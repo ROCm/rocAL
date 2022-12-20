@@ -176,7 +176,7 @@ Note: You need wget package to download the tar file.
 ```
 
 ```
-git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git
+git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git
 cd libjpeg-turbo
 mkdir build
 cd build
