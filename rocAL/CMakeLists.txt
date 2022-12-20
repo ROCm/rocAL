@@ -144,6 +144,7 @@ if(${BUILD_ROCAL})
     message("-- ${Green}ROCm Augmentation Library -- rocAL added${ColourReset}")
 
     include_directories(
+                ${CMAKE_CURRENT_BINARY_DIR}
                 ./include/api/
                 ./include/augmentations/
                 ./include/augmentations/color_augmentations/
