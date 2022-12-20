@@ -1,9 +1,9 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: mivisionx
-Source: https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX
+Upstream-Name: rocAL
+Source: https://github.com/ROCmSoftwarePlatform/rocAL.git
 
 Files: *
-Copyright: 2015 - 2022 Advanced Micro Devices, Inc.
+Copyright: 2022 Advanced Micro Devices, Inc.
 License: MIT
 
 License: MIT
