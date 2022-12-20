@@ -1,10 +1,10 @@
-<p align="center"><img width="60%" src="https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/raw/master/docs/images/MIVisionX.png" /></p>
+<p align="center"><img width="70%" src="docs/images/rocAL_logo.png" /></p>
 
 # Changelog
 
 ## Online Documentation
 
-[rocAL Documentation](https://gpuopen-professionalcompute-libraries.github.io/MIVisionX/)
+[rocAL Documentation](https://github.com/ROCmSoftwarePlatform/rocAL)
 
 ## rocAL 1.0.0 (unreleased)
 
