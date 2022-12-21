@@ -2,7 +2,7 @@
 
 <p align="center"><img width="70%" src="docs/images/rocAL_logo.png" /></p>
 
-The AMD ROCm Augmentation Library (rocAL) is designed to efficiently decode and process images and videos from a variety of storage formats and modify them through a processing graph programmable by the user. rocAL currently provides C API.
+The AMD ROCm Augmentation Library (**rocAL**) is designed to efficiently decode and process images and videos from a variety of storage formats and modify them through a processing graph programmable by the user. rocAL currently provides C API.
 For more details, go to [docs](docs) page.
 
 ## Supported Operations
@@ -90,7 +90,6 @@ For the convenience of the developer, we here provide the setup script which wil
   python rocAL-setup.py     --directory [setup directory - optional (default:~/)]
                             --opencv    [OpenCV Version - optional (default:4.6.0)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
-                            --ffmpeg    [FFMPEG V4.4.2 Installation - optional (default:no) [options:yes/no]]
                             --rpp       [RPP Version - optional (default:0.98)]
                             --mivisionx [MIVisionX Version - optional (default:rocm-5.4.1)]
                             --reinstall [Remove previous setup and reinstall (default:no)[options:yes/no]]
