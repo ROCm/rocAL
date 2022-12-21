@@ -47,8 +47,6 @@ parser.add_argument('--rpp',   		type=str, default='0.98',
                     help='RPP Version - optional (default:0.98)')
 parser.add_argument('--mivisionx',   		type=str, default='rocm-5.4.1',
                     help='MIVisionX Version - optional (default:rocm-5.4.1)')
-parser.add_argument('--ffmpeg',    	type=str, default='yes',
-                    help='FFMPEG V4.4.2 Installation - optional (default:yes) [options:yes/no]')
 parser.add_argument('--reinstall', 	type=str, default='no',
                     help='Remove previous setup and reinstall - optional (default:no) [options:yes/no]')
 parser.add_argument('--backend', 	type=str, default='HIP',
@@ -62,7 +60,6 @@ opencvVersion = args.opencv
 ProtoBufVersion = args.protobuf
 rppVersion = args.rpp
 mivisionxVersion = args.mivisionx
-ffmpegInstall = args.ffmpeg
 reinstall = args.reinstall
 backend = args.backend
 ROCM_PATH = args.rocm_path
@@ -71,10 +68,6 @@ if "ROCM_PATH" in os.environ:
     ROCM_PATH = os.environ.get('ROCM_PATH')
 print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
 
-if ffmpegInstall not in ('no', 'yes'):
-    print(
-        "ERROR: FFMPEG Install Option Not Supported - [Supported Options: no or yes]")
-    exit()
 if reinstall not in ('no', 'yes'):
     print(
         "ERROR: Re-Install Option Not Supported - [Supported Options: no or yes]")
@@ -85,18 +78,13 @@ if backend not in ('OCL', 'HIP', 'CPU'):
     exit()
 
 # check ROCm installation
-if os.path.exists(ROCM_PATH) and backend != 'CPU':
+if os.path.exists(ROCM_PATH):
     print("\nROCm Installation Found -- "+ROCM_PATH+"\n")
     os.system('echo ROCm Info -- && '+ROCM_PATH+'/bin/rocminfo')
 else:
-    if backend != 'CPU':
-        print("\nWARNING: ROCm Not Found at -- "+ROCM_PATH+"\n")
-        print(
-            "WARNING: Set ROCm Path with \"--rocm_path\" option for full installation [Default:/opt/rocm]\n")
-        print("WARNING: Only OpenCV will be installed\n")
-    ffmpegInstall = 'no'
-    neuralNetInstall = 'no'
-    rocalInstall = 'no'
+    print("\nWARNING: ROCm Not Found at -- "+ROCM_PATH+"\n")
+    print(
+        "WARNING: Set ROCm Path with \"--rocm_path\" option for full installation [Default:/opt/rocm]\n")
 
 # get platfrom info
 platfromInfo = platform.platform()
@@ -189,8 +177,14 @@ if os.path.exists(deps_dir):
         os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo ' +
                   linuxFlag+' make install -j8)')
 
+    # MIVisionX
+    if os.path.exists(deps_dir+'/MIVisionX/build-'+backend):
+        os.system('sudo -v')
+        os.system('(cd '+deps_dir+'/MIVisionX/build-'+backend+'; sudo ' +
+                  linuxFlag+' make install -j8)')
+
     print("\nrocAL Dependencies Re-Installed with rocAL-setup.py V-"+__version__+"\n")
-    exit()
+
 # Clean Install
 else:
     print("\nrocAL Dependencies Installation with rocAL-setup.py V-"+__version__+"\n")
@@ -232,22 +226,22 @@ else:
                   linuxSystemInstall_check+' install sqlite3 sqlite3-devel libbz2-devel libopenssl-devel python3-devel autoconf automake libtool curl make gcc-c++ unzip')
     # Boost V 1.80.0 from source
     os.system(
-        '(cd '+deps_dir+'; wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2 )')
-    os.system('(cd '+deps_dir+'; tar xjvf boost_1_80_0.tar.bz2 )')
+        '(cd '+deps_dir+'; wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2 )')
+    os.system('(cd '+deps_dir+'; tar xjvf boost_1_72_0.tar.bz2 )')
     if "centos-8" in platfromInfo or "redhat-8" in platfromInfo or "SLES" in platfromInfo:
         os.system(
-            '(cd '+deps_dir+'/boost_1_80_0/; ./bootstrap.sh --prefix=/usr/local --with-python=python36 )')
+            '(cd '+deps_dir+'/boost_1_72_0/; ./bootstrap.sh --prefix=/usr/local --with-python=python36 )')
     else:
         os.system(
-            '(cd '+deps_dir+'/boost_1_80_0/; ./bootstrap.sh --prefix=/usr/local --with-python=python3 )')
+            '(cd '+deps_dir+'/boost_1_72_0/; ./bootstrap.sh --prefix=/usr/local --with-python=python3 )')
     os.system(
-        '(cd '+deps_dir+'/boost_1_80_0/; ./b2 stage -j16 threading=multi link=shared cxxflags="-std=c++11" )')
+        '(cd '+deps_dir+'/boost_1_72_0/; ./b2 stage -j16 threading=multi link=shared cxxflags="-std=c++11" )')
     os.system(
-        '(cd '+deps_dir+'/boost_1_80_0/; sudo ./b2 install threading=multi link=shared --with-system --with-filesystem)')
+        '(cd '+deps_dir+'/boost_1_72_0/; sudo ./b2 install threading=multi link=shared --with-system --with-filesystem)')
     os.system(
-        '(cd '+deps_dir+'/boost_1_80_0/; ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" )')
+        '(cd '+deps_dir+'/boost_1_72_0/; ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" )')
     os.system(
-        '(cd '+deps_dir+'/boost_1_80_0/; sudo ./b2 install threading=multi link=static --with-system --with-filesystem)')
+        '(cd '+deps_dir+'/boost_1_72_0/; sudo ./b2 install threading=multi link=static --with-system --with-filesystem)')
     # Install half.hpp
     os.system(
         '(cd '+deps_dir+'; wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip )')
@@ -411,20 +405,20 @@ else:
             os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                       ' install ffmpeg-4')
 
-        # FFMPEG 4 from source -- for Ubuntu, CentOS 7, & RedHat 7
-        if "Ubuntu" in platfromInfo or "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
-            os.system('sudo -v')
-            os.system(
-                '(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo '+linuxFlag+' ldconfig )')
-            os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"; ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree)')
-            os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; make -j8 )')
-            os.system('sudo -v')
-            os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo ' +
-                      linuxFlag+' make install )')
+    # FFMPEG 4 from source -- for Ubuntu, CentOS 7, & RedHat 7
+    if "Ubuntu" in platfromInfo or "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
+        os.system('sudo -v')
+        os.system(
+            '(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo '+linuxFlag+' ldconfig )')
+        os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"; ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree)')
+        os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; make -j8 )')
+        os.system('sudo -v')
+        os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo ' +
+                  linuxFlag+' make install )')
 
     # MIVisionX
     os.system('sudo -v')
     os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
-                  linuxCMake+' -DBACKEND='+backend+' ../; make -j4; sudo make install)')
+              linuxCMake+' -DBACKEND='+backend+' ../; make -j4; sudo make install)')
 
     print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")
