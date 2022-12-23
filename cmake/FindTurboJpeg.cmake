@@ -66,6 +66,10 @@ find_path(TurboJpeg_LIBRARIES_DIRS
 )
 mark_as_advanced(TurboJpeg_LIBRARIES_DIRS)
 
+if(TurboJpeg_LIBRARIES AND TurboJpeg_INCLUDE_DIRS)
+    set(TurboJpeg_FOUND TRUE)
+endif( )
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args( TurboJpeg 
     FOUND_VAR  TurboJpeg_FOUND 

@@ -47,6 +47,10 @@ find_path(AMDRPP_LIBRARIES_DIRS
 )
 mark_as_advanced(AMDRPP_LIBRARIES_DIRS)
 
+if(AMDRPP_LIBRARIES AND AMDRPP_INCLUDE_DIRS)
+    set(AMDRPP_FOUND TRUE)
+endif( )
+
 include( FindPackageHandleStandardArgs )
 find_package_handle_standard_args( AMDRPP 
     FOUND_VAR  AMDRPP_FOUND 
@@ -63,5 +67,8 @@ set(AMDRPP_LIBRARIES_DIRS ${AMDRPP_LIBRARIES_DIRS} CACHE INTERNAL "")
 if(AMDRPP_FOUND )
     message("-- ${White}Using AMD RPP -- \n\tLibraries:${AMDRPP_LIBRARIES} \n\tIncludes:${AMDRPP_INCLUDE_DIRS}${ColourReset}")    
 else()
+    if(AMDRPP_FIND_REQUIRED)
+        message(FATAL_ERROR "{Red}FindAMDRPP -- NOT FOUND${ColourReset}")
+    endif()
     message( "-- ${Yellow}NOTE: FindAMDRPP failed to find -- amd_rpp${ColourReset}" )
 endif()
