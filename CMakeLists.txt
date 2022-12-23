@@ -131,7 +131,7 @@ set(CPACK_PACKAGE_NAME          "rocal")
 set(CPACK_PACKAGE_LICENSE       "MIT")
 set(CPACK_PACKAGE_CONTACT       "rocAL Support <mivisionx.support@amd.com>")
 set(CPACK_PACKAGE_VENDOR        "AMD Radeon")
-set(CPACK_PACKAGE_ICON          "${CMAKE_SOURCE_DIR}/docs/images/MIVisionX.bmp")
+set(CPACK_PACKAGE_ICON          "${CMAKE_SOURCE_DIR}/docs/images/rocAL_logo.png")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCmSoftwarePlatform/rocAL")
 

@@ -29,59 +29,65 @@ else()
     set(SHARED_LIB_TYPE ".so")
 endif()
 
-find_path(TurboJpeg_INCLUDE_DIRS
-    NAMES turbojpeg.h
-    HINTS
-    $ENV{TURBO_JPEG_PATH}/include
+find_path(MIVisionX_INCLUDE_DIRS
+    NAMES vx_ext_amd.h
     PATHS
-    ${TURBO_JPEG_PATH}/include
     /usr/include
-    /opt/libjpeg-turbo/include
+    ${ROCM_PATH}/include/mivisionx
 )
-mark_as_advanced(TurboJpeg_INCLUDE_DIRS)
+mark_as_advanced(MIVisionX_INCLUDE_DIRS)
 
-find_library(TurboJpeg_LIBRARIES
-    NAMES libturbojpeg${SHARED_LIB_TYPE}
-    HINTS
-    $ENV{TURBO_JPEG_PATH}/lib
-    $ENV{TURBO_JPEG_PATH}/lib64
+# OpenVX
+find_library(OPENVX_LIBRARIES
+    NAMES libopenvx${SHARED_LIB_TYPE}
     PATHS
-    ${TURBO_JPEG_PATH}/lib
-    ${TURBO_JPEG_PATH}/lib64
     /usr/lib
-    /opt/libjpeg-turbo/lib
+    ${ROCM_PATH}/lib
 )
-mark_as_advanced(TurboJpeg_LIBRARIES)
+mark_as_advanced(OPENVX_LIBRARIES)
 
-find_path(TurboJpeg_LIBRARIES_DIRS
-    NAMES libturbojpeg${SHARED_LIB_TYPE}
-    HINTS
-    $ENV{TURBO_JPEG_PATH}/lib
-    $ENV{TURBO_JPEG_PATH}/lib64
+# VX_RPP
+find_library(VXRPP_LIBRARIES
+    NAMES libvx_rpp${SHARED_LIB_TYPE}
     PATHS
-    ${TURBO_JPEG_PATH}/lib
-    ${TURBO_JPEG_PATH}/lib64
     /usr/lib
-    /opt/libjpeg-turbo/lib
+    ${ROCM_PATH}/lib
 )
-mark_as_advanced(TurboJpeg_LIBRARIES_DIRS)
+mark_as_advanced(VXRPP_LIBRARIES)
 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( TurboJpeg 
-    FOUND_VAR  TurboJpeg_FOUND 
+find_path(MIVisionX_LIBRARIES_DIRS
+    NAMES libopenvx${SHARED_LIB_TYPE}
+    HINTS
+    $ENV{ROCM_PATH}/lib
+    $ENV{ROCM_PATH}/lib64
+    PATHS
+    /usr/lib
+    ${ROCM_PATH}/lib
+)
+mark_as_advanced(MIVisionX_LIBRARIES_DIRS)
+
+if(OPENVX_LIBRARIES AND MIVisionX_INCLUDE_DIRS)
+    set(MIVisionX_FOUND TRUE)
+endif( )
+
+include( FindPackageHandleStandardArgs )
+find_package_handle_standard_args( MIVisionX 
+    FOUND_VAR  MIVisionX_FOUND 
     REQUIRED_VARS
-        TurboJpeg_LIBRARIES 
-        TurboJpeg_INCLUDE_DIRS
-        TurboJpeg_LIBRARIES_DIRS
+        OPENVX_LIBRARIES
+        VXRPP_LIBRARIES  
+        MIVisionX_INCLUDE_DIRS
+        MIVisionX_LIBRARIES_DIRS
 )
 
-set(TurboJpeg_FOUND ${TurboJpeg_FOUND} CACHE INTERNAL "")
-set(TurboJpeg_LIBRARIES ${TurboJpeg_LIBRARIES} CACHE INTERNAL "")
-set(TurboJpeg_INCLUDE_DIRS ${TurboJpeg_INCLUDE_DIRS} CACHE INTERNAL "")
-set(TurboJpeg_LIBRARIES_DIRS ${TurboJpeg_LIBRARIES_DIRS} CACHE INTERNAL "")
+set(MIVisionX_FOUND ${MIVisionX_FOUND} CACHE INTERNAL "")
+set(OPENVX_LIBRARIES ${OPENVX_LIBRARIES} CACHE INTERNAL "")
+set(VXRPP_LIBRARIES ${VXRPP_LIBRARIES} CACHE INTERNAL "")
+set(MIVisionX_INCLUDE_DIRS ${MIVisionX_INCLUDE_DIRS} CACHE INTERNAL "")
+set(MIVisionX_LIBRARIES_DIRS ${MIVisionX_LIBRARIES_DIRS} CACHE INTERNAL "")
 
-if(TurboJpeg_FOUND)
-    message("-- ${White}Using Turbo JPEG -- \n\tLibraries:${TurboJpeg_LIBRARIES} \n\tIncludes:${TurboJpeg_INCLUDE_DIRS}${ColourReset}")   
+if(MIVisionX_FOUND)
+    message("-- ${White}Using MIVisionX -- \n\tLibraries:${OPENVX_LIBRARIES} \n\tIncludes:${MIVisionX_INCLUDE_DIRS}${ColourReset}")    
 else()
-    message( "-- ${Yellow}NOTE: FindTurboJpeg failed to find -- turbojpeg${ColourReset}" )
+    message( "-- ${Yellow}NOTE: FindMIVisionX failed to find -- openvx${ColourReset}" )
 endif()
