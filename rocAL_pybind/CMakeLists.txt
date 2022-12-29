@@ -21,6 +21,13 @@
 cmake_minimum_required(VERSION 3.0)
 project(rocal_pybind)
 
+set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
+include(GNUInstallDirs)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "Deafult ROCm Installation Path")
 
@@ -175,7 +182,7 @@ if(${BUILD_ROCAL_PYBIND})
     target_link_libraries(rocal_pybind PRIVATE ${LINK_LIBRARY_LIST})
     message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
     message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
-    
+
     # install rocAL pybind libs -- {ROCM_PATH)/lib
     install(TARGETS rocal_pybind DESTINATION ${CMAKE_INSTALL_LIBDIR})
     message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
