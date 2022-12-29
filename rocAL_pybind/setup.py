@@ -52,13 +52,14 @@ class CMakeBuild(build_ext):
             self.build_extension(ext)
 
     def build_extension(self, ext):
-        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        if ext.backend == "HIP" :
+        extdir = os.path.abspath(os.path.dirname(
+            self.get_ext_fullpath(ext.name)))
+        if ext.backend == "HIP":
             cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable, '-DGPU_SUPPORT=ON', '-DBACKEND=HIP']
+                          '-DPYTHON_EXECUTABLE=' + sys.executable, '-DGPU_SUPPORT=ON', '-DBACKEND=HIP']
         else:
             cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable, '-DGPU_SUPPORT=ON', '-DBACKEND=OPENCL']
+                          '-DPYTHON_EXECUTABLE=' + sys.executable, '-DGPU_SUPPORT=ON', '-DBACKEND=OPENCL']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -71,13 +72,16 @@ class CMakeBuild(build_ext):
                                                               self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+        subprocess.check_call(['cmake', ext.sourcedir] +
+                              cmake_args, cwd=self.build_temp, env=env)
+        subprocess.check_call(['cmake', '--build', '.'] +
+                              build_args, cwd=self.build_temp)
+
 
 setup(name='amd-rocal',
       description='AMD ROCAL',
-      url='https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocal',
-      version='1.1.0',
+      url='https://github.com/ROCmSoftwarePlatform/rocAL',
+      version='1.0.0',
       author='AMD',
       license='Apache License 2.0',
       packages=find_packages(),
@@ -85,5 +89,4 @@ setup(name='amd-rocal',
       ext_modules=[CMakeExtension('rocal_pybind')],
       cmdclass=dict(build_ext=CMakeBuild),
       zip_safe=False,
-     )
-
+      )
