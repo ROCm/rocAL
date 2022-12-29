@@ -80,7 +80,6 @@ For the convenience of the developer, we here provide the setup script which wil
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7` / `8`
 * [ROCm supported hardware](https://docs.amd.com)
 * [ROCm](https://docs.amd.com)
 
@@ -199,8 +198,6 @@ sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7` / `8`
-  + SLES - `15-SP2`
 * ROCm: rocm-core - `5.4.0.50400-72`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
