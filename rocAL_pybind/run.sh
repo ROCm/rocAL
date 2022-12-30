@@ -25,9 +25,11 @@ DEFAULT_PYTHON=$(which python$PYTHON_VERSION) ## Gets the default python
 SCRIPT=$(readlink -f "$0") ## path to run.sh
 SCRIPTPATH=$(dirname "$SCRIPT") ## script location
 
-sudo rm -r ./amd_rocal.egg-info/
-sudo rm -r ./build
-sudo rm -r ./dist
+if [ -d amd_rocal.egg-info ]; then
+  sudo rm -r ./amd_rocal.egg-info
+  sudo rm -r ./build
+  sudo rm -r ./dist
+fi
 
 blue=`tput setaf 4`
 reset=`tput sgr0`

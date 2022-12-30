@@ -27,6 +27,7 @@ import subprocess
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 
+scriptPath = os.path.dirname(os.path.realpath(__file__))
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
@@ -72,14 +73,14 @@ class CMakeBuild(build_ext):
                                                               self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', ext.sourcedir] +
+        subprocess.check_call(['cmake', scriptPath] +
                               cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] +
                               build_args, cwd=self.build_temp)
 
 
 setup(name='amd-rocal',
-      description='AMD ROCAL',
+      description='AMD ROCm Augmentation Library',
       url='https://github.com/ROCmSoftwarePlatform/rocAL',
       version='1.0.0',
       author='AMD',
