@@ -27,6 +27,7 @@ set(BUILD_ROCAL true)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
+# Find Dependency
 find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
@@ -60,7 +61,7 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     endif()
 endif()
 
-#OpenCL Backend
+# OpenCL Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL")
     find_package(OpenCL QUIET)
     if(OpenCL_FOUND)
@@ -78,7 +79,7 @@ if(NOT AMDRPP_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires AMD's rpp library, Not Found ${ColourReset}")
 else()
-    #find the RPP backend type
+    # find the RPP backend type
     set(RPP_BACKEND_OPENCL_FOUND 0)
     set(RPP_BACKEND_HIP_FOUND 0)
     if(EXISTS ${ROCM_PATH}/include/rpp/rpp_backend.h)
@@ -190,7 +191,7 @@ if(${BUILD_ROCAL})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
-    message("-- ${Green}ROCm Augmentation Library -- rocAL added${ColourReset}")
+    message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
     include_directories(
                 ${CMAKE_CURRENT_BINARY_DIR}
@@ -253,7 +254,7 @@ if(${BUILD_ROCAL})
     target_compile_definitions(${PROJECT_NAME} PUBLIC DBGLOG=0 WRNLOG=0)
     target_compile_definitions(${PROJECT_NAME} PUBLIC TFRECORD_ENABLE=0)
     message("-- ${White}rocAL built with ENABLE_SIMD")
-    #OpenCV
+    # OpenCV
     if (OpenCV_FOUND)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=1)
         include_directories(${OpenCV_INCLUDE_DIRS})
@@ -266,6 +267,16 @@ if(${BUILD_ROCAL})
     else()
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
     endif()
+    # FFMPEG
+    if(NOT FFMPEG_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without FFmpeg Video Decode Functionality${ColourReset}")
+    else()
+        include_directories(${AVUTIL_INCLUDE_DIR} ${AVCODEC_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FFMPEG_LIBRARIES})
+        message("-- ${White}rocAL built with FFmpeg Video Decode Functionality${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
+    endif()
+
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation
@@ -274,15 +285,6 @@ if(${BUILD_ROCAL})
     # -std=gnu++17 -- Conform to the ISO 2017 C++ standard with GNU extensions
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -mavx2 -mfma -mf16c -Wno-deprecated-declarations -std=gnu++17")
     message("-- ${White}rocAL -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
-
-    if(NOT FFMPEG_FOUND)
-        message("-- ${Yellow}NOTE: rocAL library is going to be built without video decode functionality ${ColourReset}")
-    else()
-        include_directories(${AVUTIL_INCLUDE_DIR} ${AVCODEC_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR})
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FFMPEG_LIBRARIES})
-        message("-- ${White}rocAL library is going to be built with video decode functionality ${ColourReset}")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
-    endif()
     target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
     message("-- ${White}rocAL -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 

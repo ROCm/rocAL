@@ -175,7 +175,7 @@ if(${BUILD_ROCAL_PYBIND})
                         ${MIVisionX_INCLUDE_DIRS}
                     )
 
-    add_subdirectory(third_party_lib/pybind11)
+    add_subdirectory(third_party_lib)
 
     pybind11_add_module(rocal_pybind rocal_pybind.cpp)
 

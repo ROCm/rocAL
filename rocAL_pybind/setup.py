@@ -27,18 +27,20 @@ import subprocess
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 
+scriptPath = os.path.dirname(os.path.realpath(__file__))
 
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=''):
+    def __init__(self, name, sourcedir=scriptPath):
         Extension.__init__(self, name, sources=[])
-        self.sourcedir = os.path.abspath(sourcedir)
         if "--backend_hip" in sys.argv:
             self.backend = "HIP"
             sys.argv.remove("--backend_hip")
         elif "--backend_ocl" in sys.argv:
             self.backend = "OCL"
             sys.argv.remove("--backend_ocl")
-
+        elif "--backend_cpu" in sys.argv:
+            self.backend = "CPU"
+            sys.argv.remove("--backend_cpu")
 
 class CMakeBuild(build_ext):
     def run(self):
@@ -57,9 +59,12 @@ class CMakeBuild(build_ext):
         if ext.backend == "HIP":
             cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                           '-DPYTHON_EXECUTABLE=' + sys.executable, '-DGPU_SUPPORT=ON', '-DBACKEND=HIP']
-        else:
+        elif ext.backend == "OCL":
             cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                           '-DPYTHON_EXECUTABLE=' + sys.executable, '-DGPU_SUPPORT=ON', '-DBACKEND=OPENCL']
+        elif ext.backend == "CPU":
+            cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                          '-DPYTHON_EXECUTABLE=' + sys.executable, '-DGPU_SUPPORT=OFF', '-DBACKEND=CPU']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -72,14 +77,14 @@ class CMakeBuild(build_ext):
                                                               self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', ext.sourcedir] +
+        subprocess.check_call(['cmake', scriptPath] +
                               cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] +
                               build_args, cwd=self.build_temp)
 
 
 setup(name='amd-rocal',
-      description='AMD ROCAL',
+      description='AMD ROCm Augmentation Library',
       url='https://github.com/ROCmSoftwarePlatform/rocAL',
       version='1.0.0',
       author='AMD',
