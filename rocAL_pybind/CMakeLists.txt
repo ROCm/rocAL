@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.0)
-project(rocAL_pybind)
+project(rocal_pybind)
 
 option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
