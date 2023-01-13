@@ -122,8 +122,6 @@ if(AMD_FP16_SUPPORT)
   message("-- ${Blue}rocAL -- -DAMD_FP16_SUPPORT definition added${ColourReset}")
 endif(AMD_FP16_SUPPORT)
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development)
-include_directories(${Python_INCLUDE_DIRS})
 add_subdirectory(rocAL)
 add_subdirectory(rocAL_pybind)
 

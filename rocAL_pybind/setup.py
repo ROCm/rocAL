@@ -40,7 +40,7 @@ setup(
       license='Apache License 2.0',
       packages=find_packages(),
       include_package_data=True,
-      ext_modules=[Extension('rocal_pybind')],
+      package_data={'':['@TARGET_PYMODULE_NAME@']},
       zip_safe=False,
       distclass=BinaryDistribution
       )

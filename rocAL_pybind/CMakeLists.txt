@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.0)
-project(rocal_pybind)
+project(rocAL_pybind)
 
 option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
@@ -160,7 +160,8 @@ if(BUILD_PYPACKAGE)
     endif()
 
     if(${BUILD_ROCAL_PYBIND})
-   
+        find_package(Python REQUIRED COMPONENTS Interpreter Development)
+        include_directories(${Python_INCLUDE_DIRS})
         link_directories(${ROCM_PATH}/lib)
         # AMD RPP
         include_directories(${AMDRPP_INCLUDE_DIRS})
@@ -199,6 +200,9 @@ if(BUILD_PYPACKAGE)
             BUILD_WITH_INSTALL_RPATH TRUE)
         set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}${CMAKE_INSTALL_LIBDIR}${PYTHON_MODULE_EXTENSION}")
 
+        CONFIGURE_FILE(__init__.py
+                ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/__init__.py @ONLY
+                )
         CONFIGURE_FILE(setup.py
                 ${CMAKE_BINARY_DIR}/setup.py @ONLY
                 )
@@ -212,12 +216,12 @@ if(BUILD_PYPACKAGE)
             configure_file("${filename}" "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/${target}" COPYONLY)
         endforeach (filename)
 
-        execute_process(COMMAND "${PYTHON_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
+        execute_process(COMMAND "${Python_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
         message(STATUS "Detected rocAL Python wheel filename ${PY_WHEELFILE}")
         
         add_custom_target(PyPackageBuild
-            COMMAND "${PYTHON_EXECUTABLE}" -m pip wheel .
+            COMMAND "${Python_EXECUTABLE}" -m pip wheel .
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
             COMMENT "Building python wheel package"
             )
@@ -226,7 +230,7 @@ if(BUILD_PYPACKAGE)
 
         set_target_properties(PyPackageBuild PROPERTIES Package_Name ${PY_WHEELFILE})
         add_custom_target(PyPackageInstall
-                COMMAND "${PYTHON_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
+                COMMAND "${Python_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
                 WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
                 COMMENT "Installing wheel file"
                 )
