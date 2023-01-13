@@ -161,7 +161,8 @@ if(BUILD_PYPACKAGE)
     endif()
 
     if(${BUILD_ROCAL_PYBIND})
-
+   
+        link_directories(${ROCM_PATH}/lib)
         # AMD RPP
         include_directories(${AMDRPP_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
@@ -172,31 +173,26 @@ if(BUILD_PYPACKAGE)
         include_directories(${TurboJpeg_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
         # rocAL
-        #set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
 
         include_directories(../rocAL/include/api/
-                            third_party_lib/pybind11/include/
+                            third_party_lib/pybind11/include
                             ${PYTHON_INCLUDE_DIRS}
                             ${MIVisionX_INCLUDE_DIRS}
                         )
-        
-        
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
 
         add_subdirectory(third_party_lib/pybind11)
-        
+
+        pybind11_add_module(rocal_pybind rocal_pybind.cpp)
+        target_link_libraries(rocal_pybind PRIVATE ${LINK_LIBRARY_LIST})
+        add_dependencies(rocal_pybind rocal)
+        message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
+        message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+
         file(GLOB_RECURSE pyfiles amd/*.py)
         file(GLOB_RECURSE sources *.cpp)
 
         add_library(${CMAKE_INSTALL_LIBDIR} MODULE ${sources})
-        #link_directories(${ROCM_PATH}/lib)
-
-        pybind11_add_module(rocal_pybind rocal_pybind.cpp)
-        add_dependencies(rocal_pybind rocal)
-        target_link_libraries(rocal_pybind PRIVATE ${LINK_LIBRARY_LIST})
-        message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
-        message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
-
         set_target_properties(${CMAKE_INSTALL_LIBDIR} PROPERTIES
             PREFIX "${PYTHON_MODULE_PREFIX}"
             SUFFIX "${PYTHON_MODULE_EXTENSION}"
