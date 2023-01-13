@@ -44,6 +44,7 @@ option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_DEV        "Build rocAL Development Package"      ON)
 option(AMD_FP16_SUPPORT "Build rocAL with float16 Support"    OFF)
+option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -114,13 +115,18 @@ message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_DEV=${BUILD_DEV} [rocAL Developement/Runtime Build(default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D AMD_FP16_SUPPORT=${AMD_FP16_SUPPORT} [Turn ON/OFF OpenVX FP16 Support (default:OFF)]${ColourReset}")
+message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
 
 if(AMD_FP16_SUPPORT)
   add_definitions(-DAMD_FP16_SUPPORT)
   message("-- ${Blue}rocAL -- -DAMD_FP16_SUPPORT definition added${ColourReset}")
 endif(AMD_FP16_SUPPORT)
 
+find_package(Python QUIET)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
 add_subdirectory(rocAL)
+add_subdirectory(rocAL_pybind)
 
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/
 install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal)
