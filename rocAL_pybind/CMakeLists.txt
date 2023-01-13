@@ -41,7 +41,6 @@ set(BUILD_ROCAL_PYBIND true)
 find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
-find_package(Python QUIET)
 
 # Backend
 if(BUILD_PYPACKAGE)
@@ -201,25 +200,25 @@ if(BUILD_PYPACKAGE)
         set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}${CMAKE_INSTALL_LIBDIR}${PYTHON_MODULE_EXTENSION}")
 
         CONFIGURE_FILE(setup.py
-                ${CMAKE_CURRENT_BINARY_DIR}/setup.py @ONLY
+                ${CMAKE_BINARY_DIR}/setup.py @ONLY
                 )
         CONFIGURE_FILE(getrocALwheelname.py
-                ${CMAKE_CURRENT_BINARY_DIR}/getrocALwheelname.py @ONLY
+                ${CMAKE_BINARY_DIR}/getrocALwheelname.py @ONLY
         )
 
         foreach (filename ${pyfiles})
             get_filename_component(target "${filename}" NAME)
             message(STATUS "Copying ${filename} to ${CMAKE_INSTALL_LIBDIR}/${target}")
-            configure_file("${filename}" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/${target}" COPYONLY)
+            configure_file("${filename}" "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/${target}" COPYONLY)
         endforeach (filename)
 
         execute_process(COMMAND "${PYTHON_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
         message(STATUS "Detected rocAL Python wheel filename ${PY_WHEELFILE}")
         
         add_custom_target(PyPackageBuild
             COMMAND "${PYTHON_EXECUTABLE}" -m pip wheel .
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
             COMMENT "Building python wheel package"
             )
 
@@ -228,7 +227,7 @@ if(BUILD_PYPACKAGE)
         set_target_properties(PyPackageBuild PROPERTIES Package_Name ${PY_WHEELFILE})
         add_custom_target(PyPackageInstall
                 COMMAND "${PYTHON_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
-                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
                 COMMENT "Installing wheel file"
                 )
         add_dependencies(PyPackageInstall PyPackageBuild)
