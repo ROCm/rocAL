@@ -32,7 +32,7 @@ class BinaryDistribution(Distribution):
         return True
 
 setup(
-      name='amd-rocal',
+      name='@PROJECT_NAME@',
       description='AMD ROCm Augmentation Library',
       url='https://github.com/ROCmSoftwarePlatform/rocAL',
       version='1.0.0',
@@ -40,7 +40,5 @@ setup(
       license='Apache License 2.0',
       packages=find_packages(),
       include_package_data=True,
-      package_data={'':['@TARGET_PYMODULE_NAME@']},
-      zip_safe=False,
       distclass=BinaryDistribution
       )

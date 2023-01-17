@@ -1,4 +1,4 @@
-# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(rocal_pybind)
 
+set(PROJECT_NAME rocal_pybind)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
 #set(CMAKE_INSTALL_LIBDIR rocal_pybind_lib)
@@ -192,13 +193,14 @@ if(BUILD_PYPACKAGE)
         file(GLOB_RECURSE pyfiles amd/*.py)
         file(GLOB_RECURSE sources *.cpp)
 
-        add_library(${CMAKE_INSTALL_LIBDIR} MODULE ${sources})
-        set_target_properties(${CMAKE_INSTALL_LIBDIR} PROPERTIES
+        #add_library(${PROJECT_NAME} MODULE ${sources})
+        set_target_properties(${PROJECT_NAME} PROPERTIES
             PREFIX "${PYTHON_MODULE_PREFIX}"
             SUFFIX "${PYTHON_MODULE_EXTENSION}"
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+            BUILD_DIRECTORY "${CMAKE_BINARY_DIR}"
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${CMAKE_INSTALL_LIBDIR}"
             BUILD_WITH_INSTALL_RPATH TRUE)
-        set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}${CMAKE_INSTALL_LIBDIR}${PYTHON_MODULE_EXTENSION}")
+        set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}${PROJECT_NAME}${PYTHON_MODULE_EXTENSION}")
 
         CONFIGURE_FILE(__init__.py
                 ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/__init__.py @ONLY
@@ -212,8 +214,8 @@ if(BUILD_PYPACKAGE)
 
         foreach (filename ${pyfiles})
             get_filename_component(target "${filename}" NAME)
-            message(STATUS "Copying ${filename} to ${CMAKE_INSTALL_LIBDIR}/${target}")
-            configure_file("${filename}" "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/${target}" COPYONLY)
+            message(STATUS "Copying ${filename} to ${PROJECT_NAME}/${target}")
+            configure_file("${filename}" "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${target}" COPYONLY)
         endforeach (filename)
 
         execute_process(COMMAND "${Python_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
@@ -226,7 +228,7 @@ if(BUILD_PYPACKAGE)
             COMMENT "Building python wheel package"
             )
 
-        add_dependencies(PyPackageBuild ${CMAKE_INSTALL_LIBDIR})
+        add_dependencies(PyPackageBuild ${PROJECT_NAME})
 
         set_target_properties(PyPackageBuild PROPERTIES Package_Name ${PY_WHEELFILE})
         add_custom_target(PyPackageInstall
