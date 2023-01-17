@@ -178,7 +178,6 @@ if(BUILD_PYPACKAGE)
 
         include_directories(../rocAL/include/api/
                             third_party_lib/pybind11/include
-                            ${PYTHON_INCLUDE_DIRS}
                             ${MIVisionX_INCLUDE_DIRS}
                         )
 
@@ -213,9 +212,11 @@ if(BUILD_PYPACKAGE)
         )
 
         foreach (filename ${pyfiles})
-            get_filename_component(target "${filename}" NAME)
-            message(STATUS "Copying ${filename} to ${PROJECT_NAME}/${target}")
-            configure_file("${filename}" "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${target}" COPYONLY)
+            get_filename_component(target "${filename}" REALPATH)
+            #to maintain folder structure
+            file(RELATIVE_PATH ITEM_PATH_REL ${CMAKE_CURRENT_SOURCE_DIR} ${filename})
+            message(STATUS "Copying ${filename} to ${PROJECT_NAME}/${ITEM_PATH_REL}")
+            configure_file("${filename}" "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/${ITEM_PATH_REL}" COPYONLY)
         endforeach (filename)
 
         execute_process(COMMAND "${Python_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
