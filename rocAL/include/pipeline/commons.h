@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <vector>
 #include "exception.h"
 #include "log.h"
-
+#define MAX_ASPECT_RATIO 3.0f
 
 enum class RocalTensorFormat
 {
