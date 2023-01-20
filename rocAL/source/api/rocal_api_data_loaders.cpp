@@ -2341,9 +2341,6 @@ rocalVideoFileResizeSingleShard(
         if(shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
 
-        if(dest_width == 0 || dest_height == 0)
-            THROW("Invalid dest_width/dest_height values passed as input")
-
         // Set default step and stride values if 0 is passed
         step = (step == 0)? sequence_length : step;
         stride = (stride == 0)? 1 : stride;
