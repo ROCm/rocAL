@@ -22,13 +22,12 @@ from setuptools import setup, find_packages, Extension
 from setuptools.dist import Distribution
 import sys
 
-
-if sys.version_info < (3, 0): #TODO: check minimum & max version of python3 required
+if sys.version_info < (3, 0): 
     sys.exit('rocal Python Package requires Python > 3.0')
 
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
-    def has_ext_modules(foo):
+    def has_ext_modules(self):
         return True
 
 setup(
@@ -41,6 +40,7 @@ setup(
       packages=find_packages(where='@TARGET_NAME@'),
       package_dir={'amd':'@TARGET_NAME@/amd'},
       include_package_data=True,
-      package_data={'amd': ['@TARGET_NAME@/lib/@TARGET_PYMODULE_NAME@']},
+      #package_data={'rocal_pybind': ['@TARGET_NAME@/lib/@TARGET_PYMODULE_NAME@']},
+      ext_modules=[Extension('rocal_pybind',sources=['rocal_pybind.cpp'], include_dirs=['@PROJECT_SOURCE_DIR@/third_party_lib/pybind11/include/', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
       distclass=BinaryDistribution
       )

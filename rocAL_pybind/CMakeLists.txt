@@ -161,8 +161,12 @@ if(BUILD_PYPACKAGE)
     endif()
 
     if(${BUILD_ROCAL_PYBIND})
-        find_package(Python REQUIRED COMPONENTS Interpreter Development)
-        include_directories(${Python_INCLUDE_DIRS})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        include_directories(${Python3_INCLUDE_DIRS})
+
+        add_subdirectory(third_party_lib/pybind11)
+        include_directories(third_party_lib/pybind11/include/)
+
         link_directories(${ROCM_PATH}/lib)
         # AMD RPP
         include_directories(${AMDRPP_INCLUDE_DIRS})
@@ -177,13 +181,10 @@ if(BUILD_PYPACKAGE)
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
 
         include_directories(../rocAL/include/api/
-                            third_party_lib/pybind11/include
-                            ${MIVisionX_INCLUDE_DIRS}
+                        ${MIVisionX_INCLUDE_DIRS}
                         )
 
-        add_subdirectory(third_party_lib/pybind11)
-
-        pybind11_add_module(rocal_pybind rocal_pybind.cpp)
+        pybind11_add_module(rocal_pybind SHARED rocal_pybind.cpp)
         target_link_libraries(rocal_pybind PRIVATE ${LINK_LIBRARY_LIST})
         add_dependencies(rocal_pybind rocal)
         message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
@@ -208,7 +209,10 @@ if(BUILD_PYPACKAGE)
                 )
         CONFIGURE_FILE(getrocALwheelname.py
                 ${CMAKE_BINARY_DIR}/getrocALwheelname.py @ONLY
-        )
+                )
+        CONFIGURE_FILE(rocal_pybind.cpp
+                ${CMAKE_BINARY_DIR}/rocal_pybind.cpp @ONLY
+                )
 
         foreach (filename ${pyfiles})
             get_filename_component(target "${filename}" REALPATH)
@@ -218,12 +222,12 @@ if(BUILD_PYPACKAGE)
             configure_file("${filename}" "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${ITEM_PATH_REL}" COPYONLY)
         endforeach (filename)
 
-        execute_process(COMMAND "${Python_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
+        execute_process(COMMAND "${Python3_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
         message(STATUS "Detected rocAL Python wheel filename ${PY_WHEELFILE}")
         
         add_custom_target(PyPackageBuild
-            COMMAND "${Python_EXECUTABLE}" -m pip wheel .
+            COMMAND "${Python3_EXECUTABLE}" -m pip wheel .
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
             COMMENT "Building python wheel package"
             )
@@ -232,7 +236,7 @@ if(BUILD_PYPACKAGE)
 
         set_target_properties(PyPackageBuild PROPERTIES Package_Name ${PY_WHEELFILE})
         add_custom_target(PyPackageInstall
-                COMMAND "${Python_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
+                COMMAND "${Python3_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
                 WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
                 COMMENT "Installing wheel file"
                 )
