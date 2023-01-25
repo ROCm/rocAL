@@ -24,8 +24,6 @@ project(rocAL_pybind)
 set(TARGET_NAME rocAL_pybind)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
-#set(CMAKE_INSTALL_LIBDIR rocal_pybind_lib)
-
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
 
@@ -35,6 +33,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "Deafult ROCm Installation Path")
+# avoid setting the default installation path to /usr/local
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX /usr/local/lib/python3.10/dist-packages CACHE PATH "MIVisionX default installation path" FORCE)
+  endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 set(CMAKE_CXX_STANDARD 17)
 set(BUILD_ROCAL_PYBIND true)
@@ -167,7 +170,6 @@ if(BUILD_PYPACKAGE)
         add_subdirectory(third_party_lib/pybind11)
         include_directories(third_party_lib/pybind11/include/)
 
-        link_directories(${ROCM_PATH}/lib)
         # AMD RPP
         include_directories(${AMDRPP_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
@@ -179,25 +181,20 @@ if(BUILD_PYPACKAGE)
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
         # rocAL
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
+        include_directories(../rocAL/include/api/)
 
-        include_directories(../rocAL/include/api/
-                        ${MIVisionX_INCLUDE_DIRS}
-                        )
+        file(GLOB_RECURSE pyfiles amd/*.py)
+        file(GLOB_RECURSE sources *.cpp)
 
-        pybind11_add_module(rocal_pybind SHARED rocal_pybind.cpp)
+        pybind11_add_module(rocal_pybind MODULE ${sources})
         target_link_libraries(rocal_pybind PRIVATE ${LINK_LIBRARY_LIST})
         add_dependencies(rocal_pybind rocal)
         message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
         message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 
-        file(GLOB_RECURSE pyfiles amd/*.py)
-        file(GLOB_RECURSE sources *.cpp)
-
-        #add_library(${TARGET_NAME} MODULE ${sources})
         set_target_properties(rocal_pybind PROPERTIES
             PREFIX "${PYTHON_MODULE_PREFIX}"
             SUFFIX "${PYTHON_MODULE_EXTENSION}"
-            BUILD_DIRECTORY "${CMAKE_BINARY_DIR}"
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}")
         set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}${TARGET_NAME}${PYTHON_MODULE_EXTENSION}")
 
@@ -242,8 +239,8 @@ if(BUILD_PYPACKAGE)
                 )
         add_dependencies(PyPackageInstall PyPackageBuild)
         
-        #install rocAL pybind libs -- {ROCM_PATH)/lib
-        #install(TARGETS rocal_pybind DESTINATION ${CMAKE_INSTALL_LIBDIR})
+        #install rocAL pybind libs
+        install(TARGETS rocal_pybind DESTINATION ${CMAKE_INSTALL_PREFIX})
         message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
     else()
         message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
