@@ -25,24 +25,37 @@
 ################################################################################
 find_path(AMDRPP_INCLUDE_DIRS
     NAMES rpp.h
+    HINTS
+    $ENV{AMDRPP_PATH}/include/rpp
     PATHS
-    /usr/include
+    ${AMDRPP_PATH}/include/rpp
+    /usr/local/include/rpp
     ${ROCM_PATH}/include/rpp
 )
 mark_as_advanced(AMDRPP_INCLUDE_DIRS)
 
 find_library(AMDRPP_LIBRARIES
     NAMES amd_rpp
+    HINTS
+    $ENV{AMDRPP_PATH}/lib
+    $ENV{AMDRPP_PATH}/lib64
     PATHS
-    /usr/lib
+    ${AMDRPP_PATH}/lib
+    ${AMDRPP_PATH}/lib64
+    /usr/local/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(AMDRPP_LIBRARIES)
 
 find_path(AMDRPP_LIBRARIES_DIRS
     NAMES amd_rpp
+    HINTS
+    $ENV{AMDRPP_PATH}/lib
+    $ENV{AMDRPP_PATH}/lib64
     PATHS
-    /usr/lib
+    ${AMDRPP_PATH}/lib
+    ${AMDRPP_PATH}/lib64
+    /usr/local/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(AMDRPP_LIBRARIES_DIRS)

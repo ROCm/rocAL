@@ -31,7 +31,10 @@ endif()
 
 find_path(MIVisionX_INCLUDE_DIRS
     NAMES vx_ext_amd.h
+    HINTS
+    $ENV{MIVisionX_PATH}/include/mivisionx
     PATHS
+    ${MIVisionX_PATH}/include/mivisionx
     /usr/include
     ${ROCM_PATH}/include/mivisionx
 )
@@ -40,7 +43,10 @@ mark_as_advanced(MIVisionX_INCLUDE_DIRS)
 # OpenVX
 find_library(OPENVX_LIBRARIES
     NAMES libopenvx${SHARED_LIB_TYPE}
+    HINTS
+    $ENV{MIVisionX_PATH}/lib
     PATHS
+    ${MIVisionX_PATH}/lib
     /usr/lib
     ${ROCM_PATH}/lib
 )
@@ -49,7 +55,10 @@ mark_as_advanced(OPENVX_LIBRARIES)
 # VX_RPP
 find_library(VXRPP_LIBRARIES
     NAMES libvx_rpp${SHARED_LIB_TYPE}
+    HINTS
+    $ENV{MIVisionX_PATH}/lib
     PATHS
+    ${MIVisionX_PATH}/lib
     /usr/lib
     ${ROCM_PATH}/lib
 )
@@ -60,7 +69,9 @@ find_path(MIVisionX_LIBRARIES_DIRS
     HINTS
     $ENV{ROCM_PATH}/lib
     $ENV{ROCM_PATH}/lib64
+    $ENV{MIVisionX_PATH}/lib
     PATHS
+    ${MIVisionX_PATH}/lib
     /usr/lib
     ${ROCM_PATH}/lib
 )
