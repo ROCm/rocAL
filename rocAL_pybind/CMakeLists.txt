@@ -33,11 +33,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "Deafult ROCm Installation Path")
-# avoid setting the default installation path to /usr/local
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX /home/svcbuild/.local/lib/python3.10/site-packages/ CACHE PATH "rocAL default installation path" FORCE)
-endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 set(CMAKE_CXX_STANDARD 17)
 set(BUILD_ROCAL_PYBIND true)
@@ -166,7 +161,11 @@ if(BUILD_PYPACKAGE)
     if(${BUILD_ROCAL_PYBIND})
         find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
         include_directories(${Python3_INCLUDE_DIRS})
-
+        # avoid setting the default installation path to /usr/local
+        if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+            set(CMAKE_INSTALL_PREFIX ${Python3_STDARCH} CACHE PATH "rocAL default installation path" FORCE)
+        endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
         add_subdirectory(third_party_lib/pybind11)
         include_directories(third_party_lib/pybind11/include/)
 
