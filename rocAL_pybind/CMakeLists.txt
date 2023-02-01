@@ -35,8 +35,8 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "Deafult ROCm Installation Path")
 # avoid setting the default installation path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX /usr/local/lib/python3.10/dist-packages CACHE PATH "MIVisionX default installation path" FORCE)
-  endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX /home/svcbuild/.local/lib/python3.10/site-packages/ CACHE PATH "rocAL default installation path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -196,7 +196,7 @@ if(BUILD_PYPACKAGE)
             PREFIX "${PYTHON_MODULE_PREFIX}"
             SUFFIX "${PYTHON_MODULE_EXTENSION}"
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}")
-        set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}${TARGET_NAME}${PYTHON_MODULE_EXTENSION}")
+        set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}rocal_pybind${PYTHON_MODULE_EXTENSION}")
 
         CONFIGURE_FILE(amd/__init__.py
                 ${CMAKE_BINARY_DIR}/${TARGET_NAME}/__init__.py @ONLY
@@ -240,7 +240,7 @@ if(BUILD_PYPACKAGE)
         add_dependencies(PyPackageInstall PyPackageBuild)
         
         #install rocAL pybind libs
-        install(TARGETS rocal_pybind DESTINATION ${CMAKE_INSTALL_PREFIX})
+        install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
         message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
     else()
         message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
