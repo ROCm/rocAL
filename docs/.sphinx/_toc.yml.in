@@ -3,3 +3,17 @@
 defaults:
   numbered: False
 root: README
+subtrees:
+- caption: User Guide
+  entries:
+  - file: user_guide/ch1
+    subtrees:
+      - entries:
+        - file: user_guide/ch2
+        - file: user_guide/ch3
+        - file: user_guide/ch4
+        - file: user_guide/ch5
+        - file: user_guide/ch6
+#- caption: Examples
+#  entries:
+#  - file: api_ref
