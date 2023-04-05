@@ -14,6 +14,6 @@ subtrees:
         - file: user_guide/ch4
         - file: user_guide/ch5
         - file: user_guide/ch6
-#- caption: Examples
-#  entries:
-#  - file: api_ref
+- caption: Examples
+  entries:
+  - file: examples
