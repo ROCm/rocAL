@@ -1,4 +1,4 @@
-<p align="center"><img width="70%" src="docs/images/rocAL_logo.png" /></p>
+<p align="center"><img width="70%" src="docs/data/rocAL_logo.png" /></p>
 
 # Changelog
 
