@@ -122,10 +122,12 @@ For the convenience of the developer, we here provide the setup script which wil
     ```
     mkdir build-hip
     cd build-hip
-    cmake ../
-    make -j8
+    sudo cmake ../
+    sudo make -j8
+    sudo cmake --build . --target PyPackageInstall
     sudo make install
     ```
+**Note:** sudo is required to build rocAL_pybind package
 
   + Instructions for building rocAL with **OPENCL** GPU backend:
 
