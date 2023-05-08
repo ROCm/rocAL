@@ -122,10 +122,12 @@ For the convenience of the developer, we here provide the setup script which wil
     ```
     mkdir build-hip
     cd build-hip
-    cmake ../
-    make -j8
+    sudo cmake ../
+    sudo make -j8
+    sudo cmake --build . --target PyPackageInstall
     sudo make install
     ```
+**Note:** sudo is required to build rocAL_pybind package (only supported on HIP backend)
 
   + Instructions for building rocAL with **OPENCL** GPU backend:
 
@@ -144,6 +146,7 @@ For the convenience of the developer, we here provide the setup script which wil
     ```
 
   **Note:**
+  + rocAL_pybind is not supported on OPENCL backend
   + rocAL cannot be installed for both GPU backends in the same default folder (i.e., /opt/rocm/)
   if an app interested in installing rocAL with both GPU backends, then add **-DCMAKE_INSTALL_PREFIX** in the cmake
   commands to install rocAL with OPENCL and HIP backends into two separate custom folders.

@@ -9,14 +9,12 @@ written primarily in C/C++ language can be used effectively in Python.
 ## Prerequisites
 * [rocAL C/C++ Library](../rocAL#prerequisites)
 * CMake Version 3.10 or higher
-* Python 3
+* Python 3.8 or higher
 * PIP3 - `sudo apt install python3-pip`
+* [CuPy for rocm](https://github.com/ROCmSoftwarePlatform/cupy)
 
 ## Install
-Install rocAL_pybind using the run.sh script
-```
-./run.sh
-```
+rocAL_pybind installs during [rocAL build](https://github.com/ROCmSoftwarePlatform/rocAL#build-instructions)
 
 #### Prerequisites
 
