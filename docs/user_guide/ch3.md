@@ -20,7 +20,7 @@ To see the list of supported platforms for rocAL, see the ROCm Installation Guid
 
 ## 3.3 Installing rocAL 
 
-rocAL is shipped along with MIVisionX. To build and install the rocAL C++ library, follow the instructions given [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#build--install-mivisionx)
+rocAL is shipped along with MIVisionX. To build and install the rocAL C++ library, follow the instructions given [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#build--install-mivisionx).
 
 ## 3.4 Installing rocAL Python Package 
 
@@ -38,5 +38,5 @@ To test the rocAL Python APIs using PyTorch or TensorFlow, we recommend building
 
 To use rocAL on Ubuntu, use the following dockers:
 
-- [rocAL on ubuntu20](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/docker/mivisionx-on-ubuntu20.dockerfile)
-- [rocAL on Ubuntu22](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/docker/mivisionx-on-ubuntu22.dockerfile)
+- [rocAL on Ubuntu 20](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/docker/mivisionx-on-ubuntu20.dockerfile)
+- [rocAL on Ubuntu 22](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/docker/mivisionx-on-ubuntu22.dockerfile)

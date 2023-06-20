@@ -8,7 +8,7 @@ This section demonstrates how to use rocAL with PyTorch for training. Follow the
 
 ## 5.1.1 Build PyTorch Docker
 
-Build a rocAL PyTorch docker by following the steps here.
+Build a rocAL PyTorch docker by following the steps [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/docs/5.6.0/docker/pytorch).
 
 ## 5.1.2 Create Data-loading Pipeline
 
@@ -98,7 +98,7 @@ This section demonstrates how to use rocAL with TensorFlow for training. Follow 
 
 ## 5.2.1 Build TensorFlow Docker
 
-Build a rocAL TensorFlow docker by following the steps here.
+Build a rocAL TensorFlow docker by following the steps [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/docs/5.6.0/docker/tensorflow).
 
 ## 5.2.2 Create Data-loading Pipeline
 
@@ -159,6 +159,6 @@ Run the training Session
                 train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
 ```
 
-4. Run the training as shown [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
+4. Run the training as shown [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/docs/5.6.0/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
 
-To see a sample training script, click [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
+To see a sample training script, click [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/docs/5.6.0/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
