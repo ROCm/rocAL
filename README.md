@@ -8,12 +8,9 @@ For more details, go to [docs](docs) page.
 ## Documentation
 
 Run the steps below to build documentation locally.
-
 ```
 cd docs
-
 pip3 install -r .sphinx/requirements.txt
-
 python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
 ```
 
@@ -79,6 +76,9 @@ rocAL can be currently used to perform the following operations either with rand
 *  [Turbo JPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
 *  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
 *  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
+*  [LMBD Library](http://www.lmdb.tech/doc/)
+*  [RapidJSON](https://github.com/Tencent/rapidjson)
+*  [PyBind11](https://github.com/pybind/pybind11)
 
 ## Build instructions
 
@@ -101,15 +101,15 @@ For the convenience of the developer, we here provide the setup script which wil
   python rocAL-setup.py     --directory [setup directory - optional (default:~/)]
                             --opencv    [OpenCV Version - optional (default:4.6.0)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
-                            --rpp       [RPP Version - optional (default:0.98)]
+                            --rpp       [RPP Version - optional (default:1.1.0)]
                             --mivisionx [MIVisionX Version - optional (default:rocm-5.4.1)]
+                            --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
                             --reinstall [Remove previous setup and reinstall (default:no)[options:yes/no]]
                             --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                             --rocm_path [ROCm Installation Path - optional (default:/opt/rocm) - ROCm Installation Required]
   ```
     **Note:**
-    * **ROCm upgrade** with `sudo apt upgrade` requires the setup script **rerun**.
-    * use `X Window` / `X11` for [remote GUI app control](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/wiki/X-Window-forwarding)
+    * **ROCm upgrade** requires the setup script **rerun**.
 
 ### Using `rocAL-setup.py`
 
@@ -134,8 +134,8 @@ For the convenience of the developer, we here provide the setup script which wil
     ```
     mkdir build-hip
     cd build-hip
-    sudo cmake ../
-    sudo make -j8
+    cmake ../
+    make -j8
     sudo cmake --build . --target PyPackageInstall
     sudo make install
     ```
@@ -165,48 +165,60 @@ For the convenience of the developer, we here provide the setup script which wil
 
 ### Prerequisites - Manual Install
 
-* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
-* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* RPP - [0.98](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/0.98)
-* FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
-* MIVisionX - [rocm-5.4.1](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/releases/tag/rocm-5.4.1)
-* Turbo JPEG
-* LMBD
+*  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
+*  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
+*  [Boost library](https://www.boost.org) - Version `1.66` or higher
+*  [Turbo JPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
+*  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+*  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.11.1` or higher
+*  [LMBD Library](http://www.lmdb.tech/doc/)
+*  [RapidJSON](https://github.com/Tencent/rapidjson)
+*  [PyBind11](https://github.com/pybind/pybind11)
 
 #### Turbo JPEG installation
 
 Turbo JPEG library is a SIMD optimized library which currently rocAL uses to decode input JPEG images. It needs to be built from the source and installed in the default path for libraries and include headers. You can follow the instruction below to download the source, build and install it.
-Note: Make sure you have installed nasm Debian package before installation, it's the dependency required by libturbo-jpeg.
+**Note:** install nasm package
 
 ```
- sudo apt-get install nasm
+sudo apt-get install nasm
 ```
 
-Note: You need wget package to download the tar file.
-
+**Note:** You need wget package to download the tar file.
 ```
  sudo apt-get install wget
 ```
 
 ```
-git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git
-cd libjpeg-turbo
-mkdir build
-cd build
+git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git
+cd libjpeg-turbo && mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr \
       -DCMAKE_BUILD_TYPE=RELEASE  \
       -DENABLE_STATIC=FALSE       \
       -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
       -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  \
       ..
-make -j$nproc
-sudo make install
+make -j$nproc && sudo make install
 ```
 
 #### LMDB installation
-
 ```
 sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
+```
+
+#### RapidJSON installation
+```
+git clone https://github.com/Tencent/rapidjson.git
+cd rapidjson && mkdir build && cd build
+cmake ../ && make -j$nproc && sudo make install
+```
+
+#### PyBind11 installation
+```
+pip install pytest==3.1 
+git clone -b  https://github.com/pybind/pybind11 
+cd pybind11 && mkdir build && cd build
+cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install
 ```
 
 ## Tested Configurations
