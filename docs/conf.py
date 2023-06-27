@@ -28,6 +28,9 @@
 
 from rocm_docs import ROCmDocs
 
+
+external_projects_current_project = "rocal"
+
 docs_core = ROCmDocs("rocAL Documentation")
 docs_core.setup()
 
