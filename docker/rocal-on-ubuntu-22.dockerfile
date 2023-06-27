@@ -26,11 +26,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-
         mkdir build && cd build && cmake -DWITH_GTK=ON -DWITH_JPEG=ON -DBUILD_JPEG=ON -DWITH_OPENCL=OFF ../opencv-4.6.0 && make -j8 && sudo make install && sudo ldconfig && cd
 
 # install FFMPEG
+ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install autoconf automake build-essential cmake git-core libass-dev libfreetype6-dev libsdl2-dev libtool libva-dev \
         libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo wget zlib1g-dev \
         nasm yasm libx264-dev libx265-dev libnuma-dev libfdk-aac-dev && \
         wget https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.4.2.zip && unzip n4.4.2.zip && cd FFmpeg-n4.4.2/ && sudo ldconfig && \
-        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/" && \
         ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree && \
         make -j8 && sudo make install && cd
 
@@ -54,8 +54,17 @@ RUN apt-get -y install sqlite3 libsqlite3-dev libtool build-essential && \
     sudo ./b2 install threading=multi link=static --with-system --with-filesystem
 RUN git clone -b v3.21.9 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
-RUN git clone -b 0.98  https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && cd rpp && mkdir build && cd build && \
+RUN git clone -b 1.1.0  https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && cd rpp && mkdir build && cd build && \
         cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd
+ENV CUPY_INSTALL_USE_HIP=1
+ENV ROCM_HOME=/opt/rocm
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev && \
+        git clone https://github.com/Tencent/rapidjson.git && cd rapidjson && mkdir build && cd build && \
+        cmake ../ && make -j4 && sudo make install && cd ../../ && \
+        pip install pytest==3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
+        cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
+        git clone https://github.com/ROCmSoftwarePlatform/cupy.git && cd cupy && git submodule update --init && \
+        pip install -e . --no-cache-dir -vvvv && pip install numpy==1.21
 
 ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE

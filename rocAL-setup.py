@@ -30,7 +30,7 @@ else:
 __author__ = "Kiriti Nagesh Gowda"
 __copyright__ = "Copyright 2022 - 2023, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __maintainer__ = "Kiriti Nagesh Gowda"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
@@ -43,10 +43,12 @@ parser.add_argument('--opencv',    	type=str, default='4.6.0',
                     help='OpenCV Version - optional (default:4.6.0)')
 parser.add_argument('--protobuf',  	type=str, default='3.12.4',
                     help='ProtoBuf Version - optional (default:3.12.4)')
-parser.add_argument('--rpp',   		type=str, default='0.98',
-                    help='RPP Version - optional (default:0.98)')
+parser.add_argument('--rpp',   		type=str, default='1.1.0',
+                    help='RPP Version - optional (default:1.1.0)')
 parser.add_argument('--mivisionx',   		type=str, default='rocm-5.4.1',
                     help='MIVisionX Version - optional (default:rocm-5.4.1)')
+parser.add_argument('--pybind11',   type=str, default='v2.10.4',
+                    help='PyBind11 Version - optional (default:v2.10.4)')
 parser.add_argument('--reinstall', 	type=str, default='no',
                     help='Remove previous setup and reinstall - optional (default:no) [options:yes/no]')
 parser.add_argument('--backend', 	type=str, default='HIP',
@@ -60,6 +62,7 @@ opencvVersion = args.opencv
 ProtoBufVersion = args.protobuf
 rppVersion = args.rpp
 mivisionxVersion = args.mivisionx
+pybind11Version = args.pybind11
 reinstall = args.reinstall
 backend = args.backend
 ROCM_PATH = args.rocm_path
@@ -194,7 +197,7 @@ else:
     # install pre-reqs
     os.system('sudo -v')
     os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-              linuxSystemInstall_check+' install gcc cmake git wget unzip pkg-config inxi mivisionx')
+              linuxSystemInstall_check+' install gcc cmake git wget unzip pkg-config inxi mivisionx python3 python3-pip')
 
     # Get Installation Source
     os.system(
@@ -224,7 +227,7 @@ else:
     elif "SLES" in platfromInfo:
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                   linuxSystemInstall_check+' install sqlite3 sqlite3-devel libbz2-devel libopenssl-devel python3-devel autoconf automake libtool curl make gcc-c++ unzip')
-    # Boost V 1.80.0 from source
+    # Boost V 1.72.0 from source
     os.system(
         '(cd '+deps_dir+'; wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2 )')
     os.system('(cd '+deps_dir+'; tar xjvf boost_1_72_0.tar.bz2 )')
@@ -297,7 +300,6 @@ else:
     os.system('sudo -v')
     os.system('(cd '+deps_dir+'/build/OpenCV; sudo '+linuxFlag+' ldconfig )')
 
-    # Install RPP
     if "Ubuntu" in platfromInfo:
         # Install Packages for rocAL
         os.system('sudo -v')
@@ -311,41 +313,54 @@ else:
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                   linuxSystemInstall_check+' install clang')
-        # turbo-JPEG - https://github.com/rrawther/libjpeg-turbo.git -- 2.0.6.2
-        os.system(
-            '(cd '+deps_dir+'; git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git )')
-        os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
-                  ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
-        # RPP
+    elif "redhat" in platfromInfo or "SLES" in platfromInfo:
+        # Nasm & Yasm
         os.system('sudo -v')
-        os.system('(cd '+deps_dir+'; git clone -b '+rppVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git; cd rpp; mkdir build-'+backend+'; cd build-'+backend+'; ' +
-                  linuxCMake+' -DBACKEND='+backend+' ../; make -j4; sudo make install)')
-        # Turn off for CentOS - TBD: TURN ON when RPP is supported on CentOS
-        # else:
-        # Nasm
-        # os.system('(cd '+deps_dir+'; curl -O -L https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2 )')
-        # os.system('(cd '+deps_dir+'; tar xjvf nasm-2.14.02.tar.bz2 )')
-        # os.system('(cd '+deps_dir+'/nasm-2.14.02; ./autogen.sh; ./configure; make -j8 )')
-        # os.system('sudo -v')
-        # os.system('(cd '+deps_dir+'/nasm-2.14.02; sudo '+linuxFlag+' make install )')
-        # Yasm
-        # os.system('(cd '+deps_dir+'; curl -O -L https://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz )')
-        # os.system('(cd '+deps_dir+'; tar xzvf yasm-1.3.0.tar.gz )')
-        # os.system('(cd '+deps_dir+'/yasm-1.3.0; ./configure; make -j8 )')
-        # os.system('sudo -v')
-        # os.system('(cd '+deps_dir+'/yasm-1.3.0; sudo '+linuxFlag+' make install )')
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                  ' '+linuxSystemInstall_check+' install nasm yasm')
         # JSON-cpp
-        # os.system('sudo -v')
-        # os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check+' install jsoncpp')
-        # clang+boost
-        # os.system('sudo -v')
-        # os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check+' install boost-devel clang')
-        # turbo-JPEG
-        # os.system('(cd '+deps_dir+'; wget https://downloads.sourceforge.net/libjpeg-turbo/libjpeg-turbo-2.0.3.tar.gz )')
-        # os.system('(cd '+deps_dir+'; tar xf libjpeg-turbo-2.0.3.tar.gz )')
-        # os.system('(cd '+deps_dir+'/libjpeg-turbo-2.0.3; mkdir build; cd build; '+linuxCMake+' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
-        # RPP
-        # os.system('(cd '+deps_dir+'; git clone -b '+rppVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git; cd rpp; mkdir build; cd build; '+linuxCMake+' -DBACKEND=OCL ../; make -j4; sudo make install)')
+        os.system('sudo -v')
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
+                  linuxSystemInstall_check+' install jsoncpp-devel')
+        # boost
+        os.system('sudo -v')
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
+                  linuxSystemInstall_check+' install boost-devel')
+        # lmbd
+        os.system('sudo -v')
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
+                  linuxSystemInstall_check+' install lmdb-devel')
+
+    # turbo-JPEG - https://github.com/rrawther/libjpeg-turbo.git -- 2.0.6.2
+    os.system(
+        '(cd '+deps_dir+'; git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git )')
+    os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
+              ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
+    # RPP
+    os.system('sudo -v')
+    os.system('(cd '+deps_dir+'; git clone -b '+rppVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git; cd rpp; mkdir build-'+backend+'; cd build-'+backend+'; ' +
+              linuxCMake+' -DBACKEND='+backend+' -DCMAKE_INSTALL_PREFIX='+ROCM_PATH+' ../; make -j4; sudo make install)')
+    # RapidJSON
+    os.system('sudo -v')
+    os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +
+              linuxCMake+' ../; make -j4; sudo make install)')
+    # PyBind11
+    os.system('sudo -v')
+    os.system('pip install pytest==3.1')
+    os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
+              linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j4; sudo make install)')
+    # CuPy Install
+    os.system('sudo -v')
+    os.system(linuxSystemInstall+' update')
+    if "Ubuntu" in platfromInfo:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                  ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev')
+    else:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                  ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-devel hipcub-devel python3-devel')
+    os.system('sudo -v')
+    os.system('(cd '+deps_dir+'; git clone https://github.com/ROCmSoftwarePlatform/cupy.git; export CUPY_INSTALL_USE_HIP=1; export ROCM_HOME=/opt/rocm; cd cupy; git submodule update --init; pip install -e . --no-cache-dir -vvvv)')
+    os.system('pip install numpy==1.21')
 
     # Install ffmpeg
     if "Ubuntu" in platfromInfo:
