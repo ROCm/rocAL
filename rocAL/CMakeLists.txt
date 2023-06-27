@@ -39,6 +39,8 @@ set(BOOST_COMPONENTS filesystem system)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
+find_package(LMDB QUIET)	
+find_package(RapidJSON QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -49,7 +51,9 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
+    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032")	
+    set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
         SET(BUILD_ROCAL true)
@@ -163,6 +167,14 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
+if(NOT LMDB_FOUND)	
+    set(BUILD_ROCAL false)	
+    message("-- ${Yellow}NOTE: rocAL library requires LMDB, Not Found ${ColourReset}")	
+endif()	
+if(NOT RapidJSON_FOUND)	
+    set(BUILD_ROCAL false)	
+    message("-- ${Yellow}NOTE: rocAL library requires RapidJSON, Not Found ${ColourReset}")	
+endif()
 
 if(${BUILD_ROCAL})
     # AMD RPP
@@ -186,8 +198,11 @@ if(${BUILD_ROCAL})
     # Protobuf
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
-    # LMDB -- TBD: FIND PACKAGE Required
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} lmdb)
+    # LMDB	
+    include_directories(${LMDB_INCLUDE_DIRS})	
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})	
+    # RapidJSON	
+    include_directories(${RapidJSON_INCLUDE_DIRS})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
@@ -211,7 +226,6 @@ if(${BUILD_ROCAL})
                 ./include/pipeline/
                 ./include/readers/image/
                 ./include/readers/video/
-                ./../third_party/rapidjson/include/
                 )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})

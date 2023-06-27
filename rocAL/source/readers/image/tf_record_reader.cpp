@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,7 @@ THE SOFTWARE.
 
 namespace filesys = boost::filesystem;
 
-TFRecordReader::TFRecordReader():
-    _shuffle_time("shuffle_time", DBG_TIMING)
+TFRecordReader::TFRecordReader()
 {
     _src_dir = nullptr;
     _sub_dir = nullptr;
@@ -84,10 +83,8 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc)
         }
     }
     //shuffle dataset if set
-    _shuffle_time.start();
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
-    _shuffle_time.end();
     return ret;
 }
 
@@ -135,10 +132,8 @@ int TFRecordReader::release()
 
 void TFRecordReader::reset()
 {
-    _shuffle_time.start();
     if (_shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
-    _shuffle_time.end();
     _read_counter = 0;
     _curr_file_idx = 0;
 }

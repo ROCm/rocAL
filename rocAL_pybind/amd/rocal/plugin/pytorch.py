@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -88,12 +88,14 @@ class ROCALGenericIterator(object):
         color_format = b.getOutputColorFormat(self.loader._handle)
         self.p = (1 if (color_format == int(types.GRAY)) else 3)
         self.labels_size = ((self.bs*self.loader._numOfClasses) if (self.loader._oneHotEncoding == True) else self.bs)
-        if tensor_layout == types.NCHW:
+        if self.tensor_format == types.NCHW:
             if self.device == "cpu":
                 if self.tensor_dtype == types.FLOAT:
                     self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float32)
                 elif self.tensor_dtype == types.FLOAT16:
                     self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float16)
+                elif self.tensor_dtype == types.UINT8:
+                    self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.uint8)
                 self.labels = torch.empty(self.labels_size, dtype = torch.int32)
 
             else:
@@ -102,6 +104,8 @@ class ROCALGenericIterator(object):
                     self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float32, device = torch_gpu_device)
                 elif self.tensor_dtype == types.FLOAT16:
                     self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.float16, device = torch_gpu_device)
+                elif self.tensor_dtype ==types.UINT8:
+                    self.out = torch.empty((self.bs*self.n, self.p, int(self.h/self.bs), self.w,), dtype=torch.uint8, device = torch_gpu_device)
                 self.labels = torch.empty(self.labels_size, dtype = torch.int32, device = torch_gpu_device)
 
         else: #NHWC
@@ -110,6 +114,8 @@ class ROCALGenericIterator(object):
                     self.out = torch.empty((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype=torch.float32)
                 elif self.tensor_dtype == types.FLOAT16:
                     self.out = torch.empty((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype=torch.float16)
+                elif self.tensor_dtype == types.UINT8:
+                    self.out = torch.empty((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype=torch.uint8)
                 self.labels = torch.empty(self.labels_size, dtype = torch.int32)
 
             else:
@@ -118,8 +124,9 @@ class ROCALGenericIterator(object):
                     self.out = torch.empty((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype=torch.float32, device=torch_gpu_device)
                 elif self.tensor_dtype == types.FLOAT16:
                     self.out = torch.empty((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype=torch.float16, device=torch_gpu_device)
+                elif self.tensor_dtype == types.UINT8:
+                    self.out = torch.empty((self.bs*self.n, int(self.h/self.bs), self.w, self.p), dtype=torch.uint8, device=torch_gpu_device)
                 self.labels = torch.empty(self.labels_size, dtype = torch.int32, device = torch_gpu_device)
-
 
         if self.bs != 0:
             self.len = b.getRemainingImages(self.loader._handle)//self.bs
@@ -136,7 +143,7 @@ class ROCALGenericIterator(object):
         if self.loader.run() != 0:
             raise StopIteration
 
-        self.loader.copyToTensor(
+        self.loader.copyToExternalTensor(
             self.out, self.multiplier, self.offset, self.reverse_channels, self.tensor_format, self.tensor_dtype)
 
         if((self.loader._name == "Caffe2ReaderDetection") or (self.loader._name == "CaffeReaderDetection")):

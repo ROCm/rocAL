@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -59,6 +59,23 @@ extern "C"  RocalImage  ROCAL_API_CALL rocalResize(RocalContext context, RocalIm
                                                    unsigned resize_shorter = 0,
                                                    unsigned resize_longer = 0,
                                                    RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
+
+/// Accepts U8 and RGB24 input.
+/// \param context Rocal context
+/// \param input Input Rocal Image
+/// \param dest_width The output width
+/// \param dest_height The output height
+/// \param mean The channel mean values
+/// \param std_dev The channel standard deviation values
+/// \param is_output True: the output image is needed by user and will be copied to output buffers using the data
+/// transfer API calls. False: the output image is just an intermediate image, user is not interested in
+/// using it directly. This option allows certain optimizations to be achieved.
+/// \param p_mirror Parameter to enable horizontal flip for output image.
+/// \return
+extern "C"  RocalImage  ROCAL_API_CALL rocalResizeMirrorNormalize(RocalContext p_context, RocalImage p_input,
+                                                                  unsigned dest_width, unsigned dest_height,
+                                                                  std::vector<float> &mean, std::vector<float> &std_dev,
+                                                                  bool is_output, RocalIntParam p_mirror = NULL);
 
 /// Accepts U8 and RGB24 input.
 /// \param context

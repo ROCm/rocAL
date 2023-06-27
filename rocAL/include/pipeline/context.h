@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,7 @@ struct Context
     _user_batch_size(batch_size)
     {
         LOG("Processing on " + STR(((affinity == RocalAffinity::CPU)?" CPU": " GPU")))
-        master_graph = std::make_shared<MasterGraph>(batch_size, affinity, gpu_id, prefetch_queue_depth, output_tensor_type);
-        _internal_batch_size = master_graph->internal_batch_size();
+        master_graph = std::make_shared<MasterGraph>(batch_size, affinity, cpu_thread_count, gpu_id, prefetch_queue_depth, output_tensor_type);
     }
     ~Context()
     {
@@ -52,10 +51,8 @@ struct Context
         return master_graph->timing();
     }
     size_t user_batch_size() { return _user_batch_size; }
-    size_t internal_batch_size() { return _internal_batch_size; }
 private:
     void clear_errors() { error = "";}
     std::string error;
     size_t _user_batch_size;
-    size_t _internal_batch_size;
 };

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -112,9 +112,6 @@ public:
 
     //! Returns the number of items remained in this resource
     virtual unsigned count_items() = 0;
-
-    //! return shuffle_time if applicable
-    virtual unsigned long long get_shuffle_time() = 0;
 
     virtual ~VideoReader() = default;
 };

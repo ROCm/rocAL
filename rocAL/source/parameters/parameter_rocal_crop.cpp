@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -52,9 +52,9 @@ void RocalCropParam::fill_crop_dims() {
             // Evaluating user given crop
             cropw_arr_val[img_idx] = (crop_w <= in_width[img_idx] && crop_w > 0) ? crop_w : in_width[img_idx];
             croph_arr_val[img_idx] = (crop_h <= in_height[img_idx] && crop_h > 0) ? crop_h : in_height[img_idx];
-            if (_is_center_crop) {
-                x1_arr_val[img_idx] = static_cast<size_t>(0.5 * (in_width[img_idx] - cropw_arr_val[img_idx]));
-                y1_arr_val[img_idx] = static_cast<size_t>(0.5 * (in_height[img_idx] - croph_arr_val[img_idx]));
+            if (_is_fixed_crop) {
+                x1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[0] * (in_width[img_idx] - cropw_arr_val[img_idx])));
+                y1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[1] * (in_height[img_idx] - croph_arr_val[img_idx])));
             } else {
               x1_arr_val[img_idx] = (x1 >= in_width[img_idx]) ? 0 : x1;
               y1_arr_val[img_idx] = (y1 >= in_height[img_idx]) ? 0 : y1;

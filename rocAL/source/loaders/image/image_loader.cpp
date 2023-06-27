@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -288,7 +288,7 @@ ImageLoader::update_output_image()
     }
     _output_names = _output_decoded_img_info._image_names;
     _output_image->update_image_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
-
+    _output_image->update_image_original_dims(_output_decoded_img_info._original_width, _output_decoded_img_info._original_height);
     _circ_buff.pop();
     if (!_loop)
         _remaining_image_count -= _batch_size;

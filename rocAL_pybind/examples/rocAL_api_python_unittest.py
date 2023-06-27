@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,26 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from amd.rocal.plugin.pytorch import ROCALClassificationIterator
+from amd.rocal.plugin.generic import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 from parse_config import parse_args
 import os
+import cupy as cp
 
 def draw_patches(img, idx, device):
     #image is expected as a tensor, bboxes as numpy
     import cv2
     args = parse_args()
-    if device == "cpu":
-            image = img.detach().numpy()
-    else:
-        image = img.cpu().numpy()
+    if device == "gpu":
+        img = cp.asnumpy(img)
     if not args.NHWC:
-        image = image.transpose([1, 2, 0])
+        img = img.transpose([1, 2, 0])
     if args.fp16:
-        image = (image).astype('uint8')
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name + "/" + str(idx)+"_"+"train"+".png", image)
+        img = (img).astype('uint8')
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + args.augmentation_name + "/" + str(idx)+"_"+"train"+".png", img)
 
 
 def main():
@@ -66,7 +65,7 @@ def main():
     except OSError as error:
         print(error)
     # Create Pipeline instance
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC if args.NHWC else types.NCHW , tensor_dtype=types.FLOAT16 if args.fp16 else types.FLOAT)
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=local_rank, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC if args.NHWC else types.NCHW , tensor_dtype=types.FLOAT16 if args.fp16 else types.FLOAT)
     # Set Params
     output_set = 0
     rocal_device = 'cpu' if rocal_cpu else 'gpu'
@@ -129,12 +128,22 @@ def main():
             output = fn.color_twist(images)
         elif augmentation_name == "crop_mirror_normalize":
             output = fn.crop_mirror_normalize(images, device="cpu",
-                                              output_dtype=types.FLOAT16 if args.fp16 else types.FLOAT,
-                                              output_layout=types.NHWC if args.NHWC else types.NCHW,
+                                              output_dtype=types.UINT8,
+                                              output_layout=types.NHWC,
                                               crop=(300, 300),
                                               image_type=types.RGB,
                                               mean=[0, 0, 0],
                                               std=[1, 1, 1])
+        elif augmentation_name == "resize_mirror_normalize":
+            output = fn.resize_mirror_normalize(images,
+                                            device="gpu",
+                                            output_dtype=types.UINT8,
+                                            output_layout=types.NHWC,
+                                            resize_min = 1344,
+                                            resize_max = 1344,
+                                            image_type=types.RGB,
+                                            mean=[0, 0, 0],
+                                            std=[1, 1, 1])
         elif augmentation_name == "nop":
             output = fn.nop(images)
         elif augmentation_name == "centre_crop":
@@ -166,9 +175,8 @@ def main():
     # build the pipeline
     pipe.build()
     # Dataloader
-    data_loader = ROCALClassificationIterator(pipe,device=device)
+    data_loader = ROCALClassificationIterator(pipe,device=device,device_id=local_rank)
     cnt = 0
-
     import timeit
     start = timeit.default_timer()
 
@@ -186,7 +194,7 @@ def main():
             for img in it[0]:
                 cnt = cnt+1
                 if display:
-                    draw_patches(img, cnt, device)
+                    draw_patches(img, cnt, rocal_device)
 
             break
         data_loader.reset()

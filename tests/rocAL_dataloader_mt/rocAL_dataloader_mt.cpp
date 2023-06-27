@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -157,10 +157,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
             break;
         // copy output to host as image
         rocalCopyToOutput(handle, mat_input.data, h*w*p);
-        if (gpu_mode<0)
-          rocalGetImageLabels(handle, labels.data());
-        else
-          rocalGetImageLabels(handle, labels.data(), ROCAL_MEMCPY_TO_HOST);
+        rocalGetImageLabels(handle, labels.data());
         int img_name_size = rocalGetImageNameLen(handle, image_name_length);
         char img_name[img_name_size];
         rocalGetImageName(handle, img_name);

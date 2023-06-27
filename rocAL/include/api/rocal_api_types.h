@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -135,6 +135,13 @@ enum RocalDecoderType
     ROCAL_DECODER_HW_JPEG = 2,
     ROCAL_DECODER_VIDEO_FFMPEG_SW = 3,
     ROCAL_DECODER_VIDEO_FFMPEG_HW = 4
+};
+
+enum RocalOutputMemType
+{
+    ROCAL_MEMCPY_HOST = 0,
+    ROCAL_MEMCPY_GPU = 1,
+    ROCAL_MEMCPY_PINNED = 2
 };
 
 // rocal external memcpy flags 

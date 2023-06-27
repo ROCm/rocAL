@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -123,7 +123,7 @@ extern "C" unsigned ROCAL_API_CALL rocalGetImageNameLen(RocalContext rocal_conte
 
 /// \param meta_data RocalMetaData object that contains info about the images and labels
 /// \param buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
-extern "C" void ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context, void* buf,  unsigned int flags=0);
+extern "C" void ROCAL_API_CALL rocalGetImageLabels(RocalContext rocal_context, void* buf,  RocalOutputMemType output_mem_type = RocalOutputMemType::ROCAL_MEMCPY_HOST);
 
 ///
 /// \param rocal_context

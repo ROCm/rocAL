@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,7 @@ THE SOFTWARE.
 
 namespace filesys = boost::filesystem;
 
-FileSourceReader::FileSourceReader():
-_shuffle_time("shuffle_time", DBG_TIMING)
+FileSourceReader::FileSourceReader()
 {
     _src_dir = nullptr;
     _sub_dir = nullptr;
@@ -73,12 +72,10 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc)
         }
     }
     //shuffle dataset if set
-    _shuffle_time.start();
     if( ret==Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
-    _shuffle_time.end();
-    return ret;
 
+    return ret;
 }
 
 void FileSourceReader::incremenet_read_ptr()
@@ -152,9 +149,7 @@ FileSourceReader::release()
 
 void FileSourceReader::reset()
 {
-    _shuffle_time.start();
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
-    _shuffle_time.end();
     _read_counter = 0;
     _curr_file_idx = 0;
 }
@@ -245,13 +240,14 @@ Reader::Status FileSourceReader::open_folder()
         std::string file_path = _folder_path;
         file_path.append("/");
         file_path.append(_entity->d_name);
-        _last_file_name = file_path;
         _file_names.push_back(file_path);
         _file_count_all_shards++;
         incremenet_file_id();
     }
     if(_file_names.empty())
         WRN("FileReader ShardID ["+ TOSTR(_shard_id)+ "] Did not load any file from " + _folder_path)
+    std::sort(_file_names.begin(), _file_names.end());
+    _last_file_name = _file_names[_file_names.size()-1];
 
     closedir(_src_dir);
     return Reader::Status::OK;

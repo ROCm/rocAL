@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,6 @@ public:
     ~SequenceFileSourceReader() override;
 
     int close() override;
-    unsigned long long get_shuffle_time() override {return _shuffle_time.get_timing();};
 
     SequenceFileSourceReader();
 
@@ -105,6 +104,5 @@ private:
     void incremenet_sequence_id() { _sequence_id++; }
     void replicate_last_sequence_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    TimingDBG _shuffle_time;
 };
 

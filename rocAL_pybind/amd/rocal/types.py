@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,14 @@ from rocal_pybind.types import GPU
 from rocal_pybind.types import CPU
 
 #  RocalTensorOutputType
+from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
+
+#  RocalOutputMemType
+from rocal_pybind.types import CPU_MEMORY
+from rocal_pybind.types import GPU_MEMORY
+from rocal_pybind.types import PINNED_MEMORY
 
 # RocalImageSizeEvaluationPolicy
 from rocal_pybind.types import MAX_SIZE
@@ -87,8 +93,12 @@ _known_types = {
 
     GPU: ("GPU", GPU),
     CPU: ("CPU", CPU),
+    UINT8: ("UINT8", UINT8),
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
+    CPU_MEMORY: ("CPU_MEMORY", CPU_MEMORY),
+    GPU_MEMORY: ("GPU_MEMORY", GPU_MEMORY),
+    PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
 
     MAX_SIZE: ("MAX_SIZE", MAX_SIZE),
     USER_GIVEN_SIZE: ("USER_GIVEN_SIZE", USER_GIVEN_SIZE),

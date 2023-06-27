@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -97,9 +97,9 @@ class ROCALGenericIteratorDetection(object):
             raise StopIteration
         
         if(types.NCHW == self.tensor_format):
-            self.loader.copyToTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+            self.loader.copyToExternalTensorNCHW(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
         else:
-            self.loader.copyToTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
+            self.loader.copyToExternalTensorNHWC(self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
 
         if(self.loader._name == "TFRecordReaderDetection"):
             self.bbox_list =[]
@@ -155,11 +155,11 @@ class ROCALGenericIteratorDetection(object):
         elif (self.loader._name == "TFRecordReaderClassification"):
             if(self.loader._oneHotEncoding == True):
                 self.labels = np.zeros((self.bs)*(self.loader._numOfClasses),dtype = "int32")
-                self.loader.GetOneHotEncodedLabels_TF(self.labels)
+                self.loader.GetOneHotEncodedLabels(self.labels, device="cpu")
                 self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._numOfClasses))
             else:
                 self.labels = np.zeros((self.bs),dtype = "int32")
-                self.loader.GetImageLabels(self.labels)
+                self.loader.getImageLabels(self.labels)
 
             if self.tensor_dtype == types.FLOAT:
                 return self.out.astype(np.float32), self.labels

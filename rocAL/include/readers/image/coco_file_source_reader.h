@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,6 @@ public:
     std::string id() override { return _last_id;};
 
     unsigned count_items() override;
-    unsigned long long get_shuffle_time() override {return _shuffle_time.get_timing();};
 
     ~COCOFileSourceReader() override;
 
@@ -104,5 +103,4 @@ private:
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    TimingDBG _shuffle_time;
 };
