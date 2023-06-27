@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ void CropNode::init(unsigned int crop_h, unsigned int crop_w)
     _crop_param->crop_h = crop_h;
     _crop_param->x1 = 0; 
     _crop_param->y1 = 0;
-    _crop_param->set_center_crop();
+    _crop_param->set_fixed_crop(0.5, 0.5);    // for center_crop
 }
 
 

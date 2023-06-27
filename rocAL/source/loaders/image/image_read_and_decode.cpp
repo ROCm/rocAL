@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,6 @@ ImageReadAndDecode::timing()
     Timing t;
     t.image_decode_time = _decode_time.get_timing();
     t.image_read_time = _file_load_time.get_timing();
-    t.shuffle_time = _reader->get_shuffle_time();
     return t;
 }
 
@@ -98,6 +97,7 @@ ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_con
             _decoder[i]->initialize(device_id);
         }
     }
+    _num_threads = reader_config.get_cpu_num_threads();
     _reader = create_reader(reader_config);
 }
 
@@ -217,7 +217,7 @@ ImageReadAndDecode::load(unsigned char* buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-#pragma omp parallel for num_threads(_batch_size)  // default(none) TBD: option disabled in Ubuntu 20.04
+#pragma omp parallel for num_threads(_num_threads)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++)
         {
             // initialize the actual decoded height and width with the maximum
@@ -226,7 +226,27 @@ ImageReadAndDecode::load(unsigned char* buff,
             int original_width, original_height, jpeg_sub_samp;
             if (_decoder[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
                                          &jpeg_sub_samp) != Decoder::Status::OK) {
-                    continue;
+                    // Substituting the image which failed decoding with other image from the same batch
+                    int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
+                    while ((j >= 0)) 
+                    {
+                        if (_decoder[i]->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
+                            &jpeg_sub_samp) == Decoder::Status::OK) 
+                        {
+                                _image_names[i] =  _image_names[j];
+                                _compressed_buff[i] =  _compressed_buff[j];
+                                _actual_read_size[i] =  _actual_read_size[j];
+                                _compressed_image_size[i] =  _compressed_image_size[j];
+                                break;                                
+
+                        }
+                        else
+                            j--;
+                        if(j < 0) 
+                        {
+                            THROW("All images in the batch failed decoding\n");
+                        }                                    
+                    }
             }
             _original_height[i] = original_height;
             _original_width[i] = original_width;

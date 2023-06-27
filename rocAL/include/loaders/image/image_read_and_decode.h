@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -90,7 +90,7 @@ private:
     std::vector<size_t> _original_height;
     static const size_t MAX_COMPRESSED_SIZE = 1*1024*1024; // 1 Meg
     TimingDBG _file_load_time, _decode_time;
-    size_t _batch_size;
+    size_t _batch_size, _shard_count, _num_threads;
     DecoderConfig _decoder_config;
     bool decoder_keep_original;
     std::vector<std::vector <float>> _bbox_coords, _crop_coords_batch;

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ class Graph
 {
 public:
     enum class Status { OK = 0 };
-    Graph(vx_context context, RocalAffinity affinity, int cpu_id = 0, int gpu_id = 0 );
+    Graph(vx_context context, RocalAffinity affinity, int cpu_id = 0, size_t cpu_num_threads = 1, int gpu_id = 0 );
     Status verify();
     Status process();
     Status release();

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,6 @@ VideoReadAndDecode::timing()
     Timing t;
     t.video_decode_time = _decode_time.get_timing();
     t.video_read_time = _file_load_time.get_timing();
-    t.shuffle_time = _video_reader->get_shuffle_time();
     return t;
 }
 

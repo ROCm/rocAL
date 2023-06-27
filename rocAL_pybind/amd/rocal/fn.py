@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -283,6 +283,26 @@ def resize(*inputs, bytes_per_sample_hint=0, image_type=0, interp_type=1, mag_fi
     resized_image = b.Resize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (resized_image)
 
+def resize_mirror_normalize(*inputs, bytes_per_sample_hint=0, resize_min=0, resize_max=0, 
+                            image_type=0, mean=[0.0], mirror=1, output_dtype=types.FLOAT, output_layout=types.NCHW, pad_output=False,
+                            preserve=False, seed=1, std=[1.0], device=None):
+
+    if isinstance(mirror,int):
+        if(mirror == 0):
+            mirror = b.CreateIntParameter(0)
+        else:
+            mirror = b.CreateIntParameter(1)
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0], "resize_min":resize_min, "resize_max":resize_max, "mean":mean, "std_dev":std,
+                     "is_output": False, "mirror": mirror}
+    rmn = b.ResizeMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    Pipeline._current_pipeline._tensor_layout = output_layout
+    Pipeline._current_pipeline._tensor_dtype = output_dtype
+    Pipeline._current_pipeline._multiplier = list(map(lambda x: 1/x ,std))
+    Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
+    return (rmn)
+
 def random_crop(*inputs, crop_area_factor=[0.08, 1], crop_aspect_ratio=[0.75, 1.333333],
             crop_pox_x=0, crop_pox_y=0, device = None):
     # pybind call arguments
@@ -424,13 +444,9 @@ def crop_mirror_normalize(*inputs, bytes_per_sample_hint=0, crop=[0, 0], crop_d=
             mirror = b.CreateIntParameter(1)
 
     # pybind call arguments
-    kwargs_pybind = {"input_image0": inputs[0], "crop_depth":crop_depth, "crop_height":crop_height, "crop_width":crop_width, "start_x":0, "start_y":0, "start_z":0, "mean":mean, "std_dev":std,
+    kwargs_pybind = {"input_image0": inputs[0], "crop_depth":crop_depth, "crop_height":crop_height, "crop_width":crop_width, "start_x":crop_pos_x, "start_y":crop_pos_y, "start_z":crop_pos_z, "mean":mean, "std_dev":std,
                      "is_output": False, "mirror": mirror}
     cmn = b.CropMirrorNormalize(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
-    Pipeline._current_pipeline._tensor_layout = output_layout
-    Pipeline._current_pipeline._tensor_dtype = output_dtype
-    Pipeline._current_pipeline._multiplier = list(map(lambda x: 1/x ,std))
-    Pipeline._current_pipeline._offset = list(map(lambda x,y: -(x/y), mean, std))
     return (cmn)
 
 def centre_crop(*inputs, bytes_per_sample_hint=0, crop=[100, 100], crop_d=1, crop_h= 0, crop_pos_x = 0.5, crop_pos_y = 0.5, crop_pos_z = 0.5,

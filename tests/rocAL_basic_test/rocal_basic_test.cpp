@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -181,10 +181,7 @@ int main(int argc, const char ** argv)
             rocalCopyToOutput(handle, mat_input.data, h * w * p);
 
             counter += inputBatchSize;
-            if (processing_device == 1)
-                rocalGetImageLabels(handle, labels.data(), ROCAL_MEMCPY_TO_HOST);
-            else
-                rocalGetImageLabels(handle, labels.data());
+            rocalGetImageLabels(handle, labels.data());
 
             unsigned imagename_size = rocalGetImageNameLen(handle,ImageNameLen);
             char imageNames[imagename_size];

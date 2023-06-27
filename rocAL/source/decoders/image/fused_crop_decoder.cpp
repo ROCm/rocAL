@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -90,7 +90,7 @@ Decoder::Status FusedCropTJDecoder::decode(unsigned char *input_buffer, size_t i
                       max_decoded_width * planes,
                       max_decoded_height,
                       tjpf,
-                      TJFLAG_FASTDCT, &x1_diff, &crop_width_diff,
+                      TJFLAG_ACCURATEDCT, &x1_diff, &crop_width_diff,
                       _crop_window.x, _crop_window.y, _crop_window.W, _crop_window.H) != 0) {
         WRN("Jpeg image decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
         return Status::CONTENT_DECODE_FAILED;

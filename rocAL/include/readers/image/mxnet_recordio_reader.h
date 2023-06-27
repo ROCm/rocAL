@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ public:
     int close() override;
 
     MXNetRecordIOReader();
-    unsigned long long get_shuffle_time() override {return 0;}
+
 private:
     //! opens the folder containnig the images
     Reader::Status record_reading();
@@ -108,6 +108,5 @@ private:
     const uint32_t _kMagic = 0xced7230a;
     int64_t _seek_pos, _data_size_to_read;
     ImageRecordIOHeader _hdr;
-    TimingDBG _shuffle_time;
 };
 

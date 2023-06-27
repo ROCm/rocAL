@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include "exception.h"
 #include "log.h"
 
+// Calculated from the largest resize shorter dimension in imagenet validation dataset
+#define MAX_ASPECT_RATIO 6.0f
 
 enum class RocalTensorFormat
 {
@@ -95,7 +97,6 @@ struct Timing
     long long unsigned label_load_time= 0;
     long long unsigned bb_load_time= 0;
     long long unsigned mask_load_time = 0;
-    long long unsigned shuffle_time = 0;
     long long unsigned video_read_time= 0;
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
