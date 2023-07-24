@@ -33,7 +33,7 @@
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
-* MIVisionX - [rocm-5.6.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/releases/tag/rocm-5.6.0)
+* MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
 * Dependencies for all the above packages
 * rocAL Setup Script - `V1.0.2`
 
