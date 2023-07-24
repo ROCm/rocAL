@@ -30,7 +30,7 @@ else:
 __author__ = "Kiriti Nagesh Gowda"
 __copyright__ = "Copyright 2022 - 2023, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Kiriti Nagesh Gowda"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
@@ -43,10 +43,10 @@ parser.add_argument('--opencv',    	type=str, default='4.6.0',
                     help='OpenCV Version - optional (default:4.6.0)')
 parser.add_argument('--protobuf',  	type=str, default='3.12.4',
                     help='ProtoBuf Version - optional (default:3.12.4)')
-parser.add_argument('--rpp',   		type=str, default='1.1.0',
-                    help='RPP Version - optional (default:1.1.0)')
-parser.add_argument('--mivisionx',   		type=str, default='rocm-5.4.1',
-                    help='MIVisionX Version - optional (default:rocm-5.4.1)')
+parser.add_argument('--rpp',   		type=str, default='1.2.0',
+                    help='RPP Version - optional (default:1.2.0)')
+parser.add_argument('--mivisionx',   		type=str, default='rocm-5.6.0',
+                    help='MIVisionX Version - optional (default:rocm-5.6.0)')
 parser.add_argument('--pybind11',   type=str, default='v2.10.4',
                     help='PyBind11 Version - optional (default:v2.10.4)')
 parser.add_argument('--reinstall', 	type=str, default='no',
@@ -346,7 +346,7 @@ else:
               linuxCMake+' ../; make -j4; sudo make install)')
     # PyBind11
     os.system('sudo -v')
-    os.system('pip install pytest==3.1')
+    os.system('pip install pytest==7.3.1')
     os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
               linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j4; sudo make install)')
     # CuPy Install
@@ -434,6 +434,6 @@ else:
     # MIVisionX
     os.system('sudo -v')
     os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
-              linuxCMake+' -DBACKEND='+backend+' ../; make -j4; sudo make install)')
+              linuxCMake+' -DBACKEND='+backend+' -DROCAL=OFF ../; make -j4; sudo make install)')
 
     print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")

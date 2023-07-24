@@ -23,7 +23,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 set -x
                 echo Build rocAL - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
-                python rocAL-setup.py
+                python rocAL-setup.py --backend ${backend}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
                 ${enableSCL}
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..

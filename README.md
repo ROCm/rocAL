@@ -101,8 +101,8 @@ For the convenience of the developer, we here provide the setup script which wil
   python rocAL-setup.py     --directory [setup directory - optional (default:~/)]
                             --opencv    [OpenCV Version - optional (default:4.6.0)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
-                            --rpp       [RPP Version - optional (default:1.1.0)]
-                            --mivisionx [MIVisionX Version - optional (default:rocm-5.4.1)]
+                            --rpp       [RPP Version - optional (default:1.2.0)]
+                            --mivisionx [MIVisionX Version - optional (default:rocm-5.6.0)]
                             --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
                             --reinstall [Remove previous setup and reinstall (default:no)[options:yes/no]]
                             --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
@@ -215,7 +215,7 @@ cmake ../ && make -j$nproc && sudo make install
 
 #### PyBind11 installation
 ```
-pip install pytest==3.1 
+pip install pytest==7.3.1 
 git clone -b  https://github.com/pybind/pybind11 
 cd pybind11 && mkdir build && cd build
 cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install
@@ -228,7 +228,8 @@ cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make insta
 * ROCm: rocm-core - `5.4.0.50400-72`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* RPP - [1.1.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.1.0)
+* RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
+* MIVisionX - [rocm-5.6.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/releases/tag/rocm-5.6.0)
 * Dependencies for all the above packages
-* rocAL Setup Script - `V1.0.1`
+* rocAL Setup Script - `V1.0.2`
