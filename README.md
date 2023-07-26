@@ -102,7 +102,7 @@ For the convenience of the developer, we here provide the setup script which wil
                             --opencv    [OpenCV Version - optional (default:4.6.0)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
                             --rpp       [RPP Version - optional (default:1.2.0)]
-                            --mivisionx [MIVisionX Version - optional (default:rocm-5.6.0)]
+                            --mivisionx [MIVisionX Version - optional (default:master)]
                             --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
                             --reinstall [Remove previous setup and reinstall (default:no)[options:yes/no]]
                             --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
@@ -190,7 +190,7 @@ sudo apt-get install nasm
 ```
 
 ```
-git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git
+git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git
 cd libjpeg-turbo && mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr \
       -DCMAKE_BUILD_TYPE=RELEASE  \
