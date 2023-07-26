@@ -69,7 +69,7 @@ rocAL can be currently used to perform the following operations either with rand
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
   + CentOS - `7` / `8`
-  + SLES - `15-SP2`
+  + SLES - `15-SP4`
 *  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
 *  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
 *  [Boost library](https://www.boost.org) - Version `1.72` or higher
