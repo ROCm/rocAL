@@ -24,100 +24,171 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_PARAMETERS_H
 #include "rocal_api_types.h"
 
-///
-/// \param seed
-extern "C"  void ROCAL_API_CALL rocalSetSeed( unsigned seed);
+/*!
+ * \file
+ * \brief The AMD rocAL Library - Parameters
+ *
+ * \defgroup group_rocal_parameters API: AMD rocAL - Parameter API
+ * \brief The AMD rocAL Parameters.
+ */
 
-///
-/// \return
-extern "C"  unsigned  ROCAL_API_CALL rocalGetSeed();
+/*!
+ * \brief  rocalSetSeed
+ * \ingroup group_rocal_parameters
+ *
+ * \param seed
+ */
+extern "C" void ROCAL_API_CALL rocalSetSeed(unsigned seed);
 
-///
-/// \param start
-/// \param end
-/// \return
-extern "C"  RocalIntParam  ROCAL_API_CALL rocalCreateIntUniformRand(int start, int end);
+/*!
+ * \brief  rocalGetSeed
+ * \ingroup group_rocal_parameters
+ *
+ * \return
+ */
+extern "C" unsigned ROCAL_API_CALL rocalGetSeed();
 
-///
-/// \param start
-/// \param end
-/// \param input_obj
-/// \return
-extern "C"  RocalStatus ROCAL_API_CALL rocalUpdateIntUniformRand(int start, int end, RocalIntParam updating_obj);
+/*!
+ * \brief  rocalCreateIntUniformRand
+ * \ingroup group_rocal_parameters
+ *
+ * \param start
+ * \param end
+ * \return
+ */
+extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntUniformRand(int start, int end);
 
-///
-/// \param obj
-/// \return
-extern "C"  int ROCAL_API_CALL rocalGetIntValue(RocalIntParam obj);
+/*!
+ * \brief  rocalUpdateIntUniformRand
+ * \ingroup group_rocal_parameters
+ *
+ * \param start
+ * \param end
+ * \param input_obj
+ * \return
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalUpdateIntUniformRand(int start, int end, RocalIntParam updating_obj);
 
-///
-/// \param obj
-/// \return
-extern "C"  float ROCAL_API_CALL rocalGetFloatValue(RocalFloatParam obj);
+/*!
+ * \brief  rocalGetIntValue
+ * \ingroup group_rocal_parameters
+ *
+ * \param obj
+ * \return
+ */
+extern "C" int ROCAL_API_CALL rocalGetIntValue(RocalIntParam obj);
 
-///
-/// \param start
-/// \param end
-/// \return
-extern "C"  RocalFloatParam  ROCAL_API_CALL rocalCreateFloatUniformRand(float start, float end);
+/*!
+ * \brief  rocalGetFloatValue
+ * \ingroup group_rocal_parameters
+ *
+ * \param obj
+ * \return
+ */
+extern "C" float ROCAL_API_CALL rocalGetFloatValue(RocalFloatParam obj);
 
-///
-/// \param val
-/// \return
-extern "C"  RocalFloatParam  ROCAL_API_CALL rocalCreateFloatParameter(float val);
+/*!
+ * \brief  rocalCreateFloatUniformRand
+ * \ingroup group_rocal_parameters
+ *
+ * \param start
+ * \param end
+ * \return
+ */
+extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatUniformRand(float start, float end);
 
-///
-/// \param val
-/// \return
-extern "C"  RocalIntParam  ROCAL_API_CALL rocalCreateIntParameter(int val);
+/*!
+ * \brief  rocalCreateFloatParameter
+ * \ingroup group_rocal_parameters
+ *
+ * \param val
+ * \return
+ */
+extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatParameter(float val);
 
-///
-/// \param new_val
-/// \param input_obj
-/// \return
-extern "C" RocalStatus  ROCAL_API_CALL rocalUpdateFloatParameter(float new_val, RocalFloatParam input_obj);
+/*!
+ * \brief  rocalCreateIntParameter
+ * \ingroup group_rocal_parameters
+ *
+ * \param val
+ * \return
+ */
+extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntParameter(int val);
 
-///
-/// \param new_val
-/// \param input_obj
-/// \return
-extern "C" RocalStatus  ROCAL_API_CALL rocalUpdateIntParameter(int new_val, RocalIntParam input_obj);
+/*!
+ * \brief  rocalUpdateFloatParameter
+ * \ingroup group_rocal_parameters
+ *
+ * \param new_val
+ * \param input_obj
+ * \return
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatParameter(float new_val, RocalFloatParam input_obj);
 
-///
-/// \param start
-/// \param end
-/// \param input_obj
-/// \return
-extern "C"  RocalStatus ROCAL_API_CALL rocalUpdateFloatUniformRand(float start, float end, RocalFloatParam updating_obj);
+/*!
+ * \brief  rocalUpdateIntParameter
+ * \ingroup group_rocal_parameters
+ *
+ * \param new_val
+ * \param input_obj
+ * \return
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalUpdateIntParameter(int new_val, RocalIntParam input_obj);
 
-///
-/// \param values
-/// \param frequencies
-/// \param size
-/// \return
-extern "C"  RocalIntParam  ROCAL_API_CALL rocalCreateIntRand(const int *values, const double *frequencies, unsigned size);
+/*!
+ * \brief  rocalUpdateFloatUniformRand
+ * \ingroup group_rocal_parameters
+ *
+ * \param start
+ * \param end
+ * \param input_obj
+ * \return
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatUniformRand(float start, float end, RocalFloatParam updating_obj);
 
-///
-/// \param values
-/// \param frequencies
-/// \param size
-/// \param updating_obj
-/// \return
-extern "C"  RocalStatus ROCAL_API_CALL rocalUpdateIntRand(const int *values, const double *frequencies, unsigned size, RocalIntParam updating_obj);
+/*!
+ * \brief  rocalCreateIntRand
+ * \ingroup group_rocal_parameters
+ *
+ * \param values
+ * \param frequencies
+ * \param size
+ * \return
+ */
+extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntRand(const int *values, const double *frequencies, unsigned size);
 
-/// Sets the parameters for a new or existing RocalFloatRandGen object
-/// \param values
-/// \param frequencies
-/// \param size
-/// \return
-extern "C"  RocalFloatParam  ROCAL_API_CALL rocalCreateFloatRand(const float *values, const double *frequencies, unsigned size);
+/*!
+ * \brief  rocalUpdateIntRand
+ * \ingroup group_rocal_parameters
+ *
+ * \param values
+ * \param frequencies
+ * \param size
+ * \param updating_obj
+ * \return
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalUpdateIntRand(const int *values, const double *frequencies, unsigned size, RocalIntParam updating_obj);
 
-///
-/// \param values
-/// \param frequencies
-/// \param size
-/// \param updating_obj
-/// \return
-extern "C"  RocalStatus ROCAL_API_CALL rocalUpdateFloatRand(const float *values, const double *frequencies, unsigned size, RocalFloatParam updating_obj);
+/*!
+ * \brief  Sets the parameters for a new or existing RocalFloatRandGen object
+ * \ingroup group_rocal_parameters
+ * \param values
+ * \param frequencies
+ * \param size
+ * \return
+ */
+extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatRand(const float *values, const double *frequencies, unsigned size);
 
-#endif //MIVISIONX_ROCAL_API_PARAMETERS_H
+/*!
+ * \brief  rocalUpdateFloatRand
+ * \ingroup group_rocal_parameters
+ *
+ * \param values
+ * \param frequencies
+ * \param size
+ * \param updating_obj
+ * \return
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatRand(const float *values, const double *frequencies, unsigned size, RocalFloatParam updating_obj);
+
+#endif // MIVISIONX_ROCAL_API_PARAMETERS_H

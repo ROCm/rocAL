@@ -1,5 +1,4 @@
 /*
-MIT License
 Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,12 +44,12 @@ THE SOFTWARE.
  * \ingroup group_rocal
  *
  * \param [in] batch_size
- * \param [in] affinity
+ * \param [in] affinity RocalProcessMode: Defines whether rocal data loading should be on the CPU or GPU.
  * \param [in] gpu_id
  * \param [in] cpu_thread_count
  * \param [in] prefetch_queue_depth
- * \param [in] output_tensor_data_type
- * \return A \ref RocalContext
+ * \param [in] output_tensor_data_type RocalTensorOutputType: Defines whether the output of rocal tensor is FP32 or FP16.
+ * \return A \ref RocalContext - The context for the pipeline
  */
 extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size,
                                                    RocalProcessMode affinity,
@@ -60,29 +59,29 @@ extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size,
                                                    RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
 
 /*!
- * \brief  rocalVerify
+ * \brief  rocalVerify function to verify the graph for all the inputs and outputs
  * \ingroup group_rocal
  *
  * \param [in] context
- * \return A \ref RocalStatus
+ * \return A \ref RocalStatus - A status code indicating the success or failure
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalVerify(RocalContext context);
 
 /*!
- * \brief  rocalRun
+ * \brief  rocalRun function to process and run the built and verified graph.
  * \ingroup group_rocal
  *
  * \param [in] context
- * \return A \ref RocalStatus
+ * \return A \ref RocalStatus - A status code indicating the success or failure
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalRun(RocalContext context);
 
 /*!
- * \brief  rocalRelease
+ * \brief  rocalRelease function to free all the resources allocated during the graph creation process.
  * \ingroup group_rocal
  *
  * \param [in] context
- * \return A \ref RocalStatus
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
 

@@ -24,29 +24,68 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_DATA_TRANSFER_H
 #include "rocal_api_types.h"
 
-extern "C"  RocalStatus   ROCAL_API_CALL rocalCopyToOutput(RocalContext context, unsigned char * out_ptr, size_t out_size);
+/*!
+ * \file
+ * \brief The AMD rocAL Library - Data Transfer
+ *
+ * \defgroup group_rocal_data_transfer API: AMD rocAL - Data Transfer API
+ * \brief The AMD rocAL data transfer functions.
+ */
 
-extern "C"  RocalStatus   ROCAL_API_CALL rocalToTensor32(RocalContext rocal_context, float *out_ptr,
-                                                              RocalTensorLayout tensor_format, float multiplier0,
-                                                              float multiplier1, float multiplier2, float offset0,
-                                                              float offset1, float offset2,
-                                                              bool reverse_channels, RocalOutputMemType output_mem_type);
+/*!
+ * \brief  TBD
+ * \ingroup group_rocal_data_transfer
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalCopyToOutput(RocalContext context, unsigned char *out_ptr, size_t out_size);
 
-extern "C"  RocalStatus   ROCAL_API_CALL rocalToTensor16(RocalContext rocal_context, half *out_ptr,
-                                                              RocalTensorLayout tensor_format, float multiplier0,
-                                                              float multiplier1, float multiplier2, float offset0,
-                                                              float offset1, float offset2,
-                                                              bool reverse_channels, RocalOutputMemType output_mem_type);
+/*!
+ * \brief  TBD
+ * \ingroup group_rocal_data_transfer
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalToTensor32(RocalContext rocal_context, float *out_ptr,
+                                                      RocalTensorLayout tensor_format, float multiplier0,
+                                                      float multiplier1, float multiplier2, float offset0,
+                                                      float offset1, float offset2,
+                                                      bool reverse_channels, RocalOutputMemType output_mem_type);
 
-extern "C"  RocalStatus   ROCAL_API_CALL rocalToTensor(RocalContext rocal_context, void *out_ptr,
-                                                              RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type,
-                                                              float multiplier0, float multiplier1, float multiplier2, float offset0,
-                                                              float offset1, float offset2,
-                                                              bool reverse_channels, RocalOutputMemType output_mem_type);
-///
-/// \param rocal_context
-/// \param output_images The buffer that will be filled with output images with set_output = True
+/*!
+ * \brief  TBD
+ * \ingroup group_rocal_data_transfer
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalToTensor16(RocalContext rocal_context, half *out_ptr,
+                                                      RocalTensorLayout tensor_format, float multiplier0,
+                                                      float multiplier1, float multiplier2, float offset0,
+                                                      float offset1, float offset2,
+                                                      bool reverse_channels, RocalOutputMemType output_mem_type);
+
+/*!
+ * \brief  TBD
+ * \ingroup group_rocal_data_transfer
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalToTensor(RocalContext rocal_context, void *out_ptr,
+                                                    RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type,
+                                                    float multiplier0, float multiplier1, float multiplier2, float offset0,
+                                                    float offset1, float offset2,
+                                                    bool reverse_channels, RocalOutputMemType output_mem_type);
+/*!
+ * \brief  TBD
+ * \ingroup group_rocal_data_transfer
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure
+ */
 extern "C" void ROCAL_API_CALL rocalSetOutputs(RocalContext p_context, unsigned int num_of_outputs, std::vector<RocalImage> &output_images);
 
-
-#endif //MIVISIONX_ROCAL_API_DATA_TRANSFER_H
+#endif // MIVISIONX_ROCAL_API_DATA_TRANSFER_H

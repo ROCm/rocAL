@@ -944,6 +944,13 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = README.md \
+                        rocAL/include/api/rocal_api_augmentation.h \
+                        rocAL/include/api/rocal_api_data_loaders.h \
+                        rocAL/include/api/rocal_api_data_transfers.h \
+                        rocAL/include/api/rocal_api_info.h \
+                        rocAL/include/api/rocal_api_meta_data.h \
+                        rocAL/include/api/rocal_api_parameters.h \
+                        rocAL/include/api/rocal_api_types.h \
                         rocAL/include/api/rocal_api.h
                        
 
