@@ -32,28 +32,58 @@ THE SOFTWARE.
 #include "rocal_api_meta_data.h"
 #include "rocal_api_info.h"
 
-/// Creates the context for a new augmentation pipeline. Initializes all the required internals for the pipeline
-/// \param batch_size
-/// \param affinity
-/// \param gpu_id
-/// \param cpu_thread_count
-/// \return
-extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
-//extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1);
+/*!
+ * \file
+ * \brief The AMD rocAL Library.
+ *
+ * \defgroup group_rocal API: AMD rocAL API
+ * \brief The AMD rocAL is designed to efficiently decode and process images and videos from a variety of storage formats and modify them through a processing graph programmable by the user.
+ */
 
-///
-/// \param context
-/// \return
-extern "C"  RocalStatus ROCAL_API_CALL rocalVerify(RocalContext context);
+/*!
+ * \brief  rocalCreate creates the context for a new augmentation pipeline. Initializes all the required internals for the pipeline
+ * \ingroup group_rocal
+ *
+ * \param [in] batch_size
+ * \param [in] affinity
+ * \param [in] gpu_id
+ * \param [in] cpu_thread_count
+ * \param [in] prefetch_queue_depth
+ * \param [in] output_tensor_data_type
+ * \return A \ref RocalContext
+ */
+extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size,
+                                                   RocalProcessMode affinity,
+                                                   int gpu_id = 0,
+                                                   size_t cpu_thread_count = 1,
+                                                   size_t prefetch_queue_depth = 3,
+                                                   RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
 
-///
-/// \param context
-/// \return
-extern "C"  RocalStatus  ROCAL_API_CALL rocalRun(RocalContext context);
+/*!
+ * \brief  rocalVerify
+ * \ingroup group_rocal
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalVerify(RocalContext context);
 
-///
-/// \param rocal_context
-/// \return
-extern "C"  RocalStatus  ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
+/*!
+ * \brief  rocalRun
+ * \ingroup group_rocal
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalRun(RocalContext context);
+
+/*!
+ * \brief  rocalRelease
+ * \ingroup group_rocal
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
 
 #endif

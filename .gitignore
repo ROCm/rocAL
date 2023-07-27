@@ -1,3 +1,5 @@
+doxygen_output*
+
 # documentation artifacts
 build/
 _build/
