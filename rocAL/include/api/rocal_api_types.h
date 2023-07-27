@@ -44,13 +44,25 @@ THE SOFTWARE.
 #include <half/half.hpp>
 using half_float::half;
 
-/*! \brief typedef void*
+/*! \brief typedef void* Float Param
  * \ingroup group_rocal_types
  */
 typedef void *RocalFloatParam;
+/*! \brief typedef void* rocAL Int Param
+ * \ingroup group_rocal_types
+ */
 typedef void *RocalIntParam;
+/*! \brief typedef void* rocAL Context
+ * \ingroup group_rocal_types
+ */
 typedef void *RocalContext;
+/*! \brief typedef void*  rocAL Image
+ * \ingroup group_rocal_types
+ */
 typedef void *RocalImage;
+/*! \brief typedef void* rocAL Meta Data
+ * \ingroup group_rocal_types
+ */
 typedef void *RocalMetaData;
 
 /*! \brief typedef std::vectors
