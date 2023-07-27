@@ -28,6 +28,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 ${enableSCL}
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
+                sudo cmake --build . --target PyPackageInstall
                 sudo make install
                 sudo make package
                 """
