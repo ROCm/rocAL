@@ -75,11 +75,11 @@ add_test(
 
 add_test(
   NAME
-    rocAL_performace_tests
+    rocAL_performance_tests
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performace_tests"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performace_tests"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performance_tests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests"
             ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
@@ -87,11 +87,11 @@ add_test(
 
 add_test(
   NAME
-  rocAL_performace_tests_with_depth
+  rocAL_performance_tests_with_depth
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performace_tests_with_depth"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performace_tests_with_depth"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performance_tests_with_depth"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests_with_depth"
             ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
