@@ -82,17 +82,6 @@ add_test(
 
 add_test(
   NAME
-  rocAL_performace_tests
-  COMMAND
-    "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performace_tests"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performace_tests"
-            --build-generator "${CMAKE_GENERATOR}"
-            --test-command "rocal_performance_tests_with_depth"
-)
-
-add_test(
-  NAME
   rocAL_performace_tests_with_depth
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
