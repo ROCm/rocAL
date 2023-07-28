@@ -82,7 +82,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 16 1 1
 )
 
 add_test(
@@ -94,7 +94,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests_with_depth"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 16 1 1
 )
 
 add_test(
