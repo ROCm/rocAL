@@ -23,9 +23,9 @@
 # SOFTWARE.
 #
 ################################################################################
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required(VERSION 3.0)
 
-project (rocAL_dataloader_mt)
+project(rocal_dataloader_tf)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -47,86 +47,29 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
-if(NOT DEFINED BACKEND)
-  set(BACKEND "HIP")   # set default backend to HIP
-endif()
+include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
+link_directories(${ROCM_PATH}/lib)
+file(GLOB My_Source_Files ./*.cpp)
+add_executable(${PROJECT_NAME} ${My_Source_Files})
 
-if("${BACKEND}" STREQUAL "OPENCL")
-    find_package(OpenCL QUIET)
-    if(OpenCL_FOUND)
-        set(ENABLE_OPENCL 1)
-        set(ENABLE_HIP 0)
-        include_directories($${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
-        target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARIES})
-    else()
-        message("-- ${Yellow}NOTE: OpenCL Not Found -- runVX built for CPU only${ColourReset}")
-    endif()
-elseif ("${BACKEND}" STREQUAL "HIP")
-    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
-    find_package(HIP QUIET)
-    if(HIP_FOUND)
-        message("-- ${White}rocAL_dataloader_mt -- Using HIP -- Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER} ${ColourReset})
-        set(ENABLE_HIP 1)
-        set(ENABLE_OPENCL 0)
-        include_directories(${HIP_PATH}/include)
-        link_directories(${HIP_PATH}/lib)
-        message("-- ${Green}rali_dataloader_mt built with HIP Support${ColourReset}")
-    else()
-        message("-- ${Yellow}NOTE: HIP Not Found -- rali_dataloader_mt built for CPU only${ColourReset}")
-    endif()
-else()
-    message("-- ${Yellow}NOTE: GPU Support Not Found or Turned OFF -- rali_dataloader_mt app built for CPU only${ColourReset}")
-endif()
-
-
-include_directories (${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
-link_directories    (${ROCM_PATH}/lib)
-
-add_executable(${PROJECT_NAME} ./rocAL_dataloader_mt.cpp)
 if(OpenCV_FOUND)
-    if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 3 )
+    if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
         message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=1)
         include_directories(${OpenCV_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-        if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 4)
+        if(${OpenCV_VERSION_MAJOR} EQUAL 4)
 	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
         else()
 	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
         endif()
     else()
-        message("-- WARNING: OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
+        message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
     endif()
 else()
-    message("-- WARNING: OpenCV Not Found -- No Display Support")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
+    message(FATAL_ERROR "OpenCV Not Found -- No Display Support")
 endif()
 
 target_link_libraries(${PROJECT_NAME} rocal)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

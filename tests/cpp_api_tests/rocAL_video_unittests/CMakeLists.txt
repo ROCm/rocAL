@@ -25,7 +25,7 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.0)
 
-project (rocAL_video_unittests)
+project (rocal_video_unittests)
 
 set(CMAKE_CXX_STANDARD 14)
 

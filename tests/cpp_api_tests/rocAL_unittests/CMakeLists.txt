@@ -25,8 +25,7 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.0)
 
-project (rocAL_performance_tests)
-
+project (rocal_unittests)
 set(CMAKE_CXX_STANDARD 14)
 
 # ROCm Path
@@ -46,7 +45,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
-
 include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
 link_directories(${ROCM_PATH}/lib)
 file(GLOB My_Source_Files ./*.cpp)
@@ -73,26 +71,3 @@ target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

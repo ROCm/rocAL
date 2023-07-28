@@ -23,9 +23,10 @@
 # SOFTWARE.
 #
 ################################################################################
-cmake_minimum_required(VERSION 3.0)
 
-project(rocAL_dataloader_tf)
+cmake_minimum_required (VERSION 3.0)
+
+project (rocal_performance_tests_with_depth)
 
 set(CMAKE_CXX_STANDARD 14)
 
