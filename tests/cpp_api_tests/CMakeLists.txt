@@ -33,7 +33,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_basic_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --test-command "rocal_basic_test"
+            --test-command "rocal_basic_test ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet  ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 0 1 224 224 0"
 )
 
 add_test(
