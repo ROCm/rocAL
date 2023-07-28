@@ -1,5 +1,4 @@
 /*
-MIT License
 Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,28 +31,58 @@ THE SOFTWARE.
 #include "rocal_api_meta_data.h"
 #include "rocal_api_info.h"
 
-/// Creates the context for a new augmentation pipeline. Initializes all the required internals for the pipeline
-/// \param batch_size
-/// \param affinity
-/// \param gpu_id
-/// \param cpu_thread_count
-/// \return
-extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
-//extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1);
+/*!
+ * \file
+ * \brief The AMD rocAL Library.
+ *
+ * \defgroup group_rocal API: AMD rocAL API
+ * \brief The AMD rocAL is designed to efficiently decode and process images and videos from a variety of storage formats and modify them through a processing graph programmable by the user.
+ */
 
-///
-/// \param context
-/// \return
-extern "C"  RocalStatus ROCAL_API_CALL rocalVerify(RocalContext context);
+/*!
+ * \brief  rocalCreate creates the context for a new augmentation pipeline. Initializes all the required internals for the pipeline
+ * \ingroup group_rocal
+ *
+ * \param [in] batch_size
+ * \param [in] affinity RocalProcessMode: Defines whether rocal data loading should be on the CPU or GPU.
+ * \param [in] gpu_id
+ * \param [in] cpu_thread_count
+ * \param [in] prefetch_queue_depth
+ * \param [in] output_tensor_data_type RocalTensorOutputType: Defines whether the output of rocal tensor is FP32 or FP16.
+ * \return A \ref RocalContext - The context for the pipeline
+ */
+extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size,
+                                                   RocalProcessMode affinity,
+                                                   int gpu_id = 0,
+                                                   size_t cpu_thread_count = 1,
+                                                   size_t prefetch_queue_depth = 3,
+                                                   RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
 
-///
-/// \param context
-/// \return
-extern "C"  RocalStatus  ROCAL_API_CALL rocalRun(RocalContext context);
+/*!
+ * \brief  rocalVerify function to verify the graph for all the inputs and outputs
+ * \ingroup group_rocal
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalVerify(RocalContext context);
 
-///
-/// \param rocal_context
-/// \return
-extern "C"  RocalStatus  ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
+/*!
+ * \brief  rocalRun function to process and run the built and verified graph.
+ * \ingroup group_rocal
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalRun(RocalContext context);
+
+/*!
+ * \brief  rocalRelease function to free all the resources allocated during the graph creation process.
+ * \ingroup group_rocal
+ *
+ * \param [in] context
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
 
 #endif
