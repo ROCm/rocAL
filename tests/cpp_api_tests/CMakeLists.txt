@@ -33,7 +33,8 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_basic_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --test-command "rocal_basic_test ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet  ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 0 1 224 224 0"
+            --test-command "rocal_basic_test"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 0 1 224 224 0
 )
 
 add_test(
@@ -45,6 +46,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_dataloader"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
 )
 
 add_test(
@@ -56,6 +58,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_mt"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_dataloader_mt"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
 )
 
 add_test(
@@ -67,6 +70,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_tf"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_dataloader_tf"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
 )
 
 add_test(
@@ -78,6 +82,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performace_tests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
 )
 
 add_test(
@@ -89,6 +94,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performace_tests_with_depth"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests_with_depth"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
 )
 
 add_test(
@@ -100,6 +106,7 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_unittests"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
 )
 
 add_test(
@@ -111,4 +118,5 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_video_unittests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_video_unittests"
+            ${CMAKE_SOURCE_DIR}/data/videos/AMD_driving_virtual_20.mp4
 )
