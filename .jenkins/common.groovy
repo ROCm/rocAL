@@ -78,6 +78,7 @@ def runPackageCommand(platform, project) {
                 sudo make package
                 mkdir -p package
                 mv *.${packageType} package/
+                mv Testing/Temporary/*.log package/
                 ${packageInfo} package/*.${packageType}
                 """
 
