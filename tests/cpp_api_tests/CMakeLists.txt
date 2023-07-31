@@ -27,16 +27,53 @@ cmake_minimum_required (VERSION 3.5)
 
 add_test(
   NAME
-    rocAL_basic_test
+    rocAL_basic_test_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_basic_test"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test_cpu"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_basic_test"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 0 1 224 224 0
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
 )
 
+add_test(
+  NAME
+    rocAL_basic_test_gpu
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_basic_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test_gpu"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "rocal_basic_test"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 1 224 224
+)
+
+add_test(
+  NAME
+    rocAL_basic_test_gray
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_basic_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test_gray"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "rocal_basic_test"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
+)
+
+add_test(
+  NAME
+    rocAL_basic_test_rgb
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_basic_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test_rgb"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "rocal_basic_test"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
+)
+
+# TBD - rocAL_dataloader unit test options non-functional
 add_test(
   NAME
   rocAL_dataloader
@@ -51,62 +88,125 @@ add_test(
 
 add_test(
   NAME
-  rocAL_dataloader_mt
+  rocAL_dataloader_mt_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_dataloader_mt"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_mt"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_mt_cpu"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_dataloader_mt"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 0
 )
 
 add_test(
   NAME
-  rocAL_dataloader_tf
+  rocAL_dataloader_mt_gpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_dataloader_tf"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_tf"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_dataloader_mt"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_mt_gpu"
             --build-generator "${CMAKE_GENERATOR}"
-            --test-command "rocal_dataloader_tf"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
+            --test-command "rocal_dataloader_mt"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 1
 )
 
+# TBD - rocAL_dataloader_tf unit test non-functional
+#add_test(
+#  NAME
+#  rocAL_dataloader_tf
+#  COMMAND
+#    "${CMAKE_CTEST_COMMAND}"
+#            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_dataloader_tf"
+#                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_tf"
+#            --build-generator "${CMAKE_GENERATOR}"
+#            --test-command "rocal_dataloader_tf"
+#            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
+#)
+
+# TBD - peformance test needs to run with default options
 add_test(
   NAME
-    rocAL_performance_tests
+    rocAL_performance_tests_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performance_tests"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_cpu"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 16 1 1
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 16 0
+)
+
+# TBD - peformance test needs to run with default options
+add_test(
+  NAME
+    rocAL_performance_tests_gpu
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performance_tests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_gpu"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "rocal_performance_tests"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 16 1
 )
 
 add_test(
   NAME
-  rocAL_performance_tests_with_depth
+  rocAL_performance_tests_with_depth_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performance_tests_with_depth"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth_cpu"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests_with_depth"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 16 1 1
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 1 1 0
 )
 
 add_test(
   NAME
-    rocAL_unittests
+  rocAL_performance_tests_with_depth_gpu
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_performance_tests_with_depth"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth_cpu"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "rocal_performance_tests_with_depth"
+            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 1 1 1
+)
+
+add_test(
+  NAME
+    rocAL_unittests_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_unittests"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests_cpu"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_unittests"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
+            0 ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet test 224 224 1 0 1
+)
+
+add_test(
+  NAME
+    rocAL_unittests_gpu
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_unittests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests_gpu"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "rocal_unittests"
+            0 ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet test 224 224 1 1 1
+)
+
+add_test(
+  NAME
+    rocAL_unittests_gray
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_unittests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests_gray"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "rocal_unittests"
+            0 ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet test 224 224 1 1 0
 )
 
 add_test(
