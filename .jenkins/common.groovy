@@ -30,6 +30,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 make -j\$(nproc)
                 sudo cmake --build . --target PyPackageInstall
                 sudo make install
+                make test
                 sudo make package
                 """
 
@@ -43,7 +44,6 @@ def runTestCommand (platform, project) {
                 export HOME=/home/jenkins
                 echo Make Test
                 cd ${project.paths.project_build_prefix}/build/release
-                make test
                 ldd -v /opt/rocm/lib/librocal.so
                 """
 
