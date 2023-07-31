@@ -40,6 +40,10 @@ def runTestCommand (platform, project) {
 
     def command = """#!/usr/bin/env bash
                 set -x
+                export HOME=/home/jenkins
+                echo Make Test
+                cd ${project.paths.project_build_prefix}/build/release
+                make test
                 ldd -v /opt/rocm/lib/librocal.so
                 """
 
