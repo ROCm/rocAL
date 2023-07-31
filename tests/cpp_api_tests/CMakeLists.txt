@@ -74,17 +74,17 @@ add_test(
 )
 
 # TBD - rocAL_dataloader unit test options non-functional
-add_test(
-  NAME
-  rocAL_dataloader
-  COMMAND
-    "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_dataloader"
-                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader"
-            --build-generator "${CMAKE_GENERATOR}"
-            --test-command "rocal_dataloader"
-            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
-)
+#add_test(
+#  NAME
+#  rocAL_dataloader
+#  COMMAND
+#    "${CMAKE_CTEST_COMMAND}"
+#            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/rocAL_dataloader"
+#                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader"
+#            --build-generator "${CMAKE_GENERATOR}"
+#            --test-command "rocal_dataloader"
+#            ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet
+#)
 
 add_test(
   NAME
