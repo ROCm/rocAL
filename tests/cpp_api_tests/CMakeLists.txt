@@ -126,7 +126,7 @@ add_test(
 add_test(NAME rocAL_performance_tests_with_depth_gpu 
               COMMAND rocal_performance_tests_with_depth 
               ${CMAKE_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 1 1 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocal_performance_tests_with_depth)
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth)
 
 # rocal_unittests
 add_test(
