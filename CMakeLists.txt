@@ -128,6 +128,10 @@ add_subdirectory(rocAL_pybind)
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/
 install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal)
 
+enable_testing()
+include(CTest)
+add_subdirectory(tests/cpp_api_tests)
+
 # set package information
 set(CPACK_PACKAGE_VERSION       ${VERSION})
 set(CPACK_PACKAGE_NAME          "rocal")
