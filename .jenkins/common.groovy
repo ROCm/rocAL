@@ -8,12 +8,16 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = 'HIP'
     String enableSCL = 'echo build-rocAL'
+    String libLocation = ''
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
         if (platform.jenkinsLabel.contains('centos7')) {
             enableSCL = 'source scl_source enable llvm-toolset-7'
         }
+    }
+    else if (platform.jenkinsLabel.contains('rhel')) {
+        libLocation = ':/usr/local/lib'
     }
     else if (platform.jenkinsLabel.contains('ubuntu20')) {
         backend = 'OCL'
@@ -30,7 +34,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 make -j\$(nproc)
                 sudo cmake --build . --target PyPackageInstall
                 sudo make install
-                LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib make test ARGS="-VV"
+                LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} make test ARGS="-VV"
                 sudo make package
                 """
 
