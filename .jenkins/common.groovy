@@ -30,7 +30,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 make -j\$(nproc)
                 sudo cmake --build . --target PyPackageInstall
                 sudo make install
-                make test
+                make test ARGS="-VV"
                 sudo make package
                 """
 
