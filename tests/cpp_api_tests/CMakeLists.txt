@@ -25,10 +25,8 @@
 ################################################################################
 cmake_minimum_required (VERSION 3.5)
 
-
-SET (CTEST_ENVIRONMENT
-"LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib"
-)
+# CTest ENV Variables
+SET(CTEST_ENVIRONMENT "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib")
 
 # rocal_basic_test
 add_test(
