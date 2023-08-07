@@ -30,7 +30,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 make -j\$(nproc)
                 sudo cmake --build . --target PyPackageInstall
                 sudo make install
-                LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib make test ARGS="-VV"
+                LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib make test ARGS="-VV"
                 sudo make package
                 """
 
