@@ -29,6 +29,9 @@ THE SOFTWARE.
 #if defined(_WIN32)
 #define ROCAL_API_CALL __stdcall
 #else
+/*!
+ * rocAL API Call macro.
+ */
 #define ROCAL_API_CALL
 #endif
 #endif
@@ -68,11 +71,13 @@ typedef void *RocalMetaData;
 /*! \brief typedef std::vectors
  * \ingroup group_rocal_types
  */
+///@{
 typedef std::vector<int> ImageIDBatch, AnnotationIDBatch;
 typedef std::vector<std::string> ImagePathBatch;
 typedef std::vector<float> ScoreBatch, RotationBatch;
 typedef std::vector<std::vector<float>> CenterBatch, ScaleBatch;
 typedef std::vector<std::vector<std::vector<float>>> JointsBatch, JointsVisibilityBatch;
+///@}
 
 /*! \brief Timing Info struct
  * \ingroup group_rocal_types
