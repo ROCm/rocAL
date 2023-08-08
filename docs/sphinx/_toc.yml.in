@@ -14,6 +14,12 @@ subtrees:
         - file: user_guide/ch4
         - file: user_guide/ch5
         - file: user_guide/ch6
+- caption: API
+  entries:
+  - file: doxygen/html/index
 - caption: Examples
   entries:
   - file: examples
+- caption: About
+  entries:
+  - file: license
