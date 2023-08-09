@@ -174,7 +174,8 @@ extern "C" RocalImage ROCAL_API_CALL rocalBrightness(RocalContext context, Rocal
  * \ingroup group_rocal_augmentations
  * \param context context for the pipeline.
  * \param input
- * \param shift
+ * \param alpha
+ * \param beta
  * \param is_output
  * \return
  */
@@ -623,6 +624,10 @@ extern "C" RocalImage ROCAL_API_CALL rocalNop(RocalContext context, RocalImage i
  * \param context context for the pipeline.
  * \param input
  * \param is_output
+ * \param alpha
+ * \param beta
+ * \param hue
+ * \param sat
  * \return
  */
 extern "C" RocalImage ROCAL_API_CALL rocalColorTwist(RocalContext context, RocalImage input, bool is_output,
@@ -636,6 +641,10 @@ extern "C" RocalImage ROCAL_API_CALL rocalColorTwist(RocalContext context, Rocal
  * \param context context for the pipeline.
  * \param input
  * \param is_output
+ * \param alpha
+ * \param beta
+ * \param hue
+ * \param sat
  * \return
  */
 extern "C" RocalImage ROCAL_API_CALL rocalColorTwistFixed(RocalContext context, RocalImage input,
