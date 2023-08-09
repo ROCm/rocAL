@@ -45,6 +45,7 @@ option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_DEV        "Build rocAL Development Package"      ON)
 option(AMD_FP16_SUPPORT "Build rocAL with float16 Support"    OFF)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
+option(BUILD_WITH_AMD_ADVANCE "Build MIVisionX for advanced AMD GPU Architecture"    OFF)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
