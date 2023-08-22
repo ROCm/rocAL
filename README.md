@@ -3,7 +3,7 @@
 <p align="center"><img width="70%" src="docs/data/rocAL_logo.png" /></p>
 
 The AMD ROCm Augmentation Library (**rocAL**) is designed to efficiently decode and process images and videos from a variety of storage formats and modify them through a processing graph programmable by the user. rocAL currently provides C API.
-For more details, go to [docs](docs) page.
+For more details, go to [rocAL user guide](docs) page.
 
 ## Documentation
 
@@ -66,10 +66,10 @@ rocAL can be currently used to perform the following operations either with rand
 
 ## Prerequisites
 
-
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
   + CentOS - `7` / `8`
+  + RedHat - `8` / `9`
   + SLES - `15-SP4`
 *  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
 *  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
@@ -93,6 +93,9 @@ For the convenience of the developer, we here provide the setup script which wil
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7` / `8`
+  + RedHat - `8` / `9`
+  + SLES - `15-SP4`
 * [ROCm supported hardware](https://docs.amd.com)
 * [ROCm](https://docs.amd.com)
 
@@ -114,17 +117,19 @@ For the convenience of the developer, we here provide the setup script which wil
 
 ### Using `rocAL-setup.py`
 
-* Install [ROCm](https://rocmdocs.amd.com/en/latest/Installation_Guide/Installation-Guide.html)
+* Install [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html)
+  
 * Use the below commands to set up and build rocAL
+  
+  + Clone rocAL source code
 
   ```
   git clone https://github.com/ROCmSoftwarePlatform/rocAL.git
   cd rocAL
   ```
 
-  **Note:** rocAL has support for two GPU backends: **OPENCL** and **HIP**:
-
-  + Instructions for building rocAL with the **HIP** GPU backend (i.e., default GPU backend):
+  + Building rocAL with **HIP** backend (default backend):
+  **Note:** rocAL supports **CPU** and two **GPU** backends: **OPENCL**/**HIP**:
 
     + run the setup script to install all the dependencies required by the **HIP** GPU backend:
     ```
@@ -140,97 +145,27 @@ For the convenience of the developer, we here provide the setup script which wil
     sudo cmake --build . --target PyPackageInstall
     sudo make install
     ```
-**Note:** sudo is required to build rocAL_pybind package (only supported on HIP backend)
-
-  + Instructions for building rocAL with **OPENCL** GPU backend:
-
-    + run the setup script to install all the dependencies required by the **OPENCL** GPU backend:
-    ```
-    python rocAL-setup.py --reinstall yes --backend OCL
-    ```
-
-    + run the below commands to build rocAL with the **OPENCL** GPU backend:
-    ```
-    mkdir build-ocl
-    cd build-ocl
-    cmake -DBACKEND=OPENCL ../
-    make -j8
-    sudo make install
-    ```
+    **Note:** sudo is required to build rocAL_pybind package (only supported on HIP backend)
 
   **Note:**
   + rocAL_pybind is not supported on OPENCL backend
   + rocAL cannot be installed for both GPU backends in the same default folder (i.e., /opt/rocm/)
-  if an app interested in installing rocAL with both GPU backends, then add **-DCMAKE_INSTALL_PREFIX** in the cmake
+  + if an app interested in installing rocAL with both GPU backends, then add **-DCMAKE_INSTALL_PREFIX** in the cmake
   commands to install rocAL with OPENCL and HIP backends into two separate custom folders.
-
-### Prerequisites - Manual Install
-
-*  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
-*  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
-*  [Boost library](https://www.boost.org) - Version `1.66` or higher
-*  [Turbo JPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
-*  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
-*  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.11.1` or higher
-*  [LMBD Library](http://www.lmdb.tech/doc/)
-*  [RapidJSON](https://github.com/Tencent/rapidjson)
-*  [PyBind11](https://github.com/pybind/pybind11)
-
-#### Turbo JPEG installation
-
-Turbo JPEG library is a SIMD optimized library which currently rocAL uses to decode input JPEG images. It needs to be built from the source and installed in the default path for libraries and include headers. You can follow the instruction below to download the source, build and install it.
-**Note:** install nasm package
-
-```
-sudo apt-get install nasm
-```
-
-**Note:** You need wget package to download the tar file.
-```
- sudo apt-get install wget
-```
-
-```
-git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git
-cd libjpeg-turbo && mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr \
-      -DCMAKE_BUILD_TYPE=RELEASE  \
-      -DENABLE_STATIC=FALSE       \
-      -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
-      -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  \
-      ..
-make -j$nproc && sudo make install
-```
-
-#### LMDB installation
-```
-sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
-```
-
-#### RapidJSON installation
-```
-git clone https://github.com/Tencent/rapidjson.git
-cd rapidjson && mkdir build && cd build
-cmake ../ && make -j$nproc && sudo make install
-```
-
-#### PyBind11 installation
-```
-pip install pytest==7.3.1 
-git clone -b  https://github.com/pybind/pybind11 
-cd pybind11 && mkdir build && cd build
-cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install
-```
 
 ## Tested Configurations
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
 * ROCm: rocm-core - `5.4.0.50400-72`
+* RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
+* MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
+* Boost - [1.72.0](https://www.boost.org/users/history/version_1_72_0.html)
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
-* MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
-* Dependencies for all the above packages
+* RapidJSON- [master](https://github.com/Tencent/rapidjson)
+* PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
+* CuPy - [master](https://github.com/ROCmSoftwarePlatform/cupy.git)
 * rocAL Setup Script - `V1.0.2`
+* Dependencies for all the above packages

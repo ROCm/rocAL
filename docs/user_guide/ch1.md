@@ -1,4 +1,4 @@
-# Chapter 1: Overview
+# Chapter 1 Overview
 
 ## 1.1 Overview 
 

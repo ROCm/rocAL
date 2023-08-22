@@ -1,3 +1,5 @@
+<p align="center"><img width="70%" src="data/rocAL_logo.png" /></p>
+
 # rocAL User Guide
 
 Today’s deep learning applications require loading and pre-processing data efficiently to achieve high processing throughput.  This requires creating efficient processing pipelines fully utilizing the underlying hardware capabilities. Some examples are load and decode data, do a variety of augmentations, color-format conversions, etc.
@@ -5,6 +7,14 @@ Deep learning frameworks require supporting multiple data formats and augmentati
 
 AMD ROCm Augmentation Library (rocAL) is designed to efficiently do such processing pipelines from both images and video as well as from a variety of storage formats.
 These pipelines are programmable by the user using both C++ and Python APIs.
+
+## User Guide Chapters
+- [Chapter 1 - Overview](user_guide/ch1.md)
+- [Chapter 2 - Architecture Components](user_guide/ch2.md)
+- [Chapter 3 - Installation](user_guide/ch3.md)
+- [Chapter 4 - Using with Python API](user_guide/ch4.md)
+- [Chapter 5 - Framework Integration](user_guide/ch5.md)
+- [Chapter 6 - Using with C++ API](user_guide/ch6.md)
 
 ## Key Components of rocAL
 

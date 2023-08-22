@@ -1,4 +1,4 @@
-# Chapter 5: Framework Integration
+# Chapter 5 Framework Integration
 
 rocAL improves the pipeline efficiency by preprocessing the data and parallelizing the data loading on the CPU and running trainings on the GPU. To separate the data loading from the training, rocAL provides TensorFlow and PyTorch iterators and readers as a plugin. The integration process with PyTorch and TensorFlow is described in the sections below.
 
