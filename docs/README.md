@@ -1,10 +1,20 @@
-# rocAL Introduction
+<p align="center"><img width="70%" src="data/rocAL_logo.png" /></p>
+
+# rocAL User Guide
 
 Today’s deep learning applications require loading and pre-processing data efficiently to achieve high processing throughput.  This requires creating efficient processing pipelines fully utilizing the underlying hardware capabilities. Some examples are load and decode data, do a variety of augmentations, color-format conversions, etc.
 Deep learning frameworks require supporting multiple data formats and augmentations to adapt to a variety of data-sets and models.
 
 AMD ROCm Augmentation Library (rocAL) is designed to efficiently do such processing pipelines from both images and video as well as from a variety of storage formats.
 These pipelines are programmable by the user using both C++ and Python APIs.
+
+## User Guide Chapters
+- [Chapter 1 - Overview](user_guide/ch1.md)
+- [Chapter 2 - Architecture Components](user_guide/ch2.md)
+- [Chapter 3 - Installation](user_guide/ch3.md)
+- [Chapter 4 - Using with Python API](user_guide/ch4.md)
+- [Chapter 5 - Framework Integration](user_guide/ch5.md)
+- [Chapter 6 - Using with C++ API](user_guide/ch6.md)
 
 ## Key Components of rocAL
 
@@ -16,11 +26,11 @@ These pipelines are programmable by the user using both C++ and Python APIs.
 
 ## Prerequisites
 
-Refer to [rocAL](https://github.com/ROCmSoftwarePlatform/rocAL) to follow and install pre-requisites.
+Refer [rocAL Prerequisites](https://github.com/ROCmSoftwarePlatform/rocAL#prerequisites)
 
 ## Build instructions
 
-Follow the build instructions in [rocAL](https://github.com/ROCmSoftwarePlatform/rocAL)
+Refer [rocAL build instructions](https://github.com/ROCmSoftwarePlatform/rocAL#build-instructions)
 
 ## rocAL Python
 
@@ -38,23 +48,23 @@ Follow the build instructions in [rocAL](https://github.com/ROCmSoftwarePlatform
 *  Contains the image augmentations & file read and decode operations which are linked to rocAL C++ API
 *  All ops (listed below) are supported for the single input image and batched inputs.
 
-|Image Augmentation | Reader and Decoder  | Geometric Ops |
-| :------------------: |:--------------------:| :-------------:|
-| ColorTwist          | File Reader         | CropMirrorNormalize |
-| Brightness          | ImageDecoder        | Resize |
-| Gamma Correction    | ImageDecoderRandomCrop        |    ResizeCrop |
-| Snow                | COCOReader        |    WarpAffine |
-| Rain                | TFRecordReader        |    FishEye |
-| Blur                |         |    LensCorrection |
-| Jitter |         |    Rotate |
-| Hue     |         |    |
-| Saturation |         |    |
-| Fog  |         |     |
-| Contrast  |         |     |
-| Vignette  |         |     |
-| SNPNoise  |         |     |
-| Pixelate  |         |     |
-| Blend  |        |     |
+| Image Augmentation |   Reader and Decoder   |    Geometric Ops    |
+| :----------------: | :--------------------: | :-----------------: |
+|     ColorTwist     |      File Reader       | CropMirrorNormalize |
+|     Brightness     |      ImageDecoder      |       Resize        |
+|  Gamma Correction  | ImageDecoderRandomCrop |     ResizeCrop      |
+|        Snow        |       COCOReader       |     WarpAffine      |
+|        Rain        |     TFRecordReader     |       FishEye       |
+|        Blur        |                        |   LensCorrection    |
+|       Jitter       |                        |       Rotate        |
+|        Hue         |                        |                     |
+|     Saturation     |                        |                     |
+|        Fog         |                        |                     |
+|      Contrast      |                        |                     |
+|      Vignette      |                        |                     |
+|      SNPNoise      |                        |                     |
+|      Pixelate      |                        |                     |
+|       Blend        |                        |                     |
 
 ### amd.rocal.pipeline
 
