@@ -131,12 +131,12 @@ For the convenience of the developer, we here provide the setup script which wil
 
   + Building rocAL with default **HIP** backend:
 
-    + run the setup script to install all the dependencies required by the **HIP** GPU backend:
+    + run the setup script to install all the dependencies required
     ```
     python rocAL-setup.py
     ```
 
-    + run the below commands to build rocAL with the default **HIP** backend:
+    + run the below commands to build rocAL
     ```
     mkdir build-hip
     cd build-hip
