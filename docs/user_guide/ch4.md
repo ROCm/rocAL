@@ -1,4 +1,4 @@
-# Chapter 4 Using with Python API
+# Chapter 4: Using with Python API
 
 rocAL uses simple Python operators to provide high performance and flexibility by utilizing the underlying hardware capabilities in a very efficient manner. 
 
