@@ -1,10 +1,10 @@
 # Anywhere {branch} is used, the branch name will be substituted.
 # These comments will also be removed.
 defaults:
-  - numbered: False
+  numbered: False
 root: doxygen/html/index
 subtrees:
-  - caption: User Guide
+- caption: User Guide
   entries:
     - file: user_guide/ch1
       subtrees:
@@ -15,6 +15,8 @@ subtrees:
           - file: user_guide/ch5
           - file: user_guide/ch6
   - caption: Examples
+  entries:
     - file: examples
   - caption: About
+  entries:
     - file: license
