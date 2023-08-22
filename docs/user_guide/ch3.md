@@ -1,18 +1,19 @@
-# rocAL Installation
+# Chapter 3 - Installation
 
 This chapter provides information about the installation of rocAL and related packages.  
 
 ## 3.1 Prerequisites 
 
-- Linux Distribution
-- [AMD RPP library](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
-- MIvisionX (AMD RPP OpenVX extension) 
-- Boost lib 1.66 or higher
-- [Turbo JPEG](https://github.com/rrawther/libjpeg-turbo) with Partial Decoder support
-- Half float library
-- jsoncpp library
-- Google protobuf 3.11.1 or higher
-- LMDB
+* Linux distribution
+*  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
+*  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
+*  [Boost library](https://www.boost.org) - Version `1.72` or higher
+*  [Turbo JPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
+*  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+*  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
+*  [LMBD Library](http://www.lmdb.tech/doc/)
+*  [RapidJSON](https://github.com/Tencent/rapidjson)
+*  [PyBind11](https://github.com/pybind/pybind11)
 
 ## 3.2 Platform Support
 

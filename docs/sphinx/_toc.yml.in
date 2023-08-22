@@ -6,9 +6,10 @@ root: doxygen/html/index
 subtrees:
 - caption: User Guide
   entries:
-    - file: user_guide/ch1
+    - file: README.md
       subtrees:
         - entries:
+          - file: user_guide/ch1
           - file: user_guide/ch2
           - file: user_guide/ch3
           - file: user_guide/ch4
@@ -17,6 +18,6 @@ subtrees:
 - caption: Examples
   entries:
     - file: examples
-- caption: About
+  - caption: About
   entries:
     - file: license
