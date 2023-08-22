@@ -127,16 +127,16 @@ For the convenience of the developer, we here provide the setup script which wil
   git clone https://github.com/ROCmSoftwarePlatform/rocAL.git
   cd rocAL
   ```
-
-  + Building rocAL with **HIP** backend (default backend):
   **Note:** rocAL supports **CPU** and two **GPU** backends: **OPENCL**/**HIP**:
+
+  + Building rocAL with default **HIP** backend:
 
     + run the setup script to install all the dependencies required by the **HIP** GPU backend:
     ```
     python rocAL-setup.py
     ```
 
-    + run the below commands to build rocAL with the **HIP** GPU backend:
+    + run the below commands to build rocAL with the default **HIP** backend:
     ```
     mkdir build-hip
     cd build-hip
