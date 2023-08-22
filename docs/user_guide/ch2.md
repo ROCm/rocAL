@@ -1,4 +1,4 @@
-# Chapter 2 - Architecture Components
+# Chapter 2: Architecture Components
 
 The rocAL architecture comprises rocAL Master-Graph and RPP as major components.
 

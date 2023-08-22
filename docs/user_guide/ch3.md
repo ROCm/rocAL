@@ -1,4 +1,4 @@
-# Chapter 3 - Installation
+# Chapter 3 Installation
 
 This chapter provides information about the installation of rocAL and related packages.  
 

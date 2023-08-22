@@ -1,4 +1,4 @@
-# Chapter 6 - Using with C++ API
+# Chapter 6: Using with C++ API
 
 This chapter explains how to create a pipeline and add augmentations using C++ APIs directly. The Python APIs also call these C++ APIs internally using the Python pybind utility as explained in the section Installing rocAL Python Package.
 
