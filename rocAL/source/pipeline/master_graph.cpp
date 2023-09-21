@@ -94,7 +94,6 @@ MasterGraph::~MasterGraph() {
 }
 
 MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type) : _ring_buffer(prefetch_queue_depth),
-                                                                                                                                                                                     _graph(nullptr),
                                                                                                                                                                                      _affinity(affinity),
                                                                                                                                                                                      _cpu_num_threads(cpu_thread_count),
                                                                                                                                                                                      _gpu_id(gpu_id),
@@ -244,17 +243,23 @@ MasterGraph::calculate_cpu_num_threads(size_t shard_count) {
 
 void MasterGraph::create_single_graph() {
     // Actual graph creating and calls into adding nodes to graph is deferred and is happening here to enable potential future optimizations
-    _graph = std::make_shared<Graph>(_context, _affinity, 0, _cpu_num_threads, _gpu_id);
+    int num_of_graphs = _loader_modules.size();
+    for (int n = 0; n < num_of_graphs; n++) {
+        _graphs.emplace_back(std::make_shared<Graph>(_context, _affinity, 0, _cpu_num_threads, _gpu_id));
+    }
+    std::cerr << "Graph size : " << _graphs.size() << "\n";
     for (auto &node : _nodes) {
         // Any tensor not yet created can be created as virtual tensor
         for (auto &tensor : node->output())
             if (tensor->info().type() == TensorInfo::Type::UNKNOWN) {
-                tensor->create_virtual(_context, _graph->get());
+                tensor->create_virtual(_context, _graphs[node->get_id()]->get());
                 _internal_tensors.push_back(tensor);
             }
-        node->create(_graph);
+        node->create(_graphs[node->get_id()]);
     }
-    _graph->verify();
+    
+    for (auto& graph : _graphs)
+        graph->verify();
 }
 
 MasterGraph::Status
@@ -324,7 +329,8 @@ void MasterGraph::release() {
     _tensor_map.clear();
     _ring_buffer.release_gpu_res();
     // shut_down loader:: required for releasing any allocated resourses
-    _loader_module->shut_down();
+    for (auto loader_module : _loader_modules)
+        loader_module->shut_down();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_OPENCL
@@ -347,8 +353,10 @@ void MasterGraph::release() {
     for (auto tensor_list : _metadata_output_tensor_list)
         dynamic_cast<TensorList *>(tensor_list)->release();  // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
 
-    if (_graph != nullptr)
-        _graph->release();
+    for (auto& graph : _graphs) {
+        if (graph != nullptr)
+            graph->release();
+    }
     if (_meta_data_reader != nullptr)
         _meta_data_reader->release();
 
@@ -416,7 +424,8 @@ MasterGraph::reset() {
     if (_randombboxcrop_meta_data_reader != nullptr)
         _randombboxcrop_meta_data_reader->release();
     // resetting loader module to start from the beginning of the media and clear it's internal state/buffers
-    _loader_module->reset();
+    for (auto loader_module : _loader_modules)
+        loader_module->reset();
     // restart processing of the images
     _first_run = true;
     _output_routine_finished_processing = false;
@@ -436,10 +445,14 @@ MasterGraph::mem_type() {
 
 Timing
 MasterGraph::timing() {
-    Timing t = _loader_module->timing();
-    t.image_process_time += _process_time.get_timing();
-    t.copy_to_output += _convert_time.get_timing();
-    t.bb_process_time += _bencode_time.get_timing();
+    Timing t;
+    for (auto loader_module : _loader_modules) {
+        t = loader_module->timing();
+        t.image_process_time += _process_time.get_timing();
+        t.copy_to_output += _convert_time.get_timing();
+        t.bb_process_time += _bencode_time.get_timing();
+    }
+
     return t;
 }
 
@@ -864,11 +877,20 @@ MasterGraph::get_output_tensors() {
     return &_output_tensor_list;
 }
 
+bool MasterGraph::is_out_of_data() {
+    for (auto loader_module : _loader_modules) {
+        if (loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
     try {
         while (_processing) {
-            if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
+            if (is_out_of_data()) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
                 notify_user_thread();
@@ -883,14 +905,17 @@ void MasterGraph::output_routine() {
             _rb_block_if_full_time.end();
 
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
-            auto load_ret = _loader_module->load_next();
-            if (load_ret != LoaderModuleStatus::OK)
-                THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
+            for (auto loader_module : _loader_modules) {
+                auto load_ret = loader_module->load_next();
+                if (load_ret != LoaderModuleStatus::OK)
+                    THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))                
+            }
+
             if (!_processing)
                 break;
-            auto full_batch_image_names = _loader_module->get_id();
-            auto decode_image_info = _loader_module->get_decode_image_info();
-            auto crop_image_info = _loader_module->get_crop_image_info();
+            auto full_batch_image_names = _loader_modules[0]->get_id(); // Temp change
+            auto decode_image_info = _loader_modules[0]->get_decode_image_info();   // Temp change
+            auto crop_image_info = _loader_modules[0]->get_crop_image_info();   // Temp change
 
             if (full_batch_image_names.size() != _user_batch_size)
                 WRN("Internal problem: names count " + TOSTR(full_batch_image_names.size()))
@@ -929,8 +954,11 @@ void MasterGraph::output_routine() {
                 }
             }
             _process_time.start();
-            _graph->process();
+            for (auto& graph : _graphs) {
+                graph->process();
+            }
             _process_time.end();
+
             _bencode_time.start();
             if (_is_box_encoder) {
                 auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
@@ -944,8 +972,8 @@ void MasterGraph::output_routine() {
             }
             _bencode_time.end();
 #ifdef ROCAL_VIDEO
-            _sequence_start_framenum_vec.insert(_sequence_start_framenum_vec.begin(), _loader_module->get_sequence_start_frame_number());
-            _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
+            // _sequence_start_framenum_vec.insert(_sequence_start_framenum_vec.begin(), _loader_module->get_sequence_start_frame_number());
+            // _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
 #endif
             _ring_buffer.set_meta_data(full_batch_image_names, output_meta_data);
             _ring_buffer.push();  // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
@@ -959,7 +987,9 @@ void MasterGraph::output_routine() {
 
 void MasterGraph::start_processing() {
     _processing = true;
-    _remaining_count = _loader_module->remaining_count();
+    for (auto loader_module : _loader_modules) {
+        _remaining_count = std::min(_remaining_count, static_cast<int>(loader_module->remaining_count()));
+    }
     _output_thread = std::thread(&MasterGraph::output_routine, this);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #else
