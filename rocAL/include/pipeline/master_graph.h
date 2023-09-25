@@ -224,9 +224,6 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, co
         auto parent_node = _tensor_map.find(input)->second;
         parent_node->add_next(node);
         node->add_previous(parent_node);
-        
-        // 1. Loader module - set to 0
-        // 2. 
     }
 
     for (auto &output : outputs)
@@ -260,7 +257,6 @@ inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<
     auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
-    node->set_root_node();
     node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
@@ -281,7 +277,6 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
     auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
-    node->set_root_node();
     node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
@@ -303,7 +298,6 @@ inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const std::vecto
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     _loader_modules.emplace_back(loader_module);
-    node->set_root_node();
     node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
@@ -325,7 +319,6 @@ inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     _loader_modules.emplace_back(loader_module);
-    node->set_root_node();
     node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
@@ -349,7 +342,6 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
     auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
-    node->set_root_node();
     node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
@@ -373,7 +365,6 @@ inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const std::vector<
     auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
-    node->set_root_node();
     node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
@@ -394,7 +385,6 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
     auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
-    node->set_root_node();
     node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)

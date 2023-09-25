@@ -44,8 +44,6 @@ class Node {
     bool _is_ssd = false;
     RocalROI *get_src_roi() { return _inputs[0]->info().get_roi(); }
     RocalROI *get_dst_roi() { return _outputs[0]->info().get_roi(); }
-    void set_root_node() { _is_root_node = true; }
-    bool is_root_node() { return _is_root_node; }
     void set_id(int id) { _graph_id = id; 
         std::cerr << "Root node ID : " << id << "\n";
     }
@@ -62,6 +60,5 @@ class Node {
     pMetaDataBatch _meta_data_info;
     std::vector<std::shared_ptr<Node>> _next;
     std::vector<std::shared_ptr<Node>> _prev;
-    bool _is_root_node = false;
     int _graph_id = -1;
 };
