@@ -955,7 +955,10 @@ void MasterGraph::output_routine() {
             }
             _process_time.start();
             for (auto& graph : _graphs) {
-                graph->process();
+                graph->schedule();
+            }
+            for (auto& graph : _graphs) {
+                graph->wait();
             }
             _process_time.end();
 

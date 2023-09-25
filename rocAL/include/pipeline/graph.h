@@ -32,6 +32,8 @@ class Graph {
     Graph(vx_context context, RocalAffinity affinity, int cpu_id = 0, size_t cpu_num_threads = 1, int gpu_id = 0);
     Status verify();
     Status process();
+    Status schedule();
+    Status wait();
     Status release();
     vx_graph get() { return _graph; }
 
