@@ -138,9 +138,11 @@ class MasterGraph {
    private:
     Status update_node_parameters();
     void create_single_graph();
+    void create_multiple_graphs();
     void start_processing();
     void stop_processing();
     void output_routine();
+    void output_routine_multiple_loaders();
     void decrease_image_count();
     /// notify_user_thread() is called when the internal processing thread is done with processing all available tensors
     void notify_user_thread();
@@ -171,12 +173,13 @@ class MasterGraph {
 #elif ENABLE_OPENCL
     DeviceManager _device;                                                        //!< Keeps the device related constructs needed for running on GPU
 #endif
-    // std::shared_ptr<Graph> _graph = nullptr;
+    std::shared_ptr<Graph> _graph = nullptr;
     std::vector<std::shared_ptr<Graph>> _graphs;
     RocalAffinity _affinity;
     size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
     const int _gpu_id;                                                            //!< Defines the device id used for processing
-    std::vector<pLoaderModule> _loader_modules;                                                 //!< Keeps the loader module used to feed the input the tensors of the graph
+    pLoaderModule _loader_module;                                                 //!< Keeps the loader module used to feed the input the tensors of the graph
+    std::vector<pLoaderModule> _loader_modules;                                   //!< Keeps the list of loader modules used to feed the input the tensors of the graph
     TimingDBG _convert_time, _process_time, _bencode_time;
     const size_t _user_batch_size;                                                //!< Batch size provided by the user
     vx_context _context;
