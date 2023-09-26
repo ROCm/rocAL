@@ -20,22 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <cassert>
-#include <commons.h>
 #include "caffe2_lmdb_record_reader.h"
-#include <boost/filesystem.hpp>
+
+#include <commons.h>
+#include <stdint.h>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <cassert>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <fstream>
-#include <stdint.h>
 using namespace std;
 namespace filesys = boost::filesystem;
 
-Caffe2LMDBRecordReader::Caffe2LMDBRecordReader()
-{
+Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
     _src_dir = nullptr;
     _sub_dir = nullptr;
     _entity = nullptr;
@@ -47,17 +48,15 @@ Caffe2LMDBRecordReader::Caffe2LMDBRecordReader()
     _last_rec = false;
 }
 
-unsigned Caffe2LMDBRecordReader::count_items()
-{
-    if(_loop)
+unsigned Caffe2LMDBRecordReader::count_items() {
+    if (_loop)
         return _file_names.size();
 
-    int ret = ((int)_file_names.size() -_read_counter);
+    int ret = ((int)_file_names.size() - _read_counter);
     return ((ret < 0) ? 0 : ret);
 }
 
-Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc)
-{
+Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
@@ -70,49 +69,42 @@ Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc)
     ret = folder_reading();
     // the following code is required to make every shard the same size:: required for multi-gpu training
     if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size()/_batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count-1)/_shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count-1)/_batch_count;
+        int _num_batches = _file_names.size() / _batch_count;
+        int max_batches_per_shard = (_file_count_all_shards + _shard_count - 1) / _shard_count;
+        max_batches_per_shard = (max_batches_per_shard + _batch_count - 1) / _batch_count;
         if (_num_batches < max_batches_per_shard) {
             replicate_last_batch_to_pad_partial_shard();
         }
     }
-    //shuffle dataset if set
-    if( ret==Reader::Status::OK && _shuffle)
+    // shuffle dataset if set
+    if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
 
     return ret;
-
 }
 
-void Caffe2LMDBRecordReader::incremenet_read_ptr()
-{
+void Caffe2LMDBRecordReader::incremenet_read_ptr() {
     _read_counter++;
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
 }
-size_t Caffe2LMDBRecordReader::open()
-{
-    auto file_path = _file_names[_curr_file_idx];// Get next file name
+size_t Caffe2LMDBRecordReader::open() {
+    auto file_path = _file_names[_curr_file_idx];  // Get next file name
     _last_id = file_path;
     _current_file_size = _file_size[_file_names[_curr_file_idx]];
     return _current_file_size;
 }
 
-size_t Caffe2LMDBRecordReader::read_data(unsigned char* buf, size_t read_size)
-{
+size_t Caffe2LMDBRecordReader::read_data(unsigned char *buf, size_t read_size) {
     read_image(buf, _file_names[_curr_file_idx]);
     incremenet_read_ptr();
-    return  read_size;
-
+    return read_size;
 }
 
-int Caffe2LMDBRecordReader::close()
-{
+int Caffe2LMDBRecordReader::close() {
     return release();
 }
 
-Caffe2LMDBRecordReader::~Caffe2LMDBRecordReader()
-{
+Caffe2LMDBRecordReader::~Caffe2LMDBRecordReader() {
     _open_env = 0;
     mdb_txn_abort(_read_mdb_txn);
     mdb_close(_read_mdb_env, _read_mdb_dbi);
@@ -122,67 +114,57 @@ Caffe2LMDBRecordReader::~Caffe2LMDBRecordReader()
     release();
 }
 
-int
-Caffe2LMDBRecordReader::release()
-{
+int Caffe2LMDBRecordReader::release() {
     return 0;
 }
 
-void Caffe2LMDBRecordReader::reset()
-{
-    if(_shuffle)
+void Caffe2LMDBRecordReader::reset() {
+    if (_shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
     _curr_file_idx = 0;
 }
 
-Reader::Status Caffe2LMDBRecordReader::folder_reading()
-{
-    if ((_sub_dir = opendir (_folder_path.c_str())) == nullptr)
-        THROW("Caffe2LMDBRecordReader ShardID ["+ TOSTR(_shard_id)+ "] ERROR: Failed opening the directory at " + _folder_path);
+Reader::Status Caffe2LMDBRecordReader::folder_reading() {
+    if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
+        THROW("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
     std::string _full_path = _folder_path;
     auto ret = Reader::Status::OK;
-    if(Caffe2_LMDB_reader() != Reader::Status::OK)
-        WRN("Caffe2LMDBRecordReader ShardID ["+ TOSTR(_shard_id)+ "] Caffe2LMDBRecordReader cannot access the storage at " + _folder_path);
+    if (Caffe2_LMDB_reader() != Reader::Status::OK)
+        WRN("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Caffe2LMDBRecordReader cannot access the storage at " + _folder_path);
 
-    if(_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
-    {
+    if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
         replicate_last_image_to_fill_last_shard();
-        LOG("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path+_last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count) ) + " times to fill the last batch")
+        LOG("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
     }
-    if(!_file_names.empty())
-        LOG("Caffe2LMDBRecordReader ShardID ["+ TOSTR(_shard_id)+ "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path )
+    if (!_file_names.empty())
+        LOG("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
     return ret;
 }
 
-void Caffe2LMDBRecordReader::replicate_last_image_to_fill_last_shard()
-{
-    for(size_t i = _in_batch_read_count; i < _batch_count; i++)
-    {
+void Caffe2LMDBRecordReader::replicate_last_image_to_fill_last_shard() {
+    for (size_t i = _in_batch_read_count; i < _batch_count; i++) {
         _file_names.push_back(_last_file_name);
         _file_size.insert(pair<std::string, unsigned int>(_last_file_name, _last_file_size));
     }
 }
 
-void Caffe2LMDBRecordReader::replicate_last_batch_to_pad_partial_shard()
-{
-    if (_file_names.size() >=  _batch_count) {
-        for (size_t i = 0; i < _batch_count; i++)
-        {
+void Caffe2LMDBRecordReader::replicate_last_batch_to_pad_partial_shard() {
+    if (_file_names.size() >= _batch_count) {
+        for (size_t i = 0; i < _batch_count; i++) {
             _file_names.push_back(_file_names[i - _batch_count]);
             auto file_name = _file_names[i - _batch_count];
             auto it_file_size = _file_size.find(_file_names[i - _batch_count]);
             if (_file_size.end() == it_file_size)
-            THROW("ERROR: Given name not present in the image size map" + _file_names[i - _batch_count])
+                THROW("ERROR: Given name not present in the image size map" + _file_names[i - _batch_count])
             _file_size[file_name] = it_file_size->second;
         }
     }
 }
 
-Reader::Status Caffe2LMDBRecordReader::Caffe2_LMDB_reader()
-{
+Reader::Status Caffe2LMDBRecordReader::Caffe2_LMDB_reader() {
     _open_env = 0;
     string tmp1 = _folder_path + "/data.mdb";
     string tmp2 = _folder_path + "/lock.mdb";
@@ -199,16 +181,13 @@ Reader::Status Caffe2LMDBRecordReader::Caffe2_LMDB_reader()
     return Reader::Status::OK;
 }
 
-size_t Caffe2LMDBRecordReader::get_file_shard_id()
-{
+size_t Caffe2LMDBRecordReader::get_file_shard_id() {
     if (_batch_count == 0 || _shard_count == 0)
         THROW("Shard (Batch) size cannot be set to 0")
-    return (_file_id ) % _shard_count;
+    return (_file_id) % _shard_count;
 }
 
-
-void Caffe2LMDBRecordReader::read_image_names()
-{
+void Caffe2LMDBRecordReader::read_image_names() {
     int rc;
     MDB_env *env;
     MDB_dbi dbi;
@@ -234,33 +213,27 @@ void Caffe2LMDBRecordReader::read_image_names()
     CHECK_LMDB_RETURN_STATUS(mdb_cursor_open(txn, dbi, &cursor));
 
     // Retrieve by cursor. It retrieves key/data pairs from the database
-    while((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0)
-    {
-        str_key = string((char *) key.mv_data);
-        if(get_file_shard_id() != _shard_id )
-        {
+    while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0) {
+        str_key = string((char *)key.mv_data);
+        if (get_file_shard_id() != _shard_id) {
             incremenet_file_id();
             continue;
         }
         _in_batch_read_count++;
-        _in_batch_read_count = (_in_batch_read_count%_batch_count == 0) ? 0 : _in_batch_read_count;
-        str_data = string((char *) data.mv_data);
+        _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
+        str_data = string((char *)data.mv_data);
         caffe2_protos::TensorProtos tens_protos;
         tens_protos.ParseFromArray((char *)data.mv_data, data.mv_size);
         int protos_size = tens_protos.protos_size();
-        if(protos_size != 0)
-        {
+        if (protos_size != 0) {
             caffe2_protos::TensorProto image_proto = tens_protos.protos(0);
             bool chk_byte_data = image_proto.has_byte_data();
-            if(chk_byte_data)
-            {
+            if (chk_byte_data) {
                 _file_names.push_back(str_key.c_str());
                 _last_file_name = str_key.c_str();
                 _last_file_size = image_proto.byte_data().size();
-	        _file_size.insert(pair<std::string, unsigned int>(_last_file_name, _last_file_size));
-            }
-            else
-            {
+                _file_size.insert(pair<std::string, unsigned int>(_last_file_name, _last_file_size));
+            } else {
                 THROW("\n Image parsing failed");
             }
         }
@@ -273,8 +246,7 @@ void Caffe2LMDBRecordReader::read_image_names()
     mdb_env_close(env);
 }
 
-void Caffe2LMDBRecordReader::open_env_for_read_image()
-{
+void Caffe2LMDBRecordReader::open_env_for_read_image() {
     // Creating an LMDB environment handle
     CHECK_LMDB_RETURN_STATUS(mdb_env_create(&_read_mdb_env));
     // Setting the size of the memory map to use for this environment.
@@ -289,10 +261,8 @@ void Caffe2LMDBRecordReader::open_env_for_read_image()
     _open_env = 1;
 }
 
-void Caffe2LMDBRecordReader::read_image(unsigned char* buff, std::string file_name)
-{
-
-    if(_open_env == 0)
+void Caffe2LMDBRecordReader::read_image(unsigned char *buff, std::string file_name) {
+    if (_open_env == 0)
         open_env_for_read_image();
 
     // Creating a cursor handle.
@@ -306,38 +276,30 @@ void Caffe2LMDBRecordReader::read_image(unsigned char* buff, std::string file_na
     _read_mdb_key.mv_data = (char *)newStr.c_str();
 
     int _mdb_status = mdb_cursor_get(_read_mdb_cursor, &_read_mdb_key, &_read_mdb_value, MDB_SET_RANGE);
-    if(_mdb_status == MDB_NOTFOUND) {
-	    THROW("Key Not found");
-    }
-    else
-    {
-            // Parsing Image and Label Protos using the key and data values
-            // read from LMDB records
-            caffe2_protos::TensorProtos tens_protos;
+    if (_mdb_status == MDB_NOTFOUND) {
+        THROW("Key Not found");
+    } else {
+        // Parsing Image and Label Protos using the key and data values
+        // read from LMDB records
+        caffe2_protos::TensorProtos tens_protos;
 
-            tens_protos.ParseFromArray((char *)_read_mdb_value.mv_data, _read_mdb_value.mv_size);
+        tens_protos.ParseFromArray((char *)_read_mdb_value.mv_data, _read_mdb_value.mv_size);
 
-            // Checking size of the protos
-            int protos_size = tens_protos.protos_size();
-            if(protos_size != 0)
-            {
-                caffe2_protos::TensorProto image_proto = tens_protos.protos(0);
-                // Checking if image bytes is present or not
-                bool chk_byte_data = image_proto.has_byte_data();
+        // Checking size of the protos
+        int protos_size = tens_protos.protos_size();
+        if (protos_size != 0) {
+            caffe2_protos::TensorProto image_proto = tens_protos.protos(0);
+            // Checking if image bytes is present or not
+            bool chk_byte_data = image_proto.has_byte_data();
 
-                if(chk_byte_data)
-                {
-                    memcpy(buff, image_proto.byte_data().c_str(), image_proto.byte_data().size());
-                }
-                else
-                {
-                    THROW("Image Parsing Failed");
-                }
+            if (chk_byte_data) {
+                memcpy(buff, image_proto.byte_data().c_str(), image_proto.byte_data().size());
+            } else {
+                THROW("Image Parsing Failed");
             }
-            else
-            {
-                THROW("Parsing Protos Failed");
-            }
+        } else {
+            THROW("Parsing Protos Failed");
+        }
     }
     // Closing cursor handles
     mdb_cursor_close(_read_mdb_cursor);

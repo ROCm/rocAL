@@ -33,24 +33,23 @@ THE SOFTWARE.
 #include "ffmpeg_video_decoder.h"
 #include "video_reader_factory.h"
 #include "timing_debug.h"
-#include "video_loader_module.h"
+#include "loader_module.h"
 #include "video_properties.h"
+#include "video_reader.h"
+
 #ifdef ROCAL_VIDEO
-extern "C"
-{
+extern "C" {
 #include <libavutil/pixdesc.h>
 }
 
-class VideoReadAndDecode
-{
-public:
+class VideoReadAndDecode {
+   public:
     VideoReadAndDecode();
     ~VideoReadAndDecode();
     size_t count();
     void reset();
-    void create(VideoReaderConfig reader_config, VideoDecoderConfig decoder_config, int batch_size);
-    void set_video_process_count(size_t video_count)
-    {
+    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size);
+    void set_video_process_count(size_t video_count) {
         _video_process_count = (video_count <= _max_video_count) ? video_count : _max_video_count;
     }
     float convert_framenum_to_timestamp(size_t frame_number);
@@ -66,7 +65,7 @@ public:
     /// \param sequence_start_framenum_vec is set by the load() function. The starting frame number of the sequences will be updated.
     /// \param sequence_frame_timestamps_vec is set by the load() function. The timestamps of each of the frames in the sequences will be updated.
     /// \param output_color_format defines what color format user expects decoder to decode frames into if capable of doing so supported is
-    VideoLoaderModuleStatus load(
+    LoaderModuleStatus load(
         unsigned char *buff,
         std::vector<std::string> &names,
         const size_t max_decoded_width,
@@ -81,9 +80,9 @@ public:
 
     //! returns timing info or other status information
     Timing timing();
-private:
-    struct video_map
-    {
+
+   private:
+    struct video_map {
         int _video_map_idx;
         bool _is_decoder_instance;
     };
@@ -102,7 +101,6 @@ private:
     std::vector<int> _sequence_video_idx;
     TimingDBG _file_load_time, _decode_time;
     size_t _batch_size;
-    size_t _sequence_count;
     size_t _sequence_length;
     size_t _stride;
     size_t _video_count;
@@ -111,6 +109,6 @@ private:
     size_t _max_decoded_height;
     size_t _max_decoded_stride;
     AVPixelFormat _out_pix_fmt;
-    VideoDecoderConfig _video_decoder_config;
+    DecoderConfig _video_decoder_config;
 };
 #endif

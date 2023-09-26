@@ -21,70 +21,63 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <variant>
+#include <algorithm>  // std::remove_if
 #include <cstdlib>
-#include <stdexcept>
-#include <memory>
 #include <ctime>
-#include <numeric>// std::inner_product, std::accumulate
-#include <algorithm> // std::remove_if
-#include <vector>
-#include <thread>
+#include <memory>
+#include <numeric>  // std::inner_product, std::accumulate
 #include <random>
-#include "parameter.h"
-#include "log.h"
-template <typename T>
-class UniformRand: public Parameter<T>
-{
-public:
+#include <stdexcept>
+#include <thread>
+#include <variant>
+#include <vector>
 
-    UniformRand(T start, T end, unsigned seed = 0):_generator(seed)
-    {
+#include "log.h"
+#include "parameter.h"
+template <typename T>
+class UniformRand : public Parameter<T> {
+   public:
+    UniformRand(T start, T end, unsigned seed = 0) : _generator(seed) {
         update(start, end);
         renew();
     }
 
-    explicit UniformRand(T start, unsigned seed = 0):
-            UniformRand(start, start, seed) {}
+    explicit UniformRand(T start, unsigned seed = 0) : UniformRand(start, start, seed) {}
 
-    T default_value() const override
-    {
-        return static_cast<T>((_start+_end)/static_cast<T>(2));
+    T default_value() const override {
+        return static_cast<T>((_start + _end) / static_cast<T>(2));
     }
 
-    T get() override
-    {
+    T get() override {
         return _updated_val;
     };
-    void renew() override
-    {
+    void renew() override {
         std::unique_lock<std::mutex> lock(_lock);
-        auto val =_generator();
+        auto val = _generator();
 
-        if(single_value())
-        {
+        if (single_value()) {
             // If there is only a single value possible for the random variable
             // don't waste time on calling the rand function , just return it.
             _updated_val = _start;
         } else {
             _updated_val = static_cast<T>(
-                    ((double)val / (double) _generator.max()) * ((double) _end - (double) _start) + (double) _start);
+                ((double)val / (double)_generator.max()) * ((double)_end - (double)_start) + (double)_start);
         }
     }
     int update(T start, T end) {
         std::unique_lock<std::mutex> lock(_lock);
-        if(end < start)
+        if (end < start)
             end = start;
 
         _start = start;
         _end = end;
         return 0;
     }
-    bool single_value() const override
-    {
+    bool single_value() const override {
         return (_start == _end);
     }
-private:
+
+   private:
     T _start;
     T _end;
     T _updated_val;
@@ -92,35 +85,26 @@ private:
     std::mutex _lock;
 };
 
-
-
 template <typename T>
-struct CustomRand: public Parameter<T>
-{
-
-    CustomRand
-    (
+struct CustomRand : public Parameter<T> {
+    CustomRand(
         const T values[],
         const double frequencies[],
-        size_t size, unsigned seed = 0):_generator(seed)
-    {
+        size_t size, unsigned seed = 0) : _generator(seed) {
         update(values, frequencies, size);
         renew();
     }
-    int update
-    (
+    int update(
         const T values[],
         const double frequencies[],
-        size_t size
-    )
-    {
+        size_t size) {
         std::unique_lock<std::mutex> lock(_lock);
 
-        if(size == 0)
+        if (size == 0)
             return -1;
 
-        _values.assign(values, values+size);
-        _frequencies.assign(frequencies, frequencies+size);
+        _values.assign(values, values + size);
+        _frequencies.assign(frequencies, frequencies + size);
         _comltv_dist.resize(size, 0);
         double sum = 0;
         // filter out negative values if any, and sum it up
@@ -134,13 +118,13 @@ struct CustomRand: public Parameter<T>
         // TODO: Remove values associated with probabilities equal to 0 from the _frequencies and _values
 
         // Normalize the frequencies , so that the sum is equal to 1.0
-        std::transform (
+        std::transform(
             _frequencies.begin(),
             _frequencies.end(),
             _frequencies.begin(),
-            [&](double in) { return (double)in/sum;});
+            [&](double in) { return (double)in / sum; });
 
-        //Compute the expected value by performing inner product of probs and values
+        // Compute the expected value by performing inner product of probs and values
         _mean = std::inner_product(
             _values.begin(),
             _values.end(),
@@ -155,22 +139,18 @@ struct CustomRand: public Parameter<T>
 
         return 0;
     }
-    T default_value() const override
-    {
+    T default_value() const override {
         return static_cast<T>(_mean);
     }
-    void renew() override
-    {
+    void renew() override {
         std::unique_lock<std::mutex> lock(_lock);
-        if(single_value())
-        {
+        if (single_value()) {
             // If there is only a single value possible for the random variable
             // don't waste time on calling the rand function , just return it.
-            _updated_val =  _values[0];
-        }
-        else {
+            _updated_val = _values[0];
+        } else {
             // Generate a value between [0 1]
-            double rand_val = (double) _generator() / (double) _generator.max();
+            double rand_val = (double)_generator() / (double)_generator.max();
 
             // Find the iterators pointing to the first element bigger than idx
             auto it = std::upper_bound(_comltv_dist.begin(), _comltv_dist.end(), rand_val);
@@ -181,19 +161,18 @@ struct CustomRand: public Parameter<T>
             _updated_val = _values[idx];
         }
     }
-    T get() override
-    {
+    T get() override {
         return _updated_val;
     };
 
-    bool single_value() const override
-    {
+    bool single_value() const override {
         return (_values.size() == 1);
     }
-private:
-    std::vector<T> _values;//!< Values
-    std::vector<double> _frequencies;//!< Probabilities
-    std::vector<double> _comltv_dist;//!< commulative probabilities
+
+   private:
+    std::vector<T> _values;            //!< Values
+    std::vector<double> _frequencies;  //!< Probabilities
+    std::vector<double> _comltv_dist;  //!< commulative probabilities
     double _mean;
     T _updated_val;
     std::mt19937 _generator;

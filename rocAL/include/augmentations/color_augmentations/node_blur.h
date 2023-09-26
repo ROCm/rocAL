@@ -21,24 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "graph.h"
 #include "node.h"
 #include "parameter_factory.h"
 #include "parameter_vx.h"
-#include "graph.h"
 
-class BlurNode : public Node
-{
-public:
-    BlurNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+class BlurNode : public Node {
+   public:
+    BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     BlurNode() = delete;
-    void init(int sdev);
-    void init(IntParam *sdev);
+    void init(int kernel_size);
+    void init(IntParam *kernel_size_param);
 
-protected:
+   protected:
     void update_node() override;
     void create_node() override;
 
-private:
-    ParameterVX<int> _sdev;
-    constexpr static int SDEV_RANGE [2] = {3, 9};
+   private:
+    ParameterVX<int> _kernel_size;
+    constexpr static int KERNEL_SIZE_RANGE[2] = {3, 9};
 };

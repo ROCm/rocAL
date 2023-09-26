@@ -33,22 +33,22 @@ using namespace cv;
 #endif
 
 class CVDecoder : public Decoder {
-public:
+   public:
     //! Default constructor
     CVDecoder();
     //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
     /*!
      \param input_buffer  User provided buffer containig the encoded image
      \param input_size Size of the compressed data provided in the input_buffer
-     \param width pointer to the user's buffer to write the width of the compressed image to 
-     \param height pointer to the user's buffer to write the height of the compressed image to 
-     \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to 
+     \param width pointer to the user's buffer to write the width of the compressed image to
+     \param height pointer to the user's buffer to write the height of the compressed image to
+     \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
-    Status decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps) override;
-    
+    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
+
     //! Decodes the actual image data
     //! Decodes the actual image data
-    /*! 
+    /*!
       \param input_buffer  User provided buffer containig the encoded image
       \param output_buffer User provided buffer used to write the decoded image into
       \param input_size Size of the compressed data provided in the input_buffer
@@ -58,25 +58,25 @@ public:
       \param original_image_height The actual height of the compressed image. decoded height will be equal to this if this is smaller than max_decoded_height
     */
     Status decode(unsigned char *input_buffer, size_t input_size, unsigned char *output_buffer,
-                           size_t max_decoded_width, size_t max_decoded_height,
-                           size_t original_image_width, size_t original_image_height,
-                           size_t &actual_decoded_width, size_t &actual_decoded_height,
-                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size=false) override;
+                  size_t max_decoded_width, size_t max_decoded_height,
+                  size_t original_image_width, size_t original_image_height,
+                  size_t &actual_decoded_width, size_t &actual_decoded_height,
+                  Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override;
 
     bool is_partial_decoder() override { return _is_partial_decoder; }
-    void set_bbox_coords(std::vector <float> bbox_coord) override { _bbox_coord = bbox_coord; }
+    void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
-    std::vector <float> get_bbox_coords() override { return _bbox_coord; }
-    //virtual Status decode(unsigned char* input_buffer, size_t input_size,  unsigned char* output_buffer,int desired_width, int desired_height, ColorFormat desired_color);
-    void initialize(int device_id) override {};
+    std::vector<float> get_bbox_coords() override { return _bbox_coord; }
+    // virtual Status decode(unsigned char* input_buffer, size_t input_size,  unsigned char* output_buffer,int desired_width, int desired_height, ColorFormat desired_color);
+    void initialize(int device_id) override{};
     ~CVDecoder() override;
 
-private:
-  //cv::Mat m_mat_compressed;
-  cv::Mat m_mat_scaled;
-  cv::Mat m_mat_orig;
-  bool _is_partial_decoder = false;
-  std::vector <float> _bbox_coord;
-  CropWindow _crop_window;
+   private:
+    // cv::Mat m_mat_compressed;
+    cv::Mat m_mat_scaled;
+    cv::Mat m_mat_orig;
+    bool _is_partial_decoder = false;
+    std::vector<float> _bbox_coord;
+    CropWindow _crop_window;
 };
 #endif

@@ -21,22 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <set>
 #include <memory>
+#include <set>
+
 #include "bounding_box_graph.h"
 #include "meta_data.h"
 #include "node.h"
 #include "node_crop_mirror_normalize.h"
 #include "parameter_vx.h"
-class CropMirrorNormalizeMetaNode:public MetaNode
-{
-    public:
-        CropMirrorNormalizeMetaNode() {};
-        void update_parameters(MetaDataBatch* input_meta_data)override;
-        std::shared_ptr<CropMirrorNormalizeNode> _node = nullptr;
-    private:
-        void initialize();
-        std::shared_ptr<RocalCropParam> _meta_crop_param;
-        vx_array _dstImgWidth, _dstImgHeight, _x1, _y1, _mirror, _src_width, _src_height;
-        std::vector<uint> _width_val, _height_val, _x1_val, _y1_val, _mirror_val,_src_width_val,_src_height_val;
+class CropMirrorNormalizeMetaNode : public MetaNode {
+   public:
+    CropMirrorNormalizeMetaNode(){};
+    void update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
+    std::shared_ptr<CropMirrorNormalizeNode> _node = nullptr;
+
+   private:
+    void initialize();
+    std::shared_ptr<RocalCropParam> _meta_crop_param;
+    vx_array _dst_img_width, _dst_img_height, _x1, _y1, _mirror, _src_width, _src_height;
+    std::vector<uint> _width_val, _height_val, _x1_val, _y1_val, _mirror_val, _src_width_val, _src_height_val;
 };

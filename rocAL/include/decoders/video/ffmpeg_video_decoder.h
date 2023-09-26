@@ -25,9 +25,8 @@ THE SOFTWARE.
 #include "video_decoder.h"
 
 #ifdef ROCAL_VIDEO
-class FFmpegVideoDecoder : public VideoDecoder
-{
-public:
+class FFmpegVideoDecoder : public VideoDecoder {
+   public:
     //! Default constructor
     FFmpegVideoDecoder();
     VideoDecoder::Status Initialize(const char *src_filename) override;
@@ -35,7 +34,8 @@ public:
     int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override;
     void release() override;
     ~FFmpegVideoDecoder() override;
-private:
+
+   private:
     const char *_src_filename = NULL;
     AVFormatContext *_fmt_ctx = NULL;
     AVCodecContext *_video_dec_ctx = NULL;

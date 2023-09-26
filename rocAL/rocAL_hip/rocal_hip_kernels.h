@@ -21,43 +21,39 @@ THE SOFTWARE.
 */
 // kernel definitions for HIP
 
-#define ENABLE_EVENT_BASED_SYNC     0
-int HipExecCopyInt8ToNHWC
-(
+#define ENABLE_EVENT_BASED_SYNC 0
+int HipExecCopyInt8ToNHWC(
     hipStream_t stream,
-    const void*     inp_image_u8,
-    void*     output_tensor,
-    unsigned int     dst_buf_offset,
-    const unsigned int     n,
-    const unsigned int     c,
-    const unsigned int     h,
-    const unsigned int     w,
-    float     multiplier0,
-    float     multiplier1,
-    float     multiplier2,
-    float     offset0,
-    float     offset1,
-    float     offset2,
+    const void* inp_image_u8,
+    void* output_tensor,
+    unsigned int dst_buf_offset,
+    const unsigned int n,
+    const unsigned int c,
+    const unsigned int h,
+    const unsigned int w,
+    float multiplier0,
+    float multiplier1,
+    float multiplier2,
+    float offset0,
+    float offset1,
+    float offset2,
     unsigned int reverse_channels,
-    unsigned int fp16
-);
+    unsigned int fp16);
 
-int HipExecCopyInt8ToNCHW
-(
+int HipExecCopyInt8ToNCHW(
     hipStream_t stream,
-    const void*     inp_image_u8,
-    void*     output_tensor,
-    unsigned int     dst_buf_offset,
-    const unsigned int     n,
-    const unsigned int     c,
-    const unsigned int     h,
-    const unsigned int     w,
-    float     multiplier0,
-    float     multiplier1,
-    float     multiplier2,
-    float     offset0,
-    float     offset1,
-    float     offset2,
+    const void* inp_image_u8,
+    void* output_tensor,
+    unsigned int dst_buf_offset,
+    const unsigned int n,
+    const unsigned int c,
+    const unsigned int h,
+    const unsigned int w,
+    float multiplier0,
+    float multiplier1,
+    float multiplier2,
+    float offset0,
+    float offset1,
+    float offset2,
     unsigned int reverse_channels,
-    unsigned int fp16
-);
+    unsigned int fp16);

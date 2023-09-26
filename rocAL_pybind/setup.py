@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,22 +25,25 @@ import sys
 if sys.version_info < (3, 0):
     sys.exit('rocal Python Package requires Python > 3.0')
 
+
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
     @classmethod
     def has_ext_modules(self):
         return True
 
+
 setup(
-      name='amd-rocal',
-      description='AMD ROCm Augmentation Library',
-      url='https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/rocAL',
-      version='1.0.0',
-      author='AMD',
-      license='Apache License 2.0',
-      packages=find_packages(where='@TARGET_NAME@'),
-      package_dir={'amd':'@TARGET_NAME@/amd'},
-      include_package_data=True,
-      ext_modules=[Extension('rocal_pybind',sources=['rocal_pybind.cpp'], include_dirs=['@pybind11_INCLUDE_DIRS@', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
-      distclass=BinaryDistribution
-      )
+    name='amd-rocal',
+    description='AMD ROCm Augmentation Library',
+    url='https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/rocAL',
+    version='1.0.0',
+    author='AMD',
+    license='Apache License 2.0',
+    packages=find_packages(where='@TARGET_NAME@'),
+    package_dir={'amd': '@TARGET_NAME@/amd'},
+    include_package_data=True,
+    ext_modules=[Extension('rocal_pybind', sources=['rocal_pybind.cpp'], include_dirs=[
+                           '@pybind11_INCLUDE_DIRS@', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
+    distclass=BinaryDistribution
+)

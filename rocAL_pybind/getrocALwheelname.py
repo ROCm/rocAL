@@ -1,5 +1,6 @@
 from setuptools.dist import Distribution
 
+
 class BinaryDistribution(Distribution):
     @classmethod
     def has_ext_modules(foo):
@@ -16,5 +17,6 @@ def wheel_name(**kwargs):
     distname = bdist_wheel_cmd.wheel_dist_name
     tag = '-'.join(bdist_wheel_cmd.get_tag())
     return f'{distname}-{tag}.whl'
+
 
 print(wheel_name(name='amd-rocal', version='1.0.0'), end='')

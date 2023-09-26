@@ -20,85 +20,71 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <stdexcept>
-#include <memory>
 #include "reader_factory.h"
-#include "file_source_reader.h"
-#include "sequence_file_source_reader.h"
-#include "coco_file_source_reader.h"
-#include "cifar10_data_reader.h"
-#include "tf_record_reader.h"
-#include "caffe_lmdb_record_reader.h"
+
+#include <memory>
+#include <stdexcept>
+
 #include "caffe2_lmdb_record_reader.h"
+#include "caffe_lmdb_record_reader.h"
+#include "cifar10_data_reader.h"
+#include "coco_file_source_reader.h"
+#include "file_source_reader.h"
 #include "mxnet_recordio_reader.h"
+#include "sequence_file_source_reader.h"
+#include "tf_record_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
-    switch(config.type()) {
-        case StorageType ::FILE_SYSTEM:
-        {
+    switch (config.type()) {
+        case StorageType ::FILE_SYSTEM: {
             auto ret = std::make_shared<FileSourceReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("File reader cannot access the storage");
             return ret;
-        }
-        break;
-        case StorageType ::SEQUENCE_FILE_SYSTEM:
-        {
+        } break;
+        case StorageType ::SEQUENCE_FILE_SYSTEM: {
             auto ret = std::make_shared<SequenceFileSourceReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("File reader cannot access the storage");
             return ret;
-        }
-        break;
-        case StorageType ::COCO_FILE_SYSTEM:
-        {
+        } break;
+        case StorageType ::COCO_FILE_SYSTEM: {
             auto ret = std::make_shared<COCOFileSourceReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("COCO File reader cannot access the storage");
             return ret;
-        }
-        break;
-        case StorageType::TF_RECORD:
-        {
+        } break;
+        case StorageType::TF_RECORD: {
             auto ret = std::make_shared<TFRecordReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("File reader cannot access the storage");
             return ret;
-        }
-        break;
-        case StorageType::UNCOMPRESSED_BINARY_DATA:
-        {
+        } break;
+        case StorageType::UNCOMPRESSED_BINARY_DATA: {
             auto ret = std::make_shared<CIFAR10DataReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("CFar10 data reader cannot access the storage");
             return ret;
-        }
-        break;
-        case StorageType::CAFFE_LMDB_RECORD:
-        {
+        } break;
+        case StorageType::CAFFE_LMDB_RECORD: {
             auto ret = std::make_shared<CaffeLMDBRecordReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("CaffeLMDBRecordReader cannot access the storage");
             return ret;
-        }
-        break;
-        case StorageType::CAFFE2_LMDB_RECORD:
-        {
+        } break;
+        case StorageType::CAFFE2_LMDB_RECORD: {
             auto ret = std::make_shared<Caffe2LMDBRecordReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("Caffe2LMDBRecordReader cannot access the storage");
             return ret;
-        }
-        break;
-        case StorageType::MXNET_RECORDIO:
-        {
+        } break;
+        case StorageType::MXNET_RECORDIO: {
             auto ret = std::make_shared<MXNetRecordIOReader>();
-            if(ret->initialize(config) != Reader::Status::OK)
+            if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("MXNetRecordIOReader cannot access the storage");
             return ret;
-        }
-        break;
+        } break;
         default:
-            throw std::runtime_error ("Reader type is unsupported");
+            throw std::runtime_error("Reader type is unsupported");
     }
 }

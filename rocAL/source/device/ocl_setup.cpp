@@ -24,39 +24,36 @@ THE SOFTWARE.
 // Created by svcbuild on 11/4/19.
 //
 #if ENABLE_OPENCL
-#include <vector>
-#include "log.h"
-#include "exception.h"
 #include "ocl_setup.h"
-int get_device_and_context(int devIdx, cl_context *pContext, cl_device_id *pDevice, cl_device_type clDeviceType)
-{
+
+#include <vector>
+
+#include "exception.h"
+#include "log.h"
+int get_device_and_context(int devIdx, cl_context *pContext, cl_device_id *pDevice, cl_device_type clDeviceType) {
     cl_int error = CL_DEVICE_NOT_FOUND;
 
     int status;
 
     /*
-    * Have a look at the available platforms and pick either
-    * the AMD one if available or a reasonable default.
-    */
+     * Have a look at the available platforms and pick either
+     * the AMD one if available or a reasonable default.
+     */
 
     cl_uint numPlatforms = 0;
     cl_platform_id platform = nullptr;
     std::vector<cl_platform_id> platforms;
     status = clGetPlatformIDs(0, nullptr, &numPlatforms);
     if (status != CL_SUCCESS)
-        THROW("clGetPlatformIDs returned error: "+TOSTR(status))
+        THROW("clGetPlatformIDs returned error: " + TOSTR(status))
 
-
-    if (0 < numPlatforms)
-    {
+    if (0 < numPlatforms) {
         platforms.resize(numPlatforms);
         status = clGetPlatformIDs(numPlatforms, platforms.data(), nullptr);
         if (status != CL_SUCCESS)
             THROW("clGetPlatformIDs returned error: " + TOSTR(status))
 
-
-        for (unsigned i = 0; i < numPlatforms; ++i)
-        {
+        for (unsigned i = 0; i < numPlatforms; ++i) {
             char vendor[100];
             status = clGetPlatformInfo(platforms[i],
                                        CL_PLATFORM_VENDOR,
@@ -67,22 +64,19 @@ int get_device_and_context(int devIdx, cl_context *pContext, cl_device_id *pDevi
             const std::string AMD_NAME = "Advanced Micro Devices, Inc.";
 
             if (status != CL_SUCCESS) {
-                LOG("clGetPlatformInfo returned error: "+TOSTR(status))
+                LOG("clGetPlatformInfo returned error: " + TOSTR(status))
                 continue;
             }
-            if( AMD_NAME.compare(0, AMD_NAME.length(), vendor) == 0)
-            {
-                LOG("AMD Platform found "+STR(vendor))
+            if (AMD_NAME.compare(0, AMD_NAME.length(), vendor) == 0) {
+                LOG("AMD Platform found " + STR(vendor))
                 platform = platforms[i];
                 break;
             }
-
         }
     }
 
-    if(!platform)
+    if (!platform)
         THROW("Couldn't find AMD OpenCL platform")
-
 
     // enumerate devices
 
@@ -90,11 +84,10 @@ int get_device_and_context(int devIdx, cl_context *pContext, cl_device_id *pDevi
     char driverVersion[100] = "\0";
 
     cl_context_properties contextProps[3] =
-    {
+        {
             CL_CONTEXT_PLATFORM,
             (cl_context_properties)platform,
-            0
-    };
+            0};
 
     // Retrieve device
     cl_uint numDevices = 0;
@@ -107,39 +100,36 @@ int get_device_and_context(int devIdx, cl_context *pContext, cl_device_id *pDevi
 
     status = clGetDeviceIDs(platform, clDeviceType, numDevices, devices.data(), &numDevices);
     if (status != CL_SUCCESS)
-        THROW( "clGetDeviceIDs returned error: "+TOSTR( status))
+        THROW("clGetDeviceIDs returned error: " + TOSTR(status))
 
     clGetDeviceInfo(devices[0], CL_DRIVER_VERSION, sizeof(driverVersion), driverVersion, nullptr);
 
     // log all devices found:
-    LOG("Driver version: "+STR(driverVersion));
-    LOG("Devices found "+ TOSTR(numDevices));
-    for (unsigned int n = 0; n < numDevices; n++)
-    {
+    LOG("Driver version: " + STR(driverVersion));
+    LOG("Devices found " + TOSTR(numDevices));
+    for (unsigned int n = 0; n < numDevices; n++) {
         char deviceName[100] = "\0";
         clGetDeviceInfo(devices[n], CL_DEVICE_NAME, sizeof(deviceName), deviceName, nullptr);
-        LOG("GPU device "+STR(deviceName))
+        LOG("GPU device " + STR(deviceName))
     }
 
-    if (devIdx >= 0 && devIdx <  (int)numDevices)
-    {
+    if (devIdx >= 0 && devIdx < (int)numDevices) {
         *pDevice = devices[devIdx];
         clRetainDevice(*pDevice);
         *pContext = clCreateContext(contextProps, 1, pDevice, nullptr, nullptr, &error);
 
-        if (error == CL_SUCCESS){
+        if (error == CL_SUCCESS) {
             char deviceName[100] = "\0";
             clGetDeviceInfo(devices[devIdx], CL_DEVICE_NAME, sizeof(deviceName), deviceName, nullptr);
-            LOG("Using GPU device "+STR( deviceName));
-        }
-        else {
-            THROW("clCreateContext failed: "+TOSTR( error));
+            LOG("Using GPU device " + STR(deviceName));
+        } else {
+            THROW("clCreateContext failed: " + TOSTR(error));
         }
     } else {
-        THROW("Device id "+TOSTR(devIdx) + " is out of range of available devices " + TOSTR(numDevices) )
+        THROW("Device id " + TOSTR(devIdx) + " is out of range of available devices " + TOSTR(numDevices))
     }
 
-    for (unsigned int idx = 0; idx < numDevices; idx++){
+    for (unsigned int idx = 0; idx < numDevices; idx++) {
         clReleaseDevice(devices[idx]);
     }
 

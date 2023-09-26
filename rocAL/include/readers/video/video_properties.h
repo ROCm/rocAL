@@ -21,17 +21,17 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <boost/filesystem.hpp>
 #include <dirent.h>
-#include <sstream>
-#include <iostream>
+
+#include <boost/filesystem.hpp>
 #include <fstream>
+#include <iostream>
+#include <sstream>
 #include <tuple>
 #ifdef ROCAL_VIDEO
-extern "C"
-{
-#include <libavformat/avformat.h>
+extern "C" {
 #include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 }
 #endif
 #include "commons.h"
@@ -39,8 +39,7 @@ extern "C"
 namespace filesys = boost::filesystem;
 
 #ifdef ROCAL_VIDEO
-typedef struct VideoProperties
-{
+typedef struct VideoProperties {
     unsigned width, height, videos_count;
     float frame_rate = 0;
     std::vector<size_t> frames_count;
@@ -50,8 +49,7 @@ typedef struct VideoProperties
     std::vector<int> labels;
 } VideoProperties;
 
-typedef struct Properties
-{
+typedef struct Properties {
     unsigned width, height, frames_count, avg_frame_rate_num, avg_frame_rate_den;
 } Properties;
 

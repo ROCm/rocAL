@@ -21,19 +21,21 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <vector>
-#include <string>
-#include <memory>
 #include <dirent.h>
-#include <map>
-#include <iterator>
+
 #include <algorithm>
 #include <fstream>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "image_reader.h"
 #include "timing_debug.h"
 
-class MXNetRecordIOReader : public Reader{
-public:
+class MXNetRecordIOReader : public Reader {
+   public:
     //! Reads the MXNet Record File, and loads the image ids and other necessary info
     /*!
      \param desc  User provided descriptor containing the files' path.
@@ -54,7 +56,7 @@ public:
     void reset() override;
 
     //! Returns the id of the latest file opened
-    std::string id() override { return _last_id;};
+    std::string id() override { return _last_id; };
 
     unsigned count_items() override;
 
@@ -64,24 +66,24 @@ public:
 
     MXNetRecordIOReader();
 
-private:
+   private:
     //! opens the folder containnig the images
     Reader::Status record_reading();
     Reader::Status MXNet_reader();
     std::string _path;
-    DIR *_src_dir;
-    struct dirent *_entity;
+    DIR* _src_dir;
+    struct dirent* _entity;
     std::string _image_key;
     std::vector<std::string> _file_names;
-    std::map<std::string, std::tuple<unsigned int, int64_t, int64_t> > _record_properties;
-    unsigned  _curr_file_idx;
+    std::map<std::string, std::tuple<unsigned int, int64_t, int64_t>> _record_properties;
+    unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id, _last_file_name;
     unsigned int _last_file_size;
     int64_t _last_seek_pos;
     int64_t _last_data_size;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;// equivalent of batch size
+    size_t _shard_count = 1;  // equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
     /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
@@ -92,7 +94,7 @@ private:
     bool _shuffle;
     int _read_counter = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t  _file_count_all_shards;
+    size_t _file_count_all_shards;
     void incremenet_read_ptr();
     int release();
     size_t get_file_shard_id();
@@ -101,12 +103,11 @@ private:
     void replicate_last_batch_to_pad_partial_shard();
     void read_image(unsigned char* buff, int64_t seek_position, int64_t data_size);
     void read_image_names();
-    uint32_t DecodeFlag(uint32_t rec) {return (rec >> 29U) & 7U; };
-    uint32_t DecodeLength(uint32_t rec) {return rec & ((1U << 29U) - 1U); };
-    std::vector<std::tuple<int64_t, int64_t>> _indices;// used to store seek position and record size for a particular record.
+    uint32_t DecodeFlag(uint32_t rec) { return (rec >> 29U) & 7U; };
+    uint32_t DecodeLength(uint32_t rec) { return rec & ((1U << 29U) - 1U); };
+    std::vector<std::tuple<int64_t, int64_t>> _indices;  // used to store seek position and record size for a particular record.
     std::ifstream _file_contents;
     const uint32_t _kMagic = 0xced7230a;
     int64_t _seek_pos, _data_size_to_read;
     ImageRecordIOHeader _hdr;
 };
-
