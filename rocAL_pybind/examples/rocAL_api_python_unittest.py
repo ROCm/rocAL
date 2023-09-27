@@ -506,7 +506,7 @@ def main():
     print('Number of times loop iterates is:', cnt)
 
     print(
-        "##############################  {augmentation_name.upper()}  SUCCESS  ############################")
+        f"##############################  {augmentation_name.upper()}  SUCCESS  ############################")
 
 
 if __name__ == '__main__':
