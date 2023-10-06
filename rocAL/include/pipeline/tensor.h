@@ -303,6 +303,7 @@ class Tensor : public rocalTensor {
     int create(vx_context context);
     void create_roi_tensor_from_handle(void** handle);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
+    void update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
     vx_tensor get_roi_tensor() { return _vx_roi_handle; }
     // create_from_handle() no internal memory allocation is done here since
