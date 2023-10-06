@@ -84,9 +84,6 @@ class TensorInfo {
                RocalTensorDataType data_type, RocalTensorlayout layout,
                RocalColorFormat color_format);
 
-    //! Copy constructor
-    TensorInfo(const TensorInfo& info);
-    ~TensorInfo();
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
     void set_data_type(RocalTensorDataType data_type) {
@@ -211,7 +208,7 @@ class TensorInfo {
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
-    RocalROI* get_roi() const { return (RocalROI*)_roi_buf; }
+    RocalROI* get_roi() const { return (RocalROI*)_roi.get(); }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
     uint64_t data_type_size() {
@@ -221,6 +218,14 @@ class TensorInfo {
     bool is_image() const { return _is_image; }
     void set_metadata() { _is_metadata = true; }
     bool is_metadata() const { return _is_metadata; }
+    void set_roi_ptr(unsigned* roi_ptr) {
+        auto deleter = [&](unsigned* ptr) {};  // Empty destructor used, since memory is handled by the pipeline
+        _roi.reset(roi_ptr, deleter);
+    }
+    void copy_roi(void* roi_buffer) {
+        if (_roi != nullptr && roi_buffer != nullptr)
+            memcpy((void*)roi_buffer, (const void*)_roi.get(), _batch_size * sizeof(RocalROI));
+    }
 
    private:
     Type _type = Type::UNKNOWN;                                  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
@@ -233,7 +238,8 @@ class TensorInfo {
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;  //!< tensor data type
     RocalTensorlayout _layout = RocalTensorlayout::NONE;         //!< layout of the tensor
     RocalColorFormat _color_format;                              //!< color format of the image
-    void* _roi_buf = nullptr;
+    unsigned* _roi_buf = nullptr;
+    std::shared_ptr<unsigned> _roi;
     uint64_t _data_type_size = tensor_data_size(_data_type);
     uint64_t _data_size = 0;
     std::vector<size_t> _max_shape;  //!< stores the the width and height dimensions in the tensor
@@ -275,6 +281,8 @@ class Tensor : public rocalTensor {
     void create_roi_tensor_from_handle(void** handle);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
+    void set_roi(unsigned* roi_ptr) { _info.set_roi_ptr(roi_ptr); }
+    void copy_roi(void* roi_buffer) { _info.copy_roi(roi_buffer); }
     vx_tensor get_roi_tensor() { return _vx_roi_handle; }
     // create_from_handle() no internal memory allocation is done here since
     // tensor's handle should be swapped with external buffers before usage

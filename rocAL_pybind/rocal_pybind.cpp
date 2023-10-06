@@ -84,6 +84,18 @@ py::object wrapper_image_name(RocalContext context, int array_len) {
     return py::bytes(s);
 }
 
+py::object wrapper_copy_to_tensor(RocalContext context, py::object p,
+                                  RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,
+                                  float multiplier1, float multiplier2, float offset0, float offset1, float offset2,
+                                  bool reverse_channels, RocalOutputMemType output_mem_type, int max_height, int max_width) {
+    auto ptr = ctypes_void_ptr(p);
+    // call pure C++ function
+    int status = rocalToTensor(context, ptr, tensor_format, tensor_output_type, multiplier0,
+                               multiplier1, multiplier2, offset0, offset1, offset2,
+                               reverse_channels, output_mem_type, max_height, max_width);
+    return py::cast<py::none>(Py_None);
+}
+
 std::unordered_map<int, std::string> rocalToPybindLayout = {
     {0, "NHWC"},
     {1, "NCHW"},
@@ -290,6 +302,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("SCALING_MODE_STRETCH", ROCAL_SCALING_MODE_STRETCH)
         .value("SCALING_MODE_NOT_SMALLER", ROCAL_SCALING_MODE_NOT_SMALLER)
         .value("SCALING_MODE_NOT_LARGER", ROCAL_SCALING_MODE_NOT_LARGER)
+        .value("SCALING_MODE_MIN_MAX", ROCAL_SCALING_MODE_MIN_MAX)
         .export_values();
     py::enum_<RocalResizeInterpolationType>(types_m, "RocalResizeInterpolationType", "Decode size policies")
         .value("NEAREST_NEIGHBOR_INTERPOLATION", ROCAL_NEAREST_NEIGHBOR_INTERPOLATION)
@@ -362,6 +375,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         int *ptr = static_cast<int *>(buf.ptr);
         rocalGetImageSizes(context, ptr);
     });
+    m.def("getROIImgSizes", [](RocalContext context, py::array_t<int> array) {
+        auto buf = array.request();
+        int *ptr = static_cast<int *>(buf.ptr);
+        rocalGetROIImageSizes(context, ptr);
+    });
     // rocal_api_parameter.h
     m.def("setSeed", &rocalSetSeed);
     m.def("getSeed", &rocalGetSeed);
@@ -382,6 +400,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("getIntValue", &rocalGetIntValue);
     m.def("getFloatValue", &rocalGetFloatValue);
     // rocal_api_data_transfer.h
+    m.def("rocalToTensor", &wrapper_copy_to_tensor);
     m.def("getOutputTensors", [](RocalContext context) {
         rocalTensorList *output_tensor_list = rocalGetOutputTensors(context);
         py::list list;
@@ -434,6 +453,41 @@ PYBIND11_MODULE(rocal_pybind, m) {
             boxes_list.append(boxes_array);
         }
         return boxes_list;
+    });
+    m.def("getMaskCount", [](RocalContext context, py::array_t<int> array) {
+        auto buf = array.mutable_data();
+        unsigned count = rocalGetMaskCount(context, buf);  // total number of polygons in complete batch
+        return count;
+    });
+    m.def("getMaskCoordinates", [](RocalContext context, py::array_t<int> polygon_size, py::array_t<int> mask_count) {
+        auto buf = polygon_size.request();
+        int *polygon_size_ptr = static_cast<int *>(buf.ptr);
+        // call pure C++ function
+        rocalTensorList *mask_data = rocalGetMaskCoordinates(context, polygon_size_ptr);
+        rocalTensorList *bbox_labels = rocalGetBoundingBoxLabel(context);
+        py::list complete_list;
+        int poly_cnt = 0;
+        int prev_object_cnt = 0;
+        auto mask_count_buf = mask_count.request();
+        int *mask_count_ptr = static_cast<int *>(mask_count_buf.ptr);
+        for (int i = 0; i < bbox_labels->size(); i++) {  // nbatchSize
+            float *mask_buffer = static_cast<float *>(mask_data->at(i)->buffer());
+            py::list poly_batch_list;
+            for (unsigned j = prev_object_cnt; j < bbox_labels->at(i)->dims().at(0) + prev_object_cnt; j++) {
+                py::list single_image;
+                for (int k = 0; k < mask_count_ptr[j]; k++) {
+                    py::list polygons_buffer;
+                    for (int l = 0; l < polygon_size_ptr[poly_cnt]; l++)
+                        polygons_buffer.append(mask_buffer[l]);
+                    mask_buffer += polygon_size_ptr[poly_cnt++];
+                    single_image.append(polygons_buffer);
+                }
+                poly_batch_list.append(single_image);
+            }
+            prev_object_cnt += bbox_labels->at(i)->dims().at(0);
+            complete_list.append(poly_batch_list);
+        }
+        return complete_list;
     });
     // Will be enabled when IOU matcher changes are introduced in C++
     // m.def("getMatchedIndices", [](RocalContext context) {

@@ -263,9 +263,9 @@ MasterGraph::build() {
         THROW("No output tensors are there, cannot create the pipeline")
 
 #if ENABLE_HIP || ENABLE_OPENCL
-    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size());
+    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size(), _user_batch_size * sizeof(RocalROI));
 #else
-    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size());
+    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _user_batch_size * sizeof(RocalROI));
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
     create_single_graph();
@@ -452,7 +452,7 @@ MasterGraph::timing() {
 
 MasterGraph::Status
 MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1,
-                       float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type) {
+                       float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type, int max_height, int max_width) {
     if (no_more_processed_data())
         return MasterGraph::Status::NO_MORE_DATA;
 
@@ -474,6 +474,10 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
     const size_t h = dims[1];
     const size_t w = dims[2];
     const size_t single_output_tensor_size = output_tensor_info.data_size();
+    if ((max_height == 0) || (max_width == 0)) {
+        max_height = h;
+        max_width = w;
+    }
 
 #if ENABLE_OPENCL
     if (output_tensor_info.mem_type() == RocalMemType::OCL) {
@@ -491,7 +495,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
         cl_kernel kernel = _device["utility"][kernel_name];
         auto queue = _device.resources()->cmd_queue;
         unsigned dest_buf_offset = 0;
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
 
         if (_output_tensor_buffer == nullptr) {
             size_t size = output_tensor_info.data_size() * sizeof(cl_float);
@@ -548,7 +552,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
     if (output_tensor_info.mem_type() == RocalMemType::HIP) {
         unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
 
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
         unsigned dest_buf_offset = 0;
         // copy hip buffer to out_ptr
         // todo:: add callback routing to exchange memory pointer to avoid extra copy
@@ -556,11 +560,11 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
             auto img_buffer = out_tensor;
             if (format == RocalTensorlayout::NHWC) {
                 HipExecCopyInt8ToNHWC(_device.resources()->hip_stream, (const void *)img_buffer, out_ptr, dest_buf_offset, n, c, h, w,
-                                      multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+                                      multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16, max_height, max_width);
 
             } else {
                 HipExecCopyInt8ToNCHW(_device.resources()->hip_stream, (const void *)img_buffer, out_ptr, dest_buf_offset, n, c, h, w,
-                                      multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+                                      multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16, max_height, max_width);
             }
             dest_buf_offset += single_output_tensor_size;
         }
@@ -569,7 +573,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
         if (output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
             unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
 
-            auto output_buffers = _ring_buffer.get_read_buffers();
+            auto output_buffers = _ring_buffer.get_read_buffers().first;
             unsigned dest_buf_offset = 0;
 
             if (_output_tensor_buffer == nullptr) {
@@ -593,11 +597,11 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
 
                 if (format == RocalTensorlayout::NHWC) {
                     HipExecCopyInt8ToNHWC(_device.resources()->hip_stream, (const void *)_output_tensor_buffer, out_ptr, dest_buf_offset, n, c, h, w,
-                                          multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+                                          multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16, max_height, max_width);
 
                 } else {
                     HipExecCopyInt8ToNCHW(_device.resources()->hip_stream, (const void *)_output_tensor_buffer, out_ptr, dest_buf_offset, n, c, h, w,
-                                          multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16);
+                                          multiplier0, multiplier1, multiplier2, offset0, offset1, offset2, reverse_channels, fp16, max_height, max_width);
                 }
                 dest_buf_offset += single_output_tensor_size;
             }
@@ -610,15 +614,17 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
             float offset[3] = {offset0, offset1, offset2};
             size_t dest_buf_offset_start = 0;
 
-            auto output_buffers = _ring_buffer.get_read_buffers();
+            auto output_buffers = _ring_buffer.get_read_buffers().first;
             auto num_threads = _cpu_num_threads * 2;
             for (auto &&out_tensor : output_buffers) {
                 unsigned int single_tensor_size = w * c * h;
-                auto channel_size = w * h;
+                unsigned int channel_size = max_width * max_height;
+                unsigned int output_single_tensor_size = max_height * max_width * c;
+                unsigned int input_width_stride = w * c;
 #pragma omp parallel for num_threads(num_threads)
-                for (unsigned int batchCount = 0; batchCount < n; batchCount++) {
-                    size_t dest_buf_offset = dest_buf_offset_start + single_tensor_size * batchCount;
-                    auto in_buffer = (unsigned char *)out_tensor + single_tensor_size * batchCount;
+                for (unsigned int batch_count = 0; batch_count < n; batch_count++) {
+                    size_t dest_buf_offset = dest_buf_offset_start + output_single_tensor_size * batch_count;
+                    auto in_buffer = (unsigned char *)out_tensor + single_tensor_size * batch_count;
 
                     if (format == RocalTensorlayout::NHWC) {
                         if (output_data_type == RocalTensorDataType::FP32) {
@@ -669,34 +675,37 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
                                 __m256 padd0 = _mm256_set1_ps(offset0);
                                 __m256 padd1 = _mm256_set1_ps(offset1);
                                 __m256 padd2 = _mm256_set1_ps(offset2);
-                                unsigned int alignedLength = (channel_size & ~7);  // multiple of 8
-                                unsigned int i = 0;
+                                int alignedLength = (max_width & ~7);  // multiple of 8
 
                                 __m256 fR, fG, fB;
-                                for (; i < alignedLength; i += 8) {
-                                    __m256i pix0 = _mm256_loadu_si256((const __m256i *)in_buffer);
-                                    pix0 = _mm256_permutevar8x32_epi32(pix0, _mm256_setr_epi32(0, 1, 2, 3, 3, 4, 5, 6));
-                                    fB = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_R));
-                                    fG = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_G));
-                                    fR = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_B));
-                                    fB = _mm256_mul_ps(fB, pmul0);
-                                    fG = _mm256_mul_ps(fG, pmul1);
-                                    fR = _mm256_mul_ps(fR, pmul2);
-                                    fB = _mm256_add_ps(fB, padd0);
-                                    fG = _mm256_add_ps(fG, padd1);
-                                    fR = _mm256_add_ps(fR, padd2);
-                                    _mm256_storeu_ps(B_buf, fB);
-                                    _mm256_storeu_ps(G_buf, fG);
-                                    _mm256_storeu_ps(R_buf, fR);
-                                    B_buf += 8;
-                                    G_buf += 8;
-                                    R_buf += 8;
-                                    in_buffer += 24;
-                                }
-                                for (; i < channel_size; i++, in_buffer += 3) {
-                                    *B_buf++ = (in_buffer[0] * multiplier0) + offset0;
-                                    *G_buf++ = (in_buffer[1] * multiplier1) + offset1;
-                                    *R_buf++ = (in_buffer[2] * multiplier2) + offset1;
+                                for (int row = 0; row < max_height; row++) {
+                                    unsigned char *in_buffer_row = reinterpret_cast<unsigned char *>(in_buffer) + (row * input_width_stride);
+                                    int col = 0;
+                                    for (; col < alignedLength; col += 8) {
+                                        __m256i pix0 = _mm256_loadu_si256((const __m256i *)in_buffer_row);
+                                        pix0 = _mm256_permutevar8x32_epi32(pix0, _mm256_setr_epi32(0, 1, 2, 3, 3, 4, 5, 6));
+                                        fB = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_R));
+                                        fG = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_G));
+                                        fR = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_B));
+                                        fB = _mm256_mul_ps(fB, pmul0);
+                                        fG = _mm256_mul_ps(fG, pmul1);
+                                        fR = _mm256_mul_ps(fR, pmul2);
+                                        fB = _mm256_add_ps(fB, padd0);
+                                        fG = _mm256_add_ps(fG, padd1);
+                                        fR = _mm256_add_ps(fR, padd2);
+                                        _mm256_storeu_ps(B_buf, fB);
+                                        _mm256_storeu_ps(G_buf, fG);
+                                        _mm256_storeu_ps(R_buf, fR);
+                                        B_buf += 8;
+                                        G_buf += 8;
+                                        R_buf += 8;
+                                        in_buffer_row += 24;
+                                    }
+                                    for (; col < max_width; col++, in_buffer_row += 3) {
+                                        *B_buf++ = (in_buffer_row[0] * multiplier0) + offset0;
+                                        *G_buf++ = (in_buffer_row[1] * multiplier1) + offset1;
+                                        *R_buf++ = (in_buffer_row[2] * multiplier2) + offset1;
+                                    }
                                 }
 #else
                                 for (unsigned channel_idx = 0; channel_idx < c; channel_idx++) {
@@ -733,35 +742,38 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
                                 __m256 padd0 = _mm256_set1_ps(offset0);
                                 __m256 padd1 = _mm256_set1_ps(offset1);
                                 __m256 padd2 = _mm256_set1_ps(offset2);
-                                unsigned int alignedLength = (channel_size & ~7);  // multiple of 8
-                                unsigned int i = 0;
+                                int alignedLength = (max_width & ~7);  // multiple of 8
 
                                 __m256 fR, fG, fB;
                                 __m128i tempR, tempG, tempB;
-                                for (; i < alignedLength; i += 8) {
-                                    __m256i pix0 = _mm256_loadu_si256((const __m256i *)in_buffer);
-                                    pix0 = _mm256_permutevar8x32_epi32(pix0, _mm256_setr_epi32(0, 1, 2, 3, 3, 4, 5, 6));
-                                    fB = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_R));
-                                    fG = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_G));
-                                    fR = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_B));
-                                    fB = _mm256_fmadd_ps(fB, pmul0, padd0);
-                                    fG = _mm256_fmadd_ps(fG, pmul1, padd1);
-                                    fR = _mm256_fmadd_ps(fR, pmul2, padd2);
-                                    tempB = _mm256_cvtps_ph(fB, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-                                    tempG = _mm256_cvtps_ph(fG, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-                                    tempR = _mm256_cvtps_ph(fR, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-                                    _mm_storeu_si128((__m128i *)B_buf_16, tempB);
-                                    _mm_storeu_si128((__m128i *)G_buf_16, tempG);
-                                    _mm_storeu_si128((__m128i *)R_buf_16, tempR);
-                                    B_buf_16 += 8;
-                                    G_buf_16 += 8;
-                                    R_buf_16 += 8;
-                                    in_buffer += 24;
-                                }
-                                for (; i < channel_size; i++, in_buffer += 3) {
-                                    *B_buf_16++ = (half)(in_buffer[0] * multiplier0) + offset0;
-                                    *G_buf_16++ = (half)(in_buffer[1] * multiplier1) + offset1;
-                                    *R_buf_16++ = (half)(in_buffer[2] * multiplier2) + offset2;
+                                for (int row = 0; row < max_height; row++) {
+                                    unsigned char *in_buffer_row = reinterpret_cast<unsigned char *>(in_buffer) + (row * input_width_stride);
+                                    int col = 0;
+                                    for (; col < alignedLength; col += 8) {
+                                        __m256i pix0 = _mm256_loadu_si256((const __m256i *)in_buffer_row);
+                                        pix0 = _mm256_permutevar8x32_epi32(pix0, _mm256_setr_epi32(0, 1, 2, 3, 3, 4, 5, 6));
+                                        fB = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_R));
+                                        fG = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_G));
+                                        fR = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_B));
+                                        fB = _mm256_fmadd_ps(fB, pmul0, padd0);
+                                        fG = _mm256_fmadd_ps(fG, pmul1, padd1);
+                                        fR = _mm256_fmadd_ps(fR, pmul2, padd2);
+                                        tempB = _mm256_cvtps_ph(fB, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                                        tempG = _mm256_cvtps_ph(fG, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                                        tempR = _mm256_cvtps_ph(fR, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                                        _mm_storeu_si128((__m128i *)B_buf_16, tempB);
+                                        _mm_storeu_si128((__m128i *)G_buf_16, tempG);
+                                        _mm_storeu_si128((__m128i *)R_buf_16, tempR);
+                                        B_buf_16 += 8;
+                                        G_buf_16 += 8;
+                                        R_buf_16 += 8;
+                                        in_buffer_row += 24;
+                                    }
+                                    for (; col < max_width; col++, in_buffer_row += 3) {
+                                        *B_buf_16++ = (half)(in_buffer_row[0] * multiplier0) + offset0;
+                                        *G_buf_16++ = (half)(in_buffer_row[1] * multiplier1) + offset1;
+                                        *R_buf_16++ = (half)(in_buffer_row[2] * multiplier2) + offset2;
+                                    }
                                 }
 #else
                                 for (unsigned channel_idx = 0; channel_idx < c; channel_idx++) {
@@ -808,7 +820,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
         //  to avoid unnecessary sequence of synchronizations
 
         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
         auto out_image_idx = output_buffers.size();
         for (auto &&output_handle : output_buffers) {
             bool sync_flag = (--out_image_idx == 0) ? CL_TRUE : CL_FALSE;
@@ -831,7 +843,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
 
         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
         size_t dest_buf_offset = 0;
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
         for (auto &&output_handle : output_buffers) {
             hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr + dest_buf_offset), output_handle, size, _device.resources()->hip_stream);
             if (err) {
@@ -846,7 +858,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
     } else {
 #endif
         // get_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        auto output_buffer = _ring_buffer.get_read_buffers()[0];
+        auto output_buffer = _ring_buffer.get_read_buffers().first[0];
         memcpy(out_ptr, output_buffer, size);
 #if ENABLE_OPENCL || ENABLE_HIP
     }
@@ -857,10 +869,13 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
 
 TensorList *
 MasterGraph::get_output_tensors() {
-    auto output_ptr = _ring_buffer.get_read_buffers();
-    for (unsigned i = 0; i < _internal_tensor_list.size(); i++)
+    auto read_buffers = _ring_buffer.get_read_buffers();
+    auto output_ptr = read_buffers.first;
+    auto roi_ptr = read_buffers.second;
+    for (unsigned i = 0; i < _internal_tensor_list.size(); i++) {
         _output_tensor_list[i]->set_mem_handle(output_ptr[i]);
-
+        _output_tensor_list[i]->set_roi(roi_ptr[i]);
+    }
     return &_output_tensor_list;
 }
 
@@ -880,6 +895,7 @@ void MasterGraph::output_routine() {
             _rb_block_if_full_time.start();
             // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
             auto write_buffers = _ring_buffer.get_write_buffers();
+            auto write_output_buffers = write_buffers.first;
             _rb_block_if_full_time.end();
 
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
@@ -904,7 +920,7 @@ void MasterGraph::output_routine() {
 
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
-                _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
+                _internal_tensor_list[idx]->swap_handle(write_output_buffers[idx]);
 
             if (!_processing)
                 break;
@@ -931,6 +947,10 @@ void MasterGraph::output_routine() {
             _process_time.start();
             _graph->process();
             _process_time.end();
+
+            auto write_roi_buffers = write_buffers.second;  // Obtain ROI buffers from ring buffer
+            for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+                _internal_tensor_list[idx]->copy_roi(write_roi_buffers[idx]);  // Copy ROI from internal tensor's buffer to ring buffer
             _bencode_time.start();
             if (_is_box_encoder) {
                 auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
@@ -984,13 +1004,15 @@ void MasterGraph::stop_processing() {
         _output_thread.join();
 }
 
-std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType metadata_type, bool ltrb_bbox, bool is_box_encoder, float sigma, unsigned pose_output_width, unsigned pose_output_height) {
+std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType metadata_type, bool ltrb_bbox, bool is_box_encoder, bool avoid_class_remapping, bool aspect_ratio_grouping, float sigma, unsigned pose_output_width, unsigned pose_output_height) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
         THROW("Metadata output already defined, there can only be a single output for metadata augmentation");
 
     MetaDataConfig config(metadata_type, reader_type, source_path, std::map<std::string, std::string>(), std::string());
+    config.set_avoid_class_remapping(avoid_class_remapping);
+    config.set_aspect_ratio_grouping(aspect_ratio_grouping);
     config.set_out_img_width(pose_output_width);
     config.set_out_img_height(pose_output_height);
     _meta_data_graph = create_meta_data_graph(config);
@@ -1409,7 +1431,7 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, flo
         float offset[3] = {offset0, offset1, offset2};
         size_t dest_buf_offset = 0;
 
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
 
         for (auto &&out_tensor : output_buffers) {
             for (unsigned batch = 0; batch < n; batch++) {
