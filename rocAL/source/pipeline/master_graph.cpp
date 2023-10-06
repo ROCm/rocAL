@@ -880,6 +880,7 @@ void MasterGraph::output_routine() {
             _rb_block_if_full_time.start();
             // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
             auto write_buffers = _ring_buffer.get_write_buffers();
+            auto write_output_buffers = write_buffers.first;
             _rb_block_if_full_time.end();
 
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
@@ -904,7 +905,7 @@ void MasterGraph::output_routine() {
 
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
-                _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
+                _internal_tensor_list[idx]->swap_handle(write_output_buffers[idx]);
 
             if (!_processing)
                 break;
@@ -931,6 +932,10 @@ void MasterGraph::output_routine() {
             _process_time.start();
             _graph->process();
             _process_time.end();
+
+            auto write_roi_buffers = write_buffers.second;   // Obtain ROI buffers from ring buffer
+            for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+                _internal_tensor_list[idx]->copy_roi(write_roi_buffers[idx]);   // Copy ROI from internal tensor's buffer to ring buffer
             _bencode_time.start();
             if (_is_box_encoder) {
                 auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();

@@ -287,6 +287,11 @@ void RingBuffer::release_gpu_res() {
                         // printf("Error Freeing device buffer <%d, %d, %p>\n", buffIdx, sub_buf_idx, _dev_sub_buffer[buffIdx][sub_buf_idx]);
                         ERR("Could not release hip memory in the ring buffer")
                     }
+                if (_dev_roi_buffers[buffIdx][sub_buf_idx]) {
+                    if (hipHostFree((void *)_dev_roi_buffers[buffIdx][sub_buf_idx]) != hipSuccess) {
+                        ERR("Could not release hip memory for ROI in the ring buffer")
+                    }
+                }
             }
             if (_host_meta_data_buffers.size() != 0) {
                 for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
