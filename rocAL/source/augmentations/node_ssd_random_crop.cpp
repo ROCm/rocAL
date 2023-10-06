@@ -84,7 +84,7 @@ inline double ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const B
 }
 
 void SSDRandomCropNode::update_node() {
-    _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
+    _crop_param->set_image_dimensions((Rocal2DROI *)_inputs[0]->info().roi().get_ptr());
     _crop_param->update_array();
     RocalROI *crop_dims = static_cast<RocalROI *>(_crop_coordinates);  // ROI to be cropped from source
     std::random_device rd;
