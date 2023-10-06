@@ -29,24 +29,39 @@ THE SOFTWARE.
 
 #pragma once
 #include <vector>
+
 #include "exception.h"
 #include "log.h"
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f
 
-enum class RocalTensorFormat
-{
+/*! \brief Tensor layouts
+ *
+ * currently supported by Rocal SDK as input/output
+ */
+enum class RocalTensorlayout {
     NHWC = 0,
-    NCHW
+    NCHW,
+    NFHWC,
+    NFCHW,
+    NONE
 };
-enum class RocalTensorDataType
-{
+
+/*! \brief Tensor data type
+ *
+ * currently supported by Rocal SDK as input/output
+ */
+enum class RocalTensorDataType {
     FP32 = 0,
-    FP16
+    FP16,
+    UINT8,
+    INT8,
+    UINT32,
+    INT32
 };
-enum class RocalAffinity
-{
+
+enum class RocalAffinity {
     GPU = 0,
     CPU
 };
@@ -54,8 +69,7 @@ enum class RocalAffinity
 /*! \brief Color formats currently supported by Rocal SDK as input/output
  *
  */
-enum class RocalColorFormat
-{
+enum class RocalColorFormat {
     RGB24 = 0,
     BGR24,
     U8,
@@ -66,8 +80,7 @@ enum class RocalColorFormat
  *
  *  Currently supports HOST and OCL, will support HIP in future
  */
-enum class RocalMemType
-{
+enum class RocalMemType {
     HOST = 0,
     OCL,
     HIP
@@ -77,27 +90,39 @@ enum class RocalMemType
  *
  *  Currently supports Software decoding, will support Hardware decoding in future
  */
-enum class DecodeMode
-{
+enum class DecodeMode {
     HW_VAAPI = 0,
-    CPU = 1
+    CPU
 };
 
-struct Timing
+/*! \brief Tensor ROI type
+ *
+ * currently supports following formats
+ */
+enum class RocalROIType {
+    LTRB = 0,
+    XYWH
+};
+
+typedef struct
 {
+    unsigned x1, y1, x2, y2;
+} RocalROI;
+
+struct Timing {
     // The following timings are accumulated timing not just the most recent activity
-    long long unsigned image_read_time= 0;
-    long long unsigned image_decode_time= 0;
-    long long unsigned to_device_xfer_time= 0;
-    long long unsigned from_device_xfer_time= 0;
+    long long unsigned image_read_time = 0;
+    long long unsigned image_decode_time = 0;
+    long long unsigned to_device_xfer_time = 0;
+    long long unsigned from_device_xfer_time = 0;
     long long unsigned copy_to_output = 0;
-    long long unsigned image_process_time= 0;
-    long long unsigned bb_process_time= 0;
-    long long unsigned mask_process_time= 0;
-    long long unsigned label_load_time= 0;
-    long long unsigned bb_load_time= 0;
+    long long unsigned image_process_time = 0;
+    long long unsigned bb_process_time = 0;
+    long long unsigned mask_process_time = 0;
+    long long unsigned label_load_time = 0;
+    long long unsigned bb_load_time = 0;
     long long unsigned mask_load_time = 0;
-    long long unsigned video_read_time= 0;
-    long long unsigned video_decode_time= 0;
-    long long unsigned video_process_time= 0;
+    long long unsigned video_read_time = 0;
+    long long unsigned video_decode_time = 0;
+    long long unsigned video_process_time = 0;
 };

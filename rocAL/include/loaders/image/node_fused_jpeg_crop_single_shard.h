@@ -21,15 +21,14 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "image_loader_sharded.h"
 #include "graph.h"
+#include "image_loader_sharded.h"
+#include "node.h"
 #include "parameter_factory.h"
 
-class FusedJpegCropSingleShardNode: public Node
-{
-public:
-    FusedJpegCropSingleShardNode(Image *output, void *device_resources);
+class FusedJpegCropSingleShardNode : public Node {
+   public:
+    FusedJpegCropSingleShardNode(Tensor *output, void *device_resources);
     ~FusedJpegCropSingleShardNode() override;
 
     /// \param user_shard_count shard count from user
@@ -43,10 +42,12 @@ public:
               unsigned num_attempts, std::vector<float> &random_area, std::vector<float> &random_aspect_ratio);
 
     std::shared_ptr<LoaderModule> get_loader_module();
-protected:
-    void create_node() override {};
-    void update_node() override {};
-private:
+
+   protected:
+    void create_node() override{};
+    void update_node() override{};
+
+   private:
     std::shared_ptr<ImageLoader> _loader_module = nullptr;
     std::vector<float> _random_area, _random_aspect_ratio;
     unsigned _num_attempts;

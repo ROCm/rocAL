@@ -21,9 +21,10 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <set>
-#include <memory>
 #include <algorithm>
+#include <memory>
+#include <set>
+
 #include "bounding_box_graph.h"
 #include "meta_data.h"
 #include "node.h"
@@ -32,17 +33,17 @@ THE SOFTWARE.
 #define PI 3.14159265
 #define RAD(deg) (deg * PI / 180)
 
-class RotateMetaNode:public MetaNode
-{
-    public:
-        RotateMetaNode() {};
-        void update_parameters(MetaDataBatch* input_meta_data)override;
-        std::shared_ptr<RotateNode> _node = nullptr;
-    private:
-        void initialize();
-        vx_array _src_width, _src_height;
-        std::vector<uint> _src_width_val, _src_height_val;
-        unsigned int _dst_width, _dst_height;
-        vx_array _angle;
-        std::vector<float> _angle_val;
+class RotateMetaNode : public MetaNode {
+   public:
+    RotateMetaNode(){};
+    void update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
+    std::shared_ptr<RotateNode> _node = nullptr;
+
+   private:
+    void initialize();
+    vx_array _src_width, _src_height;
+    std::vector<uint> _src_width_val, _src_height_val;
+    unsigned int _dst_width, _dst_height;
+    vx_array _angle;
+    std::vector<float> _angle_val;
 };

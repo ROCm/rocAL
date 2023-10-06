@@ -21,18 +21,20 @@ THE SOFTWARE.
 */
 #if ENABLE_OPENCL
 
-#include <iostream>
-#include <vx_ext_amd.h>
 #include "device_manager.h"
+
+#include <vx_ext_amd.h>
+
+#include <iostream>
+
 #include "commons.h"
 
-DeviceManager::~DeviceManager()
-{
-    if(_resources.cmd_queue != nullptr)
+DeviceManager::~DeviceManager() {
+    if (_resources.cmd_queue != nullptr)
         clReleaseCommandQueue(_resources.cmd_queue);
-    if(_resources.device_id != nullptr)
+    if (_resources.device_id != nullptr)
         clReleaseDevice(_resources.device_id);
-    if(_resources.context != nullptr)
+    if (_resources.context != nullptr)
         clReleaseContext(_resources.context);
 
     _resources.cmd_queue = nullptr;
@@ -40,29 +42,27 @@ DeviceManager::~DeviceManager()
     _resources.device_id = nullptr;
     LOG("OCL context and command queue resources released")
 }
-CLProgram::~CLProgram()
-{
-    for(auto& kernel_pair : m_kernels)
-        if(clReleaseKernel(kernel_pair.second)  != CL_SUCCESS)
-            ERR("Could not release "+STR(kernel_pair.first))
+CLProgram::~CLProgram() {
+    for (auto& kernel_pair : m_kernels)
+        if (clReleaseKernel(kernel_pair.second) != CL_SUCCESS)
+            ERR("Could not release " + STR(kernel_pair.first))
     m_kernels.clear();
 }
-cl_int CLProgram::runKernel(const std::string& kernel_name, const std::vector<void*>&  args, const std::vector<size_t>& argSize, const std::vector<size_t>& globalWorkSize, const std::vector<size_t>& localWorkSize) {
+cl_int CLProgram::runKernel(const std::string& kernel_name, const std::vector<void*>& args, const std::vector<size_t>& argSize, const std::vector<size_t>& globalWorkSize, const std::vector<size_t>& localWorkSize) {
     cl_int status;
-    if(argSize.size() != args.size()) return -1;
+    if (argSize.size() != args.size()) return -1;
     cl_kernel kernel = (*this)[kernel_name];
-    for(unsigned argId = 0; argId < args.size(); argId++)
-        if((status = clSetKernelArg( kernel, argId, argSize[argId], args[argId]))!= CL_SUCCESS)
+    for (unsigned argId = 0; argId < args.size(); argId++)
+        if ((status = clSetKernelArg(kernel, argId, argSize[argId], args[argId])) != CL_SUCCESS)
             THROW("clSetKernelArg failed " + TOSTR(status));
 
-    if((status = clEnqueueNDRangeKernel(m_ocl->cmd_queue, kernel, 1, NULL, globalWorkSize.data(), localWorkSize.data(), 0 , NULL, NULL)) != CL_SUCCESS)
+    if ((status = clEnqueueNDRangeKernel(m_ocl->cmd_queue, kernel, 1, NULL, globalWorkSize.data(), localWorkSize.data(), 0, NULL, NULL)) != CL_SUCCESS)
         THROW("clEnqueueNDRangeKernel failed on " + kernel_name + " error " + TOSTR(status));
 
     return status;
 }
 
 cl_int CLProgram::buildAll() {
-
     cl_int clerr = CL_SUCCESS;
 
     auto source_code = m_code.getSourceCode();
@@ -74,19 +74,18 @@ cl_int CLProgram::buildAll() {
 
     m_prog = clCreateProgramWithSource(m_ocl->context, 1, &code_src, &code_size, &clerr);
 
-    if(clerr != CL_SUCCESS)
+    if (clerr != CL_SUCCESS)
         THROW("Building" + program_name + "program from source failed: " + TOSTR(clerr));
 
+    clerr = clBuildProgram(m_prog, 1, &m_ocl->device_id, NULL, NULL, NULL);
 
-    clerr = clBuildProgram(m_prog , 1, &m_ocl->device_id, NULL, NULL, NULL);
-
-    if(clerr != CL_SUCCESS)
+    if (clerr != CL_SUCCESS)
         THROW("Building" + program_name + " failed: " + TOSTR(clerr));
 
-    for(unsigned i =0; i < kernel_names.size(); ++i) {
+    for (unsigned i = 0; i < kernel_names.size(); ++i) {
         auto kernel = clCreateKernel(m_prog, kernel_names[i].c_str(), &clerr);
         clRetainKernel(kernel);
-        if(clerr != CL_SUCCESS)
+        if (clerr != CL_SUCCESS)
             THROW("Building kernel" + kernel_names[i] + " failed");
 
         m_kernels.insert(std::make_pair(kernel_names[i], kernel));
@@ -99,39 +98,31 @@ std::string CLProgram::getProgramName() {
 }
 
 const cl_kernel& CLProgram::operator[](const std::string& kernel_name) const {
-
-    const auto it =  m_kernels.find(kernel_name);
-    if(it != m_kernels.end())
+    const auto it = m_kernels.find(kernel_name);
+    if (it != m_kernels.end())
         return it->second;
 
-    THROW("Requested kernel" + kernel_name +  " does not exist");
+    THROW("Requested kernel" + kernel_name + " does not exist");
 }
 
 cl_int DeviceManager::initialize() {
-
-    std::vector<DeviceCode> ocl_codes = {OCLUtility() };
-    for(auto& code: ocl_codes)
+    std::vector<DeviceCode> ocl_codes = {OCLUtility()};
+    for (auto& code : ocl_codes)
         m_programs.insert(make_pair(code.getName(), CLProgram(&_resources, code)));
 
-
-
     cl_int status = CL_SUCCESS;
-    for(auto& e: m_programs)
-        if((status = e.second.buildAll()) != CL_SUCCESS)
+    for (auto& e : m_programs)
+        if ((status = e.second.buildAll()) != CL_SUCCESS)
             THROW("Couldn't build " + e.first);
-
 
     return status;
 }
 
-DeviceResources *DeviceManager::resources()
-{
+DeviceResources* DeviceManager::resources() {
     return &_resources;
 }
 
-void
-DeviceManager::init_ocl(vx_context context)
-{
+void DeviceManager::init_ocl(vx_context context) {
     cl_int clerr;
     cl_context clcontext;
     cl_device_id dev_id;
@@ -140,7 +131,6 @@ DeviceManager::init_ocl(vx_context context)
 
     if (vxstatus != VX_SUCCESS)
         THROW("vxQueryContext failed " + TOSTR(vxstatus))
-
 
     cl_int clstatus = clGetContextInfo(clcontext, CL_CONTEXT_DEVICES, sizeof(dev_id), &dev_id, nullptr);
 
@@ -152,7 +142,7 @@ DeviceManager::init_ocl(vx_context context)
 #else
     cmd_queue = clCreateCommandQueue(opencl_context, dev_id, 0, &clerr);
 #endif
-    if(clerr != CL_SUCCESS)
+    if (clerr != CL_SUCCESS)
         THROW("clCreateCommandQueue failed " + TOSTR(clerr))
 
     _resources.cmd_queue = cmd_queue;
@@ -167,10 +157,9 @@ DeviceManager::init_ocl(vx_context context)
     LOG("OpenCL initialized ...")
 }
 
-const CLProgram& DeviceManager::operator[](const std::string& prog_name)
-{
+const CLProgram& DeviceManager::operator[](const std::string& prog_name) {
     auto it = m_programs.find(prog_name);
-    if(  it != m_programs.end())
+    if (it != m_programs.end())
         return it->second;
 
     THROW("Requested kernel" + prog_name + "does not exist");

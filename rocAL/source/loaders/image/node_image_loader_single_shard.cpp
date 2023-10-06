@@ -21,26 +21,23 @@ THE SOFTWARE.
 */
 
 #include "node_image_loader_single_shard.h"
+
 #include "exception.h"
 
-ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Image *output, void *device_resources):
-        Node({}, {output})
-{
+ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }
 
-void
-ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, StorageType storage_type, DecoderType decoder_type,
-                                 bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
-                                 bool decoder_keep_original, const std::map<std::string, std::string> feature_key_map, unsigned sequence_length, unsigned step, unsigned stride)
-{
-    if(!_loader_module)
+void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, StorageType storage_type, DecoderType decoder_type,
+                                      bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
+                                      bool decoder_keep_original, const std::map<std::string, std::string> feature_key_map, unsigned sequence_length, unsigned step, unsigned stride) {
+    if (!_loader_module)
         THROW("ERROR: loader module is not set for ImageLoaderNode, cannot initialize")
-    if(shard_count < 1)
+    if (shard_count < 1)
         THROW("Shard count should be greater than or equal to one")
-    if(shard_id >= shard_count)
+    if (shard_id >= shard_count)
         THROW("Shard is should be smaller than shard count")
-    _loader_module->set_output_image(_outputs[0]);
+    _loader_module->set_output(_outputs[0]);
     // Set reader and decoder config accordingly for the ImageLoaderNode
     auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, feature_key_map, shuffle, loop);
     reader_cfg.set_shard_count(shard_count);
@@ -58,14 +55,12 @@ ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsign
     _loader_module->start_loading();
 }
 
-std::shared_ptr<LoaderModule> ImageLoaderSingleShardNode::get_loader_module()
-{
-    if(!_loader_module)
+std::shared_ptr<LoaderModule> ImageLoaderSingleShardNode::get_loader_module() {
+    if (!_loader_module)
         WRN("ImageLoaderSingleShardNode's loader module is null, not initialized")
     return _loader_module;
 }
 
-ImageLoaderSingleShardNode::~ImageLoaderSingleShardNode()
-{
+ImageLoaderSingleShardNode::~ImageLoaderSingleShardNode() {
     _loader_module = nullptr;
 }

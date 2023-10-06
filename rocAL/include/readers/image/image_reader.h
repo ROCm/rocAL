@@ -21,34 +21,35 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <string>
 #include <map>
-#include <vector>
+#include <string>
 #include <tuple>
+#include <vector>
+
 #include <lmdb.h>
 #include "meta_data_reader.h"
+#include "video_properties.h"
 
-#define CHECK_LMDB_RETURN_STATUS(status)          \
-    do {                            \
-        if(status != MDB_SUCCESS)   \
+#define CHECK_LMDB_RETURN_STATUS(status)                                                          \
+    do {                                                                                          \
+        if (status != MDB_SUCCESS)                                                                \
             THROW("LMDB error, " + std::string(__FILE__) + ":" + std::to_string(__LINE__) + " " + \
-            #status + ":" + std::string(mdb_strerror(status)));    \
+                  #status + ":" + std::string(mdb_strerror(status)));                             \
     } while (0)
 
-enum class StorageType
-{
+enum class StorageType {
     FILE_SYSTEM = 0,
     TF_RECORD = 1,
-    UNCOMPRESSED_BINARY_DATA = 2, // experimental: added for supporting cifar10 data set
+    UNCOMPRESSED_BINARY_DATA = 2,  // experimental: added for supporting cifar10 data set
     CAFFE_LMDB_RECORD = 3,
     CAFFE2_LMDB_RECORD = 4,
     COCO_FILE_SYSTEM = 5,
     SEQUENCE_FILE_SYSTEM = 6,
     MXNET_RECORDIO = 7,
+    VIDEO_FILE_SYSTEM = 8,
 };
 
-struct ReaderConfig
-{
+struct ReaderConfig {
     explicit ReaderConfig(StorageType type, std::string path = "", std::string json_path = "",
                           const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(),
                           bool shuffle = false, bool loop = false) : _type(type), _path(path), _json_path(json_path), _feature_key_map(feature_key_map), _shuffle(shuffle), _loop(loop) {}
@@ -68,22 +69,27 @@ struct ReaderConfig
     void set_loop(bool loop) { _loop = loop; }
     void set_meta_data_reader(std::shared_ptr<MetaDataReader> meta_data_reader) { _meta_data_reader = meta_data_reader; }
     void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
-    void set_frame_step(unsigned step) { _step = step; }
-    void set_frame_stride(unsigned stride) { _stride = stride; }
+    void set_frame_step(unsigned step) { _sequence_frame_step = step; }
+    void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
     size_t get_batch_size() { return _batch_count; }
     size_t get_sequence_length() { return _sequence_length; }
-    size_t get_frame_step() { return _step; }
-    size_t get_frame_stride() { return _stride; }
+    size_t get_frame_step() { return _sequence_frame_step; }
+    size_t get_frame_stride() { return _sequence_frame_stride; }
     std::string path() { return _path; }
+#ifdef ROCAL_VIDEO
+    void set_video_properties(VideoProperties video_prop) { _video_prop = video_prop; }
+    VideoProperties get_video_properties() { return _video_prop; }
+#endif
     std::string json_path() { return _json_path; }
     std::map<std::string, std::string> feature_key_map() { return _feature_key_map; }
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
-private:
+
+   private:
     StorageType _type = StorageType::FILE_SYSTEM;
     std::string _path = "";
     std::string _json_path = "";
@@ -91,31 +97,32 @@ private:
     size_t _shard_count = 1;
     size_t _shard_id = 0;
     size_t _cpu_num_threads = 1;
-    size_t _batch_count = 1;     //!< The reader will repeat images if necessary to be able to have images in multiples of the _batch_count.
-    size_t _sequence_length = 1; // Video reader module sequence length
-    size_t _step;
-    size_t _stride = 1;
+    size_t _batch_count = 1;      //!< The reader will repeat images if necessary to be able to have images in multiples of the _batch_count.
+    size_t _sequence_length = 1;  // Video reader module sequence length
+    size_t _sequence_frame_step;
+    size_t _sequence_frame_stride = 1;
     bool _shuffle = false;
     bool _loop = false;
-    std::string _file_prefix = ""; //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
+#ifdef ROCAL_VIDEO
+    VideoProperties _video_prop;
+#endif
 };
 
 // MXNet image recordio struct - used to read the contents from the MXNet recordIO files.
 struct ImageRecordIOHeader {
-  uint32_t flag; //flag of the header
-  float label; //label field that returns label of images
-  uint64_t image_id[2]; /* unique image index
-     *  image_id[1] is always set to 0,
-     *  reserved for future purposes for 128bit id
-     *  image_id[0] is used to store image id
-     */
+    uint32_t flag;        // flag of the header
+    float label;          // label field that returns label of images
+    uint64_t image_id[2]; /* unique image index
+                           *  image_id[1] is always set to 0,
+                           *  reserved for future purposes for 128bit id
+                           *  image_id[0] is used to store image id
+                           */
 };
-class Reader
-{
-public:
-    enum class Status
-    {
+class Reader {
+   public:
+    enum class Status {
         OK = 0
     };
 
@@ -152,6 +159,6 @@ public:
     virtual std::string id() = 0;
     //! Returns the number of items remained in this resource
     virtual unsigned count_items() = 0;
-    
+
     virtual ~Reader() = default;
 };

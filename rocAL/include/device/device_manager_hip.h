@@ -33,11 +33,14 @@ struct DeviceResourcesHip {
     hipStream_t hip_stream;
     int device_id;
     hipDeviceProp_t dev_prop;
-    DeviceResourcesHip() { hip_stream = nullptr; device_id = -1;}
+    DeviceResourcesHip() {
+        hip_stream = nullptr;
+        device_id = -1;
+    }
 };
 
 class DeviceManagerHip {
-public:
+   public:
     DeviceManagerHip(){};
 
     hipError_t initialize();
@@ -48,10 +51,8 @@ public:
 
     ~DeviceManagerHip();
 
-private:
-
+   private:
     DeviceResourcesHip _resources;
-
 };
 
 using pRocalHip = std::shared_ptr<DeviceManagerHip>;

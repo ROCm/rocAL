@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,21 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <set>
 #include <memory>
+#include <set>
+
 #include "bounding_box_graph.h"
 #include "meta_data.h"
 #include "node.h"
 #include "node_resize.h"
 #include "parameter_vx.h"
-class ResizeMetaNode:public MetaNode
-{
-    public:
-        ResizeMetaNode() {};
-        void update_parameters(MetaDataBatch* input_meta_data)override;
-        std::shared_ptr<ResizeNode> _node = nullptr;
-    private:
-        void initialize();
-        std::vector<uint> _src_width_val, _src_height_val;
+
+class ResizeMetaNode : public MetaNode {
+   public:
+    ResizeMetaNode(){};
+    void update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
+    std::shared_ptr<ResizeNode> _node = nullptr;
+
+   private:
+    void initialize(){};
 };

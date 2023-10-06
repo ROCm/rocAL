@@ -28,19 +28,18 @@ THE SOFTWARE.
 
 AgoTargetAffinityInfo
 get_ago_affinity_info(
-        RocalAffinity rocal_affinity,
-        int cpu_id,
-        int gpu_id)
-{
+    RocalAffinity rocal_affinity,
+    int cpu_id,
+    int gpu_id) {
     AgoTargetAffinityInfo affinity;
-    switch(rocal_affinity) {
+    switch (rocal_affinity) {
         case RocalAffinity::GPU:
-            affinity.device_type =  AGO_TARGET_AFFINITY_GPU;
-            affinity.device_info = (gpu_id >=0 && gpu_id <=9)? gpu_id : 0;
+            affinity.device_type = AGO_TARGET_AFFINITY_GPU;
+            affinity.device_info = (gpu_id >= 0 && gpu_id <= 9) ? gpu_id : 0;
             break;
         case RocalAffinity::CPU:
             affinity.device_type = AGO_TARGET_AFFINITY_CPU;
-            affinity.device_info = (cpu_id >=0 && cpu_id <=9)? cpu_id : 0;
+            affinity.device_info = (cpu_id >= 0 && cpu_id <= 9) ? cpu_id : 0;
             break;
         default:
             throw std::invalid_argument("Unsupported affinity");
@@ -48,77 +47,66 @@ get_ago_affinity_info(
     return affinity;
 }
 
-Graph::Graph(vx_context context, RocalAffinity affinity, int cpu_id, size_t cpu_num_threads, int gpu_id):
-_mem_type(((affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST)),
-_context(context),
-_graph(nullptr),
-_affinity(affinity),
-_gpu_id(gpu_id),
-_cpu_id(cpu_id)
-{
-    try
-    {
+Graph::Graph(vx_context context, RocalAffinity affinity, int cpu_id, size_t cpu_num_threads, int gpu_id) : _mem_type(((affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST)),
+                                                                                                           _context(context),
+                                                                                                           _graph(nullptr),
+                                                                                                           _affinity(affinity),
+                                                                                                           _gpu_id(gpu_id),
+                                                                                                           _cpu_id(cpu_id) {
+    try {
         vx_status status;
-        auto vx_affinity = get_ago_affinity_info(_affinity , cpu_id, gpu_id);
+        auto vx_affinity = get_ago_affinity_info(_affinity, cpu_id, gpu_id);
         vx_uint32 _cpu_num_threads = cpu_num_threads;
 
         _graph = vxCreateGraph(_context);
 
-        if((status = vxGetStatus((vx_reference)_graph)) != VX_SUCCESS)
+        if ((status = vxGetStatus((vx_reference)_graph)) != VX_SUCCESS)
             THROW("vxCreateGraph failed " + TOSTR(status))
 
-
         // Setting attribute to run on CPU or GPU
-        if((status = vxSetGraphAttribute(   _graph,
-                                            VX_GRAPH_ATTRIBUTE_AMD_AFFINITY,
-                                            &vx_affinity,
-                                            sizeof(vx_affinity))) != VX_SUCCESS)
+        if ((status = vxSetGraphAttribute(_graph,
+                                          VX_GRAPH_ATTRIBUTE_AMD_AFFINITY,
+                                          &vx_affinity,
+                                          sizeof(vx_affinity))) != VX_SUCCESS)
             THROW("vxSetGraphAttribute failed " + TOSTR(status))
 
         // Setting attribute to run on CPU or GPU
-        if((status = vxSetGraphAttribute(   _graph,
-                                            VX_GRAPH_ATTRIBUTE_AMD_CPU_NUM_THREADS,
-                                            &_cpu_num_threads,
-                                            sizeof(_cpu_num_threads))) != VX_SUCCESS)
+        if ((status = vxSetGraphAttribute(_graph,
+                                          VX_GRAPH_ATTRIBUTE_AMD_CPU_NUM_THREADS,
+                                          &_cpu_num_threads,
+                                          sizeof(_cpu_num_threads))) != VX_SUCCESS)
             THROW("vxSetGraphAttribute failed " + TOSTR(status))
 
-    }
-    catch(const std::exception& e)
-    {
+    } catch (const std::exception& e) {
         release();
         throw;
     }
-
 }
 
 Graph::Status
-Graph::verify()
-{
+Graph::verify() {
     vx_status status;
-    if((status = vxVerifyGraph(_graph)) != VX_SUCCESS)
+    if ((status = vxVerifyGraph(_graph)) != VX_SUCCESS)
         THROW("vxVerifyGraph failed " + TOSTR(status))
 
     return Status::OK;
 }
 
 Graph::Status
-Graph::process()
-{
+Graph::process() {
     vx_status status;
-    if((status = vxProcessGraph(_graph)) != VX_SUCCESS)
-         THROW("ERROR: vxProcessGraph failed " + TOSTR(status))
+    if ((status = vxProcessGraph(_graph)) != VX_SUCCESS)
+        THROW("ERROR: vxProcessGraph failed " + TOSTR(status))
 
-    return  Status::OK;
+    return Status::OK;
 }
 
 Graph::Status
-Graph::release()
-{
+Graph::release() {
     vx_status status = VX_SUCCESS;
 
-    if(_graph && (status = vxReleaseGraph(&_graph)) != VX_SUCCESS)
-        LOG ("Failed to call vxReleaseGraph " + TOSTR(status))
+    if (_graph && (status = vxReleaseGraph(&_graph)) != VX_SUCCESS)
+        LOG("Failed to call vxReleaseGraph " + TOSTR(status))
 
-    return  Status::OK;
+    return Status::OK;
 }
-

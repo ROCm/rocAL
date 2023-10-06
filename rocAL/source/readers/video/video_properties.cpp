@@ -21,23 +21,21 @@ THE SOFTWARE.
 */
 
 #include "video_properties.h"
+
 #include <cmath>
 
 #ifdef ROCAL_VIDEO
-void substring_extraction(std::string const &str, const char delim, std::vector<std::string> &out)
-{
+void substring_extraction(std::string const &str, const char delim, std::vector<std::string> &out) {
     size_t start;
     size_t end = 0;
-    while ((start = str.find_first_not_of(delim, end)) != std::string::npos)
-    {
+    while ((start = str.find_first_not_of(delim, end)) != std::string::npos) {
         end = str.find(delim, start);
         out.push_back(str.substr(start, end - start));
     }
 }
 
 // Opens the context of the Video file to obtain the width, heigh and frame rate info.
-void open_video_context(const char *video_file_path, Properties &props)
-{
+void open_video_context(const char *video_file_path, Properties &props) {
     AVFormatContext *pFormatCtx = NULL;
     AVCodecContext *pCodecCtx = NULL;
     int videoStream = -1;
@@ -45,8 +43,7 @@ void open_video_context(const char *video_file_path, Properties &props)
 
     // open video file
     int ret = avformat_open_input(&pFormatCtx, video_file_path, NULL, NULL);
-    if (ret != 0)
-    {
+    if (ret != 0) {
         WRN("Unable to open video file: " + STR(video_file_path))
         exit(0);
     }
@@ -54,10 +51,8 @@ void open_video_context(const char *video_file_path, Properties &props)
     // Retrieve stream information
     ret = avformat_find_stream_info(pFormatCtx, NULL);
     assert(ret >= 0);
-    for (i = 0; i < pFormatCtx->nb_streams; i++)
-    {
-        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && videoStream < 0)
-        {
+    for (i = 0; i < pFormatCtx->nb_streams; i++) {
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && videoStream < 0) {
             videoStream = i;
         }
     }
@@ -75,19 +70,16 @@ void open_video_context(const char *video_file_path, Properties &props)
     avformat_close_input(&pFormatCtx);
 }
 
-void get_video_properties_from_txt_file(VideoProperties &video_props, const char *file_path, bool file_list_frame_num)
-{
+void get_video_properties_from_txt_file(VideoProperties &video_props, const char *file_path, bool file_list_frame_num) {
     std::ifstream text_file(file_path);
 
-    if (text_file.good())
-    {
+    if (text_file.good()) {
         Properties props;
         std::string line;
         unsigned max_width = 0;
         unsigned max_height = 0;
         unsigned video_count = 0;
-        while (std::getline(text_file, line))
-        {
+        while (std::getline(text_file, line)) {
             int label;
             std::string video_file_name;
             unsigned start_frame_number = 0;
@@ -98,31 +90,27 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
             if (!(line_ss >> video_file_name >> label))
                 continue;
             open_video_context(video_file_name.c_str(), props);
-            if(max_width == props.width || max_width == 0)
+            if (max_width == props.width || max_width == 0)
                 max_width = props.width;
             else
                 THROW("The given video files are of different resolution\n")
-            if(max_height == props.height || max_height == 0)
+            if (max_height == props.height || max_height == 0)
                 max_height = props.height;
             else
                 THROW("The given video files are of different resolution\n")
-            if (!file_list_frame_num)
-            {
+            if (!file_list_frame_num) {
                 line_ss >> start_time >> end_time;
                 start_frame_number = static_cast<unsigned int>(std::ceil(start_time * (props.avg_frame_rate_num / (double)props.avg_frame_rate_den)));
                 end_frame_number = static_cast<unsigned int>(std::floor(end_time * (props.avg_frame_rate_num / (double)props.avg_frame_rate_den)));
-            }
-            else
-            {
+            } else {
                 line_ss >> start_frame_number >> end_frame_number;
             }
             end_frame_number = end_frame_number != 0 ? end_frame_number : props.frames_count;
-            if ((end_frame_number > props.frames_count) || (start_frame_number >= end_frame_number))
-            {
+            if ((end_frame_number > props.frames_count) || (start_frame_number >= end_frame_number)) {
                 INFO("Invalid start or end time/frame number passed, skipping the file" + video_file_name)
                 continue;
             }
-            video_file_name = std::to_string(video_count) + "#" + video_file_name; // Video index is added to each video file name to identify repeated videos files.
+            video_file_name = std::to_string(video_count) + "#" + video_file_name;  // Video index is added to each video file name to identify repeated videos files.
             video_props.video_file_names.push_back(video_file_name);
             video_props.labels.push_back(label);
             video_props.start_end_frame_num.push_back(std::make_tuple(start_frame_number, end_frame_number));
@@ -137,13 +125,11 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
         video_props.width = max_width;
         video_props.height = max_height;
         video_props.videos_count = video_count;
-    }
-    else
+    } else
         THROW("Can't open the metadata file at " + std::string(file_path))
 }
 
-void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num)
-{
+void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num) {
     DIR *_sub_dir;
     struct dirent *_entity;
     std::string video_file_path;
@@ -154,12 +140,9 @@ void find_video_properties(VideoProperties &video_props, const char *source_path
     filesys::path pathObj(_full_path);
     if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))  // Single video file / text file as input
     {
-        if (pathObj.has_extension() && pathObj.extension().string() == ".txt")
-        {
+        if (pathObj.has_extension() && pathObj.extension().string() == ".txt") {
             get_video_properties_from_txt_file(video_props, source_path, file_list_frame_num);
-        }
-        else
-        {
+        } else {
             // Single Video File Input
             open_video_context(source_path, props);
             video_props.width = props.width;
@@ -171,20 +154,17 @@ void find_video_properties(VideoProperties &video_props, const char *source_path
                 THROW("Variable frame rate videos cannot be processed")
             video_props.frame_rate = video_frame_rate;
             video_props.start_end_frame_num.push_back(std::make_tuple(0, (int)props.frames_count));
-            video_file_path = std::to_string(0) + "#" + _full_path; // Video index is added to each video file name to identify repeated videos files.
+            video_file_path = std::to_string(0) + "#" + _full_path;  // Video index is added to each video file name to identify repeated videos files.
             video_props.video_file_names.push_back(video_file_path);
         }
-    }
-    else if (filesys::exists(pathObj) && filesys::is_directory(pathObj))
-    {
+    } else if (filesys::exists(pathObj) && filesys::is_directory(pathObj)) {
         std::vector<std::string> video_files;
         unsigned video_count = 0;
         std::vector<std::string> entry_name_list;
         std::string _folder_path = source_path;
         if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
             THROW("ERROR: Failed opening the directory at " + _folder_path);
-        while ((_entity = readdir(_sub_dir)) != nullptr)
-        {
+        while ((_entity = readdir(_sub_dir)) != nullptr) {
             std::string entry_name(_entity->d_name);
             if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
                 continue;
@@ -193,18 +173,16 @@ void find_video_properties(VideoProperties &video_props, const char *source_path
         closedir(_sub_dir);
         std::sort(entry_name_list.begin(), entry_name_list.end());
 
-        for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count)
-        {
+        for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
             std::string subfolder_path = _folder_path + "/" + entry_name_list[dir_count];
             filesys::path pathObj(subfolder_path);
-            if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
-            {
+            if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
                 open_video_context(subfolder_path.c_str(), props);
-                if(max_width == props.width || max_width == 0)
+                if (max_width == props.width || max_width == 0)
                     max_width = props.width;
                 else
                     THROW("The given video files are of different resolution\n")
-                if(max_height == props.height || max_height == 0)
+                if (max_height == props.height || max_height == 0)
                     max_height = props.height;
                 else
                     THROW("The given video files are of different resolution\n")
@@ -213,18 +191,15 @@ void find_video_properties(VideoProperties &video_props, const char *source_path
                 if (video_props.frame_rate != 0 && video_frame_rate != video_props.frame_rate)
                     THROW("Variable frame rate videos cannot be processed")
                 video_props.frame_rate = video_frame_rate;
-                video_file_path = std::to_string(video_count) + "#" + subfolder_path; // Video index is added to each video file name to identify repeated videos files.
+                video_file_path = std::to_string(video_count) + "#" + subfolder_path;  // Video index is added to each video file name to identify repeated videos files.
                 video_props.video_file_names.push_back(video_file_path);
                 video_props.start_end_frame_num.push_back(std::make_tuple(0, (int)props.frames_count));
                 video_count++;
-            }
-            else if (filesys::exists(pathObj) && filesys::is_directory(pathObj))
-            {
+            } else if (filesys::exists(pathObj) && filesys::is_directory(pathObj)) {
                 std::string _full_path = subfolder_path;
                 if ((_sub_dir = opendir(_full_path.c_str())) == nullptr)
                     THROW("VideoReader ERROR: Failed opening the directory at " + source_path);
-                while ((_entity = readdir(_sub_dir)) != nullptr)
-                {
+                while ((_entity = readdir(_sub_dir)) != nullptr) {
                     std::string entry_name(_entity->d_name);
                     if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
                         continue;
@@ -232,23 +207,22 @@ void find_video_properties(VideoProperties &video_props, const char *source_path
                 }
                 closedir(_sub_dir);
                 std::sort(video_files.begin(), video_files.end());
-                for (unsigned i = 0; i < video_files.size(); i++)
-                {
+                for (unsigned i = 0; i < video_files.size(); i++) {
                     std::string file_path = _full_path;
                     file_path.append("/");
                     file_path.append(video_files[i]);
                     _full_path = file_path;
 
                     open_video_context(_full_path.c_str(), props);
-                    if(max_width == props.width || max_width == 0)
+                    if (max_width == props.width || max_width == 0)
                         max_width = props.width;
                     else
                         THROW("The given video files are of different resolution\n")
-                    if(max_height == props.height || max_height == 0)
+                    if (max_height == props.height || max_height == 0)
                         max_height = props.height;
                     else
                         THROW("The given video files are of different resolution\n")
-                    video_file_path = std::to_string(video_count) + "#" + _full_path; // Video index is added to each video file name to identify repeated videos files.
+                    video_file_path = std::to_string(video_count) + "#" + _full_path;  // Video index is added to each video file name to identify repeated videos files.
                     video_props.video_file_names.push_back(video_file_path);
                     video_props.frames_count.push_back(props.frames_count);
                     float video_frame_rate = std::floor(props.avg_frame_rate_num / props.avg_frame_rate_den);

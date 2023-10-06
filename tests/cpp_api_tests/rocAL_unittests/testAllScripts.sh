@@ -26,7 +26,7 @@ caffe2_classification_path=${ROCAL_DATA_PATH}/rocal_data/caffe2/classification/
 caffe2_detection_path=${ROCAL_DATA_PATH}/rocal_data/caffe2/detection/
 mxnet_path=${ROCAL_DATA_PATH}/rocal_data/mxnet/
 output_path=../rocal_unittest_output_folder_$(date +%Y-%m-%d_%H-%M-%S)/
-golden_output_path=${ROCAL_DATA_PATH}/rocal_data/GoldenOutputs/
+golden_output_path=${ROCAL_DATA_PATH}/rocal_data/GoldenOutputsTensor/
 
 display=0
 device=0
@@ -84,10 +84,20 @@ do
         ./rocal_unittests 0 "$image_path" "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}" $width $height 46 $device $rgb 0 $display
         ./rocal_unittests 0 "$image_path" "${output_path}Flip_${rgb_name[$rgb]}_${device_name}" $width $height 47 $device $rgb 0 $display
 
+        # FileSource Reader + partial decoder
+        ./rocal_unittests 1 "$image_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}_FileReader_partial" $width $height 41 $device $rgb 0 $display
+        ./rocal_unittests 1 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}_FileReader_partial" $width $height 42 $device $rgb 0 $display
+        ./rocal_unittests 1 "$image_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}_FileReader_partial" $width $height 40 $device $rgb 0 $display
+
         # coco detection
         ./rocal_unittests 2 "$coco_detection_path" "${output_path}Gamma_${rgb_name[$rgb]}_${device_name}" $width $height 33 $device $rgb 0 $display
         ./rocal_unittests 2 "$coco_detection_path" "${output_path}Contrast_${rgb_name[$rgb]}_${device_name}" $width $height 34 $device $rgb 0 $display
         ./rocal_unittests 2 "$coco_detection_path" "${output_path}Vignette_${rgb_name[$rgb]}_${device_name}" $width $height 38 $device $rgb 0 $display
+
+        # coco detection + partial decoder
+        ./rocal_unittests 3 "$coco_detection_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}_coco_partial" $width $height 41 $device $rgb 0 $display
+        ./rocal_unittests 3 "$coco_detection_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}_coco_partial" $width $height 42 $device $rgb 0 $display
+        ./rocal_unittests 3 "$coco_detection_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}_coco_partial" $width $height 40 $device $rgb 0 $display
 
         # tf classification
         ./rocal_unittests 4 "$tf_classification_path" "${output_path}Blend_${rgb_name[$rgb]}_${device_name}" $width $height 36 $device $rgb 0 $display
@@ -117,7 +127,7 @@ do
         # caffe2 detection
         ./rocal_unittests 9 "$caffe2_detection_path" "${output_path}FishEye_${rgb_name[$rgb]}_${device_name}" $width $height 10 $device $rgb 0 $display
         ./rocal_unittests 9 "$caffe2_detection_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
-        ./rocal_unittests 9 "$caffe2_detection_path" "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}_cmn" $width $height 55 $device $rgb 0 $display
+        ./rocal_unittests 9 "$caffe2_detection_path" "${output_path}CropCenterCMN_${rgb_name[$rgb]}_${device_name}" $width $height 55 $device $rgb 0 $display
 
         # mxnet 
         ./rocal_unittests 11 "$mxnet_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display

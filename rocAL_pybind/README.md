@@ -20,7 +20,7 @@ rocAL_pybind installs during [MIVisionX build](https://github.com/GPUOpen-Profes
 
 * Install pip packages
 ````
-pip3 install numpy opencv-python torch
+pip3 install numpy opencv-python torch pillow
 ````
 
 #### Run Test Scripts

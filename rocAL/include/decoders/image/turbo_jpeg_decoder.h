@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <turbojpeg.h>
 
 class TJDecoder : public Decoder {
-public:
+   public:
     //! Default constructor
     TJDecoder();
     //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
@@ -37,7 +37,7 @@ public:
      \param height pointer to the user's buffer to write the height of the compressed image to
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
-    Status decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps) override;
+    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
 
     //! Decodes the actual image data
     /*!
@@ -53,37 +53,37 @@ public:
                            size_t max_decoded_width, size_t max_decoded_height,
                            size_t original_image_width, size_t original_image_height,
                            size_t &actual_decoded_width, size_t &actual_decoded_height,
-                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size=false) override;
+                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override;
 
     ~TJDecoder() override;
-    void initialize(int device_id) override {};
+    void initialize(int device_id) override{};
     bool is_partial_decoder() override { return _is_partial_decoder; }
-    void set_bbox_coords(std::vector <float> bbox_coord) override { _bbox_coord = bbox_coord; }
+    void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
-    std::vector <float> get_bbox_coords() override { return _bbox_coord; }
-private:
+    std::vector<float> get_bbox_coords() override { return _bbox_coord; }
+
+   private:
     tjhandle m_jpegDecompressor;
-    const static unsigned SCALING_FACTORS_COUNT =  16;
+    const static unsigned SCALING_FACTORS_COUNT = 16;
     const tjscalingfactor SCALING_FACTORS[SCALING_FACTORS_COUNT] = {
-            { 2, 1 },
-            { 15, 8 },
-            { 7, 4 },
-            { 13, 8 },
-            { 3, 2 },
-            { 11, 8 },
-            { 5, 4 },
-            { 9, 8 },
-            { 1, 1 },
-            { 7, 8 },
-            { 3, 4 },
-            { 5, 8 },
-            { 1, 2 },
-            { 3, 8 },
-            { 1, 4 },
-            { 1, 8 }
-    };
+        {2, 1},
+        {15, 8},
+        {7, 4},
+        {13, 8},
+        {3, 2},
+        {11, 8},
+        {5, 4},
+        {9, 8},
+        {1, 1},
+        {7, 8},
+        {3, 4},
+        {5, 8},
+        {1, 2},
+        {3, 8},
+        {1, 4},
+        {1, 8}};
     bool _is_partial_decoder = false;
-    std::vector <float> _bbox_coord;
+    std::vector<float> _bbox_coord;
     const static unsigned _max_scaling_factor = 8;
     CropWindow _crop_window;
 };

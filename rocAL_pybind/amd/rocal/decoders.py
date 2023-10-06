@@ -18,21 +18,44 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+##
+# @file decoders.py
+#
+# @brief  File containing various decoder implementations for various readers
+
 import amd.rocal.types as types
 import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
 
-def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False, 
-          affine=True, bytes_per_sample_hint=0, cache_batch_copy=True, cache_debug=False, cache_size=0, cache_threshold=0, cache_type='', 
-          device_memory_padding=16777216, host_memory_padding=8388608, hybrid_huffman_threshold=1000000, output_type=types.RGB, 
-          decoder_type=types.DECODER_TJPEG, preserve=False, seed=1, split_stages=False, use_chunk_allocator=False, use_fast_idct=False,
-          device=None, decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000):
+
+def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
+          output_type=types.RGB, decoder_type=types.DECODER_TJPEG, device=None,
+          decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000):
+    """!Decodes images using different readers and decoders.
+
+        @param inputs                   list of input images.
+        @param user_feature_key_map     User-provided feature key mapping.
+        @param path                     Path to image source.
+        @param file_root                Root path for image files.
+        @param annotations_file         Path to annotations file.
+        @param shard_id                 Shard ID for parallel processing.
+        @param num_shards               Total number of shards for parallel processing.
+        @param random_shuffle           Whether to shuffle images randomly.
+        @param output_type              Color format of the output image.
+        @param decoder_type             Type of image decoder to use.
+        @param device                   Device to use for decoding ("gpu" or "cpu").
+        @param decode_size_policy       Size policy for decoding images.
+        @param max_decoded_width        Maximum width for decoded images.
+        @param max_decoded_height       Maximum height for decoded images.
+
+        @return    Decoded and preprocessed image.
+    """
     reader = Pipeline._current_pipeline._reader
     if (device == "gpu"):
         decoder_type = types.DECODER_HW_JEPG
     else:
         decoder_type = types.DECODER_TJPEG
-    if(reader == 'COCOReader'):
+    if (reader == 'COCOReader'):
         kwargs_pybind = {
             "source_path": file_root,
             "json_path": annotations_file,
@@ -46,7 +69,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type}
-        decoded_image = b.COCO_ImageDecoderShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        decoded_image = b.cocoImageDecoderShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
         kwargs_pybind = {
@@ -62,7 +86,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type}
-        decoded_image = b.TF_ImageDecoder(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        decoded_image = b.tfImageDecoder(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
         kwargs_pybind = {
@@ -76,8 +101,9 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "dec_type" : decoder_type}
-        decoded_image = b.Caffe2_ImageDecoderShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            "dec_type": decoder_type}
+        decoded_image = b.caffe2ImageDecoderShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif reader == "CaffeReader" or reader == "CaffeReaderDetection":
         kwargs_pybind = {
@@ -91,8 +117,25 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "dec_type" : decoder_type}
-        decoded_image = b.Caffe_ImageDecoderShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            "dec_type": decoder_type}
+        decoded_image = b.caffeImageDecoderShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+
+    elif reader == "MXNETReader":
+        kwargs_pybind = {
+            "source_path": path,
+            "color_format": output_type,
+            "shard_id": shard_id,
+            "num_shards": num_shards,
+            'is_output': False,
+            "shuffle": random_shuffle,
+            "loop": False,
+            "decode_size_policy": decode_size_policy,
+            "max_width": max_decoded_width,
+            "max_height": max_decoded_height,
+            "dec_type": decoder_type}
+        decoded_image = b.mxnetDecoder(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     else:
         kwargs_pybind = {
@@ -107,16 +150,25 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type}
-        decoded_image = b.ImageDecoderShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        decoded_image = b.imageDecoderShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     return (decoded_image)
 
 
-def image_raw(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
-              affine=True, bytes_per_sample_hint=0, cache_batch_copy=True, cache_debug=False, cache_size=0, cache_threshold=0, cache_type='',
-              device_memory_padding=16777216, host_memory_padding=8388608, hybrid_huffman_threshold=1000000, output_type=types.RGB,
-              preserve=False, seed=1, split_stages=False, use_chunk_allocator=False, use_fast_idct=False, device=None, 
-              decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000):
+def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False, output_type=types.RGB, max_decoded_width=1000, max_decoded_height=1000):
+    """!Decodes raw images for TF reader and decoder.
+
+        @param inputs                  list of input images.
+        @param user_feature_key_map    User-provided feature key mapping.
+        @param path                    Path to image source.
+        @param random_shuffle          Whether to shuffle images randomly.
+        @param output_type             Color format of the output image.
+        @param max_decoded_width       Maximum width for decoded images.
+        @param max_decoded_height      Maximum height for decoded images.
+
+        @return    Decoded raw image.
+    """
     reader = Pipeline._current_pipeline._reader
 
     if (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
@@ -130,18 +182,39 @@ def image_raw(*inputs, user_feature_key_map=None, path='', file_root='', annotat
             "loop": False,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        decoded_image = b.TF_ImageDecoderRaw(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        decoded_image = b.tfImageDecoderRaw(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
         return (decoded_image)
 
-def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', num_shards=1, shard_id=0, 
-                      random_shuffle=False, affine=True, bytes_per_sample_hint=0, device_memory_padding=16777216, host_memory_padding=8388608,
-                      hybrid_huffman_threshold=1000000, num_attempts=10, output_type=types.RGB, preserve=False, random_area=[0.08, 1.0],
-                      random_aspect_ratio=[0.8, 1.25], seed=1, split_stages=False, use_chunk_allocator=False, use_fast_idct=False, device=None, 
-                      decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, decoder_type=types.DECODER_TJPEG):
 
+def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', num_shards=1, shard_id=0,
+                      random_shuffle=False, num_attempts=10, output_type=types.RGB, random_area=[0.08, 1.0],
+                      random_aspect_ratio=[0.8, 1.25], decode_size_policy=types.USER_GIVEN_SIZE_ORIG,
+                      max_decoded_width=1000, max_decoded_height=1000, decoder_type=types.DECODER_TJPEG):
+    """!Applies random cropping to images using different readers and decoders.
+
+        @param inputs                  list of input images.
+        @param user_feature_key_map    User-provided feature key mapping.
+        @param path                    Path to image source.
+        @param file_root               Root path for image files.
+        @param annotations_file        Path to annotations file.
+        @param num_shards              Total number of shards for parallel processing.
+        @param shard_id                Shard ID for parallel processing.
+        @param random_shuffle          Whether to shuffle images randomly.
+        @param num_attempts            Maximum number of attempts to find a valid crop.
+        @param output_type             Color format of the output image.
+        @param random_area             Random areas for cropping.
+        @param random_aspect_ratio     Random aspect ratios for cropping.
+        @param decode_size_policy      Size policy for decoding images.
+        @param max_decoded_width       Maximum width for decoded images.
+        @param max_decoded_height      Maximum height for decoded images.
+        @param decoder_type            Type of image decoder to use.
+
+        @return    Randomly cropped and preprocessed image.
+    """
     reader = Pipeline._current_pipeline._reader
     # Internally calls the C++ Partial decoder's
-    if(reader == 'COCOReader'):
+    if (reader == 'COCOReader'):
         kwargs_pybind = {
             "source_path": file_root,
             "json_path": annotations_file,
@@ -157,7 +230,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        crop_output_image = b.COCO_ImageDecoderSliceShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        crop_output_image = b.cocoImageDecoderSliceShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
         kwargs_pybind = {
             "source_path": path,
@@ -172,7 +246,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type}
-        crop_output_image = b.TF_ImageDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+        crop_output_image = b.tfImageDecoder(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
         kwargs_pybind = {
             "source_path": path,
@@ -188,7 +263,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        crop_output_image = b.Caffe_ImageDecoderPartialShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        crop_output_image = b.caffeImageDecoderPartialShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
         kwargs_pybind = {
             "source_path": path,
@@ -204,7 +280,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        crop_output_image = b.Caffe2_ImageDecoderPartialShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        crop_output_image = b.caffe2ImageDecoderPartialShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {
             "source_path": file_root,
@@ -220,24 +297,41 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        crop_output_image = b.FusedDecoderCropShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        crop_output_image = b.fusedDecoderCropShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     return (crop_output_image)
 
-def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False, affine=True, axes=None,
-                axis_names="WH", bytes_per_sample_hint=0, device_memory_padding=16777216, device_memory_padding_jpeg2k=0, 
-                host_memory_padding=8388608, random_aspect_ratio=[0.75, 1.33333], random_area=[0.08, 1.0], num_attempts=100,
-                host_memory_padding_jpeg2k=0, hybrid_huffman_threshold=1000000, memory_stats=False, normalized_anchor=True, 
-                normalized_shape=True, output_type=types.RGB, preserve=False, seed=1, split_stages=False, use_chunk_allocator=False, 
-                use_fast_idct=False, device=None, decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000):
 
+def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
+                random_aspect_ratio=[0.75, 1.33333], random_area=[0.08, 1.0], num_attempts=100, output_type=types.RGB,
+                decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000):
+    """!Slices images randomly using different readers and decoders.
+
+        @param inputs                 list of input images.
+        @param file_root              Root path for image files.
+        @param path                   Path to image source.
+        @param annotations_file       Path to annotations file.
+        @param shard_id               Shard ID for parallel processing.
+        @param num_shards             Total number of shards for parallel processing.
+        @param random_shuffle         Whether to shuffle images randomly.
+        @param random_aspect_ratio    Random aspect ratios for cropping.
+        @param random_area            Random areas for cropping.
+        @param num_attempts           Maximum number of attempts to find a valid crop.
+        @param output_type            Color format of the output image.
+        @param decode_size_policy     Size policy for decoding images.
+        @param max_decoded_width      Maximum width for decoded images.
+        @param max_decoded_height     Maximum height for decoded images.
+
+        @return    Sliced image.
+    """
     reader = Pipeline._current_pipeline._reader
-    #Reader -> Randon BBox Crop -> ImageDecoderSlice
-    #Random crop parameters taken from pytorch's RandomResizedCrop default function arguments
-    #TODO:To pass the crop co-ordinates from random_bbox_crop to image_slice 
-    #in tensor branch integration, 
-    #for now calling partial decoder to match SSD training outer API's .
-    if(reader == 'COCOReader'):
+    # Reader -> Randon BBox Crop -> ImageDecoderSlice
+    # Random crop parameters taken from pytorch's RandomResizedCrop default function arguments
+    # TODO:To pass the crop co-ordinates from random_bbox_crop to image_slice
+    # in tensor branch integration,
+    # for now calling partial decoder to match SSD training outer API's .
+    if (reader == 'COCOReader'):
 
         kwargs_pybind = {
             "source_path": file_root,
@@ -254,7 +348,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        image_decoder_slice = b.COCO_ImageDecoderSliceShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        image_decoder_slice = b.cocoImageDecoderSliceShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
         kwargs_pybind = {
             "source_path": path,
@@ -270,7 +365,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        image_decoder_slice = b.Caffe_ImageDecoderPartialShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        image_decoder_slice = b.caffeImageDecoderPartialShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
         kwargs_pybind = {
             "source_path": path,
@@ -286,7 +382,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        image_decoder_slice = b.Caffe2_ImageDecoderPartialShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        image_decoder_slice = b.caffe2ImageDecoderPartialShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {
             "source_path": file_root,
@@ -302,5 +399,6 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height}
-        image_decoder_slice = b.FusedDecoderCropShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        image_decoder_slice = b.fusedDecoderCropShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (image_decoder_slice)

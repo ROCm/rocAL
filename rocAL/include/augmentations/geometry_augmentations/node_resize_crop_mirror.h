@@ -21,31 +21,34 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "parameter_vx.h"
-#include "parameter_factory.h"
+#include "node_crop.h"
 #include "parameter_crop_factory.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+#include "rocal_api_types.h"
 
-class CropParam;
-
-class ResizeCropMirrorNode : public Node
-{
-public:
-    ResizeCropMirrorNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+class ResizeCropMirrorNode : public CropNode {
+   public:
+    ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResizeCropMirrorNode() = delete;
-    void init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror);
-    void init( FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror);
-    unsigned int get_dst_width() { return _outputs[0]->info().width(); }
-    unsigned int get_dst_height() { return _outputs[0]->info().height_single(); }
+    void init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror,
+              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
+    void init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror,
+              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
+    unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
+    unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
     vx_array get_mirror() { return _mirror.default_array(); }
-protected:
+    void adjust_out_roi_size();
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
-    std::shared_ptr<RocalCropParam> _crop_param;
-    vx_array _dst_roi_width ,_dst_roi_height;
-    ParameterVX<int> _mirror;
-    constexpr static int MIRROR_RANGE [2] =  {0, 1};
-};
 
+   private:
+    std::shared_ptr<RocalCropParam> _crop_param;
+    vx_array _dst_roi_width, _dst_roi_height;
+    ParameterVX<int> _mirror;
+    constexpr static int MIRROR_RANGE[2] = {0, 1};
+    int _interpolation_type;
+};

@@ -21,15 +21,16 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <vector>
-#include <string>
-#include <memory>
 #include <dirent.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "image_reader.h"
 
-
 class CIFAR10DataReader : public Reader {
-public:
+   public:
     //! Looks up the folder which contains the CIFAR10 training/test data which is uncompressed, amd makes up image names
     /*!
      \param desc  User provided descriptor containing the files' path.
@@ -40,7 +41,7 @@ public:
      \param buf User's provided buffer to receive the loaded images
      \return Size of the loaded resource
     */
-    size_t read_data(unsigned char* buf, size_t max_size) override;
+    size_t read_data(unsigned char *buf, size_t max_size) override;
     //! Opens the next file in the folder
     /*!
      \return The size of the next file, 0 if couldn't access it
@@ -51,7 +52,7 @@ public:
     void reset() override;
 
     //! Returns the name of the latest data_id opened
-    std::string id() override { return _last_id;};
+    std::string id() override { return _last_id; };
 
     unsigned count_items() override;
 
@@ -61,9 +62,9 @@ public:
 
     CIFAR10DataReader();
 
-    unsigned get_file_index() { return _last_file_idx;}
+    unsigned get_file_index() { return _last_file_idx; }
 
-private:
+   private:
     //! opens the folder containing the images
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
@@ -74,17 +75,17 @@ private:
     std::vector<std::string> _file_names;
     std::vector<unsigned> _file_offsets;
     std::vector<unsigned> _file_idx;
-    unsigned  _curr_file_idx;
-    FILE* _current_fPtr;
+    unsigned _curr_file_idx;
+    FILE *_current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
-    unsigned _last_file_idx;        // index of individual raw file in a batched file
+    unsigned _last_file_idx;  // index of individual raw file in a batched file
     // hard_coding the following for now. Eventually needs to add in the ReaderConfig
     //!< file_name_prefix tells the reader to read only files with the prefix:: eventually needs to be passed through ReaderConfig
-    std::string _file_name_prefix;// = "data_batch_";
+    std::string _file_name_prefix;  // = "data_batch_";
     //!< _raw_file_size of each file to read
-    const size_t _raw_file_size = (32*32*3 + 1);    // todo:: need to add an option in reader config to take this.
+    const size_t _raw_file_size = (32 * 32 * 3 + 1);  // todo:: need to add an option in reader config to take this.
     size_t _total_file_size;
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
@@ -97,5 +98,4 @@ private:
     void incremenet_read_ptr();
     int release();
     void incremenet_file_id() { _file_id++; }
-
 };

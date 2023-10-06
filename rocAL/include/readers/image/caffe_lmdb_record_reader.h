@@ -21,22 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <vector>
-#include <string>
-#include <memory>
 #include <dirent.h>
-#include <map>
-#include <iterator>
-#include <algorithm>
 #include <google/protobuf/message_lite.h>
 #include <lmdb.h>
-#include "image_reader.h"
+
+#include <algorithm>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "caffe_protos.pb.h"
+#include "image_reader.h"
 #include "timing_debug.h"
 
-
-class CaffeLMDBRecordReader : public Reader{
-public:
+class CaffeLMDBRecordReader : public Reader {
+   public:
     //! Reads the TFRecord File, and loads the image ids and other necessary info
     /*!
      \param desc  User provided descriptor containing the files' path.
@@ -57,7 +58,7 @@ public:
     void reset() override;
 
     //! Returns the id of the latest file opened
-    std::string id() override { return _last_id;};
+    std::string id() override { return _last_id; };
 
     unsigned count_items() override;
 
@@ -67,22 +68,22 @@ public:
 
     CaffeLMDBRecordReader();
 
-private:
+   private:
     //! opens the folder containnig the images
     Reader::Status folder_reading();
     Reader::Status Caffe_LMDB_reader();
     std::string _folder_path;
     std::string _path;
-    DIR *_sub_dir;
+    DIR* _sub_dir;
     std::vector<std::string> _file_names;
-    std::map<std::string, unsigned int > _file_size;
-    unsigned  _curr_file_idx;
+    std::map<std::string, unsigned int> _file_size;
+    unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
     unsigned int _last_file_size;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;// equivalent of batch size
+    size_t _shard_count = 1;  // equivalent of batch size
     bool _last_rec;
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
@@ -93,26 +94,25 @@ private:
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
-    MDB_env* _mdb_env,  *_read_mdb_env;
+    MDB_env *_mdb_env, *_read_mdb_env;
     MDB_dbi _mdb_dbi, _read_mdb_dbi;
     MDB_val _mdb_key, _mdb_value, _read_mdb_key, _read_mdb_value;
-    MDB_txn* _mdb_txn, *_read_mdb_txn;
-    MDB_cursor* _mdb_cursor, *_read_mdb_cursor;
+    MDB_txn *_mdb_txn, *_read_mdb_txn;
+    MDB_cursor *_mdb_cursor, *_read_mdb_cursor;
     uint _file_byte_size;
     void incremenet_read_ptr();
     int release();
     size_t get_file_shard_id();
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t  _file_count_all_shards;
+    size_t _file_count_all_shards;
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
     void read_image(unsigned char* buff, std::string _file_name);
     void read_image_names();
-    std::map <std::string, uint> _image_record_starting;
+    std::map<std::string, uint> _image_record_starting;
     int _open_env = 1;
     int rc;
     void open_env_for_read_image();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
 };
-

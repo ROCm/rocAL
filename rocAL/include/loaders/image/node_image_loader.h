@@ -21,17 +21,16 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "image_loader_sharded.h"
 #include "graph.h"
+#include "image_loader_sharded.h"
+#include "node.h"
 
-class ImageLoaderNode : public Node
-{
-public:
+class ImageLoaderNode : public Node {
+   public:
     /// \param device_resources shard count from user
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
-    ImageLoaderNode(Image *output, void *device_resources);
+    ImageLoaderNode(Tensor *output, void *device_resources);
     ~ImageLoaderNode() override;
     ImageLoaderNode() = delete;
     ///
@@ -44,9 +43,11 @@ public:
               size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig = false, const char *prefix = "", unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0);
 
     std::shared_ptr<LoaderModule> get_loader_module();
-protected:
+
+   protected:
     void create_node() override{};
     void update_node() override{};
-private:
+
+   private:
     std::shared_ptr<ImageLoaderSharded> _loader_module = nullptr;
 };

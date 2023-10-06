@@ -21,18 +21,17 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "image_loader_sharded.h"
 #include "graph.h"
+#include "image_loader_sharded.h"
+#include "node.h"
 #include "parameter_factory.h"
 
-class FusedJpegCropNode: public Node
-{
-public:
+class FusedJpegCropNode : public Node {
+   public:
     /// \param device_resources shard count from user
 
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
-    FusedJpegCropNode(Image *output, void *device_resources_hip);
+    FusedJpegCropNode(Tensor *output, void *device_resources_hip);
     ~FusedJpegCropNode() override;
     FusedJpegCropNode() = delete;
     ///
@@ -46,10 +45,12 @@ public:
               unsigned num_attempts, std::vector<float> &random_area, std::vector<float> &random_aspect_ratio);
 
     std::shared_ptr<LoaderModule> get_loader_module();
-protected:
-    void create_node() override {};
-    void update_node() override {};
-private:
+
+   protected:
+    void create_node() override{};
+    void update_node() override{};
+
+   private:
     std::shared_ptr<ImageLoaderSharded> _loader_module = nullptr;
     std::vector<float> _random_area, _random_aspect_ratio;
     unsigned _num_attempts;

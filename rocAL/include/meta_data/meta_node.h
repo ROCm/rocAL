@@ -21,26 +21,25 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <set>
 #include <memory>
-#include "meta_data_graph.h"
+#include <set>
+
 #include "meta_data.h"
+#include "meta_data_graph.h"
 #include "node.h"
 #include "parameter_factory.h"
 
-class MetaNode
-{
-public:
+class MetaNode {
+   public:
     MetaNode() {}
-    virtual ~MetaNode() {};
-    virtual void update_parameters(MetaDataBatch* input_meta_data) = 0;
+    virtual ~MetaNode(){};
+    virtual void update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) = 0;
     double BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const BoundingBoxCord &box2, bool is_iou) const;
     int _batch_size;
     float _iou_threshold = 0.25;
 };
 
-inline double MetaNode::BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const BoundingBoxCord &box2, bool is_iou = false) const
-{
+inline double MetaNode::BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const BoundingBoxCord &box2, bool is_iou = false) const {
     double iou;
     float xA = std::max(box1.l, box2.l);
     float yA = std::max(box1.t, box2.t);
@@ -58,4 +57,3 @@ inline double MetaNode::BBoxIntersectionOverUnion(const BoundingBoxCord &box1, c
 
     return iou;
 }
-
