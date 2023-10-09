@@ -157,6 +157,21 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 Returns dims of tensor.
                 )code")
         .def(
+            "roi_dims_size", [](rocalTensor &output_tensor) {
+                return output_tensor.get_roi_dims_size();
+            },
+            R"code(
+                Returns the number of dims for ROI data
+                )code")
+        .def(
+            "copy_roi", [](rocalTensor &output_tensor, py::array array) {
+                auto buf = array.request();
+                output_tensor.copy_roi(static_cast<void *>(buf.ptr));
+            },
+            R"code(
+                Copies the ROI data to numpy arrays.
+                )code")
+        .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
                 auto ptr = ctypes_void_ptr(p);
                 output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);

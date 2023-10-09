@@ -63,35 +63,35 @@ void RocalRandomCropParam::fill_crop_dims() {
             aspect_ratio->renew();
             crop_area_factor = area_factor->get();
             crop_aspect_ratio = aspect_ratio->get();
-            target_area = crop_area_factor * in_roi[img_idx].y2 * in_roi[img_idx].x2;
+            target_area = crop_area_factor * in_roi[img_idx].xywh.h * in_roi[img_idx].xywh.w;
             cropw_arr_val[img_idx] = static_cast<size_t>(std::sqrt(target_area * crop_aspect_ratio));
             croph_arr_val[img_idx] = static_cast<size_t>(std::sqrt(target_area * (1 / crop_aspect_ratio)));
-            if (is_valid_crop(croph_arr_val[img_idx], cropw_arr_val[img_idx], in_roi[img_idx].y2, in_roi[img_idx].x2)) {
+            if (is_valid_crop(croph_arr_val[img_idx], cropw_arr_val[img_idx], in_roi[img_idx].xywh.h, in_roi[img_idx].xywh.w)) {
                 x_drift_factor->renew();
                 y_drift_factor->renew();
                 y_drift_factor->renew();
                 x_drift = x_drift_factor->get();
                 y_drift = y_drift_factor->get();
-                x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (in_roi[img_idx].x2 - cropw_arr_val[img_idx]));
-                y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (in_roi[img_idx].y2 - croph_arr_val[img_idx]));
+                x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (in_roi[img_idx].xywh.w - cropw_arr_val[img_idx]));
+                y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (in_roi[img_idx].xywh.h - croph_arr_val[img_idx]));
                 break;
             }
         }
         // Fallback on Central Crop
-        if (!is_valid_crop(croph_arr_val[img_idx], cropw_arr_val[img_idx], in_roi[img_idx].y2, in_roi[img_idx].x2)) {
-            in_ratio = static_cast<float>(in_roi[img_idx].x2) / in_roi[img_idx].y2;
+        if (!is_valid_crop(croph_arr_val[img_idx], cropw_arr_val[img_idx], in_roi[img_idx].xywh.h, in_roi[img_idx].xywh.w)) {
+            in_ratio = static_cast<float>(in_roi[img_idx].xywh.w) / in_roi[img_idx].xywh.h;
             if (in_ratio < ASPECT_RATIO_RANGE[0]) {
-                cropw_arr_val[img_idx] = in_roi[img_idx].x2;
+                cropw_arr_val[img_idx] = in_roi[img_idx].xywh.w;
                 croph_arr_val[img_idx] = cropw_arr_val[img_idx] / ASPECT_RATIO_RANGE[0];
             } else if (in_ratio > ASPECT_RATIO_RANGE[1]) {
-                croph_arr_val[img_idx] = in_roi[img_idx].y2;
+                croph_arr_val[img_idx] = in_roi[img_idx].xywh.h;
                 cropw_arr_val[img_idx] = croph_arr_val[img_idx] * ASPECT_RATIO_RANGE[1];
             } else {
-                croph_arr_val[img_idx] = in_roi[img_idx].y2;
-                cropw_arr_val[img_idx] = in_roi[img_idx].x2;
+                croph_arr_val[img_idx] = in_roi[img_idx].xywh.h;
+                cropw_arr_val[img_idx] = in_roi[img_idx].xywh.w;
             }
-            x1_arr_val[img_idx] = (in_roi[img_idx].x2 - cropw_arr_val[img_idx]) / 2;
-            y1_arr_val[img_idx] = (in_roi[img_idx].y2 - croph_arr_val[img_idx]) / 2;
+            x1_arr_val[img_idx] = (in_roi[img_idx].xywh.w - cropw_arr_val[img_idx]) / 2;
+            y1_arr_val[img_idx] = (in_roi[img_idx].xywh.h - croph_arr_val[img_idx]) / 2;
         }
         x2_arr_val[img_idx] = x1_arr_val[img_idx] + cropw_arr_val[img_idx];
         y2_arr_val[img_idx] = y1_arr_val[img_idx] + croph_arr_val[img_idx];

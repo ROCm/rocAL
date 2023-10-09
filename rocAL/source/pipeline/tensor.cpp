@@ -106,15 +106,17 @@ bool operator==(const TensorInfo &rhs, const TensorInfo &lhs) {
             rhs.layout() == lhs.layout());
 }
 
-void rocalTensorInfo::reset_tensor_roi_buffers() {
+void TensorInfo::reset_tensor_roi_buffers() {
     unsigned *roi_buf;
-    allocate_host_or_pinned_mem((void **)&roi_buf, _batch_size * (_is_image ? 4 : (_num_of_dims - 1) * 2) * sizeof(unsigned), _mem_type);
-    _roi.set_ptr(roi_buf, _mem_type, _num_of_dims - 1);
+    auto roi_no_of_dims = _is_image ? 2 : (_num_of_dims - 1);
+    auto roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size;  // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
+    allocate_host_or_pinned_mem((void **)&roi_buf, roi_size * roi_no_of_dims * 2 * sizeof(unsigned), _mem_type);
+    _roi.set_ptr(roi_buf, _mem_type, roi_size, roi_no_of_dims);
     if (_is_image) {
-        Rocal2DROI * roi = (Rocal2DROI *)_roi.get_ptr();
+        ROI2DCords *roi = _roi.get_2D_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
-            roi[i].x2 = _max_shape.at(0);
-            roi[i].y2 = _max_shape.at(1);
+            roi[i].xywh.w = _max_shape.at(0);
+            roi[i].xywh.h = _max_shape.at(1);
         }
     } else {
         // TODO - For other tensor types
@@ -171,53 +173,14 @@ TensorInfo::TensorInfo(std::vector<size_t> dims,
     set_max_shape();
 }
 
-TensorInfo::TensorInfo(const TensorInfo &other) {
-    _type = other._type;
-    _num_of_dims = other._num_of_dims;
-    _dims = other._dims;
-    _strides = other._strides;
-    _batch_size = other._batch_size;
-    _mem_type = other._mem_type;
-    _roi_type = other._roi_type;
-    _data_type = other._data_type;
-    _layout = other._layout;
-    _color_format = other._color_format;
-    _data_type_size = other._data_type_size;
-    _data_size = other._data_size;
-    _max_shape = other._max_shape;
-    _is_image = other._is_image;
-    _is_metadata = other._is_metadata;
-    _channels = other._channels;
-    if (!other.is_metadata()) {  // For Metadata ROI buffer is not required
-        allocate_host_or_pinned_mem(&_roi_buf, _batch_size * 4 * sizeof(unsigned), _mem_type);
-        memcpy((void *)_roi_buf, (const void *)other.get_roi(), _batch_size * 4 * sizeof(unsigned));
-    }
-}
-
-TensorInfo::~TensorInfo() {
-    if (!_is_metadata) {
-        if (_mem_type == RocalMemType::HIP) {
-#if ENABLE_HIP
-            if (_roi_buf) {
-                hipError_t err = hipHostFree(_roi_buf);
-                if (err != hipSuccess)
-                    ERR("hipHostFree failed " + TOSTR(err));
-            }
-#endif
-        } else {
-            if (_roi_buf) free(_roi_buf);
-        }
-        _roi_buf = nullptr;
-    }
-}
-
 void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
                                const std::vector<uint32_t> &height) {
     if (_info.is_image()) {
         auto max_shape = _info.max_shape();
         unsigned max_width = max_shape.at(0);
         unsigned max_height = max_shape.at(1);
-        Rocal2DROI *roi = (Rocal2DROI *)_info.roi().get_ptr();
+        ROI2DCords *roi = _info.roi().get_2D_roi();
+        
         if (width.size() != height.size())
             THROW("Batch size of Tensor height and width info does not match")
 
@@ -227,15 +190,15 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
         for (unsigned i = 0; i < info().batch_size(); i++) {
             if (width[i] > max_width) {
                 WRN("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(max_width))
-                roi[i].x2 = max_width;
+                roi[i].xywh.w = max_width;
             } else {
-                roi[i].x2 = width[i];
+                roi[i].xywh.w = width[i];
             }
             if (height[i] > max_height) {
                 WRN("Given ROI height is larger than buffer height for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(max_height))
-                roi[i].y2 = max_height;
+                roi[i].xywh.h = max_height;
             } else {
-                roi[i].y2 = height[i];
+                roi[i].xywh.h = height[i];
             }
         }
     }
@@ -287,7 +250,7 @@ int Tensor::create_virtual(vx_context context, vx_graph graph) {
         THROW("Error: vxCreateVirtualTensor(input:[" + TOSTR(_info.max_shape().at(0)) + "W" + TOSTR(_info.max_shape().at(1)) + "H" + "]): failed " + TOSTR(status))
 
     _info._type = TensorInfo::Type::VIRTUAL;
-    void *roi_handle = reinterpret_cast<void *>(_info.get_roi());
+    void *roi_handle = reinterpret_cast<void *>(_info.roi().get_ptr());
     create_roi_tensor_from_handle(&roi_handle);  // Create ROI tensor from handle
     return 0;
 }
@@ -313,7 +276,7 @@ int Tensor::create_from_handle(vx_context context) {
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
     _info._type = TensorInfo::Type::HANDLE;
-    void *roi_handle = reinterpret_cast<void *>(_info.get_roi());
+    void *roi_handle = reinterpret_cast<void *>(_info.roi().get_ptr());
     create_roi_tensor_from_handle(&roi_handle);  // Create ROI tensor from handle
     return 0;
 }

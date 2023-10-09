@@ -104,15 +104,23 @@ enum class RocalROIType {
     XYWH
 };
 
-typedef struct
-{
-    unsigned x1, y1, x2, y2;
-} Rocal2DROI;
+typedef struct {
+    unsigned l, t, r, b;
+} RoiLtrb;
+
+typedef struct {
+    unsigned x, y, w, h;
+} RoiXywh;
+
+typedef union {
+    RoiLtrb ltrb;
+    RoiXywh xywh;
+} ROI2DCords;
 
 typedef struct {
     unsigned *begin;
     unsigned *shape;
-} RocalROICords;
+} ROICords;
 
 struct Timing {
     // The following timings are accumulated timing not just the most recent activity
