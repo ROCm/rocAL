@@ -9,10 +9,15 @@ For more details, go to [rocAL user guide](docs) page.
 
 Run the steps below to build documentation locally.
 
+* Sphinx documentation
 ```bash
 cd docs
 pip3 install -r sphinx/requirements.txt
 python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
+```
+* Doxygen
+```
+doxygen .Doxyfile
 ```
 
 ## Supported Operations
@@ -71,10 +76,11 @@ rocAL can be currently used to perform the following operations either with rand
   + CentOS - `7` / `8`
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
-*  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
-*  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
+*  [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html) with --usecase=graphics,rocm
+*  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp) - MIVisionX Component
+*  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
 *  [Boost library](https://www.boost.org) - Version `1.72` or higher
-*  [Turbo JPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
+*  [Turbo JPEG](https://libjpeg-turbo.org/) - Version 2.0.6.2 from `https://github.com/rrawther/libjpeg-turbo.git`
 *  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
 *  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
 *  [LMBD Library](http://www.lmdb.tech/doc/)
@@ -96,8 +102,8 @@ For the convenience of the developer, we here provide the setup script which wil
   + CentOS - `7` / `8`
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
-* [ROCm supported hardware](https://docs.amd.com)
-* [ROCm](https://docs.amd.com)
+* [ROCm supported hardware](https://rocm.docs.amd.com/en/latest/release/gpu_os_support.html)
+* Install [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html) with --usecase=graphics,rocm
 
   **usage:**
 
@@ -117,7 +123,7 @@ For the convenience of the developer, we here provide the setup script which wil
 
 ### Using `rocAL-setup.py`
 
-* Install [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html)
+* Install [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html) with --usecase=graphics,rocm
   
 * Use the below commands to set up and build rocAL
   
@@ -145,6 +151,12 @@ For the convenience of the developer, we here provide the setup script which wil
     sudo cmake --build . --target PyPackageInstall
     sudo make install
     ```
+    
+    + run tests - [test option instructions](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/wiki/CTest)
+    ```
+    make test
+    ```
+    
     **Note:** sudo is required to build rocAL_pybind package (only supported on HIP backend)
 
   **Note:**
@@ -157,7 +169,10 @@ For the convenience of the developer, we here provide the setup script which wil
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
-* ROCm: rocm-core - `5.4.0.50400-72`
+  + CentOS - `7`
+  + RedHat - `8` / `9`
+  + SLES - `15-SP4`
+* ROCm: rocm-core - `5.7.0.50700-6`
 * RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
 * MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
 * Boost - [1.72.0](https://www.boost.org/users/history/version_1_72_0.html)
@@ -166,6 +181,6 @@ For the convenience of the developer, we here provide the setup script which wil
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * RapidJSON- [master](https://github.com/Tencent/rapidjson)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* CuPy - [master](https://github.com/ROCmSoftwarePlatform/cupy.git)
+* CuPy - [v12.2.0](https://github.com/ROCmSoftwarePlatform/cupy/releases/tag/v12.0.0)
 * rocAL Setup Script - `V1.0.2`
 * Dependencies for all the above packages
