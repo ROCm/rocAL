@@ -50,6 +50,7 @@ THE SOFTWARE.
 #define BBOX_COUNT 4
 #define MAX_NUM_ANCHORS 8732  // Num of bbox achors used in SSD training
 #define MAX_MASK_BUFFER 10000
+#define MAX_ANCHORS 120087  // Num of bbox achors used in Retinanet training
 
 #if ENABLE_SIMD
 #if _WIN32
@@ -107,18 +108,20 @@ class MasterGraph {
     std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool ltrb_bbox = true, bool is_box_encoder = false,
-                                                                bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);
+                                                                bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, bool is_box_iou_matcher = false, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);
     std::vector<rocalTensorList *> create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     std::vector<rocalTensorList *> create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
     std::vector<rocalTensorList *> create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
     std::vector<rocalTensorList *> create_cifar10_label_reader(const char *source_path, const char *file_prefix);
     std::vector<rocalTensorList *> create_mxnet_label_reader(const char *source_path, bool is_output);
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
+    void box_iou_matcher(std::vector<float> &anchors, float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
     const std::pair<ImageNameBatch, pMetaDataBatch> &meta_data();
     TensorList *labels_meta_data();
     TensorList *bbox_meta_data();
     TensorList *mask_meta_data();
+    TensorList *matched_index_meta_data();
     void set_loop(bool val) { _loop = val; }
     void set_output(Tensor *output_tensor);
     size_t calculate_cpu_num_threads(size_t shard_count);
@@ -164,6 +167,7 @@ class MasterGraph {
     TensorList _labels_tensor_list;
     TensorList _bbox_tensor_list;
     TensorList _mask_tensor_list;
+    TensorList _matches_tensor_list;
     std::vector<size_t> _meta_data_buffer_size;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU
@@ -204,6 +208,11 @@ class MasterGraph {
     bool _offset;                                                                 // Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments if offset="True"
     std::vector<float> _means, _stds;                                             //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
     bool _augmentation_metanode = false;
+    // box IoU matcher variables
+    bool _is_box_iou_matcher = false; // bool variable to set the box iou matcher
+    float _high_threshold = 0.5f;    // Max IoU threshold
+    float _low_threshold = 0.4f;     // Min IoU threshold
+    bool _allow_low_quality_matches = true; // Set to true to include low quality matches in matched idx generation
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif

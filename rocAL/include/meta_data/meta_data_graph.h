@@ -37,5 +37,6 @@ class MetaDataGraph {
     virtual void update_meta_data(pMetaDataBatch meta_data, decoded_image_info decoded_image_info) = 0;
     virtual void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_image_info decoded_image_info, crop_image_info crop_image_info) = 0;
     virtual void update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float> &means, std::vector<float> &stds, float *encoded_boxes_data, int *encoded_labels_data) = 0;
+    virtual void update_box_iou_matcher(std::vector<float> *anchors, int *matches_idx_buffer, pMetaDataBatch full_batch_meta_data, float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches) = 0;
     std::list<std::shared_ptr<MetaNode>> _meta_nodes;
 };
