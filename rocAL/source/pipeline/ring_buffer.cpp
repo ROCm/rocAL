@@ -22,8 +22,6 @@ THE SOFTWARE.
 
 #include "ring_buffer.h"
 
-#include <device_manager.h>
-
 RingBuffer::RingBuffer(unsigned buffer_depth) : BUFF_DEPTH(buffer_depth),
                                                 _dev_sub_buffer(buffer_depth),
                                                 _host_sub_buffers(buffer_depth),
