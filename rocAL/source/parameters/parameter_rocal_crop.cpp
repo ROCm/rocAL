@@ -50,14 +50,14 @@ void RocalCropParam::fill_crop_dims() {
     for (uint img_idx = 0; img_idx < batch_size; img_idx++) {
         if (!(_random)) {
             // Evaluating user given crop
-            cropw_arr_val[img_idx] = (crop_w <= in_roi[img_idx].x2 && crop_w > 0) ? crop_w : in_roi[img_idx].x2;
-            croph_arr_val[img_idx] = (crop_h <= in_roi[img_idx].y2 && crop_h > 0) ? crop_h : in_roi[img_idx].y2;
+            cropw_arr_val[img_idx] = (crop_w <= in_roi[img_idx].xywh.w && crop_w > 0) ? crop_w : in_roi[img_idx].xywh.w;
+            croph_arr_val[img_idx] = (crop_h <= in_roi[img_idx].xywh.h && crop_h > 0) ? crop_h : in_roi[img_idx].xywh.h;
             if (_is_fixed_crop) {
-                x1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[0] * (in_roi[img_idx].x2 - cropw_arr_val[img_idx])));
-                y1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[1] * (in_roi[img_idx].y2 - croph_arr_val[img_idx])));
+                x1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[0] * (in_roi[img_idx].xywh.w - cropw_arr_val[img_idx])));
+                y1_arr_val[img_idx] = static_cast<size_t>(std::nearbyintf(_crop_anchor[1] * (in_roi[img_idx].xywh.h - croph_arr_val[img_idx])));
             } else {
-                x1_arr_val[img_idx] = (x1 >= in_roi[img_idx].x2) ? 0 : x1;
-                y1_arr_val[img_idx] = (y1 >= in_roi[img_idx].y2) ? 0 : y1;
+                x1_arr_val[img_idx] = (x1 >= in_roi[img_idx].xywh.w) ? 0 : x1;
+                y1_arr_val[img_idx] = (y1 >= in_roi[img_idx].xywh.h) ? 0 : y1;
             }
         } else {
             float crop_h_factor_, crop_w_factor_, x_drift, y_drift;
@@ -65,22 +65,22 @@ void RocalCropParam::fill_crop_dims() {
             crop_h_factor_ = crop_height_factor->get();
             crop_width_factor->renew();
             crop_w_factor_ = crop_width_factor->get();
-            cropw_arr_val[img_idx] = static_cast<size_t>(crop_w_factor_ * in_roi[img_idx].x2);
-            croph_arr_val[img_idx] = static_cast<size_t>(crop_h_factor_ * in_roi[img_idx].y2);
+            cropw_arr_val[img_idx] = static_cast<size_t>(crop_w_factor_ * in_roi[img_idx].xywh.w);
+            croph_arr_val[img_idx] = static_cast<size_t>(crop_h_factor_ * in_roi[img_idx].xywh.h);
             x_drift_factor->renew();
             y_drift_factor->renew();
             x_drift = x_drift_factor->get();
             y_drift = y_drift_factor->get();
-            x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (in_roi[img_idx].x2 - cropw_arr_val[img_idx]));
-            y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (in_roi[img_idx].y2 - croph_arr_val[img_idx]));
+            x1_arr_val[img_idx] = static_cast<size_t>(x_drift * (in_roi[img_idx].xywh.w - cropw_arr_val[img_idx]));
+            y1_arr_val[img_idx] = static_cast<size_t>(y_drift * (in_roi[img_idx].xywh.h - croph_arr_val[img_idx]));
         }
         x2_arr_val[img_idx] = x1_arr_val[img_idx] + cropw_arr_val[img_idx];
         y2_arr_val[img_idx] = y1_arr_val[img_idx] + croph_arr_val[img_idx];
         // Evaluating the crop
         x1_arr_val[img_idx] = std::max(x1_arr_val[img_idx], 0u);
         y1_arr_val[img_idx] = std::max(y1_arr_val[img_idx], 0u);
-        x2_arr_val[img_idx] = std::min(x2_arr_val[img_idx], in_roi[img_idx].x2);
-        y2_arr_val[img_idx] = std::min(y2_arr_val[img_idx], in_roi[img_idx].y2);
+        x2_arr_val[img_idx] = std::min(x2_arr_val[img_idx], in_roi[img_idx].xywh.w);
+        y2_arr_val[img_idx] = std::min(y2_arr_val[img_idx], in_roi[img_idx].xywh.h);
     }
 }
 
