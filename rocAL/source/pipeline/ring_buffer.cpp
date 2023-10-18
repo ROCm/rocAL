@@ -308,6 +308,12 @@ void RingBuffer::release_gpu_res() {
                         free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
                 }
             }
+            if (_host_meta_data_buffers.size() != 0) {
+                for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
+                    if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
+                        free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
+                }
+            }
         }
         _dev_sub_buffer.clear();
         _host_meta_data_buffers.clear();
