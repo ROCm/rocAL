@@ -7,7 +7,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = 'HIP'
-    String enableSCL = 'echo build-rocAL'
+    String enableSCL = 'echo rocAL Build'
     String libLocation = ''
 
     if (platform.jenkinsLabel.contains('centos')) {
@@ -25,11 +25,11 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
     def command = """#!/usr/bin/env bash
                 set -x
+                ${enableSCL}
                 echo Build rocAL - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 python rocAL-setup.py --backend ${backend}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                ${enableSCL}
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo cmake --build . --target PyPackageInstall

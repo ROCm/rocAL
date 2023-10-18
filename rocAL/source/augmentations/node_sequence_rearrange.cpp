@@ -20,20 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
-#include <VX/vx_compatibility.h>
 #include "node_sequence_rearrange.h"
+
+#include <VX/vx_compatibility.h>
+#include <vx_ext_rpp.h>
+
 #include "exception.h"
 
+SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
-SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs) :
-        Node(inputs, outputs)
-{
-}
-
-void SequenceRearrangeNode::create_node()
-{
-    if(_node)
+void SequenceRearrangeNode::create_node() {
+    if (_node)
         return;
 
     vx_status status;
@@ -49,13 +46,8 @@ void SequenceRearrangeNode::create_node()
         THROW("Adding the sequence rearrange (vxExtRppSequenceRearrange) node failed: " + TOSTR(status))
 }
 
-void SequenceRearrangeNode::init(unsigned int* new_order, unsigned int new_sequence_length, unsigned int sequence_length, unsigned int sequence_count)
-{
-    _new_sequence_length = new_sequence_length;
-    _sequence_length = sequence_length;
-    _sequence_count = sequence_count;
-    _new_order.resize(_new_sequence_length);
-    std::copy(new_order, new_order + _new_sequence_length, _new_order.begin());
+void SequenceRearrangeNode::init(std::vector<unsigned int> &new_order) {
+    _new_order = new_order;
 }
 
 void SequenceRearrangeNode::update_node()
