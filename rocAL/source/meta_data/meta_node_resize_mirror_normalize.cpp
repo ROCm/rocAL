@@ -37,8 +37,8 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
     vxCopyArrayRange((vx_array)_mirror, 0, _batch_size, sizeof(uint), _mirror_val.data(), VX_READ_ONLY, VX_MEMORY_TYPE_HOST);
 
     for (int i = 0; i < _batch_size; i++) {
-        float _dst_to_src_width_ratio = static_cast<float>(output_roi[i].x2) / static_cast<float>(input_roi[i].x2);
-        float _dst_to_src_height_ratio = static_cast<float>(output_roi[i].y2) / static_cast<float>(input_roi[i].y2);
+        float _dst_to_src_width_ratio = static_cast<float>(output_roi[i].xywh.w) / static_cast<float>(input_roi[i].xywh.w);
+        float _dst_to_src_height_ratio = static_cast<float>(output_roi[i].xywh.h) / static_cast<float>(input_roi[i].xywh.h);
 
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
@@ -50,7 +50,7 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
             int mask_size = input_meta_data->get_mask_cords_batch()[i].size();
             for (int idx = 0; idx < mask_size; idx += 2) {
                 if (_mirror_val[i] == 1) {
-                    mask_data_ptr[idx] = output_roi[i].x2 - (mask_data_ptr[idx] * _dst_to_src_width_ratio) - 1;
+                    mask_data_ptr[idx] = output_roi[i].xywh.w - (mask_data_ptr[idx] * _dst_to_src_width_ratio) - 1;
                     mask_data_ptr[idx + 1] = mask_data_ptr[idx + 1] * _dst_to_src_height_ratio;
                 } else {
                     mask_data_ptr[idx] = mask_data_ptr[idx] * _dst_to_src_width_ratio;
@@ -69,8 +69,8 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
             coords_buf[j].b *= _dst_to_src_height_ratio;
             if (_mirror_val[i] == 1) {
                 auto l = coords_buf[j].l;
-                coords_buf[j].l = output_roi[i].x2 - coords_buf[j].r - 1;
-                coords_buf[j].r = output_roi[i].x2 - l - 1;
+                coords_buf[j].l = output_roi[i].xywh.w - coords_buf[j].r - 1;
+                coords_buf[j].r = output_roi[i].xywh.w - l - 1;
             }
             bb_coords.push_back(coords_buf[j]);
             bb_labels.push_back(labels_buf[j]);

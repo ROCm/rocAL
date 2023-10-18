@@ -50,4 +50,6 @@ void SequenceRearrangeNode::init(std::vector<unsigned int> &new_order) {
     _new_order = new_order;
 }
 
-void SequenceRearrangeNode::update_node() {}
+void SequenceRearrangeNode::update_node()
+{
+}
