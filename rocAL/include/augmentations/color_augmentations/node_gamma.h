@@ -25,19 +25,18 @@ THE SOFTWARE.
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 
-
-class GammaNode : public Node
-{
-public:
-    GammaNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+class GammaNode : public Node {
+   public:
+    GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     GammaNode() = delete;
-    void init(float shift);
-    void init(FloatParam *shift);
+    void init(float gamma);
+    void init(FloatParam *gamma_param);
 
-protected:
+   protected:
     void update_node() override;
     void create_node() override;
-private:
-    ParameterVX<float> _shift;
-    constexpr static float SHIFT_RANGE [2] = {0.3, 7.00};
+
+   private:
+    ParameterVX<float> _gamma;
+    constexpr static float GAMMA_RANGE[2] = {0.3, 7.00};
 };

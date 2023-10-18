@@ -50,23 +50,17 @@ using half_float::half;
 /*! \brief typedef void* Float Param
  * \ingroup group_rocal_types
  */
-typedef void *RocalFloatParam;
+typedef void* RocalFloatParam;
+
 /*! \brief typedef void* rocAL Int Param
  * \ingroup group_rocal_types
  */
-typedef void *RocalIntParam;
+typedef void* RocalIntParam;
+
 /*! \brief typedef void* rocAL Context
  * \ingroup group_rocal_types
  */
-typedef void *RocalContext;
-/*! \brief typedef void*  rocAL Image
- * \ingroup group_rocal_types
- */
-typedef void *RocalImage;
-/*! \brief typedef void* rocAL Meta Data
- * \ingroup group_rocal_types
- */
-typedef void *RocalMetaData;
+typedef void* RocalContext;
 
 /*! \brief typedef std::vectors
  * \ingroup group_rocal_types
@@ -82,19 +76,18 @@ typedef std::vector<std::vector<std::vector<float>>> JointsBatch, JointsVisibili
 /*! \brief Timing Info struct
  * \ingroup group_rocal_types
  */
-struct TimingInfo
-{
+struct TimingInfo {
     long long unsigned load_time;
     long long unsigned decode_time;
     long long unsigned process_time;
     long long unsigned transfer_time;
 };
 
+// HRNet training expects meta data (joints_data) in below format, so added here as a type for exposing to user
 /*! \brief rocAL Joints Data struct - HRNet training expects meta data (joints_data) in below format, so added here as a type for exposing to user
  * \ingroup group_rocal_types
  */
-struct RocalJointsData
-{
+struct RocalJointsData {
     ImageIDBatch image_id_batch;
     AnnotationIDBatch annotation_id_batch;
     ImagePathBatch image_path_batch;
@@ -109,8 +102,7 @@ struct RocalJointsData
 /*! \brief  rocAL Status enum
  * \ingroup group_rocal_types
  */
-enum RocalStatus
-{
+enum RocalStatus {
     /*! \brief AMD ROCAL_OK
      */
     ROCAL_OK = 0,
@@ -131,8 +123,7 @@ enum RocalStatus
 /*! \brief rocAL Image Color enum
  * \ingroup group_rocal_types
  */
-enum RocalImageColor
-{
+enum RocalImageColor {
     /*! \brief AMD ROCAL_COLOR_RGB24
      */
     ROCAL_COLOR_RGB24 = 0,
@@ -150,8 +141,7 @@ enum RocalImageColor
 /*! \brief rocAL Process Mode enum
  * \ingroup group_rocal_types
  */
-enum RocalProcessMode
-{
+enum RocalProcessMode {
     /*! \brief AMD ROCAL_PROCESS_GPU
      */
     ROCAL_PROCESS_GPU = 0,
@@ -163,8 +153,7 @@ enum RocalProcessMode
 /*! \brief rocAL Flip Axis enum
  * \ingroup group_rocal_types
  */
-enum RocalFlipAxis
-{
+enum RocalFlipAxis {
     /*! \brief AMD ROCAL_FLIP_HORIZONTAL
      */
     ROCAL_FLIP_HORIZONTAL = 0,
@@ -176,8 +165,7 @@ enum RocalFlipAxis
 /*! \brief rocAL Image Size Evaluation Policy enum
  * \ingroup group_rocal_types
  */
-enum RocalImageSizeEvaluationPolicy
-{
+enum RocalImageSizeEvaluationPolicy {
     /*! \brief AMD ROCAL_USE_MAX_SIZE
      */
     ROCAL_USE_MAX_SIZE = 0,
@@ -189,17 +177,16 @@ enum RocalImageSizeEvaluationPolicy
     ROCAL_USE_MOST_FREQUENT_SIZE = 2,
     /*! \brief Use the given size only if the actual decoded size is greater than the given size
      */
-    ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED = 3,
+    ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED = 3,  // use the given size only if the actual decoded size is greater than the given size
     /*! \brief Use max size if the actual decoded size is greater than max
      */
-    ROCAL_USE_MAX_SIZE_RESTRICTED = 4,
+    ROCAL_USE_MAX_SIZE_RESTRICTED = 4,         // use max size if the actual decoded size is greater than max
 };
 
 /*! \brief rocAL Decode Device enum
  * \ingroup group_rocal_types
  */
-enum RocalDecodeDevice
-{
+enum RocalDecodeDevice {
     /*! \brief AMD ROCAL_HW_DECODE
      */
     ROCAL_HW_DECODE = 0,
@@ -211,37 +198,46 @@ enum RocalDecodeDevice
 /*! \brief rocAL Tensor Layout enum
  * \ingroup group_rocal_types
  */
-enum RocalTensorLayout
-{
+enum RocalTensorLayout {
     /*! \brief AMD ROCAL_NHWC
      */
     ROCAL_NHWC = 0,
     /*! \brief AMD ROCAL_NCHW
      */
-    ROCAL_NCHW = 1
+    ROCAL_NCHW = 1,
+    /*! \brief AMD ROCAL_NFHWc
+     */
+    ROCAL_NFHWC = 2,
+    /*! \brief AMD ROCAL_NFCHW
+     */
+    ROCAL_NFCHW = 3,
+    /*! \brief AMD ROCAL_NONE
+     */
+    ROCAL_NONE = 4  // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 /*! \brief rocAL Tensor Output Type enum
  * \ingroup group_rocal_types
  */
-enum RocalTensorOutputType
-{
+enum RocalTensorOutputType {
     /*! \brief AMD ROCAL_FP32
      */
     ROCAL_FP32 = 0,
     /*! \brief AMD ROCAL_FP16
      */
     ROCAL_FP16 = 1,
-    /*! \brief AMD ROCAL_U8
+    /*! \brief AMD ROCAL_UINT8
      */
-    ROCAL_U8 = 2,
+    ROCAL_UINT8 = 2,
+    /*! \brief AMD ROCAL_INT8
+     */
+    ROCAL_INT8 = 3
 };
 
 /*! \brief rocAL Decoder Type enum
  * \ingroup group_rocal_types
  */
-enum RocalDecoderType
-{
+enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_TJPEG
      */
     ROCAL_DECODER_TJPEG = 0,
@@ -259,11 +255,7 @@ enum RocalDecoderType
     ROCAL_DECODER_VIDEO_FFMPEG_HW = 4
 };
 
-/*! \brief rocAL Output Mem Type enum
- * \ingroup group_rocal_types
- */
-enum RocalOutputMemType
-{
+enum RocalOutputMemType {
     /*! \brief AMD ROCAL_MEMCPY_HOST
      */
     ROCAL_MEMCPY_HOST = 0,
@@ -275,24 +267,24 @@ enum RocalOutputMemType
     ROCAL_MEMCPY_PINNED = 2
 };
 
+// rocal external memcpy flags
 /*! \brief AMD rocAL external memcpy flags - force copy to user provided host memory
  * \ingroup group_rocal_types
  */
-#define ROCAL_MEMCPY_TO_HOST 1
+#define ROCAL_MEMCPY_TO_HOST 1    // force copy to user provided host memory
 /*! \brief AMD rocAL external memcpy flags - force copy to user provided device memory (gpu)
  * \ingroup group_rocal_types
  */
-#define ROCAL_MEMCPY_TO_DEVICE 2
+#define ROCAL_MEMCPY_TO_DEVICE 2  // force copy to user provided device memory (gpu)
 /*! \brief AMD rocAL external memcpy flags - for future use
  * \ingroup group_rocal_types
  */
-#define ROCAL_MEMCPY_IS_PINNED 4
+#define ROCAL_MEMCPY_IS_PINNED 4  // for future use
 
 /*! \brief rocAL Resize Scaling Mode enum
  * \ingroup group_rocal_types
  */
-enum RocalResizeScalingMode
-{
+enum RocalResizeScalingMode {
     /*! \brief scales wrt specified size, if only resize width/height is provided the other dimension is scaled according to aspect ratio
      */
     ROCAL_SCALING_MODE_DEFAULT = 0,
@@ -304,7 +296,10 @@ enum RocalResizeScalingMode
     ROCAL_SCALING_MODE_NOT_SMALLER = 2,
     /*! \brief scales wrt to aspect ratio, so that resize width/height does not exceed specified size
      */
-    ROCAL_SCALING_MODE_NOT_LARGER = 3
+    ROCAL_SCALING_MODE_NOT_LARGER = 3,
+    /*! \brief scales wrt to aspect ratio, so that resize width/height does not exceed specified min and max size
+     */
+    ROCAL_SCALING_MODE_MIN_MAX = 4
 };
 
 /*! \brief rocAL Resize Interpolation Type enum
@@ -332,4 +327,34 @@ enum RocalResizeInterpolationType
     ROCAL_TRIANGULAR_INTERPOLATION = 5
 };
 
-#endif // MIVISIONX_ROCAL_API_TYPES_H
+/*! \brief Tensor Backend
+ * \ingroup group_rocal_types
+ */
+enum RocalTensorBackend {
+    /*! \brief ROCAL_CPU
+     */
+    ROCAL_CPU = 0,
+    /*! \brief ROCAL_GPU
+     */
+    ROCAL_GPU = 1
+};
+
+/*! \brief Tensor ROI type
+ * \ingroup group_rocal_types
+ */
+enum class RocalROICordsType {
+    /*! \brief ROCAL_LTRB
+     */
+    ROCAL_LTRB = 0,
+    /*! \brief ROCAL_XYWH
+     */
+    ROCAL_XYWH = 1
+};
+
+/*! \brief RocalROICords struct
+ * \ingroup group_rocal_types
+ */
+typedef struct {
+    unsigned x1, y1, x2, y2;
+} RocalROICords;
+#endif  // MIVISIONX_ROCAL_API_TYPES_H

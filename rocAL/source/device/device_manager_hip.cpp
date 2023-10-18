@@ -22,16 +22,17 @@ THE SOFTWARE.
 
 #if ENABLE_HIP
 // device manager functions for HIP backend
-#include <iostream>
-#include <vx_ext_amd.h>
 #include "device_manager_hip.h"
+
+#include <vx_ext_amd.h>
+
+#include <iostream>
+
 #include "commons.h"
 
-
-DeviceManagerHip::~DeviceManagerHip()
-{
+DeviceManagerHip::~DeviceManagerHip() {
     hipError_t err;
-    if(_resources.hip_stream != nullptr) {
+    if (_resources.hip_stream != nullptr) {
         err = hipStreamDestroy(_resources.hip_stream);
         if (err != hipSuccess)
             LOG("hipStreamDestroy failed " + TOSTR(err))
@@ -45,13 +46,11 @@ hipError_t DeviceManagerHip::initialize() {
     return hipSuccess;
 }
 
-DeviceResourcesHip *DeviceManagerHip::resources()
-{
+DeviceResourcesHip *DeviceManagerHip::resources() {
     return &_resources;
 }
 
-void DeviceManagerHip::init_hip(vx_context context)
-{
+void DeviceManagerHip::init_hip(vx_context context) {
     hipError_t err;
     hipDevice_t dev_id = -1;
     vx_status vxstatus = vxQueryContext(context, VX_CONTEXT_ATTRIBUTE_AMD_HIP_DEVICE, &dev_id, sizeof(hipDevice_t));

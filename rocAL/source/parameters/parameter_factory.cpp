@@ -20,67 +20,56 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "parameter_factory.h"
+
 #include <cstdlib>
 #include <ctime>
-#include "parameter_factory.h"
+
 #include "parameter_simple.h"
 ParameterFactory* ParameterFactory::_instance = nullptr;
 std::mutex ParameterFactory::_mutex;
 
-bool validate_simple_rand_param(pParam arg)
-{
+bool validate_simple_rand_param(pParam arg) {
     bool ret = true;
     std::visit(
-            [&ret](auto&& arg)
-            {
-                if(arg == nullptr || arg->type != RocalParameterType::DETERMINISTIC)
-                    ret = false;
-
-            },
-            arg);
-    return ret;
-}
-
-
-bool validate_custom_rand_param(pParam arg)
-{
-    bool ret = true;
-    std::visit(
-        [&ret](auto&& arg)
-        {
-            if(arg == nullptr || arg->type != RocalParameterType::RANDOM_CUSTOM)
+        [&ret](auto&& arg) {
+            if (arg == nullptr || arg->type != RocalParameterType::DETERMINISTIC)
                 ret = false;
-
         },
         arg);
     return ret;
 }
 
-bool validate_uniform_rand_param(pParam  rand_obj)
-{
+bool validate_custom_rand_param(pParam arg) {
     bool ret = true;
     std::visit(
-        [&ret](auto&& arg)
-        {
-            if(arg == nullptr || arg->type != RocalParameterType::RANDOM_UNIFORM)
+        [&ret](auto&& arg) {
+            if (arg == nullptr || arg->type != RocalParameterType::RANDOM_CUSTOM)
                 ret = false;
+        },
+        arg);
+    return ret;
+}
 
+bool validate_uniform_rand_param(pParam rand_obj) {
+    bool ret = true;
+    std::visit(
+        [&ret](auto&& arg) {
+            if (arg == nullptr || arg->type != RocalParameterType::RANDOM_UNIFORM)
+                ret = false;
         },
         rand_obj);
     return ret;
 }
 
-ParameterFactory::ParameterFactory()
-{
+ParameterFactory::ParameterFactory() {
     generate_seed();
 }
 ParameterFactory* ParameterFactory::instance() {
-
-    if(_instance == nullptr)// For performance reasons
+    if (_instance == nullptr)  // For performance reasons
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        if(_instance == nullptr)
-        {
+        if (_instance == nullptr) {
             _instance = new ParameterFactory();
         }
     }
@@ -88,105 +77,87 @@ ParameterFactory* ParameterFactory::instance() {
 }
 
 ParameterFactory::~ParameterFactory() {
-    for(auto&& rand_obj : _parameters)
-            std::visit(
-                [](auto&& arg)
-                {
-                    delete arg;
-                },
-                rand_obj);
+    for (auto&& rand_obj : _parameters)
+        std::visit(
+            [](auto&& arg) {
+                delete arg;
+            },
+            rand_obj);
 }
 
-void ParameterFactory::renew_parameters()
-{
-    for(auto&& rand_obj : _parameters)
+void ParameterFactory::renew_parameters() {
+    for (auto&& rand_obj : _parameters)
         std::visit(
-                [](auto&& arg)
-                {
-                    arg->renew();
-                },
-                rand_obj);
+            [](auto&& arg) {
+                arg->renew();
+            },
+            rand_obj);
 }
 
 unsigned
-ParameterFactory::get_seed()
-{
+ParameterFactory::get_seed() {
     return _seed;
 }
 
-void
-ParameterFactory::generate_seed()
-{
+void ParameterFactory::generate_seed() {
     std::random_device rd;
     _seed = rd();
 }
 
-void
-ParameterFactory::set_seed(unsigned seed)
-{
+void ParameterFactory::set_seed(unsigned seed) {
     _seed = seed;
 }
 
-IntParam* ParameterFactory::create_uniform_int_rand_param(int start, int end)
-{
+IntParam* ParameterFactory::create_uniform_int_rand_param(int start, int end) {
     auto gen = new UniformRand<int>(start, end, _seed);
     auto ret = new IntParam(gen, RocalParameterType::RANDOM_UNIFORM);
     _parameters.insert(gen);
     return ret;
 }
 
-FloatParam* ParameterFactory::create_uniform_float_rand_param(float start, float end)
-{
+FloatParam* ParameterFactory::create_uniform_float_rand_param(float start, float end) {
     auto gen = new UniformRand<float>(start, end, _seed);
     auto ret = new FloatParam(gen, RocalParameterType::RANDOM_UNIFORM);
     _parameters.insert(gen);
     return ret;
 }
 
-
-IntParam* ParameterFactory::create_custom_int_rand_param(const int *value, const double *frequencies, size_t size)
-{
+IntParam* ParameterFactory::create_custom_int_rand_param(const int* value, const double* frequencies, size_t size) {
     auto gen = new CustomRand<int>(value, frequencies, size, _seed);
     auto ret = new IntParam(gen, RocalParameterType::RANDOM_CUSTOM);
     _parameters.insert(gen);
     return ret;
 }
 
-FloatParam* ParameterFactory::create_custom_float_rand_param(const float *value, const double *frequencies, size_t size)
-{
+FloatParam* ParameterFactory::create_custom_float_rand_param(const float* value, const double* frequencies, size_t size) {
     auto gen = new CustomRand<float>(value, frequencies, size, _seed);
     auto ret = new FloatParam(gen, RocalParameterType::RANDOM_CUSTOM);
     _parameters.insert(gen);
     return ret;
 }
 
-
-IntParam* ParameterFactory::create_single_value_int_param(int value)
-{
+IntParam* ParameterFactory::create_single_value_int_param(int value) {
     auto gen = new SimpleParameter<int>(value);
     auto ret = new IntParam(gen, RocalParameterType::DETERMINISTIC);
     _parameters.insert(gen);
     return ret;
 }
 
-FloatParam* ParameterFactory::create_single_value_float_param(float value)
-{
+FloatParam* ParameterFactory::create_single_value_float_param(float value) {
     auto gen = new SimpleParameter<float>(value);
     auto ret = new FloatParam(gen, RocalParameterType::DETERMINISTIC);
     _parameters.insert(gen);
     return ret;
 }
 
-Parameter<int>* core(IntParam* arg)
-{
-    if(!arg)
+Parameter<int>* core(IntParam* arg) {
+    if (!arg)
         return nullptr;
     return arg->core;
 }
 
-Parameter<float>* core(FloatParam* arg)
-{
-    if(!arg)
+Parameter<float>* core(FloatParam* arg) {
+    if (!arg)
         return nullptr;
     return arg->core;
 }

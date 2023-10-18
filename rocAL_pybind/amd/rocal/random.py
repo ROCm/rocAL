@@ -18,15 +18,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+##
+# @file random.py
+#
+# @brief File containing randomization functions used for creating RNG generators
+
 import rocal_pybind as b
 
 
-def coin_flip(*inputs,probability=0.5, device=None):
+def coin_flip(*inputs, probability=0.5):
+    """!coin flip with a given probability of success.
+
+        @param inputs         list of input arguments.
+        @param probability    Probability of getting a "success" outcome.
+
+        @return    An array of coin flip outcomes.
+    """
     values = [0, 1]
-    frequencies = [1-probability, probability]
-    output_array = b.CreateIntRand(values, frequencies)
+    frequencies = [1 - probability, probability]
+    output_array = b.createIntRand(values, frequencies)
     return output_array
 
-def uniform(*inputs,range=[-1, 1], device=None):
-    output_param = b.CreateFloatUniformRand(range[0], range[1])
+
+def uniform(*inputs, range=[-1, 1]):
+    """!Generates random values uniformly distributed within a specified range.
+
+        @param inputs    list of input arguments.
+        @param range     Range for the uniform distribution.
+
+        @return    random values uniformly distributed within the specified range.
+    """
+    output_param = b.createFloatUniformRand(range[0], range[1])
     return output_param

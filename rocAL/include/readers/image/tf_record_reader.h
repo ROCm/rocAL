@@ -21,23 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <vector>
-#include <string>
-#include <memory>
 #include <dirent.h>
-#include <map>
-#include <iterator>
-#include <algorithm>
 #include <google/protobuf/message_lite.h>
-#include "image_reader.h"
-#include "timing_debug.h"
+
+#include <algorithm>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "example.pb.h"
 #include "feature.pb.h"
+#include "image_reader.h"
+#include "timing_debug.h"
 
-
-class TFRecordReader : public Reader
-        {
-public:
+class TFRecordReader : public Reader {
+   public:
     //! Reads the TFRecord File, and loads the image ids and other necessary info
     /*!
      \param desc  User provided descriptor containing the files' path.
@@ -48,7 +48,7 @@ public:
      \param buf User's provided buffer to receive the loaded images
      \return Size of the loaded resource
     */
-    size_t read_data(unsigned char* buf, size_t max_size) override;
+    size_t read_data(unsigned char *buf, size_t max_size) override;
     //! Opens the next file in the folder
     /*!
      \return The size of the next file, 0 if couldn't access it
@@ -58,7 +58,7 @@ public:
     void reset() override;
 
     //! Returns the id of the latest file opened
-    std::string id() override { return _last_id;};
+    std::string id() override { return _last_id; };
 
     unsigned count_items() override;
 
@@ -67,7 +67,8 @@ public:
     int close() override;
 
     TFRecordReader();
-private:
+
+   private:
     //! opens the folder containnig the images
     Reader::Status tf_record_reader();
     Reader::Status folder_reading();
@@ -80,14 +81,14 @@ private:
     DIR *_sub_dir;
     struct dirent *_entity;
     std::vector<std::string> _file_names;
-    std::map<std::string, unsigned int > _file_size;
-    unsigned  _curr_file_idx;
+    std::map<std::string, unsigned int> _file_size;
+    unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
     unsigned int _last_file_size;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;// equivalent of batch size
+    size_t _shard_count = 1;  // equivalent of batch size
     bool _last_rec;
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
@@ -98,7 +99,7 @@ private:
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
-    size_t  _file_count_all_shards;
+    size_t _file_count_all_shards;
     //!< _record_name_prefix tells the reader to read only files with the prefix
     std::string _record_name_prefix;
     // protobuf message objects
@@ -111,7 +112,7 @@ private:
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    Reader::Status read_image(unsigned char* buff, std::string record_file_name, uint file_size);
+    Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size);
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
-    std::map <std::string, uint> _image_record_starting;
+    std::map<std::string, uint> _image_record_starting;
 };

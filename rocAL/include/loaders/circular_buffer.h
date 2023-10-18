@@ -21,17 +21,17 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <vector>
 #include <condition_variable>
+#include <vector>
 #if ENABLE_OPENCL
-    #include <CL/cl.h>
+#include <CL/cl.h>
 #endif
 #include <queue>
+
+#include "commons.h"
 #include "device_manager.h"
 #include "device_manager_hip.h"
-#include "commons.h"
-struct decoded_image_info
-{
+struct decoded_image_info {
     std::vector<std::string> _image_names;
     std::vector<uint32_t> _roi_width;
     std::vector<uint32_t> _roi_height;
@@ -39,46 +39,44 @@ struct decoded_image_info
     std::vector<uint32_t> _original_height;
 };
 
-struct crop_image_info
-{
-    //Batch of Image Crop Coordinates in "xywh" format
+struct crop_image_info {
+    // Batch of Image Crop Coordinates in "xywh" format
     std::vector<std::vector<float>> _crop_image_coords;
 };
-class CircularBuffer
-{
-public:
+class CircularBuffer {
+   public:
     CircularBuffer(void* devres);
     ~CircularBuffer();
     void init(RocalMemType output_mem_type, size_t output_mem_size, size_t buff_depth);
-    void release(); // release resources
-    void sync();// Syncs device buffers with host
-    void unblock_reader();// Unblocks the thread currently waiting on a call to get_read_buffer
-    void unblock_writer();// Unblocks the thread currently waiting on get_write_buffer
-    void push();// The latest write goes through, effectively adds one element to the buffer
-    void pop();// The oldest write will be erased and overwritten in upcoming writes
+    void release();         // release resources
+    void sync();            // Syncs device buffers with host
+    void unblock_reader();  // Unblocks the thread currently waiting on a call to get_read_buffer
+    void unblock_writer();  // Unblocks the thread currently waiting on get_write_buffer
+    void push();            // The latest write goes through, effectively adds one element to the buffer
+    void pop();             // The oldest write will be erased and overwritten in upcoming writes
     void set_image_info(const decoded_image_info& info) { _last_image_info = info; }
     void set_crop_image_info(const crop_image_info& info) { _last_crop_image_info = info; }
     decoded_image_info& get_image_info();
     crop_image_info& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();
-    unsigned char* get_read_buffer_host();// blocks the caller if the buffer is empty
-    unsigned char*  get_write_buffer(); // blocks the caller if the buffer is full
-    size_t level();// Returns the number of elements stored
-    void reset();// sets the buffer level to 0
-    void block_if_empty();// blocks the caller if the buffer is empty
-    void block_if_full();// blocks the caller if the buffer is full
+    unsigned char* get_read_buffer_host();  // blocks the caller if the buffer is empty
+    unsigned char* get_write_buffer();      // blocks the caller if the buffer is full
+    size_t level();                         // Returns the number of elements stored
+    void reset();                           // sets the buffer level to 0
+    void block_if_empty();                  // blocks the caller if the buffer is empty
+    void block_if_full();                   // blocks the caller if the buffer is full
 
-private:
+   private:
     void increment_read_ptr();
     void increment_write_ptr();
     bool full();
     bool empty();
     size_t _buff_depth;
     decoded_image_info _last_image_info;
-    std::queue<decoded_image_info> _circ_image_info;//!< Stores the loaded images names, decoded_width and decoded_height(data is stored in the _circ_buff)
-    crop_image_info _last_crop_image_info; // for Random BBox crop coordinates
-    std::queue<crop_image_info> _circ_crop_image_info;//!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
+    std::queue<decoded_image_info> _circ_image_info;    //!< Stores the loaded images names, decoded_width and decoded_height(data is stored in the _circ_buff)
+    crop_image_info _last_crop_image_info;              // for Random BBox crop coordinates
+    std::queue<crop_image_info> _circ_crop_image_info;  //!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
     std::mutex _names_buff_lock;
     /*
      *  Pinned memory allocated on the host used for fast host to device memory transactions,
@@ -92,7 +90,7 @@ private:
     cl_context _cl_context = nullptr;
     cl_device_id _device_id = nullptr;
 #endif
-    std::vector<void *> _dev_buffer;// Actual memory allocated on the device (in the case of GPU affinity)
+    std::vector<void*> _dev_buffer;  // Actual memory allocated on the device (in the case of GPU affinity)
     std::vector<unsigned char*> _host_buffer_ptrs;
     std::vector<std::vector<unsigned char>> _actual_host_buffers;
     std::condition_variable _wait_for_load;

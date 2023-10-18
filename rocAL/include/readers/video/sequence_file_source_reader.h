@@ -21,17 +21,18 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <vector>
-#include <string>
-#include <memory>
 #include <dirent.h>
-#include "image_reader.h"
+
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "commons.h"
+#include "image_reader.h"
 #include "timing_debug.h"
 
-
 class SequenceFileSourceReader : public Reader {
-public:
+   public:
     //! Looks up the folder which contains the files, amd loads the image names
     /*!
      \param desc  User provided descriptor containing the files' path.
@@ -42,7 +43,7 @@ public:
      \param buf User's provided buffer to receive the loaded images
      \return Size of the loaded resource
     */
-    size_t read_data(unsigned char* buf, size_t max_size) override;
+    size_t read_data(unsigned char *buf, size_t max_size) override;
     //! Opens the next file in the folder
     /*!
      \return The size of the next file, 0 if couldn't access it
@@ -53,7 +54,7 @@ public:
     void reset() override;
 
     //! Returns the name of the latest file opened
-    std::string id() override { return _last_id;};
+    std::string id() override { return _last_id; };
 
     unsigned count_items() override;
 
@@ -63,7 +64,7 @@ public:
 
     SequenceFileSourceReader();
 
-private:
+   private:
     //! opens the folder containnig the images
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
@@ -74,10 +75,10 @@ private:
     struct dirent *_entity;
     std::vector<std::string> _file_names;
     std::vector<std::string> _frame_names;
-    std::vector<std::vector< std::string>> _folder_file_names;
-    std::vector<std::vector< std::string>> _sequence_frame_names;
-    unsigned  _curr_file_idx;
-    FILE* _current_fPtr;
+    std::vector<std::vector<std::string>> _folder_file_names;
+    std::vector<std::vector<std::string>> _sequence_frame_names;
+    unsigned _curr_file_idx;
+    FILE *_current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
     std::vector<std::string> _last_sequence;
@@ -85,7 +86,7 @@ private:
     size_t _step;
     size_t _stride;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;// equivalent of batch size
+    size_t _shard_count = 1;  // equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
     /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
@@ -97,7 +98,7 @@ private:
     bool _shuffle;
     int _read_counter = 0;
     //!< _sequence_count_all_shards total_number of sequences in to figure out the max_batch_size (usually needed for distributed training).
-    size_t  _sequence_count_all_shards;
+    size_t _sequence_count_all_shards;
     void incremenet_read_ptr();
     int release();
     size_t get_sequence_shard_id();
@@ -105,4 +106,3 @@ private:
     void replicate_last_sequence_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
 };
-

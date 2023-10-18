@@ -12,14 +12,11 @@ rocAL_api_coco_pipeline=0
 * [rocAL Pybind Installation](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/README.md)
 
 ## EXPORT ROCAL_DATA_PATH
-export ROCAL_DATA_PATH=/Absolute/Path/Of/rocal_data/
+export ROCAL_DATA_PATH=/Absolute/Path/Of/MIVisionX-data/
 
 ### TESTING ALL THE AUGMENTATIONS IN A SINGLE SHOT
 
-./PYTHON_UNITTEST_TEST_FILE.sh (The default value of number of gpu's is "1" & display is "ON" by default)
-
-./PYTHON_UNITTEST_TEST_FILE.sh -n <number_of_gpus> -d <true/false> -b backend<cpu/gpu> -p print_tensor<true/false>
-./PYTHON_UNITTEST_TEST_FILE.sh -n "1" -d "false" -b "cpu"
+./PYTHON_UNITTEST_TEST_FILE.sh (This runs all augmentations and readers and compare them with golden outputs for both backends)
 
 ### TO TEST MULTIPLE READER PIPELINE FROM READERS_TEST_FILE.sh
 
@@ -61,6 +58,9 @@ example: COCO Pipeline
     # rocAL_api_coco_pipeline.py
     # By default : cpu backend, NCHW format , fp32
     # Annotation must be a json file
+
+    # For printing all the arguments that can be passed from user
+    python$ver rocAL_api_coco_pipeline.py -h
 
     python$ver rocAL_api_coco_pipeline.py --image-dataset-path $data_dir --json-path $json_path --batch-size $batch_size --display --rocal-gpu --NHWC \
         --local-rank 0 --world-size $gpus_per_node --num-threads 1 --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_coco_pipeline.txt

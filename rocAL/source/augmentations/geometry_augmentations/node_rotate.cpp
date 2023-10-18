@@ -24,50 +24,39 @@ THE SOFTWARE.
 #include "node_rotate.h"
 #include "exception.h"
 
+RotateNode::RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
+                                                                                                    _angle(ROTATE_ANGLE_RANGE[0], ROTATE_ANGLE_RANGE[1]) {}
 
-RotateNode::RotateNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs) :
-        Node(inputs, outputs),
-        _angle(ROTATE_ANGLE_RANGE[0], ROTATE_ANGLE_RANGE[1])
-{
-}
-
-void RotateNode::create_node()
-{
-    if(_node)
+void RotateNode::create_node() {
+    if (_node)
         return;
-    std::vector<uint32_t> dst_roi_width(_batch_size,_outputs[0]->info().width());
-    std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().height_single());
 
-    _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
-    _dst_roi_height = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
+    _angle.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
+    int input_layout = static_cast<int>(_inputs[0]->info().layout());
+    int output_layout = static_cast<int>(_outputs[0]->info().layout());
+    int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
+    vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
+    vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    vx_status width_status, height_status;
-
-    width_status = vxAddArrayItems(_dst_roi_width, _batch_size, dst_roi_width.data(), sizeof(vx_uint32));
-    height_status = vxAddArrayItems(_dst_roi_height, _batch_size, dst_roi_height.data(), sizeof(vx_uint32));
-    if(width_status != 0 || height_status != 0)
-        THROW(" vxAddArrayItems failed in the resize (vxExtrppNode_ResizebatchPD) node: "+ TOSTR(width_status) + "  "+ TOSTR(height_status))
-
-    _angle.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-   _node = vxExtrppNode_RotatebatchPD(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(), _dst_roi_width, _dst_roi_height, _angle.default_array(), _batch_size);
-
+    _node = vxExtRppRotate(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _angle.default_array(),
+                           interpolation_vx, input_layout_vx, output_layout_vx,roi_type_vx);
     vx_status status;
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the rotate (vxExtrppNode_RotatebatchPD) node failed: "+ TOSTR(status))
-
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the rotate (vxExtRppRotate) node failed: " + TOSTR(status))
 }
 
-void RotateNode::init(float angle)
-{
+void RotateNode::init(float angle, RocalResizeInterpolationType interpolation_type) {
     _angle.set_param(angle);
+    _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void RotateNode::init(FloatParam* angle)
-{
+void RotateNode::init(FloatParam *angle, RocalResizeInterpolationType interpolation_type) {
     _angle.set_param(core(angle));
+    _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void RotateNode::update_node()
-{
+void RotateNode::update_node() {
     _angle.update_array();
 }

@@ -26,45 +26,27 @@ THE SOFTWARE.
 #include <iostream>
 #include <vector>
 #ifdef ROCAL_VIDEO
-extern "C"
-{
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/avassert.h>
+#include <libavutil/avutil.h>
+#include <libavutil/hwcontext.h>
 #include <libavutil/imgutils.h>
+#include <libavutil/opt.h>
+#include <libavutil/pixdesc.h>
 #include <libavutil/samplefmt.h>
 #include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-#include <libavutil/pixdesc.h>
 #include <libswscale/swscale.h>
-#include <libavutil/hwcontext.h>
-#include <libavutil/opt.h>
-#include <libavutil/avassert.h>
-#include <libavutil/imgutils.h>
 }
 #endif
 #include "parameter_factory.h"
 
-enum class VideoDecoderType
-{
-    FFMPEG_SOFTWARE_DECODE = 0,
-    FFMPEG_HARDWARE_DECODE = 1,
-};
-
-class VideoDecoderConfig
-{
-public:
-    VideoDecoderConfig() {}
-    explicit VideoDecoderConfig(VideoDecoderType type) : _type(type) {}
-    virtual VideoDecoderType type() { return _type; };
-    VideoDecoderType _type = VideoDecoderType::FFMPEG_SOFTWARE_DECODE;
-};
-
 #ifdef ROCAL_VIDEO
-class VideoDecoder
-{
-public:
-    enum class Status
-    {
+class VideoDecoder {
+   public:
+    enum class Status {
         OK = 0,
         HEADER_DECODE_FAILED,
         CONTENT_DECODE_FAILED,
@@ -72,8 +54,7 @@ public:
         FAILED,
         NO_MEMORY
     };
-    enum class ColorFormat
-    {
+    enum class ColorFormat {
         GRAY = 0,
         RGB,
         BGR

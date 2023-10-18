@@ -22,19 +22,19 @@ THE SOFTWARE.
 
 #pragma once
 #include <vector>
+
 #include "image_loader.h"
 //
 // ImageLoaderSharded Can be used to run load and decode in multiple shards, each shard by a single loader instance,
 // It improves load and decode performance since each loader loads the images in parallel using an internal thread
 //
-class ImageLoaderSharded : public LoaderModule
-{
-public:
+class ImageLoaderSharded : public LoaderModule {
+   public:
     explicit ImageLoaderSharded(void *dev_resources);
     ~ImageLoaderSharded() override;
     LoaderModuleStatus load_next() override;
-    void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size=false) override;
-    void set_output_image (Image* output_image) override;
+    void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
+    void set_output(Tensor *output_tensor) override;
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override;
     void reset() override;
@@ -45,7 +45,8 @@ public:
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
-private:
+
+   private:
     void increment_loader_idx();
     void *_dev_resources;
     bool _initialized = false;
@@ -55,6 +56,6 @@ private:
     void fast_forward_through_empty_loaders();
     size_t _prefetch_queue_depth;
 
-    Image *_output_image;
+    Tensor *_output_tensor;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };

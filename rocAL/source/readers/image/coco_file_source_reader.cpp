@@ -20,20 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <cassert>
-#include <algorithm>
-#include <commons.h>
-#include "coco_meta_data_reader.h"
 #include "coco_file_source_reader.h"
+
+#include <commons.h>
+
+#include <algorithm>
 #include <boost/filesystem.hpp>
-#include "meta_data_reader_factory.h"
+#include <cassert>
+
+#include "coco_meta_data_reader.h"
 #include "meta_data_graph_factory.h"
+#include "meta_data_reader_factory.h"
 
 namespace filesys = boost::filesystem;
 #define USE_STDIO_FILE 0
 
-COCOFileSourceReader::COCOFileSourceReader()
-{
+COCOFileSourceReader::COCOFileSourceReader() {
     _src_dir = nullptr;
     _sub_dir = nullptr;
     _entity = nullptr;
@@ -46,8 +48,7 @@ COCOFileSourceReader::COCOFileSourceReader()
     _file_count_all_shards = 0;
 }
 
-unsigned COCOFileSourceReader::count_items()
-{
+unsigned COCOFileSourceReader::count_items() {
     if (_loop)
         return _file_names.size();
 
@@ -55,8 +56,7 @@ unsigned COCOFileSourceReader::count_items()
     return ((ret < 0) ? 0 : ret);
 }
 
-Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc)
-{
+Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
@@ -68,67 +68,61 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc)
     _shuffle = desc.shuffle();
     _meta_data_reader = desc.meta_data_reader();
 
-    if(_json_path == "")
-    {
-        std::cout<<"\n _json_path has to be set manually";
+    if (_json_path == "") {
+        std::cout << "\n _json_path has to be set manually";
         exit(0);
     }
-    //if (!_meta_data_reader )
-    //    std::cout<<"Metadata reader not initialized for COCO file source\n";
+    // if (!_meta_data_reader )
+    //     std::cout<<"Metadata reader not initialized for COCO file source\n";
 
     ret = subfolder_reading();
     // the following code is required to make every shard the same size:: required for multi-gpu training
     if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size()/_batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count-1)/_shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count-1)/_batch_count;
+        int _num_batches = _file_names.size() / _batch_count;
+        int max_batches_per_shard = (_file_count_all_shards + _shard_count - 1) / _shard_count;
+        max_batches_per_shard = (max_batches_per_shard + _batch_count - 1) / _batch_count;
         if (_num_batches < max_batches_per_shard) {
             replicate_last_batch_to_pad_partial_shard();
         }
     }
-    //shuffle dataset if set
+    // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
     return ret;
 }
 
-void COCOFileSourceReader::incremenet_read_ptr()
-{
+void COCOFileSourceReader::incremenet_read_ptr() {
     _read_counter++;
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
 }
-size_t COCOFileSourceReader::open()
-{
-    auto file_path = _file_names[_curr_file_idx]; // Get next file name
+size_t COCOFileSourceReader::open() {
+    auto file_path = _file_names[_curr_file_idx];  // Get next file name
     incremenet_read_ptr();
     _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
-    if (std::string::npos != last_slash_idx)
-    {
+    if (std::string::npos != last_slash_idx) {
         _last_id.erase(0, last_slash_idx + 1);
     }
 
 #if USE_STDIO_FILE
-    _current_fPtr = fopen(file_path.c_str(), "rb"); // Open the file,
-    if (!_current_fPtr) // Check if it is ready for reading
+    _current_fPtr = fopen(file_path.c_str(), "rb");  // Open the file,
+    if (!_current_fPtr)                              // Check if it is ready for reading
         return 0;
-    fseek(_current_fPtr, 0, SEEK_END); // Take the file read pointer to the end
-    _current_file_size = ftell(_current_fPtr); // Check how many bytes are there between and the current read pointer position (end of the file)
-    if (_current_file_size == 0)
-    { // If file is empty continue
+    fseek(_current_fPtr, 0, SEEK_END);          // Take the file read pointer to the end
+    _current_file_size = ftell(_current_fPtr);  // Check how many bytes are there between and the current read pointer position (end of the file)
+    if (_current_file_size == 0) {              // If file is empty continue
         fclose(_current_fPtr);
         _current_fPtr = nullptr;
         return 0;
     }
-    fseek(_current_fPtr, 0, SEEK_SET); // Take the file pointer back to the start
+    fseek(_current_fPtr, 0, SEEK_SET);  // Take the file pointer back to the start
 #else
-    _current_ifs.open (file_path, std::ifstream::in);
+    _current_ifs.open(file_path, std::ifstream::in);
     if (_current_ifs.fail()) return 0;
     // Determine the file length
     _current_ifs.seekg(0, std::ios_base::end);
     _current_file_size = _current_ifs.tellg();
-    if (_current_file_size == 0)
-    { // If file is empty continue
+    if (_current_file_size == 0) {  // If file is empty continue
         _current_ifs.close();
         return 0;
     }
@@ -137,8 +131,7 @@ size_t COCOFileSourceReader::open()
     return _current_file_size;
 }
 
-size_t COCOFileSourceReader::read_data(unsigned char *buf, size_t read_size)
-{
+size_t COCOFileSourceReader::read_data(unsigned char *buf, size_t read_size) {
 #if USE_STDIO_FILE
     if (!_current_fPtr)
         return 0;
@@ -157,18 +150,15 @@ size_t COCOFileSourceReader::read_data(unsigned char *buf, size_t read_size)
     return actual_read_size;
 }
 
-int COCOFileSourceReader::close()
-{
+int COCOFileSourceReader::close() {
     return release();
 }
 
-COCOFileSourceReader::~COCOFileSourceReader()
-{
+COCOFileSourceReader::~COCOFileSourceReader() {
     release();
 }
 
-int COCOFileSourceReader::release()
-{
+int COCOFileSourceReader::release() {
 #if USE_STDIO_FILE
     if (!_current_fPtr)
         return 0;
@@ -182,24 +172,21 @@ int COCOFileSourceReader::release()
     return 0;
 }
 
-void COCOFileSourceReader::reset()
-{
+void COCOFileSourceReader::reset() {
     if (_shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
     _curr_file_idx = 0;
 }
 
-Reader::Status COCOFileSourceReader::subfolder_reading()
-{
+Reader::Status COCOFileSourceReader::subfolder_reading() {
     if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
     std::vector<std::string> entry_name_list;
     std::string _full_path = _folder_path;
 
-    while ((_entity = readdir(_sub_dir)) != nullptr)
-    {
+    while ((_entity = readdir(_sub_dir)) != nullptr) {
         std::string entry_name(_entity->d_name);
         if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
             continue;
@@ -211,22 +198,17 @@ Reader::Status COCOFileSourceReader::subfolder_reading()
 
     filesys::path pathObj(subfolder_path);
     auto ret = Reader::Status::OK;
-    if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
-    {
+    if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
         ret = open_folder();
-    }
-    else if (filesys::exists(pathObj) && filesys::is_directory(pathObj))
-    {
-        for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count)
-        {
+    } else if (filesys::exists(pathObj) && filesys::is_directory(pathObj)) {
+        for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
             std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
             _folder_path = subfolder_path;
             if (open_folder() != Reader::Status::OK)
                 WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
         }
     }
-    if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count)
-    {
+    if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
         replicate_last_image_to_fill_last_shard();
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
     }
@@ -235,32 +217,27 @@ Reader::Status COCOFileSourceReader::subfolder_reading()
     closedir(_sub_dir);
     return ret;
 }
-void COCOFileSourceReader::replicate_last_image_to_fill_last_shard()
-{
+void COCOFileSourceReader::replicate_last_image_to_fill_last_shard() {
     for (size_t i = _in_batch_read_count; i < _batch_count; i++)
         _file_names.push_back(_last_file_name);
 }
 
-void COCOFileSourceReader::replicate_last_batch_to_pad_partial_shard()
-{
-    if (_file_names.size() >=  _batch_count) {
+void COCOFileSourceReader::replicate_last_batch_to_pad_partial_shard() {
+    if (_file_names.size() >= _batch_count) {
         for (size_t i = 0; i < _batch_count; i++)
             _file_names.push_back(_file_names[i - _batch_count]);
     }
 }
 
-Reader::Status COCOFileSourceReader::open_folder()
-{
+Reader::Status COCOFileSourceReader::open_folder() {
     if ((_src_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
-    while ((_entity = readdir(_src_dir)) != nullptr)
-    {
+    while ((_entity = readdir(_src_dir)) != nullptr) {
         if (_entity->d_type != DT_REG)
             continue;
-        if(!_meta_data_reader || _meta_data_reader->exists(_entity->d_name)) {
-            if (get_file_shard_id() != _shard_id)
-            {
+        if (!_meta_data_reader || _meta_data_reader->exists(_entity->d_name)) {
+            if (get_file_shard_id() != _shard_id) {
                 _file_count_all_shards++;
                 incremenet_file_id();
                 continue;
@@ -278,16 +255,15 @@ Reader::Status COCOFileSourceReader::open_folder()
     if (_file_names.empty())
         WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
     std::sort(_file_names.begin(), _file_names.end());
-    _last_file_name = _file_names[_file_names.size()-1];
+    _last_file_name = _file_names[_file_names.size() - 1];
 
     closedir(_src_dir);
     return Reader::Status::OK;
 }
 
-size_t COCOFileSourceReader::get_file_shard_id()
-{
+size_t COCOFileSourceReader::get_file_shard_id() {
     if (_batch_count == 0 || _shard_count == 0)
         THROW("Shard (Batch) size cannot be set to 0")
-    //return (_file_id / (_batch_count)) % _shard_count;
-    return _file_id  % _shard_count;
+    // return (_file_id / (_batch_count)) % _shard_count;
+    return _file_id % _shard_count;
 }

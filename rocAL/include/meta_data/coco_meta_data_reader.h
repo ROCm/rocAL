@@ -22,37 +22,37 @@ THE SOFTWARE.
 
 #pragma once
 #include <map>
+
 #include "commons.h"
 #include "meta_data.h"
 #include "meta_data_reader.h"
 #include "timing_debug.h"
 
-class COCOMetaDataReader: public MetaDataReader
-{
-public:
-    void init(const MetaDataConfig& cfg) override;
+class COCOMetaDataReader : public MetaDataReader {
+   public:
+    void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
     void lookup(const std::vector<std::string>& image_names) override;
     void read_all(const std::string& path) override;
     void release(std::string image_name);
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    MetaDataBatch * get_output() override { return _output; }
-    const std::map<std::string, std::shared_ptr<MetaData>> & get_map_content() override { return _map_content;}
+
+    const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     COCOMetaDataReader();
-    ~COCOMetaDataReader() override { delete _output; }
-private:
-    BoundingBoxBatch* _output;
+
+   private:
+    pMetaDataBatch _output;
     std::string _path;
     int meta_data_reader_type;
-    void add(std::string image_name, BoundingBoxCords bbox, BoundingBoxLabels b_labels, ImgSize image_size);
-    bool exists(const std::string &image_name) override;
+    void add(std::string image_name, BoundingBoxCords bbox, Labels labels, ImgSize image_size, int image_id = 0);
+    void add(std::string image_name, BoundingBoxCords bbox, Labels labels, ImgSize image_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count);  // To add Mask coordinates to Metadata struct
+    bool exists(const std::string& image_name) override;
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
     std::map<std::string, ImgSize> _map_img_sizes;
-    std::map<std::string, ImgSize> ::iterator itr;
+    std::map<std::string, ImgSize>::iterator itr;
     std::map<int, int> _label_info;
-    std::map<int, int> ::iterator _it_label;
+    std::map<int, int>::iterator _it_label;
     TimingDBG _coco_metadata_read_time;
 };
-

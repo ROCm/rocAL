@@ -24,22 +24,21 @@ THE SOFTWARE.
 
 #include "decoder.h"
 #ifdef ROCAL_VIDEO
-extern "C"
-{
+
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-#include <libswscale/swscale.h>
-#include <libavutil/hwcontext.h>
 #include <libavformat/avio.h>
+#include <libavutil/avutil.h>
 #include <libavutil/file.h>
+#include <libavutil/hwcontext.h>
+#include <libswscale/swscale.h>
 }
 
-
 class HWJpegDecoder : public Decoder {
-public:
+   public:
     //! Default constructor
-    HWJpegDecoder() {};
+    HWJpegDecoder(){};
     //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
     /*!
      \param input_buffer  User provided buffer containig the encoded image
@@ -48,7 +47,7 @@ public:
      \param height pointer to the user's buffer to write the height of the compressed image to
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
-    Status decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps) override;
+    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
 
     //! Decodes the actual image data
     /*!
@@ -64,16 +63,16 @@ public:
                            size_t max_decoded_width, size_t max_decoded_height,
                            size_t original_image_width, size_t original_image_height,
                            size_t &actual_decoded_width, size_t &actual_decoded_height,
-                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size=false) override;
+                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override;
 
     ~HWJpegDecoder() override;
-    void initialize(int device_id=0);
+    void initialize(int device_id = 0);
     bool is_partial_decoder() override { return _is_partial_decoder; }
-    void set_bbox_coords(std::vector <float> bbox_coord) override { _bbox_coord = bbox_coord;}
-    void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window;}
-    std::vector <float> get_bbox_coords() override { return _bbox_coord;}
+    void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
+    void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
+    std::vector<float> get_bbox_coords() override { return _bbox_coord; }
 
-private:
+   private:
     void release();
     const char *_src_filename = NULL;
     AVHWDeviceType _hw_type = AV_HWDEVICE_TYPE_NONE;
@@ -88,7 +87,7 @@ private:
     size_t _codec_width, _codec_height;
 
     bool _is_partial_decoder = false;
-    std::vector <float> _bbox_coord;
+    std::vector<float> _bbox_coord;
     CropWindow _crop_window;
 };
 

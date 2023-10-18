@@ -18,7 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
+##
+# @file types.py
+# @brief File containing various user defined types used in rocAL
 
 # RocalStatus
 from rocal_pybind.types import OK
@@ -35,10 +37,11 @@ from rocal_pybind.types import CPU
 from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
+from rocal_pybind.types import UINT8
 
 #  RocalOutputMemType
-from rocal_pybind.types import CPU_MEMORY
-from rocal_pybind.types import GPU_MEMORY
+from rocal_pybind.types import HOST_MEMORY
+from rocal_pybind.types import DEVICE_MEMORY
 from rocal_pybind.types import PINNED_MEMORY
 
 # RocalImageSizeEvaluationPolicy
@@ -57,6 +60,8 @@ from rocal_pybind.types import RGB_PLANAR
 #     RocalTensorLayout
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
+from rocal_pybind.types import NFHWC
+from rocal_pybind.types import NFCHW
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -96,8 +101,9 @@ _known_types = {
     UINT8: ("UINT8", UINT8),
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
-    CPU_MEMORY: ("CPU_MEMORY", CPU_MEMORY),
-    GPU_MEMORY: ("GPU_MEMORY", GPU_MEMORY),
+    UINT8: ("UINT8", UINT8),
+    HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
+    DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
 
     MAX_SIZE: ("MAX_SIZE", MAX_SIZE),
@@ -108,6 +114,8 @@ _known_types = {
 
     NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
+    NFHWC: ("NFHWC", NFHWC),
+    NFCHW: ("NFCHW", NFCHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -136,9 +144,19 @@ _known_types = {
 
 }
 
+
 def data_type_function(dtype):
+    """!Converts a given data type identifier to its corresponding known type.
+
+        @param dtype    The data type identifier.
+
+        @return    Known type corresponding to the given data type identifier.
+
+        @raise     RuntimeError: If the given data type identifier does not correspond to a known type.
+    """
     if dtype in _known_types:
         ret = _known_types[dtype][0]
         return ret
     else:
-        raise RuntimeError(str(dtype) + " does not correspond to a known type.")
+        raise RuntimeError(
+            str(dtype) + " does not correspond to a known type.")

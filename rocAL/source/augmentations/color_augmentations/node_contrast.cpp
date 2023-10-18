@@ -24,44 +24,40 @@ THE SOFTWARE.
 #include "node_contrast.h"
 #include "exception.h"
 
-RocalContrastNode::RocalContrastNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs) :
-        Node(inputs, outputs),
-        _min(CONTRAST_MIN_RANGE[0], CONTRAST_MIN_RANGE[1]),
-        _max(CONTRAST_MAX_RANGE[0], CONTRAST_MAX_RANGE[1])
-{
-}
+ContrastNode::ContrastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
+                                                                                                        _factor(CONTRAST_FACTOR_RANGE[0], CONTRAST_FACTOR_RANGE[1]),
+                                                                                                        _center(CONTRAST_CENTER_RANGE[0], CONTRAST_CENTER_RANGE[1]) {}
 
-void RocalContrastNode::create_node()
-{
-
-    if(_node)
+void ContrastNode::create_node() {
+    if (_node)
         return;
 
-    _min.create_array(_graph ,VX_TYPE_UINT32, _batch_size);
-    _max.create_array(_graph ,VX_TYPE_UINT32 , _batch_size);
+    _factor.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _center.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    int input_layout = static_cast<int>(_inputs[0]->info().layout());
+    int output_layout = static_cast<int>(_outputs[0]->info().layout());
+    int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
+    vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
+    vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    _node = vxExtrppNode_ContrastbatchPD(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(), _min.default_array(), _max.default_array(), _batch_size);
-
+    _node = vxExtRppContrast(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _factor.default_array(), _center.default_array(), input_layout_vx, output_layout_vx,roi_type_vx);
     vx_status status;
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the contrast (vxExtrppNode_contrast) node failed: "+ TOSTR(status))
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the contrast (vxExtRppContrast) node failed: " + TOSTR(status))
 }
 
-void RocalContrastNode::init(int min, int max)
-{
-    _min.set_param(min);
-    _max.set_param(max);
+void ContrastNode::init(float contrast_factor, float contrast_center) {
+    _factor.set_param(contrast_factor);
+    _center.set_param(contrast_center);
 }
 
-void RocalContrastNode::init(IntParam *min, IntParam* max)
-{
-    _min.set_param(core(min));
-    _max.set_param(core(max));
+void ContrastNode::init(FloatParam *contrast_factor_param, FloatParam *contrast_center_param) {
+    _factor.set_param(core(contrast_factor_param));
+    _center.set_param(core(contrast_center_param));
 }
 
-void RocalContrastNode::update_node()
-{
-    _min.update_array();
-    _max.update_array();
+void ContrastNode::update_node() {
+    _factor.update_array();
+    _center.update_array();
 }
-

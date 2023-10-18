@@ -22,26 +22,24 @@ THE SOFTWARE.
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+
+#include "graph.h"
+#include "meta_data_reader.h"
+#include "parameter_factory.h"
 #include "randombboxcrop_meta_data.h"
 #include "image_reader.h"
-#include "meta_data_reader.h"
-#include "graph.h"
-#include "parameter_factory.h"
 
-enum class RandomBBoxCrop_MetaDataReaderType
-{
+enum class RandomBBoxCrop_MetaDataReaderType {
     RandomBBoxCropReader = 0,
 };
-enum class RandomBBoxCrop_MetaDataType
-{
+enum class RandomBBoxCrop_MetaDataType {
     BoundingBox
 };
 
-struct RandomBBoxCrop_MetaDataConfig
-{
-private:
+struct RandomBBoxCrop_MetaDataConfig {
+   private:
     RandomBBoxCrop_MetaDataType _type;
     RandomBBoxCrop_MetaDataReaderType _reader_type;
     bool _all_boxes_overlap;
@@ -54,11 +52,11 @@ private:
     FloatParam* _scaling;
     int _total_num_attempts;
     int64_t _seed;
-public:
+
+   public:
     RandomBBoxCrop_MetaDataConfig(const RandomBBoxCrop_MetaDataType& type, const RandomBBoxCrop_MetaDataReaderType& reader_type, const bool& all_boxes_overlap,
-                        const bool& no_crop, FloatParam* aspect_ratio, const bool& has_shape, const int& crop_width, const int& crop_height, const int& num_attempts,
-                        FloatParam* scaling, const int& total_num_attempts, const int64_t& seed):  _type(type), _reader_type(reader_type), _all_boxes_overlap(all_boxes_overlap), _no_crop(no_crop), _aspect_ratio(aspect_ratio),
-                        _has_shape(has_shape), _crop_width(crop_width), _crop_height(crop_height), _num_attempts(num_attempts), _scaling(scaling), _total_num_attempts(total_num_attempts), _seed(seed){}
+                                  const bool& no_crop, FloatParam* aspect_ratio, const bool& has_shape, const int& crop_width, const int& crop_height, const int& num_attempts,
+                                  FloatParam* scaling, const int& total_num_attempts, const int64_t& seed) : _type(type), _reader_type(reader_type), _all_boxes_overlap(all_boxes_overlap), _no_crop(no_crop), _aspect_ratio(aspect_ratio), _has_shape(has_shape), _crop_width(crop_width), _crop_height(crop_height), _num_attempts(num_attempts), _scaling(scaling), _total_num_attempts(total_num_attempts), _seed(seed) {}
     RandomBBoxCrop_MetaDataConfig() = delete;
     RandomBBoxCrop_MetaDataType type() const { return _type; }
     RandomBBoxCrop_MetaDataReaderType reader_type() const { return _reader_type; }
@@ -66,7 +64,7 @@ public:
     bool no_crop() const { return _no_crop; }
     bool has_shape() const { return _has_shape; }
     int crop_width() const { return _crop_width; }
-    int crop_height() const { return _crop_height;}
+    int crop_height() const { return _crop_height; }
     FloatParam* aspect_ratio() const { return _aspect_ratio; }
     FloatParam* scaling() const { return _scaling; }
     int num_attempts() const { return _num_attempts; }
@@ -74,20 +72,18 @@ public:
     int seed() const { return _seed; }
 };
 
-class RandomBBoxCrop_MetaDataReader
-{
-public:
-    enum class Status
-    {
+class RandomBBoxCrop_MetaDataReader {
+   public:
+    enum class Status {
         OK = 0
     };
-    virtual ~RandomBBoxCrop_MetaDataReader()= default;
-    virtual void init(const RandomBBoxCrop_MetaDataConfig& cfg) = 0;
-    virtual void read_all() = 0;// Reads all the meta data information
-    virtual void lookup(const std::vector<std::string>& image_names) = 0;// finds meta_data info associated with given names and fills the output
-    virtual std::vector<std::vector <float>>  get_batch_crop_coords(const std::vector<std::string>& image_names) = 0; // returns the crop coords for a batch
-    virtual void release() = 0; // Deletes the loaded information
+    virtual ~RandomBBoxCrop_MetaDataReader() = default;
+    virtual void init(const RandomBBoxCrop_MetaDataConfig& cfg, std::shared_ptr<CropCordBatch> meta_data_batch) = 0;
+    virtual void read_all() = 0;                                                                                     // Reads all the meta data information
+    virtual void lookup(const std::vector<std::string>& image_names) = 0;                                            // finds meta_data info associated with given names and fills the output
+    virtual std::vector<std::vector<float>> get_batch_crop_coords(const std::vector<std::string>& image_names) = 0;  // returns the crop coords for a batch
+    virtual void release() = 0;                                                                                      // Deletes the loaded information
     virtual void set_meta_data(std::shared_ptr<MetaDataReader> meta_data_reader) = 0;
-    virtual CropCordBatch *get_output() = 0;
-    virtual pCropCord get_crop_cord(const std::string &image_names) = 0;
+    virtual std::shared_ptr<CropCordBatch> get_output() = 0;
+    virtual pCropCord get_crop_cord(const std::string& image_names) = 0;
 };

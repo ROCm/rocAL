@@ -21,22 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "commons.h"
-#include <vector>
 #include <condition_variable>
+#include <vector>
+
+#include "commons.h"
 #if ENABLE_OPENCL
 #include <CL/cl.h>
 #endif
 #include <queue>
-#include "meta_data.h"
-#include "device_manager.h"
-#include "commons.h"
-#include "device_manager_hip.h"
 
-using MetaDataNamePair = std::pair<ImageNameBatch,pMetaDataBatch>;
-class RingBuffer
-{
-public:
+#include "commons.h"
+#include "device_manager.h"
+#include "device_manager_hip.h"
+#include "meta_data.h"
+
+using MetaDataNamePair = std::pair<ImageNameBatch, pMetaDataBatch>;
+class RingBuffer {
+   public:
     explicit RingBuffer(unsigned buffer_depth);
     ~RingBuffer();
     size_t level();
@@ -45,16 +46,19 @@ public:
     ///\param dev
     ///\param sub_buffer_size
     ///\param sub_buffer_count
-    void init(RocalMemType mem_type, void *dev, unsigned sub_buffer_size, unsigned sub_buffer_count);
+    void init(RocalMemType mem_type, void *dev, std::vector<size_t> &sub_buffer_size);
     void initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bbox_size, size_t encoded_labels_size);
+    void init_metadata(RocalMemType mem_type, std::vector<size_t> &sub_buffer_size);
     void release_gpu_res();
-    std::vector<void*> get_read_buffers() ;
-    void* get_host_master_read_buffer();
-    std::vector<void*> get_write_buffers();
-    std::pair<void*, void*> get_box_encode_write_buffers();
-    std::pair<void*, void*> get_box_encode_read_buffers();
-    MetaDataNamePair& get_meta_data();
+    std::vector<void *> get_read_buffers();
+    std::vector<void *> get_write_buffers();
+    std::pair<void *, void *> get_box_encode_write_buffers();
+    std::pair<void *, void *> get_box_encode_read_buffers();
+    MetaDataNamePair &get_meta_data();
+    std::vector<void *> get_meta_read_buffers();
+    std::vector<void *> get_meta_write_buffers();
     void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
+    void rellocate_meta_data_buffer(void *buffer, size_t buffer_size, unsigned buff_idx);
     void reset();
     void pop();
     void push();
@@ -65,21 +69,24 @@ public:
     void block_if_empty();
     void block_if_full();
     void release_if_empty();
-private:
+
+   private:
     std::queue<MetaDataNamePair> _meta_ring_buffer;
     MetaDataNamePair _last_image_meta_data;
     void increment_read_ptr();
     void increment_write_ptr();
     bool full();
     const unsigned BUFF_DEPTH;
-    unsigned _sub_buffer_size;
+    std::vector<size_t> _sub_buffer_size;
     unsigned _sub_buffer_count;
+    std::vector<std::vector<size_t>> _meta_data_sub_buffer_size;
+    unsigned _meta_data_sub_buffer_count;
     std::mutex _lock;
     std::condition_variable _wait_for_load;
     std::condition_variable _wait_for_unload;
-    std::vector<std::vector<void*>> _dev_sub_buffer;
-    std::vector<void*> _host_master_buffers;
-    std::vector<std::vector<void*>> _host_sub_buffers;
+    std::vector<std::vector<void *>> _dev_sub_buffer;
+    std::vector<std::vector<void *>> _host_sub_buffers;
+    std::vector<std::vector<void *>> _host_meta_data_buffers;
     std::vector<void *> _dev_bbox_buffer;
     std::vector<void *> _dev_labels_buffer;
     bool _dont_block = false;
@@ -88,6 +95,7 @@ private:
     size_t _write_ptr;
     size_t _read_ptr;
     size_t _level;
-    std::mutex  _names_buff_lock;
+    std::mutex _names_buff_lock;
     const size_t MEM_ALIGNMENT = 256;
+    bool _box_encoder = false;
 };
