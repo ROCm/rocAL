@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 #include <cassert>
 #include <commons.h>
+#include <cstring>
+#include <algorithm>
 #include "cifar10_data_reader.h"
 #ifdef USE_STD_FILESYSTEM
 #include <filesystem>

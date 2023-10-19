@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include <cassert>
 #include <algorithm>
+#include <cstring>
 #include <commons.h>
 #include "file_source_reader.h"
 #ifdef USE_STD_FILESYSTEM
