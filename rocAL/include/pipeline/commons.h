@@ -125,7 +125,7 @@ typedef struct {
 typedef union {
     RoiLtrb ltrb;
     RoiXywh xywh;
-} ROI2DCords;
+} Roi2DCords;
 
 /*! \brief Tensor ROI
  *
@@ -134,7 +134,7 @@ typedef union {
 typedef struct {
     unsigned *begin;
     unsigned *shape;
-} ROICords;
+} RoiCords;
 
 struct Timing {
     // The following timings are accumulated timing not just the most recent activity

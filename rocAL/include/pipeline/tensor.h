@@ -62,12 +62,12 @@ vx_uint64 tensor_data_size(RocalTensorDataType data_type);
  */
 void allocate_host_or_pinned_mem(void** ptr, size_t size, RocalMemType mem_type);
 
-struct ROI {
+struct Roi {
     unsigned* get_ptr() { return _roi_ptr.get(); }
-    ROI2DCords* get_2D_roi() {
+    Roi2DCords* get_2D_roi() {
         if (_roi_no_of_dims != 2)
-            THROW("ROI has more than 2 dimensions. Cannot return ROI2DCords")
-        return reinterpret_cast<ROI2DCords*>(_roi_ptr.get());
+            THROW("ROI has more than 2 dimensions. Cannot return Roi2DCords")
+        return reinterpret_cast<Roi2DCords*>(_roi_ptr.get());
     }
     void set_ptr(unsigned* ptr, RocalMemType mem_type, unsigned batch_size, unsigned no_of_dims = 0) {
         if (!_roi_no_of_dims) _roi_no_of_dims = no_of_dims;
@@ -95,7 +95,7 @@ struct ROI {
     }
     unsigned no_of_dims() { return _roi_no_of_dims; }
     size_t roi_buffer_size() { return _roi_buffer_size; }
-    ROICords& operator[](const int i) {
+    RoiCords& operator[](const int i) {
         _roi_coords.begin = (_roi_buf + (i * _stride));
         _roi_coords.shape = (_roi_buf + (i * _stride) + _roi_no_of_dims);
         return _roi_coords;
@@ -106,7 +106,7 @@ struct ROI {
     std::shared_ptr<unsigned> _roi_ptr;
     unsigned _roi_no_of_dims = 0;
     unsigned _stride = 0;
-    ROICords _roi_coords;
+    RoiCords _roi_coords;
     size_t _roi_buffer_size = 0;
 };
 
@@ -256,7 +256,7 @@ class TensorInfo {
     RocalROIType roi_type() const { return _roi_type; }
     RocalTensorDataType data_type() const { return _data_type; }
     RocalTensorlayout layout() const { return _layout; }
-    ROI roi() const { return _roi; }
+    Roi roi() const { return _roi; }
     RocalColorFormat color_format() const { return _color_format; }
     Type type() const { return _type; }
     uint64_t data_type_size() {
@@ -280,7 +280,7 @@ class TensorInfo {
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;  //!< tensor data type
     RocalTensorlayout _layout = RocalTensorlayout::NONE;         //!< layout of the tensor
     RocalColorFormat _color_format;                              //!< color format of the image
-    ROI _roi;
+    Roi _roi;
     uint64_t _data_type_size = tensor_data_size(_data_type);
     uint64_t _data_size = 0;
     std::vector<size_t> _max_shape;  //!< stores the the width and height dimensions in the tensor

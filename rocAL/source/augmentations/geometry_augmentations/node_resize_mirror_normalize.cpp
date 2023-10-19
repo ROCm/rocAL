@@ -95,7 +95,7 @@ void ResizeMirrorNormalizeNode::create_node() {
 }
 
 void ResizeMirrorNormalizeNode::update_node() {
-    ROI2DCords *src_roi = _inputs[0]->info().roi().get_2D_roi();
+    Roi2DCords *src_roi = _inputs[0]->info().roi().get_2D_roi();
     for (unsigned i = 0; i < _batch_size; i++) {
         _src_width = src_roi[i].xywh.w;
         _src_height = src_roi[i].xywh.h;

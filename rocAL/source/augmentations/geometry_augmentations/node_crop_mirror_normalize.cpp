@@ -101,7 +101,7 @@ void CropMirrorNormalizeNode::update_node() {
     // Obtain the crop coordinates and update the roi
     auto x1 = _crop_param->get_x1_arr_val();
     auto y1 = _crop_param->get_y1_arr_val();
-    ROI2DCords *src_roi = static_cast<ROI2DCords *>(_crop_coordinates);
+    Roi2DCords *src_roi = static_cast<Roi2DCords *>(_crop_coordinates);
     for (unsigned i = 0; i < _batch_size; i++) {
         src_roi[i].xywh.x = x1[i];
         src_roi[i].xywh.y = y1[i];

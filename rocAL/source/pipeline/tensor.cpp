@@ -113,7 +113,7 @@ void TensorInfo::reset_tensor_roi_buffers() {
     allocate_host_or_pinned_mem((void **)&roi_buf, roi_size * roi_no_of_dims * 2 * sizeof(unsigned), _mem_type);                       // 2 denotes, one coordinate each for begin and end
     _roi.set_ptr(roi_buf, _mem_type, roi_size, roi_no_of_dims);
     if (_is_image) {
-        ROI2DCords *roi = _roi.get_2D_roi();
+        Roi2DCords *roi = _roi.get_2D_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
             roi[i].xywh.w = _max_shape.at(0);
             roi[i].xywh.h = _max_shape.at(1);
@@ -179,7 +179,7 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
         auto max_shape = _info.max_shape();
         unsigned max_width = max_shape.at(0);
         unsigned max_height = max_shape.at(1);
-        ROI2DCords *roi = _info.roi().get_2D_roi();
+        Roi2DCords *roi = _info.roi().get_2D_roi();
 
         if (width.size() != height.size())
             THROW("Batch size of Tensor height and width info does not match")
