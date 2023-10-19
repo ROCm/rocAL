@@ -35,12 +35,24 @@ find_package(Protobuf QUIET)
 find_package(FFmpeg QUIET)
 find_package(OpenCV QUIET)
 find_package(OpenMP QUIET)
-set(BOOST_COMPONENTS filesystem system)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 find_package(LMDB QUIET)	
 find_package(RapidJSON QUIET)
+# Check for filesystem support
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_REQUIRED_INCLUDES "")
+check_cxx_source_compiles("#include <filesystem>\nnamespace fs = std::filesystem;\nint main() { return 0; }" HAS_STD_FILESYSTEM)
+check_cxx_source_compiles("#include <experimental/filesystem>\nnamespace fs = std::experimental::filesystem;\nint main() { return 0; }" HAS_EXP_FILESYSTEM)
+
+if (HAS_STD_FILESYSTEM)
+    set(FS_FOUND true)
+elseif (HAS_EXP_FILESYSTEM)
+    set(FS_FOUND true)
+else ()
+    set(FS_FOUND false)
+endif ()
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -160,10 +172,10 @@ if(NOT OpenMP_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires OpenMP, Not Found ${ColourReset}")
 endif()
-# BOOST
-if(NOT Boost_FOUND)
+# FileSystem
+if(NOT FS_FOUND)
     set(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires Boost, Not Found ${ColourReset}")
+    message("-- ${Yellow}NOTE: rocAL library requires FileSystem, Not Found ${ColourReset}")
 endif()
 # Threads
 if(NOT Threads_FOUND)
@@ -192,9 +204,8 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
     # Threads
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
-    # BOOST
-    include_directories(${Boost_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+    # FileSystem
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
     # TurboJPEG
     include_directories(${TurboJpeg_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
@@ -293,7 +304,12 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with FFmpeg Video Decode Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
     endif()
-
+    #FileSystem
+    if (HAS_STD_FILESYSTEM)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_STD_FILESYSTEM)
+    elseif (HAS_EXP_FILESYSTEM)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_EXP_FILESYSTEM)
+    endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation

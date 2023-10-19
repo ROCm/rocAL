@@ -24,9 +24,13 @@ THE SOFTWARE.
 #include <algorithm>
 #include <commons.h>
 #include "sequence_file_source_reader.h"
-#include <boost/filesystem.hpp>
-
-namespace filesys = boost::filesystem;
+#ifdef USE_STD_FILESYSTEM
+#include <filesystem>
+namespace filesys = std::filesystem;
+#elif defined(USE_EXP_FILESYSTEM)
+#include <experimental/filesystem>
+namespace filesys = std::experimental::filesystem;
+#endif
 
 SequenceFileSourceReader::SequenceFileSourceReader()
 {
