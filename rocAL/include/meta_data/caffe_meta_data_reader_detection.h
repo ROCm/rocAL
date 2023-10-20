@@ -45,6 +45,7 @@ class CaffeMetaDataReaderDetection : public MetaDataReader {
     bool set_timestamp_mode() override { return false; }
     void print_map_contents();
     std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
+    void add_labels(std::vector<std::string> image_name, std::vector<int> label) override{};
     CaffeMetaDataReaderDetection();
 
    private:

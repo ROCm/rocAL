@@ -99,6 +99,37 @@ class ROCALGenericIterator(object):
                 else:
                     self.output_tensor_list[i].copy_data(
                         self.output_list[i].data.ptr)
+        if (self.loader._external_source_operator):
+            if (self.index + 1) == self.num_batches:
+                self.eos = True
+            if (self.index + 1) <= self.num_batches:
+                if self.loader._external_source_mode == types.EXTSOURCE_FNAME:
+                    kwargs_pybind = {
+                        "handle": self.loader._handle,
+                        "source_input_images": next(self.loader._external_source)[0],
+                        "labels": next(self.loader._external_source)[1],
+                        "input_batch_buffer": [],
+                        "roi_width": [],
+                        "roi_height": [],
+                        "decoded_width": self.loader._external_source_user_given_width,
+                        "decoded_height": self.loader._external_source_user_given_height,
+                        "channels": self.p,
+                        "external_source_mode": self.loader._external_source_mode,
+                        "rocal_tensor_layout": types.NCHW,
+                        "eos": self.eos}
+                    b.externalSourceFeedInput(*(kwargs_pybind.values()))
+                if self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
+                    print(
+                        "Support for EXTSOURCE_RAW_COMPRESSED / Mode 1 does not exist ")
+                    exit(0)
+                if self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
+                    print(
+                        "Support for EXTSOURCE_RAW_UNCOMPRESSED / Mode 2 does not exist ")
+                    exit(0)
+
+        if (types.NCHW == self.tensor_format):
+            self.loader.copyToExternalTensorNCHW(
+                self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:

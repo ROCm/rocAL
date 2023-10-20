@@ -53,6 +53,9 @@ class ImageLoader : public LoaderModule {
     crop_image_info get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
+    void feed_external_input(std::vector<std::string> input_images_names, std::vector<int> labels, std::vector<unsigned char*> input_buffer,
+                             std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
+                             unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) override;
 
    private:
     bool is_out_of_data();
@@ -87,4 +90,7 @@ class ImageLoader : public LoaderModule {
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_tensor_width, _max_tensor_height;
+    size_t _max_decoded_width, _max_decoded_height;
+    bool _external_source_reader = false;  //!< Set to true if external source reader
+    bool _external_input_eos = false;      //!< Set to true for last batch for the sequence
 };

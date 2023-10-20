@@ -43,6 +43,7 @@ class Caffe2MetaDataReaderDetection : public MetaDataReader {
     void print_map_contents();
     std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     bool set_timestamp_mode() override { return false; }
+    void add_labels(std::vector<std::string> image_name, std::vector<int> label) override{};
     Caffe2MetaDataReaderDetection();
 
    private:

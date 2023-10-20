@@ -22,10 +22,13 @@ THE SOFTWARE.
 
 #include "image_read_and_decode.h"
 
+#include <unistd.h>
+
 #include <cstring>
 #include <iterator>
 
 #include "decoder_factory.h"
+#include "external_source_reader.h"
 
 std::tuple<Decoder::ColorFormat, unsigned>
 interpret_color_format(RocalColorFormat color_format) {
@@ -92,6 +95,26 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     }
     _num_threads = reader_config.get_cpu_num_threads();
     _reader = create_reader(reader_config);
+    _storage_type = reader_config.storage_type();
+}
+
+void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<int> labels, std::vector<unsigned char *> input_buffer,
+                                             std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
+                                             unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) {
+    std::vector<size_t> image_size;
+    image_size.reserve(roi_height.size());
+    for (unsigned int i = 0; i < roi_height.size(); i++) {
+        if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
+            image_size[i] = (max_width * max_height * channels);
+        else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
+            image_size[i] = roi_height[i];
+    }
+    if (mode == ExternalFileMode::FILENAME)
+        _reader->feed_file_names(input_images_names, input_images_names.size(), eos);
+    else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
+        _reader->feed_data(input_buffer, image_size, mode, eos, {}, {}, max_width, max_height, channels);
+    else if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
+        _reader->feed_data(input_buffer, image_size, mode, eos, roi_width, roi_height, max_width, max_height, channels);
 }
 
 void ImageReadAndDecode::reset() {
@@ -108,7 +131,7 @@ void ImageReadAndDecode::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxC
     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
 }
 
-std::vector<std::vector<float>>&
+std::vector<std::vector<float>> &
 ImageReadAndDecode::get_batch_random_bbox_crop_coords() {
     // Return the crop co-ordinates for a batch of images
     return _crop_coords_batch;
@@ -142,7 +165,8 @@ ImageReadAndDecode::load(unsigned char *buff,
     const unsigned output_planes = std::get<1>(ret);
     const bool keep_original = decoder_keep_original;
     const size_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
-
+    bool is_external_source = (_storage_type == StorageType::EXTERNAL_FILE_SOURCE);
+    bool skip_decode = false;
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing
@@ -170,7 +194,52 @@ ImageReadAndDecode::load(unsigned char *buff,
             file_counter++;
         }
         //_file_load_time.end();// Debug timing
-        // return LoaderModuleStatus::OK;
+        skip_decode = true;
+        //_file_load_time.end();// Debug timing
+    } else if (is_external_source) {
+        auto ext_reader = std::static_pointer_cast<ExternalSourceReader>(_reader);
+        if (ext_reader->mode() == ExternalFileMode::RAWDATA_UNCOMPRESSED) {
+            while ((file_counter != _batch_size) && _reader->count_items() > 0) {
+                int width, height, channels;
+                unsigned rwidth, rheight;
+                auto read_ptr = buff + image_size * file_counter;
+                size_t fsize = _reader->open();
+                if (fsize == 0) {
+                    WRN("Opened file " + _reader->id() + " of size 0");
+                    continue;
+                }
+
+                _actual_read_size[file_counter] = _reader->read_data(read_ptr, fsize);
+                if (_actual_read_size[file_counter] < fsize)
+                    LOG("Reader read less than requested bytes of size: " + _actual_read_size[file_counter]);
+
+                _image_names[file_counter] = _reader->id();
+                ext_reader->get_dims(file_counter, width, height, channels, rwidth, rheight);
+                names[file_counter] = _image_names[file_counter];
+                roi_width[file_counter] = rwidth;
+                roi_height[file_counter] = rheight;
+                actual_width[file_counter] = width;
+                actual_height[file_counter] = height;
+                _reader->close();
+                file_counter++;
+            }
+            skip_decode = true;
+        } else {
+            while ((file_counter != _batch_size) && _reader->count_items() > 0) {
+                _reader->count_items();
+                size_t fsize = _reader->open();
+                if (fsize == 0) {
+                    WRN("Opened file " + _reader->id() + " of size 0");
+                    continue;
+                }
+                _compressed_buff[file_counter].reserve(fsize);
+                _actual_read_size[file_counter] = _reader->read_data(_compressed_buff[file_counter].data(), fsize);
+                _image_names[file_counter] = _reader->id();
+                _reader->close();
+                _compressed_image_size[file_counter] = fsize;
+                file_counter++;
+            }
+        }
     } else {
         while ((file_counter != _batch_size) && _reader->count_items() > 0) {
             size_t fsize = _reader->open();
@@ -197,7 +266,7 @@ ImageReadAndDecode::load(unsigned char *buff,
     _file_load_time.end();  // Debug timing
 
     _decode_time.start();  // Debug timing
-    if (_decoder_config._type != DecoderType::SKIP_DECODE) {
+    if (!skip_decode) {
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 

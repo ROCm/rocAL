@@ -84,6 +84,32 @@ py::object wrapper_image_name(RocalContext context, int array_len) {
     return py::bytes(s);
 }
 
+py::object wrapperRocalExternalSourceFeedInput(
+    RocalContext context, std::vector<std::string> input_images_names,
+    py::array &labels, py::list arrays,
+    std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
+    unsigned int max_width, unsigned int max_height, int channels,
+    RocalExtSourceMode mode, RocalTensorLayout layout, bool eos) {
+    std::vector<unsigned char *> uchar_arrays;
+    if (input_images_names.size() == 0) {  // Used for mode 1 and mode 2 for passing decoded buffers
+        size_t numArrays = py::len(arrays);
+        for (size_t i = 0; i < numArrays; i++) {
+            py::array_t<unsigned char> arr(arrays[i]);
+            py::buffer_info buf = arr.request();
+            uchar_arrays.push_back(static_cast<unsigned char *>(buf.ptr));
+        }
+    }
+
+    int status = rocalExternalSourceFeedInput(context, input_images_names, {1}, uchar_arrays, roi_width, roi_height, max_width, max_height, channels, mode, layout, eos);
+    auto labels_tensor_list = rocalGetImageLabels(context);
+    int *labels_ptr = static_cast<int *>(labels.request().ptr);
+    for (size_t i = 0; i < labels.size(); i++) {
+        labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
+        labels_ptr++;
+    }
+    return py::cast<py::none>(Py_None);
+}
+
 std::unordered_map<int, std::string> rocalToPybindLayout = {
     {0, "NHWC"},
     {1, "NCHW"},
@@ -329,6 +355,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
         .export_values();
+    py::enum_<RocalExtSourceMode>(types_m, "RocalExtSourceMode", "Rocal Extrernal Source Mode")
+        .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
+        .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
+        .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
+        .export_values();
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
@@ -510,6 +541,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("sequenceReader", &rocalSequenceReader, "Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
           py::return_value_policy::reference);
     m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
+          py::return_value_policy::reference);
+    m.def("externalFileSource", &rocalJpegExternalFileSource,
+          py::return_value_policy::reference);
+    m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);

@@ -357,4 +357,11 @@ enum class RocalROICordsType {
 typedef struct {
     unsigned x1, y1, x2, y2;
 } RocalROICords;
+
+enum RocalExtSourceMode {
+    ROCAL_EXTSOURCE_FNAME = 0,             // file mode (list of filename given as input)
+    ROCAL_EXTSOURCE_RAW_COMPRESSED = 1,    // Compressed Raw buffer for set of images
+    ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,  // Uncompressed Raw buffer for set of images
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

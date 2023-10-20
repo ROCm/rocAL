@@ -41,7 +41,8 @@ enum class MetaDataReaderType {
     CAFFE2_DETECTION_META_DATA_READER,
     TF_DETECTION_META_DATA_READER,
     VIDEO_LABEL_READER,
-    MXNET_META_DATA_READER
+    MXNET_META_DATA_READER,
+    EXTERNAL_SOURCE_LABEL_READER
 };
 
 struct MetaDataConfig {
@@ -58,7 +59,7 @@ struct MetaDataConfig {
     unsigned _out_img_height;
 
    public:
-    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
+    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path = std::string(), const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
         : _type(type), _reader_type(reader_type), _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride) {}
     MetaDataConfig() = delete;
     MetaDataType type() const { return _type; }
@@ -88,4 +89,5 @@ class MetaDataReader {
     virtual const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() = 0;
     virtual bool exists(const std::string& image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
+    virtual void add_labels(std::vector<std::string> image_name, std::vector<int> label) = 0;
 };

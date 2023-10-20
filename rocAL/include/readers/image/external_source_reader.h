@@ -21,24 +21,19 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <dirent.h>
-#include <google/protobuf/message_lite.h>
-
-#include <algorithm>
-#include <iterator>
-#include <map>
+#include <condition_variable>
 #include <memory>
+#include <queue>
 #include <string>
 #include <vector>
 
-#include "caffe2_protos.pb.h"
-#include <lmdb.h>
+#include "commons.h"
 #include "image_reader.h"
 #include "timing_debug.h"
 
-class Caffe2LMDBRecordReader : public Reader {
+class ExternalSourceReader : public Reader {
    public:
-    //! Reads the Caffe2LMDB File, and loads the image ids and other necessary info
+    //! Looks up the folder which contains the files, amd loads the image names
     /*!
      \param desc  User provided descriptor containing the files' path.
     */
@@ -54,45 +49,51 @@ class Caffe2LMDBRecordReader : public Reader {
      \return The size of the next file, 0 if couldn't access it
     */
     size_t open() override;
-    //! Resets the object's state to read from the first file in the folder
+
+    //! Resets the object's state to read from the first file in the list
     void reset() override;
 
-    //! Returns the id of the latest file opened
-    std::string id() override { return _last_id; };
+    //! Returns the name of the latest file opened
+    std::string id() override { return _last_id; }
 
+    //! Return batch_size() for count_items unless end_of_sequence has been signalled
     unsigned count_items() override;
 
-    ~Caffe2LMDBRecordReader() override;
+    ~ExternalSourceReader() override;
 
     int close() override;
 
-    Caffe2LMDBRecordReader();
+    ExternalSourceReader();
 
-    //! return feed_data: not implemented
-    void feed_file_names(const std::vector<std::string>& file_names, size_t num_images, bool eos = false) override { return; }
+    //! receive next set of filenames from external source
+    void feed_file_names(const std::vector<std::string>& file_names, size_t num_images, bool eos = false) override;
 
-    //! return feed_raw_data: not implemented
-    void feed_data(const std::vector<unsigned char*>& images, const std::vector<size_t>& image_size, ExternalFileMode mode, bool eos = false, const std::vector<unsigned> roi_width = {}, const std::vector<unsigned> roi_height = {}, int width = 0, int height = 0, int channels = 0) override { return; }
+    //! receive next set of file data from external source
+    void feed_data(const std::vector<unsigned char*>& images, const std::vector<size_t>& image_size, ExternalFileMode mode, bool eos = false, const std::vector<unsigned> roi_width = {}, const std::vector<unsigned> roi_height = {}, int width = 0, int height = 0, int channels = 0) override;
+
+    // mode(): returs the mode for the reader
+    ExternalFileMode mode() { return _file_mode; }
+
+    // get image_dims
+    void get_dims(int cur_idx, int& width, int& height, int& channels, unsigned& roi_width, unsigned& roi_height);
 
    private:
     //! opens the folder containnig the images
-    Reader::Status Caffe2_LMDB_reader();
-    Reader::Status folder_reading();
     std::string _folder_path;
-    std::string _path;
-    DIR* _src_dir;
-    DIR* _sub_dir;
-    struct dirent* _entity;
-    std::vector<std::string> _file_names;
-    std::map<std::string, unsigned int> _file_size;
+    std::queue<std::string> _file_names_queue;
+    std::vector<size_t> _file_sizes;
+    std::vector<std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>> _file_data;
+    std::queue<std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>> _images_data_queue;
+    std::mutex _lock;
+    std::condition_variable _wait_for_input;
+
     unsigned _curr_file_idx;
+    FILE* _current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
-    unsigned int _last_file_size;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
-    bool _last_rec;
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
     /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
@@ -102,24 +103,18 @@ class Caffe2LMDBRecordReader : public Reader {
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
-    uint _file_byte_size;
-    void incremenet_read_ptr();
+    volatile bool _end_of_sequence;
+    //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
+    void push_file_name(const std::string& image_name);
+    bool pop_file_name(std::string& file_name);
+    void push_file_data(std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>& image);
+    bool pop_file_data(std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>& image);
+    size_t _file_count_all_shards;
+    void increment_read_ptr();
     int release();
     size_t get_file_shard_id();
-    //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t _file_count_all_shards;
-    void incremenet_file_id() { _file_id++; }
+    void increment_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    void read_image(unsigned char* buff, std::string file_name);
-    void read_image_names();
-    std::map<std::string, uint> _image_record_starting;
-    int _open_env = 1;
-    int rc;
-    MDB_env* _read_mdb_env;
-    MDB_dbi _read_mdb_dbi;
-    MDB_val _read_mdb_key, _read_mdb_value;
-    MDB_txn* _read_mdb_txn;
-    MDB_cursor* _read_mdb_cursor;
-    void open_env_for_read_image();
+    ExternalFileMode _file_mode;
 };

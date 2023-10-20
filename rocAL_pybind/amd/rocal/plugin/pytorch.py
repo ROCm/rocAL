@@ -59,6 +59,14 @@ class ROCALGenericIterator(object):
         self.output_memory_type = self.loader._output_memory_type
         self.iterator_length = b.getRemainingImages(self.loader._handle)
         self.display = display
+        self.batch_size = pipeline._batch_size
+        if self.loader._external_source_operator:
+            self.eos = False
+            self.index = 0
+            self.num_batches = self.loader._external_source.n // self.batch_size if self.loader._external_source.n % self.batch_size == 0 else (
+                self.loader._external_source.n // self.batch_size + 1)
+        else:
+            self.num_batches = None
         if self.loader._name is None:
             self.loader._name = self.loader._reader
 
@@ -66,6 +74,59 @@ class ROCALGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
+        if (self.loader._external_source_operator):
+            if (self.index + 1) == self.num_batches:
+                self.eos = True
+            if (self.index + 1) <= self.num_batches:
+                if self.loader._external_source_mode == types.EXTSOURCE_FNAME:
+                    data_loader_source = next(self.loader._external_source)
+                    kwargs_pybind = {
+                        "handle": self.loader._handle,
+                        "source_input_images": data_loader_source[0],
+                        "labels": data_loader_source[1],
+                        "input_batch_buffer": [],
+                        "roi_width": [],
+                        "roi_height": [],
+                        "decoded_width": self.loader._external_source_user_given_width,
+                        "decoded_height": self.loader._external_source_user_given_height,
+                        "channels": 3,
+                        "external_source_mode": self.loader._external_source_mode,
+                        "rocal_tensor_layout": types.NCHW,
+                        "eos": self.eos}
+                    b.externalSourceFeedInput(*(kwargs_pybind.values()))
+                if self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
+                    data_loader_source = next(self.loader._external_source)
+                    kwargs_pybind = {
+                        "handle": self.loader._handle,
+                        "source_input_images": [],
+                        "labels": data_loader_source[1],
+                        "input_batch_buffer": data_loader_source[0],
+                        "roi_width": [],
+                        "roi_height": data_loader_source[2],
+                        "decoded_width": self.loader._external_source_user_given_width,
+                        "decoded_height": self.loader._external_source_user_given_height,
+                        "channels": 3,
+                        "external_source_mode": self.loader._external_source_mode,
+                        "rocal_tensor_layout": types.NCHW,
+                        "eos": self.eos}
+                    b.externalSourceFeedInput(*(kwargs_pybind.values()))
+                if self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
+                    data_loader_source = next(self.loader._external_source)
+                    kwargs_pybind = {
+                        "handle": self.loader._handle,
+                        "source_input_images": [],
+                        "labels": data_loader_source[1],
+                        "input_batch_buffer": data_loader_source[0],
+                        "roi_width": data_loader_source[3],
+                        "roi_height": data_loader_source[2],
+                        "decoded_width": data_loader_source[5],
+                        "decoded_height": data_loader_source[4],
+                        "channels": 3,
+                        "external_source_mode": self.loader._external_source_mode,
+                        "rocal_tensor_layout": types.NCHW,
+                        "eos": self.eos}
+                    b.externalSourceFeedInput(*(kwargs_pybind.values()))
+            self.index = self.index + 1
         if self.loader.rocal_run() != 0:
             raise StopIteration
         else:
@@ -144,6 +205,11 @@ class ROCALGenericIterator(object):
 
             return self.output_list, self.bb_padded, self.labels_padded
 
+        elif self.loader._external_source_operator:
+            self.labels = self.loader.get_image_labels()
+            self.labels_tensor = self.labels_tensor.copy_(
+                torch.from_numpy(self.labels)).long()
+            return self.output_list, self.labels_tensor
         else:
             if self.loader._one_hot_encoding:
                 self.loader.get_one_hot_encoded_labels(
