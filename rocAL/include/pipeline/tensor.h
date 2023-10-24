@@ -71,8 +71,7 @@ struct Roi {
     }
     void set_ptr(unsigned* ptr, RocalMemType mem_type, unsigned batch_size, unsigned no_of_dims = 0) {
         if (!_roi_no_of_dims) _roi_no_of_dims = no_of_dims;
-        _stride = _roi_no_of_dims * 2;  // 2 denotes, one coordinate each for begin and end
-        _roi_buffer_size = batch_size * _stride * sizeof(unsigned);
+        _roi_buffer_size = batch_size * _roi_no_of_dims * 2 * sizeof(unsigned); // 2 denotes, one coordinate each for begin and end
         _roi_buf = ptr;
         if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
@@ -96,8 +95,9 @@ struct Roi {
     unsigned no_of_dims() { return _roi_no_of_dims; }
     size_t roi_buffer_size() { return _roi_buffer_size; }
     RoiCords& operator[](const int i) {
-        _roi_coords.begin = (_roi_buf + (i * _stride));
-        _roi_coords.shape = (_roi_buf + (i * _stride) + _roi_no_of_dims);
+        int idx = i * _roi_no_of_dims * 2;
+        _roi_coords.begin = (_roi_buf + idx);
+        _roi_coords.shape = (_roi_buf + idx + _roi_no_of_dims);
         return _roi_coords;
     }
 
@@ -105,7 +105,6 @@ struct Roi {
     unsigned* _roi_buf = nullptr;
     std::shared_ptr<unsigned> _roi_ptr;
     unsigned _roi_no_of_dims = 0;
-    unsigned _stride = 0;
     RoiCords _roi_coords;
     size_t _roi_buffer_size = 0;
 };
