@@ -97,7 +97,7 @@ struct Roi {
     RoiCords& operator[](const int i) {
         int idx = i * _roi_no_of_dims * 2;
         _roi_coords.begin = (_roi_buf + idx);
-        _roi_coords.shape = (_roi_buf + idx + _roi_no_of_dims);
+        _roi_coords.end = (_roi_buf + idx + _roi_no_of_dims);
         return _roi_coords;
     }
 

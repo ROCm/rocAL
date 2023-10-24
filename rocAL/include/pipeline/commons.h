@@ -133,7 +133,7 @@ typedef union {
  */
 typedef struct {
     unsigned *begin;
-    unsigned *shape;
+    unsigned *end;
 } RoiCords;
 
 struct Timing {

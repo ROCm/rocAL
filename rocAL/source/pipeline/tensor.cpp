@@ -213,7 +213,7 @@ void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) 
         if (shape[i].size() != (info().num_of_dims() - 1))
             THROW("The number of dims to be updated and the num of dims of tensor info does not match")
 
-        unsigned *tensor_shape = _info.roi()[i].shape;
+        unsigned *tensor_shape = _info.roi()[i].end;
         for (unsigned d = 0; d < shape[i].size(); d++) {
             if (shape[i][d] > max_shape[d]) {
                 WRN("Given ROI shape is larger than buffer shape for tensor[" + TOSTR(i) + "] " + TOSTR(shape[i][d]) + " > " + TOSTR(max_shape[d]))
