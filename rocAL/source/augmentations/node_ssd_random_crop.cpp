@@ -185,8 +185,8 @@ void SSDRandomCropNode::update_node() {
         } else if (_inputs[0]->info().roi_type() == RocalROIType::LTRB) {
             crop_dims[i].xywh.x = (crop_box.l) * input_roi[i].ltrb.l;
             crop_dims[i].xywh.y = (crop_box.t) * input_roi[i].ltrb.t;
-            crop_dims[i].xywh.w = (crop_box.r) * (input_roi[i].ltrb.r - input_roi[i].ltrb.l + 1);
-            crop_dims[i].xywh.h = (crop_box.b) * (input_roi[i].ltrb.b - input_roi[i].ltrb.t + 1);
+            crop_dims[i].xywh.w = (crop_box.r - crop_box.l) * (input_roi[i].ltrb.r - input_roi[i].ltrb.l + 1);
+            crop_dims[i].xywh.h = (crop_box.b - crop_box.t) * (input_roi[i].ltrb.b - input_roi[i].ltrb.t + 1);
         }
     }
     _outputs[0]->update_tensor_roi(_crop_width_val, _crop_height_val);
