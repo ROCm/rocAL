@@ -136,6 +136,7 @@ Hip_CopyInt8ToNCHW_fp32(
     const int maxOutW = outDims.y;
     const int img_offset = C * W * H;
     const int out_img_offset = C * maxOutW * maxOutH;
+    unsigned int cstride = maxOutW * maxOutH;
 
     if ((x >= maxOutW) || (y >= maxOutH))
         return;
@@ -145,7 +146,6 @@ Hip_CopyInt8ToNCHW_fp32(
         // copy float3  pixels to dst
         const uchar *inp_img = &inp_image_u8[n * img_offset];
         float *out_tensor = (float *)output_tensor + n * out_img_offset + dst_buf_offset;
-        unsigned int stride = maxOutW * maxOutH;
         if (C == 3) {
             float3 dst;
             if (reverse_channels)
@@ -153,8 +153,8 @@ Hip_CopyInt8ToNCHW_fp32(
             else
                 dst = make_float3((float)inp_img[srcIdx], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx + 2]) * multiplier + offset;
             out_tensor[dstIdx] = dst.x;
-            out_tensor[dstIdx + stride] = dst.y;
-            out_tensor[dstIdx + stride * 2] = dst.z;
+            out_tensor[dstIdx + cstride] = dst.y;
+            out_tensor[dstIdx + cstride * 2] = dst.z;
         } else {
             out_tensor[dstIdx] = (float)inp_img[srcIdx] * multiplier.x + offset.x;
         }
@@ -180,6 +180,7 @@ Hip_CopyInt8ToNCHW_fp16(
     const int maxOutW = outDims.y;
     const int img_offset = C * W * H;
     const int out_img_offset = C * maxOutW * maxOutH;
+    unsigned int cstride = maxOutW * maxOutH;
 
     if ((x >= maxOutW) || (y >= maxOutH))
         return;
@@ -189,7 +190,6 @@ Hip_CopyInt8ToNCHW_fp16(
         unsigned int srcIdx = (y * W + x) * C;
         // copy float3  pixels to dst
         unsigned int dstIdx = y * maxOutW + x;
-        unsigned int stride = maxOutW * maxOutH;
         if (C == 3) {
             float3 dst;
             if (reverse_channels)
@@ -197,8 +197,8 @@ Hip_CopyInt8ToNCHW_fp16(
             else
                 dst = make_float3((float)inp_img[srcIdx], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx + 2]) * multiplier + offset;
             out_tensor[dstIdx] = __float2half(dst.x);
-            out_tensor[dstIdx + stride] = __float2half(dst.y);
-            out_tensor[dstIdx + stride * 2] = __float2half(dst.z);
+            out_tensor[dstIdx + cstride] = __float2half(dst.y);
+            out_tensor[dstIdx + cstride * 2] = __float2half(dst.z);
         } else {
             out_tensor[dstIdx] = __float2half((float)inp_img[srcIdx] * multiplier.x + offset.x);
         }

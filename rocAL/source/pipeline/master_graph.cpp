@@ -452,7 +452,7 @@ MasterGraph::timing() {
 
 MasterGraph::Status
 MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1,
-                       float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type, int max_height, int max_width) {
+                       float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type, uint max_height, uint max_width) {
     if (no_more_processed_data())
         return MasterGraph::Status::NO_MORE_DATA;
 
@@ -678,9 +678,9 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
                                 int alignedLength = (max_width & ~7);  // multiple of 8
 
                                 __m256 fR, fG, fB;
-                                for (int row = 0; row < max_height; row++) {
+                                for (uint row = 0; row < max_height; row++) {
                                     unsigned char *in_buffer_row = reinterpret_cast<unsigned char *>(in_buffer) + (row * input_width_stride);
-                                    int col = 0;
+                                    uint col = 0;
                                     for (; col < alignedLength; col += 8) {
                                         __m256i pix0 = _mm256_loadu_si256((const __m256i *)in_buffer_row);
                                         pix0 = _mm256_permutevar8x32_epi32(pix0, _mm256_setr_epi32(0, 1, 2, 3, 3, 4, 5, 6));
@@ -746,9 +746,9 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
 
                                 __m256 fR, fG, fB;
                                 __m128i tempR, tempG, tempB;
-                                for (int row = 0; row < max_height; row++) {
+                                for (uint row = 0; row < max_height; row++) {
                                     unsigned char *in_buffer_row = reinterpret_cast<unsigned char *>(in_buffer) + (row * input_width_stride);
-                                    int col = 0;
+                                    uint col = 0;
                                     for (; col < alignedLength; col += 8) {
                                         __m256i pix0 = _mm256_loadu_si256((const __m256i *)in_buffer_row);
                                         pix0 = _mm256_permutevar8x32_epi32(pix0, _mm256_setr_epi32(0, 1, 2, 3, 3, 4, 5, 6));
