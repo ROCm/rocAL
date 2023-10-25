@@ -85,7 +85,7 @@ rocAL can be currently used to perform the following operations either with rand
 *  [LMBD Library](http://www.lmdb.tech/doc/)
 *  [RapidJSON](https://github.com/Tencent/rapidjson)
 *  [PyBind11](https://github.com/pybind/pybind11)
-*  [HIP] (https://github.com/ROCm-Developer-Tools/HIP)
+*  [HIP](https://github.com/ROCm-Developer-Tools/HIP)
 *  OpenMP
 *  C++17
 ## Build instructions
