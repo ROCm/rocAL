@@ -25,15 +25,9 @@ THE SOFTWARE.
 #include <commons.h>
 #include "coco_meta_data_reader.h"
 #include "coco_file_source_reader.h"
-#ifdef USE_STD_FILESYSTEM
-#include <filesystem>
-namespace filesys = std::filesystem;
-#elif defined(USE_EXP_FILESYSTEM)
-#include <experimental/filesystem>
-namespace filesys = std::experimental::filesystem;
-#endif
 #include "meta_data_reader_factory.h"
 #include "meta_data_graph_factory.h"
+#include "filesystem.h"
 
 #define USE_STDIO_FILE 0
 

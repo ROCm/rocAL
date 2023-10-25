@@ -21,13 +21,6 @@ THE SOFTWARE.
 */
 
 #pragma once
-#ifdef USE_STD_FILESYSTEM
-#include <filesystem>
-namespace filesys = std::filesystem;
-#elif defined(USE_EXP_FILESYSTEM)
-#include <experimental/filesystem>
-namespace filesys = std::experimental::filesystem;
-#endif
 #include <dirent.h>
 #include <sstream>
 #include <iostream>
@@ -40,6 +33,7 @@ extern "C"
 #include <libavcodec/avcodec.h>
 }
 #endif
+#include "filesystem.h"
 #include "commons.h"
 
 #ifdef ROCAL_VIDEO

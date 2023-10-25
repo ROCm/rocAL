@@ -25,14 +25,8 @@ THE SOFTWARE.
 #include <cstring>
 #include <algorithm>
 #include "cifar10_data_reader.h"
-#ifdef USE_STD_FILESYSTEM
-#include <filesystem>
-namespace filesys = std::filesystem;
-#elif defined(USE_EXP_FILESYSTEM)
-#include <experimental/filesystem>
-namespace filesys = std::experimental::filesystem;
-#endif
 #include <file_source_reader.h>
+#include "filesystem.h"
 
 CIFAR10DataReader::CIFAR10DataReader()
 {

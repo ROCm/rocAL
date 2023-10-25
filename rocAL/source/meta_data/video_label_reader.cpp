@@ -25,14 +25,8 @@ THE SOFTWARE.
 #include <iostream>
 #include <utility>
 #include <algorithm>
-#ifdef USE_STD_FILESYSTEM
-#include <filesystem>
-namespace filesys = std::filesystem;
-#elif defined(USE_EXP_FILESYSTEM)
-#include <experimental/filesystem>
-namespace filesys = std::experimental::filesystem;
-#endif
 #include "commons.h"
+#include "filesystem.h"
 #include "exception.h"
 
 using namespace std;

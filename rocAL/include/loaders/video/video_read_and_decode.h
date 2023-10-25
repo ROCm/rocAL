@@ -28,14 +28,8 @@ THE SOFTWARE.
 #include <cstring>
 #include <map>
 #include <tuple>
-#ifdef USE_STD_FILESYSTEM
-#include <filesystem>
-namespace filesys = std::filesystem;
-#elif defined(USE_EXP_FILESYSTEM)
-#include <experimental/filesystem>
-namespace filesys = std::experimental::filesystem;
-#endif
 #include "commons.h"
+#include "filesystem.h"
 #include "ffmpeg_video_decoder.h"
 #include "video_reader_factory.h"
 #include "timing_debug.h"

@@ -30,13 +30,8 @@ THE SOFTWARE.
 #include <memory.h>
 #include <stdint.h>
 #include "mxnet_recordio_reader.h"
-#ifdef USE_STD_FILESYSTEM
-#include <filesystem>
-namespace filesys = std::filesystem;
-#elif defined(USE_EXP_FILESYSTEM)
-#include <experimental/filesystem>
-namespace filesys = std::experimental::filesystem;
-#endif
+#include "filesystem.h"
+
 using namespace std;
 
 MXNetRecordIOReader::MXNetRecordIOReader()
