@@ -1580,6 +1580,7 @@ void MasterGraph::feed_external_input(std::vector<std::string> input_images_name
             for (unsigned i = 0; i < _user_batch_size; i++) {
                 auto info = default_labels_info;
                 _labels_tensor_list.push_back(new Tensor(info));
+                _labels_tensor_list[i]->set_mem_handle(static_cast<void*>(labels.data()));
             }
             _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
         }
