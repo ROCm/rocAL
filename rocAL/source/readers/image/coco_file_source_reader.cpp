@@ -109,23 +109,10 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
 
         // Copy the sorted file_names to _file_names vector to be used in sharding
         _file_names = _sorted_file_names;
-        // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
-        auto mid = std::upper_bound(_aspect_ratios.begin(), _aspect_ratios.end(), 1.0f) - _aspect_ratios.begin();
 
         // shuffle dataset if set
         if (ret == Reader::Status::OK && _shuffle) {
-            // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
-            std::random_shuffle(_file_names.begin(), _file_names.begin() + mid);
-            std::random_shuffle(_file_names.begin() + mid, _file_names.end());
-            std::vector<std::string> shuffled_filenames;
-            int split_count = _file_names.size() / _batch_count;  // Number of batches for this shard
-            std::vector<int> indexes(split_count);
-            std::iota(indexes.begin(), indexes.end(), 0);
-            // Shuffle the index vector and use the index to fetch batch size elements for decoding
-            std::random_shuffle(indexes.begin(), indexes.end());
-            for (auto const idx : indexes)
-                shuffled_filenames.insert(shuffled_filenames.end(), _file_names.begin() + idx * _batch_count, _file_names.begin() + idx * _batch_count + _batch_count);
-            _file_names = shuffled_filenames;
+            shuffle_with_aspect_ratios();
         }
     } else {
         // shuffle dataset if set
@@ -216,25 +203,27 @@ int COCOFileSourceReader::release() {
     return 0;
 }
 
+void COCOFileSourceReader::shuffle_with_aspect_ratios() {
+    // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
+    auto mid = std::upper_bound(_aspect_ratios.begin(), _aspect_ratios.end(), 1.0f) - _aspect_ratios.begin();
+    // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
+    std::random_shuffle(_file_names.begin(), _file_names.begin() + mid);
+    std::random_shuffle(_file_names.begin() + mid, _file_names.end());
+    std::vector<std::string> shuffled_filenames;
+    int split_count = _file_names.size() / _batch_count;  // Number of batches for this shard
+    std::vector<int> indexes(split_count);
+    std::iota(indexes.begin(), indexes.end(), 0);
+    // Shuffle the index vector and use the index to fetch batch size elements for decoding
+    std::random_shuffle(indexes.begin(), indexes.end());
+    for (auto const idx : indexes)
+        shuffled_filenames.insert(shuffled_filenames.end(), _file_names.begin() + idx * _batch_count, _file_names.begin() + idx * _batch_count + _batch_count);
+    _file_names = shuffled_filenames;
+}
+
 void COCOFileSourceReader::reset() {
     if (_meta_data_reader && _meta_data_reader->aspect_ratio_grouping()) {
         _file_names = _sorted_file_names;
-        // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
-        auto mid = std::upper_bound(_aspect_ratios.begin(), _aspect_ratios.end(), 1.0f) - _aspect_ratios.begin();
-        if (_shuffle) {
-            // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
-            std::random_shuffle(_file_names.begin(), _file_names.begin() + mid);
-            std::random_shuffle(_file_names.begin() + mid, _file_names.end());
-            std::vector<std::string> shuffled_filenames;
-            int split_count = _file_names.size() / _batch_count;  // Number of batches for this shard
-            std::vector<int> indexes(split_count);
-            std::iota(indexes.begin(), indexes.end(), 0);
-            // Shuffle the index vector and use the index to fetch batch size elements for decoding
-            std::random_shuffle(indexes.begin(), indexes.end());
-            for (auto const idx : indexes)
-                shuffled_filenames.insert(shuffled_filenames.end(), _file_names.begin() + idx * _batch_count, _file_names.begin() + idx * _batch_count + _batch_count);
-            _file_names = shuffled_filenames;
-        }
+        if (_shuffle) shuffle_with_aspect_ratios();
     } else if (_shuffle) {
         std::random_shuffle(_file_names.begin(), _file_names.end());
     }

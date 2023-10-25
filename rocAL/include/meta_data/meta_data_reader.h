@@ -82,7 +82,7 @@ struct MetaDataConfig {
 };
 
 class MetaDataReader {
-   private:
+   protected:
     bool _aspect_ratio_grouping;
 
    public:
@@ -98,6 +98,6 @@ class MetaDataReader {
     virtual bool exists(const std::string& image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
     virtual ImgSize lookup_image_size(const std::string& image_name) { return {}; }
-    void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { _aspect_ratio_grouping = aspect_ratio_grouping; }
-    bool aspect_ratio_grouping() const { return _aspect_ratio_grouping; }
+    virtual void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { return; }
+    virtual bool aspect_ratio_grouping() const { return {}; }
 };

@@ -675,7 +675,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
                                 __m256 padd0 = _mm256_set1_ps(offset0);
                                 __m256 padd1 = _mm256_set1_ps(offset1);
                                 __m256 padd2 = _mm256_set1_ps(offset2);
-                                int alignedLength = (max_width & ~7);  // multiple of 8
+                                uint alignedLength = (max_width & ~7);  // multiple of 8
 
                                 __m256 fR, fG, fB;
                                 for (uint row = 0; row < max_height; row++) {
@@ -742,7 +742,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
                                 __m256 padd0 = _mm256_set1_ps(offset0);
                                 __m256 padd1 = _mm256_set1_ps(offset1);
                                 __m256 padd2 = _mm256_set1_ps(offset2);
-                                int alignedLength = (max_width & ~7);  // multiple of 8
+                                uint alignedLength = (max_width & ~7);  // multiple of 8
 
                                 __m256 fR, fG, fB;
                                 __m128i tempR, tempG, tempB;
