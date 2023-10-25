@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 #if __cplusplus >= 201703L && __has_include(<filesystem>)
     #include <filesystem>
-    namespace fs = std::filesystem;
+    namespace filesys = std::filesystem;
 #elif __has_include(<experimental/filesystem>)
     #include <experimental/filesystem>
-    namespace fs = std::experimental::filesystem;
+    namespace filesys = std::experimental::filesystem;
 #endif
