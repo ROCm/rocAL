@@ -421,8 +421,10 @@ void
     }
 }
 
-void ROCAL_API_CALL rocalBoxEncoder(RocalContext p_context, std::vector<float>& anchors, float criteria,
-                                    std::vector<float>& means, std::vector<float>& stds, bool offset, float scale) {
+void
+    ROCAL_API_CALL
+    rocalBoxEncoder(RocalContext p_context, std::vector<float>& anchors, float criteria,
+                    std::vector<float>& means, std::vector<float>& stds, bool offset, float scale) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalBoxEncoder")
     auto context = static_cast<Context*>(p_context);

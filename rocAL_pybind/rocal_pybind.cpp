@@ -87,7 +87,7 @@ py::object wrapper_image_name(RocalContext context, int array_len) {
 py::object wrapper_copy_to_tensor(RocalContext context, py::object p,
                                   RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,
                                   float multiplier1, float multiplier2, float offset0, float offset1, float offset2,
-                                  bool reverse_channels, RocalOutputMemType output_mem_type, int max_height, int max_width) {
+                                  bool reverse_channels, RocalOutputMemType output_mem_type, uint max_height, uint max_width) {
     auto ptr = ctypes_void_ptr(p);
     // call pure C++ function
     int status = rocalToTensor(context, ptr, tensor_format, tensor_output_type, multiplier0,
@@ -489,15 +489,15 @@ PYBIND11_MODULE(rocal_pybind, m) {
             float *mask_buffer = static_cast<float *>(mask_data->at(i)->buffer());
             py::list poly_batch_list;
             for (unsigned j = prev_object_cnt; j < bbox_labels->at(i)->dims().at(0) + prev_object_cnt; j++) {
-                py::list single_image;
+                py::list polygons_buffer;
                 for (int k = 0; k < mask_count_ptr[j]; k++) {
-                    py::list polygons_buffer;
+                    py::list coords_buffer;
                     for (int l = 0; l < polygon_size_ptr[poly_cnt]; l++)
-                        polygons_buffer.append(mask_buffer[l]);
+                        coords_buffer.append(mask_buffer[l]);
                     mask_buffer += polygon_size_ptr[poly_cnt++];
-                    single_image.append(polygons_buffer);
+                    polygons_buffer.append(coords_buffer);
                 }
-                poly_batch_list.append(single_image);
+                poly_batch_list.append(polygons_buffer);
             }
             prev_object_cnt += bbox_labels->at(i)->dims().at(0);
             complete_list.append(poly_batch_list);

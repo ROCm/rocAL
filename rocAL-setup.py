@@ -306,7 +306,7 @@ else:
         # Install Packages for rocAL
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install libgflags-dev libgoogle-glog-dev liblmdb-dev')
+                  linuxSystemInstall_check+' install libgflags-dev libgoogle-glog-dev liblmdb-dev rapidjson-dev')
         # Yasm/Nasm for TurboJPEG
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -315,7 +315,7 @@ else:
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                   linuxSystemInstall_check+' install clang')
-    elif "redhat" in platfromInfo or "SLES" in platfromInfo:
+    elif "redhat" in platfromInfo or "SLES" in platfromInfo or "centos" in platfromInfo:
         # Nasm & Yasm
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -331,7 +331,7 @@ else:
         # lmbd
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install lmdb-devel')
+                  linuxSystemInstall_check+' install lmdb-devel rapidjson-devel')
 
     # turbo-JPEG - https://github.com/rrawther/libjpeg-turbo.git -- 2.0.6.2
     os.system(

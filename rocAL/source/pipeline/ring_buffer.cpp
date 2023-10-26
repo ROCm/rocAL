@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 #include "ring_buffer.h"
 
+#include <device_manager.h>
+
 RingBuffer::RingBuffer(unsigned buffer_depth) : BUFF_DEPTH(buffer_depth),
                                                 _dev_sub_buffer(buffer_depth),
                                                 _host_sub_buffers(buffer_depth),
@@ -162,7 +164,7 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> &
                           " failed " + TOSTR(err));
                 }
                 err = hipHostMalloc((void **)&_dev_roi_buffers[buffIdx][sub_idx], roi_buffer_size[sub_idx], hipHostMallocDefault);  // Allocate HIP page locked ROI buffers
-                if(err != hipSuccess || !_dev_roi_buffers[buffIdx][sub_idx]) {
+                if (err != hipSuccess || !_dev_roi_buffers[buffIdx][sub_idx]) {
                     _dev_roi_buffers.clear();
                     THROW("hipHostMalloc of size " + TOSTR(roi_buffer_size[sub_idx]) + " failed " + TOSTR(err))
                 }
