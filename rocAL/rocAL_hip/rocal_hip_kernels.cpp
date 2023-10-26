@@ -43,8 +43,8 @@ Hip_CopyInt8ToNHWC_fp32(
     const int C = nchw.y;
     const int maxOutH = out_dims.x;
     const int maxOutW = out_dims.y;
-    const int img_offset = C * W * H;
-    const int out_img_offset = C * maxOutW * maxOutH;
+    const int imgOffset = C * W * H;
+    const int outImgOffset = C * maxOutW * maxOutH;
 
     if ((x >= maxOutW) || (y >= maxOutH))
         return;
@@ -54,8 +54,8 @@ Hip_CopyInt8ToNHWC_fp32(
         // copy float3  pixels to dst
         if (C == 3) {
             float3 dst;
-            const uchar *inp_img = &inp_image_u8[n * img_offset];
-            float *out_tensor = (float *)((float *)output_tensor + dst_buf_offset + n * out_img_offset);
+            const uchar *inp_img = &inp_image_u8[n * imgOffset];
+            float *out_tensor = (float *)((float *)output_tensor + dst_buf_offset + n * outImgOffset);
             if (reverse_channels)
                 dst = make_float3((float)inp_img[src_idx + 2], (float)inp_img[src_idx + 1], (float)inp_img[src_idx]) * multiplier + offset;
             else
@@ -64,8 +64,8 @@ Hip_CopyInt8ToNHWC_fp32(
             out_tensor[dst_idx + 1] = dst.y;
             out_tensor[dst_idx + 2] = dst.z;
         } else {
-            const uchar *inp_img = &inp_image_u8[n * img_offset + dst_buf_offset];
-            float *out_tensor = (float *)output_tensor + dst_buf_offset + n * out_img_offset;
+            const uchar *inp_img = &inp_image_u8[n * imgOffset + dst_buf_offset];
+            float *out_tensor = (float *)output_tensor + dst_buf_offset + n * outImgOffset;
             out_tensor[dst_idx] = (float)inp_img[src_idx] * multiplier.x + offset.x;
         }
     }
@@ -88,18 +88,18 @@ Hip_CopyInt8ToNHWC_fp16(
     const int C = nchw.y;
     const int maxOutH = out_dims.x;
     const int maxOutW = out_dims.y;
-    const int img_offset = C * W * H;
-    const int out_img_offset = C * maxOutW * maxOutH;
+    const int imgOffset = C * W * H;
+    const int outImgOffset = C * maxOutW * maxOutH;
 
     if ((x >= maxOutW) || (y >= maxOutH))
         return;
     for (unsigned int n = 0; n < nchw.x; n++) {
-        __half *out_tensor = (__half *)output_tensor + dst_buf_offset + n * out_img_offset;
+        __half *out_tensor = (__half *)output_tensor + dst_buf_offset + n * outImgOffset;
         unsigned int src_idx = (y * W + x) * C;
         // copy float3  pixels to dst
         if (C == 3) {
             unsigned int dst_idx = y * maxOutW + x * 3;
-            const uchar *inp_img = &inp_image_u8[n * img_offset];
+            const uchar *inp_img = &inp_image_u8[n * imgOffset];
             float3 dst;
             if (reverse_channels)
                 dst = make_float3((float)inp_img[src_idx + 2], (float)inp_img[src_idx + 1], (float)inp_img[src_idx]) * multiplier + offset;
@@ -110,8 +110,8 @@ Hip_CopyInt8ToNHWC_fp16(
             out_tensor[dst_idx + 2] = __float2half(dst.z);
         } else {
             unsigned int dst_idx = y * maxOutW + x;
-            const uchar *inp_img = &inp_image_u8[n * img_offset];
-            float *out_tensor = (float *)output_tensor + n * out_img_offset;
+            const uchar *inp_img = &inp_image_u8[n * imgOffset];
+            float *out_tensor = (float *)output_tensor + n * outImgOffset;
             out_tensor[dst_idx] = __float2half((float)inp_img[src_idx] * multiplier.x + offset.x);
         }
     }
@@ -134,8 +134,8 @@ Hip_CopyInt8ToNCHW_fp32(
     const int C = nchw.y;
     const int maxOutH = out_dims.x;
     const int maxOutW = out_dims.y;
-    const int img_offset = C * W * H;
-    const int out_img_offset = C * maxOutW * maxOutH;
+    const int imgOffset = C * W * H;
+    const int outImgOffset = C * maxOutW * maxOutH;
     unsigned int cstride = maxOutW * maxOutH;
 
     if ((x >= maxOutW) || (y >= maxOutH))
@@ -144,8 +144,8 @@ Hip_CopyInt8ToNCHW_fp32(
         unsigned int src_idx = (y * W + x) * C;
         unsigned int dst_idx = y * maxOutW + x;
         // copy float3  pixels to dst
-        const uchar *inp_img = &inp_image_u8[n * img_offset];
-        float *out_tensor = (float *)output_tensor + n * out_img_offset + dst_buf_offset;
+        const uchar *inp_img = &inp_image_u8[n * imgOffset];
+        float *out_tensor = (float *)output_tensor + n * outImgOffset + dst_buf_offset;
         if (C == 3) {
             float3 dst;
             if (reverse_channels)
@@ -178,15 +178,15 @@ Hip_CopyInt8ToNCHW_fp16(
     const int C = nchw.y;
     const int maxOutH = out_dims.x;
     const int maxOutW = out_dims.y;
-    const int img_offset = C * W * H;
-    const int out_img_offset = C * maxOutW * maxOutH;
+    const int imgOffset = C * W * H;
+    const int outImgOffset = C * maxOutW * maxOutH;
     unsigned int cstride = maxOutW * maxOutH;
 
     if ((x >= maxOutW) || (y >= maxOutH))
         return;
     for (unsigned int n = 0; n < nchw.x; n++) {
-        __half *out_tensor = (__half *)output_tensor + n * out_img_offset + dst_buf_offset;
-        const uchar *inp_img = &inp_image_u8[n * img_offset];
+        __half *out_tensor = (__half *)output_tensor + n * outImgOffset + dst_buf_offset;
+        const uchar *inp_img = &inp_image_u8[n * imgOffset];
         unsigned int src_idx = (y * W + x) * C;
         // copy float3  pixels to dst
         unsigned int dst_idx = y * maxOutW + x;
