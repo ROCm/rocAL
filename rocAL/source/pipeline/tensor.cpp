@@ -110,10 +110,10 @@ void TensorInfo::reset_tensor_roi_buffers() {
     unsigned *roi_buf;
     auto roi_no_of_dims = _is_image ? 2 : (_num_of_dims - 1);
     auto roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size;  // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
-    allocate_host_or_pinned_mem((void **)&roi_buf, roi_size * roi_no_of_dims * 2 * sizeof(unsigned), _mem_type);
+    allocate_host_or_pinned_mem((void **)&roi_buf, roi_size * roi_no_of_dims * 2 * sizeof(unsigned), _mem_type);                       // 2 denotes, one coordinate each for begin and end
     _roi.set_ptr(roi_buf, _mem_type, roi_size, roi_no_of_dims);
     if (_is_image) {
-        ROI2DCords *roi = _roi.get_2D_roi();
+        Roi2DCords *roi = _roi.get_2D_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
             roi[i].xywh.w = _max_shape.at(0);
             roi[i].xywh.h = _max_shape.at(1);
@@ -179,8 +179,8 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
         auto max_shape = _info.max_shape();
         unsigned max_width = max_shape.at(0);
         unsigned max_height = max_shape.at(1);
-        ROI2DCords *roi = _info.roi().get_2D_roi();
-        
+        Roi2DCords *roi = _info.roi().get_2D_roi();
+
         if (width.size() != height.size())
             THROW("Batch size of Tensor height and width info does not match")
 
@@ -212,9 +212,9 @@ void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) 
     for (unsigned i = 0; i < info().batch_size(); i++) {
         if (shape[i].size() != (info().num_of_dims() - 1))
             THROW("The number of dims to be updated and the num of dims of tensor info does not match")
-        
-        unsigned *tensor_shape = _info.roi()[i].shape;
-        for(unsigned d = 0; d < shape[i].size(); d++) {
+
+        unsigned *tensor_shape = _info.roi()[i].end;
+        for (unsigned d = 0; d < shape[i].size(); d++) {
             if (shape[i][d] > max_shape[d]) {
                 WRN("Given ROI shape is larger than buffer shape for tensor[" + TOSTR(i) + "] " + TOSTR(shape[i][d]) + " > " + TOSTR(max_shape[d]))
                 tensor_shape[d] = max_shape[d];

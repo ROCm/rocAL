@@ -71,7 +71,7 @@ void CropResizeNode::update_node() {
     auto y1 = _crop_param->get_y1_arr_val();
     auto x2 = _crop_param->get_croph_arr_val();
     auto y2 = _crop_param->get_cropw_arr_val();
-    ROI2DCords *crop_dims = static_cast<ROI2DCords *>(_crop_coordinates);
+    Roi2DCords *crop_dims = static_cast<Roi2DCords *>(_crop_coordinates);
     for (unsigned i = 0; i < _batch_size; i++) {
         crop_dims[i].xywh.x = x1[i];
         crop_dims[i].xywh.y = y1[i];
