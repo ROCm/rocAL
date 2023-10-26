@@ -436,7 +436,7 @@ int main(int argc, const char **argv) {
                 RocalTensorList labels = rocalGetImageLabels(handle);
                 std::cerr << " Labels size : " << labels->size() << "\n";
                 for (int i = 0; i < labels->size(); i++) {
-                    int *labels_buffer = (int *)(labels->at(i)->buffer());
+                    int *labels_buffer = reinterpret_cast<int *>(labels->at(i)->buffer());
                     std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
                 }
             } break;
