@@ -485,7 +485,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         int prev_object_cnt = 0;
         auto mask_count_buf = mask_count.request();
         int *mask_count_ptr = static_cast<int *>(mask_count_buf.ptr);
-        for (int i = 0; i < bbox_labels->size(); i++) {  // nbatchSize
+        for (int i = 0; i < bbox_labels->size(); i++) {  // For each image in a batch, parse through the mask metadata buffers and convert them to polygons format
             float *mask_buffer = static_cast<float *>(mask_data->at(i)->buffer());
             py::list poly_batch_list;
             for (unsigned j = prev_object_cnt; j < bbox_labels->at(i)->dims().at(0) + prev_object_cnt; j++) {

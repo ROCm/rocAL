@@ -687,12 +687,9 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
                                         fB = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_R));
                                         fG = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_G));
                                         fR = _mm256_cvtepi32_ps(_mm256_shuffle_epi8(pix0, mask_B));
-                                        fB = _mm256_mul_ps(fB, pmul0);
-                                        fG = _mm256_mul_ps(fG, pmul1);
-                                        fR = _mm256_mul_ps(fR, pmul2);
-                                        fB = _mm256_add_ps(fB, padd0);
-                                        fG = _mm256_add_ps(fG, padd1);
-                                        fR = _mm256_add_ps(fR, padd2);
+                                        fB = _mm256_fmadd_ps(fB, pmul0, padd0);
+                                        fG = _mm256_fmadd_ps(fG, pmul1, padd1);
+                                        fR = _mm256_fmadd_ps(fR, pmul2, padd2);
                                         _mm256_storeu_ps(B_buf, fB);
                                         _mm256_storeu_ps(G_buf, fG);
                                         _mm256_storeu_ps(R_buf, fR);

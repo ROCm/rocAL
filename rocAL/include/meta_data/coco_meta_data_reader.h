@@ -40,7 +40,7 @@ class COCOMetaDataReader : public MetaDataReader {
     bool set_timestamp_mode() override { return false; }
     const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     void set_aspect_ratio_grouping(bool aspect_ratio_grouping) override { _aspect_ratio_grouping = aspect_ratio_grouping; }
-    bool aspect_ratio_grouping() const override { return _aspect_ratio_grouping; }
+    bool get_aspect_ratio_grouping() const override { return _aspect_ratio_grouping; }
     COCOMetaDataReader();
 
    private:
@@ -54,7 +54,7 @@ class COCOMetaDataReader : public MetaDataReader {
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
     std::map<std::string, ImgSize> _map_img_sizes;
-    std::map<int, std::string> _map_img_names;
+    std::map<int, std::string> _map_image_names_to_id;  // Maps image names to their image IDs
     std::map<std::string, ImgSize>::iterator itr;
     std::map<int, int> _label_info;
     std::map<int, int>::iterator _it_label;
