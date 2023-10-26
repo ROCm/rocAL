@@ -263,9 +263,9 @@ MasterGraph::build() {
         THROW("No output tensors are there, cannot create the pipeline")
 
 #if ENABLE_HIP || ENABLE_OPENCL
-    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size());
+    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #else
-    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size());
+    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
     create_single_graph();
@@ -493,7 +493,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
         cl_kernel kernel = _device["utility"][kernel_name];
         auto queue = _device.resources()->cmd_queue;
         unsigned dest_buf_offset = 0;
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
 
         if (_output_tensor_buffer == nullptr) {
             size_t size = output_tensor_info.data_size() * sizeof(cl_float);
@@ -550,7 +550,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
     if (output_tensor_info.mem_type() == RocalMemType::HIP) {
         unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
 
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
         unsigned dest_buf_offset = 0;
         // copy hip buffer to out_ptr
         // todo:: add callback routing to exchange memory pointer to avoid extra copy
@@ -571,7 +571,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
         if (output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
             unsigned int fp16 = (output_data_type == RocalTensorDataType::FP16);
 
-            auto output_buffers = _ring_buffer.get_read_buffers();
+            auto output_buffers = _ring_buffer.get_read_buffers().first;
             unsigned dest_buf_offset = 0;
 
             if (_output_tensor_buffer == nullptr) {
@@ -612,7 +612,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier
             float offset[3] = {offset0, offset1, offset2};
             size_t dest_buf_offset_start = 0;
 
-            auto output_buffers = _ring_buffer.get_read_buffers();
+            auto output_buffers = _ring_buffer.get_read_buffers().first;
             auto num_threads = _cpu_num_threads * 2;
             for (auto &&out_tensor : output_buffers) {
                 unsigned int single_tensor_size = w * c * h;
@@ -810,7 +810,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
         //  to avoid unnecessary sequence of synchronizations
 
         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
         auto out_image_idx = output_buffers.size();
         for (auto &&output_handle : output_buffers) {
             bool sync_flag = (--out_image_idx == 0) ? CL_TRUE : CL_FALSE;
@@ -833,7 +833,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
 
         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
         size_t dest_buf_offset = 0;
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
         for (auto &&output_handle : output_buffers) {
             hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr + dest_buf_offset), output_handle, size, _device.resources()->hip_stream);
             if (err) {
@@ -848,7 +848,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
     } else {
 #endif
         // get_read_buffer is blocking if _ring_buffer is empty, and blocks this thread till internal processing thread process a new batch and store in the _ring_buffer
-        auto output_buffer = _ring_buffer.get_read_buffers()[0];
+        auto output_buffer = _ring_buffer.get_read_buffers().first[0];
         memcpy(out_ptr, output_buffer, size);
 #if ENABLE_OPENCL || ENABLE_HIP
     }
@@ -859,10 +859,13 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
 
 TensorList *
 MasterGraph::get_output_tensors() {
-    auto output_ptr = _ring_buffer.get_read_buffers();
-    for (unsigned i = 0; i < _internal_tensor_list.size(); i++)
+    auto read_buffers = _ring_buffer.get_read_buffers();
+    auto output_ptr = read_buffers.first;
+    auto roi_ptr = read_buffers.second;
+    for (unsigned i = 0; i < _internal_tensor_list.size(); i++) {
         _output_tensor_list[i]->set_mem_handle(output_ptr[i]);
-
+        _output_tensor_list[i]->set_roi(roi_ptr[i]);
+    }
     return &_output_tensor_list;
 }
 
@@ -882,6 +885,7 @@ void MasterGraph::output_routine() {
             _rb_block_if_full_time.start();
             // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
             auto write_buffers = _ring_buffer.get_write_buffers();
+            auto write_output_buffers = write_buffers.first;
             _rb_block_if_full_time.end();
 
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
@@ -906,7 +910,7 @@ void MasterGraph::output_routine() {
 
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
-                _internal_tensor_list[idx]->swap_handle(write_buffers[idx]);
+                _internal_tensor_list[idx]->swap_handle(write_output_buffers[idx]);
 
             if (!_processing)
                 break;
@@ -933,6 +937,10 @@ void MasterGraph::output_routine() {
             _process_time.start();
             _graph->process();
             _process_time.end();
+
+            auto write_roi_buffers = write_buffers.second;   // Obtain ROI buffers from ring buffer
+            for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+                _internal_tensor_list[idx]->copy_roi(write_roi_buffers[idx]);   // Copy ROI from internal tensor's buffer to ring buffer
             _bencode_time.start();
             if (_is_box_encoder) {
                 auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
@@ -1413,7 +1421,7 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, flo
         float offset[3] = {offset0, offset1, offset2};
         size_t dest_buf_offset = 0;
 
-        auto output_buffers = _ring_buffer.get_read_buffers();
+        auto output_buffers = _ring_buffer.get_read_buffers().first;
 
         for (auto &&out_tensor : output_buffers) {
             for (unsigned batch = 0; batch < n; batch++) {

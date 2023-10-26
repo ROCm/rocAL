@@ -61,10 +61,10 @@ void ResizeNode::create_node() {
 }
 
 void ResizeNode::update_node() {
-    auto src_dims = _inputs[0]->info().get_roi();
+    Roi2DCords *src_dims = _inputs[0]->info().roi().get_2D_roi();
     for (unsigned i = 0; i < _batch_size; i++) {
-        _src_width = src_dims[i].x2;
-        _src_height = src_dims[i].y2;
+        _src_width = src_dims[i].xywh.w;
+        _src_height = src_dims[i].xywh.h;
         _dst_width = _out_width;
         _dst_height = _out_height;
         adjust_out_roi_size();

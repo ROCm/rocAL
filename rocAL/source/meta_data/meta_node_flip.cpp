@@ -43,13 +43,13 @@ void FlipMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaDataBa
         for (uint j = 0; j < bb_count; j++) {
             if (_h_flip_val[i]) {
                 auto l = coords_buf[j].l;
-                coords_buf[j].l = input_roi[i].x2 - coords_buf[j].r;
-                coords_buf[j].r = input_roi[i].x2 - l;
+                coords_buf[j].l = input_roi[i].xywh.w - coords_buf[j].r;
+                coords_buf[j].r = input_roi[i].xywh.w - l;
             }
             if (_v_flip_val[i]) {
                 auto t = coords_buf[j].t;
-                coords_buf[j].t = input_roi[i].y2 - coords_buf[j].b;
-                coords_buf[j].b = input_roi[i].y2 - t;
+                coords_buf[j].t = input_roi[i].xywh.h - coords_buf[j].b;
+                coords_buf[j].b = input_roi[i].xywh.h - t;
             }
 
             bb_coords.push_back(coords_buf[j]);
