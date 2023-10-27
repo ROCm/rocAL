@@ -99,15 +99,20 @@ py::object wrapperRocalExternalSourceFeedInput(
             uchar_arrays.push_back(static_cast<unsigned char *>(buf.ptr));
         }
     }
-
-    int status = rocalExternalSourceFeedInput(context, input_images_names, {1}, uchar_arrays, roi_width, roi_height, max_width, max_height, channels, mode, layout, eos);
+    bool enable_labels = true;
+    if (labels.is_none()) {
+        enable_labels = false;
+    }
+    int status = rocalExternalSourceFeedInput(context, input_images_names, enable_labels, uchar_arrays, roi_width, roi_height, max_width, max_height, channels, mode, layout, eos);
 
     // Update labels in the tensorList
-    auto labels_tensor_list = rocalGetImageLabels(context);
-    int *labels_ptr = static_cast<int *>(labels.request().ptr);
-    for (size_t i = 0; i < labels.size(); i++) {
-        labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
-        labels_ptr++;
+    if (enable_labels) {
+        auto labels_tensor_list = rocalGetImageLabels(context);
+        int *labels_ptr = static_cast<int *>(labels.request().ptr);
+        for (size_t i = 0; i < labels.size(); i++) {
+            labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
+            labels_ptr++;
+        }
     }
     return py::cast<py::none>(Py_None);
 }
