@@ -94,7 +94,7 @@ class ROCALGenericIterator(object):
                         "rocal_tensor_layout": types.NCHW,
                         "eos": self.eos}
                     b.externalSourceFeedInput(*(kwargs_pybind.values()))
-                if self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
+                elif self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
                     data_loader_source = next(self.loader._external_source)
                     kwargs_pybind = {
                         "handle": self.loader._handle,
@@ -110,7 +110,7 @@ class ROCALGenericIterator(object):
                         "rocal_tensor_layout": types.NCHW,
                         "eos": self.eos}
                     b.externalSourceFeedInput(*(kwargs_pybind.values()))
-                if self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
+                elif self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
                     data_loader_source = next(self.loader._external_source)
                     kwargs_pybind = {
                         "handle": self.loader._handle,

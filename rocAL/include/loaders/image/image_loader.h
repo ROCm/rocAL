@@ -90,7 +90,6 @@ class ImageLoader : public LoaderModule {
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_tensor_width, _max_tensor_height;
-    size_t _max_decoded_width, _max_decoded_height;
     bool _external_source_reader = false;  //!< Set to true if external source reader
     bool _external_input_eos = false;      //!< Set to true for last batch for the sequence
 };

@@ -101,6 +101,8 @@ py::object wrapperRocalExternalSourceFeedInput(
     }
 
     int status = rocalExternalSourceFeedInput(context, input_images_names, {1}, uchar_arrays, roi_width, roi_height, max_width, max_height, channels, mode, layout, eos);
+
+    // Update labels in the tensorList
     auto labels_tensor_list = rocalGetImageLabels(context);
     int *labels_ptr = static_cast<int *>(labels.request().ptr);
     for (size_t i = 0; i < labels.size(); i++) {
