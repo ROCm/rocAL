@@ -96,7 +96,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _storage_type = reader_config.storage_type();
 }
 
-void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, bool labels, std::vector<unsigned char *> input_buffer,
+void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char *> input_buffer,
                                              std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
                                              unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) {
     std::vector<size_t> image_size;
