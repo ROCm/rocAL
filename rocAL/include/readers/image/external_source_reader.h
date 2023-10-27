@@ -81,7 +81,6 @@ class ExternalSourceReader : public Reader {
     //! opens the folder containnig the images
     std::string _folder_path;
     std::queue<std::string> _file_names_queue;
-    std::vector<size_t> _file_sizes;
     std::vector<std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>> _file_data;
     std::queue<std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>> _images_data_queue;
     std::mutex _lock;
@@ -91,7 +90,6 @@ class ExternalSourceReader : public Reader {
     FILE* _current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
-    std::string _last_file_name;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
@@ -99,22 +97,21 @@ class ExternalSourceReader : public Reader {
     /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
     size_t _batch_count = 1;
     size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
     volatile bool _end_of_sequence;
+    ExternalFileMode _file_mode;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
+    size_t _file_count_all_shards;
     void push_file_name(const std::string& image_name);
     bool pop_file_name(std::string& file_name);
     void push_file_data(std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>& image);
     bool pop_file_data(std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned>& image);
-    size_t _file_count_all_shards;
     void increment_read_ptr();
     int release();
     size_t get_file_shard_id();
     void increment_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    ExternalFileMode _file_mode;
 };

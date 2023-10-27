@@ -101,5 +101,5 @@ class ImageReadAndDecode {
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     pCropCord _CropCord;
     RocalRandomCropDecParam *_random_crop_dec_param = nullptr;
-    StorageType _storage_type;
+    bool _is_external_source = false;
 };

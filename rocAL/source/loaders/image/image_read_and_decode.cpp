@@ -93,7 +93,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     }
     _num_threads = reader_config.get_cpu_num_threads();
     _reader = create_reader(reader_config);
-    _storage_type = reader_config.type();
+    _is_external_source = (reader_config.type() == StorageType::EXTERNAL_FILE_SOURCE);
 }
 
 void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char *> input_buffer,
@@ -164,7 +164,6 @@ ImageReadAndDecode::load(unsigned char *buff,
     const unsigned output_planes = std::get<1>(ret);
     const bool keep_original = decoder_keep_original;
     const size_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
-    bool is_external_source = (_storage_type == StorageType::EXTERNAL_FILE_SOURCE);
     bool skip_decode = false;
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
@@ -193,7 +192,7 @@ ImageReadAndDecode::load(unsigned char *buff,
             file_counter++;
         }
         //_file_load_time.end();// Debug timing
-    } else if (is_external_source) {
+    } else if (_is_external_source) {
         auto ext_reader = std::static_pointer_cast<ExternalSourceReader>(_reader);
         if (ext_reader->mode() == ExternalFileMode::RAWDATA_UNCOMPRESSED) {
             while ((file_counter != _batch_size) && _reader->count_items() > 0) {

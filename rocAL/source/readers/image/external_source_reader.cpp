@@ -32,7 +32,6 @@ ExternalSourceReader::ExternalSourceReader() {
     _curr_file_idx = 0;
     _current_file_size = 0;
     _current_fPtr = nullptr;
-    _loop = false;
     _file_id = 0;
     _shuffle = false;
     _file_count_all_shards = 0;
