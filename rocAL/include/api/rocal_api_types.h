@@ -358,19 +358,19 @@ typedef struct {
     unsigned x1, y1, x2, y2;
 } RocalROICords;
 
-/*! \brief RocalROICords struct
+/*! \brief RocalExternalSourceMode struct
  * \ingroup group_rocal_types
  */
 enum RocalExternalSourceMode {
-    /*! \brief ROCAL_EXTSOURCE_FNAME
+    /*! \brief list of filename passed as input
      */
-    ROCAL_EXTSOURCE_FNAME = 0,             // file mode (list of filename given as input)
-    /*! \brief ROCAL_EXTSOURCE_RAW_COMPRESSED
+    ROCAL_EXTSOURCE_FNAME = 0,
+    /*! \brief compressed raw buffer passed as input
      */
-    ROCAL_EXTSOURCE_RAW_COMPRESSED = 1,    // Compressed Raw buffer for set of images
-    /*! \brief ROCAL_EXTSOURCE_RAW_UNCOMPRESSED
+    ROCAL_EXTSOURCE_RAW_COMPRESSED = 1,
+    /*! \brief uncompressed raw buffer passed as input
      */
-    ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,  // Uncompressed Raw buffer for set of images
+    ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

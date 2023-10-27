@@ -101,7 +101,7 @@ size_t ExternalSourceReader::open() {
         std::tuple<unsigned char*, size_t, int, int, int, unsigned, unsigned> image;
         bool ret = pop_file_data(image);
         if (_end_of_sequence && !ret) {
-            std::cerr << "\n EOS || POP FAILED ";
+            WRN(" EOS || POP FAILED ")
             return 0;
         }
         _file_data[_curr_file_idx] = image;

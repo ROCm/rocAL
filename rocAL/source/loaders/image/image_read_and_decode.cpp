@@ -21,8 +21,10 @@ THE SOFTWARE.
 */
 
 #include "image_read_and_decode.h"
+
 #include <cstring>
 #include <iterator>
+
 #include "decoder_factory.h"
 #include "external_source_reader.h"
 
@@ -191,8 +193,6 @@ ImageReadAndDecode::load(unsigned char *buff,
             file_counter++;
         }
         //_file_load_time.end();// Debug timing
-        skip_decode = true;
-        //_file_load_time.end();// Debug timing
     } else if (is_external_source) {
         auto ext_reader = std::static_pointer_cast<ExternalSourceReader>(_reader);
         if (ext_reader->mode() == ExternalFileMode::RAWDATA_UNCOMPRESSED) {
@@ -237,6 +237,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 file_counter++;
             }
         }
+        // return LoaderModuleStatus::OK;
     } else {
         while ((file_counter != _batch_size) && _reader->count_items() > 0) {
             size_t fsize = _reader->open();

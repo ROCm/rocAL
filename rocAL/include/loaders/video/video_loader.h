@@ -58,7 +58,7 @@ class VideoLoader : public LoaderModule {
     void shut_down() override;
     void feed_external_input(std::vector<std::string> input_images_names, bool labels, std::vector<unsigned char*> input_buffer,
                              std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
-                             unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) override { return; }
+                             unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) override {}
 
    private:
     bool is_out_of_data();
