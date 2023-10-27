@@ -39,7 +39,6 @@ class Cifar10MetaDataReader : public MetaDataReader {
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
     std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
-    void add_labels(std::vector<std::string> image_name, std::vector<int> label) override{};
     Cifar10MetaDataReader();
 
    private:

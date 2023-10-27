@@ -41,8 +41,7 @@ enum class MetaDataReaderType {
     CAFFE2_DETECTION_META_DATA_READER,
     TF_DETECTION_META_DATA_READER,
     VIDEO_LABEL_READER,
-    MXNET_META_DATA_READER,
-    EXTERNAL_SOURCE_LABEL_READER
+    MXNET_META_DATA_READER
 };
 
 struct MetaDataConfig {
@@ -89,5 +88,4 @@ class MetaDataReader {
     virtual const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() = 0;
     virtual bool exists(const std::string& image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
-    virtual void add_labels(std::vector<std::string> image_name, std::vector<int> label) = 0;
 };
