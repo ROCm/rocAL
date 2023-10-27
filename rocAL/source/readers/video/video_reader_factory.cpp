@@ -29,7 +29,7 @@ THE SOFTWARE.
 
 #ifdef ROCAL_VIDEO
 std::shared_ptr<VideoReader> create_video_reader(ReaderConfig config) {
-    switch (config.storage_type()) {
+    switch (config.type()) {
         case StorageType::VIDEO_FILE_SYSTEM: {
             auto ret = std::make_shared<VideoFileSourceReader>();
             if (ret->initialize(config) != VideoReader::Status::OK)

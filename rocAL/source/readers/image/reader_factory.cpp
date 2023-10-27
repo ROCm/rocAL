@@ -36,7 +36,7 @@ THE SOFTWARE.
 #include "tf_record_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
-    switch (config.storage_type()) {
+    switch (config.type()) {
         case StorageType ::FILE_SYSTEM: {
             auto ret = std::make_shared<FileSourceReader>();
             if (ret->initialize(config) != Reader::Status::OK)

@@ -93,7 +93,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     }
     _num_threads = reader_config.get_cpu_num_threads();
     _reader = create_reader(reader_config);
-    _storage_type = reader_config.storage_type();
+    _storage_type = reader_config.type();
 }
 
 void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char *> input_buffer,
