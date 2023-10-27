@@ -1975,7 +1975,7 @@ rocalJpegExternalFileSource(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalExtSourceMode external_source_mode) {
+    RocalExternalSourceMode external_source_mode) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {

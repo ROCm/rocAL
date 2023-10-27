@@ -83,20 +83,20 @@ RocalStatus ROCAL_API_CALL
 rocalExternalSourceFeedInput(
     RocalContext p_context,
     std::vector<std::string> input_images_names,
-    std::vector<int> labels,
+    bool labels,
     std::vector<unsigned char*> input_buffer,
     std::vector<unsigned> roi_width,
     std::vector<unsigned> roi_height,
     unsigned int max_width,
     unsigned int max_height,
     int channels,
-    RocalExtSourceMode mode,
+    RocalExternalSourceMode mode,
     RocalTensorLayout layout,
     bool eos) {
     auto context = static_cast<Context*>(p_context);
     try {
-        ExternalFileMode external_file_mode = (ExternalFileMode)mode;
-        RocalTensorlayout format = (RocalTensorlayout)layout;
+        ExternalFileMode external_file_mode = static_cast<ExternalFileMode>(mode);
+        RocalTensorlayout format = static_cast<RocalTensorlayout>(layout);
         context->master_graph->feed_external_input(input_images_names, labels, input_buffer,
                                                    roi_width, roi_height, max_width, max_height, channels,
                                                    external_file_mode, format, eos);

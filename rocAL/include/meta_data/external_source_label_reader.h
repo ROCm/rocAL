@@ -22,9 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <dirent.h>
-
 #include <map>
-
 #include "commons.h"
 #include "meta_data.h"
 #include "meta_data_reader.h"

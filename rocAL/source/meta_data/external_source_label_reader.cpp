@@ -21,13 +21,10 @@ THE SOFTWARE.
 */
 
 #include "external_source_label_reader.h"
-
 #include <string.h>
-
 #include <algorithm>
 #include <iostream>
 #include <utility>
-
 #include "commons.h"
 #include "exception.h"
 

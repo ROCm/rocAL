@@ -53,7 +53,7 @@ class ImageReadAndDecode {
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader);
     std::vector<std::vector<float>> &get_batch_random_bbox_crop_coords();
     void set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> batch_crop_coords);
-    void feed_external_input(std::vector<std::string> input_images_names, std::vector<int> labels, std::vector<unsigned char *> input_buffer,
+    void feed_external_input(std::vector<std::string> input_images_names, bool labels, std::vector<unsigned char *> input_buffer,
                              std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
                              unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos);
 

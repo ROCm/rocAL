@@ -236,12 +236,12 @@ int main(int argc, const char **argv) {
         input1 = rocalJpegExternalFileSource(
             handle, folderPath, color_format, false, false, false,
             ROCAL_USE_USER_GIVEN_SIZE, maxwidth, maxheight,
-            RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExtSourceMode(mode));
+            RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExternalSourceMode(mode));
     } else {
         input1 = rocalJpegExternalFileSource(
             handle, folderPath, color_format, false, false, false,
             ROCAL_USE_USER_GIVEN_SIZE, decode_width, decode_height,
-            RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExtSourceMode(mode));
+            RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExternalSourceMode(mode));
     }
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cerr << "JPEG source could not initialize : "
@@ -278,6 +278,7 @@ int main(int argc, const char **argv) {
     int counter = 0;
     std::vector<std::string> names;
     std::vector<int> labels;
+    bool setlabels = false;
     names.resize(inputBatchSize);
     labels.resize(total_images);
     int iter_cnt = 0;
@@ -326,19 +327,19 @@ int main(int argc, const char **argv) {
             std::cerr << "\n************************** Gonna process Batch *************************" << index;
             std::cerr << "\n Mode ********************* " << mode;
             if (mode == 0) {
-                rocalExternalSourceFeedInput(handle, input_images, label_buffer, {}, {}, {},
+                rocalExternalSourceFeedInput(handle, input_images, setlabels, {}, {}, {},
                                              decode_width, decode_height, channels,
-                                             RocalExtSourceMode(0),
+                                             RocalExternalSourceMode(0),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 1) {
-                rocalExternalSourceFeedInput(handle, {}, label_buffer, input_batch_buffer, {},
+                rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer, {},
                                              roi_height, decode_width, decode_height,
-                                             channels, RocalExtSourceMode(mode),
+                                             channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 2) {
-                rocalExternalSourceFeedInput(handle, {}, label_buffer, input_batch_buffer,
+                rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer,
                                              roi_width, roi_height, maxwidth, maxheight,
-                                             channels, RocalExtSourceMode(mode),
+                                             channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             }
         }
@@ -433,12 +434,17 @@ int main(int argc, const char **argv) {
             case 1:  // classification pipeline
             {
                 std::cerr << "\n Classification Pipeline called - Meta data call";
-                RocalTensorList labels = rocalGetImageLabels(handle);
-                std::cerr << " Labels size : " << labels->size() << "\n";
-                for (int i = 0; i < labels->size(); i++) {
-                    int *labels_buffer = reinterpret_cast<int *>(labels->at(i)->buffer());
-                    std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+                if(setlabels)
+                {
+                    RocalTensorList labels = rocalGetImageLabels(handle);
+                    std::cerr << " \n Labels size : " << labels->size() << "\n";
+                    for (int i = 0; i < labels->size(); i++) {
+                        int *labels_buffer = reinterpret_cast<int *>(labels->at(i)->buffer());
+                        std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+                    }
                 }
+                else
+                    std::cerr<<"\n labels are not set";
             } break;
             default: {
                 std::cerr << "Not a valid pipeline type ! Exiting!\n";

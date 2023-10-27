@@ -21,12 +21,8 @@ THE SOFTWARE.
 */
 
 #include "image_read_and_decode.h"
-
-#include <unistd.h>
-
 #include <cstring>
 #include <iterator>
-
 #include "decoder_factory.h"
 #include "external_source_reader.h"
 
@@ -98,14 +94,15 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _storage_type = reader_config.storage_type();
 }
 
-void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<int> labels, std::vector<unsigned char *> input_buffer,
+void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, bool labels, std::vector<unsigned char *> input_buffer,
                                              std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
                                              unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) {
     std::vector<size_t> image_size;
     image_size.reserve(roi_height.size());
+    size_t max_image_size = max_width * max_height * channels;
     for (unsigned int i = 0; i < roi_height.size(); i++) {
         if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
-            image_size[i] = (max_width * max_height * channels);
+            image_size[i] = max_image_size;
         else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
             image_size[i] = roi_height[i];
     }
@@ -131,7 +128,7 @@ void ImageReadAndDecode::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxC
     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
 }
 
-std::vector<std::vector<float>> &
+std::vector<std::vector<float>>&
 ImageReadAndDecode::get_batch_random_bbox_crop_coords() {
     // Return the crop co-ordinates for a batch of images
     return _crop_coords_batch;

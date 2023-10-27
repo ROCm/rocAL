@@ -89,7 +89,7 @@ py::object wrapperRocalExternalSourceFeedInput(
     py::array &labels, py::list arrays,
     std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
     unsigned int max_width, unsigned int max_height, int channels,
-    RocalExtSourceMode mode, RocalTensorLayout layout, bool eos) {
+    RocalExternalSourceMode mode, RocalTensorLayout layout, bool eos) {
     std::vector<unsigned char *> uchar_arrays;
     if (input_images_names.size() == 0) {  // Used for mode 1 and mode 2 for passing decoded buffers
         size_t numArrays = py::len(arrays);
@@ -370,7 +370,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
         .export_values();
-    py::enum_<RocalExtSourceMode>(types_m, "RocalExtSourceMode", "Rocal Extrernal Source Mode")
+    py::enum_<RocalExternalSourceMode>(types_m, "RocalExternalSourceMode", "Rocal Extrernal Source Mode")
         .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)

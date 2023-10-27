@@ -1573,13 +1573,13 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes) {
     return bbox_encoded_output;
 }
 
-void MasterGraph::feed_external_input(std::vector<std::string> input_images_names, std::vector<int> labels, std::vector<unsigned char *> input_buffer,
+void MasterGraph::feed_external_input(std::vector<std::string> input_images_names, bool labels, std::vector<unsigned char *> input_buffer,
                                       std::vector<unsigned> roi_width, std::vector<unsigned> roi_height, unsigned int max_width, unsigned int max_height, int channels,
                                       ExternalFileMode mode, RocalTensorlayout layout, bool eos) {
     _external_source_eos = eos;
     _loader_module->feed_external_input(input_images_names, labels, input_buffer, roi_width, roi_height, max_width, max_height, channels, mode, eos);
 
-    if (!labels.empty()) {
+    if (labels) {
         if (_labels_tensor_list.size() == 0) {  // Labels tensor list is initialized only once for the pipeline
             std::vector<size_t> dims = {1};
             auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);
@@ -1588,7 +1588,6 @@ void MasterGraph::feed_external_input(std::vector<std::string> input_images_name
             for (unsigned i = 0; i < _user_batch_size; i++) {
                 auto info = default_labels_info;
                 _labels_tensor_list.push_back(new Tensor(info));
-                _labels_tensor_list[i]->set_mem_handle(static_cast<void*>(labels.data()));
             }
             _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
         }
