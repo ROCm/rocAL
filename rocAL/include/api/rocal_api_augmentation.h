@@ -307,7 +307,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalContrastFixed(RocalContext context, R
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTensor input, bool is_output,
-                                                RocalIntParam horizonal_flag = NULL, RocalIntParam vertical_flag = NULL,
+                                                RocalIntParam horizonal_flag = NULL, RocalIntParam vertical_flag = NULL, RocalIntParam depth_flag = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -323,7 +323,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTenso
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFlipFixed(RocalContext context, RocalTensor input,
-                                                     int horizonal_flag, int vertical_flag, bool is_output,
+                                                     int horizonal_flag, int vertical_flag, int depth_flag, bool is_output,
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -561,6 +561,43 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoise(RocalContext context, RocalT
 extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, RocalTensor input,
                                                          float noise_prob, float salt_prob,
                                                          float salt_val, float pepper_val,
+                                                         bool is_output, int seed = 0,
+                                                         RocalTensorLayout output_layout = ROCAL_NONE,
+                                                         RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies gaussian noise effect on images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] mean Mean of the distribution
+ * \param [in] std_dev Standard deviation of the distribution
+ * \param [in] seed seed value for the random number generator
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoise(RocalContext context, RocalTensor input,
+                                                    bool is_output,
+                                                    RocalFloatParam mean = NULL, RocalFloatParam std_dev = NULL,
+                                                    int seed = 0,
+                                                    RocalTensorLayout output_layout = ROCAL_NONE,
+                                                    RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies gaussian noise effect on images with fixed parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] mean Mean of the distribution
+ * \param [in] std_dev Standard deviation of the distribution
+ * \param [in] seed seed value for the random number generator
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoiseFixed(RocalContext context, RocalTensor input,
+                                                         float mean, float std_dev,
                                                          bool is_output, int seed = 0,
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);

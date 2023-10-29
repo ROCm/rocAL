@@ -29,17 +29,19 @@ class FlipNode : public Node {
    public:
     FlipNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     FlipNode() = delete;
-    void init(int h_flag, int v_flag);
-    void init(IntParam *h_flag_param, IntParam *v_flag_param);
+    void init(int h_flag, int v_flag, int d_flag);
+    void init(IntParam *h_flag_param, IntParam *v_flag_param, IntParam *d_flag_param);
     vx_array get_horizontal_flip() { return _horizontal.default_array(); }
     vx_array get_vertical_flip() { return _vertical.default_array(); }
+    vx_array get_depth_flip() { return _depth.default_array(); }
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<int> _horizontal, _vertical;
+    ParameterVX<int> _horizontal, _vertical, _depth;
     constexpr static int HORIZONTAL_RANGE[2] = {0, 1};
     constexpr static int VERTICAL_RANGE[2] = {0, 1};
+    constexpr static int DEPTH_RANGE[2] = {0, 1};
 };

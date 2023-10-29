@@ -21,21 +21,20 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_flip.h"
+#include "node_gaussian_noise.h"
 #include "exception.h"
 
-FlipNode::FlipNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
-                                                                                                _horizontal(HORIZONTAL_RANGE[0], HORIZONTAL_RANGE[1]),
-                                                                                                _vertical(VERTICAL_RANGE[0], VERTICAL_RANGE[1]),
-                                                                                                _depth(DEPTH_RANGE[0], DEPTH_RANGE[1]) {}
+GaussianNoiseNode::GaussianNoiseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
+                                                                                                      _mean(MEAN_RANGE[0], MEAN_RANGE[1]),
+                                                                                                      _stddev(STDDEV_RANGE[0], STDDEV_RANGE[1]) {}
 
-void FlipNode::create_node() {
+void GaussianNoiseNode::create_node() {
     if (_node)
         return;
 
-    _horizontal.create_array(_graph, VX_TYPE_UINT32, _batch_size);
-    _vertical.create_array(_graph, VX_TYPE_UINT32, _batch_size);
-    _depth.create_array(_graph, VX_TYPE_UINT32, _batch_size);
+    _mean.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _stddev.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    vx_scalar seed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_seed);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -43,27 +42,26 @@ void FlipNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    _node = vxExtRppFlip(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                         _horizontal.default_array(), _vertical.default_array(), _depth.default_array(), input_layout_vx, output_layout_vx,roi_type_vx);
+    _node = vxExtRppGaussianNoise(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _mean.default_array(),
+                          _stddev.default_array(), seed, input_layout_vx, output_layout_vx, roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the flip (vxExtRppFlip) node failed: " + TOSTR(status))
+        THROW("Adding the Noise (vxExtRppGaussianNoise) node failed: " + TOSTR(status))
 }
 
-void FlipNode::init(int h_flag, int v_flag, int d_flag) {
-    _horizontal.set_param(h_flag);
-    _vertical.set_param(v_flag);
-    _depth.set_param(d_flag);
+void GaussianNoiseNode::init(float mean, float stddev, int seed) {
+    _mean.set_param(mean);
+    _stddev.set_param(stddev);
+    _seed = seed;
 }
 
-void FlipNode::init(IntParam *h_flag, IntParam *v_flag, IntParam *d_flag) {
-    _horizontal.set_param(core(h_flag));
-    _vertical.set_param(core(v_flag));
-    _depth.set_param(core(d_flag));
+void GaussianNoiseNode::init(FloatParam* mean_param, FloatParam* stddev_param, int seed) {
+    _mean.set_param(core(mean_param));
+    _stddev.set_param(core(stddev_param));
+    _seed = seed;
 }
 
-void FlipNode::update_node() {
-    _horizontal.update_array();
-    _vertical.update_array();
-    _depth.update_array();
+void GaussianNoiseNode::update_node() {
+    _mean.update_array();
+    _stddev.update_array();
 }
