@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <lmdb.h>
 #include "meta_data_reader.h"
 #include "video_properties.h"
+#include "tensor.h"
 
 #define CHECK_LMDB_RETURN_STATUS(status)                                                          \
     do {                                                                                          \
@@ -44,9 +45,10 @@ enum class StorageType {
     CAFFE_LMDB_RECORD = 3,
     CAFFE2_LMDB_RECORD = 4,
     COCO_FILE_SYSTEM = 5,
-    SEQUENCE_FILE_SYSTEM = 6,
-    MXNET_RECORDIO = 7,
-    VIDEO_FILE_SYSTEM = 8,
+    MXNET_RECORDIO = 6,
+    VIDEO_FILE_SYSTEM = 7,
+    SEQUENCE_FILE_SYSTEM = 8,
+    NUMPY_DATA = 9
 };
 
 struct ReaderConfig {
@@ -120,6 +122,27 @@ struct ImageRecordIOHeader {
                            *  image_id[0] is used to store image id
                            */
 };
+
+struct NumpyHeaderData {
+    public:
+    std::vector<unsigned> _shape;
+    RocalTensorDataType _type_info;
+    bool _fortran_order = false;
+    int64_t _data_offset = 0;
+
+    RocalTensorDataType type() const { return _type_info; };
+
+    size_t size() const {
+        size_t num_elements = 1;
+        for (const auto& dim: _shape)
+            num_elements *= dim;
+        return num_elements;
+    };
+
+    size_t nbytes() const { return tensor_data_size(_type_info) * size(); }
+    std::vector<unsigned> shape() const { return _shape; }
+};
+
 class Reader {
    public:
     enum class Status {
@@ -148,6 +171,10 @@ class Reader {
 
     //! Copies the data of the opened item to the buf
     virtual size_t read_data(unsigned char *buf, size_t read_size) = 0;
+
+    virtual const NumpyHeaderData get_numpy_header_data() { return {}; }
+
+    virtual size_t read_numpy_data(void *buf, size_t read_size, std::vector<size_t> max_shape) { return 0; }
 
     //! Closes the opened item
     virtual int close() = 0;

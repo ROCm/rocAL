@@ -576,6 +576,48 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
                                                                         unsigned out_width = 0, unsigned out_height = 0,
                                                                         const char* record_name_prefix = "");
 
+/*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.
+ * \ingroup group_rocal_data_loaders
+ * \param [in] context Rocal context
+ * \param [in] source_path A NULL terminated char string pointing to the location on the disk
+ * \param [in] internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
+ * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
+ * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
+ * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
+ * \param [in] decode_size_policy Decode size policy used for the loader
+ * \return Reference to the output tensor
+ */
+extern "C"  RocalTensor  ROCAL_API_CALL rocalNumpyFileSource(
+                 RocalContext p_context,
+                 const char* source_path,
+                 unsigned internal_shard_count,
+                 bool is_output = false,
+                 bool shuffle = false,
+                 bool loop = false,
+                 RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE);
+
+/*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.
+ * \ingroup group_rocal_data_loaders
+ * \param [in] context Rocal context
+ * \param [in] source_path A NULL terminated char string pointing to the location on the disk
+ * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
+ * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
+ * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
+ * \param [in] decode_size_policy Decode size policy used for the loader
+ * \param [in] shard_id Shard id for this loader
+ * \param [in] shard_count Total shard count
+ * \return Reference to the output tensor
+ */
+extern "C"  RocalTensor  rocalNumpyFileSourceSingleShard(
+                 RocalContext p_context,
+                 const char* source_path,
+                 bool is_output = false,
+                 bool shuffle = false,
+                 bool loop = false,
+                 RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
+                 unsigned shard_id = 0,
+                 unsigned shard_count = 1);
+
 /*!
  * \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.
  * \ingroup group_rocal_data_loaders

@@ -91,7 +91,7 @@ void CropMirrorNormalizeNode::create_node() {
 }
 
 void CropMirrorNormalizeNode::update_node() {
-    _crop_param->set_image_dimensions(_inputs[0]->info().get_roi());
+    _crop_param->set_image_dimensions(_inputs[0]->info().roi().get_2D_roi());
     _crop_param->update_array();
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
     _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
@@ -101,7 +101,7 @@ void CropMirrorNormalizeNode::update_node() {
     // Obtain the crop coordinates and update the roi
     auto x1 = _crop_param->get_x1_arr_val();
     auto y1 = _crop_param->get_y1_arr_val();
-    RocalROI *src_roi = static_cast<RocalROI *>(_crop_coordinates);
+    ROI2DCords *src_roi = static_cast<ROI2DCords *>(_crop_coordinates);
     for (unsigned i = 0; i < _batch_size; i++) {
         src_roi[i].x1 = x1[i];
         src_roi[i].y1 = y1[i];

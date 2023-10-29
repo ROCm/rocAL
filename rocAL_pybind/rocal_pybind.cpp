@@ -89,6 +89,8 @@ std::unordered_map<int, std::string> rocalToPybindLayout = {
     {1, "NCHW"},
     {2, "NFHWC"},
     {3, "NFCHW"},
+    {4, "NDHWC"},
+    {5, "NCDHW"},
 };
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
@@ -317,6 +319,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
         .value("NFCHW", ROCAL_NFCHW)
+        .value("NDHWC", ROCAL_NDHWC)
+        .value("NCDHW", ROCAL_NCDHW)
         .export_values();
     py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
         .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -510,6 +514,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("sequenceReader", &rocalSequenceReader, "Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
           py::return_value_policy::reference);
     m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
+          py::return_value_policy::reference);
+    m.def("numpyReaderSource", &rocalNumpyFileSource, "Reads file from the source given and decodes it according to the policy",
+          py::return_value_policy::reference);
+    m.def("numpyReaderSourceShard", &rocalNumpyFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);

@@ -84,7 +84,7 @@ class Pipeline(object):
         self._check_ops_decoder = [
             "ImageDecoder", "ImageDecoderSlice", "ImageDecoderRandomCrop", "ImageDecoderRaw"]
         self._check_ops_reader = ["labelReader", "TFRecordReaderClassification", "TFRecordReaderDetection",
-                                  "COCOReader", "Caffe2Reader", "Caffe2ReaderDetection", "CaffeReader", "CaffeReaderDetection"]
+                                  "COCOReader", "Caffe2Reader", "Caffe2ReaderDetection", "CaffeReader", "CaffeReaderDetection", "NumpyReader"]
         self._batch_size = batch_size
         self._num_threads = num_threads
         self._device_id = device_id

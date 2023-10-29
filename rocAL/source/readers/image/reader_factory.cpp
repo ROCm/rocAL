@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "coco_file_source_reader.h"
 #include "file_source_reader.h"
 #include "mxnet_recordio_reader.h"
+#include "numpy_data_reader.h"
 #include "sequence_file_source_reader.h"
 #include "tf_record_reader.h"
 
@@ -82,6 +83,12 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             auto ret = std::make_shared<MXNetRecordIOReader>();
             if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("MXNetRecordIOReader cannot access the storage");
+            return ret;
+        } break;
+        case StorageType::NUMPY_DATA: {
+            auto ret = std::make_shared<NumpyDataReader>();
+            if (ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("NumpyDataReader cannot access the storage");
             return ret;
         } break;
         default:

@@ -50,6 +50,14 @@ ImageSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
     return status;
 }
 
+ImageSourceEvaluatorStatus
+ImageSourceEvaluator::create(ReaderConfig reader_cfg) {
+    ImageSourceEvaluatorStatus status = ImageSourceEvaluatorStatus::OK;
+    _reader = create_reader(std::move(reader_cfg));
+    find_max_numpy_dimensions();
+    return status;
+}
+
 void ImageSourceEvaluator::find_max_dimension() {
     _reader->reset();
 
@@ -72,6 +80,39 @@ void ImageSourceEvaluator::find_max_dimension() {
 
         _width_max.process_sample(width);
         _height_max.process_sample(height);
+    }
+    // return the reader read pointer to the begining of the resource
+    _reader->reset();
+}
+
+void ImageSourceEvaluator::find_max_numpy_dimensions() {
+    _reader->reset();
+
+    while (_reader->count_items()) {
+        size_t fsize = _reader->open();
+        if (fsize == 0)
+            THROW("Numpy arrays must contain readable data")
+        const NumpyHeaderData numpy_header = _reader->get_numpy_header_data();
+        _reader->close();
+
+        if (_max_numpy_dims.size() == 0) {
+            _max_numpy_dims.resize(numpy_header._shape.size());
+            _numpy_dtype = numpy_header._type_info;
+        }
+
+        if (_max_numpy_dims.size() != numpy_header._shape.size()) {
+            THROW("All numpy arrays must have the same number of dimensions")
+        }
+
+        if (_numpy_dtype != numpy_header._type_info) {
+            THROW("All numpy arrays must have the same data type")
+        }
+
+        for (uint i = 0; i < _max_numpy_dims.size(); i++) {
+            if (numpy_header._shape[i] > _max_numpy_dims[i]) {
+                _max_numpy_dims[i] = numpy_header._shape[i];
+            }
+        }
     }
     // return the reader read pointer to the begining of the resource
     _reader->reset();

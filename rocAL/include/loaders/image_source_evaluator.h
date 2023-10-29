@@ -41,10 +41,14 @@ enum class MaxSizeEvaluationPolicy {
 class ImageSourceEvaluator {
    public:
     ImageSourceEvaluatorStatus create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
+    ImageSourceEvaluatorStatus create(ReaderConfig reader_cfg);
     void find_max_dimension();
+    void find_max_numpy_dimensions();
     void set_size_evaluation_policy(MaxSizeEvaluationPolicy arg);
     size_t max_width();
     size_t max_height();
+    std::vector<size_t> max_numpy_dims() { return _max_numpy_dims; };
+    RocalTensorDataType get_numpy_dtype() { return _numpy_dtype; };
 
    private:
     class FindMaxSize {
@@ -61,6 +65,9 @@ class ImageSourceEvaluator {
     };
     FindMaxSize _width_max;
     FindMaxSize _height_max;
+    FindMaxSize _channel_max;
+    std::vector<size_t> _max_numpy_dims;
+    RocalTensorDataType _numpy_dtype;
     DecoderConfig _decoder_cfg_cv;
     std::shared_ptr<Decoder> _decoder;
     std::shared_ptr<Reader> _reader;
