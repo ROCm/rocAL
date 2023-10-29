@@ -2145,3 +2145,26 @@ rocalNop(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalSetLayout(
+    RocalContext p_context,
+    RocalTensor p_input,
+    RocalTensorLayout output_layout) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        input->set_layout(op_tensor_layout);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return input;
+}

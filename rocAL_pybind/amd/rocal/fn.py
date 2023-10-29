@@ -1055,3 +1055,18 @@ def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5,
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     Pipeline._current_pipeline._box_iou_matcher = True
     return (box_iou_matcher, [])
+
+
+def set_layout(*inputs, output_layout=types.NHWC):
+    """!Adjusts brightness of the image.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+
+        @return    Tensor with required output layout
+    """
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "output_layout": output_layout}
+    new_output = b.setLayout(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (new_output)

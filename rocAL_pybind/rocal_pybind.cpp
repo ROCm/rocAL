@@ -522,6 +522,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
+    m.def("setLayout", &rocalSetLayout,
+          py::return_value_policy::reference);
     m.def("ssdRandomCrop", &rocalSSDRandomCrop,
           py::return_value_policy::reference);
     m.def("resize", &rocalResize,
