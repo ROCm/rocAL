@@ -78,54 +78,34 @@ class ROCALGenericIterator(object):
             if (self.index + 1) == self.num_batches:
                 self.eos = True
             if (self.index + 1) <= self.num_batches:
-                if self.loader._external_source_mode == types.EXTSOURCE_FNAME:
-                    data_loader_source = next(self.loader._external_source)
-                    kwargs_pybind = {
-                        "handle": self.loader._handle,
-                        "source_input_images": data_loader_source[0],
-                        "labels": data_loader_source[1],
-                        "input_batch_buffer": [],
-                        "roi_width": [],
-                        "roi_height": [],
-                        "decoded_width": self.loader._external_source_user_given_width,
-                        "decoded_height": self.loader._external_source_user_given_height,
-                        "channels": 3,
-                        "external_source_mode": self.loader._external_source_mode,
-                        "rocal_tensor_layout": types.NCHW,
-                        "eos": self.eos}
-                    b.externalSourceFeedInput(*(kwargs_pybind.values()))
-                elif self.loader._external_source_mode == types.EXTSOURCE_RAW_COMPRESSED:
-                    data_loader_source = next(self.loader._external_source)
-                    kwargs_pybind = {
-                        "handle": self.loader._handle,
-                        "source_input_images": [],
-                        "labels": data_loader_source[1],
-                        "input_batch_buffer": data_loader_source[0],
-                        "roi_width": [],
-                        "roi_height": data_loader_source[2],
-                        "decoded_width": self.loader._external_source_user_given_width,
-                        "decoded_height": self.loader._external_source_user_given_height,
-                        "channels": 3,
-                        "external_source_mode": self.loader._external_source_mode,
-                        "rocal_tensor_layout": types.NCHW,
-                        "eos": self.eos}
-                    b.externalSourceFeedInput(*(kwargs_pybind.values()))
-                elif self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED:
-                    data_loader_source = next(self.loader._external_source)
-                    kwargs_pybind = {
-                        "handle": self.loader._handle,
-                        "source_input_images": [],
-                        "labels": data_loader_source[1],
-                        "input_batch_buffer": data_loader_source[0],
-                        "roi_width": data_loader_source[3],
-                        "roi_height": data_loader_source[2],
-                        "decoded_width": data_loader_source[5],
-                        "decoded_height": data_loader_source[4],
-                        "channels": 3,
-                        "external_source_mode": self.loader._external_source_mode,
-                        "rocal_tensor_layout": types.NCHW,
-                        "eos": self.eos}
-                    b.externalSourceFeedInput(*(kwargs_pybind.values()))
+                data_loader_source = next(self.loader._external_source)
+                # Extract all data from the source
+                images_list = data_loader_source[0] if (self.loader._external_source_mode == types.EXTSOURCE_FNAME) else []
+                input_buffer = data_loader_source[0] if (self.loader._external_source_mode != types.EXTSOURCE_FNAME) else []
+                labels_data = data_loader_source[1] if (len(data_loader_source) > 1) else None
+                roi_height = data_loader_source[2] if (len(data_loader_source) > 2) else []
+                roi_width = data_loader_source[3] if (len(data_loader_source) > 3) else []
+                if (len(data_loader_source) == 6 and self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED):
+                    decoded_height = data_loader_source[4]
+                    decoded_width = data_loader_source[5]
+                else:
+                    decoded_height = self.loader._external_source_user_given_height
+                    decoded_width = self.loader._external_source_user_given_width
+
+                kwargs_pybind = {
+                    "handle": self.loader._handle,
+                    "source_input_images": images_list,
+                    "labels": labels_data,
+                    "input_batch_buffer": input_buffer,
+                    "roi_width": roi_width,
+                    "roi_height": roi_height,
+                    "decoded_width": decoded_width,
+                    "decoded_height": decoded_height,
+                    "channels": 3,
+                    "external_source_mode": self.loader._external_source_mode,
+                    "rocal_tensor_layout": types.NCHW,
+                    "eos": self.eos}
+                b.externalSourceFeedInput(*(kwargs_pybind.values()))
             self.index = self.index + 1
         if self.loader.rocal_run() != 0:
             raise StopIteration
