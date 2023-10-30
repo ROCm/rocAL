@@ -26,7 +26,9 @@ THE SOFTWARE.
 #include <algorithm>
 #include "cifar10_data_reader.h"
 #include <file_source_reader.h>
-#include "filesystem.h"
+#include TCM_FS_HEADER
+
+namespace filesys = TCM_FS_NAMESPACE;
 
 CIFAR10DataReader::CIFAR10DataReader()
 {

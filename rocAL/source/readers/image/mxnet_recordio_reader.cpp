@@ -30,9 +30,10 @@ THE SOFTWARE.
 #include <memory.h>
 #include <stdint.h>
 #include "mxnet_recordio_reader.h"
-#include "filesystem.h"
+#include TCM_FS_HEADER
 
 using namespace std;
+namespace filesys = TCM_FS_NAMESPACE;
 
 MXNetRecordIOReader::MXNetRecordIOReader()
 {

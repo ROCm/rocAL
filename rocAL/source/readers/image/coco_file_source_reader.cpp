@@ -27,7 +27,9 @@ THE SOFTWARE.
 #include "coco_file_source_reader.h"
 #include "meta_data_reader_factory.h"
 #include "meta_data_graph_factory.h"
-#include "filesystem.h"
+#include TCM_FS_HEADER
+
+namespace filesys = TCM_FS_NAMESPACE;
 
 #define USE_STDIO_FILE 0
 

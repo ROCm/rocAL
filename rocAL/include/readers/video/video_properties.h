@@ -33,7 +33,6 @@ extern "C"
 #include <libavcodec/avcodec.h>
 }
 #endif
-#include "filesystem.h"
 #include "commons.h"
 
 #ifdef ROCAL_VIDEO
