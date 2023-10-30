@@ -1,8 +1,9 @@
 import types
+import cupy as cp
 import numpy as np
 from random import shuffle
 from amd.rocal.pipeline import Pipeline
-from amd.rocal.plugin.pytorch import ROCALClassificationIterator
+from amd.rocal.plugin.generic import ROCALClassificationIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 import cv2
@@ -14,7 +15,7 @@ def main():
     batch_size = 5
     data_dir = os.environ["ROCAL_DATA_PATH"] + \
         "/coco/coco_10_img/train_10images_2017/"
-    device = "cpu"
+    device = "gpu"
     try:
         path = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE2/"
         isExist = os.path.exists(path)
@@ -27,9 +28,7 @@ def main():
         # image is expected as a tensor, bboxes as numpy
         import cv2
         if device == "gpu":
-            image = image.cpu().detach().numpy()
-        else:
-            image = image.detach().numpy()
+            image = cp.asnumpy(image)
         image = image.transpose([1, 2, 0])  # NCHW
         image = (image).astype('uint8')
         cv2.imwrite("OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE2/" +

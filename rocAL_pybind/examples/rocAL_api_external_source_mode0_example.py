@@ -1,10 +1,11 @@
 from random import shuffle
 from amd.rocal.pipeline import Pipeline
-from amd.rocal.plugin.pytorch import ROCALClassificationIterator
+from amd.rocal.plugin.generic import ROCALClassificationIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 import os
 import numpy as np
+import cupy as cp
 
 
 def main():
@@ -23,14 +24,12 @@ def main():
     def image_dump(img, idx, device="cpu"):
         import cv2
         if device == "gpu":
-            image = img.cpu().detach().numpy()
-        else:
-            image = img.detach().numpy()
-        image = image.transpose([1, 2, 0])  # NCHW
-        image = (image).astype('uint8')
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            img = cp.asnumpy(img)
+        img = img.transpose([1, 2, 0])  # NCHW
+        img = (img).astype('uint8')
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         cv2.imwrite("OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE0/" +
-                    str(idx)+"_"+"train"+".png", image)
+                    str(idx)+"_"+"train"+".png", img)
 
     # Define the Data Source for all image samples - User needs to define their own source
     class ExternalInputIteratorMode0(object):
