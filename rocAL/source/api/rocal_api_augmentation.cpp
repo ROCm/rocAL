@@ -554,10 +554,10 @@ RocalTensor ROCAL_API_CALL
     try {
         if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
             THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
-        // Specifying dest width and height along with Resize_shorter and resize_longer can be used together in case of MIN_MAX_SCALING_MODE - for other scaling modes, this throws an error
+        // MaskRCNN training uses a new resize scaling mode - MIN_MAX_SCALING_MODE where min_size and max_size is passed and the final output size is calculated from the image size
+        // Only in the case of MIN_MAX_SCALING_MODE, both resize_shorter and resize_longer values can be passed together
         if ((dest_width | dest_height) && (resize_longer | resize_shorter) && (scaling_mode != RocalResizeScalingMode::ROCAL_SCALING_MODE_MIN_MAX))
             THROW("Only one method of specifying size can be used \ndest_width and/or dest_height\nresize_shorter\nresize_longer")
-        // Resize_shorter and resize_longer can be used together in case of MIN_MAX_SCALING_MODE - for other scaling modes, this throws an error
         if (resize_longer && resize_shorter && scaling_mode != RocalResizeScalingMode::ROCAL_SCALING_MODE_MIN_MAX)
             THROW("'resize_longer' and 'resize_shorter' can only be passed together for min max scaling mode")
 
