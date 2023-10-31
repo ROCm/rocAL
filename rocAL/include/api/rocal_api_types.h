@@ -351,13 +351,6 @@ enum class RocalROICordsType {
     ROCAL_XYWH = 1
 };
 
-/*! \brief RocalROICords struct
- * \ingroup group_rocal_types
- */
-typedef struct {
-    unsigned x1, y1, x2, y2;
-} RocalROICords;
-
 /*! \brief RocalExternalSourceMode struct
  * \ingroup group_rocal_types
  */
