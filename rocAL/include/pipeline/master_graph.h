@@ -82,7 +82,7 @@ class MasterGraph {
     Status reset();
     size_t remaining_count();
     MasterGraph::Status to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1, float multiplier2,
-                                  float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type, uint max_height = 0, uint max_width = 0);
+                                  float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type, uint max_roi_height = 0, uint max_roi_width = 0);
     Status copy_output(unsigned char *out_ptr, size_t out_size_in_bytes);
     Status copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1, float multiplier2,
                                   float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type);

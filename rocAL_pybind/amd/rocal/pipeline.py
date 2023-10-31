@@ -146,9 +146,9 @@ class Pipeline(object):
     def get_handle(self):
         return self._handle
 
-    def copyToExternalTensor(self, array,  multiplier, offset, reverse_channels, tensor_format, tensor_dtype, max_height=0, max_width=0):
+    def copyToExternalTensor(self, array,  multiplier, offset, reverse_channels, tensor_format, tensor_dtype, max_roi_height=0, max_roi_width=0):
         b.rocalToTensor(self._handle, ctypes.c_void_p(array.data_ptr()), tensor_format, tensor_dtype,
-                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0), self._output_memory_type, max_height, max_width)
+                        multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0), self._output_memory_type, max_roi_height, max_roi_width)
 
     def get_one_hot_encoded_labels(self, array, device):
         if device == "cpu":
