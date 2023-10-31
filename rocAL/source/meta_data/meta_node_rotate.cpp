@@ -58,8 +58,8 @@ void RotateMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaData
             dest_cx = _dst_width / 2;
             dest_cy = _dst_height / 2;
 
-            src_cx = static_cast<float>(input_roi[i].x2) / 2;
-            src_cy = static_cast<float>(input_roi[i].y2) / 2;
+            src_cx = static_cast<float>(input_roi[i].xywh.w) / 2;
+            src_cy = static_cast<float>(input_roi[i].xywh.h) / 2;
             src_bb_x = coords_buf[j].l;
             src_bb_y = coords_buf[j].t;
             bb_w = coords_buf[j].r - coords_buf[j].l;

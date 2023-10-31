@@ -42,8 +42,8 @@ class Node {
     std::shared_ptr<Graph> graph() { return _graph; }
     void set_meta_data(pMetaDataBatch meta_data_info) { _meta_data_info = meta_data_info; }
     bool _is_ssd = false;
-    RocalROI *get_src_roi() { return _inputs[0]->info().get_roi(); }
-    RocalROI *get_dst_roi() { return _outputs[0]->info().get_roi(); }
+    const Roi2DCords *get_src_roi() { return _inputs[0]->info().roi().get_2D_roi(); }
+    const Roi2DCords *get_dst_roi() { return _outputs[0]->info().roi().get_2D_roi(); }
 
    protected:
     virtual void create_node() = 0;
