@@ -41,6 +41,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 find_package(LMDB QUIET)	
 find_package(RapidJSON QUIET)
+find_package(HALF QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -178,6 +179,10 @@ if(NOT RapidJSON_FOUND)
     set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires RapidJSON, Not Found ${ColourReset}")	
 endif()
+if(NOT HALF_FOUND)	
+    set(BUILD_ROCAL false)	
+    message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
+endif()
 
 if(${BUILD_ROCAL})
     # AMD RPP
@@ -206,6 +211,8 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})	
     # RapidJSON	
     include_directories(${RapidJSON_INCLUDE_DIRS})
+    # half
+    include_directories(${HALF_INCLUDE_DIRS})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
