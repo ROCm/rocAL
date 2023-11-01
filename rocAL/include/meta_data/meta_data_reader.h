@@ -69,7 +69,7 @@ struct MetaDataConfig {
     std::map<std::string, std::string> feature_key_map() const { return _feature_key_map; }
     std::string file_prefix() const { return _file_prefix; }
     bool class_remapping() const { return _avoid_class_remapping; }
-    bool aspect_ratio_grouping() const { return _aspect_ratio_grouping; }
+    bool get_aspect_ratio_grouping() const { return _aspect_ratio_grouping; }
     unsigned sequence_length() const { return _sequence_length; }
     unsigned frame_step() const { return _frame_step; }
     unsigned frame_stride() const { return _frame_stride; }
@@ -99,5 +99,5 @@ class MetaDataReader {
     virtual bool set_timestamp_mode() = 0;
     virtual ImgSize lookup_image_size(const std::string& image_name) { return {}; }
     virtual void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { return; }
-    virtual bool aspect_ratio_grouping() const { return {}; }
+    virtual bool get_aspect_ratio_grouping() const { return {}; }
 };

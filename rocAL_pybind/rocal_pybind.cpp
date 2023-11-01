@@ -87,12 +87,12 @@ py::object wrapper_image_name(RocalContext context, int array_len) {
 py::object wrapper_copy_to_tensor(RocalContext context, py::object p,
                                   RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,
                                   float multiplier1, float multiplier2, float offset0, float offset1, float offset2,
-                                  bool reverse_channels, RocalOutputMemType output_mem_type, uint max_height, uint max_width) {
+                                  bool reverse_channels, RocalOutputMemType output_mem_type, uint max_roi_height, uint max_roi_width) {
     auto ptr = ctypes_void_ptr(p);
     // call pure C++ function
     int status = rocalToTensor(context, ptr, tensor_format, tensor_output_type, multiplier0,
                                multiplier1, multiplier2, offset0, offset1, offset2,
-                               reverse_channels, output_mem_type, max_height, max_width);
+                               reverse_channels, output_mem_type, max_roi_height, max_roi_width);
     return py::cast<py::none>(Py_None);
 }
 
@@ -485,7 +485,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         int prev_object_cnt = 0;
         auto mask_count_buf = mask_count.request();
         int *mask_count_ptr = static_cast<int *>(mask_count_buf.ptr);
-        for (int i = 0; i < bbox_labels->size(); i++) {  // nbatchSize
+        for (int i = 0; i < bbox_labels->size(); i++) {  // For each image in a batch, parse through the mask metadata buffers and convert them to polygons format
             float *mask_buffer = static_cast<float *>(mask_data->at(i)->buffer());
             py::list poly_batch_list;
             for (unsigned j = prev_object_cnt; j < bbox_labels->at(i)->dims().at(0) + prev_object_cnt; j++) {

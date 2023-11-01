@@ -34,7 +34,7 @@ using namespace std;
 void COCOMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
     _path = cfg.path();
     _avoid_class_remapping = cfg.class_remapping();
-    this->set_aspect_ratio_grouping(cfg.aspect_ratio_grouping());
+    this->set_aspect_ratio_grouping(cfg.get_aspect_ratio_grouping());
     _output = meta_data_batch;
     _output->set_metadata_type(cfg.type());
 }
@@ -194,7 +194,7 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                         parser.SkipValue();
                     }
                 }
-                _map_img_names.insert(pair<int, std::string>(image_id, image_name));
+                _map_image_names_to_id.insert(pair<int, std::string>(image_id, image_name));
                 _map_img_sizes.insert(pair<std::string, ImgSize>(image_name, img_size));
                 img_size = {};
             }
@@ -270,7 +270,7 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                     }
                 }
 
-                auto itr = _map_img_names.find(id);
+                auto itr = _map_image_names_to_id.find(id);
                 auto it = _map_img_sizes.find(itr->second);
                 ImgSize image_size = it->second;  // Convert to "ltrb" format
                 if ((_output->get_metadata_type() == MetaDataType::PolygonMask) && iscrowd == 0) {

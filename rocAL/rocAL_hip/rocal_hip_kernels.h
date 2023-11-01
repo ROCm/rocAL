@@ -39,8 +39,8 @@ int HipExecCopyInt8ToNHWC(
     float offset2,
     unsigned int reverse_channels,
     unsigned int fp16,
-    const unsigned max_output_height = 0,
-    const unsigned max_output_width = 0);
+    const unsigned max_roi_height = 0,
+    const unsigned max_roi_width = 0);
 
 int HipExecCopyInt8ToNCHW(
     hipStream_t stream,
@@ -59,5 +59,5 @@ int HipExecCopyInt8ToNCHW(
     float offset2,
     unsigned int reverse_channels,
     unsigned int fp16,
-    const unsigned max_output_height = 0,
-    const unsigned max_output_width = 0);
+    const unsigned max_roi_height = 0,
+    const unsigned max_roi_width = 0);

@@ -86,7 +86,7 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
         }
     }
 
-    if (_meta_data_reader && _meta_data_reader->aspect_ratio_grouping()) {
+    if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
         // calculate the aspect ratio for each file and create a pair of <filename, aspect_ratio>
         std::vector<std::pair<std::string, float>> file_aspect_ratio_pair(_file_names.size());
         for (size_t i = 0; i < _file_names.size(); i++) {
@@ -221,7 +221,7 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
 }
 
 void COCOFileSourceReader::reset() {
-    if (_meta_data_reader && _meta_data_reader->aspect_ratio_grouping()) {
+    if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
         _file_names = _sorted_file_names;
         if (_shuffle) shuffle_with_aspect_ratios();
     } else if (_shuffle) {
