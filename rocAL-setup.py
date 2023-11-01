@@ -345,9 +345,13 @@ else:
     # RapidJSON
     os.system('sudo -v')
     if "Ubuntu" in platfromInfo:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' install -y rapidjson-dev')
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall + ' ' +
+                  linuxSystemInstall_check+' install -y rapidjson-dev')
     else:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' install -y rapidjson-devel')
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall + ' ' +
+                  linuxSystemInstall_check+' install -y rapidjson-devel')
+    os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +
+              linuxCMake+' ../; make -j4; sudo make install)')
     # PyBind11
     os.system('sudo -v')
     os.system('pip install pytest==7.3.1')
