@@ -40,6 +40,7 @@ find_package(Threads QUIET)
 find_package(LMDB QUIET)	
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
+find_package(HALF QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -175,6 +176,9 @@ endif()
 if(NOT StdFilesystem_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires FileSystem, Not Found ${ColourReset}")	
+if(NOT HALF_FOUND)	
+    set(BUILD_ROCAL false)	
+    message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
 
 if(${BUILD_ROCAL})
@@ -203,6 +207,8 @@ if(${BUILD_ROCAL})
     include_directories(${RapidJSON_INCLUDE_DIRS})
     # Filesystem
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} std::filesystem)	
+    # half
+    include_directories(${HALF_INCLUDE_DIRS})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)

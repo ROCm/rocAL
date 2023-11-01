@@ -322,6 +322,12 @@ else:
               linuxCMake+' -DBACKEND='+backend+' -DCMAKE_INSTALL_PREFIX='+ROCM_PATH+' ../; make -j4; sudo make install)')
     # RapidJSON
     os.system('sudo -v')
+    if "Ubuntu" in platfromInfo:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall + ' ' +
+                  linuxSystemInstall_check+' install -y rapidjson-dev')
+    else:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall + ' ' +
+                  linuxSystemInstall_check+' install -y rapidjson-devel')
     os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +
               linuxCMake+' ../; make -j4; sudo make install)')
     # PyBind11
