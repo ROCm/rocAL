@@ -5,13 +5,12 @@ This application demonstrates a basic usage of rocAL's C++ API to load images fr
 
 ### Pre-requisites
 * Ubuntu Linux, [version `18.04` or later](https://www.microsoft.com/software-download/windows10)
-* rocAL library (Part of the MIVisionX toolkit)
+* rocAL library
 * [OpenCV 3.1](https://github.com/opencv/opencv/releases) or higher
 * ROCm Performance Primitives (RPP)
 
 ### build
   ````
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/mivisionx/lib
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/rpp/lib
   mkdir build
   cd build
