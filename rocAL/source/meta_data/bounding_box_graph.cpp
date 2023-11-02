@@ -262,7 +262,7 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, int *
 
             if (allow_low_quality_matches) {
                 for (unsigned int anchor_idx = 0; anchor_idx < anchors_size; anchor_idx++) {  // if the element is found
-                    if (fabs(bbox_iou[anchor_idx] - best_bbox_iou) < 1e-6)
+                    if (fabs(bbox_iou[anchor_idx] - best_bbox_iou) < 1e-6)                    // Compare the IOU values and check if they are equal with a tolerance of 1e-6
                         low_quality_preds[anchor_idx] = anchor_idx;
                 }
             }

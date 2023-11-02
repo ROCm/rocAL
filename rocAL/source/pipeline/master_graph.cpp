@@ -1022,7 +1022,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     _meta_data_reader->read_all(source_path);
     if (!ltrb_bbox) _augmented_meta_data->set_xywh_bbox();
     std::vector<size_t> dims;
-    size_t max_objects = static_cast<size_t>(is_box_encoder ? MAX_NUM_ANCHORS : MAX_OBJECTS);
+    size_t max_objects = static_cast<size_t>(is_box_encoder ? MAX_SSD_ANCHORS : MAX_OBJECTS);
     dims = {max_objects};
     auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default labels Info
     default_labels_info.set_metadata();
@@ -1043,7 +1043,7 @@ std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const c
     }
     if (is_box_iou_matcher) {
         _is_box_iou_matcher = true;
-        dims = {MAX_ANCHORS};
+        dims = {MAX_RETINANET_ANCHORS};
         default_matches_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default matches info
         default_matches_info.set_metadata();
         _meta_data_buffer_size.emplace_back(_user_batch_size * default_matches_info.data_size());

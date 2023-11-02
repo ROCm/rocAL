@@ -309,11 +309,11 @@ extern "C" void ROCAL_API_CALL rocalGetJointsDataPtr(RocalContext p_context, Roc
 extern "C" void ROCAL_API_CALL rocalBoxIouMatcher(RocalContext p_context, std::vector<float>& anchors, float criteria,
                                                   float high_threshold, float low_threshold, bool allow_low_quality_matches = true);
 
-/*! \brief API to return the matched idices for the bounding box and anchors
+/*! \brief API to return the matched indices for the bounding box and anchors
  * \ingroup group_rocal_meta_data
- * \param [in] rocal_context rocAL context
+ * \param [in] p_context rocAL context
  * \return RocalTensorList of matched indices
  */
-extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext rocal_context);
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_context);
 
 #endif  // MIVISIONX_ROCAL_API_META_DATA_H

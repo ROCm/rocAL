@@ -46,11 +46,11 @@ THE SOFTWARE.
 #include "randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
 #define MAX_STRING_LENGTH 100
-#define MAX_OBJECTS 50        // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
+#define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
 #define BBOX_COUNT 4
-#define MAX_NUM_ANCHORS 8732  // Num of bbox achors used in SSD training
+#define MAX_SSD_ANCHORS 8732          // Num of bbox achors used in SSD training
 #define MAX_MASK_BUFFER 10000
-#define MAX_ANCHORS 120087  // Num of bbox achors used in Retinanet training
+#define MAX_RETINANET_ANCHORS 120087  // Num of bbox achors used in Retinanet training
 
 #if ENABLE_SIMD
 #if _WIN32
@@ -209,10 +209,10 @@ class MasterGraph {
     std::vector<float> _means, _stds;                                             //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
     bool _augmentation_metanode = false;
     // box IoU matcher variables
-    bool _is_box_iou_matcher = false; // bool variable to set the box iou matcher
-    float _high_threshold = 0.5f;    // Max IoU threshold
-    float _low_threshold = 0.4f;     // Min IoU threshold
-    bool _allow_low_quality_matches = true; // Set to true to include low quality matches in matched idx generation
+    bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
+    float _high_threshold = 0.5f;                                                 // Max IoU threshold
+    float _low_threshold = 0.4f;                                                  // Min IoU threshold
+    bool _allow_low_quality_matches = true;                                       // Set to true to include low quality matches in matched idx generation
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
