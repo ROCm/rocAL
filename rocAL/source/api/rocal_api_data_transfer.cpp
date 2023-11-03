@@ -95,7 +95,7 @@ rocalExternalSourceFeedInput(
     bool eos) {
     auto context = static_cast<Context*>(p_context);
     try {
-        ExternalFileMode external_file_mode = static_cast<ExternalFileMode>(mode);
+        ExternalSourceFileMode external_file_mode = static_cast<ExternalSourceFileMode>(mode);
         RocalTensorlayout format = static_cast<RocalTensorlayout>(layout);
         context->master_graph->feed_external_input(input_images_names, labels, input_buffer,
                                                    roi_width, roi_height, max_width, max_height, channels,

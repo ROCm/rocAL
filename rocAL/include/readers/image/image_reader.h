@@ -50,7 +50,7 @@ enum class StorageType {
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
 };
 
-enum class ExternalFileMode {
+enum class ExternalSourceFileMode {
     FILENAME = 0,
     RAWDATA_COMPRESSED = 1,
     RAWDATA_UNCOMPRESSED = 2,
@@ -59,7 +59,7 @@ enum class ExternalFileMode {
 struct ReaderConfig {
     explicit ReaderConfig(StorageType type, std::string path = "", std::string json_path = "",
                           const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(),
-                          bool shuffle = false, bool loop = false, ExternalFileMode mode = ExternalFileMode::FILENAME) : _type(type), _path(path), _json_path(json_path), _feature_key_map(feature_key_map), _shuffle(shuffle), _loop(loop), _file_mode(mode) {}
+                          bool shuffle = false, bool loop = false) : _type(type), _path(path), _json_path(json_path), _feature_key_map(feature_key_map), _shuffle(shuffle), _loop(loop) {}
     virtual StorageType type() { return _type; };
     void set_path(const std::string &path) { _path = path; }
     void set_shard_id(size_t shard_id) { _shard_id = shard_id; }
@@ -78,7 +78,7 @@ struct ReaderConfig {
     void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
-    void set_external_filemode(ExternalFileMode mode) { _file_mode = mode; }
+    void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -96,7 +96,7 @@ struct ReaderConfig {
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
-    ExternalFileMode mode() { return _file_mode; }
+    ExternalSourceFileMode mode() { return _file_mode; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -114,7 +114,7 @@ struct ReaderConfig {
     bool _loop = false;
     std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    ExternalFileMode _file_mode;
+    ExternalSourceFileMode _file_mode = ExternalSourceFileMode::FILENAME;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
@@ -130,6 +130,18 @@ struct ImageRecordIOHeader {
                            *  image_id[0] is used to store image id
                            */
 };
+
+// ExternalSourceImageInfo struct - used to pass the image info needed for external source input.
+struct ExternalSourceImageInfo {
+    unsigned char* file_data;  // Pointer to the file data
+    size_t file_read_size;     // Total file size
+    int width;                 // Width of the image
+    int height;                // Height of the image
+    int channels;              // Number of image channels
+    unsigned roi_width;        // ROI width of the image
+    unsigned roi_height;       // ROI height of the image
+};
+
 class Reader {
    public:
     enum class Status {
@@ -171,10 +183,10 @@ class Reader {
     virtual unsigned count_items() = 0;
 
     //! Feeds file names as an external_source into the reader
-    virtual void feed_file_names(const std::vector<std::string> &file_names, size_t num_images, bool eos = false) = 0;
+    virtual void feed_file_names(const std::vector<std::string> &file_names, size_t num_images, bool eos = false){THROW("Not Supported")};
 
     //! Used for feeding raw data into the reader (mode specified compressed jpegs or raw)
-    virtual void feed_data(const std::vector<unsigned char *> &images, const std::vector<size_t> &image_size, ExternalFileMode mode, bool eos = false, const std::vector<unsigned> roi_width = {}, const std::vector<unsigned> roi_height = {}, int width = 0, int height = 0, int channels = 0) = 0;
+    virtual void feed_data(const std::vector<unsigned char *> &images, const std::vector<size_t> &image_size, ExternalSourceFileMode mode, bool eos = false, const std::vector<unsigned> roi_width = {}, const std::vector<unsigned> roi_height = {}, int width = 0, int height = 0, int channels = 0){THROW("Not Supported")};
 
     virtual ~Reader() = default;
 };

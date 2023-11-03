@@ -64,7 +64,7 @@ class LoaderModule {
     // External Source reader
     virtual void feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char*> input_buffer,
                                      std::vector<unsigned> roi_width, std::vector<unsigned> roi_height, unsigned int max_width, unsigned int max_height,
-                                     int channels, ExternalFileMode mode, bool eos) = 0;
+                                     int channels, ExternalSourceFileMode mode, bool eos) = 0;
 };
 
 using pLoaderModule = std::shared_ptr<LoaderModule>;

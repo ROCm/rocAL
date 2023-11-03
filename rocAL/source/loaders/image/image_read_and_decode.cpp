@@ -98,22 +98,24 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
 
 void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char *> input_buffer,
                                              std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
-                                             unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) {
+                                             unsigned int max_width, unsigned int max_height, int channels, ExternalSourceFileMode mode, bool eos) {
     std::vector<size_t> image_size;
     image_size.reserve(roi_height.size());
     size_t max_image_size = max_width * max_height * channels;
     for (unsigned int i = 0; i < roi_height.size(); i++) {
-        if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
+        if (mode == ExternalSourceFileMode::RAWDATA_UNCOMPRESSED)
             image_size[i] = max_image_size;
-        else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
+        else if (mode == ExternalSourceFileMode::RAWDATA_COMPRESSED)
             image_size[i] = roi_height[i];
     }
-    if (mode == ExternalFileMode::FILENAME)
+    if (mode == ExternalSourceFileMode::FILENAME)
         _reader->feed_file_names(input_images_names, input_images_names.size(), eos);
-    else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
+    else if (mode == ExternalSourceFileMode::RAWDATA_COMPRESSED)
         _reader->feed_data(input_buffer, image_size, mode, eos, {}, {}, max_width, max_height, channels);
-    else if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
+    else if (mode == ExternalSourceFileMode::RAWDATA_UNCOMPRESSED)
         _reader->feed_data(input_buffer, image_size, mode, eos, roi_width, roi_height, max_width, max_height, channels);
+    else
+        THROW("Invalid ExternalSourceFileMode mode passed")
 }
 
 void ImageReadAndDecode::reset() {
@@ -194,7 +196,7 @@ ImageReadAndDecode::load(unsigned char *buff,
         //_file_load_time.end();// Debug timing
     } else if (_is_external_source) {
         auto ext_reader = std::static_pointer_cast<ExternalSourceReader>(_reader);
-        if (ext_reader->mode() == ExternalFileMode::RAWDATA_UNCOMPRESSED) {
+        if (ext_reader->mode() == ExternalSourceFileMode::RAWDATA_UNCOMPRESSED) {
             while ((file_counter != _batch_size) && _reader->count_items() > 0) {
                 int width, height, channels;
                 unsigned rwidth, rheight;
