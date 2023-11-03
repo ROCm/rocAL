@@ -57,7 +57,6 @@ std::pair<std::vector<void *>, std::vector<unsigned *>> RingBuffer::get_read_buf
     block_if_empty();
     if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_sub_buffer[_read_ptr], _dev_roi_buffers[_read_ptr]);
-
     return std::make_pair(_host_sub_buffers[_read_ptr], _host_roi_buffers[_read_ptr]);
 }
 
@@ -72,7 +71,6 @@ std::pair<std::vector<void *>, std::vector<unsigned *>> RingBuffer::get_write_bu
     block_if_full();
     if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
         return std::make_pair(_dev_sub_buffer[_write_ptr], _dev_roi_buffers[_write_ptr]);
-
     return std::make_pair(_host_sub_buffers[_write_ptr], _host_roi_buffers[_write_ptr]);
 }
 
@@ -113,7 +111,7 @@ void RingBuffer::unblock_writer() {
     _wait_for_unload.notify_all();
 }
 
-void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> &sub_buffer_size, size_t roi_buffer_size) {
+void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> &sub_buffer_size, std::vector<size_t> &roi_buffer_size) {
     _mem_type = mem_type;
     _dev = devres;
     _sub_buffer_size = sub_buffer_size;
@@ -165,10 +163,10 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> &
                     THROW("hipMalloc of size " + TOSTR(_sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
                           " failed " + TOSTR(err));
                 }
-                err = hipHostMalloc((void **)&_dev_roi_buffers[buffIdx][sub_idx], roi_buffer_size, hipHostMallocDefault);  // Allocate HIP page locked ROI buffers
+                err = hipHostMalloc((void **)&_dev_roi_buffers[buffIdx][sub_idx], roi_buffer_size[sub_idx], hipHostMallocDefault);  // Allocate HIP page locked ROI buffers
                 if (err != hipSuccess || !_dev_roi_buffers[buffIdx][sub_idx]) {
                     _dev_roi_buffers.clear();
-                    THROW("hipHostMalloc of size " + TOSTR(roi_buffer_size) + " failed " + TOSTR(err))
+                    THROW("hipHostMalloc of size " + TOSTR(roi_buffer_size[sub_idx]) + " failed " + TOSTR(err))
                 }
             }
         }
@@ -180,7 +178,7 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> &
             _host_roi_buffers[buffIdx].resize(sub_buffer_count);
             for (size_t sub_buff_idx = 0; sub_buff_idx < sub_buffer_count; sub_buff_idx++) {
                 _host_sub_buffers[buffIdx][sub_buff_idx] = aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_sub_buffer_size[sub_buff_idx] / MEM_ALIGNMENT + 1));
-                _host_roi_buffers[buffIdx][sub_buff_idx] = static_cast<unsigned *>(malloc(roi_buffer_size));  // Allocate HOST ROI buffers
+                _host_roi_buffers[buffIdx][sub_buff_idx] = static_cast<unsigned *>(malloc(roi_buffer_size[sub_buff_idx]));  // Allocate HOST ROI buffers
             }
         }
 #if ENABLE_OPENCL || ENABLE_HIP

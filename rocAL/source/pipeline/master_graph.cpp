@@ -263,9 +263,9 @@ MasterGraph::build() {
         THROW("No output tensors are there, cannot create the pipeline")
 
 #if ENABLE_HIP || ENABLE_OPENCL
-    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size(), _user_batch_size * sizeof(ROI2DCords));
+    _ring_buffer.init(_mem_type, (void *)_device.resources(), _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #else
-    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _user_batch_size * sizeof(ROI2DCords));
+    _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
     create_single_graph();
@@ -832,8 +832,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
         // get_read_buffers() calls block_if_empty() internally and blocks if buffers are empty until a new batch is processed
         size_t dest_buf_offset = 0;
         auto output_buffers = _ring_buffer.get_read_buffers().first;
-        for( auto&& output_handle: output_buffers)
-        {
+        for (auto &&output_handle : output_buffers) {
             hipError_t err = hipMemcpyDtoHAsync((void *)(out_ptr + dest_buf_offset), output_handle, size, _device.resources()->hip_stream);
             if (err) {
                 THROW("hipMemcpyDtoHAsync failed: " + TOSTR(err))
@@ -857,8 +856,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes) {
 }
 
 TensorList *
-MasterGraph::get_output_tensors()
-{
+MasterGraph::get_output_tensors() {
     auto read_buffers = _ring_buffer.get_read_buffers();
     auto output_ptr = read_buffers.first;
     auto roi_ptr = read_buffers.second;

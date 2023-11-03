@@ -86,7 +86,7 @@ inline double ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const B
 void SSDRandomCropNode::update_node() {
     _crop_param->set_image_dimensions(_inputs[0]->info().roi().get_2D_roi());
     _crop_param->update_array();
-    ROI2DCords *crop_dims = static_cast<ROI2DCords *>(_crop_coordinates);  // ROI to be cropped from source
+    Roi2DCords *crop_dims = static_cast<Roi2DCords *>(_crop_coordinates);  // ROI to be cropped from source
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 6);
@@ -176,14 +176,17 @@ void SSDRandomCropNode::update_node() {
                 continue;
             break;
         }  // while loop
-        crop_dims[i].x1 = (crop_box.l) * input_roi[i].x2;
-        crop_dims[i].y1 = (crop_box.t) * input_roi[i].y2;
+
         if (_inputs[0]->info().roi_type() == RocalROIType::XYWH) {
-            crop_dims[i].x2 = (crop_box.r - crop_box.l) * input_roi[i].x2;
-            crop_dims[i].y2 = (crop_box.b - crop_box.t) * input_roi[i].y2;
+            crop_dims[i].xywh.x = (crop_box.l) * input_roi[i].xywh.w;
+            crop_dims[i].xywh.y = (crop_box.t) * input_roi[i].xywh.h;
+            crop_dims[i].xywh.w = (crop_box.r - crop_box.l) * input_roi[i].xywh.w;
+            crop_dims[i].xywh.h = (crop_box.b - crop_box.t) * input_roi[i].xywh.h;
         } else if (_inputs[0]->info().roi_type() == RocalROIType::LTRB) {
-            crop_dims[i].x2 = (crop_box.r) * input_roi[i].x2;
-            crop_dims[i].y2 = (crop_box.b) * input_roi[i].y2;
+            crop_dims[i].xywh.x = (crop_box.l) * input_roi[i].ltrb.l;
+            crop_dims[i].xywh.y = (crop_box.t) * input_roi[i].ltrb.t;
+            crop_dims[i].xywh.w = (crop_box.r - crop_box.l) * (input_roi[i].ltrb.r - input_roi[i].ltrb.l + 1);
+            crop_dims[i].xywh.h = (crop_box.b - crop_box.t) * (input_roi[i].ltrb.b - input_roi[i].ltrb.t + 1);
         }
     }
     _outputs[0]->update_tensor_roi(_crop_width_val, _crop_height_val);

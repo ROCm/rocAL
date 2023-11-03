@@ -114,23 +114,23 @@ void TensorInfo::reset_tensor_roi_buffers() {
     _roi.set_ptr(roi_buf, _mem_type, roi_size, roi_no_of_dims);
     if (_layout == RocalTensorlayout::NCDHW) {
         for (unsigned i = 0; i < _batch_size; i++) {
-            unsigned *tensor_shape = _roi[i].shape;
+            unsigned *tensor_shape = _roi[i].end;
             tensor_shape[2] = _max_shape[1];
             tensor_shape[1] = _max_shape[2];
             tensor_shape[0] = _max_shape[3];
         }
     } else if (_layout == RocalTensorlayout::NDHWC) {
         for (unsigned i = 0; i < _batch_size; i++) {
-            unsigned *tensor_shape = _roi[i].shape;
+            unsigned *tensor_shape = _roi[i].end;
             tensor_shape[2] = _max_shape[0];
             tensor_shape[1] = _max_shape[1];
             tensor_shape[0] = _max_shape[2];
         }
     } else if (_is_image) {
-        ROI2DCords *roi = _roi.get_2D_roi();
+        Roi2DCords *roi = _roi.get_2D_roi();
         for (unsigned i = 0; i < _batch_size; i++) {
-            roi[i].x2 = _max_shape.at(0);
-            roi[i].y2 = _max_shape.at(1);
+            roi[i].xywh.w = _max_shape.at(0);
+            roi[i].xywh.h = _max_shape.at(1);
         }
     }
 }
@@ -191,8 +191,8 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
         auto max_shape = _info.max_shape();
         unsigned max_width = max_shape.at(0);
         unsigned max_height = max_shape.at(1);
-        ROI2DCords *roi = _info.roi().get_2D_roi();
-        
+        Roi2DCords *roi = _info.roi().get_2D_roi();
+
         if (width.size() != height.size())
             THROW("Batch size of Tensor height and width info does not match")
 
@@ -202,15 +202,15 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
         for (unsigned i = 0; i < info().batch_size(); i++) {
             if (width[i] > max_width) {
                 WRN("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(width[i]) + " > " + TOSTR(max_width))
-                roi[i].x2 = max_width;
+                roi[i].xywh.w = max_width;
             } else {
-                roi[i].x2 = width[i];
+                roi[i].xywh.w = width[i];
             }
             if (height[i] > max_height) {
                 WRN("Given ROI height is larger than buffer height for tensor[" + TOSTR(i) + "] " + TOSTR(height[i]) + " > " + TOSTR(max_height))
-                roi[i].y2 = max_height;
+                roi[i].xywh.h = max_height;
             } else {
-                roi[i].y2 = height[i];
+                roi[i].xywh.h = height[i];
             }
         }
     }
@@ -225,7 +225,7 @@ void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) 
         if (shape[i].size() != (info().num_of_dims() - 1))
             THROW("The number of dims to be updated and the num of dims of tensor info does not match")
         
-        unsigned *tensor_shape = _info.roi()[i].shape;
+        unsigned *tensor_shape = _info.roi()[i].end;
         if (_info.layout() == RocalTensorlayout::NCDHW) {
             tensor_shape[2] = shape[i][1] > max_shape[1] ? max_shape[1] : shape[i][1];
             tensor_shape[1] = shape[i][2] > max_shape[2] ? max_shape[2] : shape[i][2];
@@ -264,7 +264,7 @@ int Tensor::create_virtual(vx_context context, vx_graph graph) {
 
     _info._type = TensorInfo::Type::VIRTUAL;
     void *roi_handle = reinterpret_cast<void *>(_info.roi().get_ptr());
-    create_roi_tensor_from_handle(&roi_handle); // Create ROI tensor from handle
+    create_roi_tensor_from_handle(&roi_handle);  // Create ROI tensor from handle
     return 0;
 }
 
@@ -290,7 +290,7 @@ int Tensor::create_from_handle(vx_context context) {
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
     _info._type = TensorInfo::Type::HANDLE;
     void *roi_handle = reinterpret_cast<void *>(_info.roi().get_ptr());
-    create_roi_tensor_from_handle(&roi_handle); // Create ROI tensor from handle
+    create_roi_tensor_from_handle(&roi_handle);  // Create ROI tensor from handle
     return 0;
 }
 

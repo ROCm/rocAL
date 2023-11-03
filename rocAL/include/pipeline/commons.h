@@ -115,15 +115,37 @@ enum class Rocal3DROIType {
     XYZWHD
 };
 
-typedef struct
-{
-    unsigned x1, y1, x2, y2;
-} ROI2DCords;
+/*! \brief Tensor ROI in LTRB format
+ *
+ */
+typedef struct {
+    unsigned l, t, r, b;
+} RoiLtrb;
 
+/*! \brief Tensor ROI in XYWH format
+ *
+ */
+typedef struct {
+    unsigned x, y, w, h;
+} RoiXywh;
+
+/*! \brief Tensor ROI union
+ *
+ * Supports LTRB and XYWH formats
+ */
+typedef union {
+    RoiLtrb ltrb;
+    RoiXywh xywh;
+} Roi2DCords;
+
+/*! \brief Tensor ROI
+ *
+ * Points to the begin and end in the ROI for each data
+ */
 typedef struct {
     unsigned *begin;
-    unsigned *shape;
-} ROICords;
+    unsigned *end;
+} RoiCords;
 
 struct Timing {
     // The following timings are accumulated timing not just the most recent activity
