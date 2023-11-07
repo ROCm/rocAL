@@ -25,9 +25,7 @@ THE SOFTWARE.
 #include <cstring>
 #include <commons.h>
 #include "file_source_reader.h"
-#include TCM_FS_HEADER
-
-namespace filesys = TCM_FS_NAMESPACE;
+#include "filesystem.h"
 
 FileSourceReader::FileSourceReader()
 {

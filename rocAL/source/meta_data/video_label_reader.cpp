@@ -27,10 +27,9 @@ THE SOFTWARE.
 #include <algorithm>
 #include "commons.h"
 #include "exception.h"
-#include TCM_FS_HEADER
+#include "filesystem.h"
 
 using namespace std;
-namespace filesys = TCM_FS_NAMESPACE;
 
 #ifdef ROCAL_VIDEO
 VideoLabelReader::VideoLabelReader()

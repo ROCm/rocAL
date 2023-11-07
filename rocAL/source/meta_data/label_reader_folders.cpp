@@ -27,10 +27,9 @@ THE SOFTWARE.
 #include "commons.h"
 #include "exception.h"
 #include "label_reader_folders.h"
-#include TCM_FS_HEADER
+#include "filesystem.h"
 
 using namespace std;
-namespace filesys = TCM_FS_NAMESPACE;
 
 LabelReaderFolders::LabelReaderFolders()
 {

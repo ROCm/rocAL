@@ -27,10 +27,9 @@ THE SOFTWARE.
 #include "commons.h"
 #include "exception.h"
 #include "cifar10_meta_data_reader.h"
-#include TCM_FS_HEADER
+#include "filesystem.h"
 
 using namespace std;
-namespace filesys = TCM_FS_NAMESPACE;
 
 Cifar10MetaDataReader::Cifar10MetaDataReader()
 {

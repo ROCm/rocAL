@@ -32,13 +32,8 @@ THE SOFTWARE.
 #include "ffmpeg_video_decoder.h"
 #include "video_reader_factory.h"
 #include "timing_debug.h"
-#include TCM_FS_HEADER
+#include "filesystem.h"
 
-// int main() {
-//     auto path = TCM_FS_NAMESPACE::current_path();
-//     std::cout << "Current path: " << path << std::endl;
-//     return 0;
-// }
 #include "video_loader_module.h"
 #include "video_properties.h"
 #ifdef ROCAL_VIDEO

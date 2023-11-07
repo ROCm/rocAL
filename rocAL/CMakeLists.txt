@@ -173,7 +173,7 @@ if(NOT RapidJSON_FOUND)
     set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires RapidJSON, Not Found ${ColourReset}")	
 endif()
-if(NOT StdFilesystem_FOUND)
+if(NOT FILESYSTEM_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires FileSystem, Not Found ${ColourReset}")	
 endif()
@@ -207,7 +207,8 @@ if(${BUILD_ROCAL})
     # RapidJSON	
     include_directories(${RapidJSON_INCLUDE_DIRS})
     # Filesystem
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} std::filesystem)	
+    include_directories(${FILESYSTEM_INCLUDE_DIRS})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
     # half
     include_directories(${HALF_INCLUDE_DIRS})
 

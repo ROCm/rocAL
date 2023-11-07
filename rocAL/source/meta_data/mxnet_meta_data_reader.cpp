@@ -26,10 +26,9 @@ THE SOFTWARE.
 #include <memory.h>
 #include <stdint.h>
 #include "mxnet_meta_data_reader.h"
-#include TCM_FS_HEADER
+#include "filesystem.h"
 
 using namespace std;
-namespace filesys = TCM_FS_NAMESPACE;
 
 void MXNetMetaDataReader::init(const MetaDataConfig &cfg)
 {

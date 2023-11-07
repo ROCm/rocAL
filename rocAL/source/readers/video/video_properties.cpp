@@ -24,9 +24,7 @@ THE SOFTWARE.
 #include <cmath>
 #include <cassert>
 #include <algorithm>
-#include TCM_FS_HEADER
-
-namespace filesys = TCM_FS_NAMESPACE;
+#include "filesystem.h"
 
 #ifdef ROCAL_VIDEO
 void substring_extraction(std::string const &str, const char delim, std::vector<std::string> &out)
