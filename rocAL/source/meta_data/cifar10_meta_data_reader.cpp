@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <filesystem.h>
 #include <string.h>
 #include <iostream>
 #include <utility>
@@ -31,7 +30,7 @@ THE SOFTWARE.
 #include "cifar10_meta_data_reader.h"
 
 using namespace std;
-//namespace filesys = std::filesystem;
+
 Cifar10MetaDataReader::Cifar10MetaDataReader()
 {
     _src_dir = nullptr;

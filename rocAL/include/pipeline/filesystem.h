@@ -27,5 +27,5 @@ THE SOFTWARE.
     #include <experimental/filesystem>
     namespace filesys = std::experimental::filesystem;
 #else 
-    #error "no filesystem detected"
+    #error "No filesystem support available"
 #endif
