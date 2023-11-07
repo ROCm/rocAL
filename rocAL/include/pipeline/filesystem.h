@@ -20,13 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #pragma once
-
-#if defined(STD_FILESYSTEM_AVAILABLE)
+#if __cplusplus >= 201703L && __has_include(<filesystem>)
     #include <filesystem>
     namespace filesys = std::filesystem;
-#elif defined(EXPERIMENTAL_FILESYSTEM_AVAILABLE)
+#elif __has_include(<experimental/filesystem>)
     #include <experimental/filesystem>
     namespace filesys = std::experimental::filesystem;
-#else
-    #error "No filesystem support available"
+#else 
+    #error "no filesystem detected"
 #endif
