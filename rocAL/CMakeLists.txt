@@ -298,6 +298,16 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with FFmpeg Video Decode Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
     endif()
+    # Filesystem
+    if(STD_FILESYSTEM_PRESENT)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DSTD_FILESYSTEM_AVAILABLE)
+        message("-- ${White}rocAL built with std Filesystem${ColourReset}")
+    elseif(EXPERIMENTAL_FILESYSTEM_PRESENT)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DEXPERIMENTAL_FILESYSTEM_AVAILABLE)
+        message("-- ${White}rocAL built with std experimental Filesystem${ColourReset}")
+    else()
+        message(FATAL_ERROR "No filesystem library found.")
+    endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation
