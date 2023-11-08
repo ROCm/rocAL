@@ -63,7 +63,7 @@ extern "C" RocalStatus ROCAL_API_CALL rocalToTensor(RocalContext rocal_context, 
                                                     RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type,
                                                     float multiplier0, float multiplier1, float multiplier2, float offset0,
                                                     float offset1, float offset2,
-                                                    bool reverse_channels, RocalOutputMemType output_mem_type);
+                                                    bool reverse_channels, RocalOutputMemType output_mem_type, int max_roi_height = 0, int max_roi_width = 0);
 
 /*!
  * \brief Sets the output images in the RocalContext
@@ -73,7 +73,6 @@ extern "C" RocalStatus ROCAL_API_CALL rocalToTensor(RocalContext rocal_context, 
  * \param [in] output_images output images
  */
 extern "C" void ROCAL_API_CALL rocalSetOutputs(RocalContext p_context, unsigned int num_of_outputs, std::vector<RocalTensor> &output_images);
-
 
 /*!
  * \brief gives the list of output tensors from rocal context
