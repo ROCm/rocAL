@@ -1005,8 +1005,7 @@ void MasterGraph::stop_processing() {
         _output_thread.join();
 }
 
-std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType metadata_type, bool ltrb_bbox, bool is_box_encoder,
-                                                                         bool avoid_class_remapping, bool aspect_ratio_grouping, bool is_box_iou_matcher, float sigma, unsigned pose_output_width, unsigned pose_output_height) {
+std::vector<rocalTensorList *> MasterGraph::create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType metadata_type, bool ltrb_bbox, bool is_box_encoder, bool avoid_class_remapping, bool aspect_ratio_grouping, bool is_box_iou_matcher, float sigma, unsigned pose_output_width, unsigned pose_output_height) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
