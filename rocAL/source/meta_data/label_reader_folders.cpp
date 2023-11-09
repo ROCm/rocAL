@@ -24,15 +24,12 @@ THE SOFTWARE.
 #include <iostream>
 #include <utility>
 #include <algorithm>
-#include <boost/filesystem.hpp>
 #include "commons.h"
 #include "exception.h"
 #include "label_reader_folders.h"
-
+#include "filesystem.h"
 
 using namespace std;
-
-namespace filesys = boost::filesystem;
 
 LabelReaderFolders::LabelReaderFolders()
 {

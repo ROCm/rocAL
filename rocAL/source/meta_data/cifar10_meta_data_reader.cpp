@@ -24,15 +24,12 @@ THE SOFTWARE.
 #include <iostream>
 #include <utility>
 #include <algorithm>
-#include <boost/filesystem.hpp>
 #include "commons.h"
 #include "exception.h"
+#include "filesystem.h"
 #include "cifar10_meta_data_reader.h"
 
-
 using namespace std;
-
-namespace filesys = boost::filesystem;
 
 Cifar10MetaDataReader::Cifar10MetaDataReader()
 {

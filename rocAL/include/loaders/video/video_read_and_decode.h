@@ -28,11 +28,12 @@ THE SOFTWARE.
 #include <cstring>
 #include <map>
 #include <tuple>
-#include <boost/filesystem.hpp>
 #include "commons.h"
 #include "ffmpeg_video_decoder.h"
 #include "video_reader_factory.h"
 #include "timing_debug.h"
+#include "filesystem.h"
+
 #include "video_loader_module.h"
 #include "video_properties.h"
 #ifdef ROCAL_VIDEO

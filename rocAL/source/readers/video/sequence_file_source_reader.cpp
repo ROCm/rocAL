@@ -22,11 +22,10 @@ THE SOFTWARE.
 
 #include <cassert>
 #include <algorithm>
+#include <cstring>
 #include <commons.h>
 #include "sequence_file_source_reader.h"
-#include <boost/filesystem.hpp>
-
-namespace filesys = boost::filesystem;
+#include "filesystem.h"
 
 SequenceFileSourceReader::SequenceFileSourceReader()
 {

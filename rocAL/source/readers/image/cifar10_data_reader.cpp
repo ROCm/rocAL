@@ -22,11 +22,11 @@ THE SOFTWARE.
 
 #include <cassert>
 #include <commons.h>
+#include <cstring>
+#include <algorithm>
 #include "cifar10_data_reader.h"
-#include <boost/filesystem.hpp>
 #include <file_source_reader.h>
-
-namespace filesys = boost::filesystem;
+#include "filesystem.h"
 
 CIFAR10DataReader::CIFAR10DataReader()
 {

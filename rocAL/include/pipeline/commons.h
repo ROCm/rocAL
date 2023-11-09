@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <vector>
 #include "exception.h"
 #include "log.h"
+#include "filesystem.h"
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f

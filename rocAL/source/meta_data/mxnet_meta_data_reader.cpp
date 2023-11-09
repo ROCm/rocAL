@@ -26,9 +26,8 @@ THE SOFTWARE.
 #include <memory.h>
 #include <stdint.h>
 #include "mxnet_meta_data_reader.h"
-#include <boost/filesystem.hpp>
+#include "filesystem.h"
 
-namespace filesys = boost::filesystem;
 using namespace std;
 
 void MXNetMetaDataReader::init(const MetaDataConfig &cfg)

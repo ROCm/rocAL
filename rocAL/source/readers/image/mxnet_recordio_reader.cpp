@@ -30,9 +30,7 @@ THE SOFTWARE.
 #include <memory.h>
 #include <stdint.h>
 #include "mxnet_recordio_reader.h"
-#include <boost/filesystem.hpp>
-
-namespace filesys = boost::filesystem;
+#include "filesystem.h"
 
 using namespace std;
 

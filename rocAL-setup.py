@@ -229,24 +229,6 @@ else:
     elif "SLES" in platfromInfo:
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                   linuxSystemInstall_check+' install sqlite3 sqlite3-devel libbz2-devel libopenssl-devel python3-devel autoconf automake libtool curl make gcc-c++ unzip')
-    # Boost V 1.72.0 from source
-    os.system(
-        '(cd '+deps_dir+'; wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2 )')
-    os.system('(cd '+deps_dir+'; tar xjvf boost_1_72_0.tar.bz2 )')
-    if "centos-8" in platfromInfo or "redhat-8" in platfromInfo or "SLES" in platfromInfo:
-        os.system(
-            '(cd '+deps_dir+'/boost_1_72_0/; ./bootstrap.sh --prefix=/usr/local --with-python=python36 )')
-    else:
-        os.system(
-            '(cd '+deps_dir+'/boost_1_72_0/; ./bootstrap.sh --prefix=/usr/local --with-python=python3 )')
-    os.system(
-        '(cd '+deps_dir+'/boost_1_72_0/; ./b2 stage -j16 threading=multi link=shared cxxflags="-std=c++11" )')
-    os.system(
-        '(cd '+deps_dir+'/boost_1_72_0/; sudo ./b2 install threading=multi link=shared --with-system --with-filesystem)')
-    os.system(
-        '(cd '+deps_dir+'/boost_1_72_0/; ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" )')
-    os.system(
-        '(cd '+deps_dir+'/boost_1_72_0/; sudo ./b2 install threading=multi link=static --with-system --with-filesystem)')
     # Install half.hpp
     os.system(
         '(cd '+deps_dir+'; wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip )')
@@ -324,10 +306,6 @@ else:
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                   linuxSystemInstall_check+' install jsoncpp-devel')
-        # boost
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install boost-devel')
         # lmbd
         os.system('sudo -v')
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +

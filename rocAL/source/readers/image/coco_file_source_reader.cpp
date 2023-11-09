@@ -25,11 +25,10 @@ THE SOFTWARE.
 #include <commons.h>
 #include "coco_meta_data_reader.h"
 #include "coco_file_source_reader.h"
-#include <boost/filesystem.hpp>
 #include "meta_data_reader_factory.h"
 #include "meta_data_graph_factory.h"
+#include "filesystem.h"
 
-namespace filesys = boost::filesystem;
 #define USE_STDIO_FILE 0
 
 COCOFileSourceReader::COCOFileSourceReader()
