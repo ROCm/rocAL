@@ -75,6 +75,11 @@ void ResizeMirrorNormalizeMetaNode::update_parameters(pMetaDataBatch input_meta_
             bb_coords.push_back(coords_buf[j]);
             bb_labels.push_back(labels_buf[j]);
         }
+        // get roi width and height of output image
+        auto img_roi_size = input_meta_data->get_img_roi_sizes_batch()[i];
+        img_roi_size.w = output_roi[i].xywh.w;
+        img_roi_size.h = output_roi[i].xywh.h;
+        output_meta_data->get_img_roi_sizes_batch()[i] = img_roi_size;
         output_meta_data->get_bb_cords_batch()[i] = bb_coords;
         output_meta_data->get_labels_batch()[i] = bb_labels;
     }

@@ -76,8 +76,8 @@ class COCOFileSourceReader : public Reader {
     DIR *_src_dir;
     DIR *_sub_dir;
     struct dirent *_entity;
-    std::vector<std::string> _file_names;
-    std::vector<std::string> _files;
+    std::vector<std::string> _file_names, _sorted_file_names;
+    std::vector<float> _aspect_ratios;
     unsigned _curr_file_idx;
     FILE *_current_fPtr;
     std::ifstream _current_ifs;
@@ -103,4 +103,5 @@ class COCOFileSourceReader : public Reader {
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
+    void shuffle_with_aspect_ratios();
 };
