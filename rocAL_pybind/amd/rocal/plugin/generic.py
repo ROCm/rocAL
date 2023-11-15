@@ -85,6 +85,11 @@ class ROCALGenericIterator(object):
                 labels_data = data_loader_source[1] if (len(data_loader_source) > 1) else None
                 roi_height = data_loader_source[2] if (len(data_loader_source) > 2) else []
                 roi_width = data_loader_source[3] if (len(data_loader_source) > 3) else []
+                ROIxywh = b.ROIxywh()
+                ROIxywh.x_vector =  [0]
+                ROIxywh.y_vector =  [0]
+                ROIxywh.w_vector = roi_width
+                ROIxywh.h_vector = roi_height
                 if (len(data_loader_source) == 6 and self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED):
                     decoded_height = data_loader_source[4]
                     decoded_width = data_loader_source[5]
@@ -97,8 +102,7 @@ class ROCALGenericIterator(object):
                     "source_input_images": images_list,
                     "labels": labels_data,
                     "input_batch_buffer": input_buffer,
-                    "roi_width": roi_width,
-                    "roi_height": roi_height,
+                    "roi_xywh": ROIxywh,
                     "decoded_width": decoded_width,
                     "decoded_height": decoded_height,
                     "channels": 3,

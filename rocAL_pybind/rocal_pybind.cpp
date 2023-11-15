@@ -87,7 +87,7 @@ py::object wrapper_image_name(RocalContext context, int array_len) {
 py::object wrapperRocalExternalSourceFeedInput(
     RocalContext context, std::vector<std::string> input_images_names,
     py::array &labels, py::list arrays,
-    std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
+    ROIxywh roi_xywh,
     unsigned int max_width, unsigned int max_height, int channels,
     RocalExternalSourceMode mode, RocalTensorLayout layout, bool eos) {
     std::vector<unsigned char *> uchar_arrays;
@@ -103,7 +103,7 @@ py::object wrapperRocalExternalSourceFeedInput(
     if (labels.is_none()) {
         enable_labels = false;
     }
-    int status = rocalExternalSourceFeedInput(context, input_images_names, enable_labels, uchar_arrays, roi_width, roi_height, max_width, max_height, channels, mode, layout, eos);
+    int status = rocalExternalSourceFeedInput(context, input_images_names, enable_labels, uchar_arrays, roi_xywh, max_width, max_height, channels, mode, layout, eos);
 
     // Update labels in the tensorList
     if (enable_labels) {
@@ -133,6 +133,13 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
 
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
+    // Bind the C++ structure
+    py::class_<ROIxywh>(m, "ROIxywh")
+        .def(py::init<>())
+        .def_readwrite("x_vector", &ROIxywh::x)
+        .def_readwrite("y_vector", &ROIxywh::y)
+        .def_readwrite("w_vector", &ROIxywh::w)
+        .def_readwrite("h_vector", &ROIxywh::h);
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
           py::return_value_policy::reference,

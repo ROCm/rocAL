@@ -99,6 +99,13 @@ struct RocalJointsData {
     RotationBatch rotation_batch;
 };
 
+struct ROIxywh {
+    std::vector<unsigned> x;
+    std::vector<unsigned> y;
+    std::vector<unsigned> w;
+    std::vector<unsigned> h;
+};
+
 /*! \brief  rocAL Status enum
  * \ingroup group_rocal_types
  */

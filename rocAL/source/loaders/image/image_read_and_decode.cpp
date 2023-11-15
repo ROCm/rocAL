@@ -97,16 +97,16 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
 }
 
 void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char *> input_buffer,
-                                             std::vector<unsigned> roi_width, std::vector<unsigned> roi_height,
+                                             ROIxywh roi_xywh,
                                              unsigned int max_width, unsigned int max_height, int channels, ExternalFileMode mode, bool eos) {
     std::vector<size_t> image_size;
-    image_size.reserve(roi_height.size());
+    image_size.reserve(roi_xywh.h.size());
     size_t max_image_size = max_width * max_height * channels;
-    for (unsigned int i = 0; i < roi_height.size(); i++) {
+    for (unsigned int i = 0; i < roi_xywh.h.size(); i++) {
         if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
             image_size[i] = max_image_size;
         else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
-            image_size[i] = roi_height[i];
+            image_size[i] = roi_xywh.h[i];
     }
     auto ext_reader = std::static_pointer_cast<ExternalSourceReader>(_reader);
     if (mode == ExternalFileMode::FILENAME)
@@ -114,7 +114,7 @@ void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_imag
     else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
         ext_reader->feed_data(input_buffer, image_size, mode, eos, {}, {}, max_width, max_height, channels);
     else if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
-        ext_reader->feed_data(input_buffer, image_size, mode, eos, roi_width, roi_height, max_width, max_height, channels);
+        ext_reader->feed_data(input_buffer, image_size, mode, eos, roi_xywh.w, roi_xywh.h, max_width, max_height, channels);
 }
 
 void ImageReadAndDecode::reset() {
