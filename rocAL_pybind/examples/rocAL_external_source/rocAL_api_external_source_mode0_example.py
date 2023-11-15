@@ -7,7 +7,7 @@ import os
 import numpy as np
 import cupy as cp
 import cv2
-
+from PIL import Image
 
 
 def main():
@@ -16,20 +16,34 @@ def main():
         "/coco/coco_10_img/train_10images_2017/"
     device = "cpu"
     try:
-        path = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE0/"
-        isExist = os.path.exists(path)
+        path_mode0 = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE0/"
+        isExist = os.path.exists(path_mode0)
         if not isExist:
-            os.makedirs(path)
+            os.makedirs(path_mode0)
+    except OSError as error:
+        print(error)
+    try:
+        path_mode1 = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE1/"
+        isExist = os.path.exists(path_mode1)
+        if not isExist:
+            os.makedirs(path_mode1)
+    except OSError as error:
+        print(error)
+    try:
+        path_mode2 = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE2/"
+        isExist = os.path.exists(path_mode2)
+        if not isExist:
+            os.makedirs(path_mode2)
     except OSError as error:
         print(error)
 
-    def image_dump(img, idx, device="cpu"):
+    def image_dump(img, idx, device="cpu", mode=0):
         if device == "gpu":
             img = cp.asnumpy(img)
         img = img.transpose([1, 2, 0])  # NCHW
         img = (img).astype('uint8')
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE0/" +
+        cv2.imwrite("OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE" + str(mode) + "/"+
                     str(idx)+"_"+"train"+".png", img)
 
     ##################### MODE 0 #########################
@@ -92,7 +106,7 @@ def main():
         print("**************", i, "*******************")
         for img in output_list[0][0]:
             cnt = cnt + 1
-            image_dump(img, cnt, device=device)
+            image_dump(img, cnt, device=device, mode=0)
 
     ##################### MODE 0 #########################
     
@@ -162,7 +176,7 @@ def main():
         print("**************", i, "*******************")
         for img in output_list[0][0]:
             cnt = cnt + 1
-            image_dump(img, cnt, device=device)
+            image_dump(img, cnt, device=device, mode=1)
     ##################### MODE 1 #########################
     
     ##################### MODE 2 #########################
@@ -181,6 +195,7 @@ def main():
             shuffle(self.files)
             self.i = 0
             self.n = len(self.files)
+
             for x in range(self.n):
                 jpeg_filename = self.files[x]
                 label = 1
@@ -256,7 +271,7 @@ def main():
         print("**************", i, "*******************")
         for img in output_list[0][0]:
             cnt = cnt+1
-            image_dump(img, cnt, device=device)
+            image_dump(img, cnt, device=device, mode=2)
     ##################### MODE 2 #########################
 if __name__ == '__main__':
     main()
