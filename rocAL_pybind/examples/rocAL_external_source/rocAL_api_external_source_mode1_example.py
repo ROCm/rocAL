@@ -72,7 +72,7 @@ def main():
     eii_1 = ExternalInputIteratorMode1(batch_size)
 
     # Create the pipeline
-    external_source_pipeline_mode1 = Pipeline(batch_size=batch_size, num_threads=1, device_id=0,
+    external_source_pipeline_mode1 = Pipeline(batch_size=batch_size, num_threads=1, device_id=0, prefetch_queue_depth=4,
                                               seed=1, rocal_cpu=True if device == "cpu" else False, tensor_layout=types.NCHW)
 
     with external_source_pipeline_mode1:
