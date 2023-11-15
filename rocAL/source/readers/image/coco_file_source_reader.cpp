@@ -85,9 +85,40 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
             replicate_last_batch_to_pad_partial_shard();
         }
     }
-    // shuffle dataset if set
-    if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_file_names.begin(), _file_names.end());
+
+    if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
+        // calculate the aspect ratio for each file and create a pair of <filename, aspect_ratio>
+        std::vector<std::pair<std::string, float>> file_aspect_ratio_pair(_file_names.size());
+        for (size_t i = 0; i < _file_names.size(); i++) {
+            auto filename = _file_names[i];
+            std::string base_filename = filename.substr(filename.find_last_of("/\\") + 1);
+            auto img_size = _meta_data_reader->lookup_image_size(base_filename);
+            auto aspect_ratio = static_cast<float>(img_size.h) / img_size.w;
+            file_aspect_ratio_pair[i] = std::make_pair(filename, aspect_ratio);
+            _aspect_ratios.push_back(aspect_ratio);
+        };
+
+        // sort the <filename, aspect_ratio> pairs according to aspect ratios
+        std::sort(file_aspect_ratio_pair.begin(), file_aspect_ratio_pair.end(), [](auto &lop, auto &rop) { return lop.second < rop.second; });
+
+        // extract sorted file_names
+        std::transform(file_aspect_ratio_pair.begin(), file_aspect_ratio_pair.end(), std::back_inserter(_sorted_file_names), [](auto &pair) { return pair.first; });
+        // extract sorted aspect ratios
+        _aspect_ratios.clear();
+        std::transform(file_aspect_ratio_pair.begin(), file_aspect_ratio_pair.end(), std::back_inserter(_aspect_ratios), [](auto &pair) { return pair.second; });
+
+        // Copy the sorted file_names to _file_names vector to be used in sharding
+        _file_names = _sorted_file_names;
+
+        // shuffle dataset if set
+        if (ret == Reader::Status::OK && _shuffle) {
+            shuffle_with_aspect_ratios();
+        }
+    } else {
+        // shuffle dataset if set
+        if (ret == Reader::Status::OK && _shuffle)
+            std::random_shuffle(_file_names.begin(), _file_names.end());
+    }
     return ret;
 }
 
@@ -172,9 +203,30 @@ int COCOFileSourceReader::release() {
     return 0;
 }
 
+void COCOFileSourceReader::shuffle_with_aspect_ratios() {
+    // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
+    auto mid = std::upper_bound(_aspect_ratios.begin(), _aspect_ratios.end(), 1.0f) - _aspect_ratios.begin();
+    // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
+    std::random_shuffle(_file_names.begin(), _file_names.begin() + mid);
+    std::random_shuffle(_file_names.begin() + mid, _file_names.end());
+    std::vector<std::string> shuffled_filenames;
+    int split_count = _file_names.size() / _batch_count;  // Number of batches for this shard
+    std::vector<int> indexes(split_count);
+    std::iota(indexes.begin(), indexes.end(), 0);
+    // Shuffle the index vector and use the index to fetch batch size elements for decoding
+    std::random_shuffle(indexes.begin(), indexes.end());
+    for (auto const idx : indexes)
+        shuffled_filenames.insert(shuffled_filenames.end(), _file_names.begin() + idx * _batch_count, _file_names.begin() + idx * _batch_count + _batch_count);
+    _file_names = shuffled_filenames;
+}
+
 void COCOFileSourceReader::reset() {
-    if (_shuffle)
+    if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
+        _file_names = _sorted_file_names;
+        if (_shuffle) shuffle_with_aspect_ratios();
+    } else if (_shuffle) {
         std::random_shuffle(_file_names.begin(), _file_names.end());
+    }
     _read_counter = 0;
     _curr_file_idx = 0;
 }

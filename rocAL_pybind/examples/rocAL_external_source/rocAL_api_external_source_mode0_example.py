@@ -264,6 +264,7 @@ def main():
     data_loader = ROCALClassificationIterator(
         external_source_pipeline_mode2, device=device)
     for i, output_list in enumerate(data_loader, 0):
+        print("**************MODE 0*******************")
         print("**************", i, "*******************")
         print("**************starts*******************")
         print("\nImages:\n", output_list)

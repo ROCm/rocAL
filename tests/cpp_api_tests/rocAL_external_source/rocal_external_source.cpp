@@ -285,12 +285,14 @@ int main(int argc, const char **argv) {
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
     ROIxywh ROI_xywh_vector;
+    ROI_xywh_vector.x = 0;
+    ROI_xywh_vector.y = 0;
     while (rocalGetRemainingImages(handle) >= inputBatchSize) {
         std::vector<std::string> input_images;
         std::vector<unsigned char *> input_batch_buffer;
         std::vector<int> label_buffer;
-        std::vector<unsigned> roi_width;
-        std::vector<unsigned> roi_height;
+        std::vector<unsigned> ROI_xywh_vector.w;
+        std::vector<unsigned> ROI_xywh_vector.h;
         for (int i = 0; i < inputBatchSize; i++) {
             if (mode == 0) {
                 input_images.push_back(file_names.back());
@@ -304,17 +306,17 @@ int main(int argc, const char **argv) {
                 if (mode == 1) {
                     input_batch_buffer.push_back(input_buffer.back());
                     input_buffer.pop_back();
-                    roi_height.push_back(srcsize_height.back());
+                    ROI_xywh_vector.h.push_back(srcsize_height.back());
                     srcsize_height.pop_back();
                     label_buffer.push_back(labels.back());
                     labels.pop_back();
                 } else {
                     input_batch_buffer.push_back(input_buffer.back());
                     input_buffer.pop_back();
-                    roi_width.push_back(srcsize_width.back());
+                    ROI_xywh_vector.w.push_back(srcsize_width.back());
                     ROI_xwwh
                     srcsize_width.pop_back();
-                    roi_height.push_back(srcsize_height.back());
+                    ROI_xywh_vector.h.push_back(srcsize_height.back());
                     srcsize_height.pop_back();
                     label_buffer.push_back(labels.back());
                     labels.pop_back();
@@ -328,18 +330,18 @@ int main(int argc, const char **argv) {
             std::cerr << "\n************************** Gonna process Batch *************************" << index;
             std::cerr << "\n Mode ********************* " << mode;
             if (mode == 0) {
-                rocalExternalSourceFeedInput(handle, input_images, setlabels, {}, {}, {},
+                rocalExternalSourceFeedInput(handle, input_images, setlabels, {}, ROI_xywh_vector,
                                              decode_width, decode_height, channels,
                                              RocalExternalSourceMode(0),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 1) {
-                rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer, {},
-                                             roi_height, decode_width, decode_height,
+                rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer,
+                                             ROI_xywh_vector, decode_width, decode_height,
                                              channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 2) {
                 rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer,
-                                             roi_width, roi_height, maxwidth, maxheight,
+                                             ROI_xywh_vector, maxwidth, maxheight,
                                              channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             }
