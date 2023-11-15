@@ -108,12 +108,13 @@ void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_imag
         else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
             image_size[i] = roi_height[i];
     }
+    auto ext_reader = std::static_pointer_cast<ExternalSourceReader>(_reader);
     if (mode == ExternalFileMode::FILENAME)
-        _reader->feed_file_names(input_images_names, input_images_names.size(), eos);
+        ext_reader->feed_file_names(input_images_names, input_images_names.size(), eos);
     else if (mode == ExternalFileMode::RAWDATA_COMPRESSED)
-        _reader->feed_data(input_buffer, image_size, mode, eos, {}, {}, max_width, max_height, channels);
+        ext_reader->feed_data(input_buffer, image_size, mode, eos, {}, {}, max_width, max_height, channels);
     else if (mode == ExternalFileMode::RAWDATA_UNCOMPRESSED)
-        _reader->feed_data(input_buffer, image_size, mode, eos, roi_width, roi_height, max_width, max_height, channels);
+        ext_reader->feed_data(input_buffer, image_size, mode, eos, roi_width, roi_height, max_width, max_height, channels);
 }
 
 void ImageReadAndDecode::reset() {

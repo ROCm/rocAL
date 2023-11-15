@@ -29,9 +29,10 @@ THE SOFTWARE.
 
 #include "commons.h"
 #include "image_reader.h"
+#include "external_source.h"
 #include "timing_debug.h"
 
-class ExternalSourceReader : public Reader {
+class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
    public:
     //! Looks up the folder which contains the files, amd loads the image names
     /*!
