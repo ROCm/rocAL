@@ -56,6 +56,8 @@ struct MetaDataConfig {
     unsigned _frame_stride;
     unsigned _out_img_width;
     unsigned _out_img_height;
+    bool _avoid_class_remapping;
+    bool _aspect_ratio_grouping;
 
    public:
     MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
@@ -66,6 +68,8 @@ struct MetaDataConfig {
     std::string path() const { return _path; }
     std::map<std::string, std::string> feature_key_map() const { return _feature_key_map; }
     std::string file_prefix() const { return _file_prefix; }
+    bool class_remapping() const { return _avoid_class_remapping; }
+    bool get_aspect_ratio_grouping() const { return _aspect_ratio_grouping; }
     unsigned sequence_length() const { return _sequence_length; }
     unsigned frame_step() const { return _frame_step; }
     unsigned frame_stride() const { return _frame_stride; }
@@ -73,9 +77,14 @@ struct MetaDataConfig {
     unsigned out_img_height() const { return _out_img_height; }
     void set_out_img_width(unsigned out_img_width) { _out_img_width = out_img_width; }
     void set_out_img_height(unsigned out_img_height) { _out_img_height = out_img_height; }
+    void set_avoid_class_remapping(bool avoid_class_remapping) { _avoid_class_remapping = avoid_class_remapping; }
+    void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { _aspect_ratio_grouping = aspect_ratio_grouping; }
 };
 
 class MetaDataReader {
+   protected:
+    bool _aspect_ratio_grouping;
+
    public:
     enum class Status {
         OK = 0
@@ -88,4 +97,7 @@ class MetaDataReader {
     virtual const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() = 0;
     virtual bool exists(const std::string& image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
+    virtual ImgSize lookup_image_size(const std::string& image_name) { return {}; }
+    virtual void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { return; }
+    virtual bool get_aspect_ratio_grouping() const { return {}; }
 };

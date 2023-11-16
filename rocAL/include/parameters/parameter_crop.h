@@ -48,7 +48,7 @@ class CropParam {
         x_drift_factor = default_x_drift_factor();
         y_drift_factor = default_y_drift_factor();
     }
-    void set_image_dimensions(RocalROI *roi) {
+    void set_image_dimensions(Roi2DCords *roi) {
         if (roi == nullptr)
             THROW("Empty ROI ptr passed to be set to parameter_crop")
         in_roi = roi;
@@ -62,7 +62,7 @@ class CropParam {
     }
     void set_x_drift_factor(Parameter<float> *x_drift);
     void set_y_drift_factor(Parameter<float> *y_drift);
-    const RocalROI *in_roi;
+    const Roi2DCords *in_roi;
     unsigned int x1, y1, x2, y2;
     const unsigned int batch_size;
     void set_batch_size(unsigned int batch_size);

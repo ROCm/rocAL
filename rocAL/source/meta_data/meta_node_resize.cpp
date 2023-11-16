@@ -29,8 +29,8 @@ void ResizeMetaNode::update_parameters(pMetaDataBatch input_meta_data, pMetaData
     auto input_roi = _node->get_src_roi();
     auto output_roi = _node->get_dst_roi();
     for (int i = 0; i < _batch_size; i++) {
-        float _dst_to_src_width_ratio = static_cast<float>(output_roi[i].x2) / static_cast<float>(input_roi[i].x2);
-        float _dst_to_src_height_ratio = static_cast<float>(output_roi[i].y2) / static_cast<float>(input_roi[i].y2);
+        float _dst_to_src_width_ratio = static_cast<float>(output_roi[i].xywh.w) / static_cast<float>(input_roi[i].xywh.w);
+        float _dst_to_src_height_ratio = static_cast<float>(output_roi[i].xywh.h) / static_cast<float>(input_roi[i].xywh.h);
         unsigned bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf = input_meta_data->get_bb_cords_batch()[i];
         Labels labels_buf = input_meta_data->get_labels_batch()[i];
