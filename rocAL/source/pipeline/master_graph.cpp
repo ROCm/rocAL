@@ -352,7 +352,6 @@ void MasterGraph::release() {
     // shut_down loader:: required for releasing any allocated resourses
     for (auto loader_module : _loader_modules)
         loader_module->shut_down();
-    _loader_module->shut_down();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_OPENCL
@@ -450,7 +449,6 @@ MasterGraph::reset() {
     // resetting loader module to start from the beginning of the media and clear it's internal state/buffers
     for (auto loader_module : _loader_modules)
         loader_module->reset();
-    if (_loader_module) _loader_module->reset();
     // restart processing of the images
     _first_run = true;
     _output_routine_finished_processing = false;
@@ -471,15 +469,8 @@ MasterGraph::mem_type() {
 Timing
 MasterGraph::timing() {
     Timing t;
-    if (_loader_modules.size() > 1) {
-        for (auto loader_module : _loader_modules) {
-            t = loader_module->timing();
-            t.image_process_time += _process_time.get_timing();
-            t.copy_to_output += _convert_time.get_timing();
-            t.bb_process_time += _bencode_time.get_timing();
-        }
-    } else {
-        t = _loader_module->timing();
+    for (auto loader_module : _loader_modules) {
+        t = loader_module->timing();
         t.image_process_time += _process_time.get_timing();
         t.copy_to_output += _convert_time.get_timing();
         t.bb_process_time += _bencode_time.get_timing();
@@ -1144,7 +1135,7 @@ void MasterGraph::start_processing() {
         _remaining_count = std::min(_remaining_count, static_cast<int>(loader_module->remaining_count()));
     }
     if (_loader_modules.size() == 1) {
-    _output_thread = std::thread(&MasterGraph::output_routine, this);
+        _output_thread = std::thread(&MasterGraph::output_routine, this);
     } else {
         _output_thread = std::thread(&MasterGraph::output_routine_multiple_loaders, this);
     }
