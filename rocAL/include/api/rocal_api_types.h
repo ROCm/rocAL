@@ -356,4 +356,16 @@ enum class RocalROICordsType {
     ROCAL_XYWH = 1
 };
 
+/*! \brief Tensor padding types
+ * \ingroup group_rocal_types
+ */
+enum RocalOutOfBoundsPolicy {
+    /*! \brief TRIM_TO_SHAPE
+     */
+    TRIMTOSHAPE = 0,
+    /*! \brief PAD
+     */
+    PAD,
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

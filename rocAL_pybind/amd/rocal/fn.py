@@ -825,6 +825,32 @@ def crop(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
     return (cropped_image)
 
 
+def slice(*inputs, anchor = [], shape = [], dtype = types.FLOAT, end = [], fill_values = [0.0],  out_of_bounds_policy = types.PAD, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """
+    The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
+
+    The slice arguments can be specified by the following named arguments:
+
+    start: Slice start coordinates (absolute)
+
+    rel_start: Slice start coordinates (relative)
+
+    end: Slice end coordinates (absolute)
+
+    rel_end: Slice end coordinates (relative)
+
+    shape: Slice shape (absolute)
+
+    rel_shape: Slice shape (relative)
+
+    """
+
+    kwargs_pybind = {"input": inputs[0], "is_output": False, "anchor": anchor, "shape": shape, "fill_values": fill_values,
+                     "out_of_bounds_policy": out_of_bounds_policy, "output_layout": output_layout, "output_dtype": output_dtype}
+    slice_output = b.slice(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return slice_output
+
+
 def color_twist(*inputs, brightness=1.0, contrast=1.0, hue=0.0,
                 saturation=1.0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Adjusts the brightness, hue and saturation of the images.
@@ -1099,3 +1125,9 @@ def gaussian_noise(*inputs, mean=0.0, std_dev=1.0, seed=0, device=None, output_l
     noise_added_image = b.gaussianNoise(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (noise_added_image)
+
+def roi_random_crop(*inputs, crop_shape=None, remove_dim=-1):
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "crop_shape": crop_shape, "remove_dim": remove_dim}
+    roi_random_crop = b.roiRandomCrop(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (roi_random_crop)

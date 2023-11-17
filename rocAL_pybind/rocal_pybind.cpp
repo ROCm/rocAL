@@ -348,6 +348,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
         .export_values();
+    py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Out of Bounds Policy Type")
+        .value("TRIMTOSHAPE", TRIMTOSHAPE)
+        .value("PAD", PAD)
+        .export_values();
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
@@ -381,6 +385,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         int *ptr = static_cast<int *>(buf.ptr);
         rocalGetImageSizes(context, ptr);
     });
+    m.def("roiRandomCrop", &rocalROIRandomCrop);
     // rocal_api_parameter.h
     m.def("setSeed", &rocalSetSeed);
     m.def("getSeed", &rocalGetSeed);
@@ -612,6 +617,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
     m.def("gaussianNoise", &rocalGaussianNoise,
+          py::return_value_policy::reference);
+    m.def("slice", &rocalSlice,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

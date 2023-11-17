@@ -56,3 +56,4 @@ THE SOFTWARE.
 #include "node_nop.h"
 #include "node_sequence_rearrange.h"
 #include "node_gaussian_noise.h"
+#include "node_slice.h"

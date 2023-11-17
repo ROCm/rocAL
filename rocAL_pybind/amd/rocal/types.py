@@ -90,6 +90,9 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
+from rocal_pybind.types import TRIMTOSHAPE
+from rocal_pybind.types import PAD
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -145,6 +148,9 @@ _known_types = {
     SCALING_MODE_STRETCH: ("SCALING_MODE_STRETCH", SCALING_MODE_STRETCH),
     SCALING_MODE_NOT_SMALLER: ("SCALING_MODE_NOT_SMALLER", SCALING_MODE_NOT_SMALLER),
     SCALING_MODE_NOT_LARGER: ("SCALING_MODE_NOT_LARGER", SCALING_MODE_NOT_LARGER),
+
+    TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
+    PAD: ("PAD", PAD),
 
 }
 

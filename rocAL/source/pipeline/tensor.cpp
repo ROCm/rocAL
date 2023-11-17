@@ -77,6 +77,10 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
+        case RocalTensorDataType::UINT32:
+            return VX_TYPE_UINT32;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -108,23 +112,14 @@ bool operator==(const TensorInfo &rhs, const TensorInfo &lhs) {
 
 void TensorInfo::reset_tensor_roi_buffers() {
     unsigned *roi_buf;
-    auto roi_no_of_dims = _is_image ? 2 : (_num_of_dims - 2);
+    auto roi_no_of_dims = _is_image ? 2 : (_num_of_dims - 1);
     auto roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size;  // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
     allocate_host_or_pinned_mem((void **)&roi_buf, roi_size * roi_no_of_dims * 2 * sizeof(unsigned), _mem_type);
     _roi.set_ptr(roi_buf, _mem_type, roi_size, roi_no_of_dims);
-    if (_layout == RocalTensorlayout::NCDHW) {
+    if (_layout == RocalTensorlayout::NCDHW || _layout == RocalTensorlayout::NDHWC) {
         for (unsigned i = 0; i < _batch_size; i++) {
             unsigned *tensor_shape = _roi[i].end;
-            tensor_shape[2] = _max_shape[1];
-            tensor_shape[1] = _max_shape[2];
-            tensor_shape[0] = _max_shape[3];
-        }
-    } else if (_layout == RocalTensorlayout::NDHWC) {
-        for (unsigned i = 0; i < _batch_size; i++) {
-            unsigned *tensor_shape = _roi[i].end;
-            tensor_shape[2] = _max_shape[0];
-            tensor_shape[1] = _max_shape[1];
-            tensor_shape[0] = _max_shape[2];
+            tensor_shape[i] = _max_shape[i];
         }
     } else if (_is_image) {
         Roi2DCords *roi = _roi.get_2D_roi();
@@ -226,14 +221,10 @@ void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) 
             THROW("The number of dims to be updated and the num of dims of tensor info does not match")
         
         unsigned *tensor_shape = _info.roi()[i].end;
-        if (_info.layout() == RocalTensorlayout::NCDHW) {
-            tensor_shape[2] = shape[i][1] > max_shape[1] ? max_shape[1] : shape[i][1];
-            tensor_shape[1] = shape[i][2] > max_shape[2] ? max_shape[2] : shape[i][2];
-            tensor_shape[0] = shape[i][3] > max_shape[3] ? max_shape[3] : shape[i][3];
-        } else if (_info.layout() == RocalTensorlayout::NDHWC) {
-            tensor_shape[2] = shape[i][0] > max_shape[0] ? max_shape[0] : shape[i][0];
-            tensor_shape[1] = shape[i][1] > max_shape[1] ? max_shape[1] : shape[i][1];
-            tensor_shape[0] = shape[i][2] > max_shape[2] ? max_shape[2] : shape[i][2];
+        if (_info.layout() == RocalTensorlayout::NCDHW || _info.layout() == RocalTensorlayout::NDHWC) {
+            for (unsigned j = 0; j < max_shape.size(); j++) {
+                tensor_shape[j] = shape[i][j] > max_shape[j] ? max_shape[j] : shape[i][j];
+            }
         }
     }
 }
@@ -291,6 +282,30 @@ int Tensor::create_from_handle(vx_context context) {
     _info._type = TensorInfo::Type::HANDLE;
     void *roi_handle = reinterpret_cast<void *>(_info.roi().get_ptr());
     create_roi_tensor_from_handle(&roi_handle);  // Create ROI tensor from handle
+    return 0;
+}
+
+int Tensor::create_from_ptr(vx_context context, void *ptr) {
+    if (_vx_handle) {
+        WRN("Tensor object create method is already called ")
+        return -1;
+    }
+
+    _context = context;
+    vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
+    unsigned num_of_dims = _info.num_of_dims();
+    vx_size stride[num_of_dims];
+
+    stride[0] = tensor_data_size(_info.data_type());
+    for (unsigned i = 1; i < num_of_dims; i++)
+        stride[i] = stride[i - 1] * _info.dims().at(i - 1);
+
+    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
+    vx_status status;
+    if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
+        THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
+    _info._type = TensorInfo::Type::HANDLE;
+    _mem_handle = ptr;
     return 0;
 }
 
