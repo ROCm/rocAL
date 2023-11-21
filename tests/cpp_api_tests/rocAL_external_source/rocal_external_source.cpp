@@ -278,21 +278,17 @@ int main(int argc, const char **argv) {
     int counter = 0;
     std::vector<std::string> names;
     std::vector<int> labels;
-    bool setlabels = false;
+    bool setlabels = true;
     names.resize(inputBatchSize);
     labels.resize(total_images);
     int iter_cnt = 0;
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
     ROIxywh ROI_xywh_vector;
-    ROI_xywh_vector.x = 0;
-    ROI_xywh_vector.y = 0;
     while (rocalGetRemainingImages(handle) >= inputBatchSize) {
         std::vector<std::string> input_images;
         std::vector<unsigned char *> input_batch_buffer;
         std::vector<int> label_buffer;
-        std::vector<unsigned> ROI_xywh_vector.w;
-        std::vector<unsigned> ROI_xywh_vector.h;
         for (int i = 0; i < inputBatchSize; i++) {
             if (mode == 0) {
                 input_images.push_back(file_names.back());
@@ -314,7 +310,6 @@ int main(int argc, const char **argv) {
                     input_batch_buffer.push_back(input_buffer.back());
                     input_buffer.pop_back();
                     ROI_xywh_vector.w.push_back(srcsize_width.back());
-                    ROI_xwwh
                     srcsize_width.pop_back();
                     ROI_xywh_vector.h.push_back(srcsize_height.back());
                     srcsize_height.pop_back();
