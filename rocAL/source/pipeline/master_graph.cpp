@@ -961,7 +961,7 @@ void MasterGraph::output_routine() {
             }
             if (_is_box_iou_matcher) {
                 int *matches_write_buffer = reinterpret_cast<int *>(_ring_buffer.get_meta_write_buffers()[2]);
-                _meta_data_graph->update_box_iou_matcher(&_anchors, matches_write_buffer, output_meta_data, _high_threshold, _low_threshold, _allow_low_quality_matches);
+                _meta_data_graph->update_box_iou_matcher(_iou_matcher_info, matches_write_buffer, output_meta_data);
             }
             _bencode_time.end();
 #ifdef ROCAL_VIDEO
@@ -1366,11 +1366,10 @@ void MasterGraph::box_iou_matcher(std::vector<float> &anchors, float criteria,
                                   bool allow_low_quality_matches) {
     if (!_is_box_iou_matcher)
         THROW("Box IOU matcher variable not set cannot return matched idx")
-    _num_anchors = anchors.size() / 4;
-    _anchors = anchors;
-    _high_threshold = high_threshold;
-    _low_threshold = low_threshold;
-    _allow_low_quality_matches = allow_low_quality_matches;
+    _iou_matcher_info.anchors = anchors;
+    _iou_matcher_info.high_threshold = high_threshold;
+    _iou_matcher_info.low_threshold = low_threshold;
+    _iou_matcher_info.allow_low_quality_matches = allow_low_quality_matches;
 }
 
 size_t MasterGraph::bounding_box_batch_count(pMetaDataBatch meta_data_batch) {

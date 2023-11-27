@@ -210,9 +210,7 @@ class MasterGraph {
     bool _augmentation_metanode = false;
     // box IoU matcher variables
     bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
-    float _high_threshold = 0.5f;                                                 // Max IoU threshold
-    float _low_threshold = 0.4f;                                                  // Min IoU threshold
-    bool _allow_low_quality_matches = true;                                       // Set to true to include low quality matches in matched idx generation
+    BoxIouMatcherInfo _iou_matcher_info;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
