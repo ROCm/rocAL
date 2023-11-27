@@ -219,7 +219,7 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
 }
 
 void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, int *matches_idx_buffer,
-                                              pMetaDataBatch full_batch_meta_data, float criteria, float high_threshold,
+                                              pMetaDataBatch full_batch_meta_data, float high_threshold,
                                               float low_threshold, bool allow_low_quality_matches) {
     auto bb_coords_batch = full_batch_meta_data->get_bb_cords_batch();
     unsigned anchors_size = anchors->size() / 4;  // divide the anchors_size by 4 to get the total number of anchors

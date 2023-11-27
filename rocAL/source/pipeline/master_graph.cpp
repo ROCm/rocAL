@@ -961,7 +961,7 @@ void MasterGraph::output_routine() {
             }
             if (_is_box_iou_matcher) {
                 int *matches_write_buffer = reinterpret_cast<int *>(_ring_buffer.get_meta_write_buffers()[2]);
-                _meta_data_graph->update_box_iou_matcher(&_anchors, matches_write_buffer, output_meta_data, _criteria, _high_threshold, _low_threshold, _allow_low_quality_matches);
+                _meta_data_graph->update_box_iou_matcher(&_anchors, matches_write_buffer, output_meta_data, _high_threshold, _low_threshold, _allow_low_quality_matches);
             }
             _bencode_time.end();
 #ifdef ROCAL_VIDEO
