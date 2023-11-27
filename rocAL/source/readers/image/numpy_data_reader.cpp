@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <commons.h>
 
 #include <algorithm>
+#include <numeric>
 #include <boost/filesystem.hpp>
 #include <cassert>
 
@@ -375,7 +376,20 @@ int NumpyDataReader::release() {
 
 void NumpyDataReader::reset() {
     _shuffle_time.start();
-    if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
+    if (_shuffle) {
+        std::vector<std::string> shuffled_filenames;
+        std::vector<NumpyHeaderData> shuffled_headers;
+        std::vector<int> indexes(_file_names.size());
+        std::iota(indexes.begin(), indexes.end(), 0);
+        // Shuffle the index vector and use the index to fetch batch size elements for decoding
+        std::random_shuffle(indexes.begin(), indexes.end());
+        for (auto const idx : indexes) {
+            shuffled_filenames.push_back(_file_names[idx]);
+            shuffled_headers.push_back(_file_headers[idx]);
+        }
+        _file_names = shuffled_filenames;
+        _file_headers = shuffled_headers;
+    }
     _shuffle_time.end();
     _read_counter = 0;
     _curr_file_idx = 0;
