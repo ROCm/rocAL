@@ -220,8 +220,8 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
 
 void BoundingBoxGraph::update_box_iou_matcher(BoxIouMatcherInfo &iou_matcher_info, int *matches_idx_buffer, pMetaDataBatch full_batch_meta_data) {
     auto bb_coords_batch = full_batch_meta_data->get_bb_cords_batch();
-    unsigned anchors_size = iou_matcher_info.anchors.size() / 4;  // divide the anchors_size by 4 to get the total number of anchors
-    BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(iou_matcher_info.anchors.data());
+    unsigned anchors_size = iou_matcher_info.anchors->size() / 4;  // divide the anchors_size by 4 to get the total number of anchors
+    BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(iou_matcher_info.anchors->data());
 
     std::vector<int *> matches(full_batch_meta_data->size());
     for (int i = 0; i < full_batch_meta_data->size(); i++) {

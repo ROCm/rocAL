@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include "randombboxcrop_meta_data_reader.h"
 
 typedef struct {
-    std::vector<float> anchors;
+    std::vector<float> *anchors;
     float high_threshold;
     float low_threshold;
     bool allow_low_quality_matches;
