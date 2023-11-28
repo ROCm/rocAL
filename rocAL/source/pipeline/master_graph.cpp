@@ -1366,7 +1366,7 @@ void MasterGraph::box_iou_matcher(std::vector<float> &anchors,
                                   bool allow_low_quality_matches) {
     if (!_is_box_iou_matcher)
         THROW("Box IOU matcher variable not set cannot return matched idx")
-    _anchors = anchors;
+    _anchors = anchors;                     // Uses existing _anchors variable used for box encoder
     _iou_matcher_info.anchors = &_anchors;
     _iou_matcher_info.high_threshold = high_threshold;
     _iou_matcher_info.low_threshold = low_threshold;
