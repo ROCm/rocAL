@@ -301,12 +301,11 @@ extern "C" void ROCAL_API_CALL rocalGetJointsDataPtr(RocalContext p_context, Roc
  * \ingroup group_rocal_meta_data
  * \param [in] p_context rocAL context
  * \param [in] anchors The anchors / ground truth bounding box coordinates
- * \param [in] criteria Threshold IoU for matching bounding boxes with anchors.
  * \param [in] high_threshold The max threshold for IOU
  * \param [in] low_threshold The min threshold for IOU
  * \param [in] allow_low_quality_matches bool value when set to true allows low quality matches
  */
-extern "C" void ROCAL_API_CALL rocalBoxIouMatcher(RocalContext p_context, std::vector<float>& anchors, float criteria,
+extern "C" void ROCAL_API_CALL rocalBoxIouMatcher(RocalContext p_context, std::vector<float>& anchors,
                                                   float high_threshold, float low_threshold, bool allow_low_quality_matches = true);
 
 /*! \brief API to return the matched indices for the bounding box and anchors

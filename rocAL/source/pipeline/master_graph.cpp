@@ -1361,7 +1361,7 @@ const std::pair<ImageNameBatch, pMetaDataBatch> &MasterGraph::meta_data() {
     return _ring_buffer.get_meta_data();
 }
 
-void MasterGraph::box_iou_matcher(std::vector<float> &anchors, float criteria,
+void MasterGraph::box_iou_matcher(std::vector<float> &anchors,
                                   float high_threshold, float low_threshold,
                                   bool allow_low_quality_matches) {
     if (!_is_box_iou_matcher)

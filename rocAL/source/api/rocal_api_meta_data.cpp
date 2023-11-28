@@ -495,13 +495,12 @@ void
     ROCAL_API_CALL
     rocalBoxIouMatcher(RocalContext p_context,
                        std::vector<float>& anchors,
-                       float criteria, float high_threshold,
-                       float low_threshold,
+                       float high_threshold, float low_threshold,
                        bool allow_low_quality_matches) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalBoxIouMatcher")
     auto context = static_cast<Context*>(p_context);
-    context->master_graph->box_iou_matcher(anchors, criteria, high_threshold,
+    context->master_graph->box_iou_matcher(anchors, high_threshold,
                                            low_threshold,
                                            allow_low_quality_matches);
 }
