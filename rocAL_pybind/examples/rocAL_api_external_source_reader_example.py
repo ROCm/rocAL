@@ -42,7 +42,8 @@ def main():
             img = cp.asnumpy(img)
         img = img.transpose([1, 2, 0])  # NCHW
         img = (img).astype('uint8')
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        if mode!=2:
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         cv2.imwrite("OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE" + str(mode) + "/"+
                     str(idx)+"_"+"train"+".png", img)
 
