@@ -63,7 +63,7 @@ class LoaderModule {
     virtual std::vector<std::vector<float>> get_sequence_frame_timestamps() { return {}; }
     // External Source reader
     virtual void feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char*> input_buffer,
-                                     ROIxywh roi_xywh, unsigned int max_width, unsigned int max_height,
+                                     std::vector<ROIxywh> roi_xywh, unsigned int max_width, unsigned int max_height,
                                      int channels, ExternalSourceFileMode mode, bool eos) = 0;
 };
 

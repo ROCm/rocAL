@@ -60,7 +60,7 @@ class ROCALGenericIterator(object):
         self.iterator_length = b.getRemainingImages(self.loader._handle)
         self.display = display
         self.batch_size = pipeline._batch_size
-        if self.loader._external_source_operator:
+        if self.loader._is_external_source_operator:
             self.eos = False
             self.index = 0
             self.num_batches = self.loader._external_source.n // self.batch_size if self.loader._external_source.n % self.batch_size == 0 else (
@@ -74,7 +74,7 @@ class ROCALGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if (self.loader._external_source_operator):
+        if (self.loader._is_external_source_operator):
             if (self.index + 1) == self.num_batches:
                 self.eos = True
             if (self.index + 1) <= self.num_batches:
@@ -185,7 +185,7 @@ class ROCALGenericIterator(object):
 
             return self.output_list, self.bb_padded, self.labels_padded
 
-        elif self.loader._external_source_operator:
+        elif self.loader._is_external_source_operator:
             self.labels = self.loader.get_image_labels()
             self.labels_tensor = self.labels_tensor.copy_(
                 torch.from_numpy(self.labels)).long()

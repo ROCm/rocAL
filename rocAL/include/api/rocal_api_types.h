@@ -100,10 +100,10 @@ struct RocalJointsData {
 };
 
 struct ROIxywh {
-    std::vector<unsigned> x;
-    std::vector<unsigned> y;
-    std::vector<unsigned> w;
-    std::vector<unsigned> h;
+    unsigned x;
+    unsigned y;
+    unsigned w;
+    unsigned h;
 };
 
 /*! \brief  rocAL Status enum

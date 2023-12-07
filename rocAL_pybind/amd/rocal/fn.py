@@ -1059,7 +1059,7 @@ def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5,
 
 def external_source(*inputs, source, device=None, color_format=types.RGB, random_shuffle=False, mode=types.EXTSOURCE_FNAME, max_width=2000, max_height=2000):
     # pybind call arguments
-    Pipeline._current_pipeline._external_source_operator = True
+    Pipeline._current_pipeline._is_external_source_operator = True
     Pipeline._current_pipeline._external_source = iter(source)
     Pipeline._current_pipeline._external_source_mode = mode
     Pipeline._current_pipeline._external_source_user_given_width = max_width
