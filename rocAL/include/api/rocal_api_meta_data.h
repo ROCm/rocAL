@@ -76,9 +76,14 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
  * \ingroup group_rocal_meta_data
  * \param [in] rocal_context rocal context
  * \param [in] source_path path to the coco json file
+ * \param [in] mask enable polygon masks
+ * \param [in] ltrb If set to True, bboxes are returned as [left, top, right, bottom]. If set to False, the bboxes are returned as [x, y, width, height]
+ * \param [in] is_box_encoder If set to True, bboxes are returned as encoded bboxes using the anchors
+ * \param [in] avoid_class_remapping If set to True, classes are returned directly. Otherwise, classes are mapped to consecutive values
+ * \param [in] aspect_ratio_grouping If set to True, images are sorted by their aspect ratio and returned
  * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
  */
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool mask = false, bool ltrb = true, bool is_box_encoder = false);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool mask = false, bool ltrb = true, bool is_box_encoder = false, bool avoid_class_remapping = false, bool aspect_ratio_grouping = false);
 
 /*! \brief create coco reader key points
  * \ingroup group_rocal_meta_data
@@ -208,6 +213,13 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetBoundingBoxCords(RocalContext 
  * \param [out] buf The user's buffer that will be filled with images sizes info for the images in the output batch
  */
 extern "C" void ROCAL_API_CALL rocalGetImageSizes(RocalContext rocal_context, int* buf);
+
+/*! \brief get ROI image sizes
+ * \ingroup group_rocal_meta_data
+ * \param [in] rocal_context rocal context
+ * \param [out] buf The user's buffer that will be filled with ROI image size info for the images in the output batch
+ */
+extern "C" void ROCAL_API_CALL rocalGetROIImageSizes(RocalContext rocal_context, int* buf);
 
 /*! \brief create text cifar10 label reader
  * \ingroup group_rocal_meta_data

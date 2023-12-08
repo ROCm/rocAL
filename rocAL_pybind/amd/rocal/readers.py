@@ -29,7 +29,7 @@ import amd.rocal.types as types
 
 
 def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_remapping=False,
-         pixelwise_masks=False, is_box_encoder=False, is_box_iou_matcher=False, stick_to_shard=False, pad_last_batch=False):
+         pixelwise_masks=False, is_box_encoder=False, is_box_iou_matcher=False, aspect_ratio_grouping=False, stick_to_shard=False, pad_last_batch=False):
     """!Creates a COCOReader node.
 
         @param annotations_file         Path to the COCO annotations file.
@@ -40,6 +40,7 @@ def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_r
         @param pixelwise_masks          Whether to read mask data and generate pixel-wise masks.
         @param is_box_encoder           Whether to enable box encoder in the pipeline.
         @param is_box_iou_matcher       Whether to enable box IOU matcher in the pipeline.
+        @param aspect_ratio_grouping    Whether to enable aspect ratio grouping in the pipeline.
         @param stick_to_shard           Determines whether the reader should stick to a data shard instead of going through the entire dataset.
         @param pad_last_batch           If set to True, pads the shard by repeating the last sample.
 
@@ -54,7 +55,9 @@ def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_r
         "is_output": True,
         "mask": masks,
         "ltrb": ltrb,
-        "is_box_encoder": is_box_encoder}
+        "is_box_encoder": is_box_encoder,
+        "avoid_class_remapping": avoid_class_remapping,
+        "aspect_ratio_grouping": aspect_ratio_grouping}
     meta_data = b.cocoReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (meta_data, labels, bboxes)

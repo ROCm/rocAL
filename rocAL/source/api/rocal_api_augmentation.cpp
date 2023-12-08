@@ -554,16 +554,22 @@ RocalTensor ROCAL_API_CALL
     try {
         if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
             THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
-        if ((dest_width | dest_height) && (resize_longer | resize_shorter))
+        // MaskRCNN training uses a new resize scaling mode - MIN_MAX_SCALING_MODE where min_size and max_size is passed and the final output size is calculated from the image size
+        // Only in the case of MIN_MAX_SCALING_MODE, both resize_shorter and resize_longer values can be passed together
+        if ((dest_width | dest_height) && (resize_longer | resize_shorter) && (scaling_mode != RocalResizeScalingMode::ROCAL_SCALING_MODE_MIN_MAX))
             THROW("Only one method of specifying size can be used \ndest_width and/or dest_height\nresize_shorter\nresize_longer")
-        if (resize_longer && resize_shorter)
-            THROW("'resize_longer' and 'resize_shorter' cannot be passed together. They are mutually exclusive.")
+        if (resize_longer && resize_shorter && scaling_mode != RocalResizeScalingMode::ROCAL_SCALING_MODE_MIN_MAX)
+            THROW("'resize_longer' and 'resize_shorter' can only be passed together for min max scaling mode")
 
         unsigned out_width, out_height;
         RocalResizeScalingMode resize_scaling_mode;
 
         // Change the scaling mode if resize_shorter or resize_longer is specified
-        if (resize_shorter) {
+        if (scaling_mode == RocalResizeScalingMode::ROCAL_SCALING_MODE_MIN_MAX) {
+            resize_scaling_mode = scaling_mode;
+            out_width = dest_width;
+            out_height = dest_height;
+        } else if (resize_shorter) {
             resize_scaling_mode = RocalResizeScalingMode::ROCAL_SCALING_MODE_NOT_SMALLER;
             out_width = out_height = resize_shorter;
         } else if (resize_longer) {
@@ -608,6 +614,10 @@ RocalTensor ROCAL_API_CALL
                 max_out_width = maximum_size[0] ? maximum_size[0] : max_out_width;
                 max_out_height = maximum_size[1] ? maximum_size[1] : max_out_height;
             }
+        }
+        if (scaling_mode == RocalResizeScalingMode::ROCAL_SCALING_MODE_MIN_MAX) {
+            // For Min Max scaling mode, both min size and max size are passed as resize_shorter and resize_longer values
+            maximum_size = {resize_shorter, resize_longer};
         }
 
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
