@@ -285,6 +285,7 @@ int main(int argc, const char **argv) {
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
     std::vector<ROIxywh> ROI_xywh;
+    ROI_xywh.resize(inputBatchSize);
     while (rocalGetRemainingImages(handle) >= inputBatchSize) {
         std::vector<std::string> input_images;
         std::vector<unsigned char *> input_batch_buffer;

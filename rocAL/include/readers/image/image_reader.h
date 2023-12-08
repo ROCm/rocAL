@@ -54,6 +54,7 @@ enum class ExternalSourceFileMode {
     FILENAME = 0,
     RAWDATA_COMPRESSED = 1,
     RAWDATA_UNCOMPRESSED = 2,
+    NONE = 3,
 };
 
 struct ReaderConfig {
@@ -114,7 +115,7 @@ struct ReaderConfig {
     bool _loop = false;
     std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    ExternalSourceFileMode _file_mode = ExternalSourceFileMode::FILENAME;
+    ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
