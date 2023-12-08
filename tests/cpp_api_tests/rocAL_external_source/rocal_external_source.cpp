@@ -322,7 +322,6 @@ int main(int argc, const char **argv) {
                 }
             }
         }
-        std::cerr << "\n total_images" << total_images << "\n index" << index<< "\n eos" << eos; 
         if (index+1 <= (total_images / inputBatchSize)) {
             std::cerr << "\n************************** Gonna process Batch *************************" << index;
             std::cerr << "\n Mode ********************* " << mode;
