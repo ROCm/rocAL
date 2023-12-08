@@ -134,22 +134,41 @@ class MasterGraph {
     void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
     std::vector<rocalTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
-    Tensor* roi_random_crop(Tensor *input, int *crop_shape, int remove_dim=-1);
-    void update_roi_random_crop(int *crop_shape_batch, int *roi_begin_batch, int *roi_end_batch);
+    Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, int *crop_shape);
+    TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0);
+    void update_roi_random_crop();
+    void update_random_object_bbox();
+    void findLabels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
+    void filterByLabel(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
+    void labelRow(const int *label_base, const int *in_row, int *out_row, unsigned length);
+    int disjointGetGroup(const int &x) { return x; }
+    int disjointSetGroup(int &x, int new_id);
+    int disjointFind(int *items, int x);
+    int disjointMerge(int *items, int x, int y);
+    void mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
+    int labelMergeFunc(const u_int8_t *input, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng);
+    bool hit(std::vector<unsigned>& hits, unsigned idx);
+    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> ranges, std::vector<unsigned> hits, int *in, std::vector<int> origin, unsigned width);
+    int pick_box(std::vector<std::vector<std::vector<unsigned>>> boxes, std::mt19937 &rng, int k_largest = -1);
 #if ENABLE_OPENCL
-    cl_command_queue get_ocl_cmd_q() { return _device.resources()->cmd_queue; }
+        cl_command_queue get_ocl_cmd_q() {
+        return _device.resources()->cmd_queue;
+    }
 #endif
    private:
     Status update_node_parameters();
     void create_single_graph();
+    void create_multiple_graphs();
     void start_processing();
     void stop_processing();
     void output_routine();
+    void output_routine_multiple_loaders();
     void decrease_image_count();
     /// notify_user_thread() is called when the internal processing thread is done with processing all available tensors
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed tensors
     bool no_more_processed_data();
+    bool is_out_of_data();
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
@@ -175,10 +194,12 @@ class MasterGraph {
     DeviceManager _device;                                                        //!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
+    std::vector<std::shared_ptr<Graph>> _graphs;
     RocalAffinity _affinity;
     size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
     const int _gpu_id;                                                            //!< Defines the device id used for processing
     pLoaderModule _loader_module;                                                 //!< Keeps the loader module used to feed the input the tensors of the graph
+    std::vector<pLoaderModule> _loader_modules;                                   //!< Keeps the list of loader modules used to feed the input the tensors of the graph
     TimingDBG _convert_time, _process_time, _bencode_time;
     const size_t _user_batch_size;                                                //!< Batch size provided by the user
     vx_context _context;
@@ -189,7 +210,7 @@ class MasterGraph {
     bool _first_run = true;
     bool _processing;                                                             //!< Indicates if internal processing thread should keep processing or not
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
-    int _remaining_count;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
+    int _remaining_count = INT_MAX;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
     bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
@@ -209,11 +230,22 @@ class MasterGraph {
     std::vector<float> _means, _stds;                                             //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
     bool _augmentation_metanode = false;
     bool _is_roi_random_crop = false;
-    uint _input_dims, _output_dims, _roi_dim_to_remove;
+    bool _is_random_object_bbox = false;
     int *_crop_shape_batch = nullptr;
     int *_roi_batch = nullptr;
     Tensor *_roi_random_crop_tensor = nullptr;
+    Tensor *_roi_start_tensor = nullptr;
+    Tensor *_roi_end_tensor = nullptr;
+    Tensor *_random_object_bbox_label_tensor = nullptr;
+    Tensor *_random_object_bbox_box1_tensor = nullptr;
+    Tensor *_random_object_bbox_box2_tensor = nullptr;
     void *_roi_random_crop_buf = nullptr;
+    void *_random_object_bbox_box1_buf = nullptr;
+    void *_random_object_bbox_box2_buf = nullptr;
+    TensorList _random_object_bbox_tensor_list;
+    std::string _random_object_bbox_output_format;
+    int _k_largest;
+    float _foreground_prob;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
@@ -255,15 +287,17 @@ std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node) {
  */
 template <>
 inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<ImageLoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<ImageLoaderNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -273,15 +307,17 @@ inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<
 
 template <>
 inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -291,16 +327,18 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
 
 template <>
 inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<FusedJpegCropNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<FusedJpegCropNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
-    _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -310,16 +348,18 @@ inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const std::vecto
 
 template <>
 inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
-    _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -332,15 +372,17 @@ inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const
  */
 template <>
 inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -353,15 +395,17 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
  */
 template <>
 inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<VideoLoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<VideoLoaderNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -371,15 +415,17 @@ inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const std::vector<
 
 template <>
 inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -389,15 +435,17 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
 
 template <>
 inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<NumpyLoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<NumpyLoaderNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
@@ -407,15 +455,17 @@ inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<
 
 template <>
 inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-    if (_loader_module)
-        THROW("A loader already exists, cannot have more than one loader")
+    // if (_loader_module)
+    //     THROW("A loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<NumpyLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<NumpyLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_id(_loader_modules.size() - 1);
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));

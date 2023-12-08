@@ -77,6 +77,7 @@ class NumpyDataReader : public Reader {
     DIR* _sub_dir;
     struct dirent* _entity;
     std::vector<std::string> _file_names;
+    std::vector<std::string> _files;
     std::vector<NumpyHeaderData> _file_headers;
     unsigned _curr_file_idx;
     FILE* _current_fPtr;
@@ -94,8 +95,11 @@ class NumpyDataReader : public Reader {
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
+    unsigned _seed = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
+    std::mutex _cache_mutex_;
+    std::map<std::string, NumpyHeaderData> _header_cache_;
     const RocalTensorDataType TypeFromNumpyStr(const std::string& format);
     inline void SkipSpaces(const char*& ptr);
     void ParseHeaderContents(NumpyHeaderData& target, const std::string& header);
@@ -111,6 +115,8 @@ class NumpyDataReader : public Reader {
     void ParseHeader(NumpyHeaderData& parsed_header, std::string file_path);
     template <typename T>
     size_t ParseNumpyData(T* buf, std::vector<unsigned> strides, std::vector<unsigned> shapes, unsigned dim = 0);
+    bool GetFromCache(const std::string& file_name, NumpyHeaderData& target);
+    void UpdateCache(const std::string& file_name, const NumpyHeaderData& value);   
     void incremenet_read_ptr();
     int release();
     size_t get_file_shard_id();

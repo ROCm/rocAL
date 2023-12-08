@@ -253,12 +253,14 @@ class TensorInfo {
                 _max_shape[0] = _dims[1] = new_dims[0];
                 _max_shape[1] = _dims[2] = new_dims[1];
                 _max_shape[2] = _dims[3] = new_dims[2];
+                _max_shape[3] = _dims[4] = new_dims[3];
                 break;
             }
             case RocalTensorlayout::NCDHW: {
-                _max_shape[1] = _dims[2] = new_dims[0];
-                _max_shape[2] = _dims[3] = new_dims[1];
-                _max_shape[3] = _dims[4] = new_dims[2];
+                _max_shape[0] = _dims[1] = new_dims[0];
+                _max_shape[1] = _dims[2] = new_dims[1];
+                _max_shape[2] = _dims[3] = new_dims[2];
+                _max_shape[3] = _dims[4] = new_dims[3];
                 break;
             }
             default: {

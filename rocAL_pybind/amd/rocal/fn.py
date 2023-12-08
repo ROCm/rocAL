@@ -135,12 +135,13 @@ def fog(*inputs, fog=0.5, device=None, output_layout=types.NHWC, output_dtype=ty
     return (fog_image)
 
 
-def brightness(*inputs, brightness=None, brightness_shift=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def brightness(*inputs, brightness=None, brightness_shift=None, conditional_execution=1, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Adjusts brightness of the image.
 
         @param inputs                                                                 the input image passed to the augmentation
         @param brightness (float, optional, default = None):                          brightness multiplier. Values >= 0 are accepted. For example: 0 - black image, 1 - no change, 2 - increase brightness twice
         @param brightness_shift (float, optional, default = None)                     brightness shift
+        @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
@@ -151,22 +152,25 @@ def brightness(*inputs, brightness=None, brightness_shift=None, device=None, out
         brightness, float) else brightness
     brightness_shift = b.createFloatParameter(brightness_shift) if isinstance(
         brightness_shift, float) else brightness_shift
+    conditional_execution = b.createIntParameter(conditional_execution) if isinstance(
+            conditional_execution, int) else conditional_execution
 
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "brightness": brightness, "brightness_shift": brightness_shift,
-                     "output_layout": output_layout, "output_dtype": output_dtype}
+                     "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
     brightness_image = b.brightness(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (brightness_image)
 
 
-def brightness_fixed(*inputs, brightness=1.0, brightness_shift=0.0, device=None,
+def brightness_fixed(*inputs, brightness=1.0, brightness_shift=0.0, conditional_execution=1, device=None,
                      output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Adjusts brightness of the image with fixed parameters.
 
         @param inputs                                                                 the input image passed to the augmentation
         @param brightness (float, optional, default = 1.0)                            brightness multiplier. Values >= 0 are accepted. For example: 0 - black image, 1 - no change, 2 - increase brightness twice
         @param brightness_shift (float, optional, default = 0.0)                      brightness shift
+        @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
@@ -175,7 +179,7 @@ def brightness_fixed(*inputs, brightness=1.0, brightness_shift=0.0, device=None,
     """
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "brightness": brightness, "brightness_shift": brightness_shift,
-                     "output_layout": output_layout, "output_dtype": output_dtype}
+                     "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
     brightness_image = b.brightnessFixed(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (brightness_image)
@@ -1085,7 +1089,6 @@ def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5,
     Pipeline._current_pipeline._box_iou_matcher = True
     return (box_iou_matcher, [])
 
-
 def set_layout(*inputs, output_layout=types.NHWC):
     """!Adjusts brightness of the image.
 
@@ -1100,14 +1103,14 @@ def set_layout(*inputs, output_layout=types.NHWC):
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (new_output)
 
-
-def gaussian_noise(*inputs, mean=0.0, std_dev=1.0, seed=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def gaussian_noise(*inputs, mean=0.0, std_dev=1.0, seed=0, conditional_execution=1, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Gaussian noise to the input image.
 
         @param inputs (list)                                                          The input image to which salt-and-pepper noise is applied.
         @param mean (float, optional, default = 0.0)                                  Mean used for noise generation. Default is 0.0.
         @param std_dev (float, optional, default = 1.0)                               Standard deviation used for noise generation. Default is 1.0.
         @param seed (int, optional, default = 0)                                      Random seed. Default is 0.
+        @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
         @param output_dtype (int, optional, default = types.UINT*)                    Tensor dtype for the augmentation output. Default is types.UINT8.
@@ -1118,16 +1121,30 @@ def gaussian_noise(*inputs, mean=0.0, std_dev=1.0, seed=0, device=None, output_l
         mean) if isinstance(mean, float) else mean
     std_dev = b.createFloatParameter(
         std_dev) if isinstance(std_dev, float) else std_dev
+    conditional_execution = b.createIntParameter(conditional_execution) if isinstance(
+                conditional_execution, int) else conditional_execution
 
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "std_dev": std_dev,
-                     "seed": seed, "output_layout": output_layout, "output_dtype": output_dtype}
+                     "seed": seed, "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
     noise_added_image = b.gaussianNoise(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (noise_added_image)
 
-def roi_random_crop(*inputs, crop_shape=None, remove_dim=-1):
+def roi_random_crop(*inputs, roi_start, roi_end, crop_shape):
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "crop_shape": crop_shape, "remove_dim": remove_dim}
-    roi_random_crop = b.roiRandomCrop(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (roi_random_crop)
+    kwargs_pybind = {"input_image": inputs[0], "roi_start": roi_start, "roi_end": roi_end, "crop_shape": crop_shape}
+    anchor = b.roiRandomCrop(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (anchor)
+
+def random_object_bbox(*inputs, format='anchor_shape', background=0, cache_objects=False, classes=[], foreground_prob=1.0, ignore_class=False, k_largest=-1, seed=0, threshold=[]):
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "format": format, "k_largest": k_largest, "foreground_prob": foreground_prob}
+    selected_roi = b.randomObjectBbox(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    if format == "box":
+        return (selected_roi)
+    elif format == "anchor_shape" or format == "start_end":
+        return (selected_roi[0], selected_roi[1])
+    else:
+        print('Wrong format passed to random_object_bbox')
+        return ()

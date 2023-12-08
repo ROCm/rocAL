@@ -52,11 +52,12 @@ class ParameterVX {
             THROW("Reading vx scalar failed" + TOSTR(status));
     }
     void create_array(std::shared_ptr<Graph> graph, vx_enum data_type, unsigned batch_size) {
-        // _arrVal = (T*)malloc(sizeof(T) * _batch_size);
         _batch_size = batch_size;
-        _arrVal.resize(_batch_size);
+        _param->create_array(_batch_size);
         _array = vxCreateArray(vxGetContext((vx_reference)graph->get()), data_type, _batch_size);
-        vxAddArrayItems(_array, _batch_size, _arrVal.data(), sizeof(T));
+        auto status  = vxAddArrayItems(_array, _batch_size, get_array().data(), sizeof(T));
+        if (status != 0)
+            THROW(" vxAddArrayItems failed in create_array (ParameterVX): " + TOSTR(status))
         update_array();
     }
     void set_param(Parameter<T>* param) {
@@ -96,11 +97,7 @@ class ParameterVX {
     }
     void update_array() {
         vx_status status;
-        for (uint i = 0; i < _batch_size; i++) {
-            _arrVal[i] = renew();
-            // INFO("update_array: " + TOSTR(i) + "," + TOSTR(_arrVal[i]));
-        }
-        status = vxCopyArrayRange((vx_array)_array, 0, _batch_size, sizeof(T), _arrVal.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+        status = vxCopyArrayRange((vx_array)_array, 0, _batch_size, sizeof(T), get_array().data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
         if (status != 0)
             THROW(" vxCopyArrayRange failed in update_array (ParameterVX): " + TOSTR(status))
     }
@@ -109,12 +106,15 @@ class ParameterVX {
         return _param->get();
     }
 
+    std::vector<T> get_array() {
+        return _param->get_array();
+    }
+
    private:
     vx_scalar _scalar;
-    vx_array _array;
+    vx_array _array = nullptr;
     Parameter<T>* _param;
     T _val;
-    std::vector<T> _arrVal;
     unsigned _batch_size;
     unsigned OVX_PARAM_IDX;
     const T _DEFAULT_RANGE_START;

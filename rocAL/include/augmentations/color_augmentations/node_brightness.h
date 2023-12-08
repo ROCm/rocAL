@@ -31,8 +31,8 @@ class BrightnessNode : public Node {
     BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     BrightnessNode() = delete;
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
+    void init(float alpha, float beta, int conditional_execution);
+    void init(FloatParam *alpha_param, FloatParam *beta_param, IntParam *conditional_execution);
 
    protected:
     void create_node() override;
@@ -41,6 +41,8 @@ class BrightnessNode : public Node {
    private:
     ParameterVX<float> _alpha;
     ParameterVX<float> _beta;
+    ParameterVX<int> _conditional_execution;
     constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
     constexpr static float BETA_RANGE[2] = {0, 25};
+    constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};
 };

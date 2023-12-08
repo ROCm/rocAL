@@ -35,9 +35,35 @@ class SimpleParameter : public Parameter<T> {
     T get() override {
         return _val;
     }
-    int update(T new_val) {
+
+    std::vector<T> get_array() override {
+        return _array;
+    }
+
+    void update_single_value(T new_val) {
         _val = new_val;
+    }
+
+    void update_array(T new_val) {
+        for (uint i = 0; i < _batch_size; i++) {
+            update_single_value(new_val);
+            _array[i] = _val;
+        }
+    }
+
+    int update(T new_val) {
+        if (_array.size() > 0)
+            update_array(new_val);
+        else
+            update_single_value(new_val);
         return 0;
+    }
+
+    void create_array(unsigned batch_size) override {
+        if (_array.size() == 0)
+            _array.resize(batch_size);
+        _batch_size = batch_size;
+        update(_val);
     }
 
     ~SimpleParameter() = default;
@@ -48,6 +74,8 @@ class SimpleParameter : public Parameter<T> {
 
    private:
     T _val;
+    std::vector<T> _array;
+    unsigned _batch_size;
 };
 using pIntParam = std::shared_ptr<SimpleParameter<int>>;
 using pFloatParam = std::shared_ptr<SimpleParameter<float>>;

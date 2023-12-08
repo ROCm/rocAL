@@ -29,6 +29,8 @@ THE SOFTWARE.
 #include "parameter_random.h"
 #include "parameter_simple.h"
 
+const int MAX_SEEDS = 1024;
+
 enum class RocalParameterType {
     DETERMINISTIC = 0,
     RANDOM_UNIFORM,
@@ -72,6 +74,8 @@ class ParameterFactory {
     void set_seed(unsigned seed);
     unsigned get_seed();
     void generate_seed();
+    int64_t get_seed_from_seedsequence();
+    void increment_seed_sequence_idx();
 
     template <typename T>
     Parameter<T>* create_uniform_rand_param(T start, T end) {
@@ -104,4 +108,6 @@ class ParameterFactory {
     static ParameterFactory* _instance;
     static std::mutex _mutex;
     ParameterFactory();
+    std::vector<int64_t> _seed_vector;
+    int _seed_sequence_idx = 0;
 };

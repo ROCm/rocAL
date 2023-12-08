@@ -104,8 +104,21 @@ void ParameterFactory::generate_seed() {
     _seed = rd();
 }
 
+int64_t
+ParameterFactory::get_seed_from_seedsequence() {
+    increment_seed_sequence_idx();
+    return _seed_vector[_seed_sequence_idx];
+}
+
+void ParameterFactory::increment_seed_sequence_idx() {
+    _seed_sequence_idx = (_seed_sequence_idx + 1) % MAX_SEEDS;
+}
+
 void ParameterFactory::set_seed(unsigned seed) {
     _seed = seed;
+    _seed_vector.resize(MAX_SEEDS);
+    std::seed_seq ss{seed};
+    ss.generate(_seed_vector.begin(), _seed_vector.end());
 }
 
 IntParam* ParameterFactory::create_uniform_int_rand_param(int start, int end) {
@@ -123,7 +136,7 @@ FloatParam* ParameterFactory::create_uniform_float_rand_param(float start, float
 }
 
 IntParam* ParameterFactory::create_custom_int_rand_param(const int* value, const double* frequencies, size_t size) {
-    auto gen = new CustomRand<int>(value, frequencies, size, _seed);
+    auto gen = new CustomRand<int>(value, frequencies, size, get_seed_from_seedsequence());
     auto ret = new IntParam(gen, RocalParameterType::RANDOM_CUSTOM);
     _parameters.insert(gen);
     return ret;

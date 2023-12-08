@@ -646,6 +646,7 @@ rocalBrightness(
     bool is_output,
     RocalFloatParam p_alpha,
     RocalFloatParam p_beta,
+    RocalIntParam conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -658,6 +659,7 @@ rocalBrightness(
     auto input = static_cast<Tensor*>(p_input);
     auto alpha = static_cast<FloatParam*>(p_alpha);
     auto beta = static_cast<FloatParam*>(p_beta);
+    auto conditional_execution_value = static_cast<IntParam*>(conditional_execution);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -665,7 +667,7 @@ rocalBrightness(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta, conditional_execution_value);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -680,6 +682,7 @@ rocalBrightnessFixed(
     float alpha,
     float beta,
     bool is_output,
+    int conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -697,7 +700,7 @@ rocalBrightnessFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta, conditional_execution);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1163,6 +1166,7 @@ rocalGaussianNoise(
     RocalFloatParam mean,
     RocalFloatParam std_dev,
     int seed,
+    RocalIntParam conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1175,6 +1179,7 @@ rocalGaussianNoise(
     auto input = static_cast<Tensor*>(p_input);
     auto mean_value = static_cast<FloatParam*>(mean);
     auto stddev_value = static_cast<FloatParam*>(std_dev);
+    auto conditional_execution_value = static_cast<IntParam*>(conditional_execution);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -1182,7 +1187,7 @@ rocalGaussianNoise(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean_value, stddev_value, seed);
+        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean_value, stddev_value, seed, conditional_execution_value);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1198,6 +1203,7 @@ rocalGaussianNoiseFixed(
     float std_dev,
     bool is_output,
     int seed,
+    int conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1215,7 +1221,7 @@ rocalGaussianNoiseFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, std_dev, seed);
+        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, std_dev, seed, conditional_execution);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

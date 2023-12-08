@@ -203,12 +203,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRotateFixed(RocalContext context, Roc
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] alpha controls contrast of the image
  * \param [in] beta controls brightness of the image
+ * \param [in] conditional_execution controls the execution of the augmentation
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
-                                                      RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL,
+                                                      RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalIntParam conditional_execution = NULL,
                                                       RocalTensorLayout output_layout = ROCAL_NONE,
                                                       RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -219,13 +220,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] alpha controls contrast of the image
  * \param [in] beta controls brightness of the image
+ * \param [in] conditional_execution controls the execution of the augmentation
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context, RocalTensor input,
                                                            float alpha, float beta,
-                                                           bool is_output,
+                                                           bool is_output, int conditional_execution = 1,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -573,6 +575,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
  * \param [in] mean Mean of the distribution
  * \param [in] std_dev Standard deviation of the distribution
  * \param [in] seed seed value for the random number generator
+ * \param [in] conditional_execution controls the execution of the augmentation
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -580,7 +583,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
 extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoise(RocalContext context, RocalTensor input,
                                                          bool is_output,
                                                          RocalFloatParam mean = NULL, RocalFloatParam std_dev = NULL,
-                                                         int seed = 0,
+                                                         int seed = 0, RocalIntParam conditional_execution = NULL,
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -592,13 +595,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoise(RocalContext context, R
  * \param [in] mean Mean of the distribution
  * \param [in] std_dev Standard deviation of the distribution
  * \param [in] seed seed value for the random number generator
+ * \param [in] conditional_execution controls the execution of the augmentation
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoiseFixed(RocalContext context, RocalTensor input,
                                                               float mean, float std_dev,
-                                                              bool is_output, int seed = 0,
+                                                              bool is_output, int seed = 0, int conditional_execution = 1,
                                                               RocalTensorLayout output_layout = ROCAL_NONE,
                                                               RocalTensorOutputType output_datatype = ROCAL_UINT8);
 

@@ -37,13 +37,15 @@ class Node {
     void update_parameters();
     std::vector<Tensor *> input() { return _inputs; };
     std::vector<Tensor *> output() { return _outputs; };
-    void add_next(const std::shared_ptr<Node> &node) {}      // To be implemented
-    void add_previous(const std::shared_ptr<Node> &node) {}  // To be implemented
+    void add_next(const std::shared_ptr<Node> &node);    // To be implemented
+    void add_previous(const std::shared_ptr<Node> &node); // To be implemented
     std::shared_ptr<Graph> graph() { return _graph; }
     void set_meta_data(pMetaDataBatch meta_data_info) { _meta_data_info = meta_data_info; }
     bool _is_ssd = false;
     const Roi2DCords *get_src_roi() { return _inputs[0]->info().roi().get_2D_roi(); }
     const Roi2DCords *get_dst_roi() { return _outputs[0]->info().roi().get_2D_roi(); }
+    void set_id(int id) { _graph_id = id; }
+    int get_id() { return _graph_id; }
 
    protected:
     virtual void create_node() = 0;
@@ -54,4 +56,7 @@ class Node {
     vx_node _node = nullptr;
     size_t _batch_size;
     pMetaDataBatch _meta_data_info;
+    std::vector<std::shared_ptr<Node>> _next;
+    std::vector<std::shared_ptr<Node>> _prev;
+    int _graph_id = -1;
 };

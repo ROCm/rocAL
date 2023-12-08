@@ -257,6 +257,26 @@ void MasterGraph::create_single_graph() {
     _graph->verify();
 }
 
+void MasterGraph::create_multiple_graphs() {
+    // Actual graph creating and calls into adding nodes to graph is deferred and is happening here to enable potential future optimizations
+    int num_of_graphs = _loader_modules.size();
+    for (int n = 0; n < num_of_graphs; n++) {
+        _graphs.emplace_back(std::make_shared<Graph>(_context, _affinity, 0, _cpu_num_threads, _gpu_id));
+    }
+    for (auto &node : _nodes) {
+        // Any tensor not yet created can be created as virtual tensor
+        for (auto &tensor : node->output())
+            if (tensor->info().type() == TensorInfo::Type::UNKNOWN) {
+                tensor->create_virtual(_context, _graphs[node->get_id()]->get());
+                _internal_tensors.push_back(tensor);
+            }
+        node->create(_graphs[node->get_id()]);
+    }
+    
+    for (auto& graph : _graphs)
+        graph->verify();
+}
+
 MasterGraph::Status
 MasterGraph::build() {
     if (_internal_tensor_list.empty())
@@ -268,7 +288,12 @@ MasterGraph::build() {
     _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
-    create_single_graph();
+    if (_loader_modules.size() > 1) {
+        create_multiple_graphs();
+    } else {
+        _loader_module = _loader_modules[0];
+        create_single_graph();
+    }
     start_processing();
     return Status::OK;
 }
@@ -324,7 +349,8 @@ void MasterGraph::release() {
     _tensor_map.clear();
     _ring_buffer.release_gpu_res();
     // shut_down loader:: required for releasing any allocated resourses
-    _loader_module->shut_down();
+    for (auto loader_module : _loader_modules)
+        loader_module->shut_down();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_OPENCL
@@ -348,7 +374,6 @@ void MasterGraph::release() {
         dynamic_cast<TensorList *>(tensor_list)->release();  // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     if(_is_roi_random_crop)
     {
-        // delete _roi_random_crop_tensor;
         if(_crop_shape_batch != nullptr)
             delete[] _crop_shape_batch;
         if(_roi_random_crop_buf != nullptr) {
@@ -359,11 +384,38 @@ void MasterGraph::release() {
                     std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
     #endif
             } else { free(_roi_random_crop_buf); }
+        delete _roi_random_crop_tensor;
         }
+    }
+    if(_is_random_object_bbox)
+    {
+        if(_random_object_bbox_box1_buf != nullptr) {
+            if (_affinity == RocalAffinity::GPU) {
+    #if ENABLE_HIP
+                hipError_t err = hipHostFree(_random_object_bbox_box1_buf);
+                if (err != hipSuccess)
+                    std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+    #endif
+            } else { free(_random_object_bbox_box1_buf); }
+        }
+        if(_random_object_bbox_box2_buf != nullptr) {
+            if (_affinity == RocalAffinity::GPU) {
+    #if ENABLE_HIP
+                hipError_t err = hipHostFree(_random_object_bbox_box2_buf);
+                if (err != hipSuccess)
+                    std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+    #endif
+            } else { free(_random_object_bbox_box2_buf); }
+        }
+        // _random_object_bbox_tensor_list.release();
     }
 
     if (_graph != nullptr)
         _graph->release();
+    for (auto& graph : _graphs) {
+        if (graph != nullptr)
+            graph->release();
+    }
     if (_meta_data_reader != nullptr)
         _meta_data_reader->release();
 
@@ -431,7 +483,8 @@ MasterGraph::reset() {
     if (_randombboxcrop_meta_data_reader != nullptr)
         _randombboxcrop_meta_data_reader->release();
     // resetting loader module to start from the beginning of the media and clear it's internal state/buffers
-    _loader_module->reset();
+    for (auto loader_module : _loader_modules)
+        loader_module->reset();
     // restart processing of the images
     _first_run = true;
     _output_routine_finished_processing = false;
@@ -451,10 +504,13 @@ MasterGraph::mem_type() {
 
 Timing
 MasterGraph::timing() {
-    Timing t = _loader_module->timing();
-    t.image_process_time += _process_time.get_timing();
-    t.copy_to_output += _convert_time.get_timing();
-    t.bb_process_time += _bencode_time.get_timing();
+    Timing t;
+    for (auto loader_module : _loader_modules) {
+        t = loader_module->timing();
+        t.image_process_time += _process_time.get_timing();
+        t.copy_to_output += _convert_time.get_timing();
+        t.bb_process_time += _bencode_time.get_timing();
+    }
     return t;
 }
 
@@ -889,7 +945,16 @@ MasterGraph::get_output_tensors() {
         _output_tensor_list[i]->set_roi(roi_ptr[i]);
     }
     return &_output_tensor_list;
+}
+
+bool MasterGraph::is_out_of_data() {
+    for (auto loader_module : _loader_modules) {
+        if (loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
+            return true;
+        }
     }
+    return false;
+}
 
 void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
@@ -956,29 +1021,8 @@ void MasterGraph::output_routine() {
                     _meta_data_graph->process(_augmented_meta_data, output_meta_data);
                 }
             }
-
-            if(_is_roi_random_crop)
-            {
-                // get the roi_begin and roi_end values from random_object_bbox
-                int *roi_begin_batch = new int[_user_batch_size * _input_dims];
-                int *roi_end_batch = new int[_user_batch_size * _input_dims];
-                for(uint i = 0; i < _user_batch_size; i++)
-                {
-                    int sample_idx = i * _input_dims;
-                    int *roi_begin = &roi_begin_batch[sample_idx];
-                    int *roi_end = &roi_end_batch[sample_idx];
-                    int *input_shape = &_roi_batch[sample_idx * 2 + _input_dims];
-                    for(uint j = 0; j < _input_dims; j++)
-                    {
-                        roi_begin[j] = std::rand() % (_input_dims * 5);
-                        roi_end[j] = std::min(roi_begin[j] + (std::rand() % input_shape[j]), input_shape[j]);
-                    }
-                }
-                update_roi_random_crop(_crop_shape_batch, roi_begin_batch, roi_end_batch);
-                delete[] roi_begin_batch;
-                delete[] roi_end_batch;
-            }
-
+            if(_is_random_object_bbox) { update_random_object_bbox(); }
+            if(_is_roi_random_crop) { update_roi_random_crop(); }
             _process_time.start();
             _graph->process();
             _process_time.end();
@@ -1012,10 +1056,128 @@ void MasterGraph::output_routine() {
     }
 }
 
+void MasterGraph::output_routine_multiple_loaders() {
+    INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
+    try {
+        while (_processing) {
+            if (is_out_of_data()) {
+                // If the internal process routine ,output_routine(), has finished processing all the images, and last
+                // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
+                notify_user_thread();
+                // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
+                _ring_buffer.release_if_empty();
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+            _rb_block_if_full_time.start();
+            // _ring_buffer.get_write_buffers() is blocking and blocks here until user uses processed image by calling run() and frees space in the ring_buffer
+            auto write_buffers = _ring_buffer.get_write_buffers();
+            auto write_output_buffers = write_buffers.first;
+            _rb_block_if_full_time.end();
+
+            // Swap handles on the input tensor, so that new tensor is loaded to be processed
+            for (auto loader_module : _loader_modules) {
+                auto load_ret = loader_module->load_next();
+                if (load_ret != LoaderModuleStatus::OK)
+                    THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))                
+            }
+
+            if (!_processing)
+                break;
+            auto full_batch_image_names = _loader_modules[0]->get_id(); // Temp change
+            auto decode_image_info = _loader_modules[0]->get_decode_image_info();   // Temp change
+            auto crop_image_info = _loader_modules[0]->get_crop_image_info();   // Temp change
+
+            if (full_batch_image_names.size() != _user_batch_size)
+                WRN("Internal problem: names count " + TOSTR(full_batch_image_names.size()))
+            
+            /*
+            // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
+            if (_meta_data_reader)
+                _meta_data_reader->lookup(full_batch_image_names);
+            */
+
+            if (!_processing)
+                break;
+
+            // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
+            for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+                _internal_tensor_list[idx]->swap_handle(write_output_buffers[idx]);
+
+            if (!_processing)
+                break;
+
+            for (auto node : _nodes) {
+                if (node->_is_ssd) {
+                    node->set_meta_data(_augmented_meta_data);
+                }
+            }
+
+            update_node_parameters();
+            pMetaDataBatch output_meta_data = nullptr;
+            /* if (_augmented_meta_data) {
+                output_meta_data = _augmented_meta_data->clone(!_augmentation_metanode);  // copy the data if metadata is not processed by the nodes, else create an empty instance
+                if (_meta_data_graph) {
+                    if (_is_random_bbox_crop) {
+                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, output_meta_data, decode_image_info, crop_image_info);
+                    } else {
+                        _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info);
+                    }
+                    _meta_data_graph->process(_augmented_meta_data, output_meta_data);
+                }
+            }*/
+            if(_is_random_object_bbox) { update_random_object_bbox(); }
+            if(_is_roi_random_crop) { update_roi_random_crop(); }
+            _process_time.start();
+            for (auto& graph : _graphs) {
+                graph->schedule();
+            }
+            for (auto& graph : _graphs) {
+                graph->wait();
+            }
+            _process_time.end();
+
+            auto write_roi_buffers = write_buffers.second;   // Obtain ROI buffers from ring buffer
+            for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
+                _internal_tensor_list[idx]->copy_roi(write_roi_buffers[idx]);   // Copy ROI from internal tensor's buffer to ring buffer
+
+            /*_bencode_time.start();
+            if (_is_box_encoder) {
+                auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
+#if ENABLE_HIP
+                if (_mem_type == RocalMemType::HIP) {
+                    // get bbox encoder read buffers
+                    if (_box_encoder_gpu) _box_encoder_gpu->Run(output_meta_data, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
+                } else
+#endif
+                    _meta_data_graph->update_box_encoder_meta_data(&_anchors, output_meta_data, _criteria, _offset, _scale, _means, _stds, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
+            }
+            _bencode_time.end();
+#ifdef ROCAL_VIDEO
+            // _sequence_start_framenum_vec.insert(_sequence_start_framenum_vec.begin(), _loader_module->get_sequence_start_frame_number());
+            // _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
+#endif
+            */
+            _ring_buffer.set_meta_data(full_batch_image_names, output_meta_data);
+            _ring_buffer.push();  // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
+        }
+    } catch (const std::exception &e) {
+        ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        _processing = false;
+        _ring_buffer.release_all_blocked_calls();
+    }
+}
+
 void MasterGraph::start_processing() {
     _processing = true;
-    _remaining_count = _loader_module->remaining_count();
-    _output_thread = std::thread(&MasterGraph::output_routine, this);
+    for (auto loader_module : _loader_modules) {
+        _remaining_count = std::min(_remaining_count, static_cast<int>(loader_module->remaining_count()));
+    }
+    if (_loader_modules.size() == 1) {
+        _output_thread = std::thread(&MasterGraph::output_routine, this);
+    } else {
+        _output_thread = std::thread(&MasterGraph::output_routine_multiple_loaders, this);
+    }
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #else
 //  Changing thread scheduling policy and it's priority does not help on latest Ubuntu builds
@@ -1430,7 +1592,7 @@ TensorList *MasterGraph::mask_meta_data() {
 
     return &_mask_tensor_list;
 }
-class BatchRNGUniform {
+class BatchRNG {
  public:
   /**
    * @brief Used to keep batch of RNGs, so Operators can be immune to order of sample processing
@@ -1441,7 +1603,7 @@ class BatchRNGUniform {
    * @param state_size How many seed are used to initialize one RNG. Used to lower probablity of
    * collisions between seeds used to initialize RNGs in different operators.
    */
-  BatchRNGUniform(int64_t seed, int batch_size, int state_size = 4)
+  BatchRNG(int64_t seed, int batch_size, int state_size = 4)
   : seed_(seed) {
     std::seed_seq seq{seed_};
     std::vector<uint32_t> seeds(batch_size * state_size);
@@ -1466,54 +1628,524 @@ class BatchRNGUniform {
   std::vector<std::mt19937> rngs_;
 };
 
-Tensor* MasterGraph::roi_random_crop(Tensor *input, int *crop_shape, int remove_dim)
+TensorList *MasterGraph::random_object_bbox(Tensor *input, std::string output_format, int k_largest, float foreground_prob) {
+    _random_object_bbox_label_tensor = input;
+    _is_random_object_bbox = true;
+    _k_largest = k_largest;
+    _foreground_prob = foreground_prob;
+    auto output_dims = _random_object_bbox_label_tensor->num_of_dims() - 1;
+    _random_object_bbox_output_format = output_format;
+    if(output_format == "start_end" || output_format == "anchor_shape") {        
+        // create new instance of tensor class
+        std::vector<size_t> box1_dims = {_user_batch_size, output_dims};
+        auto box1_info = TensorInfo(std::move(box1_dims), input->info().mem_type(), RocalTensorDataType::INT32);
+        _random_object_bbox_box1_tensor = new Tensor(box1_info);
+
+        // allocate memory for the raw buffer pointer in tensor object
+        allocate_host_or_pinned_mem(&_random_object_bbox_box1_buf, _user_batch_size * output_dims * sizeof(int), input->info().mem_type());
+        _random_object_bbox_box1_tensor->create_from_ptr(_context, _random_object_bbox_box1_buf);
+
+        // create new instance of tensor class
+        std::vector<size_t> box2_dims = {_user_batch_size, output_dims};
+        auto box2_info = TensorInfo(std::move(box2_dims), input->info().mem_type(), RocalTensorDataType::INT32);
+        _random_object_bbox_box2_tensor = new Tensor(box2_info);
+
+        // allocate memory for the raw buffer pointer in tensor object
+        allocate_host_or_pinned_mem(&_random_object_bbox_box2_buf, _user_batch_size * output_dims * sizeof(int), input->info().mem_type());
+        _random_object_bbox_box2_tensor->create_from_ptr(_context, _random_object_bbox_box2_buf);
+        _random_object_bbox_tensor_list.push_back(_random_object_bbox_box1_tensor);
+        _random_object_bbox_tensor_list.push_back(_random_object_bbox_box2_tensor);
+    } else if(output_format == "box") {
+        // create new instance of tensor class
+        std::vector<size_t> box1_dims = {_user_batch_size, output_dims * 2};
+        auto box1_info = TensorInfo(std::move(box1_dims), input->info().mem_type(), RocalTensorDataType::INT32);
+        _random_object_bbox_box1_tensor = new Tensor(box1_info);
+
+        // allocate memory for the raw buffer pointer in tensor object
+        allocate_host_or_pinned_mem(&_random_object_bbox_box1_buf, _user_batch_size * output_dims * 2 * sizeof(int), input->info().mem_type());
+        _random_object_bbox_box1_tensor->create_from_ptr(_context, _random_object_bbox_box1_buf);
+        _random_object_bbox_tensor_list.push_back(_random_object_bbox_box1_tensor);
+    }
+    return &_random_object_bbox_tensor_list;
+}
+
+void MasterGraph::update_random_object_bbox() {
+    u_int8_t *input = static_cast<u_int8_t *>(_random_object_bbox_label_tensor->buffer());
+    auto roi_dims = reinterpret_cast<int *>(_random_object_bbox_label_tensor->info().roi().get_ptr());
+    std::vector<size_t> max_size = _random_object_bbox_label_tensor->info().max_shape();
+    auto single_image_size = _random_object_bbox_label_tensor->data_size() / _user_batch_size;
+    auto input_dims = _random_object_bbox_label_tensor->num_of_dims() - 1;
+    uint seed = std::time(0);
+    BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
+    std::uniform_real_distribution<> foreground(0, 1);
+    int *box1_buf = static_cast<int *>(_random_object_bbox_box1_buf);
+    int *box2_buf = static_cast<int *>(_random_object_bbox_box2_buf);
+#pragma omp parallel for num_threads(_user_batch_size)
+    for (uint i = 0; i < _user_batch_size; i++) {
+        auto sample_idx = i * input_dims;
+        int *input_shape = &roi_dims[sample_idx * 2 + input_dims];
+        std::vector<int> roi_size;
+        for (uint j = 0; j < input_dims; j++) {
+            roi_size.push_back(input_shape[j]);
+        }
+        std::vector<int> output_compact;
+        auto label = input + i * single_image_size;
+        int total_box = 0;
+        bool fg = foreground(_rng[i]) < _foreground_prob;
+        if (fg) total_box = labelMergeFunc(label, roi_size, max_size, output_compact, _rng[i]);
+        if (total_box) {
+            std::vector<std::vector<std::vector<unsigned>>> boxes;  // total - lo,hi - 4d
+            std::vector<std::pair<unsigned, unsigned>> ranges;      // totalbox - lo,hi
+            std::vector<unsigned> hits;
+            boxes.resize(total_box);
+            ranges.resize(total_box);
+            hits.resize((total_box / 32 + !!(total_box % 32)));
+            auto out_row = output_compact.data();
+            for (int d1 = 0; d1 < roi_size[0]; d1++) {
+                for (int d2 = 0; d2 < roi_size[1]; d2++) {
+                    for (int d3 = 0; d3 < roi_size[2]; d3++) {
+                        std::vector<int> origin{d1, d2, d3, 0};
+                        get_label_boundingboxes(boxes, ranges, hits, out_row, origin, roi_size[3]);
+                        out_row += roi_size[3];
+                    }
+                }
+            }
+            int chosen_box_idx = pick_box(boxes, _rng[i], _k_largest);
+            if(chosen_box_idx == -1) { ERR("No ROI regions found in input. Setting input shape as ROI region"); }
+            if(_random_object_bbox_output_format == "box") {
+                for (uint j = 0; j < input_dims; j++) {
+                    if(chosen_box_idx >= 0) {
+                        box1_buf[sample_idx + j] = boxes[chosen_box_idx][0][j];
+                        box1_buf[sample_idx + j + input_dims] = boxes[chosen_box_idx][1][j];
+                    }
+                    else {
+                        box1_buf[sample_idx + j] = 0;
+                        box1_buf[sample_idx + j + input_dims] = input_shape[j];
+                    }
+                }
+            } else if(_random_object_bbox_output_format == "anchor_shape") {
+                for (uint j = 0; j < input_dims; j++) {
+                    if(chosen_box_idx >= 0) {
+                        box1_buf[sample_idx + j] = boxes[chosen_box_idx][0][j];
+                        box2_buf[sample_idx + j] = boxes[chosen_box_idx][0][j] - boxes[chosen_box_idx][1][j];
+                    }
+                    else {
+                        box1_buf[sample_idx + j] = 0;
+                        box2_buf[sample_idx + j] = input_shape[j];
+                    }
+                }
+            } else if(_random_object_bbox_output_format == "start_end") {
+                for (uint j = 0; j < input_dims; j++) {
+                    if(chosen_box_idx >= 0) {
+                        box1_buf[sample_idx + j] = boxes[chosen_box_idx][0][j];
+                        box2_buf[sample_idx + j] = boxes[chosen_box_idx][1][j];
+                    }
+                    else {
+                        box1_buf[sample_idx + j] = 0;
+                        box2_buf[sample_idx + j] = input_shape[j];
+                    }
+                }
+            }
+        } else {
+            if(_random_object_bbox_output_format == "box") {
+                for (uint j = 0; j < input_dims; j++) {
+                    box1_buf[sample_idx + j] = 0;
+                    box1_buf[sample_idx + j + input_dims] = input_shape[j];
+                }
+            } else {
+                for (uint j = 0; j < input_dims; j++) {
+                    box1_buf[sample_idx + j] = 0;
+                    box2_buf[sample_idx + j] = input_shape[j];
+                }
+            }
+        }
+    }
+}
+
+int MasterGraph::pick_box(std::vector<std::vector<std::vector<unsigned>>> boxes, std::mt19937 &rng, int k_largest) {
+    auto beg = boxes.begin();
+    auto end = boxes.end();
+    int n = end - beg;
+    if (n <= 0)
+        return -1;
+    if (k_largest > 0 && k_largest < n) {
+        std::vector<std::pair<int64_t, int>> vol_idx;
+        vol_idx.resize(n);
+        for (int i = 0; i < n; i++) {
+            std::vector<unsigned> crop_region;
+            std::transform(boxes[i][1].begin(),boxes[i][1].end(), boxes[i][0].begin(),
+               std::back_inserter(crop_region),
+               [](const auto& hi, const auto& lo)
+               {
+                   return hi - lo;
+               });
+            auto volume_val = 1;
+            for (auto val : crop_region) {
+                volume_val *= val;
+            }
+            vol_idx[i] = {-volume_val, i};
+        }
+        std::sort(vol_idx.begin(), vol_idx.end());
+        std::uniform_int_distribution<int> dist(0, std::min(n, k_largest) - 1);
+        return vol_idx[dist(rng)].second;
+    } else {
+        std::uniform_int_distribution<int> dist(0, n - 1);
+        return dist(rng);
+    }
+}
+
+void MasterGraph::findLabels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size) {
+    if (!roi_size.size() || !max_size.size())
+        return;
+    int prev = input[0];
+    labels.insert(prev);
+    int num_dims = roi_size.size();
+    std::vector<unsigned> strides(num_dims + 1);
+    strides[num_dims] = 1;
+    for (int i = num_dims - 1; i >= 0; i--) {
+        strides[i] = strides[i + 1] * max_size[i];
+    }
+    auto index = 0;
+    for (int c = 0; c < roi_size[0]; c++) {
+        int outerDim1 = index;
+        for (int d = 0; d < roi_size[1]; d++) {
+            int outerDim2 = outerDim1;
+            for (int h = 0; h < roi_size[2]; h++) {
+                int outerDim3 = outerDim2;
+                for (int w = 0; w < roi_size[3]; w++) {
+                    auto value = input[outerDim3++];
+                    if (value == prev)
+                        continue;  // skip runs of equal labels
+                    labels.insert(value);
+                    prev = value;
+                }
+                outerDim2 += strides[3];
+            }
+            outerDim1 += strides[2];
+        }
+        index += strides[1];
+    }
+}
+
+void MasterGraph::filterByLabel(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label) {
+    int num_dims = roi_size.size();
+    std::vector<unsigned> strides(num_dims + 1);
+    strides[num_dims] = 1;
+    for (int i = num_dims - 1; i >= 0; i--) {
+        strides[i] = strides[i + 1] * max_size[i];
+    }
+    int index = 0;
+    int out_index = 0;
+    for (int c = 0; c < roi_size[0]; c++) {
+        int outerDim1 = index;
+        for (int d = 0; d < roi_size[1]; d++) {
+            int outerDim2 = outerDim1;
+            for (int h = 0; h < roi_size[2]; h++) {
+                int outerDim3 = outerDim2;
+                for (int w = 0; w < roi_size[3]; w++) {
+                    output[out_index++] = input[outerDim3++] == label;
+                }
+                outerDim2 += strides[3];
+            }
+            outerDim1 += strides[2];
+        }
+        index += strides[1];
+    }
+}
+
+void MasterGraph::labelRow(const int *label_base, const int *in_row, int *out_row, unsigned length) {
+    int curr_label = -1;
+    int bg_label = -1;
+    int prev = 0;
+    for (unsigned i = 0; i < length; i++) {
+        if (in_row[i] != prev) {
+            if (in_row[i] != 0) {
+                curr_label = out_row + i - label_base;
+            } else {
+                curr_label = bg_label;
+            }
+        }
+        out_row[i] = curr_label;
+        prev = in_row[i];
+    }
+}
+
+int MasterGraph::disjointSetGroup(int &x, int new_id) {
+    int old = x;
+    x = new_id;
+    return old;
+}
+
+int MasterGraph::disjointFind(int *items, int x) {
+    int x0 = x;
+
+    // find the label
+    for (;;) {
+        int g = disjointGetGroup(items[x]);
+        if (g == x)
+            break;
+        x = g;
+    }
+
+    int r = x;
+
+    // assign all intermediate labels to save time in subsequent calls
+    x = x0;
+    while (x != disjointGetGroup(items[x])) {
+        x0 = disjointSetGroup(items[x], r);
+        x = x0;
+    }
+
+    return r;
+}
+
+int MasterGraph::disjointMerge(int *items, int x, int y) {
+    y = disjointFind(items, y);
+    x = disjointFind(items, x);
+    if (x < y) {
+        disjointSetGroup(items[y], x);
+        return x;
+    } else if (y < x) {
+        disjointSetGroup(items[x], y);
+        return y;
+    } else {
+        // already merged
+        return x;
+    }
+}
+
+void MasterGraph::mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n) {
+    int bg_label = -1;
+    int prev1 = bg_label;
+    int prev2 = bg_label;
+    for (unsigned i = 0, in_offset = 0, out_offset = 0; i < n; i++, in_offset += 1, out_offset += 1) {
+        int &o1 = out1[out_offset];
+        int &o2 = out2[out_offset];
+        if (o1 != prev1 || o2 != prev2) {
+            if (o1 != bg_label) {
+                if (in1[in_offset] == in2[in_offset]) {
+                    disjointMerge(label_base, o1, o2);
+                }
+            }
+            prev1 = o1;
+            prev2 = o2;
+        }
+    }
+}
+
+int MasterGraph::labelMergeFunc(const u_int8_t *input, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng) {
+    int64_t total_buf_size = 1;
+    for (auto val : size)
+        total_buf_size *= val;
+    std::vector<int> output_filtered;
+    output_filtered.resize(total_buf_size);
+    output_compact.resize(total_buf_size);
+    std::fill(output_filtered.begin(), output_filtered.end(), 0);
+    std::fill(output_compact.begin(), output_compact.end(), 0);
+    std::set<int> labels_found;
+    findLabels(input, labels_found, size, max_size);
+    labels_found.erase(0); // Removing background class
+    int selected_label;
+    if (!labels_found.size()) return 0;   // All labels belongs to background
+    if(labels_found.size() == 1) { selected_label = *labels_found.begin(); }
+    else {
+        std::uniform_int_distribution<int> class_dist{1, *labels_found.rbegin()};
+        selected_label = class_dist(rng);
+    }
+    filterByLabel(input, output_filtered, size, max_size, selected_label);
+    for (int i = 0; i < size[0]; i++) {
+        for (int j = 0; j < size[1]; j++) {
+            for (int k = 0; k < size[2]; k++) {
+                labelRow(output_compact.data(),
+                         output_filtered.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k * size[3]),
+                         output_compact.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k * size[3]),
+                         size[3]);
+                if (k > 0) {
+                    mergeRow(output_compact.data(),
+                             output_filtered.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k - 1) * size[3],
+                             output_filtered.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k)*size[3],
+                             output_compact.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + ((k - 1) * size[3]),
+                             output_compact.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k * size[3]),
+                             size[3]);
+                }
+            }
+        }
+    }
+    for (int k = 0; k < size[0]; k++) {
+        for (int stride = 1; stride <= size[1]; stride *= 2) {
+            for (int i = stride; i < size[1]; i += 2 * stride) {
+                auto out_slice = output_compact.data() + (i * size[2] * size[3]);
+                auto in_slice = output_filtered.data() + (i * size[2] * size[3]);
+                auto prev_out = output_compact.data() + ((i - 1) * size[2] * size[3]);
+                auto prev_in = output_filtered.data() + ((i - 1) * size[2] * size[3]);
+                mergeRow(output_compact.data(),
+                         prev_in, in_slice, prev_out, out_slice, size[2] * size[3]);
+            }
+        }
+    }
+    std::set<int> label_set;
+    int bg_label = 0;
+    int old_bg_label = -1;
+    int prev = old_bg_label;
+    int remapped = old_bg_label;
+    for (int64_t i = 0; i < total_buf_size; i++) {
+        if (output_compact[i] != old_bg_label) {
+            if (output_compact[i] != prev) {
+                prev = output_compact[i];
+                // look up `ds` only when the value changes - this saves a lot of lookups
+                remapped = disjointFind(output_compact.data(), i);
+                // no need to assign labels[i] = remapped; find did it
+                label_set.insert(remapped);
+            } else {
+                output_compact[i] = remapped;
+            }
+        }
+    }
+    std::map<int, int> label_map;
+    int next_label = 0;
+    for (auto old : label_set) {
+        if (next_label == bg_label)
+            next_label++;
+        label_map[old] = next_label++;
+    }
+    label_map[old_bg_label] = bg_label;
+    prev = output_compact[0];
+    remapped = label_map.find(prev)->second;
+    for (auto &label : output_compact) {
+        if (label != prev) {
+            prev = label;
+            remapped = label_map.find(prev)->second;
+        }
+        label = remapped;
+    }
+    return label_set.size();
+}
+
+bool MasterGraph::hit(std::vector<unsigned> &hits, unsigned idx) {
+    unsigned flag = (1u << (idx & 31));
+    unsigned &h = hits[idx >> 5];
+    bool ret = h & flag;
+    h |= flag;
+    return ret;
+}
+
+void MasterGraph::get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes,
+                                          std::vector<std::pair<unsigned, unsigned>> ranges,
+                                          std::vector<unsigned> hits,
+                                          int *in,
+                                          std::vector<int> origin,
+                                          unsigned width) {
+    for (auto &mask : hits) {
+        mask = 0u;  // mark all labels as not found in this row
+    }
+
+    int ndim = 4;
+
+    const unsigned nboxes = ranges.size();
+    int background = -1;
+    for (unsigned i = 0; i < width; i++) {
+        if (in[i] != background) {
+            // We make a "hole" in the label indices for the background.
+            int skip_bg = (background >= 0 && in[i] >= background);
+            unsigned idx = static_cast<unsigned>(in[i]) - skip_bg;
+            // deliberate use of unsigned overflow to detect negative labels as out-of-range
+            if (idx < nboxes) {
+                if (!hit(hits, idx)) {
+                    ranges[idx].first = i;
+                }
+                ranges[idx].second = i;
+            }
+        }
+    }
+
+    std::vector<unsigned> lo(4, 0);
+    std::vector<unsigned> hi(4, 0);
+
+    for (int i = 0; i < ndim; i++) {
+        lo[i] = origin[i];
+        hi[i] = origin[i] + 1;  // one past
+    }
+    const int d = 3;
+
+    for (uint word = 0; word < hits.size(); word++) {
+        unsigned mask = hits[word];
+        unsigned i = 32 * word;
+        while (mask) {
+            if ((mask & 0xffu) == 0) {  // skip 8 labels if not set
+                mask >>= 8;
+                i += 8;
+                continue;
+            }
+            if (mask & 1) {  // label found? mark it
+                lo[d] = ranges[i].first + origin[d];
+                hi[d] = (ranges[i].second + origin[d] + 1);  // one past the index found in this function
+                if (boxes[i].empty()) {
+                    // empty box - create a new one
+                    boxes[i].push_back(lo);
+                    boxes[i].push_back(hi);
+                } else {
+                    // expand existing
+                    std::transform(boxes[i][0].begin(), boxes[i][0].end(), lo.begin(), boxes[i][0].begin(),
+                                   [](const auto &val1, const auto &val2) {
+                                       return val1 < val2 ? val1 : val2;
+                                   });
+                    std::transform(boxes[i][1].begin(), boxes[i][1].end(), hi.begin(), boxes[i][1].begin(),
+                                   [](const auto &val1, const auto &val2) {
+                                       return val1 > val2 ? val1 : val2;
+                                   });
+                }
+            }
+            mask >>= 1;
+            i++;  // skip one label
+        }
+    }
+}
+
+Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, int *crop_shape)
 {
     _is_roi_random_crop = true;
-    if(input->info().is_image())
-        _input_dims = input->num_of_dims() - 2; // TO be changed later when generic roi changes are added
-    else
-        _input_dims = input->num_of_dims() - 1;
-    
-    _output_dims = remove_dim >= 0 ? _input_dims - 1 : _input_dims;
-    _roi_dim_to_remove = remove_dim >= 0 ? remove_dim : _input_dims; // Setting roi_dim_to_remove as _input_dims if remove_dim is not passed
+    _roi_start_tensor = roi_start;
+    _roi_end_tensor = roi_end;
+    auto input_dims = input->info().is_image() ? input->num_of_dims() - 2 : input->num_of_dims() - 1;
 
     _roi_batch = reinterpret_cast<int *>(input->info().roi().get_ptr());
-    _crop_shape_batch = new int[_input_dims * _user_batch_size]; // TODO handle this case later when different crop_shape is given for each tensor
+    _crop_shape_batch = new int[input_dims * _user_batch_size]; // TODO handle this case later when different crop_shape is given for each tensor
 
     // replicate crop_shape values for all samples in a batch
     for(uint i = 0; i < _user_batch_size; i++)
     {
-        int sample_idx = i * _input_dims;
-        memcpy(&(_crop_shape_batch[sample_idx]), crop_shape, _input_dims * sizeof(int));
+        int sample_idx = i * input_dims;
+        memcpy(&(_crop_shape_batch[sample_idx]), crop_shape, input_dims * sizeof(int));
     }
 
     // create new instance of tensor class
-    std::vector<size_t> dims = {_user_batch_size, _output_dims};
+    std::vector<size_t> dims = {_user_batch_size, input_dims};
     auto info = TensorInfo(std::move(dims), input->info().mem_type(), RocalTensorDataType::INT32);
     _roi_random_crop_tensor = new Tensor(info);
 
     // allocate memory for the raw buffer pointer in tensor object
-    allocate_host_or_pinned_mem(&_roi_random_crop_buf, _user_batch_size * _output_dims * sizeof(int), input->info().mem_type());
+    allocate_host_or_pinned_mem(&_roi_random_crop_buf, _user_batch_size * input_dims * sizeof(int), input->info().mem_type());
     _roi_random_crop_tensor->create_from_ptr(_context, _roi_random_crop_buf);
     return _roi_random_crop_tensor;
 }
 
-void MasterGraph::update_roi_random_crop(int *crop_shape_batch, int *roi_begin_batch, int *roi_end_batch) {
+void MasterGraph::update_roi_random_crop() {
     int *crop_begin_batch = static_cast<int *>(_roi_random_crop_buf);
     uint seed = std::time(0);
-
-    BatchRNGUniform _rng = {seed, static_cast<int>(_user_batch_size)};
+    auto input_dims = _roi_random_crop_tensor->info().dims()[1];
+    // get the roi_begin and roi_end values from random_object_bbox
+    int *roi_begin_batch = static_cast<int *>(_roi_start_tensor->buffer());
+    int *roi_end_batch = static_cast<int *>(_roi_end_tensor->buffer());
+    BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
     for(uint i = 0; i < _user_batch_size; i++) {
-        int sample_idx = i * _input_dims;
-        int *crop_shape = &crop_shape_batch[sample_idx];
+        int sample_idx = i * input_dims;
+        int *crop_shape = &_crop_shape_batch[sample_idx];
         int *roi_begin = &roi_begin_batch[sample_idx];
-        int *input_shape = &_roi_batch[sample_idx * 2 + _input_dims];
+        int *input_shape = &_roi_batch[sample_idx * 2 + input_dims];
         int *roi_end = &roi_end_batch[sample_idx];
-        int *crop_begin = &crop_begin_batch[i * _output_dims];
+        int *crop_begin = &crop_begin_batch[sample_idx];
 
-        for(uint j = 0, k = 0; j < _input_dims; j++) {
-            if (j == _roi_dim_to_remove)
-                continue;
+        for(uint j = 0; j < input_dims; j++) {
             // check if crop_shape, roi_end is greater than input_shape
             if(crop_shape[j] > input_shape[j])
                 THROW("crop shape cannot be greater than input shape");
@@ -1523,7 +2155,7 @@ void MasterGraph::update_roi_random_crop(int *crop_shape_batch, int *roi_begin_b
             int roi_length = roi_end[j] - roi_begin[j];
             int crop_length = crop_shape[j];
             if (roi_length == crop_length) {
-                crop_begin[k++] = roi_begin[j];
+                crop_begin[j] = roi_begin[j];
             } else {
                 int64_t start_range[2] = {roi_begin[j], roi_end[j] - crop_length};
 
@@ -1539,7 +2171,7 @@ void MasterGraph::update_roi_random_crop(int *crop_shape_batch, int *roi_begin_b
                 start_range[1] = std::min<int64_t>(input_shape[j] - crop_length, start_range[1]);
 
                 auto dist = std::uniform_int_distribution<int64_t>(start_range[0], start_range[1]);
-                crop_begin[k++] = dist(_rng[i]);
+                crop_begin[j] = dist(_rng[i]);
             }
         }
     }

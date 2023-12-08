@@ -74,7 +74,7 @@ evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
 
 std::vector<size_t>
 evaluate_numpy_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
-                        DecoderType decoder_type, const std::string &source_path, const std::string &json_path)
+                        DecoderType decoder_type, const std::string &source_path, const std::vector<std::string> &files)
 {
     auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy)
     {
@@ -92,7 +92,10 @@ evaluate_numpy_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
 
     ImageSourceEvaluator source_evaluator;
     source_evaluator.set_size_evaluation_policy(translate_image_size_policy(decode_size_policy));
-    if(source_evaluator.create(ReaderConfig(storage_type, source_path, json_path)) != ImageSourceEvaluatorStatus::OK)
+    auto reader_cfg = ReaderConfig(storage_type, source_path);
+    if (!files.empty())
+        reader_cfg.set_files(files);
+    if (source_evaluator.create(reader_cfg) != ImageSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed ")
     auto max_dims = source_evaluator.max_numpy_dims();
     int data_type = (int)source_evaluator.get_numpy_dtype();
@@ -1636,15 +1639,17 @@ rocalNumpyFileSource(
     RocalContext p_context,
     const char* source_path,
     unsigned internal_shard_count,
+    std::vector<std::string> files,
     bool is_output,
     bool shuffle,
     bool loop,
-    RocalImageSizeEvaluationPolicy decode_size_policy) {
+    RocalImageSizeEvaluationPolicy decode_size_policy,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
         auto max_dimensions = evaluate_numpy_data_set(decode_size_policy, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
-                                                      source_path, "");
+                                                      source_path, files);
 
         RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type;
@@ -1672,7 +1677,7 @@ rocalNumpyFileSource(
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(internal_shard_count, source_path, "", StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(internal_shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1691,12 +1696,14 @@ RocalTensor ROCAL_API_CALL
 rocalNumpyFileSourceSingleShard(
     RocalContext p_context,
     const char* source_path,
+    std::vector<std::string> files,
     bool is_output,
     bool shuffle,
     bool loop,
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned shard_id,
-    unsigned shard_count) {
+    unsigned shard_count,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1707,7 +1714,7 @@ rocalNumpyFileSourceSingleShard(
             THROW("Shard id should be smaller than shard count")
 
         auto max_dimensions = evaluate_numpy_data_set(decode_size_policy, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
-                                                      source_path, "");
+                                                      source_path, files);
 
         RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type;
@@ -1735,7 +1742,7 @@ rocalNumpyFileSourceSingleShard(
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, "", StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
