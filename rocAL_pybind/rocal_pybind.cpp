@@ -99,7 +99,7 @@ py::object wrapper_copy_to_tensor(RocalContext context, py::object p,
 py::object wrapperRocalExternalSourceFeedInput(
     RocalContext context, std::vector<std::string> input_images_names,
     py::array &labels, py::list arrays,
-    ROIxywh roi_xywh,
+    std::vector<ROIxywh> roi_xywh,
     unsigned int max_width, unsigned int max_height, int channels,
     RocalExternalSourceMode mode, RocalTensorLayout layout, bool eos) {
     std::vector<unsigned char *> uchar_arrays;
@@ -148,10 +148,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     // Bind the C++ structure
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
-        .def_readwrite("x_vector", &ROIxywh::x)
-        .def_readwrite("y_vector", &ROIxywh::y)
-        .def_readwrite("w_vector", &ROIxywh::w)
-        .def_readwrite("h_vector", &ROIxywh::h);
+        .def_readwrite("x", &ROIxywh::x)
+        .def_readwrite("y", &ROIxywh::y)
+        .def_readwrite("w", &ROIxywh::w)
+        .def_readwrite("h", &ROIxywh::h);
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
           py::return_value_policy::reference,

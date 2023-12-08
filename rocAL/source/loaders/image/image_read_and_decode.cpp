@@ -97,16 +97,22 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
 }
 
 void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_images_names, std::vector<unsigned char *> input_buffer,
-                                             ROIxywh roi_xywh,
+                                             std::vector<ROIxywh> roi_xywh,
                                              unsigned int max_width, unsigned int max_height, int channels, ExternalSourceFileMode mode, bool eos) {
     std::vector<size_t> image_size;
-    image_size.reserve(roi_xywh.h.size());
+    std::vector<unsigned> image_roi_w, image_roi_h;
+    image_size.reserve(roi_xywh.size());
+    image_roi_w.resize(roi_xywh.size());
+    image_roi_h.resize(roi_xywh.size());
     size_t max_image_size = max_width * max_height * channels;
-    for (unsigned int i = 0; i < roi_xywh.h.size(); i++) {
-        if (mode == ExternalSourceFileMode::RAWDATA_UNCOMPRESSED)
+    for (unsigned int i = 0; i < roi_xywh.size(); i++) {
+        if (mode == ExternalSourceFileMode::RAWDATA_UNCOMPRESSED) {
             image_size[i] = max_image_size;
+            image_roi_w[i] = roi_xywh[i].w;
+            image_roi_h[i] = roi_xywh[i].h;
+        }
         else if (mode == ExternalSourceFileMode::RAWDATA_COMPRESSED)
-            image_size[i] = roi_xywh.h[i];
+            image_size[i] = roi_xywh[i].h;
     }
     auto ext_reader = std::static_pointer_cast<ExternalSourceReader>(_reader);
     if (mode == ExternalSourceFileMode::FILENAME)
@@ -114,7 +120,7 @@ void ImageReadAndDecode::feed_external_input(std::vector<std::string> input_imag
     else if (mode == ExternalSourceFileMode::RAWDATA_COMPRESSED)
         ext_reader->feed_data(input_buffer, image_size, mode, eos, {}, {}, max_width, max_height, channels);
     else if (mode == ExternalSourceFileMode::RAWDATA_UNCOMPRESSED)
-        ext_reader->feed_data(input_buffer, image_size, mode, eos, roi_xywh.w, roi_xywh.h, max_width, max_height, channels);
+        ext_reader->feed_data(input_buffer, image_size, mode, eos, image_roi_w, image_roi_h, max_width, max_height, channels);
 }
 
 void ImageReadAndDecode::reset() {

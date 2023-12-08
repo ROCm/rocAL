@@ -62,7 +62,7 @@ class ROCALGenericIterator(object):
         self.labels_tensor = None
         self.iterator_length = b.getRemainingImages(
             self.loader._handle) // self.batch_size  # iteration length
-        if self.loader._external_source_operator:
+        if self.loader._is_external_source_operator:
             self.eos = False
             self.index = 0
             self.num_batches = self.loader._external_source.n // self.batch_size if self.loader._external_source.n % self.batch_size == 0 else (
@@ -74,7 +74,7 @@ class ROCALGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if (self.loader._external_source_operator):
+        if (self.loader._is_external_source_operator):
             if (self.index + 1) == self.num_batches:
                 self.eos = True
             if (self.index + 1) <= self.num_batches:
@@ -85,11 +85,14 @@ class ROCALGenericIterator(object):
                 labels_data = data_loader_source[1] if (len(data_loader_source) > 1) else None
                 roi_height = data_loader_source[2] if (len(data_loader_source) > 2) else []
                 roi_width = data_loader_source[3] if (len(data_loader_source) > 3) else []
-                ROIxywh = b.ROIxywh()
-                ROIxywh.x_vector =  [0]
-                ROIxywh.y_vector =  [0]
-                ROIxywh.w_vector = roi_width
-                ROIxywh.h_vector = roi_height
+                ROIxywh_list = []
+                for i in range(self.batch_size):
+                    ROIxywh = b.ROIxywh()
+                    ROIxywh.x =  0
+                    ROIxywh.y =  0
+                    ROIxywh.w = roi_width[i] if len(roi_width) > 0 else 0
+                    ROIxywh.h = roi_height[i] if len(roi_height) > 0 else 0
+                    ROIxywh_list.append(ROIxywh)
                 if (len(data_loader_source) == 6 and self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED):
                     decoded_height = data_loader_source[4]
                     decoded_width = data_loader_source[5]
@@ -102,7 +105,7 @@ class ROCALGenericIterator(object):
                     "source_input_images": images_list,
                     "labels": labels_data,
                     "input_batch_buffer": input_buffer,
-                    "roi_xywh": ROIxywh,
+                    "roi_xywh": ROIxywh_list,
                     "decoded_width": decoded_width,
                     "decoded_height": decoded_height,
                     "channels": 3,
@@ -143,7 +146,7 @@ class ROCALGenericIterator(object):
                 else:
                     self.output_tensor_list[i].copy_data(
                         self.output_list[i].data.ptr)
-        if (self.loader._external_source_operator):
+        if (self.loader._is_external_source_operator):
             self.labels = self.loader.get_image_labels()
             if self.device == "cpu":
                 self.labels_tensor = self.labels.astype(dtype=np.int_)

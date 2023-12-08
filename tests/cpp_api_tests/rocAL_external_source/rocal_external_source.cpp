@@ -284,7 +284,8 @@ int main(int argc, const char **argv) {
     int iter_cnt = 0;
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
-    ROIxywh ROI_xywh_vector;
+    std::vector<ROIxywh> ROI_xywh;
+    ROI_xywh.resize(inputBatchSize);
     while (rocalGetRemainingImages(handle) >= inputBatchSize) {
         std::vector<std::string> input_images;
         std::vector<unsigned char *> input_batch_buffer;
@@ -302,16 +303,16 @@ int main(int argc, const char **argv) {
                 if (mode == 1) {
                     input_batch_buffer.push_back(input_buffer.back());
                     input_buffer.pop_back();
-                    ROI_xywh_vector.h.push_back(srcsize_height.back());
+                    ROI_xywh[i].h = srcsize_height.back();
                     srcsize_height.pop_back();
                     label_buffer.push_back(labels.back());
                     labels.pop_back();
                 } else {
                     input_batch_buffer.push_back(input_buffer.back());
                     input_buffer.pop_back();
-                    ROI_xywh_vector.w.push_back(srcsize_width.back());
+                    ROI_xywh[i].w = srcsize_width.back();
                     srcsize_width.pop_back();
-                    ROI_xywh_vector.h.push_back(srcsize_height.back());
+                    ROI_xywh[i].h = srcsize_height.back();
                     srcsize_height.pop_back();
                     label_buffer.push_back(labels.back());
                     labels.pop_back();
@@ -321,22 +322,23 @@ int main(int argc, const char **argv) {
                 }
             }
         }
-        if (index <= (total_images / inputBatchSize)) {
+        std::cerr << "\n total_images" << total_images << "\n index" << index<< "\n eos" << eos; 
+        if (index+1 <= (total_images / inputBatchSize)) {
             std::cerr << "\n************************** Gonna process Batch *************************" << index;
             std::cerr << "\n Mode ********************* " << mode;
             if (mode == 0) {
-                rocalExternalSourceFeedInput(handle, input_images, setlabels, {}, ROI_xywh_vector,
+                rocalExternalSourceFeedInput(handle, input_images, setlabels, {}, ROI_xywh,
                                              decode_width, decode_height, channels,
                                              RocalExternalSourceMode(0),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 1) {
                 rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer,
-                                             ROI_xywh_vector, decode_width, decode_height,
+                                             ROI_xywh, decode_width, decode_height,
                                              channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 2) {
                 rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer,
-                                             ROI_xywh_vector, maxwidth, maxheight,
+                                             ROI_xywh, maxwidth, maxheight,
                                              channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             }
@@ -409,7 +411,7 @@ int main(int argc, const char **argv) {
                 mat_input.data = (unsigned char *)out_buffer;
 
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
-            std::string outName = "external_source_output";
+            std::string outName = "external_source_output_new";
             std::string out_filename = outName + ".png";  // in case the user specifies non png filename
             if (display)
                 out_filename = outName + std::to_string(index) + std::to_string(idx) + ".png";  // in case the user specifies non png filename
@@ -431,14 +433,14 @@ int main(int argc, const char **argv) {
         switch (pipeline_type) {
             case 1:  // classification pipeline
             {
-                std::cerr << "\n Classification Pipeline called - Meta data call";
                 if(setlabels)
                 {
-                    RocalTensorList labels = rocalGetImageLabels(handle);
-                    std::cerr << " \n Labels size : " << labels->size() << "\n";
-                    for (int i = 0; i < labels->size(); i++) {
-                        int *labels_buffer = reinterpret_cast<int *>(labels->at(i)->buffer());
-                        std::cerr << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+                    auto labels_tensor_list = rocalGetImageLabels(handle);
+                    int *labels_ptr = static_cast<int *>(label_buffer.data());
+                    for (size_t i = 0; i < label_buffer.size(); i++) {
+                        labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
+                        std::cerr << ">>>>> LABELS : " << labels_ptr[i] << "\t";
+                        labels_ptr++;
                     }
                 }
                 else
