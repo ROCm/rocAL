@@ -137,8 +137,8 @@ int main(int argc, const char **argv) {
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
     RocalTensor input1;
-    RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
-    RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
+    RocalTensorLayout tensor_layout = RocalTensorLayout::ROCAL_NHWC;
+    RocalTensorOutputType tensor_output_type = RocalTensorOutputType::ROCAL_UINT8;
     std::vector<uint32_t> srcsize_height, srcsize_width;
     uint32_t max_height = 0, max_width = 0;
     DIR *_src_dir;
@@ -247,7 +247,6 @@ int main(int argc, const char **argv) {
     int resize_w = decode_width, resize_h = decode_height;
     // just do one augmentation to test
     rocalResize(handle, input1, resize_w, resize_h, true);  // Remove this later
-                                                            // rocalResize(handle, input1, 0, 0, true, ROCAL_SCALING_MODE_NOT_SMALLER, {}, 256, 0, ROCAL_LINEAR_INTERPOLATION, tensorLayout, tensorOutputType);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cerr << "Error while adding the augmentation nodes " << std::endl;
         auto err_msg = rocalGetErrorMessage(handle);
@@ -277,7 +276,7 @@ int main(int argc, const char **argv) {
     labels.resize(total_images);
     int iter_cnt = 0;
     RocalTensorList output_tensor_list;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
+    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensor_output_type == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
     std::vector<ROIxywh> ROI_xywh;
     ROI_xywh.resize(input_batch_size);
     while (rocalGetRemainingImages(handle) >= input_batch_size) {
