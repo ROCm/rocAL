@@ -200,8 +200,8 @@ int main(int argc, const char **argv) {
                 }
                 srcsize_height[i] = image.rows;
                 srcsize_width[i] = image.cols;
-                max_height = std::min(max_height, srcsize_height[i]);
-                max_width = std::min(max_width, srcsize_width[i]);
+                max_height = std::max(max_height, srcsize_height[i]);
+                max_width = std::max(max_width, srcsize_width[i]);
             }
             unsigned long long image_dim_max = (unsigned long long)max_height * (unsigned long long)max_width * 3;
             unsigned char *complete_image_buffer = (unsigned char *)malloc(sizeof(unsigned char) * file_names.size() * image_dim_max);
@@ -315,7 +315,7 @@ int main(int argc, const char **argv) {
                 }
             }
         }
-        if (index+1 <= (total_images / input_batch_size)) {
+        if (index + 1 <= (total_images / input_batch_size)) {
             std::cerr << "\n************************** Gonna process Batch *************************" << index;
             std::cerr << "\n Mode ********************* " << mode;
             if (mode == 0) {
@@ -428,7 +428,7 @@ int main(int argc, const char **argv) {
                     int *labels_ptr = static_cast<int *>(label_buffer.data());
                     for (size_t i = 0; i < label_buffer.size(); i++) {
                         labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
-                        std::cerr << ">>>>> LABELS : " << labels_ptr[i] << "\t";
+                        std::cerr << ">>>>> LABELS : " << labels_ptr[0] << "\t";
                         labels_ptr++;
                     }
                 }
