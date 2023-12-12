@@ -354,9 +354,6 @@ int main(int argc, const char **argv) {
             if (output_tensor_list->at(idx)->layout() == RocalTensorLayout::ROCAL_NHWC) {
                 h = output_tensor_list->at(idx)->dims().at(1) * output_tensor_list->at(idx)->dims().at(0);
                 w = output_tensor_list->at(idx)->dims().at(2);
-            } else if (output_tensor_list->at(idx)->layout() == RocalTensorLayout::ROCAL_NCHW) {
-                h = output_tensor_list->at(idx)->dims().at(2) * output_tensor_list->at(idx)->dims().at(0);
-                w = output_tensor_list->at(idx)->dims().at(3);
             }
 
             mat_input = cv::Mat(h, w, cv_color_format);
@@ -393,11 +390,7 @@ int main(int argc, const char **argv) {
                     out_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());
             }
 
-            if (output_tensor_list->at(idx)->layout() == RocalTensorLayout::ROCAL_NCHW) {
-                convert_nchw_to_nhwc(out_buffer, mat_input.data, output_tensor_list->at(idx)->dims().at(0), output_tensor_list->at(idx)->dims().at(2),
-                                     output_tensor_list->at(idx)->dims().at(3), output_tensor_list->at(idx)->dims().at(1));
-            } else
-                mat_input.data = (unsigned char *)out_buffer;
+            mat_input.data = (unsigned char *)out_buffer;
 
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
             std::string outName = "external_source_output";
