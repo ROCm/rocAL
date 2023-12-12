@@ -92,12 +92,12 @@ int main(int argc, const char **argv) {
         return -1;
     }
     int argIdx = 0;
-    const char *folderPath = argv[++argIdx];
+    const char *folder_path = argv[++argIdx];
     bool display = 1;            // Display the images
     int rgb = 1;                 // process color images
     int decode_width = 224;      // Decoding width
     int decode_height = 224;     // Decoding height
-    int inputBatchSize = 2;      // Batch size
+    int input_batch_size = 2;      // Batch size
     bool processing_device = 0;  // CPU Processing
     int mode = 0;                // File mode
 
@@ -107,7 +107,7 @@ int main(int argc, const char **argv) {
 
     if (argc >= argIdx + MIN_ARG_COUNT) decode_height = atoi(argv[++argIdx]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT) inputBatchSize = atoi(argv[++argIdx]);
+    if (argc >= argIdx + MIN_ARG_COUNT) input_batch_size = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT) rgb = atoi(argv[++argIdx]);
 
@@ -121,7 +121,7 @@ int main(int argc, const char **argv) {
     color_format = rgb_mappings[rgb].first;
     int channels = rgb_mappings[rgb].second;
 
-    auto handle = rocalCreate(inputBatchSize, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1);
+    auto handle = rocalCreate(input_batch_size, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cerr << "Could not create the Rocal contex\n";
@@ -140,20 +140,20 @@ int main(int argc, const char **argv) {
     RocalTensorLayout tensorLayout = RocalTensorLayout::ROCAL_NHWC;
     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_UINT8;
     std::vector<uint32_t> srcsize_height, srcsize_width;
-    uint32_t maxheight = 0, maxwidth = 0;
+    uint32_t max_height = 0, max_width = 0;
     DIR *_src_dir;
     struct dirent *_entity;
     std::vector<std::string> file_names;
     std::vector<unsigned char *> input_buffer;
-    if ((_src_dir = opendir(folderPath)) == nullptr) {
-        std::cerr << "\n ERROR: Failed opening the directory at " << folderPath;
+    if ((_src_dir = opendir(folder_path)) == nullptr) {
+        std::cerr << "\n ERROR: Failed opening the directory at " << folder_path;
         exit(0);
     }
 
     while ((_entity = readdir(_src_dir)) != nullptr) {
         if (_entity->d_type != DT_REG) continue;
 
-        std::string file_path = folderPath;
+        std::string file_path = folder_path;
         file_path.append(_entity->d_name);
         file_names.push_back(file_path);
     }
@@ -200,17 +200,15 @@ int main(int argc, const char **argv) {
                 }
                 srcsize_height[i] = image.rows;
                 srcsize_width[i] = image.cols;
-                if (maxheight < srcsize_height[i])
-                    maxheight = srcsize_height[i];
-                if (maxwidth < srcsize_width[i])
-                    maxwidth = srcsize_width[i];
+                max_height = std::min(max_height, srcsize_height[i]);
+                max_width = std::min(max_width, srcsize_width[i]);
             }
-            unsigned long long imageDimMax = (unsigned long long)maxheight * (unsigned long long)maxwidth * 3;
-            unsigned char *complete_image_buffer = (unsigned char *)malloc(sizeof(unsigned char) * file_names.size() * imageDimMax);
-            uint32_t elementsInRowMax = maxwidth * 3;
+            unsigned long long image_dim_max = (unsigned long long)max_height * (unsigned long long)max_width * 3;
+            unsigned char *complete_image_buffer = (unsigned char *)malloc(sizeof(unsigned char) * file_names.size() * image_dim_max);
+            uint32_t elements_in_row_max = max_width * 3;
             unsigned char *temp_buffer, *temp_image;
             for (uint32_t i = 0; i < file_names.size(); i++) {
-                temp_image = temp_buffer = complete_image_buffer + (i * imageDimMax);
+                temp_image = temp_buffer = complete_image_buffer + (i * image_dim_max);
                 Mat image = imread(file_names[i], 1);
                 if (image.empty()) {
                     std::cout << "Could not read the image: " << file_names[i] << std::endl;
@@ -218,24 +216,24 @@ int main(int argc, const char **argv) {
                 }
                 cvtColor(image, image, cv::COLOR_BGR2RGB);
                 unsigned char *ip_image = image.data;
-                uint32_t elementsInRow = srcsize_width[i] * 3;
+                uint32_t elements_in_row = srcsize_width[i] * 3;
                 for (uint32_t j = 0; j < srcsize_height[i]; j++) {
-                    memcpy(temp_buffer, ip_image, elementsInRow * sizeof(unsigned char));
-                    ip_image += elementsInRow;
-                    temp_buffer += elementsInRowMax;
+                    memcpy(temp_buffer, ip_image, elements_in_row * sizeof(unsigned char));
+                    ip_image += elements_in_row;
+                    temp_buffer += elements_in_row_max;
                 }
                 input_buffer.push_back(temp_image);
             }
         }
     }
-    if (maxheight != 0 && maxwidth != 0) {
+    if (max_height != 0 && max_width != 0) {
         input1 = rocalJpegExternalFileSource(
-            handle, folderPath, color_format, false, false, false,
-            ROCAL_USE_USER_GIVEN_SIZE, maxwidth, maxheight,
+            handle, folder_path, color_format, false, false, false,
+            ROCAL_USE_USER_GIVEN_SIZE, max_width, max_height,
             RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExternalSourceMode(mode));
     } else {
         input1 = rocalJpegExternalFileSource(
-            handle, folderPath, color_format, false, false, false,
+            handle, folder_path, color_format, false, false, false,
             ROCAL_USE_USER_GIVEN_SIZE, decode_width, decode_height,
             RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExternalSourceMode(mode));
     }
@@ -274,19 +272,19 @@ int main(int argc, const char **argv) {
     int counter = 0;
     std::vector<std::string> names;
     std::vector<int> labels;
-    bool setlabels = true;
-    names.resize(inputBatchSize);
+    bool set_labels = true;
+    names.resize(input_batch_size);
     labels.resize(total_images);
     int iter_cnt = 0;
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensorOutputType == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
     std::vector<ROIxywh> ROI_xywh;
-    ROI_xywh.resize(inputBatchSize);
-    while (rocalGetRemainingImages(handle) >= inputBatchSize) {
+    ROI_xywh.resize(input_batch_size);
+    while (rocalGetRemainingImages(handle) >= input_batch_size) {
         std::vector<std::string> input_images;
         std::vector<unsigned char *> input_batch_buffer;
         std::vector<int> label_buffer;
-        for (int i = 0; i < inputBatchSize; i++) {
+        for (int i = 0; i < input_batch_size; i++) {
             if (mode == 0) {
                 input_images.push_back(file_names.back());
                 file_names.pop_back();
@@ -318,22 +316,22 @@ int main(int argc, const char **argv) {
                 }
             }
         }
-        if (index+1 <= (total_images / inputBatchSize)) {
+        if (index+1 <= (total_images / input_batch_size)) {
             std::cerr << "\n************************** Gonna process Batch *************************" << index;
             std::cerr << "\n Mode ********************* " << mode;
             if (mode == 0) {
-                rocalExternalSourceFeedInput(handle, input_images, setlabels, {}, ROI_xywh,
+                rocalExternalSourceFeedInput(handle, input_images, set_labels, {}, ROI_xywh,
                                              decode_width, decode_height, channels,
                                              RocalExternalSourceMode(0),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 1) {
-                rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer,
+                rocalExternalSourceFeedInput(handle, {}, set_labels, input_batch_buffer,
                                              ROI_xywh, decode_width, decode_height,
                                              channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             } else if (mode == 2) {
-                rocalExternalSourceFeedInput(handle, {}, setlabels, input_batch_buffer,
-                                             ROI_xywh, maxwidth, maxheight,
+                rocalExternalSourceFeedInput(handle, {}, set_labels, input_batch_buffer,
+                                             ROI_xywh, max_width, max_height,
                                              channels, RocalExternalSourceMode(mode),
                                              RocalTensorLayout(0), eos);
             }
@@ -397,16 +395,13 @@ int main(int argc, const char **argv) {
             }
 
             if (output_tensor_list->at(idx)->layout() == RocalTensorLayout::ROCAL_NCHW) {
-                // cv::Mat mat_input_nchw = cv::Mat(cv_color_format, h, w);
-                // mat_input_nchw = (unsigned char *)out_buffer;
-                // cv::transposeND(mat_input_nchw, {0, 3, 1, 2}, mat_input); // Can be enabled only with OpenCV 4.6.0
                 convert_nchw_to_nhwc(out_buffer, mat_input.data, output_tensor_list->at(idx)->dims().at(0), output_tensor_list->at(idx)->dims().at(2),
                                      output_tensor_list->at(idx)->dims().at(3), output_tensor_list->at(idx)->dims().at(1));
             } else
                 mat_input.data = (unsigned char *)out_buffer;
 
             mat_input.copyTo(mat_output(cv::Rect(0, 0, w, h)));
-            std::string outName = "external_source_output_new";
+            std::string outName = "external_source_output";
             std::string out_filename = outName + ".png";  // in case the user specifies non png filename
             if (display)
                 out_filename = outName + std::to_string(index) + std::to_string(idx) + ".png";  // in case the user specifies non png filename
@@ -428,7 +423,7 @@ int main(int argc, const char **argv) {
         switch (pipeline_type) {
             case 1:  // classification pipeline
             {
-                if(setlabels)
+                if(set_labels)
                 {
                     auto labels_tensor_list = rocalGetImageLabels(handle);
                     int *labels_ptr = static_cast<int *>(label_buffer.data());
@@ -448,7 +443,7 @@ int main(int argc, const char **argv) {
         }
         col_counter = (col_counter + 1) % number_of_cols;
         index++;
-        counter += inputBatchSize;
+        counter += input_batch_size;
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
