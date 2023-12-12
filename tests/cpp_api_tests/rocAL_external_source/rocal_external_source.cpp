@@ -76,6 +76,12 @@ void convert_nchw_to_nhwc(unsigned char *input_chw, unsigned char *output_hwc, i
     }
 }
 
+const std::array<std::pair<RocalImageColor, int>, 3> rgb_mappings = {
+        {std::make_pair(ROCAL_COLOR_U8, 1),
+         std::make_pair(ROCAL_COLOR_RGB24, 3),
+         std::make_pair(ROCAL_COLOR_RGB_PLANAR, 3)}
+    };
+
 int main(int argc, const char **argv) {
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
@@ -112,20 +118,10 @@ int main(int argc, const char **argv) {
     std::cerr << "\n Mode:: " << mode << std::endl;
     std::cerr << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
     RocalImageColor color_format = RocalImageColor::ROCAL_COLOR_RGB_PLANAR;
-    if (rgb == 0)
-        color_format = RocalImageColor::ROCAL_COLOR_U8;
-    else if (rgb == 1)
-        color_format = RocalImageColor::ROCAL_COLOR_RGB24;
-    else if (rgb == 2)
-        color_format = RocalImageColor::ROCAL_COLOR_RGB_PLANAR;
-    int channels = 3;
-    if (rgb == 0) channels = 1;
+    color_format = rgb_mappings[rgb].first;
+    int channels = rgb_mappings[rgb].second;
 
-    auto handle =
-        rocalCreate(inputBatchSize,
-                    processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU
-                                      : RocalProcessMode::ROCAL_PROCESS_CPU,
-                    0, 1);
+    auto handle = rocalCreate(inputBatchSize, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cerr << "Could not create the Rocal contex\n";
