@@ -267,7 +267,7 @@ ImageLoader::update_output_image() {
 
 Timing ImageLoader::timing() {
     auto t = _image_loader->timing();
-    t.image_process_time = _swap_handle_time.get_timing();
+    t.process_time = _swap_handle_time.get_timing();
     return t;
 }
 
