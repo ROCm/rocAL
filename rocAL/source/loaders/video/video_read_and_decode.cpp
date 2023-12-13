@@ -21,10 +21,7 @@ THE SOFTWARE.
 */
 
 #include "video_read_and_decode.h"
-
 #include "video_decoder_factory.h"
-
-namespace filesys = boost::filesystem;
 
 #ifdef ROCAL_VIDEO
 std::tuple<VideoDecoder::ColorFormat, unsigned, AVPixelFormat>

@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "image_reader.h"
 #include "external_source.h"
 #include "timing_debug.h"
+#include "filesystem.h"
 
 class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
    public:

@@ -20,15 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "sequence_file_source_reader.h"
-
-#include <commons.h>
-
-#include <algorithm>
-#include <boost/filesystem.hpp>
 #include <cassert>
-
-namespace filesys = boost::filesystem;
+#include <algorithm>
+#include <cstring>
+#include <commons.h>
+#include "sequence_file_source_reader.h"
+#include "filesystem.h"
 
 SequenceFileSourceReader::SequenceFileSourceReader() {
     _src_dir = nullptr;

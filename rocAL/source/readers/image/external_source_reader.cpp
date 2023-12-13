@@ -26,8 +26,6 @@ THE SOFTWARE.
 #include <boost/filesystem.hpp>
 #include <cassert>
 
-namespace filesys = boost::filesystem;
-
 ExternalSourceReader::ExternalSourceReader() {
     _curr_file_idx = 0;
     _current_file_size = 0;

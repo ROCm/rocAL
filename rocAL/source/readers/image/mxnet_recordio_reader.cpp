@@ -25,16 +25,8 @@ THE SOFTWARE.
 #include <commons.h>
 #include <memory.h>
 #include <stdint.h>
-
-#include <algorithm>
-#include <boost/filesystem.hpp>
-#include <cassert>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-
-namespace filesys = boost::filesystem;
+#include "mxnet_recordio_reader.h"
+#include "filesystem.h"
 
 using namespace std;
 

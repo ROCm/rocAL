@@ -21,22 +21,13 @@ THE SOFTWARE.
 */
 
 #include "tf_record_reader.h"
-
-#include <commons.h>
-#include <stdint.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <cassert>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-namespace filesys = boost::filesystem;
-
-TFRecordReader::TFRecordReader() {
+TFRecordReader::TFRecordReader()
+{
     _src_dir = nullptr;
     _sub_dir = nullptr;
     _entity = nullptr;

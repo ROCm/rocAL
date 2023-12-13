@@ -36,8 +36,6 @@ extern "C" {
 #endif
 #include "commons.h"
 
-namespace filesys = boost::filesystem;
-
 #ifdef ROCAL_VIDEO
 typedef struct VideoProperties {
     unsigned width, height, videos_count;

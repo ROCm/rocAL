@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "loader_module.h"
 #include "video_properties.h"
 #include "video_reader.h"
+#include "filesystem.h"
 
 #ifdef ROCAL_VIDEO
 extern "C" {

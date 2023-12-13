@@ -27,7 +27,7 @@ import cupy as cp
 import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
-
+import ctypes
 
 class ROCALGenericIterator(object):
     """!Iterator for processing data
@@ -154,10 +154,6 @@ class ROCALGenericIterator(object):
                 with cp.cuda.Device(device=self.device_id):
                     self.labels_tensor = self.labels.astype(dtype=cp.int_)
             return self.output_list, self.labels_tensor
-
-        if (types.NCHW == self.tensor_format):
-            self.loader.copyToExternalTensorNCHW(
-                self.out, self.multiplier, self.offset, self.reverse_channels, int(self.tensor_dtype))
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:
