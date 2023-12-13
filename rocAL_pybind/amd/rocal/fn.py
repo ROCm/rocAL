@@ -1033,13 +1033,12 @@ def snp_noise(*inputs, p_noise=0.0, p_salt=0.0, noise_val=0.0, salt_val=0.0,
     return (snp_noise_added_image)
 
 
-def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5,
+def box_iou_matcher(*inputs, anchors, high_threshold=0.5,
                     low_threshold=0.4, allow_low_quality_matches=True, device=None):
     """!Applies box IoU matching to the input image.
 
         @param inputs (list)                                                 The input image to which box IoU matching is applied.
         @param anchors (list of floats)                                      Anchors to be used for encoding, in the ltrb format.
-        @param criteria (float, optional, default = 0.5)                     Criteria value used for box IoU matching. Default is 0.5.
         @param high_threshold (float, optional, default = 0.5)               Upper threshold used for matching indices. Default is 0.5.
         @param low_threshold (float, optional, default = 0.4)                Lower threshold used for matching indices. Default is 0.4.
         @param allow_low_quality_matches (bool, optional, default = True)    Whether to allow low quality matches as output. Default is True.
@@ -1049,9 +1048,9 @@ def box_iou_matcher(*inputs, anchors, criteria=0.5, high_threshold=0.5,
 
     """
     # pybind call arguments
-    kwargs_pybind = {"anchors": anchors, "criteria": criteria, "high_threshold": high_threshold,
+    kwargs_pybind = {"anchors": anchors, "high_threshold": high_threshold,
                      "low_threshold": low_threshold, "allow_low_quality_matches": allow_low_quality_matches}
-    box_iou_matcher = b.BoxIOUMatcher(
+    box_iou_matcher = b.boxIouMatcher(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     Pipeline._current_pipeline._box_iou_matcher = True
     return (box_iou_matcher, [])
