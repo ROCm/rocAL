@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@ THE SOFTWARE.
 #include "circular_buffer.h"
 #include "commons.h"
 #include "image_read_and_decode.h"
-// #include "numpy_data_reader.h"
 //
 // NumpyLoader runs an internal thread for loading an decoding of numpy arrays asynchronously
 // it uses a circular buffer to store decoded numpy arrays for the user
