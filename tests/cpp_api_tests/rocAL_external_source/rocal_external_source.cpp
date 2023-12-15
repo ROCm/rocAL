@@ -53,30 +53,7 @@ void convert_float_to_uchar_buffer(T *input_float_buffer, unsigned char *output_
     }
 }
 
-void convert_nchw_to_nhwc(unsigned char *input_chw, unsigned char *output_hwc, int n, int h, int w, int c) {
-    int image_stride = h * w * c;
-    int channel_stride = h * w;
-    for (size_t idx = 0; idx < n; idx++) {
-        unsigned char *input_image = input_chw + idx * image_stride;
-        unsigned char *plane_R = input_image;
-        unsigned char *plane_G = input_image + channel_stride;
-        unsigned char *plane_B = input_image + channel_stride;
-
-        unsigned char *output_image = output_hwc + idx * image_stride;
-        for (size_t i = 0; i < h; i++) {
-            for (size_t j = 0; j < w; j++) {
-                *output_image++ = *plane_R;
-                *output_image++ = *plane_G;
-                *output_image++ = *plane_B;
-                plane_R++;
-                plane_G++;
-                plane_B++;
-            }
-        }
-    }
-}
-
-const std::array<std::pair<RocalImageColor, int>, 3> rgb_mappings = {
+const std::array<std::pair<RocalImageColor, int>, 3> color_mappings = {
         {std::make_pair(ROCAL_COLOR_U8, 1),
          std::make_pair(ROCAL_COLOR_RGB24, 3),
          std::make_pair(ROCAL_COLOR_RGB_PLANAR, 3)}
@@ -118,8 +95,8 @@ int main(int argc, const char **argv) {
     std::cerr << "\n Mode:: " << mode << std::endl;
     std::cerr << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
     RocalImageColor color_format = RocalImageColor::ROCAL_COLOR_RGB_PLANAR;
-    color_format = rgb_mappings[rgb].first;
-    int channels = rgb_mappings[rgb].second;
+    color_format = color_mappings[rgb].first;
+    int channels = color_mappings[rgb].second;
 
     auto handle = rocalCreate(input_batch_size, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1);
 
@@ -132,12 +109,8 @@ int main(int argc, const char **argv) {
 
     rocalSetSeed(0);
 
-    // Creating uniformly distributed random objects to override some of the default augmentation parameters
-    RocalIntParam color_temp_adj = rocalCreateIntParameter(-50);
-
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
     RocalTensor input1;
-    RocalTensorLayout tensor_layout = RocalTensorLayout::ROCAL_NHWC;
     RocalTensorOutputType tensor_output_type = RocalTensorOutputType::ROCAL_UINT8;
     std::vector<uint32_t> srcsize_height, srcsize_width;
     uint32_t max_height = 0, max_width = 0;
@@ -274,12 +247,11 @@ int main(int argc, const char **argv) {
     bool set_labels = true;
     names.resize(input_batch_size);
     labels.resize(total_images);
-    int iter_cnt = 0;
     RocalTensorList output_tensor_list;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensor_output_type == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
     std::vector<ROIxywh> ROI_xywh;
     ROI_xywh.resize(input_batch_size);
-    while (rocalGetRemainingImages(handle) >= input_batch_size) {
+    while (static_cast<int>(rocalGetRemainingImages(handle)) >= input_batch_size) {
         std::vector<std::string> input_images;
         std::vector<unsigned char *> input_batch_buffer;
         std::vector<int> label_buffer;
@@ -349,8 +321,8 @@ int main(int argc, const char **argv) {
 
         cv::Mat mat_input;
         cv::Mat mat_output;
-        for (int idx = 0; idx < output_tensor_list->size(); idx++) {
-            int h, w;
+        int h = 0, w = 0 ;
+        for (uint64_t idx = 0; idx < output_tensor_list->size(); idx++) {
             if (output_tensor_list->at(idx)->layout() == RocalTensorLayout::ROCAL_NHWC) {
                 h = output_tensor_list->at(idx)->dims().at(1) * output_tensor_list->at(idx)->dims().at(0);
                 w = output_tensor_list->at(idx)->dims().at(2);
@@ -358,9 +330,9 @@ int main(int argc, const char **argv) {
 
             mat_input = cv::Mat(h, w, cv_color_format);
             mat_output = cv::Mat(h, w, cv_color_format);
-            unsigned char *out_buffer;
+            unsigned char *out_buffer = nullptr;
             if (output_tensor_list->at(idx)->data_type() == RocalTensorOutputType::ROCAL_FP32) {
-                float *out_f_buffer;
+                float *out_f_buffer = nullptr;
                 if (output_tensor_list->at(idx)->backend() == RocalTensorBackend::ROCAL_GPU) {
                     out_f_buffer = (float *)malloc(output_tensor_list->at(idx)->data_size());
                     output_tensor_list->at(idx)->copy_data(out_f_buffer);
@@ -372,7 +344,7 @@ int main(int argc, const char **argv) {
                 // if(out_f_buffer != nullptr) free(out_f_buffer);
             }
             if (output_tensor_list->at(idx)->data_type() == RocalTensorOutputType::ROCAL_FP16) {
-                half *out_f16_buffer;
+                half *out_f16_buffer = nullptr;
                 if (output_tensor_list->at(idx)->backend() == RocalTensorBackend::ROCAL_GPU) {
                     out_f16_buffer = (half *)malloc(output_tensor_list->at(idx)->data_size());
                     output_tensor_list->at(idx)->copy_data(out_f16_buffer);
