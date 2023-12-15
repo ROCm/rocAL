@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 #include <algorithm>
 #include <numeric>
+#include <random>
 #include <boost/filesystem.hpp>
 #include <cassert>
 
@@ -61,9 +62,11 @@ Reader::Status NumpyDataReader::initialize(ReaderConfig desc) {
     _batch_count = desc.get_batch_size();
     _shuffle = desc.shuffle();
     _loop = desc.loop();
+    _files = desc.get_files();
+    _seed = desc.seed();
     ret = subfolder_reading();
     // the following code is required to make every shard the same size:: required for multi-gpu training
-    if (_shard_count > 1 && _batch_count > 1) {
+    if (_shard_count > 1 && _batch_count > 1 && _files.empty()) {
         int _num_batches = _file_names.size() / _batch_count;
         int max_batches_per_shard = (_file_count_all_shards + _shard_count - 1) / _shard_count;
         max_batches_per_shard = (max_batches_per_shard + _batch_count - 1) / _batch_count;
@@ -74,8 +77,10 @@ Reader::Status NumpyDataReader::initialize(ReaderConfig desc) {
     _file_headers.resize(_file_names.size());
     // shuffle dataset if set
     _shuffle_time.start();
-    if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_file_names.begin(), _file_names.end());
+    if (ret == Reader::Status::OK && _shuffle) {
+        std::mt19937 rng(_seed);
+        std::shuffle(_file_names.begin(), _file_names.end(), rng);
+    }
     _shuffle_time.end();
     return ret;
 }
@@ -94,10 +99,34 @@ size_t NumpyDataReader::open() {
         _last_id.erase(0, last_slash_idx + 1);
     }
 
-    ParseHeader(_file_headers[_curr_file_idx], file_path);
+    auto ret = GetFromCache(file_path, _file_headers[_curr_file_idx]);
+    if (!ret) {
+        ParseHeader(_file_headers[_curr_file_idx], file_path);
+        UpdateCache(file_path, _file_headers[_curr_file_idx]);
+    } else {
+        _current_fPtr = std::fopen(file_path.c_str(), "rb");
+        if (_current_fPtr == nullptr)
+            THROW("Could not open file " + file_path + ": " + std::strerror(errno));
+    }
     fseek(_current_fPtr, 0, SEEK_SET);  // Take the file pointer back to the start
 
     return _file_headers[_curr_file_idx].nbytes();
+}
+
+bool NumpyDataReader::GetFromCache(const std::string& file_name, NumpyHeaderData& header) {
+    std::unique_lock<std::mutex> cache_lock(_cache_mutex_);
+    auto it = _header_cache_.find(file_name);
+    if (it == _header_cache_.end()) {
+        return false;
+    } else {
+        header = it->second;
+        return true;
+    }
+}
+
+void NumpyDataReader::UpdateCache(const std::string& file_name, const NumpyHeaderData& value) {
+    std::unique_lock<std::mutex> cache_lock(_cache_mutex_);
+    _header_cache_[file_name] = value;
 }
 
 const RocalTensorDataType NumpyDataReader::TypeFromNumpyStr(const std::string& format) {
@@ -378,18 +407,8 @@ int NumpyDataReader::release() {
 void NumpyDataReader::reset() {
     _shuffle_time.start();
     if (_shuffle) {
-        std::vector<std::string> shuffled_filenames;
-        std::vector<NumpyHeaderData> shuffled_headers;
-        std::vector<int> indexes(_file_names.size());
-        std::iota(indexes.begin(), indexes.end(), 0);
-        // Shuffle the index vector and use the index to fetch batch size elements for decoding
-        std::random_shuffle(indexes.begin(), indexes.end());
-        for (auto const idx : indexes) {
-            shuffled_filenames.push_back(_file_names[idx]);
-            shuffled_headers.push_back(_file_headers[idx]);
-        }
-        _file_names = shuffled_filenames;
-        _file_headers = shuffled_headers;
+        std::mt19937 rng(_seed);
+        std::shuffle(_file_names.begin(), _file_names.end(), rng);
     }
     _shuffle_time.end();
     _read_counter = 0;
@@ -397,38 +416,56 @@ void NumpyDataReader::reset() {
 }
 
 Reader::Status NumpyDataReader::subfolder_reading() {
-    if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
-        THROW("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
-
-    std::vector<std::string> entry_name_list;
-    std::string _full_path = _folder_path;
-
-    while ((_entity = readdir(_sub_dir)) != nullptr) {
-        std::string entry_name(_entity->d_name);
-        if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0) continue;
-        entry_name_list.push_back(entry_name);
-    }
-    closedir(_sub_dir);
-    std::sort(entry_name_list.begin(), entry_name_list.end());
-
     auto ret = Reader::Status::OK;
-    for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
-        std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
-        filesys::path pathObj(subfolder_path);
-        if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
-            // ignore files with extensions .tar, .zip, .7z
-            auto file_extension_idx = subfolder_path.find_last_of(".");
-            if (file_extension_idx != std::string::npos) {
-                std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
-                if (file_extension != "npy")
-                    continue;
+    if (!_files.empty()) {
+        for (unsigned file_count = 0; file_count < _files.size(); file_count++) {
+            std::string file_path = _files[file_count];
+            filesys::path pathObj(file_path);
+            if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
+                // ignore files with extensions .tar, .zip, .7z
+                auto file_extension_idx = file_path.find_last_of(".");
+                if (file_extension_idx != std::string::npos) {
+                    std::string file_extension = file_path.substr(file_extension_idx + 1);
+                    if (file_extension != "npy")
+                        continue;
+                    else
+                        _file_names.push_back(file_path);
+                }
             }
-            ret = open_folder();
-            break;  // assume directory has only files.
-        } else if (filesys::exists(pathObj) && filesys::is_directory(pathObj)) {
-            _folder_path = subfolder_path;
-            if (open_folder() != Reader::Status::OK)
-                WRN("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
+        }
+    } else {
+        if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
+            THROW("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
+
+        std::vector<std::string> entry_name_list;
+        std::string _full_path = _folder_path;
+
+        while ((_entity = readdir(_sub_dir)) != nullptr) {
+            std::string entry_name(_entity->d_name);
+            if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0) continue;
+            entry_name_list.push_back(entry_name);
+        }
+        closedir(_sub_dir);
+        std::sort(entry_name_list.begin(), entry_name_list.end());
+
+        for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
+            std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
+            filesys::path pathObj(subfolder_path);
+            if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
+                // ignore files with extensions .tar, .zip, .7z
+                auto file_extension_idx = subfolder_path.find_last_of(".");
+                if (file_extension_idx != std::string::npos) {
+                    std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
+                    if (file_extension != "npy")
+                        continue;
+                }
+                ret = open_folder();
+                break;  // assume directory has only files.
+            } else if (filesys::exists(pathObj) && filesys::is_directory(pathObj)) {
+                _folder_path = subfolder_path;
+                if (open_folder() != Reader::Status::OK)
+                    WRN("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
+            }
         }
     }
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {

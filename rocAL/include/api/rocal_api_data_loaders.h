@@ -588,13 +588,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
  * \return Reference to the output tensor
  */
 extern "C"  RocalTensor  ROCAL_API_CALL rocalNumpyFileSource(
-                                        RocalContext p_context,
-                                        const char* source_path,
-                                        unsigned internal_shard_count,
-                                        bool is_output = false,
-                                        bool shuffle = false,
-                                        bool loop = false,
-                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE);
+                 RocalContext p_context,
+                 const char* source_path,
+                 unsigned internal_shard_count,
+                 std::vector<std::string> files = {},
+                 bool is_output = false,
+                 bool shuffle = false,
+                 bool loop = false,
+                 RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
+                 unsigned seed = 0);
 
 /*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.
  * \ingroup group_rocal_data_loaders
@@ -611,12 +613,14 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalNumpyFileSource(
 extern "C"  RocalTensor  rocalNumpyFileSourceSingleShard(
                  RocalContext p_context,
                  const char* source_path,
+                 std::vector<std::string> files = {},
                  bool is_output = false,
                  bool shuffle = false,
                  bool loop = false,
                  RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                  unsigned shard_id = 0,
-                 unsigned shard_count = 1);
+                 unsigned shard_count = 1,
+                 unsigned seed = 0);
 
 /*!
  * \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.

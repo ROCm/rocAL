@@ -352,13 +352,13 @@ def mxnet(path, stick_to_shard=False, pad_last_batch=False):
     return mxnet_metadata
 
 
-def numpy(*inputs, file_root='', num_shards=1,
-          random_shuffle=False, shard_id=0, stick_to_shard=False, pad_last_batch=False):
+def numpy(*inputs, file_root='', files=[], num_shards=1,
+          random_shuffle=False, shard_id=0, stick_to_shard=False, pad_last_batch=False, seed=0):
 
     Pipeline._current_pipeline._reader = "NumpyReader"
     # Output
-    kwargs_pybind = {"source_path": file_root, "is_output": False, "shuffle": random_shuffle,
-                     "loop": False, "decode_size_policy": types.MAX_SIZE, "shard_id": shard_id, "shard_count": num_shards}
+    kwargs_pybind = {"source_path": file_root, "files": files, "is_output": False, "shuffle": random_shuffle,
+                     "loop": False, "decode_size_policy": types.MAX_SIZE, "shard_id": shard_id, "shard_count": num_shards, "seed": seed}
     numpy_reader_output = b.numpyReaderSourceShard(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (numpy_reader_output)
