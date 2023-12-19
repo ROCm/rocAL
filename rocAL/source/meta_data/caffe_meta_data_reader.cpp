@@ -32,8 +32,7 @@ using caffe_protos::Datum;
 using std::string;
 using namespace std;
 
-CaffeMetaDataReader::CaffeMetaDataReader()
-{
+CaffeMetaDataReader::CaffeMetaDataReader() {
 }
 
 void CaffeMetaDataReader::init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) {

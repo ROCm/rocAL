@@ -32,8 +32,7 @@ THE SOFTWARE.
 
 using namespace std;
 
-LabelReaderFolders::LabelReaderFolders()
-{
+LabelReaderFolders::LabelReaderFolders() {
     _src_dir = nullptr;
     _entity = nullptr;
     _sub_dir = nullptr;

@@ -26,8 +26,7 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-TFRecordReader::TFRecordReader()
-{
+TFRecordReader::TFRecordReader() {
     _src_dir = nullptr;
     _sub_dir = nullptr;
     _entity = nullptr;
