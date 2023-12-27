@@ -137,24 +137,27 @@ For the convenience of the developer, we here provide the setup script which wil
   + Building rocAL with default **HIP** backend:
 
     + run the setup script to install all the dependencies required
-    ```
+  
+```
     python rocAL-setup.py
-    ```
+```
 
     + run the below commands to build rocAL
-    ```
+  
+```
     mkdir build-hip
     cd build-hip
     cmake ../
     make -j8
     sudo cmake --build . --target PyPackageInstall
     sudo make install
-    ```
+```
     
     + run tests - [test option instructions](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/wiki/CTest)
-    ```
+  
+```
     make test
-    ```
+```
     
     **Note:** sudo is required to build rocAL_pybind package (only supported on HIP backend)
 
