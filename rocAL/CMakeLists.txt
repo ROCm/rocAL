@@ -21,7 +21,10 @@
 # SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-project(rocal)
+set(VERSION "1.0.0")
+
+# Set Project Version and Language
+project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
 set(BUILD_ROCAL true)
 

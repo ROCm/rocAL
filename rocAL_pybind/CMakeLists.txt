@@ -19,9 +19,12 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-project(rocAL_pybind)
+set(VERSION "1.0.0")
 
-set(TARGET_NAME rocAL_pybind)
+# Set Project Version and Language
+project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
+
+set(TARGET_NAME rocal_pybind)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
