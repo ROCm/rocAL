@@ -90,7 +90,7 @@ rocAL can be currently used to perform the following operations either with rand
 *  C++17
 ## Build instructions
 
-### Prerequisites setup script for Linux - `rocAL-setup.py`
+### Prerequisites setup script for Linux - rocAL-setup.py
 
 For the convenience of the developer, we here provide the setup script which will install all the dependencies required by this project.
 
@@ -112,17 +112,15 @@ For the convenience of the developer, we here provide the setup script which wil
   python rocAL-setup.py     --directory [setup directory - optional (default:~/)]
                             --opencv    [OpenCV Version - optional (default:4.6.0)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
-                            --rpp       [RPP Version - optional (default:1.2.0)]
-                            --mivisionx [MIVisionX Version - optional (default:master)]
                             --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
                             --reinstall [Remove previous setup and reinstall (default:no)[options:yes/no]]
                             --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                             --rocm_path [ROCm Installation Path - optional (default:/opt/rocm) - ROCm Installation Required]
   ```
-    **Note:**
+  **Note:**
     * **ROCm upgrade** requires the setup script **rerun**.
 
-### Using `rocAL-setup.py`
+### Using rocAL-setup.py
 
 * Install [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html) with --usecase=graphics,rocm
   
