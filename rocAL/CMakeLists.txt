@@ -52,10 +52,7 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         endif()
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032;gfx1100")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941")
-    endif()
+    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032;gfx1100,gfx941,gfx942")
     set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
@@ -318,21 +315,20 @@ if(${BUILD_ROCAL})
     message("-- ${White}rocAL -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 
     # install rocAL libs -- {ROCM_PATH)/lib
-    install(TARGETS rocal DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    if(BUILD_DEV)
-        # install rocAL include files -- {ROCM_PATH}/include/rocAL/
-        install(FILES
-                include/api/rocal_api.h
-                include/api/rocal_api_info.h
-                include/api/rocal_api_augmentation.h
-                include/api/rocal_api_data_loaders.h
-                include/api/rocal_api_types.h
-                include/api/rocal_api_data_transfer.h
-                include/api/rocal_api_parameters.h
-                include/api/rocal_api_meta_data.h
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
-        )
-    endif(BUILD_DEV)
+    install(TARGETS rocal LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_SKIP)
+    install(TARGETS rocal LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev NAMELINK_ONLY)
+    install(TARGETS rocal LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
+    # install rocAL include files -- {ROCM_PATH}/include/rocAL/
+    install(FILES
+            include/api/rocal_api.h
+            include/api/rocal_api_info.h
+            include/api/rocal_api_augmentation.h
+            include/api/rocal_api_data_loaders.h
+            include/api/rocal_api_types.h
+            include/api/rocal_api_data_transfer.h
+            include/api/rocal_api_parameters.h
+            include/api/rocal_api_meta_data.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
 else()
     message(FATAL_ERROR "-- ${Red}rocAL dependencies not satisfied${ColourReset}")
 endif()
