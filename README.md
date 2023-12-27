@@ -174,13 +174,12 @@ For the convenience of the developer, we here provide the setup script which wil
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-6`
-* RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
-* MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
+* RPP - `rpp` & `rpp-dev`/`rpp-devel`
+* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * RapidJSON- [master](https://github.com/Tencent/rapidjson)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* CuPy - [v12.2.0](https://github.com/ROCmSoftwarePlatform/cupy/releases/tag/v12.0.0)
-* rocAL Setup Script - `V1.0.2`
+* rocAL Setup Script - `V1.1.0`
 * Dependencies for all the above packages

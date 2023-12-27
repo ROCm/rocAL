@@ -18,7 +18,7 @@
 
 ### Changed
 
-* 
+* CuPy - Removed from setup.py
 
 ### Fixed
 
@@ -31,11 +31,11 @@
 * ROCm: rocm-core - `5.4.0.50400-72`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
-* MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
+* RPP - `rpp` & `rpp-dev`/`rpp-devel`
+* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Dependencies for all the above packages
-* rocAL Setup Script - `V1.0.2`
+* rocAL Setup Script - `V1.1.0`
 
 ### Known issues
 
