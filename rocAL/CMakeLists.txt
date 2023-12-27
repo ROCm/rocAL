@@ -320,6 +320,8 @@ if(${BUILD_ROCAL})
     target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
     message("-- ${White}rocAL -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 
+    set_target_properties(rocal PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
+
     # install rocAL libs -- {ROCM_PATH)/lib
     install(TARGETS rocal LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_SKIP)
     install(TARGETS rocal LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev NAMELINK_ONLY)
