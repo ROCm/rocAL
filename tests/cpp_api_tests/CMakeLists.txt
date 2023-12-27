@@ -75,19 +75,19 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_basic_test"
-            ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
 )
 add_test(NAME rocAL_basic_test_gpu 
               COMMAND rocal_basic_test 
-              ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test)
 add_test(NAME rocAL_basic_test_gray 
               COMMAND rocal_basic_test 
-              ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test)
 add_test(NAME rocAL_basic_test_rgb 
               COMMAND rocal_basic_test 
-              ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_basic_test)
 
 # TBD - rocAL_dataloader unit test options non-functional - NEEDS TO BE ADDED ONCE RESOLVED
@@ -100,7 +100,7 @@ add_test(NAME rocAL_basic_test_rgb
 #                              "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader"
 #            --build-generator "${CMAKE_GENERATOR}"
 #            --test-command "rocal_dataloader"
-#            ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet
+#            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet
 #)
 
 # rocal_dataloader_mt
@@ -113,11 +113,11 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_mt"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_dataloader_mt"
-            ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet 0
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
 )
 add_test(NAME rocAL_dataloader_mt_gpu 
               COMMAND rocal_dataloader_mt 
-              ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet 1
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_dataloader_mt)
 
 # TBD - rocAL_dataloader_tf unit test non-functional
@@ -144,11 +144,11 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests"
-            ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 16 0
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 0
 )
 add_test(NAME rocAL_performance_tests_gpu 
               COMMAND rocal_performance_tests 
-              ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 16 1
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests)
 
 # rocal_performance_tests_with_depth
@@ -161,11 +161,11 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_performance_tests_with_depth"
-            ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 1 1 0
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 0
 )
 add_test(NAME rocAL_performance_tests_with_depth_gpu 
               COMMAND rocal_performance_tests_with_depth 
-              ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet 224 224 1 1 1 1
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_performance_tests_with_depth)
 
 # rocal_unittests
@@ -178,15 +178,15 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_unittests"
-            0 ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet test 224 224 1 0 1
+            0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 0 1
 )
 add_test(NAME rocAL_unittests_gpu 
               COMMAND rocal_unittests 
-              0 ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet test 224 224 1 1 1
+              0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests)
 add_test(NAME rocAL_unittests_gray 
               COMMAND rocal_unittests 
-              0 ${CMAKE_CURRENT_SOURCE_DIR}/data/images/AMD-tinyDataSet test 224 224 1 1 0
+              0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rocAL_unittests)
 
 # rocal_video_unittests
@@ -199,5 +199,5 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/rocAL_video_unittests"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "rocal_video_unittests"
-            ${CMAKE_CURRENT_SOURCE_DIR}/data/videos/AMD_driving_virtual_20.mp4
+            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
 )
