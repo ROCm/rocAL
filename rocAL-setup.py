@@ -408,5 +408,9 @@ else:
     else:
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                       ' '+linuxSystemInstall_check+' install -y mivisionx mivisionx-devel')
+    # TBD: Need source install as rocm-6.0 mivisionx is missing vx_rpp
+    os.system('sudo -v')
+    os.system('(cd '+deps_dir+'; git clone https://github.com/ROCm/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
+              linuxCMake+' -DBACKEND='+backend+' -D ROCAL=OFF ../; make -j4; sudo make install)')
 
     print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")
