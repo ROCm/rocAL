@@ -129,7 +129,7 @@ For the convenience of the developer, we here provide the setup script which wil
   + Clone rocAL source code
 
   ```
-  git clone https://github.com/ROCmSoftwarePlatform/rocAL.git
+  git clone https://github.com/ROCm/rocAL.git
   cd rocAL
   ```
   **Note:** rocAL supports **CPU** and two **GPU** backends: **OPENCL**/**HIP**:

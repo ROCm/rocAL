@@ -224,7 +224,7 @@ int main(int argc, const char ** argv)
     AMD_ROCm_Black_resize = cv::imread("../../../samples/images/rocm-black-resize.png");
     int fontFace = CV_FONT_HERSHEY_DUPLEX;
     int thickness = 1.3;
-    std::string bufferName = "MIVisionX Image Augmentation";
+    std::string bufferName = "rocAL Image Augmentation";
 
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
     int w = rocalGetOutputWidth(handle);

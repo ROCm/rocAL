@@ -3,7 +3,7 @@
 rocAL has several applications built on top of AMD optimized libraries that can be used as prototypes or used as models to develop products.
 
 ## Prerequisites
-* [rocAL](https://github.com/ROCmSoftwarePlatform/rocAL)
+* [rocAL](https://github.com/ROCm/rocAL)
 
 ## Image Augmentation
 

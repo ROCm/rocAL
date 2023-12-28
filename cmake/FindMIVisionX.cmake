@@ -36,6 +36,7 @@ find_path(MIVisionX_INCLUDE_DIRS
     PATHS
     ${MIVisionX_PATH}/include/mivisionx
     /usr/include
+    $ENV{ROCM_PATH}/include/mivisionx
     ${ROCM_PATH}/include/mivisionx
 )
 mark_as_advanced(MIVisionX_INCLUDE_DIRS)
@@ -45,9 +46,11 @@ find_library(OPENVX_LIBRARIES
     NAMES libopenvx${SHARED_LIB_TYPE}
     HINTS
     $ENV{MIVisionX_PATH}/lib
+    $ENV{MIVisionX_PATH}/lib64
     PATHS
     ${MIVisionX_PATH}/lib
     /usr/lib
+    $ENV{ROCM_PATH}/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(OPENVX_LIBRARIES)

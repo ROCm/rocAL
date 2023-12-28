@@ -4,7 +4,7 @@
 
 ## Online Documentation
 
-[rocAL Documentation](https://github.com/ROCmSoftwarePlatform/rocAL)
+[rocAL Documentation](https://github.com/ROCm/rocAL)
 
 ## rocAL 1.0.0 (unreleased)
 
