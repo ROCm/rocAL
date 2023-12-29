@@ -45,8 +45,8 @@ parser.add_argument('--protobuf',  	type=str, default='3.12.4',
                     help='ProtoBuf Version - optional (default:3.12.4)')
 parser.add_argument('--pybind11',   type=str, default='v2.10.4',
                     help='PyBind11 Version - optional (default:v2.10.4)')
-parser.add_argument('--reinstall', 	type=str, default='no',
-                    help='Remove previous setup and reinstall - optional (default:no) [options:yes/no]')
+parser.add_argument('--reinstall', 	type=str, default='ON',
+                    help='Remove previous setup and reinstall - optional (default:ON) [options:OFF/ON]')
 parser.add_argument('--backend', 	type=str, default='HIP',
                     help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/OCL/HIP]')
 parser.add_argument('--rocm_path', 	type=str, default='/opt/rocm',
@@ -57,17 +57,17 @@ setupDir = args.directory
 opencvVersion = args.opencv
 ProtoBufVersion = args.protobuf
 pybind11Version = args.pybind11
-reinstall = args.reinstall
-backend = args.backend
+reinstall = args.reinstall.upper()
+backend = args.backend.upper()
 ROCM_PATH = args.rocm_path
 
 if "ROCM_PATH" in os.environ:
     ROCM_PATH = os.environ.get('ROCM_PATH')
 print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
 
-if reinstall not in ('no', 'yes'):
+if reinstall not in ('ON', 'OFF'):
     print(
-        "ERROR: Re-Install Option Not Supported - [Supported Options: no or yes]")
+        "ERROR: Re-Install Option Not Supported - [Supported Options: ON or OFF]")
     exit()
 if backend not in ('OCL', 'HIP', 'CPU'):
     print(
@@ -144,7 +144,7 @@ if userName == 'root':
     os.system(linuxSystemInstall+' install sudo')
 
 # Delete previous install
-if os.path.exists(deps_dir) and reinstall == 'yes':
+if os.path.exists(deps_dir) and reinstall == 'ON':
     os.system('sudo -v')
     os.system('sudo rm -rf '+deps_dir)
     print("\nrocAL Setup: Removing Previous Install -- "+deps_dir+"\n")
@@ -163,12 +163,6 @@ if os.path.exists(deps_dir):
         os.system('sudo -v')
         os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
                   '; sudo '+linuxFlag+' make install -j8)')
-
-    # RPP
-    if os.path.exists(deps_dir+'/rpp/build-'+backend):
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/rpp/build-'+backend+'; sudo ' +
-                  linuxFlag+' make install -j8)')
 
     # FFMPEG
     if os.path.exists(deps_dir+'/FFmpeg-n4.4.2'):
