@@ -14,21 +14,21 @@ Returns: The context for the pipeline
 
 Arguments: 
 
-- RocalProcessMode: Defines whether rocal data loading should be on the CPU or [GPU](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL/include/api/rocal_api_types.h#L91)
+- RocalProcessMode: Defines whether rocal data loading should be on the CPU or [GPU](https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api_types.h#L91)
 
 ```
 RocalProcessMode:: ROCAL_PROCESS_GPU
 RocalProcessMode::ROCAL_PROCESS_CPU
 ```
 
-- RocalTensorOutputType: Defines whether the output of rocal tensor is FP32 or [FP16](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL/include/api/rocal_api_types.h#L124)
+- RocalTensorOutputType: Defines whether the output of rocal tensor is FP32 or [FP16](https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api_types.h#L124)
 
 ```
 RocalTensorOutputType::ROCAL_FP32
 RocalTensorOutputType::ROCAL_FP16
 ```
 
-[Example](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL/include/api/rocal_api.h#L41):
+[Example](https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L41):
 
 ```
 extern "C"  RocalContext  ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
@@ -40,7 +40,7 @@ Use: To verify the graph for all the inputs and outputs
 
 Returns: A status code indicating the success or failure
 
-[Example](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL/include/api/rocal_api.h#L47):
+[Example](https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L47):
 
 ```
 extern "C"  RocalStatus ROCAL_API_CALL rocalVerify(RocalContext context);
@@ -52,7 +52,7 @@ Use: To process and run the built and verified graph
 
 Returns: A status code indicating the success or failure
 
-[Example](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL/include/api/rocal_api.h#L52):
+[Example](https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L52):
 
 ```
 extern "C"  RocalStatus  ROCAL_API_CALL rocalRun(RocalContext context);
@@ -64,7 +64,7 @@ Use: To free all the resources allocated during the graph creation process
 
 Returns: A status code indicating the success or failure
 
-[Example](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL/include/api/rocal_api.h#L57):
+[Example](https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L57):
 
 ```
 extern "C"  RocalStatus  ROCAL_API_CALL rocalRelease(RocalContext rocal_context);

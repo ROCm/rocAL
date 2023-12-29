@@ -26,11 +26,11 @@ These pipelines are programmable by the user using both C++ and Python APIs.
 
 ## Prerequisites
 
-Refer [rocAL Prerequisites](https://github.com/ROCmSoftwarePlatform/rocAL#prerequisites)
+Refer [rocAL Prerequisites](https://github.com/ROCm/rocAL#prerequisites)
 
 ## Build instructions
 
-Refer [rocAL build instructions](https://github.com/ROCmSoftwarePlatform/rocAL#build-instructions)
+Refer [rocAL build instructions](https://github.com/ROCm/rocAL#build-instructions)
 
 ## rocAL Python
 
@@ -88,7 +88,7 @@ amd.rocal.types are enums exported from C++ API to python. Some examples include
 
 *  Build and install RPP
 *  Build and install MIVisionX which installs rocAL c++ lib
-*  Go to [rocal_pybind](https://github.com/ROCmSoftwarePlatform/rocAL/rocAL_pybind) folder
+*  Go to [rocal_pybind](https://github.com/ROCm/rocAL/rocAL_pybind) folder
 *  sudo ./run.sh
 
 ### Steps to run MLPerf Resnet50 classification training with rocAL on a system with MI50+ and ROCm

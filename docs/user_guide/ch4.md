@@ -43,7 +43,7 @@ Given below is an example of a file reader, which takes a folder of images as in
 
 ## 4.1.2 Defining the Pipeline
 
-To define a pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L29.
+To define a pipeline, see https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L29.
 
 ```
 class Pipeline(object):
@@ -122,7 +122,7 @@ Following are the important functions available in the Pipeline class, which is 
 
 Building the pipeline ensures that all operators are validated with the corresponding inputs and outputs.
 
-To build the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L166
+To build the pipeline, see https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L166
 
 ```
 # build the pipeline
@@ -134,7 +134,7 @@ To build the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/ma
 
 To run/use the pipeline, simply create a data loader using the pipeline and iterate through it to get the next batch of images with labels.
 
-To run the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168
+To run the pipeline, see https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168
 
 ```
     # Dataloader
@@ -156,7 +156,7 @@ Figure 3.	Sample Pipeline Output
 
 rocAL not only reads images from the disk and batches them into tensors, it can also perform various augmentations on those images. 
 
-To read images, decode them, and rotate them in the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L77
+To read images, decode them, and rotate them in the pipeline, see https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L77
 
 ```
 def rotated_pipeline():
@@ -196,7 +196,7 @@ Here are some of the commonly used rocAL data types:
     - tensor_dtype = types.FLOAT
     - tensor_dtype = types.FLOAT16
 
-To see the usage of the above-mentioned data types, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L97
+To see the usage of the above-mentioned data types, see https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L97
 
 ```
 def __init__(self, batch_size=-1, num_threads=-1, device_id=-1, seed=-1,

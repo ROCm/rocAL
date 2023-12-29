@@ -30,7 +30,7 @@ else:
 __author__ = "Kiriti Nagesh Gowda"
 __copyright__ = "Copyright 2022 - 2023, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "1.0.2"
+__version__ = "1.1.0"
 __maintainer__ = "Kiriti Nagesh Gowda"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
@@ -43,14 +43,10 @@ parser.add_argument('--opencv',    	type=str, default='4.6.0',
                     help='OpenCV Version - optional (default:4.6.0)')
 parser.add_argument('--protobuf',  	type=str, default='3.12.4',
                     help='ProtoBuf Version - optional (default:3.12.4)')
-parser.add_argument('--rpp',   		type=str, default='master',
-                    help='RPP Version - optional (default:master)')
-parser.add_argument('--mivisionx',   		type=str, default='master',
-                    help='MIVisionX Version - optional (default:master)')
 parser.add_argument('--pybind11',   type=str, default='v2.10.4',
                     help='PyBind11 Version - optional (default:v2.10.4)')
-parser.add_argument('--reinstall', 	type=str, default='no',
-                    help='Remove previous setup and reinstall - optional (default:no) [options:yes/no]')
+parser.add_argument('--reinstall', 	type=str, default='ON',
+                    help='Remove previous setup and reinstall - optional (default:ON) [options:OFF/ON]')
 parser.add_argument('--backend', 	type=str, default='HIP',
                     help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/OCL/HIP]')
 parser.add_argument('--rocm_path', 	type=str, default='/opt/rocm',
@@ -60,20 +56,18 @@ args = parser.parse_args()
 setupDir = args.directory
 opencvVersion = args.opencv
 ProtoBufVersion = args.protobuf
-rppVersion = args.rpp
-mivisionxVersion = args.mivisionx
 pybind11Version = args.pybind11
-reinstall = args.reinstall
-backend = args.backend
+reinstall = args.reinstall.upper()
+backend = args.backend.upper()
 ROCM_PATH = args.rocm_path
 
 if "ROCM_PATH" in os.environ:
     ROCM_PATH = os.environ.get('ROCM_PATH')
 print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
 
-if reinstall not in ('no', 'yes'):
+if reinstall not in ('ON', 'OFF'):
     print(
-        "ERROR: Re-Install Option Not Supported - [Supported Options: no or yes]")
+        "ERROR: Re-Install Option Not Supported - [Supported Options: ON or OFF]")
     exit()
 if backend not in ('OCL', 'HIP', 'CPU'):
     print(
@@ -150,7 +144,7 @@ if userName == 'root':
     os.system(linuxSystemInstall+' install sudo')
 
 # Delete previous install
-if os.path.exists(deps_dir) and reinstall == 'yes':
+if os.path.exists(deps_dir) and reinstall == 'ON':
     os.system('sudo -v')
     os.system('sudo rm -rf '+deps_dir)
     print("\nrocAL Setup: Removing Previous Install -- "+deps_dir+"\n")
@@ -169,12 +163,6 @@ if os.path.exists(deps_dir):
         os.system('sudo -v')
         os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
                   '; sudo '+linuxFlag+' make install -j8)')
-
-    # RPP
-    if os.path.exists(deps_dir+'/rpp/build-'+backend):
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/rpp/build-'+backend+'; sudo ' +
-                  linuxFlag+' make install -j8)')
 
     # FFMPEG
     if os.path.exists(deps_dir+'/FFmpeg-n4.4.2'):
@@ -230,12 +218,9 @@ else:
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                   linuxSystemInstall_check+' install sqlite3 sqlite3-devel libbz2-devel libopenssl-devel python3-devel autoconf automake libtool curl make gcc-c++ unzip')
     # Install half.hpp
-    os.system(
-        '(cd '+deps_dir+'; wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip )')
-    os.system('(cd '+deps_dir+'; unzip half-1.12.0.zip -d half-files )')
     os.system('sudo -v')
-    os.system(
-        '(cd '+deps_dir+'; sudo mkdir -p /usr/local/include/half; sudo cp half-files/include/half.hpp /usr/local/include/half )')
+    os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                  ' '+linuxSystemInstall_check+' install -y half')
     # Install ProtoBuf
     os.system('(cd '+deps_dir+'/protobuf-' +
               ProtoBufVersion+'; ./autogen.sh )')
@@ -318,8 +303,12 @@ else:
               ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
     # RPP
     os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b '+rppVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git; cd rpp; mkdir build-'+backend+'; cd build-'+backend+'; ' +
-              linuxCMake+' -DBACKEND='+backend+' -DCMAKE_INSTALL_PREFIX='+ROCM_PATH+' ../; make -j4; sudo make install)')
+    if "Ubuntu" in platfromInfo:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                      ' '+linuxSystemInstall_check+' install -y rpp rpp-dev')
+    else:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                      ' '+linuxSystemInstall_check+' install -y rpp rpp-devel')
     # RapidJSON
     os.system('sudo -v')
     if "Ubuntu" in platfromInfo:
@@ -335,18 +324,6 @@ else:
     os.system('pip install pytest==7.3.1')
     os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
               linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j4; sudo make install)')
-    # CuPy Install
-    os.system('sudo -v')
-    os.system(linuxSystemInstall+' update')
-    if "Ubuntu" in platfromInfo:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                  ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev')
-    else:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                  ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-devel hipcub-devel python3-devel')
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b v12.2.0 https://github.com/ROCmSoftwarePlatform/cupy.git; export CUPY_INSTALL_USE_HIP=1; export ROCM_HOME=/opt/rocm; cd cupy; git submodule update --init; pip install -e . --no-cache-dir -vvvv)')
-    os.system('pip install numpy==1.21')
 
     # Install ffmpeg
     if "Ubuntu" in platfromInfo:
@@ -419,7 +396,15 @@ else:
 
     # MIVisionX
     os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
-              linuxCMake+' -DBACKEND='+backend+' -DROCAL=OFF ../; make -j4; sudo make install)')
+    if "Ubuntu" in platfromInfo:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                      ' '+linuxSystemInstall_check+' install -y mivisionx mivisionx-dev')
+    else:
+        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                      ' '+linuxSystemInstall_check+' install -y mivisionx mivisionx-devel')
+    # TBD: Need source install as rocm-6.0 mivisionx is missing vx_rpp
+    os.system('sudo -v')
+    os.system('(cd '+deps_dir+'; git clone https://github.com/ROCm/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
+              linuxCMake+' -DBACKEND='+backend+' -D ROCAL=OFF ../; make -j4; sudo make install)')
 
     print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")

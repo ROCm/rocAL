@@ -90,7 +90,7 @@ rocAL can be currently used to perform the following operations either with rand
 *  C++17
 ## Build instructions
 
-### Prerequisites setup script for Linux - `rocAL-setup.py`
+### Prerequisites setup script for Linux - rocAL-setup.py
 
 For the convenience of the developer, we here provide the setup script which will install all the dependencies required by this project.
 
@@ -112,17 +112,15 @@ For the convenience of the developer, we here provide the setup script which wil
   python rocAL-setup.py     --directory [setup directory - optional (default:~/)]
                             --opencv    [OpenCV Version - optional (default:4.6.0)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
-                            --rpp       [RPP Version - optional (default:1.2.0)]
-                            --mivisionx [MIVisionX Version - optional (default:master)]
                             --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
                             --reinstall [Remove previous setup and reinstall (default:no)[options:yes/no]]
                             --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                             --rocm_path [ROCm Installation Path - optional (default:/opt/rocm) - ROCm Installation Required]
   ```
-    **Note:**
+  **Note:**
     * **ROCm upgrade** requires the setup script **rerun**.
 
-### Using `rocAL-setup.py`
+### Using rocAL-setup.py
 
 * Install [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html) with --usecase=graphics,rocm
   
@@ -131,7 +129,7 @@ For the convenience of the developer, we here provide the setup script which wil
   + Clone rocAL source code
 
   ```
-  git clone https://github.com/ROCmSoftwarePlatform/rocAL.git
+  git clone https://github.com/ROCm/rocAL.git
   cd rocAL
   ```
   **Note:** rocAL supports **CPU** and two **GPU** backends: **OPENCL**/**HIP**:
@@ -139,26 +137,20 @@ For the convenience of the developer, we here provide the setup script which wil
   + Building rocAL with default **HIP** backend:
 
     + run the setup script to install all the dependencies required
-    ```
+    + run the below commands to build rocAL & test
+    + run tests - [test option instructions](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/wiki/CTest)
+  
+```
     python rocAL-setup.py
-    ```
-
-    + run the below commands to build rocAL
-    ```
     mkdir build-hip
     cd build-hip
     cmake ../
     make -j8
     sudo cmake --build . --target PyPackageInstall
     sudo make install
-    ```
-    
-    + run tests - [test option instructions](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/wiki/CTest)
-    ```
     make test
-    ```
-    
-    **Note:** sudo is required to build rocAL_pybind package (only supported on HIP backend)
+``` 
+  **Note:** sudo is required to build rocAL_pybind package (only supported on HIP backend)
 
   **Note:**
   + rocAL_pybind is not supported on OPENCL backend
@@ -174,13 +166,12 @@ For the convenience of the developer, we here provide the setup script which wil
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-6`
-* RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
-* MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
+* RPP - `rpp` & `rpp-dev`/`rpp-devel`
+* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * RapidJSON- [master](https://github.com/Tencent/rapidjson)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* CuPy - [v12.2.0](https://github.com/ROCmSoftwarePlatform/cupy/releases/tag/v12.0.0)
-* rocAL Setup Script - `V1.0.2`
+* rocAL Setup Script - `V1.1.0`
 * Dependencies for all the above packages

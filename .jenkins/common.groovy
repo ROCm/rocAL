@@ -58,32 +58,65 @@ def runTestCommand (platform, project) {
 def runPackageCommand(platform, project) {
 
     def packageHelper = platform.makePackage(platform.jenkinsLabel, "${project.paths.project_build_prefix}/build/release")
+    
+    String packageType = ''
+    String packageInfo = ''
+    String packageDetail = ''
+    String osType = ''
+    String packageRunTime = ''
 
-    String packageType = ""
-    String packageInfo = ""
-
-    if (platform.jenkinsLabel.contains('centos') ||
-        platform.jenkinsLabel.contains('rhel') ||
-        platform.jenkinsLabel.contains('sles')) {
+    if (platform.jenkinsLabel.contains('centos') || platform.jenkinsLabel.contains('rhel') || platform.jenkinsLabel.contains('sles')) {
         packageType = 'rpm'
         packageInfo = 'rpm -qlp'
+        packageDetail = 'rpm -qi'
+        packageRunTime = 'rocal-*'
+
+        if (platform.jenkinsLabel.contains('sles')) {
+            osType = 'sles'
         }
+        else if (platform.jenkinsLabel.contains('centos7')) {
+            osType = 'centos7'
+        }
+        else if (platform.jenkinsLabel.contains('rhel8')) {
+            osType = 'rhel8'
+        }
+        else if (platform.jenkinsLabel.contains('rhel9')) {
+            osType = 'rhel9'
+        }
+    }
     else
     {
         packageType = 'deb'
         packageInfo = 'dpkg -c'
+        packageDetail = 'dpkg -I'
+        packageRunTime = 'rocal_*'
+
+        if (platform.jenkinsLabel.contains('ubuntu20')) {
+            osType = 'ubuntu20'
+        }
+        else if (platform.jenkinsLabel.contains('ubuntu22')) {
+            osType = 'ubuntu22'
+        }
     }
 
     def command = """#!/usr/bin/env bash
                 set -x
                 export HOME=/home/jenkins
-                echo Make rocAL Package
+                echo Make rocal Package
                 cd ${project.paths.project_build_prefix}/build/release
                 sudo make package
                 mkdir -p package
-                mv *.${packageType} package/
-                mv Testing/Temporary/*.log package/
-                ${packageInfo} package/*.${packageType}
+                mv rocal-test*.${packageType} package/${osType}-rocal-test.${packageType}
+                mv rocal-dev*.${packageType} package/${osType}-rocal-dev.${packageType}
+                mv ${packageRunTime}.${packageType} package/${osType}-rocal.${packageType}
+                mv Testing/Temporary/LastTest.log ${osType}-LastTest.log
+                mv Testing/Temporary/LastTestsFailed.log ${osType}-LastTestsFailed.log
+                ${packageDetail} package/${osType}-rocal-test.${packageType}
+                ${packageDetail} package/${osType}-rocal-dev.${packageType}
+                ${packageDetail} package/${osType}-rocal.${packageType}
+                ${packageInfo} package/${osType}-rocal-test.${packageType}
+                ${packageInfo} package/${osType}-rocal-dev.${packageType}
+                ${packageInfo} package/${osType}-rocal.${packageType}
                 """
 
     platform.runCommand(this, command)

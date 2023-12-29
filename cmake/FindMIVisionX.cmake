@@ -33,9 +33,11 @@ find_path(MIVisionX_INCLUDE_DIRS
     NAMES vx_ext_amd.h
     HINTS
     $ENV{MIVisionX_PATH}/include/mivisionx
+    $ENV{ROCM_PATH}/include/mivisionx
     PATHS
     ${MIVisionX_PATH}/include/mivisionx
     /usr/include
+    $ENV{ROCM_PATH}/include/mivisionx
     ${ROCM_PATH}/include/mivisionx
 )
 mark_as_advanced(MIVisionX_INCLUDE_DIRS)
@@ -45,9 +47,12 @@ find_library(OPENVX_LIBRARIES
     NAMES libopenvx${SHARED_LIB_TYPE}
     HINTS
     $ENV{MIVisionX_PATH}/lib
+    $ENV{MIVisionX_PATH}/lib64
     PATHS
     ${MIVisionX_PATH}/lib
+    ${MIVisionX_PATH}/lib64
     /usr/lib
+    $ENV{ROCM_PATH}/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(OPENVX_LIBRARIES)
@@ -57,9 +62,12 @@ find_library(VXRPP_LIBRARIES
     NAMES libvx_rpp${SHARED_LIB_TYPE}
     HINTS
     $ENV{MIVisionX_PATH}/lib
+    $ENV{MIVisionX_PATH}/lib64
     PATHS
     ${MIVisionX_PATH}/lib
+    ${MIVisionX_PATH}/lib64
     /usr/lib
+    $ENV{ROCM_PATH}/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(VXRPP_LIBRARIES)
@@ -67,12 +75,13 @@ mark_as_advanced(VXRPP_LIBRARIES)
 find_path(MIVisionX_LIBRARIES_DIRS
     NAMES libopenvx${SHARED_LIB_TYPE}
     HINTS
-    $ENV{ROCM_PATH}/lib
-    $ENV{ROCM_PATH}/lib64
     $ENV{MIVisionX_PATH}/lib
+    $ENV{MIVisionX_PATH}/lib64
     PATHS
     ${MIVisionX_PATH}/lib
+    ${MIVisionX_PATH}/lib64
     /usr/lib
+    $ENV{ROCM_PATH}/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(MIVisionX_LIBRARIES_DIRS)
