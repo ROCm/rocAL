@@ -82,7 +82,7 @@ else()
 endif()
 
 
-include_directories (${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
+include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
 link_directories    (${ROCM_PATH}/lib)
 
 add_executable(${PROJECT_NAME} ./rocAL_dataloader_mt.cpp)
