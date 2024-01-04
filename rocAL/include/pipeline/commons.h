@@ -32,6 +32,7 @@ THE SOFTWARE.
 
 #include "exception.h"
 #include "log.h"
+#include "filesystem.h"
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f
@@ -149,18 +150,18 @@ typedef struct {
 
 struct Timing {
     // The following timings are accumulated timing not just the most recent activity
-    long long unsigned image_read_time = 0;
-    long long unsigned image_decode_time = 0;
+    long long unsigned read_time = 0;
+    long long unsigned decode_time = 0;
     long long unsigned to_device_xfer_time = 0;
     long long unsigned from_device_xfer_time = 0;
     long long unsigned copy_to_output = 0;
-    long long unsigned image_process_time = 0;
+    long long unsigned process_time = 0;
     long long unsigned bb_process_time = 0;
     long long unsigned mask_process_time = 0;
     long long unsigned label_load_time = 0;
     long long unsigned bb_load_time = 0;
     long long unsigned mask_load_time = 0;
-    long long unsigned video_read_time = 0;
-    long long unsigned video_decode_time = 0;
-    long long unsigned video_process_time = 0;
+    long long unsigned video_read_time= 0;
+    long long unsigned video_decode_time= 0;
+    long long unsigned video_process_time= 0;
 };

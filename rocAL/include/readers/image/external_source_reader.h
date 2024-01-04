@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,18 +21,19 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <dirent.h>
-
+#include <condition_variable>
 #include <memory>
+#include <queue>
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "commons.h"
 #include "image_reader.h"
+#include "external_source.h"
 #include "timing_debug.h"
+#include "filesystem.h"
 
-class NumpyDataReader : public Reader {
+class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
    public:
     //! Looks up the folder which contains the files, amd loads the image names
     /*!
@@ -51,40 +52,46 @@ class NumpyDataReader : public Reader {
     */
     size_t open() override;
 
-    const NumpyHeaderData get_numpy_header_data() override;
-
-    size_t read_numpy_data(void* buf, size_t read_size, std::vector<size_t> max_shape) override;
-
-    //! Resets the object's state to read from the first file in the folder
+    //! Resets the object's state to read from the first file in the list
     void reset() override;
 
     //! Returns the name of the latest file opened
-    std::string id() override { return _last_id; };
+    std::string id() override { return _last_id; }
 
+    //! Return batch_size() for count_items unless end_of_sequence has been signalled
     unsigned count_items() override;
 
-    ~NumpyDataReader() override;
+    ~ExternalSourceReader() override;
 
     int close() override;
 
-    NumpyDataReader();
+    ExternalSourceReader();
+
+    //! receive next set of filenames from external source
+    void feed_file_names(const std::vector<std::string>& file_names, size_t num_images, bool eos = false) override;
+
+    //! receive next set of file data from external source
+    void feed_data(const std::vector<unsigned char*>& images, const std::vector<size_t>& image_size, ExternalSourceFileMode mode, bool eos = false, const std::vector<unsigned> roi_width = {}, const std::vector<unsigned> roi_height = {}, int width = 0, int height = 0, int channels = 0) override;
+
+    // mode(): returs the mode for the reader
+    ExternalSourceFileMode mode() { return _file_mode; }
+
+    // get image_dims
+    void get_dims(int cur_idx, int& width, int& height, int& channels, unsigned& roi_width, unsigned& roi_height);
 
    private:
     //! opens the folder containnig the images
-    Reader::Status open_folder();
-    Reader::Status subfolder_reading();
     std::string _folder_path;
-    DIR* _src_dir;
-    DIR* _sub_dir;
-    struct dirent* _entity;
-    std::vector<std::string> _file_names;
-    std::vector<std::string> _files;
-    std::vector<NumpyHeaderData> _file_headers;
+    std::queue<std::string> _file_names_queue;
+    std::vector<ExternalSourceImageInfo> _file_data;
+    std::queue<ExternalSourceImageInfo> _images_data_queue;
+    std::mutex _lock;
+    std::condition_variable _wait_for_input;
+
     unsigned _curr_file_idx;
     FILE* _current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
-    std::string _last_file_name;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
@@ -92,37 +99,21 @@ class NumpyDataReader : public Reader {
     /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
     size_t _batch_count = 1;
     size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
-    unsigned _seed = 0;
+    volatile bool _end_of_sequence;
+    ExternalSourceFileMode _file_mode;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
-    std::mutex _cache_mutex_;
-    std::map<std::string, NumpyHeaderData> _header_cache_;
-    const RocalTensorDataType TypeFromNumpyStr(const std::string& format);
-    inline void SkipSpaces(const char*& ptr);
-    void ParseHeaderContents(NumpyHeaderData& target, const std::string& header);
-    template <size_t N>
-    void Skip(const char*& ptr, const char (&what)[N]);
-    template <size_t N>
-    bool TrySkip(const char*& ptr, const char (&what)[N]);
-    template <size_t N>
-    void SkipFieldName(const char*& ptr, const char (&name)[N]);
-    template <typename T = int64_t>
-    T ParseInteger(const char*& ptr);
-    std::string ParseStringValue(const char*& input, char delim_start = '\'', char delim_end = '\'');
-    void ParseHeader(NumpyHeaderData& parsed_header, std::string file_path);
-    template <typename T>
-    size_t ParseNumpyData(T* buf, std::vector<unsigned> strides, std::vector<unsigned> shapes, unsigned dim = 0);
-    bool GetFromCache(const std::string& file_name, NumpyHeaderData& target);
-    void UpdateCache(const std::string& file_name, const NumpyHeaderData& value);   
-    void incremenet_read_ptr();
+    void push_file_name(const std::string& image_name);
+    bool pop_file_name(std::string& file_name);
+    void push_file_data(ExternalSourceImageInfo& image);
+    bool pop_file_data(ExternalSourceImageInfo& image);
+    void increment_read_ptr();
     int release();
     size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
+    void increment_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    TimingDBG _shuffle_time;
 };

@@ -27,10 +27,8 @@ THE SOFTWARE.
 #include <algorithm>
 #include <numeric>
 #include <random>
-#include <boost/filesystem.hpp>
 #include <cassert>
-
-namespace filesys = boost::filesystem;
+#include "filesystem.h"
 
 NumpyDataReader::NumpyDataReader() : _shuffle_time("shuffle_time", DBG_TIMING) {
     _src_dir = nullptr;

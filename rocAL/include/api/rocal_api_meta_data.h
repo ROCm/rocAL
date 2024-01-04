@@ -81,9 +81,10 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
  * \param [in] is_box_encoder If set to True, bboxes are returned as encoded bboxes using the anchors
  * \param [in] avoid_class_remapping If set to True, classes are returned directly. Otherwise, classes are mapped to consecutive values
  * \param [in] aspect_ratio_grouping If set to True, images are sorted by their aspect ratio and returned
+ * \param [in] is_box_iou_matcher If set to True, box iou matcher which returns matched indices is enabled in the pipeline
  * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
  */
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool mask = false, bool ltrb = true, bool is_box_encoder = false, bool avoid_class_remapping = false, bool aspect_ratio_grouping = false);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool mask = false, bool ltrb = true, bool is_box_encoder = false, bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, bool is_box_iou_matcher = false);
 
 /*! \brief create coco reader key points
  * \ingroup group_rocal_meta_data
@@ -295,6 +296,24 @@ extern "C" void ROCAL_API_CALL rocalGetImageId(RocalContext p_context, int* buf)
  * \param [out] joints_data The user's RocalJointsData pointer that will be pointed to JointsDataBatch pointer
  */
 extern "C" void ROCAL_API_CALL rocalGetJointsDataPtr(RocalContext p_context, RocalJointsData** joints_data);
+
+/*! \brief API to enable box IOU matcher and pass required params to pipeline
+ * \ingroup group_rocal_meta_data
+ * \param [in] p_context rocAL context
+ * \param [in] anchors The anchors / ground truth bounding box coordinates
+ * \param [in] high_threshold The max threshold for IOU
+ * \param [in] low_threshold The min threshold for IOU
+ * \param [in] allow_low_quality_matches bool value when set to true allows low quality matches
+ */
+extern "C" void ROCAL_API_CALL rocalBoxIouMatcher(RocalContext p_context, std::vector<float>& anchors,
+                                                  float high_threshold, float low_threshold, bool allow_low_quality_matches = true);
+
+/*! \brief API to return the matched indices for the bounding box and anchors
+ * \ingroup group_rocal_meta_data
+ * \param [in] p_context rocAL context
+ * \return RocalTensorList of matched indices
+ */
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_context);
 
 /*! \brief initialize the values required for ROI Random crop
  * \ingroup group_rocal_meta_data

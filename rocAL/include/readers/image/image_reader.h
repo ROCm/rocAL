@@ -48,7 +48,15 @@ enum class StorageType {
     MXNET_RECORDIO = 6,
     VIDEO_FILE_SYSTEM = 7,
     SEQUENCE_FILE_SYSTEM = 8,
-    NUMPY_DATA = 9
+    EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
+    NUMPY_DATA = 10
+};
+
+enum class ExternalSourceFileMode {
+    FILENAME = 0,
+    RAWDATA_COMPRESSED = 1,
+    RAWDATA_UNCOMPRESSED = 2,
+    NONE = 3,
 };
 
 struct ReaderConfig {
@@ -73,6 +81,7 @@ struct ReaderConfig {
     void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
+    void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
     void set_files(const std::vector<std::string> &files) { _files = files; }
     void set_seed(unsigned seed) { _seed = seed; }
     size_t get_shard_count() { return _shard_count; }
@@ -94,6 +103,7 @@ struct ReaderConfig {
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
+    ExternalSourceFileMode mode() { return _file_mode; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -111,6 +121,7 @@ struct ReaderConfig {
     bool _loop = false;
     std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
+    ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
     std::vector<std::string> _files;
     unsigned _seed = 0;
 #ifdef ROCAL_VIDEO

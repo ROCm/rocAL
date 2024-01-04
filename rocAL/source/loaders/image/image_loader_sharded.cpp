@@ -152,12 +152,17 @@ Timing ImageLoaderSharded::timing() {
     // is experiences on the load_next() call due to read and decode time is the maximum of all
     for (auto& loader : _loaders) {
         auto info = loader->timing();
-        max_read_time = (info.image_read_time > max_read_time) ? info.image_read_time : max_read_time;
-        max_decode_time = (info.image_decode_time > max_decode_time) ? info.image_decode_time : max_decode_time;
-        swap_handle_time += info.image_process_time;
+        max_read_time = (info.read_time > max_read_time) ? info.read_time : max_read_time;
+        max_decode_time = (info.decode_time > max_decode_time) ? info.decode_time : max_decode_time;
+        swap_handle_time += info.process_time;
     }
-    t.image_decode_time = max_decode_time;
-    t.image_read_time = max_read_time;
-    t.image_process_time = swap_handle_time;
+    t.decode_time = max_decode_time;
+    t.read_time = max_read_time;
+    t.process_time = swap_handle_time;
     return t;
+}
+
+void ImageLoaderSharded::feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer, const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, int channels, ExternalSourceFileMode mode, bool eos) {
+    for (auto& loader : _loaders)
+        loader->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);
 }

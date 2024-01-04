@@ -28,7 +28,6 @@ THE SOFTWARE.
 #include <cstring>
 #include <map>
 #include <tuple>
-#include <boost/filesystem.hpp>
 #include "commons.h"
 #include "ffmpeg_video_decoder.h"
 #include "video_reader_factory.h"
@@ -36,6 +35,7 @@ THE SOFTWARE.
 #include "loader_module.h"
 #include "video_properties.h"
 #include "video_reader.h"
+#include "filesystem.h"
 
 #ifdef ROCAL_VIDEO
 extern "C" {

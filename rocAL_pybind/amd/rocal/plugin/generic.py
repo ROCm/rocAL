@@ -27,7 +27,7 @@ import cupy as cp
 import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
-
+import ctypes
 
 class ROCALGenericIterator(object):
     """!Iterator for processing data
@@ -62,11 +62,58 @@ class ROCALGenericIterator(object):
         self.labels_tensor = None
         self.iterator_length = b.getRemainingImages(
             self.loader._handle) // self.batch_size  # iteration length
+        if self.loader._is_external_source_operator:
+            self.eos = False
+            self.index = 0
+            self.num_batches = self.loader._external_source.n // self.batch_size if self.loader._external_source.n % self.batch_size == 0 else (
+                self.loader._external_source.n // self.batch_size + 1)
+        else:
+            self.num_batches = None
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
+        if (self.loader._is_external_source_operator):
+            if (self.index + 1) == self.num_batches:
+                self.eos = True
+            if (self.index + 1) <= self.num_batches:
+                data_loader_source = next(self.loader._external_source)
+                # Extract all data from the source
+                images_list = data_loader_source[0] if (self.loader._external_source_mode == types.EXTSOURCE_FNAME) else []
+                input_buffer = data_loader_source[0] if (self.loader._external_source_mode != types.EXTSOURCE_FNAME) else []
+                labels_data = data_loader_source[1] if (len(data_loader_source) > 1) else None
+                roi_height = data_loader_source[2] if (len(data_loader_source) > 2) else []
+                roi_width = data_loader_source[3] if (len(data_loader_source) > 3) else []
+                ROIxywh_list = []
+                for i in range(self.batch_size):
+                    ROIxywh = b.ROIxywh()
+                    ROIxywh.x =  0
+                    ROIxywh.y =  0
+                    ROIxywh.w = roi_width[i] if len(roi_width) > 0 else 0
+                    ROIxywh.h = roi_height[i] if len(roi_height) > 0 else 0
+                    ROIxywh_list.append(ROIxywh)
+                if (len(data_loader_source) == 6 and self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED):
+                    decoded_height = data_loader_source[4]
+                    decoded_width = data_loader_source[5]
+                else:
+                    decoded_height = self.loader._external_source_user_given_height
+                    decoded_width = self.loader._external_source_user_given_width
+
+                kwargs_pybind = {
+                    "handle": self.loader._handle,
+                    "source_input_images": images_list,
+                    "labels": labels_data,
+                    "input_batch_buffer": input_buffer,
+                    "roi_xywh": ROIxywh_list,
+                    "decoded_width": decoded_width,
+                    "decoded_height": decoded_height,
+                    "channels": 3,
+                    "external_source_mode": self.loader._external_source_mode,
+                    "rocal_tensor_layout": types.NCHW,
+                    "eos": self.eos}
+                b.externalSourceFeedInput(*(kwargs_pybind.values()))
+            self.index = self.index + 1
         if self.loader.rocal_run() != 0:
             raise StopIteration
         self.output_tensor_list = self.loader.get_output_tensors()
@@ -99,6 +146,14 @@ class ROCALGenericIterator(object):
                 else:
                     self.output_tensor_list[i].copy_data(
                         self.output_list[i].data.ptr)
+        if (self.loader._is_external_source_operator):
+            self.labels = self.loader.get_image_labels()
+            if self.device == "cpu":
+                self.labels_tensor = self.labels.astype(dtype=np.int_)
+            else:
+                with cp.cuda.Device(device=self.device_id):
+                    self.labels_tensor = self.labels.astype(dtype=cp.int_)
+            return self.output_list, self.labels_tensor
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:

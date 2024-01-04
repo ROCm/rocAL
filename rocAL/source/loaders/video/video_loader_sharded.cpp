@@ -157,13 +157,13 @@ Timing VideoLoaderSharded::timing() {
     // is experiences on the load_next() call due to read and decode time is the maximum of all
     for (auto &loader : _loaders) {
         auto info = loader->timing();
-        max_read_time = (info.video_read_time > max_read_time) ? info.video_read_time : max_read_time;
-        max_decode_time = (info.video_decode_time > max_decode_time) ? info.video_decode_time : max_decode_time;
-        swap_handle_time += info.video_process_time;
+        max_read_time = (info.read_time > max_read_time) ? info.read_time : max_read_time;
+        max_decode_time = (info.decode_time > max_decode_time) ? info.decode_time : max_decode_time;
+        swap_handle_time += info.process_time;
     }
-    t.video_decode_time = max_decode_time;
-    t.video_read_time = max_read_time;
-    t.video_process_time = swap_handle_time;
+    t.decode_time = max_decode_time;
+    t.read_time = max_read_time;
+    t.process_time = swap_handle_time;
     return t;
 }
 #endif

@@ -263,8 +263,8 @@ NumpyLoader::update_output_image() {
 
 Timing NumpyLoader::timing() {
     Timing t;
-    t.image_read_time = _file_load_time.get_timing();
-    t.image_process_time = _swap_handle_time.get_timing();
+    t.read_time = _file_load_time.get_timing();
+    t.process_time = _swap_handle_time.get_timing();
     return t;
 }
 

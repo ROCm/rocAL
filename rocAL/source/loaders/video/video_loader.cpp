@@ -244,7 +244,7 @@ VideoLoader::update_output_image() {
 
 Timing VideoLoader::timing() {
     auto t = _video_loader->timing();
-    t.video_process_time = _swap_handle_time.get_timing();
+    t.process_time = _swap_handle_time.get_timing();
     return t;
 }
 
