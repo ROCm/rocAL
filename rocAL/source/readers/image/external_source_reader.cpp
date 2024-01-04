@@ -23,7 +23,6 @@ THE SOFTWARE.
 #include "external_source_reader.h"
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
 #include <cassert>
 
 ExternalSourceReader::ExternalSourceReader() {

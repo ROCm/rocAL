@@ -23,7 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include <dirent.h>
 
-#include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
 #include <sstream>
