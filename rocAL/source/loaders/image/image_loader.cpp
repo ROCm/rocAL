@@ -315,7 +315,7 @@ crop_image_info ImageLoader::get_crop_image_info() {
     return _output_cropped_img_info;
 }
 
-void ImageLoader::feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer, const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, int channels, ExternalSourceFileMode mode, bool eos) {
+void ImageLoader::feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer, const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) {
     _external_source_reader = true;
     _external_input_eos = eos;
     _image_loader->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);

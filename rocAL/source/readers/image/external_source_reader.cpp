@@ -217,7 +217,7 @@ void ExternalSourceReader::feed_file_names(const std::vector<std::string>& file_
     _end_of_sequence = eos;
 }
 
-void ExternalSourceReader::feed_data(const std::vector<unsigned char*>& images, const std::vector<size_t>& image_size, ExternalSourceFileMode mode, bool eos, const std::vector<unsigned> roi_width, const std::vector<unsigned> roi_height, int width, int height, int channels) {
+void ExternalSourceReader::feed_data(const std::vector<unsigned char*>& images, const std::vector<size_t>& image_size, ExternalSourceFileMode mode, bool eos, const std::vector<unsigned> roi_width, const std::vector<unsigned> roi_height, unsigned int width, unsigned int height, unsigned int channels) {
     if (mode == ExternalSourceFileMode::RAWDATA_COMPRESSED) {
         for (unsigned n = 0; n < images.size(); n++) {
             ExternalSourceImageInfo image_info = {images[n], image_size[n], width, height, channels, 0, 0};

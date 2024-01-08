@@ -101,7 +101,7 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetOutputTensors(RocalContext p_c
 extern "C" RocalStatus ROCAL_API_CALL rocalExternalSourceFeedInput(RocalContext p_context, const std::vector<std::string>& input_images_names,
                                                                    bool is_labels, const std::vector<unsigned char *>& input_buffer,
                                                                    const std::vector<ROIxywh>& roi_xywh,
-                                                                   unsigned int max_width, unsigned int max_height, int channels,
+                                                                   unsigned int max_width, unsigned int max_height, unsigned int channels,
                                                                    RocalExternalSourceMode mode, RocalTensorLayout layout, bool eos);
 
 #endif  // MIVISIONX_ROCAL_API_DATA_TRANSFER_H

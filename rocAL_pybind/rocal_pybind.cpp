@@ -100,7 +100,7 @@ py::object wrapperRocalExternalSourceFeedInput(
     RocalContext context, std::vector<std::string> input_images_names,
     py::array &labels, py::list arrays,
     std::vector<ROIxywh> roi_xywh,
-    unsigned int max_width, unsigned int max_height, int channels,
+    unsigned int max_width, unsigned int max_height, unsigned int channels,
     RocalExternalSourceMode mode, RocalTensorLayout layout, bool eos) {
     std::vector<unsigned char *> uchar_arrays;
     if (input_images_names.size() == 0) {  // Used for mode 1 and mode 2 for passing decoded buffers

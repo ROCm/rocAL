@@ -46,7 +46,7 @@ class ImageLoaderSharded : public LoaderModule {
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
-                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, int channels, ExternalSourceFileMode mode, bool eos) override;
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
 
    private:
     void increment_loader_idx();

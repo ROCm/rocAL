@@ -135,7 +135,7 @@ class MasterGraph {
     void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
     std::vector<rocalTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
     void feed_external_input(const std::vector<std::string>& input_images_names, bool labels, const std::vector<unsigned char *>& input_buffer,
-                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, int channels, ExternalSourceFileMode mode,
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode,
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);

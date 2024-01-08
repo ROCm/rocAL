@@ -88,7 +88,7 @@ rocalExternalSourceFeedInput(
     const std::vector<ROIxywh>& roi_xywh,
     unsigned int max_width,
     unsigned int max_height,
-    int channels,
+    unsigned int channels,
     RocalExternalSourceMode mode,
     RocalTensorLayout layout,
     bool eos) {

@@ -98,7 +98,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
 
 void ImageReadAndDecode::feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
                                              const std::vector<ROIxywh>& roi_xywh,
-                                             unsigned int max_width, unsigned int max_height, int channels, ExternalSourceFileMode mode, bool eos) {
+                                             unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) {
     std::vector<size_t> image_size;
     std::vector<unsigned> image_roi_w, image_roi_h;
     image_size.reserve(roi_xywh.size());
