@@ -803,7 +803,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSing
 /*! \brief Creates JPEG external source image reader.
  * \ingroup group_rocal_data_loaders
  * \param [in] rocal_context Rocal context
- * \param [in] source_path A NULL terminated char string pointing to the location on the disk
  * \param [in] rocal_color_format The color format the images will be decoded to.
  * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
@@ -816,7 +815,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSing
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p_context,
-                                                                  const char* source_path,
                                                                   RocalImageColor rocal_color_format,
                                                                   bool is_output = false,
                                                                   bool shuffle = false,
