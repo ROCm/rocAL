@@ -1,14 +1,11 @@
-<p align="center"><img width="70%" src="docs/data/rocAL_logo.png" /></p>
-
 # Changelog
 
-## Online Documentation
-
-[rocAL Documentation](https://github.com/ROCm/rocAL)
+rocAL documentation is available at
+[https://rocm.docs.amd.com/projects/rocAL/en/latest/](https://rocm.docs.amd.com/projects/rocAL/en/latest/)
 
 ## rocAL 1.0.0 (unreleased)
 
-### Added
+### Additions
 
 * 
 
@@ -16,15 +13,15 @@
 
 * 
 
-### Changed
+### Changes
 
-* CuPy - Removed from setup.py
+* Removed CuPy from `setup.py`
 
-### Fixed
+### Fixes
 
 * 
 
-### Tested Configurations
+### Tested configurations
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
