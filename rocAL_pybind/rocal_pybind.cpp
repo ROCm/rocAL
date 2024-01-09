@@ -146,12 +146,6 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
     // Bind the C++ structure
-    py::class_<ROIxywh>(m, "ROIxywh")
-        .def(py::init<>())
-        .def_readwrite("x", &ROIxywh::x)
-        .def_readwrite("y", &ROIxywh::y)
-        .def_readwrite("w", &ROIxywh::w)
-        .def_readwrite("h", &ROIxywh::h);
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
           py::return_value_policy::reference,
@@ -402,6 +396,12 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
+    py::class_<ROIxywh>(m, "ROIxywh")
+        .def(py::init<>())
+        .def_readwrite("x", &ROIxywh::x)
+        .def_readwrite("y", &ROIxywh::y)
+        .def_readwrite("w", &ROIxywh::w)
+        .def_readwrite("h", &ROIxywh::h);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
