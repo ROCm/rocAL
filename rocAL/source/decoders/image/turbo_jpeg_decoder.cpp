@@ -20,24 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "turbo_jpeg_decoder.h"
 
-#include <commons.h>
 #include <stdio.h>
+#include <commons.h>
+#include "turbo_jpeg_decoder.h"
+#include "libjpeg_extra.h"
 
 TJDecoder::TJDecoder() {
     m_jpegDecompressor = tjInitDecompress();
-
-#if 0
-    int num_avail_scalings = 0;
-    auto scaling_factors = tjGetScalingFactors	(&num_avail_scalings);	
-    for(int i = 0; i < num_avail_scalings; i++) {
-        if(scaling_factors[i].num < scaling_factors[i].denom) {
-
-            printf("%d / %d  - ",scaling_factors[i].num, scaling_factors[i].denom );
+    if ((_scaling_factors = tj3GetScalingFactors(&_num_scaling_factors)) == NULL)
+        THROW("tjDecompress2_partial_scale(): error getting scaling factors");
+    for(int i = 0; i < _num_scaling_factors; i++) {
+        if(_scaling_factors[i].num < _scaling_factors[i].denom) {
+            INFO(STR(_scaling_factors[i].num) + "/" + STR(_scaling_factors[i].denom));
         }
     }
-#endif
 };
 
 Decoder::Status TJDecoder::decode_info(unsigned char* input_buffer, size_t input_size, int* width, int* height, int* color_comps) {
@@ -90,7 +87,7 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
                 crop_width = _max_scaling_factor * max_decoded_width;
                 if (crop_width > original_image_width) crop_width = original_image_width;
                 crop_height = crop_width * (1.0 / in_ratio);
-                if (crop_height > _max_scaling_factor * max_decoded_width) crop_height = _max_scaling_factor * max_decoded_width;
+                if (crop_height > _max_scaling_factor * max_decoded_height) crop_height = _max_scaling_factor * max_decoded_height;
             } else if (original_image_height > (_max_scaling_factor * max_decoded_height)) {
                 crop_height = _max_scaling_factor * max_decoded_height;
                 if (crop_height > original_image_height) crop_height = original_image_height;
@@ -114,9 +111,9 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
             }
             // Find the decoded image size using the predefined scaling factors in the turbo jpeg decoder
             uint scaledw = max_decoded_width, scaledh = max_decoded_height;
-            for (auto scaling_factor : SCALING_FACTORS) {
-                scaledw = TJSCALED(crop_width, scaling_factor);
-                scaledh = TJSCALED(crop_height, scaling_factor);
+            for (int j=0; j < _num_scaling_factors; j++) {
+                scaledw = TJSCALED(original_image_width, _scaling_factors[j]);
+                scaledh = TJSCALED(original_image_height, _scaling_factors[j]);
                 if (scaledw <= max_decoded_width && scaledh <= max_decoded_height) {
                     break;
                 }
@@ -142,9 +139,9 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
             }
             // Find the decoded image size using the predefined scaling factors in the turbo jpeg decoder
             uint scaledw = max_decoded_width, scaledh = max_decoded_height;
-            for (auto scaling_factor : SCALING_FACTORS) {
-                scaledw = TJSCALED(original_image_width, scaling_factor);
-                scaledh = TJSCALED(original_image_height, scaling_factor);
+            for (int j=0; j < _num_scaling_factors; j++) {
+                scaledw = TJSCALED(original_image_width, _scaling_factors[j]);
+                scaledh = TJSCALED(original_image_height, _scaling_factors[j]);
                 if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
                     break;
             }
@@ -168,7 +165,7 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
                 crop_width = _max_scaling_factor * max_decoded_width;
                 if (crop_width > original_image_width) crop_width = original_image_width;
                 crop_height = crop_width * (1.0 / in_ratio);
-                if (crop_height > _max_scaling_factor * max_decoded_width) crop_height = _max_scaling_factor * max_decoded_width;
+                if (crop_height > _max_scaling_factor * max_decoded_height) crop_height = _max_scaling_factor * max_decoded_height;
             } else if (original_image_height > (_max_scaling_factor * max_decoded_height)) {
                 crop_height = _max_scaling_factor * max_decoded_height;
                 if (crop_height > original_image_height) crop_height = original_image_height;
@@ -192,9 +189,9 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
             }
             // Find the decoded image size using the predefined scaling factors in the turbo jpeg decoder
             uint scaledw = max_decoded_width, scaledh = max_decoded_height;
-            for (auto scaling_factor : SCALING_FACTORS) {
-                scaledw = TJSCALED(crop_width, scaling_factor);
-                scaledh = TJSCALED(crop_height, scaling_factor);
+            for (int j=0; j < _num_scaling_factors; j++) {
+                scaledw = TJSCALED(original_image_width, _scaling_factors[j]);
+                scaledh = TJSCALED(original_image_height, _scaling_factors[j]);
                 if (scaledw <= max_decoded_width && scaledh <= max_decoded_height) {
                     break;
                 }
@@ -219,9 +216,9 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
             // Find the decoded image size using the predefined scaling factors in the turbo jpeg decoder
             if ((actual_decoded_width != original_image_width) || (actual_decoded_height != original_image_height)) {
                 uint scaledw = actual_decoded_width, scaledh = actual_decoded_height;
-                for (auto scaling_factor : SCALING_FACTORS) {
-                    scaledw = TJSCALED(original_image_width, scaling_factor);
-                    scaledh = TJSCALED(original_image_height, scaling_factor);
+                for (int j=0; j < _num_scaling_factors; j++) {
+                    scaledw = TJSCALED(original_image_width, _scaling_factors[j]);
+                    scaledh = TJSCALED(original_image_height, _scaling_factors[j]);
                     if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
                         break;
                 }

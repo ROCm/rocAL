@@ -33,14 +33,6 @@ THE SOFTWARE.
 #include "timing_debug.h"
 #include "turbo_jpeg_decoder.h"
 
-/**
- * Compute the scaled value of <tt>dimension</tt> using the given scaling
- * factor.  This macro performs the integer equivalent of <tt>ceil(dimension *
- * scalingFactor)</tt>.
- */
-#define TJSCALED(dimension, scalingFactor)                       \
-    ((dimension * scalingFactor.num + scalingFactor.denom - 1) / \
-     scalingFactor.denom)
 
 class ImageReadAndDecode {
    public:
