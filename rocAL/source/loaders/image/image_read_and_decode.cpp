@@ -47,8 +47,8 @@ interpret_color_format(RocalColorFormat color_format) {
 Timing
 ImageReadAndDecode::timing() {
     Timing t;
-    t.image_decode_time = _decode_time.get_timing();
-    t.image_read_time = _file_load_time.get_timing();
+    t.decode_time = _decode_time.get_timing();
+    t.read_time = _file_load_time.get_timing();
     return t;
 }
 
