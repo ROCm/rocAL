@@ -333,9 +333,9 @@ else:
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
                   linuxSystemInstall_check+' install lmdb-devel rapidjson-devel')
 
-    # turbo-JPEG - https://github.com/rrawther/libjpeg-turbo.git -- 2.0.6.2
+    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.1
     os.system(
-        '(cd '+deps_dir+'; git clone -b 3.0.1 https://github.com/libjpeg-turbo.git )')
+        '(cd '+deps_dir+'; git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git )')
     os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
               ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ..; make -j 4; sudo make install )')
     # RPP
