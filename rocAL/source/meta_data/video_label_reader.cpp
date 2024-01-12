@@ -168,9 +168,10 @@ void VideoLabelReader::read_text_file(const std::string &_path)
 }
 
 void VideoLabelReader::read_all(const std::string &_path) {
-    if(_path.empty() && !(_file_names.empty()) && !(_labels.empty())) {
+    if(_file_names.size() && _labels.size()) {
         if (_file_names.size() != _labels.size())
             THROW("Number of file names is not matching with number of labels");
+        Properties props;
         for (unsigned i = 0; i < _file_names.size(); i++)
         {
             int label = std::stoi(_labels[i]);

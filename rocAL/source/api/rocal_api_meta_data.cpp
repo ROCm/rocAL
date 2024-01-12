@@ -68,7 +68,7 @@ ROCAL_API_CALL rocalCreateLabelReader(RocalContext p_context, const char* source
 
 RocalMetaData
 ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext p_context, const char* source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num,
-                                           std::vector<std::string>&& file_names, std::vector<std::string>&& labels) {
+                                           std::vector<std::string> file_names, std::vector<std::string> labels) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateLabelReader")
     auto context = static_cast<Context*>(p_context);

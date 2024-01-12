@@ -54,7 +54,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext roca
  * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
  */
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext rocal_context, const char *source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true,
-                                                                    std::vector<std::string>&& file_names = {}, std::vector<std::string>&& labels = {});
+                                                                    std::vector<std::string> file_names = {}, std::vector<std::string> labels = {});
 
 
 /*!
