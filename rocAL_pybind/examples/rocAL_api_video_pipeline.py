@@ -79,11 +79,15 @@ class ROCALVideoIterator(object):
         #Copy output from buffer to numpy array
         self.loader.copyImage(self.out)
         img = torch.from_numpy(self.out)
+
+        self.labels_size = self.batch_size
+        self.labels = np.empty(self.labels_size, dtype = np.int32)
+        self.loader.getImageLabels(self.labels)
         #Display Frames in a video sequence
         if self.display:
             for batch_i in range(self.batch_size):
                 draw_frames(img[batch_i], batch_i, self.iter_num)
-        return img
+        return (img, self.labels)
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -145,6 +149,7 @@ def main():
     for epoch in range(int(args.num_epochs)):
         print("EPOCH:::::",epoch)
         for i, it in enumerate(data_loader, 0):
+            print("label: ", it[1])
             if args.print_tensor:
                 print("**************", i, "*******************")
                 print("**************starts*******************")
