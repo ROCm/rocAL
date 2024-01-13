@@ -66,6 +66,7 @@ class ROCALVideoIterator(object):
         self.p = (1 if color_format is types.GRAY else 3)
         self.out = np.empty(
                 (self.batch_size*self.n,int(self.h/self.batch_size), self.w,self.p), dtype="ubyte")
+        self.labels = np.zeros(self.batch_size, dtype="int32")
 
     def next(self):
         return self.__next__()
@@ -79,11 +80,12 @@ class ROCALVideoIterator(object):
         #Copy output from buffer to numpy array
         self.loader.copyImage(self.out)
         img = torch.from_numpy(self.out)
+        self.loader.getImageLabels(self.labels)     # Get labels
         #Display Frames in a video sequence
         if self.display:
             for batch_i in range(self.batch_size):
                 draw_frames(img[batch_i], batch_i, self.iter_num)
-        return img
+        return img, self.labels
 
     def reset(self):
         self.loader.rocalResetLoaders()
