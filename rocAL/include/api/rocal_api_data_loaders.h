@@ -610,7 +610,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCont
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
- * \param filenames_list List of input video filenames
+ * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
@@ -629,7 +629,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                           RocalDecodeDevice rocal_decode_device,
                                                           unsigned internal_shard_count,
                                                           unsigned sequence_length,
-                                                          std::vector<std::string> filenames_list = {},
+                                                          std::vector<std::string> file_names_list = {},
                                                           bool is_output = false,
                                                           bool shuffle = false,
                                                           bool loop = false,

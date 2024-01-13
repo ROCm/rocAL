@@ -157,29 +157,31 @@ void find_video_properties(VideoProperties &video_props, const char *source_path
     filesys::path pathObj(_full_path);
     unsigned video_count = 0;
 
-    if (filenames.size() > 0)
+    if (filenames.size() > 0)   // Filenames list passed as input
     {
         for (auto filename : filenames) {
             filesys::path pathObj(filename);
             if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
-            open_video_context(filename.c_str(), props);
-            if(max_width == props.width || max_width == 0)
-                max_width = props.width;
-            else
-                THROW("The given video files are of different resolution\n")
-            if(max_height == props.height || max_height == 0)
-                max_height = props.height;
-            else
-                THROW("The given video files are of different resolution\n")
-            video_props.frames_count.push_back(props.frames_count);
-            float video_frame_rate = std::floor(props.avg_frame_rate_num / props.avg_frame_rate_den);
-            if (video_props.frame_rate != 0 && video_frame_rate != video_props.frame_rate)
-                THROW("Variable frame rate videos cannot be processed")
-            video_props.frame_rate = video_frame_rate;
-            video_file_path = std::to_string(video_count) + "#" + filename; // Video index is added to each video file name to identify repeated videos files.
-            video_props.video_file_names.push_back(video_file_path);
-            video_props.start_end_frame_num.push_back(std::make_tuple(0, (int)props.frames_count));
-            video_count++;
+                open_video_context(filename.c_str(), props);
+                if(max_width == props.width || max_width == 0) {
+                    max_width = props.width;
+                } else {
+                    THROW("The given video files are of different resolution\n")
+                }
+                if(max_height == props.height || max_height == 0) {
+                    max_height = props.height;
+                } else {
+                    THROW("The given video files are of different resolution\n")
+                }
+                video_props.frames_count.push_back(props.frames_count);
+                float video_frame_rate = std::floor(props.avg_frame_rate_num / props.avg_frame_rate_den);
+                if (video_props.frame_rate != 0 && video_frame_rate != video_props.frame_rate)
+                    THROW("Variable frame rate videos cannot be processed")
+                video_props.frame_rate = video_frame_rate;
+                video_file_path = std::to_string(video_count) + "#" + filename; // Video index is added to each video file name to identify repeated videos files.
+                video_props.video_file_names.push_back(video_file_path);
+                video_props.start_end_frame_num.push_back(std::make_tuple(0, (int)props.frames_count));
+                video_count++;
             } else {
                 THROW("ERROR: Failed opening the file at " + filename)
             }

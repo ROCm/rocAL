@@ -140,7 +140,7 @@ def video(*inputs, sequence_length, additional_decode_surfaces=2, bytes_per_samp
     kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"filenames": filenames,"shuffle":random_shuffle ,"is_output":False,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num} #VideoDecoder
 
     videos = b.VideoDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
-    return videos
+    return (videos)
 
 def video_resize(*inputs, sequence_length, resize_width, resize_height, additional_decode_surfaces=2,
                  bytes_per_sample_hint=0, channels=3, dont_use_mmap=False, dtype=types.FLOAT, enable_frame_num=False,

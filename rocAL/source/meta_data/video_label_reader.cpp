@@ -168,7 +168,8 @@ void VideoLabelReader::read_text_file(const std::string &_path)
 }
 
 void VideoLabelReader::read_all(const std::string &_path) {
-    if(_file_names.size() && _labels.size()) {
+    if(_file_names.size() && _labels.size()) 
+    {
         if (_file_names.size() != _labels.size())
             THROW("Number of file names is not matching with number of labels");
         Properties props;
@@ -187,72 +188,73 @@ void VideoLabelReader::read_all(const std::string &_path) {
             add(video_file_name, _labels[i]);
         }
     }
-    else {
-    std::string _folder_path = _path;
-    filesys::path pathObj(_folder_path);
-    if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
-    {
-        if (pathObj.has_extension() && pathObj.extension().string() == ".txt")
-        {
-            read_text_file(_path);
-        }
-        else if (pathObj.has_extension() && pathObj.extension().string() == ".mp4")
-        {
-            add(_path, 0);
-        }
-    }
     else
     {
-        if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
-            THROW("ERROR: Failed opening the directory at " + _folder_path);
-        std::vector<std::string> entry_name_list;
-        std::string _full_path = _folder_path;
-        while ((_entity = readdir(_sub_dir)) != nullptr)
+        std::string _folder_path = _path;
+        filesys::path pathObj(_folder_path);
+        if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
         {
-            std::string entry_name(_entity->d_name);
-            if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
-                continue;
-            entry_name_list.push_back(entry_name);
-        }
-        std::sort(entry_name_list.begin(), entry_name_list.end());
-        closedir(_sub_dir);
-        for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count)
-        {
-            std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
-            filesys::path pathObj(subfolder_path);
-            if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
+            if (pathObj.has_extension() && pathObj.extension().string() == ".txt")
             {
-                // ignore files with extensions .tar, .zip, .7z
-                auto file_extension_idx = subfolder_path.find_last_of(".");
-                if (file_extension_idx != std::string::npos)
-                {
-                    std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
-                    if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
-                        continue;
-                }
-                read_files(_folder_path);
-                for (unsigned i = 0; i < _subfolder_video_file_names.size(); i++)
-                {
-                    add(_subfolder_video_file_names[i], i);
-                }
-                break; // assume directory has only files.
+                read_text_file(_path);
             }
-            else if (filesys::exists(pathObj) && filesys::is_directory(pathObj))
+            else if (pathObj.has_extension() && pathObj.extension().string() == ".mp4")
             {
-                _folder_path = subfolder_path;
-                _subfolder_video_file_names.clear();
-                read_files(_folder_path);
-                for (unsigned i = 0; i < _subfolder_video_file_names.size(); i++)
-                {
-                    std::vector<std::string> substrings;
-                    char delim = '/';
-                    substring_extraction(_subfolder_video_file_names[i], delim, substrings);
-                    int label = atoi(substrings[substrings.size() - 2].c_str());
-                    add(_subfolder_video_file_names[i], label);
-                }
+                add(_path, 0);
             }
         }
-    }
+        else
+        {
+            if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
+                THROW("ERROR: Failed opening the directory at " + _folder_path);
+            std::vector<std::string> entry_name_list;
+            std::string _full_path = _folder_path;
+            while ((_entity = readdir(_sub_dir)) != nullptr)
+            {
+                std::string entry_name(_entity->d_name);
+                if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
+                    continue;
+                entry_name_list.push_back(entry_name);
+            }
+            std::sort(entry_name_list.begin(), entry_name_list.end());
+            closedir(_sub_dir);
+            for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count)
+            {
+                std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
+                filesys::path pathObj(subfolder_path);
+                if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
+                {
+                    // ignore files with extensions .tar, .zip, .7z
+                    auto file_extension_idx = subfolder_path.find_last_of(".");
+                    if (file_extension_idx != std::string::npos)
+                    {
+                        std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
+                        if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
+                            continue;
+                    }
+                    read_files(_folder_path);
+                    for (unsigned i = 0; i < _subfolder_video_file_names.size(); i++)
+                    {
+                        add(_subfolder_video_file_names[i], i);
+                    }
+                    break; // assume directory has only files.
+                }
+                else if (filesys::exists(pathObj) && filesys::is_directory(pathObj))
+                {
+                    _folder_path = subfolder_path;
+                    _subfolder_video_file_names.clear();
+                    read_files(_folder_path);
+                    for (unsigned i = 0; i < _subfolder_video_file_names.size(); i++)
+                    {
+                        std::vector<std::string> substrings;
+                        char delim = '/';
+                        substring_extraction(_subfolder_video_file_names[i], delim, substrings);
+                        int label = atoi(substrings[substrings.size() - 2].c_str());
+                        add(_subfolder_video_file_names[i], label);
+                    }
+                }
+            }
+        }
     }
     // print_map_contents();
 }

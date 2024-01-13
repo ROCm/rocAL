@@ -65,6 +65,7 @@ private:
     unsigned _out_img_height;
     std::vector<std::string> _file_names;
     std::vector<int> _labels;
+
 public:
     MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string> &feature_key_map=std::map<std::string, std::string>(), const std::string file_prefix=std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1,
                    std::vector<std::string> file_names = {}, std::vector<int> labels = {})
