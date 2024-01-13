@@ -643,6 +643,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
+ * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param shard_id Shard id for this loader.
@@ -663,6 +664,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContex
                                                                      unsigned shard_id,
                                                                      unsigned shard_count,
                                                                      unsigned sequence_length,
+                                                                     std::vector<std::string> file_names_list = {},
                                                                      bool shuffle = false,
                                                                      bool is_output = false,
                                                                      bool loop = false,
@@ -676,6 +678,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContex
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
+ * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
@@ -698,6 +701,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
                                                           unsigned sequence_length,
                                                           unsigned dest_width,
                                                           unsigned dest_height,
+                                                          std::vector<std::string> file_names_list = {},
                                                           bool shuffle = false,
                                                           bool is_output = false,
                                                           bool loop = false,
@@ -716,6 +720,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
+ * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param shard_id Shard id for this loader.
@@ -740,6 +745,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalContex
                                                                      unsigned sequence_length,
                                                                      unsigned dest_width,
                                                                      unsigned dest_height,
+                                                                     std::vector<std::string> file_names_list = {},
                                                                      bool shuffle = false,
                                                                      bool is_output = false,
                                                                      bool loop = false,

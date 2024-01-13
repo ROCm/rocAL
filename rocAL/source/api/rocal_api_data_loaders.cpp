@@ -2064,6 +2064,7 @@ rocalVideoFileSourceSingleShard(
         unsigned shard_id,
         unsigned shard_count,
         unsigned sequence_length,
+        std::vector<std::string> file_names_list,
         bool shuffle,
         bool is_output,
         bool loop,
@@ -2082,6 +2083,9 @@ rocalVideoFileSourceSingleShard(
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
+
+        if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
+            THROW("file_root and filenames are mutually exclusive")
         // Set video loader flag in master_graph
         context->master_graph->set_video_loader_flag();
 
@@ -2097,7 +2101,7 @@ rocalVideoFileSourceSingleShard(
 
         VideoProperties video_prop;
         VideoDecoderType decoder_type;
-        find_video_properties(video_prop, source_path, file_list_frame_num);
+        find_video_properties(video_prop, source_path, file_list_frame_num, file_names_list);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
         else
@@ -2155,6 +2159,7 @@ rocalVideoFileResize(
         unsigned sequence_length,
         unsigned dest_width,
         unsigned dest_height,
+        std::vector<std::string> file_names_list,
         bool shuffle,
         bool is_output,
         bool loop,
@@ -2179,6 +2184,9 @@ rocalVideoFileResize(
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
+
+        if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
+            THROW("file_root and filenames are mutually exclusive")
         // Set video loader flag in master_graph
         context->master_graph->set_video_loader_flag();
 
@@ -2188,7 +2196,7 @@ rocalVideoFileResize(
 
         VideoProperties video_prop;
         VideoDecoderType decoder_type;
-        find_video_properties(video_prop, source_path, file_list_frame_num);
+        find_video_properties(video_prop, source_path, file_list_frame_num, file_names_list);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
         else
@@ -2329,6 +2337,7 @@ rocalVideoFileResizeSingleShard(
         unsigned sequence_length,
         unsigned dest_width,
         unsigned dest_height,
+        std::vector<std::string> file_names_list,
         bool shuffle,
         bool is_output,
         bool loop,
@@ -2353,6 +2362,9 @@ rocalVideoFileResizeSingleShard(
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
+
+        if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
+            THROW("file_root and filenames are mutually exclusive")
         // Set video loader flag in master_graph
         context->master_graph->set_video_loader_flag();
 
@@ -2368,7 +2380,7 @@ rocalVideoFileResizeSingleShard(
 
         VideoProperties video_prop;
         VideoDecoderType decoder_type;
-        find_video_properties(video_prop, source_path, file_list_frame_num);
+        find_video_properties(video_prop, source_path, file_list_frame_num, file_names_list);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
         else
