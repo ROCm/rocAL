@@ -1977,6 +1977,7 @@ rocalVideoFileSource(
         RocalDecodeDevice rocal_decode_device,
         unsigned internal_shard_count,
         unsigned sequence_length,
+        std::vector<std::string> filenames_list,
         bool shuffle,
         bool is_output,
         bool loop,
@@ -2004,7 +2005,7 @@ rocalVideoFileSource(
 
         VideoProperties video_prop;
         VideoDecoderType decoder_type;
-        find_video_properties(video_prop, source_path, file_list_frame_num);
+        find_video_properties(video_prop, source_path, file_list_frame_num, filenames_list);
         if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
         else

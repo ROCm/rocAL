@@ -185,7 +185,7 @@ void VideoLabelReader::read_all(const std::string &_path) {
                 INFO("Invalid start_frame_number or end_frame_number time/frame passed, skipping the file" + video_file_name)
                 continue;
             }
-            add(video_file_name, label, (end_frame_number - start_frame_number), start_frame_number);
+            add(video_file_name, label);
         }
     }
     else {
