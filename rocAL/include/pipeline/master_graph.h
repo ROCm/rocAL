@@ -78,7 +78,7 @@ public:
     Image *create_image(const ImageInfo &info, bool is_output);
     Image *create_loader_output_image(const ImageInfo &info);
     MetaDataBatch *create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    MetaDataBatch *create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
+    MetaDataBatch *create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true, std::vector<std::string> file_names = {}, std::vector<std::string> labels = {});
     MetaDataBatch *create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type , MetaDataType label_type, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);
     MetaDataBatch *create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
     MetaDataBatch *create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type,  MetaDataType label_type);
@@ -105,8 +105,8 @@ public:
     bool is_video_loader() {return _is_video_loader; }
     bool is_sequence_reader_output() {return _is_sequence_reader_output; }
     void set_sequence_reader_output() { _is_sequence_reader_output = true; }
-    void set_sequence_batch_size(size_t sequence_length) 
-    { 
+    void set_sequence_batch_size(size_t sequence_length)
+    {
         _sequence_length = sequence_length;
         _sequence_batch_size = _user_batch_size * sequence_length;
     }
@@ -253,7 +253,7 @@ template<> inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_n
     auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], nullptr);
-#endif    
+#endif
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
@@ -289,7 +289,7 @@ template<> inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add
     auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], nullptr);
-#endif    
+#endif
     _loader_module = node->get_loader_module();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
@@ -331,9 +331,9 @@ template<> inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const s
         THROW("A video loader already exists, cannot have more than one loader")
 #if ENABLE_HIP || ENABLE_OPENCL
     auto node = std::make_shared<VideoLoaderNode>(outputs[0], (void *)_device.resources());
-#else    
+#else
     auto node = std::make_shared<VideoLoaderNode>(outputs[0], nullptr);
-#endif    
+#endif
     _video_loader_module = node->get_loader_module();
     _video_loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
@@ -350,7 +350,7 @@ template<> inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_n
     auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], nullptr);
-#endif    
+#endif
     _video_loader_module = node->get_loader_module();
     _video_loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);

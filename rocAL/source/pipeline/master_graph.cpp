@@ -128,7 +128,7 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
         _mem_type ((_affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST),
 #else
         _mem_type (RocalMemType::HOST),
-#endif        
+#endif
         _first_run(true),
         _processing(false),
         _prefetch_queue_depth(prefetch_queue_depth),
@@ -705,7 +705,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorFormat format, float multiplier
     }
 #endif
     if((_output_image_info.mem_type() == RocalMemType::HOST))
-    {        
+    {
         if(output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST)
         {
             float multiplier[3] = {multiplier0, multiplier1, multiplier2 };
@@ -828,7 +828,7 @@ MasterGraph::to_tensor(void *out_ptr, RocalTensorFormat format, float multiplier
         #endif
                             }
                         }
-                        else if(output_data_type == RocalTensorDataType::FP16) 
+                        else if(output_data_type == RocalTensorDataType::FP16)
                         {
                             half *output_tensor_16 = static_cast<half *>(out_ptr);
                             auto channel_size = w * h;
@@ -983,7 +983,7 @@ MasterGraph::copy_output(unsigned char *out_ptr, size_t out_size_in_bytes)
         memcpy(out_ptr, _ring_buffer.get_host_master_read_buffer(), size * _output_images.size());
 #if ENABLE_OPENCL || ENABLE_HIP
     }
-#endif    
+#endif
     _convert_time.end();
     return Status::OK;
 }
@@ -1289,11 +1289,12 @@ MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDa
     return _meta_data_reader->get_output();
 }
 
-MetaDataBatch * MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num)
+MetaDataBatch * MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num,
+                                                       std::vector<std::string> file_names, std::vector<std::string> labels)
 {
     if( _meta_data_reader)
         THROW("A metadata reader has already been created")
-    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), sequence_length, frame_step, frame_stride);
+    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), sequence_length, frame_step, frame_stride, file_names, labels);
     _meta_data_reader = create_meta_data_reader(config);
     _meta_data_reader->init(config);
     if(!file_list_frame_num)

@@ -62,5 +62,6 @@ private:
     unsigned _sequence_length;
     unsigned _step;
     unsigned _stride;
+    std::vector<std::string> _labels;
 };
 #endif

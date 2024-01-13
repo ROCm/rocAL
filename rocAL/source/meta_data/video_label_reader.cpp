@@ -45,6 +45,8 @@ void VideoLabelReader::init(const MetaDataConfig &cfg)
     _sequence_length = cfg.sequence_length();
     _step = cfg.frame_step();
     _stride = cfg.frame_stride();
+    _file_names = cfg.file_names();
+    _labels = cfg.labels();
     _output = new LabelBatch();
 }
 
@@ -165,8 +167,28 @@ void VideoLabelReader::read_text_file(const std::string &_path)
         THROW("Can't open the metadata file at " + std::string(_path))
 }
 
-void VideoLabelReader::read_all(const std::string &_path)
-{
+void VideoLabelReader::read_all(const std::string &_path) {
+    if(_file_names.size() && _labels.size()) {
+        if (_file_names.size() != _labels.size())
+            THROW("Number of file names is not matching with number of labels");
+        Properties props;
+        for (unsigned i = 0; i < _file_names.size(); i++)
+        {
+            int label = std::stoi(_labels[i]);
+            std::string video_file_name = _file_names[i];
+            unsigned start_frame_number = 0;
+            unsigned end_frame_number = 0;
+            open_video_context(video_file_name.c_str(), props);
+            end_frame_number = props.frames_count;
+            if ((end_frame_number > props.frames_count) || (start_frame_number >= end_frame_number))
+            {
+                INFO("Invalid start_frame_number or end_frame_number time/frame passed, skipping the file" + video_file_name)
+                continue;
+            }
+            add(video_file_name, label, (end_frame_number - start_frame_number), start_frame_number);
+        }
+    }
+    else {
     std::string _folder_path = _path;
     filesys::path pathObj(_folder_path);
     if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
@@ -231,6 +253,7 @@ void VideoLabelReader::read_all(const std::string &_path)
                 }
             }
         }
+    }
     }
     // print_map_contents();
 }

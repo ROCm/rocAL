@@ -53,7 +53,9 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext roca
  * False : when the inputs from text file is to considered as timestamps.
  * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
  */
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext rocal_context, const char *source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext rocal_context, const char *source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true,
+                                                                    std::vector<std::string> file_names = {}, std::vector<std::string> labels = {});
+
 
 /*!
  * \brief  rocalCreateTFReader

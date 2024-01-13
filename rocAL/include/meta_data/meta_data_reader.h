@@ -63,10 +63,13 @@ private:
     unsigned _frame_stride;
     unsigned _out_img_width;
     unsigned _out_img_height;
-
+    std::vector<std::string> _file_names;
+    std::vector<std::string> _labels;
 public:
-    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string> &feature_key_map=std::map<std::string, std::string>(), const std::string file_prefix=std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
-                    :_type(type), _reader_type(reader_type),  _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride){}
+    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string> &feature_key_map=std::map<std::string, std::string>(), const std::string file_prefix=std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1,
+                   std::vector<std::string> file_names = {}, std::vector<std::string> labels = {})
+                    :_type(type), _reader_type(reader_type),  _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride), _file_names(file_names), _labels(labels){}
+
     MetaDataConfig() = delete;
     MetaDataType type() const { return _type; }
     MetaDataReaderType reader_type() const { return _reader_type; }
@@ -80,6 +83,8 @@ public:
     unsigned out_img_height() const { return _out_img_height; }
     void set_out_img_width(unsigned out_img_width) { _out_img_width = out_img_width; }
     void set_out_img_height(unsigned out_img_height) { _out_img_height = out_img_height; }
+    std::vector<std::string> file_names() const { return _file_names; }
+    std::vector<std::string> labels() const { return _labels; }
 };
 
 

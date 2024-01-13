@@ -85,7 +85,7 @@ class ROCALVideoIterator(object):
         if self.display:
             for batch_i in range(self.batch_size):
                 draw_frames(img[batch_i], batch_i, self.iter_num)
-        return img, self.labels
+        return (img, self.labels)
 
     def reset(self):
         self.loader.rocalResetLoaders()
@@ -121,11 +121,15 @@ def main():
     # Create Pipeline instance
     pipe = Pipeline(batch_size=batch_size, num_threads=num_threads,device_id=args.local_rank, seed=random_seed, rocal_cpu=_rocal_cpu,
                     mean=[0.485 * 255, 0.456 * 255, 0.406 * 255], std=[0.229 * 255, 0.224 * 255, 0.225 * 255], tensor_layout=tensor_format, tensor_dtype=tensor_dtype)
+    filenames = ["/media/MIVisionX-data/rocal_data/video_and_sequence_samples/labelled_videos/0/dino1_720p_30fps_1.mp4",
+                 "/media/MIVisionX-data/rocal_data/video_and_sequence_samples/labelled_videos/0/dino1_720p_30fps_2.mp4"]
+    labels=["100", "200"]
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
-        images = fn.readers.video(device="gpu", file_root=video_path, sequence_length=user_sequence_length,
+        images = fn.readers.video(device="gpu", file_root="", sequence_length=user_sequence_length,
                               normalized=False, random_shuffle=False, image_type=types.RGB,
-                              dtype=types.FLOAT, initial_fill=16, pad_last_batch=True, name="Reader")
+                              dtype=types.FLOAT, initial_fill=16, pad_last_batch=True, name="Reader",
+                              filenames=filenames, labels=labels)
         crop_size = (512,960)
         output_images = fn.crop_mirror_normalize(images,
                                             crop=crop_size,
@@ -147,6 +151,7 @@ def main():
     for epoch in range(int(args.num_epochs)):
         print("EPOCH:::::",epoch)
         for i, it in enumerate(data_loader, 0):
+            print("label: ", it[1])
             if args.print_tensor:
                 print("**************", i, "*******************")
                 print("**************starts*******************")
