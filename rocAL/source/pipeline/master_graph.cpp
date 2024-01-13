@@ -1290,7 +1290,7 @@ MetaDataBatch * MasterGraph::create_label_reader(const char *source_path, MetaDa
 }
 
 MetaDataBatch * MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num,
-                                                       std::vector<std::string> file_names, std::vector<std::string> labels)
+                                                       std::vector<std::string> file_names, std::vector<int> labels)
 {
     if( _meta_data_reader)
         THROW("A metadata reader has already been created")

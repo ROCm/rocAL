@@ -174,7 +174,6 @@ void VideoLabelReader::read_all(const std::string &_path) {
         Properties props;
         for (unsigned i = 0; i < _file_names.size(); i++)
         {
-            int label = std::stoi(_labels[i]);
             std::string video_file_name = _file_names[i];
             unsigned start_frame_number = 0;
             unsigned end_frame_number = 0;
@@ -185,7 +184,7 @@ void VideoLabelReader::read_all(const std::string &_path) {
                 INFO("Invalid start_frame_number or end_frame_number time/frame passed, skipping the file" + video_file_name)
                 continue;
             }
-            add(video_file_name, label);
+            add(video_file_name, _labels[i]);
         }
     }
     else {
