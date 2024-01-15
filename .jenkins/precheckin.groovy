@@ -9,6 +9,8 @@ def runCI =
     
     def prj = new rocProject('rocAL', 'PreCheckin')
 
+    prj.libraryDependencies = ['rpp','MIVisionX']
+
     def nodes = new dockerNodes(nodeDetails, jobName, prj)
 
     def commonGroovy
