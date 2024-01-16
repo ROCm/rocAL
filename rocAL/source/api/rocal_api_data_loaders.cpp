@@ -1996,11 +1996,12 @@ rocalVideoFileSource(
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-        // Set video loader flag in master_graph
-        context->master_graph->set_video_loader_flag();
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
         if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
             THROW("file_root and filenames are mutually exclusive")
-
+        // Set video loader flag in master_graph
+        context->master_graph->set_video_loader_flag();
         // Set default step and stride values if 0 is passed
         step = (step == 0)? sequence_length : step;
         stride = (stride == 0)? 1 : stride;
@@ -2083,7 +2084,8 @@ rocalVideoFileSourceSingleShard(
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
         if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
             THROW("file_root and filenames are mutually exclusive")
         // Set video loader flag in master_graph
@@ -2184,7 +2186,8 @@ rocalVideoFileResize(
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
         if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
             THROW("file_root and filenames are mutually exclusive")
         // Set video loader flag in master_graph
@@ -2362,7 +2365,8 @@ rocalVideoFileResizeSingleShard(
 #ifdef ROCAL_VIDEO
         if(sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
-
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
         if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
             THROW("file_root and filenames are mutually exclusive")
         // Set video loader flag in master_graph

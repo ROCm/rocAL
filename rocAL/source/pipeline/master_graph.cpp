@@ -1293,6 +1293,10 @@ MetaDataBatch * MasterGraph::create_video_label_reader(const char *source_path, 
 {
     if( _meta_data_reader)
         THROW("A metadata reader has already been created")
+    if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names.size() == 0)
+        THROW("Invalid input path, Either file_root or filenames must be passed")
+    if ((source_path != nullptr) && (source_path[0] != '\0') && file_names.size() != 0)
+        THROW("file_root and filenames are mutually exclusive")
     MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), sequence_length, frame_step, frame_stride);
     config.set_file_names(file_names);
     config.set_labels(labels);
