@@ -25,16 +25,11 @@ THE SOFTWARE.
 #include <string.h>
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <iostream>
-#include <utility>
-
 #include "commons.h"
 #include "exception.h"
+#include "filesystem.h"
 
 using namespace std;
-
-namespace filesys = boost::filesystem;
 
 #ifdef ROCAL_VIDEO
 VideoLabelReader::VideoLabelReader() {

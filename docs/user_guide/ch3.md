@@ -7,7 +7,6 @@ This chapter provides information about the installation of rocAL and related pa
 * Linux distribution
 *  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
 *  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
-*  [Boost library](https://www.boost.org) - Version `1.72` or higher
 *  [Turbo JPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
 *  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
 *  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher

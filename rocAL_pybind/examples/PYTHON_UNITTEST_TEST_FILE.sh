@@ -84,7 +84,7 @@ do
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name contrast --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Contrast_${rgb_name[$rgb]}_${device_name}"
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name vignette --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Vignette_${rgb_name[$rgb]}_${device_name}"
 
-        # tf classification
+        # # tf classification
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name blend --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Blend_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name warp_affine --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}WarpAffine_${rgb_name[$rgb]}_${device_name}"
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name blur --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Blur_${rgb_name[$rgb]}_${device_name}"

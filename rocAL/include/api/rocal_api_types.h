@@ -99,6 +99,13 @@ struct RocalJointsData {
     RotationBatch rotation_batch;
 };
 
+struct ROIxywh {
+    unsigned x;
+    unsigned y;
+    unsigned w;
+    unsigned h;
+};
+
 /*! \brief  rocAL Status enum
  * \ingroup group_rocal_types
  */
@@ -349,6 +356,21 @@ enum class RocalROICordsType {
     /*! \brief ROCAL_XYWH
      */
     ROCAL_XYWH = 1
+};
+
+/*! \brief RocalExternalSourceMode struct
+ * \ingroup group_rocal_types
+ */
+enum RocalExternalSourceMode {
+    /*! \brief list of filename passed as input
+     */
+    ROCAL_EXTSOURCE_FNAME = 0,
+    /*! \brief compressed raw buffer passed as input
+     */
+    ROCAL_EXTSOURCE_RAW_COMPRESSED = 1,
+    /*! \brief uncompressed raw buffer passed as input
+     */
+    ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

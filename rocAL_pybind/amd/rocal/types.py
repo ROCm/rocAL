@@ -89,6 +89,11 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
+# Rocal External Source Mode
+from rocal_pybind.types import EXTSOURCE_FNAME
+from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
+from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -144,8 +149,10 @@ _known_types = {
     SCALING_MODE_NOT_LARGER: ("SCALING_MODE_NOT_LARGER", SCALING_MODE_NOT_LARGER),
     SCALING_MODE_MIN_MAX: ("SCALING_MODE_MIN_MAX", SCALING_MODE_MIN_MAX),
 
+    EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
+    EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
+    EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
 }
-
 
 def data_type_function(dtype):
     """!Converts a given data type identifier to its corresponding known type.

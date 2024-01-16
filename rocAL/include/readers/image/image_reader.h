@@ -47,6 +47,14 @@ enum class StorageType {
     SEQUENCE_FILE_SYSTEM = 6,
     MXNET_RECORDIO = 7,
     VIDEO_FILE_SYSTEM = 8,
+    EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
+};
+
+enum class ExternalSourceFileMode {
+    FILENAME = 0,
+    RAWDATA_COMPRESSED = 1,
+    RAWDATA_UNCOMPRESSED = 2,
+    NONE = 3,
 };
 
 struct ReaderConfig {
@@ -71,6 +79,7 @@ struct ReaderConfig {
     void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
+    void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -88,6 +97,7 @@ struct ReaderConfig {
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
+    ExternalSourceFileMode mode() { return _file_mode; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -105,6 +115,7 @@ struct ReaderConfig {
     bool _loop = false;
     std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
+    ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
@@ -120,6 +131,8 @@ struct ImageRecordIOHeader {
                            *  image_id[0] is used to store image id
                            */
 };
+
+
 class Reader {
    public:
     enum class Status {

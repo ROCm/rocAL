@@ -59,6 +59,14 @@ class ROCALGenericIterator(object):
         self.output_memory_type = self.loader._output_memory_type
         self.iterator_length = b.getRemainingImages(self.loader._handle)
         self.display = display
+        self.batch_size = pipeline._batch_size
+        if self.loader._is_external_source_operator:
+            self.eos = False
+            self.index = 0
+            self.num_batches = self.loader._external_source.n // self.batch_size if self.loader._external_source.n % self.batch_size == 0 else (
+                self.loader._external_source.n // self.batch_size + 1)
+        else:
+            self.num_batches = None
         if self.loader._name is None:
             self.loader._name = self.loader._reader
 
@@ -66,6 +74,39 @@ class ROCALGenericIterator(object):
         return self.__next__()
 
     def __next__(self):
+        if (self.loader._is_external_source_operator):
+            if (self.index + 1) == self.num_batches:
+                self.eos = True
+            if (self.index + 1) <= self.num_batches:
+                data_loader_source = next(self.loader._external_source)
+                # Extract all data from the source
+                images_list = data_loader_source[0] if (self.loader._external_source_mode == types.EXTSOURCE_FNAME) else []
+                input_buffer = data_loader_source[0] if (self.loader._external_source_mode != types.EXTSOURCE_FNAME) else []
+                labels_data = data_loader_source[1] if (len(data_loader_source) > 1) else None
+                roi_height = data_loader_source[2] if (len(data_loader_source) > 2) else []
+                roi_width = data_loader_source[3] if (len(data_loader_source) > 3) else []
+                if (len(data_loader_source) == 6 and self.loader._external_source_mode == types.EXTSOURCE_RAW_UNCOMPRESSED):
+                    decoded_height = data_loader_source[4]
+                    decoded_width = data_loader_source[5]
+                else:
+                    decoded_height = self.loader._external_source_user_given_height
+                    decoded_width = self.loader._external_source_user_given_width
+
+                kwargs_pybind = {
+                    "handle": self.loader._handle,
+                    "source_input_images": images_list,
+                    "labels": labels_data,
+                    "input_batch_buffer": input_buffer,
+                    "roi_width": roi_width,
+                    "roi_height": roi_height,
+                    "decoded_width": decoded_width,
+                    "decoded_height": decoded_height,
+                    "channels": 3,
+                    "external_source_mode": self.loader._external_source_mode,
+                    "rocal_tensor_layout": types.NCHW,
+                    "eos": self.eos}
+                b.externalSourceFeedInput(*(kwargs_pybind.values()))
+            self.index = self.index + 1
         if self.loader.rocal_run() != 0:
             raise StopIteration
         else:
@@ -144,6 +185,11 @@ class ROCALGenericIterator(object):
 
             return self.output_list, self.bb_padded, self.labels_padded
 
+        elif self.loader._is_external_source_operator:
+            self.labels = self.loader.get_image_labels()
+            self.labels_tensor = self.labels_tensor.copy_(
+                torch.from_numpy(self.labels)).long()
+            return self.output_list, self.labels_tensor
         else:
             if self.loader._one_hot_encoding:
                 self.loader.get_one_hot_encoded_labels(
