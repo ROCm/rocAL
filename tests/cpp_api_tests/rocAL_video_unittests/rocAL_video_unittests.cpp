@@ -189,7 +189,7 @@ int main(int argc, const char **argv)
         default:
         {
             std::cout << "\n>>>> VIDEO READER\n";
-            input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
+            input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, {}, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
             break;
         }
         case 2:
@@ -200,7 +200,7 @@ int main(int argc, const char **argv)
                 std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
                 return -1;
             }
-            input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
+            input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, {}, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
             break;
         }
         case 3:
