@@ -610,11 +610,11 @@ extern "C" RocalImage ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCont
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
- * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
  * \param sequence_length: The number of frames in a sequence.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
@@ -643,12 +643,12 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
- * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param shard_id Shard id for this loader.
  * \param shard_count Total shard count.
  * \param sequence_length: The number of frames in a sequence.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
@@ -678,13 +678,13 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContex
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
- * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
  * \param sequence_length: The number of frames in a sequence.
  * \param dest_width The output width of frames.
  * \param dest_height The output height of frames.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
@@ -720,7 +720,6 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param context Rocal context
  * \param source_path A NULL terminated char string pointing to the location on the disk.
  * source_path can be a video file, folder containing videos or a text file
- * \param file_names_list List of input video filenames
  * \param color_format The color format the frames will be decoded to.
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param shard_id Shard id for this loader.
@@ -728,6 +727,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param sequence_length: The number of frames in a sequence.
  * \param dest_width The output width of frames.
  * \param dest_height The output height of frames.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
