@@ -135,7 +135,7 @@ def video(*inputs, sequence_length, additional_decode_surfaces=2, bytes_per_samp
     Pipeline._current_pipeline._reader = "VideoDecoder"
     #Output
     videos = []
-    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_list_frame_num":file_list_frame_num,"file_names_list":filenames,"labels":labels} #VideoMetaDataReader
+    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_names_list":filenames,"labels":labels,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
     b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
     kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"file_names_list":filenames,"shuffle":random_shuffle ,"is_output":False,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num} #VideoDecoder
 
@@ -155,7 +155,7 @@ def video_resize(*inputs, sequence_length, resize_width, resize_height, addition
     Pipeline._current_pipeline._reader = "VideoDecoderResize"
     #Output
     videos = []
-    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_list_frame_num":file_list_frame_num,"file_names_list":filenames,"labels":labels} #VideoMetaDataReader
+    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_names_list":filenames,"labels":labels,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
     meta_data = b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
     kwargs_pybind_decoder = {"source_path": file_root, "color_format":image_type, "decoder_mode":decoder_mode, "shard_count":num_shards,
                             "sequence_length":sequence_length, "resize_width":resize_width, "resize_height":resize_height,"file_names_list":filenames,

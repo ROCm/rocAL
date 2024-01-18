@@ -145,7 +145,7 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
         THROW("Can't open the metadata file at " + std::string(file_path))
 }
 
-void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num, std::vector<std::string> filenames)
+void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num, const std::vector<std::string>& filenames)
 {
     DIR *_sub_dir;
     struct dirent *_entity;

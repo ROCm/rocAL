@@ -201,7 +201,7 @@ int main(int argc, const char **argv)
     else if (enable_metadata)
     {
         std::cout << "\n>>>> META DATA READER\n";
-        rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, file_list_frame_num, filenames_list, labels_list);
+        rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, filenames_list, labels_list, file_list_frame_num);
     }
 
     RocalImage input1;
