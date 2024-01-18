@@ -110,7 +110,7 @@ git clone -b mlperf-v1.1-rocal https://github.com/rrawther/MLPerf-mGPU
 
 ### MIVisionX Pytorch Docker
 
-* Refer to the [docker](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#docker) page for prerequisites and information on building the docker
+* Refer to the [docker](https://github.com/ROCm/MIVisionX#docker) page for prerequisites and information on building the docker
 * Step 1: Run the docker image*
 ````
 sudo docker run -it -v <Path-To-Data-HostSystem>:/data -v /<Path-to-GitRepo>:/dockerx -w /dockerx --privileged --device=/dev/kfd --device=/dev/dri --group-add video --shm-size=4g --ipc="host" --network=host <docker-name>

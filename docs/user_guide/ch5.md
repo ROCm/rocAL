@@ -159,6 +159,6 @@ Run the training Session
                 train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
 ```
 
-4. Run the training as shown [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
+4. Run the training as shown [here](https://github.com/ROCm/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
 
-To see a sample training script, click [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
+To see a sample training script, click [here](https://github.com/ROCm/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).

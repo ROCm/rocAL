@@ -77,15 +77,15 @@ rocAL can be currently used to perform the following operations either with rand
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 *  [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html) with --usecase=graphics,rocm
-*  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp) - MIVisionX Component
-*  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
+*  [AMD RPP](https://github.com/ROCm/rpp) - MIVisionX Component
+*  [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
 *  [Turbo JPEG](https://libjpeg-turbo.org/) - Version 2.0.6.2 from `https://github.com/rrawther/libjpeg-turbo.git`
 *  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
 *  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
 *  [LMBD Library](http://www.lmdb.tech/doc/)
 *  [RapidJSON](https://github.com/Tencent/rapidjson)
 *  [PyBind11](https://github.com/pybind/pybind11)
-*  [HIP](https://github.com/ROCm-Developer-Tools/HIP)
+*  [HIP](https://github.com/ROCm/HIP)
 *  OpenMP
 *  C++17
 ## Build instructions
@@ -138,7 +138,7 @@ For the convenience of the developer, we here provide the setup script which wil
 
     + run the setup script to install all the dependencies required
     + run the below commands to build rocAL & test
-    + run tests - [test option instructions](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/wiki/CTest)
+    + run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
   
 ```
     python rocAL-setup.py
