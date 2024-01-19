@@ -201,12 +201,12 @@ int main(int argc, const char **argv) {
     }
     if (max_height != 0 && max_width != 0) {
         input1 = rocalJpegExternalFileSource(
-            handle, folder_path, color_format, false, false, false,
+            handle, color_format, false, false, false,
             ROCAL_USE_USER_GIVEN_SIZE, max_width, max_height,
             RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExternalSourceMode(mode));
     } else {
         input1 = rocalJpegExternalFileSource(
-            handle, folder_path, color_format, false, false, false,
+            handle, color_format, false, false, false,
             ROCAL_USE_USER_GIVEN_SIZE, decode_width, decode_height,
             RocalDecoderType::ROCAL_DECODER_TJPEG, RocalExternalSourceMode(mode));
     }

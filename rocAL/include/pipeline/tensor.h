@@ -345,7 +345,13 @@ class Tensor : public rocalTensor {
     void* buffer() { return _mem_handle; }
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
-    void set_mem_handle(void* buffer) override { _mem_handle = buffer; }
+    void set_mem_handle(void* buffer) override {
+        if (buffer)
+            _mem_handle = buffer;
+        else {
+            THROW("Invalid buffer pointer passed")
+        }
+    }
 #if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
     unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);

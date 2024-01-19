@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_amd.h>
 #include <graph.h>
 #include "node_crop.h"
 #include "parameter_crop.h"

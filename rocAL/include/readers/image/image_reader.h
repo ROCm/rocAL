@@ -45,9 +45,9 @@ enum class StorageType {
     CAFFE_LMDB_RECORD = 3,
     CAFFE2_LMDB_RECORD = 4,
     COCO_FILE_SYSTEM = 5,
-    MXNET_RECORDIO = 6,
-    VIDEO_FILE_SYSTEM = 7,
-    SEQUENCE_FILE_SYSTEM = 8,
+    SEQUENCE_FILE_SYSTEM = 6,
+    MXNET_RECORDIO = 7,
+    VIDEO_FILE_SYSTEM = 8,
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
     NUMPY_DATA = 10
 };
