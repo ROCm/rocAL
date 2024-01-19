@@ -55,11 +55,11 @@ class ROCALVideoIterator(object):
         self.w = self.loader.getOutputWidth()
         self.h = self.loader.getOutputHeight()
         self.n = self.loader.getOutputImageCount()
-        self.rim = self.loader.getRemainingImages()
+        self.remaining_sequences = self.loader.getRemainingImages()
         self.display = display
         self.iter_num = 0
         self.sequence_length = sequence_length
-        print("____________REMAINING IMAGES____________:", self.rim)
+        print("____________REMAINING SEQUENCES____________:", self.remaining_sequences)
         color_format = self.loader.getOutputColorFormat()
         self.p = (1 if color_format is types.GRAY else 3)
         self.out = np.empty(
