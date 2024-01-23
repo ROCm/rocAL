@@ -22,7 +22,7 @@ THE SOFTWARE.
 */
 
 #include <cstdio>
-#if !ENABLE_HIP
+#if ENABLE_OPENCL
 #include <CL/cl.h>
 #endif
 #include <vx_ext_amd.h>
