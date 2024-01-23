@@ -70,7 +70,6 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
 {
     JSAMPROW *row_pointer = NULL;
     int i, retval = 0;
-    int64_t total_size;
 
     if (jpegBuf == NULL || jpegSize <= 0 || dstBuf == NULL || width < 0 ||
         pitch < 0 || height < 0 || pixelFormat < 0 || pixelFormat >= TJ_NUMPF)
@@ -94,27 +93,8 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     cinfo.out_color_space = pf2cs[pixelFormat];
     if (flags & TJFLAG_FASTDCT) cinfo.dct_method = JDCT_FASTEST;
     if (flags & TJFLAG_FASTUPSAMPLE) cinfo.do_fancy_upsampling = FALSE;
-    
-    // Determine the output image size before attempting decompress to prevent
-    // OOM'ing doing the decompress
-    jpeg_calc_output_dimensions(&cinfo);
-
-    total_size = static_cast<int64_t>(cinfo.output_height) * 
-                        static_cast<int64_t>(cinfo.output_width) *
-                        static_cast<int64_t>(cinfo.num_components);
-    // Some of the internal routines do not gracefully handle ridiculously
-    // large images, so fail fast.
-    if (cinfo.output_width <= 0 || cinfo.output_height <= 0) {
-        ERR ("Invalid image size: " << cinfo.output_width << " x " << cinfo.output_height);
-        retval = -1;  goto bailout;
-    }
-    if (total_size >= (1LL << 29)) {
-        ERR("Image too large: " << total_size);
-        retval = -1;  goto bailout;
-    }
 
     jpeg_start_decompress(&cinfo);
-
     /* Check for valid crop dimensions.  We cannot check these values until
     * after jpeg_start_decompress() is called.
     */
@@ -150,13 +130,17 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     JDIMENSION num_scanlines;
     jpeg_skip_scanlines(&cinfo, crop_y);
     while (cinfo.output_scanline <  crop_y + crop_height) {
-        num_scanlines = jpeg_read_scanlines(&cinfo,  &row_pointer[cinfo.output_scanline],
-                                        crop_y + crop_height - cinfo.output_scanline);
+        if (cinfo.output_scanline < crop_y)
+          num_scanlines = jpeg_read_scanlines(&cinfo,  &row_pointer[cinfo.output_scanline],
+                                          crop_y + crop_height - cinfo.output_scanline);
+        else
+          num_scanlines = jpeg_read_scanlines(&cinfo,  &row_pointer[cinfo.output_scanline - crop_y],
+                                          crop_y + crop_height - cinfo.output_scanline);
         if (num_scanlines == 0){
           ERR("Premature end of Jpeg data. Stopped at " << cinfo.output_scanline - crop_y << "/"
               << cinfo.output_height)
         }
-    }
+    }      
     jpeg_skip_scanlines(&cinfo, cinfo.output_height - crop_y - crop_height);
     jpeg_finish_decompress(&cinfo);
 
