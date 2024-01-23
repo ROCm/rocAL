@@ -34,8 +34,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 make -j\$(nproc)
                 sudo cmake --build . --target PyPackageInstall
                 sudo make install
-                LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} make test ARGS="-VV --rerun-failed --output-on-failure"
-                sudo make package
+                ldd -v /opt/rocm/lib/librocal.so
                 """
 
     platform.runCommand(this, command)
@@ -48,6 +47,7 @@ def runTestCommand (platform, project) {
                 export HOME=/home/jenkins
                 echo Make Test
                 cd ${project.paths.project_build_prefix}/build/release
+                LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} make test ARGS="-VV --rerun-failed --output-on-failure"
                 ldd -v /opt/rocm/lib/librocal.so
                 """
 
