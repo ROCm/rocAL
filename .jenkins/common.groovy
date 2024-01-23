@@ -42,6 +42,11 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
 def runTestCommand (platform, project) {
 
+    String libLocation = ''
+    if (platform.jenkinsLabel.contains('rhel') || platform.jenkinsLabel.contains('sles')) {
+        libLocation = ':/usr/local/lib'
+    }
+
     def command = """#!/usr/bin/env bash
                 set -x
                 export HOME=/home/jenkins
