@@ -124,7 +124,7 @@ For the convenience of the developer, we here provide the setup script which wil
 
 **usage:**
 
-```
+```shell
 python rocAL-setup.py       --directory [setup directory - optional (default:~/)]
                             --opencv    [OpenCV Version - optional (default:4.6.0)]
                             --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
@@ -140,22 +140,19 @@ python rocAL-setup.py       --directory [setup directory - optional (default:~/)
   
 * Clone rocAL source code
 
-```
+```shell
 git clone https://github.com/ROCm/rocAL.git
 ```
   **Note:** rocAL has support for two GPU backends: **OPENCL** and **HIP**:
 
 * Instructions for building rocAL with the **HIP** GPU backend (default GPU backend):
-
-    + run the setup script to install all the dependencies required by the **HIP** GPU backend:
-  
+  + run the setup script to install all the dependencies required by the **HIP** GPU backend:
   ```shell
   cd rocAL
   python rocAL-setup.py
   ```
 
-    + run the below commands to build rocAL with the **HIP** GPU backend:
-
+  + run the below commands to build rocAL with the **HIP** GPU backend:
   ```shell
   mkdir build-hip
   cd build-hip
@@ -165,13 +162,12 @@ git clone https://github.com/ROCm/rocAL.git
   sudo make install
   ```
 
-    + run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
-
+  + run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
   ```shell
   make test
   ```
 
-    **Note:**
+  **Note:**
     + `PyPackageInstall` used for rocal_pybind installation
     + `sudo` required for pybind installation
   
