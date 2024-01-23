@@ -101,7 +101,7 @@ Install rocAL runtime, development, and test packages.
   ```
 
   **Note:**
-  * Package install requires `OpenCV V4.6` and `Protobuf V3.12.4`  manual install
+  * Package install requires `Turbo JPEG`, `PyBind 11 v2.10.4` and `Protobuf V3.12.4`  manual install
   * `CentOS`/`RedHat`/`SLES` requires `FFMPEG Dev` package manual install
 
 #### Source build and install
