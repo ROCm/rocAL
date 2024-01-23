@@ -215,7 +215,7 @@ doxygen .Doxyfile
 
 ## Technical support
 
-Please email `mivisionx.support@amd.com` for questions, and feedback on MIVisionX.
+Please email `mivisionx.support@amd.com` for questions, and feedback on rocAL.
 
 Please submit your feature requests, and bug reports on the [GitHub issues](https://github.com/ROCm/rocAL/issues) page.
 
