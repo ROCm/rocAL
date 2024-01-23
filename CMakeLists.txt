@@ -194,8 +194,8 @@ endif()
 set(ROCAL_DEBIAN_PACKAGE_LIST  "rpp, mivisionx")
 set(ROCAL_RPM_PACKAGE_LIST     "rpp, mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel")
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel")
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
 execute_process(
