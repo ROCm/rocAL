@@ -42,6 +42,14 @@ find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
 
+if(DEFINED ENV{ROCM_PATH})
+  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     if(NOT DEFINED HIP_PATH)
@@ -225,6 +233,7 @@ if(${BUILD_ROCAL})
                 include/augmentations/geometry_augmentations/
                 include/decoders/image/
                 include/decoders/video/
+                include/decoders/libjpeg/
                 include/device/
                 include/loaders/
                 include/loaders/image/
