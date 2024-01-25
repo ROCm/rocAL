@@ -82,10 +82,10 @@ public:
     unsigned out_img_height() const { return _out_img_height; }
     void set_out_img_width(unsigned out_img_width) { _out_img_width = out_img_width; }
     void set_out_img_height(unsigned out_img_height) { _out_img_height = out_img_height; }
-    std::vector<std::string> file_names() const { return _file_names; }
-    std::vector<int> labels() const { return _labels; }
-    void set_file_names(std::vector<std::string> file_names) { _file_names = file_names; }
-    void set_labels(std::vector<int> labels) { _labels = labels; }
+    const std::vector<std::string>& file_names() const { return _file_names; }
+    const std::vector<int>& labels() const { return _labels; }
+    void set_file_names(const std::vector<std::string>& file_names) { _file_names = file_names; }
+    void set_labels(const std::vector<int>& labels) { _labels = labels; }
 };
 
 
