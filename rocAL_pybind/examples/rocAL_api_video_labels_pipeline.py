@@ -99,10 +99,10 @@ def draw_frames(img,batch_idx,iter_idx):
     image = image.transpose([0,1,2])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR )
     import os
-    if not os.path.exists("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_READER"):
-        os.makedirs("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_READER")
+    if not os.path.exists("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_LABEL_READER"):
+        os.makedirs("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_LABEL_READER")
     image = cv2.UMat(image).get()
-    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_READER/"+"iter_"+str(iter_idx)+"_batch_"+str(batch_idx)+".png", image)
+    cv2.imwrite("OUTPUT_IMAGES_PYTHON/NEW_API/VIDEO_LABEL_READER/"+"iter_"+str(iter_idx)+"_batch_"+str(batch_idx)+".png", image)
 
 def main():
     #Args
