@@ -4,11 +4,16 @@
 ##   DEFAULT        : VideoReader                      ##
 ##   READER_CASE 2  : VideoReaderResize                ##
 ##   READER_CASE 3  : SequenceReader                   ##
+##   READER_CASE 4  : VideoReaderWithLabels            ##
 #########################################################
 INPUT_PATH=$1
 READER_CASE=$2
 
-if [ -z "$INPUT_PATH" ]
+if [ "$INPUT_PATH" -eq 4 ]
+  then
+    READER_CASE=4
+    INPUT_PATH=""
+elif [ -z "$INPUT_PATH" ]
   then
     echo "No input argument supplied"
     exit

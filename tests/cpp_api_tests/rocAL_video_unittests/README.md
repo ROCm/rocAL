@@ -130,3 +130,16 @@ New Sequence order : (2, 1, 1, 0), The order can be changed directly in rocAL_vi
 **NOTE**:
 
 The outputs frames will be dumped inside the build/output_frames folder. The above images are for illustration purpose only.
+
+<br>
+
+**Example 4: Video Reader with Labels**
+
+This test case passes a list of filenames and labels as input and returns the sequences along with the corresponding labels
+
+> ./testScript.sh 4
+
+NOTE : 
+
+- ROCAL_DATA_PATH must be set, as the videos present in [rocal_data](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data) is used.
+- The list of filenames and labels can be modified in the rocAL_video_unittests.cpp file.

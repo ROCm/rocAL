@@ -180,6 +180,7 @@ int main(int argc, const char **argv)
                           rocal_data_path + "video_and_sequence_samples/labelled_videos/1/dino2_720p_30fps_1.mp4",
                           rocal_data_path + "video_and_sequence_samples/labelled_videos/2/dino3_720p_30fps_1.mp4"};
         labels_list = {0, 1, 2}; // Considering 3 files as input
+        enable_metadata = true; // Enable metadata to print the filenames and labels
     }
     if (reader_case == 3)
     {
