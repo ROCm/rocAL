@@ -53,6 +53,7 @@ option(BUILD_DEV        "Build rocAL Development Package"      ON)
 option(AMD_FP16_SUPPORT "Build rocAL with float16 Support"    OFF)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(BUILD_WITH_AMD_ADVANCE "Build rocAL for advanced AMD GPU Architecture"    OFF)
+option(PYTHONVERSION    "Python version to build rocal" "")
 
 set(DEFAULT_BUILD_TYPE "Release")
 
