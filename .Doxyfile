@@ -943,7 +943,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = README.md \
+INPUT                  = index.md \
                         rocAL/include/api/rocal_api_augmentation.h \
                         rocAL/include/api/rocal_api_data_loaders.h \
                         rocAL/include/api/rocal_api_data_transfer.h \
@@ -952,7 +952,7 @@ INPUT                  = README.md \
                         rocAL/include/api/rocal_api_parameters.h \
                         rocAL/include/api/rocal_api_types.h \
                         rocAL/include/api/rocal_api.h
-                       
+
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
