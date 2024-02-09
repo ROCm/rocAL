@@ -32,13 +32,11 @@ std::shared_ptr<MetaDataGraph> create_meta_data_graph(const MetaDataConfig& conf
         case MetaDataType::Label: {
             return nullptr;
         }
-        case MetaDataType::BoundingBox: {
-            return std::make_shared<BoundingBoxGraph>();
-        }
-        case MetaDataType::PolygonMask: {
-            return std::make_shared<BoundingBoxGraph>();
-        }
-        case MetaDataType::KeyPoints: {
+        case MetaDataType::BoundingBox:
+        case MetaDataType::PolygonMask:
+        case MetaDataType::PixelwiseMask:
+        case MetaDataType::KeyPoints:
+        {
             return std::make_shared<BoundingBoxGraph>();
         }
 

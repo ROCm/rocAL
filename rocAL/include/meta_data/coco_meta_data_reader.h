@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "meta_data.h"
 #include "meta_data_reader.h"
 #include "timing_debug.h"
+#include "maskApi.h"
 
 class COCOMetaDataReader : public MetaDataReader {
    public:

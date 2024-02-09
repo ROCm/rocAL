@@ -243,6 +243,7 @@ if(${BUILD_ROCAL})
                 include/pipeline/
                 include/readers/image/
                 include/readers/video/
+                ./../thirdparty/coco_RLE/include/
     )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
@@ -256,10 +257,11 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
+    file(GLOB_RECURSE PYCOCOTOOLS_SOURCES "../thirdparty/coco_RLE/source/*.cpp")
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
-    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
+    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${PYCOCOTOOLS_SOURCES} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         add_dependencies(${PROJECT_NAME} rocAL_hip)

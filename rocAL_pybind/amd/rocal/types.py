@@ -94,6 +94,11 @@ from rocal_pybind.types import EXTSOURCE_FNAME
 from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
 from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
 
+# RocalRandomObjectBBoxFormat
+from rocal_pybind.types import OUT_BOX
+from rocal_pybind.types import OUT_ANCHORSHAPE
+from rocal_pybind.types import OUT_STARTEND
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -152,6 +157,10 @@ _known_types = {
     EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
     EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
     EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
+
+    OUT_BOX: ("OUT_BOX", OUT_BOX),
+    OUT_ANCHORSHAPE: ("OUT_ANCHORSHAPE", OUT_ANCHORSHAPE),
+    OUT_STARTEND: ("OUT_STARTEND", OUT_STARTEND),
 }
 
 def data_type_function(dtype):

@@ -373,4 +373,11 @@ enum RocalExternalSourceMode {
     ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
 };
 
+enum RocalRandomObjectBBoxFormat
+{
+    ROCAL_OUT_BOX = 0,
+    ROCAL_OUT_ANCHORSHAPE = 1,
+    ROCAL_OUT_STARTEND = 2,
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
