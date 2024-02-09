@@ -6,7 +6,7 @@ root: doxygen/html/index
 subtrees:
 - caption: User Guide
   entries:
-    - file: README
+    - file: index
       subtrees:
         - entries:
           - file: user_guide/ch1
