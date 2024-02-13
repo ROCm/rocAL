@@ -1,6 +1,12 @@
-# Chapter 1: Overview
+.. meta::
+  :description: rocAL documentation and API reference library
+  :keywords: rocAL, ROCm, API, documentation
 
-## 1.1 Overview 
+.. _overview:
+
+********************************************************************
+rocAL Overview
+********************************************************************
 
 The performance of Deep Learning applications depends upon the efficiency of performance pipelines that can load and preprocess data efficiently to provide a high throughput. The pipelines are typically used to perform tasks such as loading and decoding data, perform a variety of augmentations, perform color-format conversions, etc., before passing the data for training or inference. The Deep Learning frameworks also require the pipelines to support multiple data formats and augmentations to adapt to a variety of datasets and models.
 
@@ -19,7 +25,8 @@ To optimize the preprocessing pipeline, rocAL utilizes the following features:
 
 Figure 1. 	The Role of Pipelines in Deep Learning Applications
 
-## 1.2 Key Components
+Key Components
+================
 
 - CPU- or GPU-based implementation for each augmentation and data_loader nodes
 - Python and C APIs for easy integration and testing

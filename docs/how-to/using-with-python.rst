@@ -1,4 +1,12 @@
-# Chapter 4: Using with Python API
+.. meta::
+  :description: rocAL documentation and API reference library
+  :keywords: rocAL, ROCm, API, documentation
+
+.. _using-with-python:
+
+********************************************************************
+Using with Python API
+********************************************************************
 
 rocAL uses simple Python operators to provide high performance and flexibility by utilizing the underlying hardware capabilities in a very efficient manner. 
 
