@@ -126,7 +126,7 @@ def caffe2(*inputs, path, bbox=False, additional_inputs=0, bytes_per_sample_hint
 def video(*inputs, sequence_length, additional_decode_surfaces=2, bytes_per_sample_hint=0, channels=3,
           dont_use_mmap=False, dtype=types.FLOAT, enable_frame_num=False,  enable_timestamps=False, file_list="",
           file_list_frame_num=False, file_list_include_preceding_frame=False, file_root="", filenames=[],
-          image_type=types.RGB, initial_fill=1024, labels="", lazy_init=False, normalized=False, num_shards=1,
+          image_type=types.RGB, initial_fill=1024, labels=[], lazy_init=False, normalized=False, num_shards=1,
           pad_last_batch=False, pad_sequences=False, prefetch_queue_depth=1, preserve=False, random_shuffle=False,
           read_ahead=False, seed=-1, shard_id=0, skip_cached_images=False, skip_vfr_check=False, step=1,
           stick_to_shard=False, stride=1, tensor_init_bytes=1048576, decoder_mode=types.SOFTWARE_DECODE,
@@ -135,9 +135,9 @@ def video(*inputs, sequence_length, additional_decode_surfaces=2, bytes_per_samp
     Pipeline._current_pipeline._reader = "VideoDecoder"
     #Output
     videos = []
-    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
+    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_names_list":filenames,"labels":labels,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
     b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
-    kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"shuffle":random_shuffle ,"is_output":False,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num } #VideoDecoder
+    kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"file_names_list":filenames,"shuffle":random_shuffle ,"is_output":False,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num} #VideoDecoder
 
     videos = b.VideoDecoder(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
     return (videos)
@@ -145,7 +145,7 @@ def video(*inputs, sequence_length, additional_decode_surfaces=2, bytes_per_samp
 def video_resize(*inputs, sequence_length, resize_width, resize_height, additional_decode_surfaces=2,
                  bytes_per_sample_hint=0, channels=3, dont_use_mmap=False, dtype=types.FLOAT, enable_frame_num=False,
                  enable_timestamps=False, file_list="", file_list_frame_num=False, file_list_include_preceding_frame=False,
-                 file_root="", filenames=[], image_type=types.RGB, initial_fill=1024, labels="", lazy_init=False, normalized=False,
+                 file_root="", filenames=[], image_type=types.RGB, initial_fill=1024, labels=[], lazy_init=False, normalized=False,
                  num_shards=1, pad_last_batch=False, pad_sequences=False, prefetch_queue_depth=1, preserve=False, random_shuffle=False,
                  read_ahead=False, seed=-1, shard_id=0, skip_cached_images=False, skip_vfr_check=False, step=3, stick_to_shard=False,
                  stride=3, tensor_init_bytes=1048576, decoder_mode=types.SOFTWARE_DECODE, device=None, name=None,
@@ -155,16 +155,16 @@ def video_resize(*inputs, sequence_length, resize_width, resize_height, addition
     Pipeline._current_pipeline._reader = "VideoDecoderResize"
     #Output
     videos = []
-    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
+    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_names_list":filenames,"labels":labels,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
     meta_data = b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
     kwargs_pybind_decoder = {"source_path": file_root, "color_format":image_type, "decoder_mode":decoder_mode, "shard_count":num_shards,
-                            "sequence_length":sequence_length, "resize_width":resize_width, "resize_height":resize_height,
+                            "sequence_length":sequence_length, "resize_width":resize_width, "resize_height":resize_height,"file_names_list":filenames,
                             "shuffle":random_shuffle , "is_output":False, "loop":False, "frame_step":step,"frame_stride":stride,
                             "file_list_frame_num":file_list_frame_num, "scaling_mode":scaling_mode ,"max_size":max_size,
                             "resize_shorter": resize_shorter, "resize_longer": resize_longer,"interpolation_type": interpolation_type }
 
     videos = b.VideoDecoderResize(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
-    return (videos, meta_data)
+    return videos
 
 def sequence_reader(*inputs, file_root, sequence_length, bytes_per_sample_hint=0, dont_use_mmap=False,
                     image_type=types.RGB, initial_fill='', lazy_init='', num_shards=1, pad_last_batch=False,

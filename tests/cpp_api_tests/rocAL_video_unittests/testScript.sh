@@ -4,11 +4,16 @@
 ##   DEFAULT        : VideoReader                      ##
 ##   READER_CASE 2  : VideoReaderResize                ##
 ##   READER_CASE 3  : SequenceReader                   ##
+##   READER_CASE 4  : VideoReaderWithLabels            ##
 #########################################################
 INPUT_PATH=$1
 READER_CASE=$2
 
-if [ -z "$INPUT_PATH" ]
+if [ "$INPUT_PATH" -eq 4 ]
+  then
+    READER_CASE=4
+    INPUT_PATH=""
+elif [ -z "$INPUT_PATH" ]
   then
     echo "No input argument supplied"
     exit
@@ -53,10 +58,10 @@ ENABLE_FRAME_NUMBER=0        # outputs the starting frame numbers of the sequenc
 ENABLE_TIMESTAMPS=0          # outputs timestamps of the frames in the batch
 ENABLE_SEQUENCE_REARRANGE=0  # rearranges the frames in the sequence NOTE: The order needs to be set in the rocAL_video_unittests.cpp
 
-echo ./rocAL_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
+echo ./rocal_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
 $RGB $SAVE_FRAMES $SHUFFLE $RESIZE_WIDTH $RESIZE_HEIGHT $FILELIST_FRAMENUM \
 $ENABLE_METADATA $ENABLE_FRAME_NUMBER $ENABLE_TIMESTAMPS $ENABLE_SEQUENCE_REARRANGE
 
-./rocAL_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
+./rocal_video_unittests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
 $RGB $SAVE_FRAMES $SHUFFLE $RESIZE_WIDTH $RESIZE_HEIGHT $FILELIST_FRAMENUM \
 $ENABLE_METADATA $ENABLE_FRAME_NUMBER $ENABLE_TIMESTAMPS $ENABLE_SEQUENCE_REARRANGE

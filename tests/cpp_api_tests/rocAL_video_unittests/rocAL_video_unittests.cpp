@@ -152,6 +152,11 @@ int main(int argc, const char **argv)
         std::cerr << "Resize height : " << resize_height << std::endl;
     }
 
+    /*>>>>>>>>>>>>>>>> Getting the path for MIVisionX-data  <<<<<<<<<<<<<<<<*/
+    std::string rocal_data_path;
+    if(std::getenv("ROCAL_DATA_PATH"))
+        rocal_data_path = std::getenv("ROCAL_DATA_PATH");
+
     RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24 : RocalImageColor::ROCAL_COLOR_U8;
     RocalContext handle;
     handle = rocalCreate(input_batch_size, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1);
@@ -159,6 +164,23 @@ int main(int argc, const char **argv)
     {
         std::cout << "Could not create the Rocal contex\n";
         return -1;
+    }
+
+    std::vector<std::string> filenames_list;
+    std::vector<int> labels_list;
+    if (reader_case == 4)
+    {
+        if (strcmp(rocal_data_path.c_str(), "") == 0)
+        {
+            std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+            exit(0);
+        }
+        source_path = "";   // Setting the source path to null and passing the filenames list as input
+        filenames_list = {rocal_data_path + "video_and_sequence_samples/labelled_videos/0/dino1_720p_30fps_1.mp4",
+                          rocal_data_path + "video_and_sequence_samples/labelled_videos/1/dino2_720p_30fps_1.mp4",
+                          rocal_data_path + "video_and_sequence_samples/labelled_videos/2/dino3_720p_30fps_1.mp4"};
+        labels_list = {0, 1, 2}; // Considering 3 files as input
+        enable_metadata = true; // Enable metadata to print the filenames and labels
     }
     if (reader_case == 3)
     {
@@ -180,7 +202,7 @@ int main(int argc, const char **argv)
     else if (enable_metadata)
     {
         std::cout << "\n>>>> META DATA READER\n";
-        rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, file_list_frame_num);
+        rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, filenames_list, labels_list, file_list_frame_num);
     }
 
     RocalImage input1;
@@ -189,7 +211,7 @@ int main(int argc, const char **argv)
         default:
         {
             std::cout << "\n>>>> VIDEO READER\n";
-            input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
+            input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, {}, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
             break;
         }
         case 2:
@@ -200,7 +222,7 @@ int main(int argc, const char **argv)
                 std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
                 return -1;
             }
-            input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
+            input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, {}, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
             break;
         }
         case 3:
@@ -208,6 +230,12 @@ int main(int argc, const char **argv)
             std::cout << "\n>>>> SEQUENCE READER\n";
             enable_framenumbers = enable_timestamps = 0;
             input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            break;
+        }
+        case 4:
+        {
+            std::cout << "\n>>>> VIDEO READER WITH FILENAMES LIST\n";
+            input1 = rocalVideoFileSource(handle, "", color_format, decoder_mode, shard_count, sequence_length, filenames_list, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
             break;
         }
     }

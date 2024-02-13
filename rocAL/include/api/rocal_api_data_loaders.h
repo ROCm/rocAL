@@ -23,6 +23,7 @@ THE SOFTWARE.
 #ifndef MIVISIONX_ROCAL_API_DATA_LOADERS_H
 #define MIVISIONX_ROCAL_API_DATA_LOADERS_H
 #include "rocal_api_types.h"
+#include <vector>
 
 /*!
  * \file
@@ -613,6 +614,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCont
  * \param rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
  * \param internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
  * \param sequence_length: The number of frames in a sequence.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
@@ -627,6 +629,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                           RocalDecodeDevice rocal_decode_device,
                                                           unsigned internal_shard_count,
                                                           unsigned sequence_length,
+                                                          const std::vector<std::string>& file_names_list,
                                                           bool is_output = false,
                                                           bool shuffle = false,
                                                           bool loop = false,
@@ -645,6 +648,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
  * \param shard_id Shard id for this loader.
  * \param shard_count Total shard count.
  * \param sequence_length: The number of frames in a sequence.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
@@ -660,6 +664,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContex
                                                                      unsigned shard_id,
                                                                      unsigned shard_count,
                                                                      unsigned sequence_length,
+                                                                     const std::vector<std::string>& file_names_list,
                                                                      bool shuffle = false,
                                                                      bool is_output = false,
                                                                      bool loop = false,
@@ -679,6 +684,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContex
  * \param sequence_length: The number of frames in a sequence.
  * \param dest_width The output width of frames.
  * \param dest_height The output height of frames.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
@@ -695,6 +701,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
                                                           unsigned sequence_length,
                                                           unsigned dest_width,
                                                           unsigned dest_height,
+                                                          const std::vector<std::string>& file_names_list,
                                                           bool shuffle = false,
                                                           bool is_output = false,
                                                           bool loop = false,
@@ -720,6 +727,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param sequence_length: The number of frames in a sequence.
  * \param dest_width The output width of frames.
  * \param dest_height The output height of frames.
+ * \param file_names_list List of input video filenames
  * \param shuffle: to shuffle sequences.
  * \param is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param loop: repeat data loading.
@@ -737,6 +745,7 @@ extern "C" RocalImage ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalContex
                                                                      unsigned sequence_length,
                                                                      unsigned dest_width,
                                                                      unsigned dest_height,
+                                                                     const std::vector<std::string>& file_names_list,
                                                                      bool shuffle = false,
                                                                      bool is_output = false,
                                                                      bool loop = false,
