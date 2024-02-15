@@ -63,6 +63,8 @@ private:
     unsigned _frame_stride;
     unsigned _out_img_width;
     unsigned _out_img_height;
+    std::vector<std::string> _file_names;
+    std::vector<int> _labels;
 
 public:
     MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string> &feature_key_map=std::map<std::string, std::string>(), const std::string file_prefix=std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
@@ -80,6 +82,10 @@ public:
     unsigned out_img_height() const { return _out_img_height; }
     void set_out_img_width(unsigned out_img_width) { _out_img_width = out_img_width; }
     void set_out_img_height(unsigned out_img_height) { _out_img_height = out_img_height; }
+    const std::vector<std::string>& file_names() const { return _file_names; }
+    const std::vector<int>& labels() const { return _labels; }
+    void set_file_names(const std::vector<std::string>& file_names) { _file_names = file_names; }
+    void set_labels(const std::vector<int>& labels) { _labels = labels; }
 };
 
 
