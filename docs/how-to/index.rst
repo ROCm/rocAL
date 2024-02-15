@@ -13,6 +13,6 @@ different utilities.
 
 * :ref:`overview`
 * :ref:`architecture`
+* :ref:`using-with-cpp`
 * :ref:`using-with-python`
 * :ref:`framework`
-* :ref:`using-with-cpp`
