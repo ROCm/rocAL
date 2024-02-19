@@ -51,7 +51,12 @@ class UniformRand : public Parameter<T> {
     T get() override {
         return _updated_val;
     };
-    void renew() override {
+
+    std::vector<T> get_array() override {
+        return _array;
+    }
+
+    void renew_value() {
         std::unique_lock<std::mutex> lock(_lock);
         auto val = _generator();
 
@@ -64,6 +69,21 @@ class UniformRand : public Parameter<T> {
                 ((double)val / (double)_generator.max()) * ((double)_end - (double)_start) + (double)_start);
         }
     }
+
+    void renew_array() {
+        for (uint i = 0; i < _batch_size; i++) {
+            renew_value();
+            _array[i] = _updated_val;
+        }
+    }
+
+    void renew() override {
+        if (_array.size() > 0) {
+            renew_array();
+        } else {
+            renew_value();
+        }
+    }
     int update(T start, T end) {
         std::unique_lock<std::mutex> lock(_lock);
         if (end < start)
@@ -73,6 +93,13 @@ class UniformRand : public Parameter<T> {
         _end = end;
         return 0;
     }
+
+    void create_array(unsigned batch_size) override {
+        if (_array.size() == 0)
+            _array.resize(batch_size);
+        _batch_size = batch_size;
+    }
+
     bool single_value() const override {
         return (_start == _end);
     }
@@ -81,8 +108,10 @@ class UniformRand : public Parameter<T> {
     T _start;
     T _end;
     T _updated_val;
+    std::vector<T> _array;
     std::mt19937 _generator;
     std::mutex _lock;
+    unsigned _batch_size;
 };
 
 template <typename T>
@@ -142,7 +171,8 @@ struct CustomRand : public Parameter<T> {
     T default_value() const override {
         return static_cast<T>(_mean);
     }
-    void renew() override {
+
+    void renew_value() {
         std::unique_lock<std::mutex> lock(_lock);
         if (single_value()) {
             // If there is only a single value possible for the random variable
@@ -161,9 +191,34 @@ struct CustomRand : public Parameter<T> {
             _updated_val = _values[idx];
         }
     }
+
+    void renew_array() {
+        for (uint i = 0; i < _batch_size; i++) {
+            renew_value();
+            _array[i] = _updated_val;
+        }
+    }
+
+    void renew() override {
+        if (_array.size() > 0) {
+            renew_array();
+        } else {
+            renew_value();
+        }
+    }
     T get() override {
         return _updated_val;
     };
+
+    std::vector<T> get_array() override {
+        return _array;
+    }
+
+    void create_array(unsigned batch_size) override {
+        if (_array.size() == 0)
+            _array.resize(batch_size);
+        _batch_size = batch_size;
+    }
 
     bool single_value() const override {
         return (_values.size() == 1);
@@ -175,6 +230,8 @@ struct CustomRand : public Parameter<T> {
     std::vector<double> _comltv_dist;  //!< commulative probabilities
     double _mean;
     T _updated_val;
+    std::vector<T> _array;
     std::mt19937 _generator;
     std::mutex _lock;
+    unsigned _batch_size;
 };
