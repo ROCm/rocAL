@@ -48,7 +48,7 @@ RUN apt-get update -y && apt-get -y install autoconf automake libbz2-dev libssl-
 RUN apt-get -y install sqlite3 libsqlite3-dev libtool build-essential
 RUN git clone -b v3.21.9 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
-RUN git clone -b https://github.com/ROCm/rpp && cd rpp && mkdir build && cd build && \
+RUN git clone https://github.com/ROCm/rpp && cd rpp && mkdir build && cd build && \
         cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd
 ENV CUPY_INSTALL_USE_HIP=1
 ENV ROCM_HOME=/opt/rocm
