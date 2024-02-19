@@ -148,9 +148,10 @@ class Label : public MetaData {
     void set_bb_cords(BoundingBoxCords bb_cords) override{THROW("Not Implemented")} std::vector<int>& get_polygon_count() override{THROW("Not Implemented")} std::vector<std::vector<int>>& get_vertices_count() override{THROW("Not Implemented")} MaskCords& get_mask_cords() override { THROW("Not Implemented") }
     void set_mask_cords(MaskCords mask_cords) override { THROW("Not Implemented") }
     void set_polygon_counts(std::vector<int> polygon_count) override { THROW("Not Implemented") }
-    void set_vertices_counts(std::vector<std::vector<int>> vertices_count) override{THROW("Not Implemented")} JointsData& get_joints_data() override { THROW("Not Implemented") }
+    void set_vertices_counts(std::vector<std::vector<int>> vertices_count) override{THROW("Not Implemented")}
     std::vector<int>& get_pixelwise_label() override { THROW("Not Implemented") };
     void set_pixelwise_label(std::vector<int>& pixelwise_label) override { THROW("Not Implemented") }
+    JointsData& get_joints_data() override { THROW("Not Implemented") }
     void set_joints_data(JointsData* joints_data) override { THROW("Not Implemented") }
 
    protected:
@@ -175,6 +176,7 @@ class BoundingBox : public Label {
 
 struct PolygonMask : public BoundingBox {
    public:
+    PolygonMask() = default;
     PolygonMask(BoundingBoxCords bb_cords, Labels bb_label_ids, ImgSize img_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, int img_id = 0) {
         _bb_cords = std::move(bb_cords);
         _label_ids = std::move(bb_label_ids);
@@ -198,10 +200,9 @@ struct PolygonMask : public BoundingBox {
 };
 
 struct PixelwiseMask : public PolygonMask {
-public:
+   public:
     PixelwiseMask() = default;
-    PixelwiseMask(BoundingBoxCords bb_cords, Labels bb_label_ids, ImgSize img_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, int img_id = 0)
-    {
+    PixelwiseMask(BoundingBoxCords bb_cords, Labels bb_label_ids, ImgSize img_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, int img_id = 0) {
         _bb_cords = std::move(bb_cords);
         _label_ids = std::move(bb_label_ids);
         _info.img_size = std::move(img_size);
@@ -212,7 +213,8 @@ public:
     }
     std::vector<int>& get_pixelwise_label() override { return _pixelwise_label; }
     void set_pixelwise_label(std::vector<int>& pixelwise_label) override { _pixelwise_label = std::move(pixelwise_label); }
-protected:
+
+   protected:
     std::vector<int> _pixelwise_label = {};
 };
 
@@ -346,8 +348,14 @@ class LabelBatch : public MetaDataBatch {
         return _buffer_size;
     }
     std::vector<Labels>& get_labels_batch() override { return _label_ids; }
-    int mask_size() override{THROW("Not Implemented")} std::vector<BoundingBoxCords>& get_bb_cords_batch() override { THROW("Not Implemented") }
-    void set_xywh_bbox() override{THROW("Not Implemented")} std::vector<MaskCords>& get_mask_cords_batch() override{THROW("Not Implemented")} std::vector<std::vector<int>>& get_mask_polygons_count_batch() override{THROW("Not Implemented")} std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() override{THROW("Not Implemented")} JointsDataBatch& get_joints_data_batch() override { THROW("Not Implemented") }
+    int mask_size() override{THROW("Not Implemented")}
+    std::vector<BoundingBoxCords>& get_bb_cords_batch() override { THROW("Not Implemented") }
+    void set_xywh_bbox() override{THROW("Not Implemented")}
+    std::vector<MaskCords>& get_mask_cords_batch() override{THROW("Not Implemented")}
+    std::vector<std::vector<int>>& get_mask_polygons_count_batch() override{THROW("Not Implemented")}
+    std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() override{THROW("Not Implemented")}
+    std::vector<std::vector<int>>& get_pixelwise_labels_batch()  override{THROW("Not Implemented")}
+    JointsDataBatch& get_joints_data_batch() override { THROW("Not Implemented") }
 
    protected:
     std::vector<Labels> _label_ids = {};
@@ -503,9 +511,8 @@ struct PolygonMaskBatch : public BoundingBoxBatch {
 };
 
 class PixelwiseMaskBatch : public PolygonMaskBatch {
-public:
-    void clear() override
-    {
+   public:
+    void clear() override {
         _bb_cords.clear();
         _label_ids.clear();
         _info_batch.clear();
@@ -515,8 +522,7 @@ public:
         _buffer_size.clear();
         _pixelwise_labels.clear();
     }
-    MetaDataBatch&  operator += (MetaDataBatch& other) override
-    {
+    MetaDataBatch& operator+=(MetaDataBatch& other) override {
         _bb_cords.insert(_bb_cords.end(), other.get_bb_cords_batch().begin(), other.get_bb_cords_batch().end());
         _label_ids.insert(_label_ids.end(), other.get_labels_batch().begin(), other.get_labels_batch().end());
         _info_batch.insert(other.get_info_batch());
@@ -526,8 +532,7 @@ public:
         _pixelwise_labels.insert(_pixelwise_labels.end(), other.get_pixelwise_labels_batch().begin(), other.get_pixelwise_labels_batch().end());
         return *this;
     }
-    void resize(int batch_size) override
-    {
+    void resize(int batch_size) override {
         _bb_cords.resize(batch_size);
         _label_ids.resize(batch_size);
         _info_batch.resize(batch_size);
@@ -537,9 +542,8 @@ public:
         _pixelwise_labels.resize(batch_size);
     }
     std::vector<std::vector<int>>& get_pixelwise_labels_batch() override { return _pixelwise_labels; }
-    std::shared_ptr<MetaDataBatch> clone(bool copy_contents) override
-    {
-        if(copy_contents) {
+    std::shared_ptr<MetaDataBatch> clone(bool copy_contents) override {
+        if (copy_contents) {
             return std::make_shared<PixelwiseMaskBatch>(*this);
         } else {
             std::shared_ptr<MetaDataBatch> mask_batch_instance = std::make_shared<PixelwiseMaskBatch>();
@@ -548,17 +552,15 @@ public:
             return mask_batch_instance;
         }
     }
-    void copy_data(std::vector<void*> buffer) override
-    {
-        if(buffer.size() < 2)
-            THROW("The buffers are insufficient") // TODO -change
-        int *labels_buffer = (int *)buffer[0];
-        float *bbox_buffer = (float *)buffer[1];
-        int *mask_buffer = (int *)buffer[2];
-        for(unsigned i = 0; i < (unsigned int)_label_ids.size(); i++)
-        {
+    void copy_data(std::vector<void*> buffer) override {
+        if (buffer.size() < 2)
+            THROW("The buffers are insufficient")  // TODO -change
+        int* labels_buffer = (int*)buffer[0];
+        float* bbox_buffer = (float*)buffer[1];
+        int* mask_buffer = (int*)buffer[2];
+        for (unsigned i = 0; i < (unsigned int)_label_ids.size(); i++) {
             mempcpy(labels_buffer, _label_ids[i].data(), _label_ids[i].size() * sizeof(int));
-            if(_bbox_output_type == BoundingBoxType::XYWH) convert_ltrb_to_xywh(_bb_cords[i]);
+            if (_bbox_output_type == BoundingBoxType::XYWH) convert_ltrb_to_xywh(_bb_cords[i]);
             memcpy(bbox_buffer, _bb_cords[i].data(), _label_ids[i].size() * 4 * sizeof(float));
             memcpy(mask_buffer, _pixelwise_labels[i].data(), _pixelwise_labels[i].size() * sizeof(int));
             labels_buffer += _label_ids[i].size();
@@ -566,8 +568,7 @@ public:
             mask_buffer += _pixelwise_labels[i].size();
         }
     }
-    std::vector<size_t>& get_buffer_size() override
-    {
+    std::vector<size_t>& get_buffer_size() override {
         size_t size = 0;
         for (auto label : _label_ids)
             size += label.size();
@@ -579,7 +580,8 @@ public:
         _buffer_size.emplace_back(size * sizeof(int));
         return _buffer_size;
     }
-protected:
+
+   protected:
     std::vector<std::vector<int>> _pixelwise_labels;
 };
 

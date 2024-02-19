@@ -475,7 +475,7 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                 auto itr = _map_image_names_to_id.find(id);
                 auto it = _map_img_sizes.find(itr->second);
                 ImgSize image_size = it->second;  // Convert to "ltrb" format
-                if ((_output->get_metadata_type() == MetaDataType::PolygonMask) && iscrowd == 0) {
+                if ((_output->get_metadata_type() == MetaDataType::PolygonMask || _output->get_metadata_type() == MetaDataType::PixelwiseMask) && iscrowd == 0) {
                     box.l = bbox[0];
                     box.t = bbox[1];
                     box.r = (bbox[0] + bbox[2] - 1);
@@ -492,7 +492,7 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                     vertices_array.clear();
                     bb_coords.clear();
                     bb_labels.clear();
-                } else if (!(_output->get_metadata_type() == MetaDataType::PolygonMask)) {
+                } else if (!(_output->get_metadata_type() == MetaDataType::PolygonMask || _output->get_metadata_type() == MetaDataType::PixelwiseMask)) {
                     box.l = bbox[0];
                     box.t = bbox[1];
                     box.r = (bbox[0] + bbox[2]);

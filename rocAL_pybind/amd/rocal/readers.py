@@ -28,7 +28,7 @@ from amd.rocal.pipeline import Pipeline
 import amd.rocal.types as types
 
 
-def coco(annotations_file='', ltrb=True, polygon_masks=False, ratio=False, avoid_class_remapping=False,
+def coco(annotations_file='', ltrb=True, polygon_masks=False, ratio=False, avoid_class_remapping=False, is_foreground=False, value=0, is_threshold=True,
          pixelwise_masks=False, is_box_encoder=False, is_box_iou_matcher=False, aspect_ratio_grouping=False, stick_to_shard=False, pad_last_batch=False):
     """!Creates a COCOReader node.
 

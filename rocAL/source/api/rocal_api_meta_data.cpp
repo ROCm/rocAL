@@ -77,7 +77,7 @@ RocalMetaData
     if (is_polygon_mask && is_pixelwise_mask)
         THROW("PixelwiseMask and PolygonMask are mutually exclusive")
     auto context = static_cast<Context*>(p_context);
-    if(is_polygon_mask) {
+    if (is_polygon_mask) {
         return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER, MetaDataType::PolygonMask, ltrb, is_box_encoder, avoid_class_remapping, aspect_ratio_grouping);
     } else if (is_pixelwise_mask) {
         return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_META_DATA_READER, MetaDataType::PixelwiseMask, ltrb, is_box_encoder, avoid_class_remapping, aspect_ratio_grouping);
@@ -92,7 +92,7 @@ RocalMetaData
         THROW("Invalid rocal context passed to rocalCreateCOCOReaderKeyPoints")
     auto context = static_cast<Context*>(p_context);
 
-    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_KEY_POINTS_META_DATA_READER, MetaDataType::KeyPoints, false, false, false, false, sigma, pose_output_width, pose_output_height);
+    return context->master_graph->create_coco_meta_data_reader(source_path, is_output, MetaDataReaderType::COCO_KEY_POINTS_META_DATA_READER, MetaDataType::KeyPoints, false, false, false, false, false, sigma, pose_output_width, pose_output_height);
 }
 
 RocalMetaData
@@ -341,28 +341,28 @@ RocalTensorList
             }
         }
     }
-    return context->master_graph->mask_meta_data();
+    return context->master_graph->mask_meta_data(true);
 }
 
 RocalTensorList
-ROCAL_API_CALL rocalGetPixelwiseMaskLabels(RocalContext p_context)
-{
+    ROCAL_API_CALL
+    rocalGetPixelwiseMaskLabels(RocalContext p_context) {
     if (p_context == nullptr)
         THROW("Invalid rocal context passed to rocalGetPixelwiseMaskLabels")
-    auto context = static_cast<Context *>(p_context);
+    auto context = static_cast<Context*>(p_context);
     return context->master_graph->mask_meta_data(false);
 }
 
 RocalTensorList
-ROCAL_API_CALL rocalSelectMask(RocalContext p_context,
-                               std::vector<int> mask_ids,
-                               std::vector<std::vector<int>> &sel_vertices_counts,
-                               std::vector<std::vector<int>> &sel_mask_ids,
-                               bool reindex_mask)
-{
+    ROCAL_API_CALL
+    rocalSelectMask(RocalContext p_context,
+                    std::vector<int> mask_ids,
+                    std::vector<std::vector<int>>& sel_vertices_counts,
+                    std::vector<std::vector<int>>& sel_mask_ids,
+                    bool reindex_mask) {
     if (p_context == nullptr)
         THROW("Invalid rocal context passed to rocalSelectMask")
-    auto context = static_cast<Context *>(p_context);
+    auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
     if (context->user_batch_size() != meta_data_batch_size)
@@ -379,11 +379,11 @@ ROCAL_API_CALL rocalSelectMask(RocalContext p_context,
 }
 
 RocalTensorList
-ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context)
-{
+    ROCAL_API_CALL
+    rocalRandomMaskPixel(RocalContext p_context) {
     if (p_context == nullptr)
         THROW("Invalid rocal context passed to rocalGetPixelwiseLabels")
-    auto context = static_cast<Context *>(p_context);
+    auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
     if (context->user_batch_size() != meta_data_batch_size)
@@ -393,25 +393,24 @@ ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context)
     return context->master_graph->get_random_mask_pixel(context->master_graph->mask_meta_data(false));
 }
 
-void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground, unsigned int value, bool is_threshold)
-{
+void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground, unsigned int value, bool is_threshold) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalBoxIOUMatcher")
-    auto context = static_cast<Context *>(p_context);
+    auto context = static_cast<Context*>(p_context);
     context->master_graph->set_random_mask_pixel_config(is_foreground, value, is_threshold);
 }
 
 RocalTensorList
-ROCAL_API_CALL RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format)
-{
+    ROCAL_API_CALL
+    RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format) {
     if (p_context == nullptr)
         THROW("Invalid rocal context passed to rocalGetPixelwiseLabels")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
-    if(context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != "+ TOSTR(context->user_batch_size() ))
-    if(!meta_data.second)
+    if (context->user_batch_size() != meta_data_batch_size)
+        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
+    if (!meta_data.second)
         THROW("No mask has been loaded for this output image")
     return context->master_graph->get_random_object_bbox(context->master_graph->mask_meta_data(false), (RandomObjectBBoxFormat)format);
 }

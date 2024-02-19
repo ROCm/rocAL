@@ -319,6 +319,24 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateMXNetReader(handle, path, true);
             decoded_output = rocalMXNetRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
+        case 12: //coco segmentation
+        {
+            std::cout << ">>>>>>> Running COCO READER" << std::endl;
+            pipeline_type = 3;
+            if (strcmp(rocal_data_path.c_str(), "") == 0)
+            {
+                std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+                exit(0);
+            }
+            // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/instances_train2017.json";
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true);
+            if (decode_max_height <= 0 || decode_max_width <= 0)
+                decoded_output = rocalJpegCOCOFileSource(handle, path, json_path.c_str(), color_format, num_threads, false, true, false);
+            else
+                decoded_output = rocalJpegCOCOFileSource(handle, path, json_path.c_str(), color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            rocalSetRandomPixelMaskConfig(handle, true);
+        } break;
         default: {
             std::cout << ">>>>>>> Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -748,7 +766,50 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                     std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
             } break;
-            case 3: {   // keypoints pipeline
+            case 3: //detection + segmentation + Pixelwise pipeline
+            {
+                RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                int ImageNameLen[inputBatchSize];
+                unsigned imagename_size = rocalGetImageNameLen(handle,ImageNameLen);
+                char imageNames[imagename_size];
+                rocalGetImageName(handle,imageNames);
+                std::string imageNamesStr(imageNames);
+                RocalTensorList mask_data = rocalGetPixelwiseMaskLabels(handle);
+                std::cerr << "\n>>>>> PIXELWISE LABELS : ";
+                for(int i =0; i < bbox_labels->size(); i++) {
+                    std::cout << "Imagename:" << imageNamesStr[i] << std::endl;
+                    int *mask_buffer = (int *)(mask_data->at(i)->buffer());
+                    int mask_size = mask_data->at(i)->dims().at(0)*mask_data->at(i)->dims().at(1);
+                    for (int j = 0; j < mask_size; j++) {
+                        std::cerr << mask_buffer[j] << "\t";
+                    }
+                    std::cerr << std::endl;
+                }
+                std::cout << "\n>>>>> RANDOM PIXEL POSITION:" << std::endl;
+                RocalTensorList output = rocalRandomMaskPixel(handle);
+                for(int i =0; i < bbox_labels->size(); i++) {
+                    unsigned int *mask_buffer = (unsigned int *)(output->at(i)->buffer());
+                    int mask_size = output->at(i)->dims().at(0);
+                    for (int j = 0; j < mask_size; j++) {
+                        std::cerr << mask_buffer[j] << "\t";
+                    }
+                    std::cerr << std::endl;
+                }
+                for(int i = 0; i < bbox_labels->size(); i++)
+                {
+                    int * labels_buffer = (int *)(bbox_labels->at(i)->buffer());
+                    float *bbox_buffer = (float *)(bbox_coords->at(i)->buffer());
+
+                    std::cerr << "\n>>>>> BBOX LABELS : ";
+                    for(int j = 0; j < bbox_labels->at(i)->dims().at(0); j++)
+                        std::cerr << labels_buffer[j] << " ";
+                    std::cerr << "\n>>>>> BBOXX : " <<bbox_coords->at(i)->dims().at(0) << " : \n";
+                    for(int j = 0, j4 = 0; j < bbox_coords->at(i)->dims().at(0); j++, j4 = j * 4)
+                        std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
+                }
+            } break;
+            case 4: {   // keypoints pipeline
                 int size = inputBatchSize;
                 RocalJointsData *joints_data;
                 rocalGetJointsDataPtr(handle, &joints_data);

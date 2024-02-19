@@ -120,19 +120,20 @@ class MasterGraph {
     void box_iou_matcher(std::vector<float> &anchors, float high_threshold, float low_threshold, bool allow_low_quality_matches);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
     const std::pair<ImageNameBatch, pMetaDataBatch> &meta_data();
-    TensorList * get_select_mask_polygon(rocalTensorList* mask_data,
-                                         std::vector<std::vector<int>> polygon_counts,
-                                         std::vector<std::vector<std::vector<int>>> vertices_counts,
-                                         std::vector<int> mask_ids,
-                                         std::vector<std::vector<int>> &sel_vertices_counts,
-                                         std::vector<std::vector<int>> &sel_mask_ids,
-                                         bool reindex_mask);
+    TensorList *get_select_mask_polygon(rocalTensorList *mask_data,
+                                        std::vector<std::vector<int>> polygon_counts,
+                                        std::vector<std::vector<std::vector<int>>> vertices_counts,
+                                        std::vector<int> mask_ids,
+                                        std::vector<std::vector<int>> &sel_vertices_counts,
+                                        std::vector<std::vector<int>> &sel_mask_ids,
+                                        bool reindex_mask);
     void set_random_mask_pixel_config(bool is_foreground, int value, bool is_threshold);
-    TensorList * get_random_mask_pixel(rocalTensorList* input);
-    TensorList * get_random_object_bbox(rocalTensorList* input, RandomObjectBBoxFormat format);
+    
     TensorList *labels_meta_data();
     TensorList *bbox_meta_data();
-    TensorList *mask_meta_data();
+    TensorList *mask_meta_data(bool is_polygon_mask);
+    TensorList *get_random_mask_pixel(rocalTensorList *input);
+    TensorList *get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format);
     TensorList *matched_index_meta_data();
     void set_loop(bool val) { _loop = val; }
     void set_output(Tensor *output_tensor);
@@ -166,17 +167,17 @@ class MasterGraph {
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed tensors
     bool no_more_processed_data();
     int64_t find_pixel(std::vector<int> start, std::vector<int> foreground_count, int64_t val, int count);
-    void merge_row(int* in1, int* in2,int* out1,int* out2, unsigned n);
-    void filter_by_label(int* in_row, int* out_row, unsigned N, int label);
-    int compact_rows(int* in, unsigned height, unsigned width);
-    void label_row(int* in_row,int* label_base,int* out_row, unsigned length);
-    void get_label_boundingboxes(std::vector<std::vector<std::pair<unsigned,unsigned>>> &boxes,
-                                std::vector<std::pair<unsigned,unsigned>> ranges,
-                                std::vector<unsigned> hits,
-                                int* in,
-                                std::vector<unsigned> origin,
-                                unsigned width);
-    bool hit(std::vector<unsigned>& hits, unsigned idx);
+    void merge_row(int *in1, int *in2, int *out1, int *out2, unsigned n);
+    void filter_by_label(int *in_row, int *out_row, unsigned N, int label);
+    int compact_rows(int *in, unsigned height, unsigned width);
+    void label_row(int *in_row, int *label_base, int *out_row, unsigned length);
+    void get_label_boundingboxes(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes,
+                                 std::vector<std::pair<unsigned, unsigned>> ranges,
+                                 std::vector<unsigned> hits,
+                                 int *in,
+                                 std::vector<unsigned> origin,
+                                 unsigned width);
+    bool hit(std::vector<unsigned> &hits, unsigned idx);
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
