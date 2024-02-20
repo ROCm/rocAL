@@ -59,13 +59,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
         git clone -b rocm6.1_internal_testing https://github.com/ROCm/cupy.git && cd cupy && git submodule update --init && \
         pip install -e . --no-cache-dir -vvvv
 
-ENV ROCAL_WORKSPACE=/workspace
-WORKDIR $ROCAL_WORKSPACE
-
 # install MIVisionX 
 RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
         mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../ && make -j8 && make install
 
+ENV ROCAL_WORKSPACE=/workspace
+WORKDIR $ROCAL_WORKSPACE
+
 # Install rocAL
-RUN git clone -b develop https://github.com/ROCm/rocAL && cd rocAL && \
+RUN git clone -b develop https://github.com/ROCm/rocAL && \
         mkdir build && cd build && cmake ../ && make -j8 && cmake --build . --target PyPackageInstall && make install
