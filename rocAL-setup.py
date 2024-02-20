@@ -345,8 +345,8 @@ else:
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                   ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-devel hipcub-devel python3-devel')
     os.system('sudo -v')
+    os.system('pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.*')
     os.system('(cd '+deps_dir+'; git clone -b rocm6.1_internal_testing https://github.com/ROCm/cupy.git; export CUPY_INSTALL_USE_HIP=1; export ROCM_HOME=/opt/rocm; cd cupy; git submodule update --init; pip install -e . --no-cache-dir -vvvv)')
-    os.system('pip install numpy==1.21')
 
     # Install ffmpeg
     if "Ubuntu" in platfromInfo:
