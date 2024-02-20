@@ -419,7 +419,7 @@ else:
 
     # MIVisionX
     os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
+    os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/ROCm/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
               linuxCMake+' -DBACKEND='+backend+' -DROCAL=OFF ../; make -j4; sudo make install)')
 
     print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")

@@ -1,8 +1,8 @@
 ARG PYTORCH_VERSION=latest
 FROM rocm/pytorch:${PYTORCH_VERSION}
 
-ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/5.4/ubuntu/focal/amdgpu-install_5.4.50400-1_all.deb
-ARG ROCM_INSTALLER_PACKAGE=amdgpu-install_5.4.50400-1_all.deb
+ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/6.0.2/ubuntu/focal/amdgpu-install_6.0.60002-1_all.deb
+ARG ROCM_INSTALLER_PACKAGE=amdgpu-install_6.0.60002-1_all.deb
 
 ENV ROCAL_DEPS_ROOT=/rocAL-deps
 WORKDIR $ROCAL_DEPS_ROOT
@@ -20,7 +20,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-de
         wget ${ROCM_INSTALLER_REPO} && \
         sudo apt-get install -y ./${ROCM_INSTALLER_PACKAGE} && \
         sudo apt-get update -y && \
-        sudo amdgpu-install -y --usecase=graphics,rocm
+        sudo amdgpu-install -y --usecase=graphics,rocm --no-32
 
 # install OpenCV
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy \
@@ -65,5 +65,9 @@ ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE
 
 # install MIVisionX 
-RUN git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git && \
+RUN git clone https://github.com/ROCm/MIVisionX.git && \
         mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../MIVisionX && make -j8 && make install
+
+# Install rocAL
+RUN git clone -b develop https://github.com/ROCm/rocAL && \
+        mkdir build && cd build && cmake ../ && make -j8 && cmake --build . --target PyPackageInstall && make install

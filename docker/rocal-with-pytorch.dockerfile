@@ -31,11 +31,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rocblas rocblas-dev miopen
 
 # install rocAL dependency
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget libbz2-dev libssl-dev python-dev python3-dev libgflags-dev libgoogle-glog-dev liblmdb-dev nasm yasm libjsoncpp-dev clang && \
-        git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
         git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../ && \
-        make -j4 && sudo make install && cd
-        git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && cd rpp && mkdir build && cd build && \
+        make -j4 && sudo make install && cd && \
+        git clone https://github.com/ROCm/rpp.git && cd rpp && mkdir build && cd build && \
         cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd ../../ && \
         git clone -b v3.12.4 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
@@ -53,5 +52,9 @@ ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE
 
 # install MIVisionX 
-RUN git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git && \
+RUN git clone https://github.com/ROCm/MIVisionX.git && \
         mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../MIVisionX && make -j8 && make install
+
+# Install rocAL
+RUN git clone -b develop https://github.com/ROCm/rocAL && \
+        mkdir build && cd build && cmake -DPYTHONVERSION=3.9 ../ && make -j8 && cmake --build . --target PyPackageInstall && make install
