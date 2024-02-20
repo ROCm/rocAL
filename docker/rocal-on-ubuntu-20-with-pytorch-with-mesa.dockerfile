@@ -67,9 +67,9 @@ ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE
 
 # install MIVisionX 
-RUN git clone https://github.com/ROCm/MIVisionX.git && \
-        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../MIVisionX && make -j8 && make install
+RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
+        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../ && make -j8 && make install
 
 # Install rocAL
-RUN git clone -b develop https://github.com/ROCm/rocAL && \
+RUN git clone -b develop https://github.com/ROCm/rocAL && cd rocAL && \
         mkdir build && cd build && cmake ../ && make -j8 && cmake --build . --target PyPackageInstall && make install
