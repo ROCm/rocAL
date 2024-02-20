@@ -57,7 +57,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
         cmake ../ && make -j4 && sudo make install && cd ../../ && \
         pip install pytest==3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
         cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
-        git clone -b rocm6.1_internal_testing https://github.com/ROCmSoftwarePlatform/cupy.git && cd cupy && git submodule update --init && \
+        git clone -b rocm6.1_internal_testing https://github.com/ROCm/cupy.git && cd cupy && git submodule update --init && \
         pip install -e . --no-cache-dir -vvvv && pip install numpy==1.21
 
 ENV ROCAL_WORKSPACE=/workspace
