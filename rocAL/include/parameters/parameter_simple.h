@@ -52,7 +52,7 @@ class SimpleParameter : public Parameter<T> {
     }
 
     int update(T new_val) {
-        if (_array.size() > 0)
+        if (_array.size())
             update_array(new_val);
         else
             update_single_value(new_val);
