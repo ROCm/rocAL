@@ -135,7 +135,11 @@ else()
 endif()
 
 add_subdirectory(rocAL)
-add_subdirectory(rocAL_pybind)
+if(BUILD_PYPACKAGE)
+  add_subdirectory(rocAL_pybind)
+else()
+  message("-- ${Cyan}ROCAL Python Module turned OFF by user option -D BUILD_PYPACKAGE=OFF ${ColourReset}")
+endif()
 
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/
 install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal COMPONENT runtime)

@@ -25,7 +25,6 @@ set(VERSION "1.0.0")
 project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
 
 set(TARGET_NAME rocal_pybind)
-option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -38,7 +37,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(BUILD_ROCAL_PYBIND true)
-set(ROCAL_PYTHON ON)
 
 find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
