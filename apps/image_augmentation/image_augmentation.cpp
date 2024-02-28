@@ -48,12 +48,12 @@ int main(int argc, const char** argv) {
     if (argc < MIN_ARG_COUNT) {
         printf(
             "Usage: image_augmentation <image_dataset_folder/video_file> <processing_device=1/cpu=0>  \
-              decode_width decode_height video_mode gray_scale/rgb display_on_off decode_shard_count  <shuffle:0/1> <jpeg_dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>\n");
+              decode_width decode_height decoder_mode gray_scale/rgb display_on_off decode_shard_count  <shuffle:0/1> <jpeg_dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>\n");
         return -1;
     }
     int argIdx = 0;
     const char* folderPath1 = argv[++argIdx];
-    int video_mode = 0;  // 0 means no video decode, 1 means hardware, 2 means software decoding
+    int decoder_mode = 0;  // 0 means no video decode, 1 means hardware, 2 means software decoding
     bool display = 1;    // Display the images
     int aug_depth = 1;   // how deep is the augmentation tree
     int rgb = 1;         // process color images
@@ -62,7 +62,7 @@ int main(int argc, const char** argv) {
     bool processing_device = 1;
     size_t shard_count = 2;
     int shuffle = 0;
-    int dec_mode = 0;
+    int decoder_type = 0;
     const char *outName = "image_augmentation_app.png";
 
     if (argc >= argIdx + MIN_ARG_COUNT)
@@ -75,7 +75,7 @@ int main(int argc, const char** argv) {
         decode_height = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
-        video_mode = atoi(argv[++argIdx]);
+        decoder_mode = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         rgb = atoi(argv[++argIdx]);
@@ -90,7 +90,7 @@ int main(int argc, const char** argv) {
         shuffle = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
-        dec_mode = atoi(argv[++argIdx]);
+        decoder_type = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         outName = argv[++argIdx];
@@ -108,7 +108,7 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
-    RocalDecoderType dec_type = (RocalDecoderType)dec_mode;
+    RocalDecoderType dec_type = (RocalDecoderType)decoder_type;
 
     /*>>>>>>>>>>>>>>>> Creating rocAL parameters  <<<<<<<<<<<<<<<<*/
 
@@ -126,7 +126,7 @@ int main(int argc, const char** argv) {
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
     RocalTensor input1;
 
-    if (video_mode != 0) {
+    if (decoder_mode >= 2) {
         unsigned sequence_length = 3;
         unsigned frame_step = 3;
         unsigned frame_stride = 1;
@@ -134,7 +134,12 @@ int main(int argc, const char** argv) {
             std::cout << "Output width and height is needed for video decode\n";
             return -1;
         }
-        input1 = rocalVideoFileSource(handle, folderPath1, color_format, ((video_mode == 1) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE), shard_count, sequence_length, frame_step, frame_stride, shuffle, true, false);
+        input1 = rocalVideoFileSource(handle, folderPath1, color_format, (decoder_mode == 2)? ROCAL_SW_DECODE: ROCAL_HW_DECODE, shard_count, sequence_length, frame_step, frame_stride, shuffle, true, false);
+    } else if (decoder_mode == 1) {
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            input1 = rocalFusedJpegCrop(handle, folderPath1, color_format, shard_count, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_width, decode_height);
+
     } else {
         // The jpeg file loader can automatically select the best size to decode all images to that size
         // User can alternatively set the size or change the policy that is used to automatically find the size
@@ -152,7 +157,7 @@ int main(int argc, const char** argv) {
 
     RocalTensor tensor0;
     int resize_w = 112, resize_h = 112;
-    if (video_mode) {
+    if (decoder_mode >= 2) {
         resize_h = decode_height;
         resize_w = decode_width;
         tensor0 = input1;
@@ -214,7 +219,7 @@ int main(int argc, const char** argv) {
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
-    const unsigned number_of_cols = video_mode ? 1 : 10;
+    const unsigned number_of_cols = (decoder_mode >= 2) ? 1 : 10;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h + AMD_ROCm_Black_resize.rows, w * number_of_cols, cv_color_format);
     cv::Mat mat_input(h, w, cv_color_format);

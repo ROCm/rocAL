@@ -33,7 +33,14 @@ find_program(MAKE_NSIS_EXE makensis)
 find_program(RPMBUILD_EXE rpmbuild)
 find_program(DPKG_EXE dpkg)
 
-set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
 # avoid setting the default installation path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "rocAL default installation path" FORCE)
@@ -46,6 +53,7 @@ option(BUILD_DEV        "Build rocAL Development Package"      ON)
 option(AMD_FP16_SUPPORT "Build rocAL with float16 Support"    OFF)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(BUILD_WITH_AMD_ADVANCE "Build rocAL for advanced AMD GPU Architecture"    OFF)
+option(PYTHONVERSION    "Python version to build rocal" "")
 
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -124,8 +132,11 @@ if(AMD_FP16_SUPPORT)
 endif(AMD_FP16_SUPPORT)
 
 add_subdirectory(rocAL)
-add_subdirectory(rocAL_pybind)
-
+if(BUILD_PYPACKAGE)
+  add_subdirectory(rocAL_pybind)
+else()
+  message("-- ${Cyan}ROCAL Python Module turned OFF by user option -D BUILD_PYPACKAGE=OFF ${ColourReset}")
+endif()
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/
 install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal)
 

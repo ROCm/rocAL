@@ -23,12 +23,6 @@ THE SOFTWARE.
 #include "caffe_lmdb_record_reader.h"
 
 #include <commons.h>
-#include <stdint.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <cassert>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -37,9 +31,8 @@ THE SOFTWARE.
 using namespace std;
 using caffe_protos::Datum;
 
-namespace filesys = boost::filesystem;
-
-CaffeLMDBRecordReader::CaffeLMDBRecordReader() {
+CaffeLMDBRecordReader::CaffeLMDBRecordReader()
+{
     _sub_dir = nullptr;
     _curr_file_idx = 0;
     _current_file_size = 0;

@@ -53,19 +53,6 @@ find_library(TurboJpeg_LIBRARIES
 )
 mark_as_advanced(TurboJpeg_LIBRARIES)
 
-find_path(TurboJpeg_LIBRARIES_DIRS
-    NAMES libturbojpeg${SHARED_LIB_TYPE}
-    HINTS
-    $ENV{TURBO_JPEG_PATH}/lib
-    $ENV{TURBO_JPEG_PATH}/lib64
-    PATHS
-    ${TURBO_JPEG_PATH}/lib
-    ${TURBO_JPEG_PATH}/lib64
-    /usr/lib
-    /opt/libjpeg-turbo/lib
-)
-mark_as_advanced(TurboJpeg_LIBRARIES_DIRS)
-
 if(TurboJpeg_LIBRARIES AND TurboJpeg_INCLUDE_DIRS)
     set(TurboJpeg_FOUND TRUE)
 endif( )
@@ -76,13 +63,11 @@ find_package_handle_standard_args( TurboJpeg
     REQUIRED_VARS
         TurboJpeg_LIBRARIES 
         TurboJpeg_INCLUDE_DIRS
-        TurboJpeg_LIBRARIES_DIRS
 )
 
 set(TurboJpeg_FOUND ${TurboJpeg_FOUND} CACHE INTERNAL "")
 set(TurboJpeg_LIBRARIES ${TurboJpeg_LIBRARIES} CACHE INTERNAL "")
 set(TurboJpeg_INCLUDE_DIRS ${TurboJpeg_INCLUDE_DIRS} CACHE INTERNAL "")
-set(TurboJpeg_LIBRARIES_DIRS ${TurboJpeg_LIBRARIES_DIRS} CACHE INTERNAL "")
 
 if(TurboJpeg_FOUND)
     message("-- ${White}Using Turbo JPEG -- \n\tLibraries:${TurboJpeg_LIBRARIES} \n\tIncludes:${TurboJpeg_INCLUDE_DIRS}${ColourReset}")   

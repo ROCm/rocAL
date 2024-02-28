@@ -22,13 +22,6 @@ THE SOFTWARE.
 
 #include "video_file_source_reader.h"
 
-#include <commons.h>
-
-#include <algorithm>
-#include <boost/filesystem.hpp>
-#include <cassert>
-namespace filesys = boost::filesystem;
-
 #ifdef ROCAL_VIDEO
 VideoFileSourceReader::VideoFileSourceReader() {
     _curr_sequence_idx = 0;

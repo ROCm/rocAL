@@ -79,6 +79,34 @@ void
     }
 }
 
+RocalStatus ROCAL_API_CALL
+rocalExternalSourceFeedInput(
+    RocalContext p_context,
+    const std::vector<std::string>& input_images_names,
+    bool is_labels,
+    const std::vector<unsigned char*>& input_buffer,
+    const std::vector<ROIxywh>& roi_xywh,
+    unsigned int max_width,
+    unsigned int max_height,
+    unsigned int channels,
+    RocalExternalSourceMode mode,
+    RocalTensorLayout layout,
+    bool eos) {
+    auto context = static_cast<Context*>(p_context);
+    try {
+        ExternalSourceFileMode external_file_mode = static_cast<ExternalSourceFileMode>(mode);
+        RocalTensorlayout format = static_cast<RocalTensorlayout>(layout);
+        context->master_graph->feed_external_input(input_images_names, is_labels, input_buffer,
+                                                   roi_xywh, max_width, max_height, channels,
+                                                   external_file_mode, format, eos);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+        return ROCAL_RUNTIME_ERROR;
+    }
+    return ROCAL_OK;
+}
+
 RocalTensorList ROCAL_API_CALL
 rocalGetOutputTensors(RocalContext p_context) {
     auto context = static_cast<Context*>(p_context);

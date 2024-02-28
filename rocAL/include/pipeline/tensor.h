@@ -303,7 +303,13 @@ class Tensor : public rocalTensor {
     void* buffer() { return _mem_handle; }
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
-    void set_mem_handle(void* buffer) { _mem_handle = buffer; }
+    void set_mem_handle(void* buffer) override {
+        if (buffer)
+            _mem_handle = buffer;
+        else {
+            THROW("Invalid buffer pointer passed")
+        }
+    }
 #if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
     unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);
@@ -331,7 +337,7 @@ class Tensor : public rocalTensor {
     int create_from_handle(vx_context context);
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
-    void set_dims(std::vector<size_t> dims) { _info.set_dims(dims); }
+    void set_dims(std::vector<size_t> dims) override { _info.set_dims(dims); }
     unsigned num_of_dims() override { return _info.num_of_dims(); }
     unsigned batch_size() override { return _info.batch_size(); }
     std::vector<size_t> dims() override { return _info.dims(); }

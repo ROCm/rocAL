@@ -20,11 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "fused_crop_decoder.h"
 
 #include <commons.h>
 #include <stdio.h>
 #include <string.h>
+#include "fused_crop_decoder.h"
+#include "libjpeg_extra.h"
+
 
 FusedCropTJDecoder::FusedCropTJDecoder() {
     m_jpegDecompressor = tjInitDecompress();

@@ -25,18 +25,15 @@ THE SOFTWARE.
 #include <string.h>
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <iostream>
-#include <utility>
-
 #include "commons.h"
 #include "exception.h"
+#include "filesystem.h"
+#include "cifar10_meta_data_reader.h"
 
 using namespace std;
 
-namespace filesys = boost::filesystem;
-
-Cifar10MetaDataReader::Cifar10MetaDataReader() {
+Cifar10MetaDataReader::Cifar10MetaDataReader()
+{
     _src_dir = nullptr;
     _entity = nullptr;
     _sub_dir = nullptr;

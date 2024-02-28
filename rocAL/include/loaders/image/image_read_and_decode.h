@@ -33,14 +33,6 @@ THE SOFTWARE.
 #include "timing_debug.h"
 #include "turbo_jpeg_decoder.h"
 
-/**
- * Compute the scaled value of <tt>dimension</tt> using the given scaling
- * factor.  This macro performs the integer equivalent of <tt>ceil(dimension *
- * scalingFactor)</tt>.
- */
-#define TJSCALED(dimension, scalingFactor)                       \
-    ((dimension * scalingFactor.num + scalingFactor.denom - 1) / \
-     scalingFactor.denom)
 
 class ImageReadAndDecode {
    public:
@@ -53,7 +45,8 @@ class ImageReadAndDecode {
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader);
     std::vector<std::vector<float>> &get_batch_random_bbox_crop_coords();
     void set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> batch_crop_coords);
-
+    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos);
     //! Loads a decompressed batch of images into the buffer indicated by buff
     /// \param buff User's buffer provided to be filled with decoded image samples
     /// \param names User's buffer provided to be filled with name of the images decoded
@@ -98,4 +91,5 @@ class ImageReadAndDecode {
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     pCropCord _CropCord;
     RocalRandomCropDecParam *_random_crop_dec_param = nullptr;
+    bool _is_external_source = false;
 };

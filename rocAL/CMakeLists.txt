@@ -35,12 +35,20 @@ find_package(Protobuf QUIET)
 find_package(FFmpeg QUIET)
 find_package(OpenCV QUIET)
 find_package(OpenMP QUIET)
-set(BOOST_COMPONENTS filesystem system)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 find_package(LMDB QUIET)	
 find_package(RapidJSON QUIET)
+find_package(StdFilesystem QUIET)
+find_package(HALF QUIET)
+
+if(DEFINED ENV{ROCM_PATH})
+  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -160,11 +168,6 @@ if(NOT OpenMP_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires OpenMP, Not Found ${ColourReset}")
 endif()
-# BOOST
-if(NOT Boost_FOUND)
-    set(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires Boost, Not Found ${ColourReset}")
-endif()
 # Threads
 if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
@@ -177,6 +180,14 @@ endif()
 if(NOT RapidJSON_FOUND)	
     set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires RapidJSON, Not Found ${ColourReset}")	
+endif()
+if(NOT FILESYSTEM_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires FileSystem, Not Found ${ColourReset}")	
+endif()
+if(NOT HALF_FOUND)	
+    set(BUILD_ROCAL false)	
+    message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
 
 if(${BUILD_ROCAL})
@@ -192,9 +203,6 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
     # Threads
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
-    # BOOST
-    include_directories(${Boost_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
     # TurboJPEG
     include_directories(${TurboJpeg_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
@@ -206,6 +214,11 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})	
     # RapidJSON	
     include_directories(${RapidJSON_INCLUDE_DIRS})
+    # Filesystem
+    include_directories(${FILESYSTEM_INCLUDE_DIRS})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
+    # half
+    include_directories(${HALF_INCLUDE_DIRS})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
@@ -220,6 +233,7 @@ if(${BUILD_ROCAL})
                 include/augmentations/geometry_augmentations/
                 include/decoders/image/
                 include/decoders/video/
+                include/decoders/libjpeg/
                 include/device/
                 include/loaders/
                 include/loaders/image/
@@ -242,7 +256,7 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
-    link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
+    link_directories(${AMDRPP_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
@@ -293,7 +307,14 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with FFmpeg Video Decode Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
     endif()
-
+    # Filesystem
+    if(STD_FILESYSTEM_PRESENT)
+        message("-- ${White}rocAL built with std Filesystem${ColourReset}")
+    elseif(EXPERIMENTAL_FILESYSTEM_PRESENT)
+        message("-- ${White}rocAL built with std experimental Filesystem${ColourReset}")
+    else()
+        message(FATAL_ERROR "No filesystem library found.")
+    endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation
