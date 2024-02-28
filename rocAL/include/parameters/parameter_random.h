@@ -53,7 +53,7 @@ class UniformRand : public Parameter<T> {
     };
 
     std::vector<T> get_array() override {
-        return _elements;
+        return _values;
     }
 
     void renew_value() {
@@ -71,14 +71,14 @@ class UniformRand : public Parameter<T> {
     }
 
     void renew_array() {
-        for (uint i = 0; i < _batch_size; i++) {
+        for (uint i = 0; i < _size; i++) {
             renew_value();
-            _elements[i] = _updated_val;
+            _values[i] = _updated_val;
         }
     }
 
     void renew() override {
-        if (_elements.size()) {
+        if (_values.size()) {
             renew_array();
         } else {
             renew_value();
@@ -94,10 +94,11 @@ class UniformRand : public Parameter<T> {
         return 0;
     }
 
-    void create_array(unsigned size) override {
-        if (_elements.size() == 0)
-            _elements.resize(size);
-        _batch_size = size;
+    void create_array(unsigned vector_size) override {
+        if (_values.size() == 0) {
+            _values.resize(vector_size);
+            _size = vector_size;
+        }
     }
 
     bool single_value() const override {
@@ -108,10 +109,10 @@ class UniformRand : public Parameter<T> {
     T _start;
     T _end;
     T _updated_val;
-    std::vector<T> _elements;
+    std::vector<T> _values;
     std::mt19937 _generator;
     std::mutex _lock;
-    unsigned _batch_size;
+    unsigned _size;
 };
 
 template <typename T>
@@ -193,14 +194,14 @@ struct CustomRand : public Parameter<T> {
     }
 
     void renew_array() {
-        for (uint i = 0; i < _batch_size; i++) {
+        for (uint i = 0; i < _size; i++) {
             renew_value();
-            _elements[i] = _updated_val;
+            _values[i] = _updated_val;
         }
     }
 
     void renew() override {
-        if (_elements.size()) {
+        if (_values.size()) {
             renew_array();
         } else {
             renew_value();
@@ -211,13 +212,14 @@ struct CustomRand : public Parameter<T> {
     };
 
     std::vector<T> get_array() override {
-        return _elements;
+        return _values;
     }
 
-    void create_array(unsigned size) override {
-        if (_elements.size() == 0)
-            _elements.resize(size);
-        _batch_size = size;
+    void create_array(unsigned vector_size) override {
+        if (_values.size() == 0) {
+            _values.resize(vector_size);
+            _size = vector_size;
+        }
     }
 
     bool single_value() const override {
@@ -230,8 +232,8 @@ struct CustomRand : public Parameter<T> {
     std::vector<double> _comltv_dist;  //!< commulative probabilities
     double _mean;
     T _updated_val;
-    std::vector<T> _elements;
+    std::vector<T> _values; //!< The values will be used in parameter_vx.h file after renewing
     std::mt19937 _generator;
     std::mutex _lock;
-    unsigned _batch_size;
+    unsigned _size;
 };
