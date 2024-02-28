@@ -43,12 +43,11 @@ void Node::add_next(const std::shared_ptr<Node> &node) {
     
     if (node->get_id() < 0)
         node->set_id(_graph_id);
-    std::cerr << "Node ID : " << _graph_id << "\n";
     _next.emplace_back(node);
 }
 
 void Node::add_previous(const std::shared_ptr<Node> &node) {
-    for (auto prev_node : _prev) {
+    for (auto& prev_node : _prev) {
         if (prev_node->get_id() != node->get_id())
             THROW("The nodes are interdependent between 2 graphs")
     }

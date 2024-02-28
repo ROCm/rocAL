@@ -44,9 +44,7 @@ class Node {
     bool _is_ssd = false;
     const Roi2DCords *get_src_roi() { return _inputs[0]->info().roi().get_2D_roi(); }
     const Roi2DCords *get_dst_roi() { return _outputs[0]->info().roi().get_2D_roi(); }
-    void set_id(int id) { _graph_id = id; 
-        std::cerr << "Root node ID : " << id << "\n";
-    }
+    void set_id(int id) { _graph_id = id; }
     int get_id() { return _graph_id; }
 
    protected:
