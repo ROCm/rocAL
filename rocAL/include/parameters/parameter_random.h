@@ -53,7 +53,7 @@ class UniformRand : public Parameter<T> {
     };
 
     std::vector<T> get_array() override {
-        return _values;
+        return _param_values;
     }
 
     void renew_value() {
@@ -73,12 +73,12 @@ class UniformRand : public Parameter<T> {
     void renew_array() {
         for (uint i = 0; i < _size; i++) {
             renew_value();
-            _values[i] = _updated_val;
+            _param_values[i] = _updated_val;
         }
     }
 
     void renew() override {
-        if (_values.size()) {
+        if (_param_values.size()) {
             renew_array();
         } else {
             renew_value();
@@ -95,8 +95,8 @@ class UniformRand : public Parameter<T> {
     }
 
     void create_array(unsigned vector_size) override {
-        if (_values.size() == 0) {
-            _values.resize(vector_size);
+        if (_param_values.size() == 0) {
+            _param_values.resize(vector_size);
             _size = vector_size;
         }
     }
@@ -109,7 +109,7 @@ class UniformRand : public Parameter<T> {
     T _start;
     T _end;
     T _updated_val;
-    std::vector<T> _values;
+    std::vector<T> _param_values;
     std::mt19937 _generator;
     std::mutex _lock;
     unsigned _size;
@@ -196,7 +196,7 @@ struct CustomRand : public Parameter<T> {
     void renew_array() {
         for (uint i = 0; i < _size; i++) {
             renew_value();
-            _values[i] = _updated_val;
+            _param_values[i] = _updated_val;
         }
     }
 
@@ -212,12 +212,12 @@ struct CustomRand : public Parameter<T> {
     };
 
     std::vector<T> get_array() override {
-        return _values;
+        return _param_values;
     }
 
     void create_array(unsigned vector_size) override {
-        if (_values.size() == 0) {
-            _values.resize(vector_size);
+        if (_param_values.size() == 0) {
+            _param_values.resize(vector_size);
             _size = vector_size;
         }
     }
@@ -232,7 +232,7 @@ struct CustomRand : public Parameter<T> {
     std::vector<double> _comltv_dist;  //!< commulative probabilities
     double _mean;
     T _updated_val;
-    std::vector<T> _values; //!< The values will be used in parameter_vx.h file after renewing
+    std::vector<T> _param_values; //!< The values will be used in parameter_vx.h file after renewing
     std::mt19937 _generator;
     std::mutex _lock;
     unsigned _size;
