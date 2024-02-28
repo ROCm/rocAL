@@ -36,7 +36,7 @@ class Parameter {
     /// allocates memory for the array with specified size
     virtual void create_array(unsigned size){};
 
-    /// used to fetch the values of the array
+    /// used to fetch the updated param values
     virtual std::vector<T> get_array() { return {}; };
 
     virtual ~Parameter() {}

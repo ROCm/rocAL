@@ -106,12 +106,9 @@ void ParameterFactory::generate_seed() {
 
 int64_t
 ParameterFactory::get_seed_from_seedsequence() {
-    increment_seed_sequence_idx();
-    return _seed_vector[_seed_sequence_idx];
-}
-
-void ParameterFactory::increment_seed_sequence_idx() {
+    auto seed = _seed_vector[_seed_sequence_idx];
     _seed_sequence_idx = (_seed_sequence_idx + 1) % MAX_SEEDS;
+    return seed;
 }
 
 void ParameterFactory::set_seed(unsigned seed) {
