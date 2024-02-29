@@ -260,7 +260,7 @@ void MasterGraph::create_single_graph() {
 void MasterGraph::create_multiple_graphs() {
     // Actual graph creating and calls into adding nodes to graph is deferred and is happening here to enable potential future optimizations
     // Creating a Graph instance for every loader module in the pipeline
-    for (unsigned n = 0; n < _loader_modules.size(); n++) {
+    for (unsigned n = 0; n < _loaders_count; n++) {
         _graphs.emplace_back(std::make_shared<Graph>(_context, _affinity, 0, _cpu_num_threads, _gpu_id));
     }
     for (auto &node : _nodes) {
@@ -288,7 +288,7 @@ MasterGraph::build() {
     _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
-    if (_loader_modules.size() > 1) {
+    if (_loaders_count > 1) {
         create_multiple_graphs();
     } else {
         _loader_module = _loader_modules[0];
@@ -349,7 +349,7 @@ void MasterGraph::release() {
     _tensor_map.clear();
     _ring_buffer.release_gpu_res();
     // shut_down loader:: required for releasing any allocated resourses
-    for (auto loader_module : _loader_modules)
+    for (auto &loader_module : _loader_modules)
         loader_module->shut_down();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
@@ -446,7 +446,7 @@ MasterGraph::reset() {
     if (_randombboxcrop_meta_data_reader != nullptr)
         _randombboxcrop_meta_data_reader->release();
     // resetting loader module to start from the beginning of the media and clear it's internal state/buffers
-    for (auto loader_module : _loader_modules)
+    for (auto &loader_module : _loader_modules)
         loader_module->reset();
     // restart processing of the images
     _first_run = true;
@@ -471,7 +471,7 @@ Timing
 MasterGraph::timing() {
     Timing t;
     // Accumulate the timings from each loader
-    for (auto loader_module : _loader_modules) {
+    for (auto &loader_module : _loader_modules) {
         t = loader_module->timing();
         t.process_time += _process_time.get_timing();
         t.copy_to_output += _convert_time.get_timing();
@@ -1138,11 +1138,11 @@ void MasterGraph::output_routine_multiple_loaders() {
 
 void MasterGraph::start_processing() {
     _processing = true;
-    for (auto loader_module : _loader_modules) {
+    for (auto &loader_module : _loader_modules) {
         // Stores the least remaining count value of all loaders
         _remaining_count = std::min(_remaining_count, static_cast<int>(loader_module->remaining_count()));
     }
-    if (_loader_modules.size() == 1) {
+    if (_loaders_count == 1) {
         _output_thread = std::thread(&MasterGraph::output_routine, this);
     } else {
         _output_thread = std::thread(&MasterGraph::output_routine_multiple_loaders, this);
