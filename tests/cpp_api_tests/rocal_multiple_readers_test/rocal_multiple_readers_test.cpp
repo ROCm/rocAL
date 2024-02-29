@@ -51,82 +51,23 @@ using namespace cv;
 
 using namespace std::chrono;
 
-std::string get_interpolation_type(unsigned int val, RocalResizeInterpolationType &interpolation_type) {
-    switch (val) {
-        case 0: {
-            interpolation_type = ROCAL_NEAREST_NEIGHBOR_INTERPOLATION;
-            return "NearestNeighbor";
-        }
-        case 2: {
-            interpolation_type = ROCAL_CUBIC_INTERPOLATION;
-            return "Bicubic";
-        }
-        case 3: {
-            interpolation_type = ROCAL_LANCZOS_INTERPOLATION;
-            return "Lanczos";
-        }
-        case 4: {
-            interpolation_type = ROCAL_GAUSSIAN_INTERPOLATION;
-            return "Gaussian";
-        }
-        case 5: {
-            interpolation_type = ROCAL_TRIANGULAR_INTERPOLATION;
-            return "Triangular";
-        }
-        default: {
-            interpolation_type = ROCAL_LINEAR_INTERPOLATION;
-            return "Bilinear";
-        }
-    }
-}
-
-std::string get_scaling_mode(unsigned int val, RocalResizeScalingMode &scale_mode) {
-    switch (val) {
-        case 1: {
-            scale_mode = ROCAL_SCALING_MODE_STRETCH;
-            return "Stretch";
-        }
-        case 2: {
-            scale_mode = ROCAL_SCALING_MODE_NOT_SMALLER;
-            return "NotSmaller";
-        }
-        case 3: {
-            scale_mode = ROCAL_SCALING_MODE_NOT_LARGER;
-            return "Notlarger";
-        }
-        default: {
-            scale_mode = ROCAL_SCALING_MODE_DEFAULT;
-            return "Default";
-        }
-    }
-}
-
-int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode);
+int test(const char *path, const char *outName, int rgb, int gpu, int width, int height, int display_all);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: rocal_unittests reader-type <image-dataset-folder> output_image_name <width> <height> test_case gpu=1/cpu=0 rgb=1/grayscale=0 one_hot_labels=num_of_classes/0  display_all=0(display_last_only)1(display_all)\n");
+        printf("Usage: rocal_unittests <image-dataset-folder> output_image_name <width> <height> gpu=1/cpu=0 rgb=1/grayscale=0 display_all=0(display_last_only)1(display_all)\n");
         return -1;
     }
 
     int argIdx = 0;
-    int reader_type = atoi(argv[++argIdx]);
     const char *path = argv[++argIdx];
     const char *outName = argv[++argIdx];
     int width = atoi(argv[++argIdx]);
     int height = atoi(argv[++argIdx]);
     int display_all = 0;
-
     int rgb = 1;  // process color images
     bool gpu = 1;
-    int test_case = 3;  // For Rotate
-    int num_of_classes = 0;
-    int resize_interpolation_type = 1;  // For Bilinear interpolations
-    int resize_scaling_mode = 0;        // For Default scaling mode
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
@@ -135,29 +76,19 @@ int main(int argc, const char **argv) {
         rgb = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
-        num_of_classes = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
         display_all = atoi(argv[++argIdx]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        resize_interpolation_type = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        resize_scaling_mode = atoi(argv[++argIdx]);
-
-    test(test_case, reader_type, path, outName, rgb, gpu, width, height, num_of_classes, display_all, resize_interpolation_type, resize_scaling_mode);
+    test(path, outName, rgb, gpu, width, height, display_all);
 
     return 0;
 }
 
-int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
+int test(const char *path, const char *outName, int rgb, int gpu, int width, int height, int display_all) {
     size_t num_threads = 1;
     unsigned int inputBatchSize = 2;
     int decode_max_width = width;
     int decode_max_height = height;
-    int pipeline_type = -1;
-    std::cout << ">>> test case " << test_case << std::endl;
+
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
 
     RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24
@@ -172,45 +103,21 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>> Getting the path for MIVisionX-data  <<<<<<<<<<<<<<<<*/
-
-    std::string rocal_data_path;
-    if (std::getenv("ROCAL_DATA_PATH"))
-        rocal_data_path = std::getenv("ROCAL_DATA_PATH");
-
-    /*>>>>>>>>>>>>>>>> Creating Rocal parameters  <<<<<<<<<<<<<<<<*/
-
     rocalSetSeed(0);
-
-    // Creating uniformly distributed random objects to override some of the default augmentation parameters
-    RocalIntParam color_temp_adj = rocalCreateIntParameter(-50);
-    RocalIntParam mirror = rocalCreateIntParameter(1);
-
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
 
-#if defined RANDOMBBOXCROP
-    bool all_boxes_overlap = true;
-    bool no_crop = false;
-#endif
-
     RocalTensor decoded_output, decoded_output1;
-    RocalTensorLayout output_tensor_layout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC : RocalTensorLayout::ROCAL_NCHW;
-    RocalTensorOutputType output_tensor_dtype = RocalTensorOutputType::ROCAL_UINT8;
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
-    switch (reader_type) {
-        default: {
-            std::cout << ">>>>>>> Running IMAGE READERS" << std::endl;
-            pipeline_type = 1;
-            rocalCreateLabelReader(handle, path);
-            if (decode_max_height <= 0 || decode_max_width <= 0) {
-                decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
-                decoded_output1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
-            } else {
-                decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-                decoded_output1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-            }
-        } break;
+
+    std::cout << ">>>>>>> Running IMAGE READERS" << std::endl;
+    rocalCreateLabelReader(handle, path);
+    if (decode_max_height <= 0 || decode_max_width <= 0) {
+        decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
+        decoded_output1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
+    } else {
+        decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        decoded_output1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
     }
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
@@ -218,28 +125,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         return -1;
     }
 
-    int resize_w = width, resize_h = height;  // height and width
-
-    RocalTensor input = decoded_output;
-    RocalTensor input_1 = decoded_output1;
-    // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50) && rgb == 0) {
-        std::cout << "Not a valid option! Exiting!\n";
-        return -1;
-    }
-    switch (test_case) {
-        case 1: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalBrightness" << std::endl;
-            output = rocalBrightness(handle, input, true);
-            output = rocalGamma(handle, input_1, true);
-        } break;
-        default:
-            std::cout << "Not a valid option! Exiting!\n";
-            return -1;
-    }
+    std::cout << ">>>>>>> Running rocalBrightness" << std::endl;
+    output = rocalBrightness(handle, decoded_output, true);
+    std::cout << ">>>>>>> Running rocalGamma" << std::endl;
+    output = rocalGamma(handle, decoded_output1, true);
 
     // Calling the API to verify and build the augmentation graph
     rocalVerify(handle);
@@ -248,18 +139,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         return -1;
     }
 
-    auto number_of_outputs = rocalGetAugmentationBranchCount(handle);
-    std::cout << "\n\nAugmented copies count " << number_of_outputs << "\n";
-
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
-    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
-    int w = rocalGetOutputWidth(handle);
-    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
-    const unsigned number_of_cols = 1; //1920 / w;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     std::vector<cv::Mat> mat_output, mat_input;
     cv::Mat mat_color;
-    int col_counter = 0;
     if(DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
     printf("Going to process images\n");
@@ -272,10 +155,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         index++;
         if (rocalRun(handle) != 0)
             break;
-        int numOfClasses = 0;
-        int image_name_length[inputBatchSize];
-        auto last_colot_temp = rocalGetIntValue(color_temp_adj);
-        rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
 
@@ -283,7 +162,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
 
-        for(int idx = 0; idx < output_tensor_list->size(); idx++)
+        for(unsigned idx = 0; idx < output_tensor_list->size(); idx++)
         {
             auto output_tensor = output_tensor_list->at(idx);
             int h = output_tensor->shape().at(1) * output_tensor->dims().at(0);
@@ -328,7 +207,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
-    for (int i = 0; i < mat_input.size(); i++) {
+    for (unsigned i = 0; i < mat_input.size(); i++) {
         mat_input[i].release();
         mat_output[i].release();
     }
