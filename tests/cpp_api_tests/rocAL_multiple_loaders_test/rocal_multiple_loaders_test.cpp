@@ -47,7 +47,6 @@ using namespace cv;
 #endif
 
 #define DISPLAY 0
-// #define RANDOMBBOXCROP
 
 using namespace std::chrono;
 
@@ -56,7 +55,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: rocal_unittests <image-dataset-folder> output_image_name <width> <height> gpu=1/cpu=0 rgb=1/grayscale=0 display_all=0(display_last_only)1(display_all)\n");
+        printf("Usage: rocal_multiple_loaders_test <image-dataset-folder> output_image_name <width> <height> gpu=1/cpu=0 rgb=1/grayscale=0 display_all=0(display_last_only)1(display_all)\n");
         return -1;
     }
 
@@ -143,15 +142,14 @@ int test(const char *path, const char *outName, int rgb, int gpu, int width, int
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     std::vector<cv::Mat> mat_output, mat_input;
     cv::Mat mat_color;
-    if(DISPLAY)
+    if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
     printf("Going to process images\n");
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
     bool first_run = true;
-    while (rocalGetRemainingImages(handle) >= inputBatchSize)
-    {
+    while (rocalGetRemainingImages(handle) >= inputBatchSize) {
         index++;
         if (rocalRun(handle) != 0)
             break;
@@ -162,39 +160,34 @@ int test(const char *path, const char *outName, int rgb, int gpu, int width, int
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
 
-        for(unsigned idx = 0; idx < output_tensor_list->size(); idx++)
-        {
+        for (unsigned idx = 0; idx < output_tensor_list->size(); idx++) {
             auto output_tensor = output_tensor_list->at(idx);
             int h = output_tensor->shape().at(1) * output_tensor->dims().at(0);
             int w = output_tensor->shape().at(0);
-            if(first_run) {
+            if (first_run) {
                 mat_input.emplace_back(cv::Mat(h, w, cv_color_format));
-                mat_output.emplace_back(cv::Mat(h, w, cv_color_format));   
+                mat_output.emplace_back(cv::Mat(h, w, cv_color_format));
             }
-            
+
             output_tensor->copy_data(mat_input[idx].data, ROCAL_MEMCPY_HOST);
             mat_input[idx].copyTo(mat_output[idx](cv::Rect(0, 0, w, h)));
 
-            std::string out_filename = std::string(outName) + ".png";   // in case the user specifies non png filename
+            std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
             if (display_all)
-                out_filename = std::string(outName) + std::to_string(index) + std::to_string(idx) + ".png";   // in case the user specifies non png filename
+                out_filename = std::string(outName) + std::to_string(index) + std::to_string(idx) + ".png";  // in case the user specifies non png filename
 
-            if (color_format == RocalImageColor::ROCAL_COLOR_RGB24)
-            {
+            if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                 cv::cvtColor(mat_output[idx], mat_color, CV_RGB2BGR);
-                if(DISPLAY)
+                if (DISPLAY)
                     cv::imshow("output", mat_output[idx]);
                 else
                     cv::imwrite(out_filename, mat_color, compression_params);
-            }
-            else
-            {
-                if(DISPLAY)
-                cv::imshow("output", mat_output[idx]);
+            } else {
+                if (DISPLAY)
+                    cv::imshow("output", mat_output[idx]);
                 else
-                cv::imwrite(out_filename, mat_output[idx], compression_params);
+                    cv::imwrite(out_filename, mat_output[idx], compression_params);
             }
-            // col_counter = (col_counter + 1) % number_of_cols;
         }
         first_run = false;
     }

@@ -25,7 +25,7 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.5)
 
-project (rocal_multiple_readers_test)
+project (rocal_multiple_loaders_test)
 set(CMAKE_CXX_STANDARD 14)
 
 # ROCm Path
