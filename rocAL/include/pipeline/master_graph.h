@@ -155,6 +155,7 @@ class MasterGraph {
     void notify_user_thread();
     /// no_more_processed_data() is logically linked to the notify_user_thread() and is used to tell the user they've already consumed all the processed tensors
     bool no_more_processed_data();
+    // is_out_of_data() is called to check the remaining batch count from each loader module, if any of the loader module has consumed all the batches it returns true.
     bool is_out_of_data();
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
@@ -182,7 +183,7 @@ class MasterGraph {
     DeviceManager _device;                                                        //!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
-    std::vector<std::shared_ptr<Graph>> _graphs;
+    std::vector<std::shared_ptr<Graph>> _graphs;                                 //!<Keeps a list of the Graph instances, a graph is created for each loader
     RocalAffinity _affinity;
     size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
     const int _gpu_id;                                                            //!< Defines the device id used for processing
@@ -198,7 +199,7 @@ class MasterGraph {
     bool _first_run = true;
     bool _processing;                                                             //!< Indicates if internal processing thread should keep processing or not
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
-    int _remaining_count = INT_MAX;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
+    int _remaining_count = INT_MAX;                                               //!< Keeps the count of remaining tensors yet to be processed for the user
     bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;

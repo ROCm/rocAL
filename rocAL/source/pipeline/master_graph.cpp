@@ -259,11 +259,10 @@ void MasterGraph::create_single_graph() {
 
 void MasterGraph::create_multiple_graphs() {
     // Actual graph creating and calls into adding nodes to graph is deferred and is happening here to enable potential future optimizations
-    int num_of_graphs = _loader_modules.size();
-    for (int n = 0; n < num_of_graphs; n++) {
+    // Creating a Graph instance for every loader module in the pipeline
+    for (unsigned n = 0; n < _loader_modules.size(); n++) {
         _graphs.emplace_back(std::make_shared<Graph>(_context, _affinity, 0, _cpu_num_threads, _gpu_id));
     }
-    std::cerr << "Graph size : " << _graphs.size() << "\n";
     for (auto &node : _nodes) {
         // Any tensor not yet created can be created as virtual tensor
         for (auto &tensor : node->output())
@@ -273,8 +272,8 @@ void MasterGraph::create_multiple_graphs() {
             }
         node->create(_graphs[node->get_id()]);
     }
-    
-    for (auto& graph : _graphs)
+
+    for (auto &graph : _graphs)
         graph->verify();
 }
 
@@ -471,6 +470,7 @@ MasterGraph::mem_type() {
 Timing
 MasterGraph::timing() {
     Timing t;
+    // Accumulate the timings from each loader
     for (auto loader_module : _loader_modules) {
         t = loader_module->timing();
         t.process_time += _process_time.get_timing();
@@ -914,6 +914,7 @@ MasterGraph::get_output_tensors() {
 }
 
 bool MasterGraph::is_out_of_data() {
+    // If any of the loader module's remaining count is less than the batch size, return true
     for (auto loader_module : _loader_modules) {
         if (loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
             return true;
@@ -1025,8 +1026,7 @@ void MasterGraph::output_routine() {
 }
 
 void MasterGraph::output_routine_multiple_loaders() {
-    INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
-    std::cerr << "Output routine with multiple loaders\n";
+    INFO("Output routine for multiple loaders started with " + TOSTR(_remaining_count) + " to load");
     try {
         while (_processing) {
             if (is_out_of_data()) {
@@ -1053,14 +1053,16 @@ void MasterGraph::output_routine_multiple_loaders() {
 
             if (!_processing)
                 break;
-            auto full_batch_image_names = _loader_modules[0]->get_id(); // Temp change
-            auto decode_image_info = _loader_modules[0]->get_decode_image_info();   // Temp change
-            auto crop_image_info = _loader_modules[0]->get_crop_image_info();   // Temp change
+            auto full_batch_image_names = _loader_modules[0]->get_id();
+            /*  TODO - Will be fixed with multiple readers changes
+            auto decode_image_info = _loader_modules[0]->get_decode_image_info();
+            auto crop_image_info = _loader_modules[0]->get_crop_image_info();
+            */
 
             if (full_batch_image_names.size() != _user_batch_size)
                 WRN("Internal problem: names count " + TOSTR(full_batch_image_names.size()))
             
-            /*
+            /*  TODO - Will be fixed with multiple readers changes
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
                 _meta_data_reader->lookup(full_batch_image_names);
@@ -1084,7 +1086,8 @@ void MasterGraph::output_routine_multiple_loaders() {
 
             update_node_parameters();
             pMetaDataBatch output_meta_data = nullptr;
-            /* if (_augmented_meta_data) {
+            /* TODO - Will be fixed with multiple readers changes
+            if (_augmented_meta_data) {
                 output_meta_data = _augmented_meta_data->clone(!_augmentation_metanode);  // copy the data if metadata is not processed by the nodes, else create an empty instance
                 if (_meta_data_graph) {
                     if (_is_random_bbox_crop) {
@@ -1105,7 +1108,8 @@ void MasterGraph::output_routine_multiple_loaders() {
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 _internal_tensor_list[idx]->copy_roi(write_roi_buffers[idx]);   // Copy ROI from internal tensor's buffer to ring buffer
 
-            /*_bencode_time.start();
+            /* TODO - Will be fixed with multiple readers changes
+            _bencode_time.start();
             if (_is_box_encoder) {
                 auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
 #if ENABLE_HIP
@@ -1135,6 +1139,7 @@ void MasterGraph::output_routine_multiple_loaders() {
 void MasterGraph::start_processing() {
     _processing = true;
     for (auto loader_module : _loader_modules) {
+        // Stores the least remaining count value of all loaders
         _remaining_count = std::min(_remaining_count, static_cast<int>(loader_module->remaining_count()));
     }
     if (_loader_modules.size() == 1) {
