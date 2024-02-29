@@ -26,7 +26,6 @@
 import rocal_pybind as b
 import amd.rocal.types as types
 import numpy as np
-import cupy as cp
 import ctypes
 import functools
 import inspect
@@ -161,11 +160,11 @@ class Pipeline(object):
             else:  # torch tensor
                 return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 0)
         else:
-            if (isinstance(array, cp.ndarray)):
-                b.getCupyOneHotEncodedLabels(
-                    self._handle, array.data.ptr, self._num_classes, 1)
-            else:  # torch tensor
+            # torch tensor
                 return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 1)
+    
+    def get_one_hot_encoded_labels_cupy(self, array):
+        return b.getCupyOneHotEncodedLabels(self._handle, array.data.ptr, self._num_classes)
 
     def set_outputs(self, *output_list):
         b.setOutputs(self._handle, len(output_list), output_list)

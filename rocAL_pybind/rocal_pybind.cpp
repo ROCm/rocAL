@@ -129,6 +129,20 @@ py::object wrapperRocalExternalSourceFeedInput(
     return py::cast<py::none>(Py_None);
 }
 
+    py::object wrapper_one_hot_label_copy(RocalContext context, py::object p , unsigned num_of_classes, int dest) {
+        auto ptr = ctypes_void_ptr(p);
+        // call pure C++ function
+        rocalGetOneHotImageLabels(context, ptr, num_of_classes, dest);
+        return py::cast<py::none>(Py_None);
+    }
+
+    py::object wrapper_cupy_one_hot_label_copy(RocalContext context, size_t array_ptr, unsigned num_of_classes) {
+        void * ptr = (void*) array_ptr;
+        // call pure C++ function
+        rocalGetOneHotImageLabels(context, ptr, num_of_classes, 1);
+        return py::cast<py::none>(Py_None);
+    }
+
 std::unordered_map<int, std::string> rocalToPybindLayout = {
     {0, "NHWC"},
     {1, "NCHW"},
@@ -583,6 +597,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
             {sizeof(float)}));
         return std::make_pair(labels_array, bboxes_array);
     });
+    m.def("getOneHotEncodedLabels", &wrapper_one_hot_label_copy, py::return_value_policy::reference);
+    m.def("getCupyOneHotEncodedLabels", &wrapper_cupy_one_hot_label_copy, py::return_value_policy::reference);
     // rocal_api_data_loaders.h
     m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);

@@ -157,8 +157,13 @@ class ROCALGenericIterator(object):
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:
-                self.loader.get_one_hot_encoded_labels(
-                    self.labels, self.device)
+                #cpu
+                if self.device == "cpu":
+                    self.loader.get_one_hot_encoded_labels(
+                        self.labels, self.device)
+                else:
+                    self.loader.get_one_hot_encoded_labels_cupy(
+                        self.labels)
                 self.labels_tensor = self.labels.reshape(
                     -1, self.batch_size, self.loader._num_classes)
             else:

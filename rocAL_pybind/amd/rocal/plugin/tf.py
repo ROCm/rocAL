@@ -189,10 +189,11 @@ class ROCALGenericIteratorDetection(object):
                 else:
                     self.labels = cp.zeros(
                         (self.bs) * (self.loader._num_classes), dtype="int32")
-                    self.loader.get_one_hot_encoded_labels(
-                        self.labels, device="gpu")
+                    self.loader.get_one_hot_encoded_labels_cupy(
+                        self.labels)
                     self.labels = cp.reshape(
                         self.labels, (-1, self.bs, self.loader._num_classes))
+                    
             else:
                 self.labels = self.loader.get_image_labels()
 
