@@ -244,6 +244,8 @@ void
         THROW("Invalid rocal context passed to rocalGetOneHotImageLabels")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
+    auto meta_data_buffers = context->master_graph->get_meta_read_buffer_at(0);
+    auto labels = meta_data.second->get_labels_batch();
     if (!meta_data.second) {
         WRN("No label has been loaded for this output image")
         return;
@@ -255,18 +257,16 @@ void
     int labels_buf[meta_data_batch_size];
     int one_hot_encoded[meta_data_batch_size * numOfClasses];
     memset(one_hot_encoded, 0, sizeof(int) * meta_data_batch_size * numOfClasses);
-    memcpy(labels_buf, meta_data.second->get_labels_batch().data(), sizeof(int) * meta_data_batch_size);
+    memcpy(labels_buf, meta_data_buffers,  sizeof(int) * meta_data_batch_size);
 
     for (uint i = 0; i < meta_data_batch_size; i++) {
         int label_index = labels_buf[i];
-        if (label_index > 0 && label_index <= numOfClasses) {
+        if (label_index > 0 && label_index <= numOfClasses)
             one_hot_encoded[(i * numOfClasses) + label_index - 1] = 1;
-
-        } else if (label_index == 0) {
+        else if (label_index == 0)
             one_hot_encoded[(i * numOfClasses) + numOfClasses - 1] = 1;
-        }
     }
-    if (dest == 0)  // HOST DESTINATION
+    if (dest == 0) // HOST DESTINATION
         memcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * numOfClasses);
     else {
 #if ENABLE_HIP

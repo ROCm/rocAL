@@ -689,7 +689,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         index++;
         if (rocalRun(handle) != 0)
             break;
-        int numOfClasses = 0;
         int image_name_length[inputBatchSize];
         switch (pipeline_type) {
             case 1: {   // classification pipeline
@@ -697,30 +696,28 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
                 char img_name[img_size];
-                numOfClasses = num_of_classes;
-                int label_one_hot_encoded[inputBatchSize * numOfClasses];
+                int label_one_hot_encoded[inputBatchSize * num_of_classes];
                 rocalGetImageName(handle, img_name);
-                /*if (num_of_classes != 0)
-                {
-                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded, numOfClasses,0);
-                }*/
+                if (num_of_classes != 0) {
+                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded, num_of_classes, 0);
+                }
                 std::cerr << "\nPrinting image names of batch: " << img_name << "\n";
                 for (unsigned int i = 0; i < inputBatchSize; i++) {
                     std::cerr << "\t Printing label_id : " << label_id[i] << std::endl;
-                    /*if(num_of_classes != 0)
+                    if(num_of_classes != 0)
                     {
                         std::cout << "One Hot Encoded labels:"<<"\t";
-                        for (int j = 0; j < numOfClasses; j++)
+                        for (int j = 0; j < num_of_classes; j++)
                         {
-                            int idx_value = label_one_hot_encoded[(i*numOfClasses)+j];
+                            int idx_value = label_one_hot_encoded[(i*num_of_classes)+j];
                             if(idx_value == 0)
-                                std::cout << idx_value;
+                                std::cout << idx_value << "\t";
                             else
                             {
-                                std::cout << idx_value;
+                                std::cout << idx_value << "\t";
                             }
                         }
-                    }*/
+                    }
                     std::cout << "\n";
                 }
             } break;

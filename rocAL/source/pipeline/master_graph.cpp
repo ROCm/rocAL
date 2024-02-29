@@ -1383,6 +1383,12 @@ size_t MasterGraph::bounding_box_batch_count(pMetaDataBatch meta_data_batch) {
     return size;
 }
 
+void* MasterGraph::get_meta_read_buffer_at(uint i) {
+    if (_ring_buffer.level() == 0)
+        THROW("No meta data has been loaded")
+    return _ring_buffer.get_meta_read_buffers()[i];
+}
+
 TensorList *MasterGraph::labels_meta_data() {
     if (_external_source_reader)
         return &_labels_tensor_list;
