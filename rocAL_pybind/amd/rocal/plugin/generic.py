@@ -157,7 +157,6 @@ class ROCALGenericIterator(object):
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:
-                #cpu
                 if self.device == "cpu":
                     self.loader.get_one_hot_encoded_labels(
                         self.labels, self.device)
