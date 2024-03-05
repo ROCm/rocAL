@@ -1,5 +1,3 @@
-<p align="center"><img width="70%" src="data/rocAL_logo.png" /></p>
-
 # rocAL User Guide
 
 Today’s deep learning applications require loading and pre-processing data efficiently to achieve high processing throughput.  This requires creating efficient processing pipelines fully utilizing the underlying hardware capabilities. Some examples are load and decode data, do a variety of augmentations, color-format conversions, etc.
