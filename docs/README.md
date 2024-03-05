@@ -7,12 +7,12 @@ AMD ROCm Augmentation Library (rocAL) is designed to efficiently do such process
 These pipelines are programmable by the user using both C++ and Python APIs.
 
 ## User Guide Chapters
-- [Chapter 1 - Overview](user_guide/ch1.md)
-- [Chapter 2 - Architecture Components](user_guide/ch2.md)
-- [Chapter 3 - Installation](user_guide/ch3.md)
-- [Chapter 4 - Using with Python API](user_guide/ch4.md)
-- [Chapter 5 - Framework Integration](user_guide/ch5.md)
-- [Chapter 6 - Using with C++ API](user_guide/ch6.md)
+* [Chapter 1 - Overview](user_guide/ch1.md)
+* [Chapter 2 - Architecture Components](user_guide/ch2.md)
+* [Chapter 3 - Installation](user_guide/ch3.md)
+* [Chapter 4 - Using with Python API](user_guide/ch4.md)
+* [Chapter 5 - Framework Integration](user_guide/ch5.md)
+* [Chapter 6 - Using with C++ API](user_guide/ch6.md)
 
 ## Key Components of rocAL
 
@@ -95,12 +95,15 @@ amd.rocal.types are enums exported from C++ API to python. Some examples include
 * Step 2: Build [MIVisionX Pytorch docker](../docker/README.md)
 * Step 3: Install rocAL python_pybind plugin as described above
 * Step 4: Clone [MLPerf](https://github.com/rrawther/MLPerf-mGPU) branch and checkout mlperf-v1.1-rocal branch
-```
+
+``` bash
 git clone -b mlperf-v1.1-rocal https://github.com/rrawther/MLPerf-mGPU
 ```
+
 * Step 5: Modify RN50_AMP_LARS_8GPUS_NCHW.sh or RN50_AMP_LARS_8GPUS_NHWC.sh to reflect correct path for imagenet directory
 * Step 8: Run RN50_AMP_LARS_8GPUS_NCHC.sh or RN50_AMP_LARS_8GPUS_NHWC.sh
-```
+
+``` bash
 ./RN50_AMP_LARS_8GPUS_NCHW.sh 
 (or)
 ./RN50_AMP_LARS_8GPUS_NHWC.sh
@@ -110,9 +113,11 @@ git clone -b mlperf-v1.1-rocal https://github.com/rrawther/MLPerf-mGPU
 
 * Refer to the [docker](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#docker) page for prerequisites and information on building the docker
 * Step 1: Run the docker image*
-````
+  
+``` bash
 sudo docker run -it -v <Path-To-Data-HostSystem>:/data -v /<Path-to-GitRepo>:/dockerx -w /dockerx --privileged --device=/dev/kfd --device=/dev/dri --group-add video --shm-size=4g --ipc="host" --network=host <docker-name>
-````
+```
+
   * Optional: Map localhost directory on the docker image
     * option to map the localhost directory with imagenet dataset folder to be accessed on the docker image.
     * usage: -v {LOCAL_HOST_DIRECTORY_PATH}:{DOCKER_DIRECTORY_PATH}
