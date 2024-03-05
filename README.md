@@ -227,7 +227,7 @@ Please submit your feature requests, and bug reports on the [GitHub issues](http
 
 ### Changelog
 
-Review all notable [changes](CHANGELOG.md#changelog) with the latest release
+Review all notable [changes](https://github.com/ROCm/rocAL/blob/develop/CHANGELOG.md) with the latest release
 
 ### Tested Configurations
 
