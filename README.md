@@ -1,7 +1,5 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-<p align="center"><img width="70%" src="docs/data/rocAL_logo.png" /></p>
-
 The AMD ROCm Augmentation Library (**rocAL**) is designed to efficiently decode and process images and videos from a variety of storage formats and modify them through a processing graph programmable by the user. rocAL currently provides C API.
 For more details, go to [rocAL user guide](docs) page.
 
