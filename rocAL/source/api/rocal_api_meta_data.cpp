@@ -245,7 +245,6 @@ void
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     auto meta_data_buffers = context->master_graph->get_meta_read_buffer_at(0);
-    auto labels = meta_data.second->get_labels_batch();
     if (!meta_data.second) {
         WRN("No label has been loaded for this output image")
         return;

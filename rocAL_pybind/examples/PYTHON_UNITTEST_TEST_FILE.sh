@@ -23,10 +23,10 @@ golden_output_path=${ROCAL_DATA_PATH}/rocal_data/GoldenOutputsTensor/
 
 display=0
 batch_size=2
-device=1
+device=0
 width=640 
 height=480
-device_name="hip"
+device_name="host"
 rgb_name=("gray" "rgb")
 rgb=1
 dev_start=0
@@ -64,11 +64,15 @@ mkdir "$output_path"
 
 for ((device=dev_start;device<=dev_end;device++))
 do 
-
+    if [ $device -eq 1 ]
+    then 
         device_name="hip"
         backend_arg=rocal-gpu
         echo "Running HIP Backend..."
-
+    else
+        backend_arg=no-rocal-gpu
+        echo "Running HOST Backend..."
+    fi
     for ((rgb=rgb_start;rgb<=rgb_end;rgb++))
     do 
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$image_path" --augmentation-name lens_correction --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}LensCorrection_${rgb_name[$rgb]}_${device_name}"
