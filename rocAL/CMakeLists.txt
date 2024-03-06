@@ -41,6 +41,10 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 
 if(DEFINED ENV{ROCM_PATH})
   set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -189,6 +193,12 @@ if(NOT HALF_FOUND)
     set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
+if (${libsnd_LIBS} STREQUAL "libsnd_LIBS-NOTFOUND")
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires libsnd (sndfile), but it was not found. Try specifying its location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
+else()
+    message(STATUS "Found libsnd: ${libsnd_LIBS}")
+endif()
 
 if(${BUILD_ROCAL})
     # AMD RPP
@@ -219,6 +229,9 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
     # half
     include_directories(${HALF_INCLUDE_DIRS})
+    # SndFile
+    include_directories(${SndFile_INCLUDE_DIRS})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} sndfile)
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
@@ -231,13 +244,16 @@ if(${BUILD_ROCAL})
                 include/augmentations/color_augmentations/
                 include/augmentations/effects_augmentations/
                 include/augmentations/geometry_augmentations/
+                include/augmentations/audio_augmentations/
                 include/decoders/image/
                 include/decoders/video/
+                include/decoders/audio/
                 include/decoders/libjpeg/
                 include/device/
                 include/loaders/
                 include/loaders/image/
                 include/loaders/video/
+                include/loaders/audio/
                 include/meta_data/
                 include/parameters/
                 include/pipeline/

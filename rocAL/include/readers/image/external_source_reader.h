@@ -58,6 +58,9 @@ class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id; }
 
+    //! Returns the name of the latest file_path opened
+    std::string file_path() override { return _last_file_name; }
+
     //! Return batch_size() for count_items unless end_of_sequence has been signalled
     unsigned count_items() override;
 
@@ -91,7 +94,7 @@ class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
     unsigned _curr_file_idx;
     FILE* _current_fPtr;
     unsigned _current_file_size;
-    std::string _last_id;
+    std::string _last_id, _last_file_name;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.

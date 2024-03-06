@@ -54,7 +54,10 @@ class SequenceFileSourceReader : public Reader {
     void reset() override;
 
     //! Returns the name of the latest file opened
-    std::string id() override { return _last_id; };
+    std::string id() override { return _last_id; }
+
+    //! Returns the name of the latest file_path opened
+    std::string file_path() override { return _last_file_name; }
 
     unsigned count_items() override;
 
@@ -80,7 +83,7 @@ class SequenceFileSourceReader : public Reader {
     unsigned _curr_file_idx;
     FILE *_current_fPtr;
     unsigned _current_file_size;
-    std::string _last_id;
+    std::string _last_id, _last_file_name;
     std::vector<std::string> _last_sequence;
     size_t _sequence_length;
     size_t _step;

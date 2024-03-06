@@ -19,20 +19,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+#include "audio_decoder_factory.h"
+#include "decoder_factory.h"
+#include <audio_decoder.h>
+#include <sndfile_decoder.h>
+#include "commons.h"
 
-#pragma once
-#include <list>
+std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
+    switch (config.type()) {
+        case DecoderType::SNDFILE:
+            return std::make_shared<SndFileDecoder>();
+        default:
+            THROW("Unsupported decoder type " + TOSTR(config.type()));
+    }
+}
 
-#include "meta_data_graph.h"
-#include "meta_node.h"
-
-typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh;
-
-class BoundingBoxGraph : public MetaDataGraph {
-   public:
-    void process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
-    void update_meta_data(pMetaDataBatch meta_data, decoded_sample_info decode_image_info) override;
-    void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_sample_info decoded_sample_info, crop_image_info crop_image_info) override;
-    void update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float> &means, std::vector<float> &stds, float *encoded_boxes_data, int *encoded_labels_data) override;
-    void update_box_iou_matcher(BoxIouMatcherInfo &iou_matcher_info, int *matches_idx_buffer, pMetaDataBatch full_batch_meta_data) override;
-};

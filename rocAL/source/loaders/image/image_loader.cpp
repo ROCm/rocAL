@@ -152,7 +152,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_tensor_width = _output_tensor->info().max_shape().at(0);
     _max_tensor_height = _output_tensor->info().max_shape().at(1);
-    _decoded_img_info._image_names.resize(_batch_size);
+    _decoded_img_info._sample_names.resize(_batch_size);
     _decoded_img_info._roi_height.resize(_batch_size);
     _decoded_img_info._roi_width.resize(_batch_size);
     _decoded_img_info._original_height.resize(_batch_size);
@@ -187,7 +187,7 @@ ImageLoader::load_routine() {
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _image_loader->load(data,
-                                              _decoded_img_info._image_names,
+                                              _decoded_img_info._sample_names,
                                               _max_tensor_width,
                                               _max_tensor_height,
                                               _decoded_img_info._roi_width,
@@ -201,7 +201,7 @@ ImageLoader::load_routine() {
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
                     _circ_buff.set_crop_image_info(_crop_image_info);
                 }
-                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.set_sample_info(_decoded_img_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }
@@ -259,11 +259,11 @@ ImageLoader::update_output_image() {
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_img_info = _circ_buff.get_image_info();
+    _output_decoded_img_info = _circ_buff.get_sample_info();
     if (_randombboxcrop_meta_data_reader) {
         _output_cropped_img_info = _circ_buff.get_cropped_image_info();
     }
-    _output_names = _output_decoded_img_info._image_names;
+    _output_names = _output_decoded_img_info._sample_names;
     _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
@@ -307,7 +307,7 @@ std::vector<std::string> ImageLoader::get_id() {
     return _output_names;
 }
 
-decoded_image_info ImageLoader::get_decode_image_info() {
+decoded_sample_info ImageLoader::get_decode_sample_info() {
     return _output_decoded_img_info;
 }
 

@@ -21,18 +21,29 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <list>
+#include <memory>
+#include <map>
+#include "sndfile_decoder.h"
+#include "reader_factory.h"
+#include "timing_debug.h"
+#include "loader_module.h"
 
-#include "meta_data_graph.h"
-#include "meta_node.h"
-
-typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh;
-
-class BoundingBoxGraph : public MetaDataGraph {
-   public:
-    void process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
-    void update_meta_data(pMetaDataBatch meta_data, decoded_sample_info decode_image_info) override;
-    void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_sample_info decoded_sample_info, crop_image_info crop_image_info) override;
-    void update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float> &means, std::vector<float> &stds, float *encoded_boxes_data, int *encoded_labels_data) override;
-    void update_box_iou_matcher(BoxIouMatcherInfo &iou_matcher_info, int *matches_idx_buffer, pMetaDataBatch full_batch_meta_data) override;
+enum class AudioSourceEvaluatorStatus {
+    OK = 0,
+    UNSUPPORTED_DECODER_TYPE,
+    UNSUPPORTED_STORAGE_TYPE,
 };
+
+class AudioSourceEvaluator {
+public:
+    AudioSourceEvaluatorStatus create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
+    void find_max_dimension();
+    size_t max_samples();
+    size_t max_channels();
+private:
+    int _samples_max = 0, _channels_max = 0;
+    std::shared_ptr<AudioDecoder> _decoder;
+    std::shared_ptr<Reader> _reader;
+    std::string _input_path;
+};
+
