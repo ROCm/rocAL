@@ -260,10 +260,11 @@ void
 
     for (uint i = 0; i < meta_data_batch_size; i++) {
         int label_index = labels_buf[i];
-        if (label_index > 0 && label_index <= num_of_classes)
-            one_hot_encoded[(i * num_of_classes) + label_index - 1] = 1;
-        else if (!label_index)
+        if (label_index > 0 && label_index <= num_of_classes) {
+            one_hot_encoded[(i * num_of_classes) + label_index - 1] = 1; 
+        } else if (!label_index) {
             one_hot_encoded[(i * num_of_classes) + num_of_classes - 1] = 1;
+        }
     }
     if (dest == 0) // HOST DESTINATION
         memcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * num_of_classes);

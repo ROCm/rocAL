@@ -193,7 +193,7 @@ class ROCALGenericIterator(object):
         else:
             if self.loader._one_hot_encoding:
                 self.loader.get_one_hot_encoded_labels(
-                    self.labels_tensor, self.device)
+                    ctypes.c_void_p(self.labels_tensor.data_ptr()), self.device)
                 self.labels_tensor = self.labels_tensor.reshape(
                     -1, self.batch_size, self.loader._num_classes)
             else:

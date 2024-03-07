@@ -24,6 +24,7 @@
 
 import numpy as np
 import cupy as cp
+import ctypes
 import rocal_pybind as b
 import amd.rocal.types as types
 
@@ -183,14 +184,15 @@ class ROCALGenericIteratorDetection(object):
                     self.labels = np.zeros(
                         (self.bs) * (self.loader._num_classes), dtype="int32")
                     self.loader.get_one_hot_encoded_labels(
-                        self.labels, device="cpu")
+                        self.labels.ctypes.data_as(
+                    ctypes.c_void_p), device="cpu")
                     self.labels = np.reshape(
                         self.labels, (-1, self.bs, self.loader._num_classes))
                 else:
                     self.labels = cp.zeros(
                         (self.bs) * (self.loader._num_classes), dtype="int32")
                     self.loader.get_one_hot_encoded_labels_cupy(
-                        self.labels)
+                        self.labels.data.ptr)
                     self.labels = cp.reshape(
                         self.labels, (-1, self.bs, self.loader._num_classes))
                     
