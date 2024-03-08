@@ -49,7 +49,7 @@ class ImageLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
+    decoded_sample_info get_decode_sample_info() override;
     crop_image_info get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
@@ -74,9 +74,9 @@ class ImageLoader : public LoaderModule {
     size_t _batch_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_image_info _decoded_img_info;
+    decoded_sample_info _decoded_img_info;
     crop_image_info _crop_image_info;
-    decoded_image_info _output_decoded_img_info;
+    decoded_sample_info _output_decoded_img_info;
     crop_image_info _output_cropped_img_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;

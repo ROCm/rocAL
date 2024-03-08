@@ -31,8 +31,8 @@ THE SOFTWARE.
 #include "commons.h"
 #include "device_manager.h"
 #include "device_manager_hip.h"
-struct decoded_image_info {
-    std::vector<std::string> _image_names;
+struct decoded_sample_info {
+    std::vector<std::string> _sample_names;
     std::vector<uint32_t> _roi_width;
     std::vector<uint32_t> _roi_height;
     std::vector<uint32_t> _original_width;
@@ -54,9 +54,9 @@ class CircularBuffer {
     void unblock_writer();  // Unblocks the thread currently waiting on get_write_buffer
     void push();            // The latest write goes through, effectively adds one element to the buffer
     void pop();             // The oldest write will be erased and overwritten in upcoming writes
-    void set_image_info(const decoded_image_info& info) { _last_image_info = info; }
+    void set_sample_info(const decoded_sample_info& info) { _last_sample_info = info; }
     void set_crop_image_info(const crop_image_info& info) { _last_crop_image_info = info; }
-    decoded_image_info& get_image_info();
+    decoded_sample_info& get_sample_info();
     crop_image_info& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();
@@ -73,8 +73,8 @@ class CircularBuffer {
     bool full();
     bool empty();
     size_t _buff_depth;
-    decoded_image_info _last_image_info;
-    std::queue<decoded_image_info> _circ_image_info;    //!< Stores the loaded images names, decoded_width and decoded_height(data is stored in the _circ_buff)
+    decoded_sample_info _last_sample_info;
+    std::queue<decoded_sample_info> _circ_sample_info;    //!< Stores the loaded sample's names, decoded_width and decoded_height(data is stored in the _circ_buff)
     crop_image_info _last_crop_image_info;              // for Random BBox crop coordinates
     std::queue<crop_image_info> _circ_crop_image_info;  //!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
     std::mutex _names_buff_lock;
