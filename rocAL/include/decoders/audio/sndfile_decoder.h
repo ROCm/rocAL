@@ -25,13 +25,12 @@ THE SOFTWARE.
 #include "audio_decoder.h"
 
 class SndFileDecoder : public AudioDecoder {
-public:
+   public:
     //! Default constructor
     SndFileDecoder();
-    AudioDecoder::Status initialize(const char *src_filename) override;
+    AudioDecoder::Status initialize(const char* src_filename) override;
     AudioDecoder::Status decode(float* buffer) override;
     AudioDecoder::Status decode_info(int* samples, int* channels, float* sample_rates) override;
     void release() override;
     ~SndFileDecoder() override;
 };
-
