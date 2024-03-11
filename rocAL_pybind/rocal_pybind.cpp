@@ -277,7 +277,27 @@ PYBIND11_MODULE(rocal_pybind, m) {
             R"code(
                 Returns a rocal tensor at given position `idx` in the rocalTensorlist.
                 )code",
-            py::keep_alive<0, 1>());
+            py::keep_alive<0, 1>())
+            
+            
+        .def(
+            "get_rois",
+                [](rocalTensor &output_tensor)
+                {
+                    return py::array(py::buffer_info(
+                            (int *)(output_tensor.get_roi()),
+                            sizeof(int),
+                            py::format_descriptor< int>::format(),
+                            1,
+                            {output_tensor.dims().at(0) * 4},
+                            {sizeof(int) }));
+                },
+                R"code(
+                Returns a tensor ROI
+                ex : width, height in case of an image data
+                ex : samples , channels in case of an audio data
+                )code"
+            );
     py::class_<rocalTensorList>(m, "rocalTensorList")
         .def(
             "__getitem__",
