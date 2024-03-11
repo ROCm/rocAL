@@ -129,17 +129,17 @@ py::object wrapperRocalExternalSourceFeedInput(
     return py::cast<py::none>(Py_None);
 }
 
-    py::object wrapper_one_hot_label_copy(RocalContext context, py::object p , unsigned num_of_classes, int dest) {
+    py::object wrapper_one_hot_label_copy(RocalContext context, py::object p , unsigned num_of_classes, RocalOutputMemType dest_mem_type) {
         auto ptr = ctypes_void_ptr(p);
         // call pure C++ function
-        rocalGetOneHotImageLabels(context, ptr, num_of_classes, dest);
+        rocalGetOneHotImageLabels(context, ptr, num_of_classes, dest_mem_type);
         return py::cast<py::none>(Py_None);
     }
 
     py::object wrapper_cupy_one_hot_label_copy(RocalContext context, size_t array_ptr, unsigned num_of_classes) {
         void * ptr = (void*) array_ptr;
         // call pure C++ function
-        rocalGetOneHotImageLabels(context, ptr, num_of_classes, 1);
+        rocalGetOneHotImageLabels(context, ptr, num_of_classes, RocalOutputMemType::ROCAL_MEMCPY_GPU);
         return py::cast<py::none>(Py_None);
     }
 

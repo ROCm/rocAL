@@ -154,9 +154,9 @@ class Pipeline(object):
 
     def get_one_hot_encoded_labels(self, array_ptr, device):
         if device == "cpu":
-            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, 0)
+            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, types.HOST_MEMORY)
         else:
-            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, 1)
+            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, types.DEVICE_MEMORY)
     
     def get_one_hot_encoded_labels_cupy(self, array_ptr):
         b.getCupyOneHotEncodedLabels(self._handle, array_ptr, self._num_classes)
