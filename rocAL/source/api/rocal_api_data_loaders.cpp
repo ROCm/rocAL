@@ -2099,17 +2099,17 @@ rocalJpegExternalFileSource(
 
 RocalTensor  ROCAL_API_CALL
 rocalAudioFileSourceSingleShard(
-        RocalContext p_context,
-        const char* source_path,
-        unsigned shard_id,
-        unsigned shard_count,
-        bool is_output,
-        bool shuffle,
-        bool loop,
-        bool downmix,
-        unsigned max_frames,
-        unsigned max_channels,
-        unsigned storage_type) {
+    RocalContext p_context,
+    const char* source_path,
+    unsigned shard_id,
+    unsigned shard_count,
+    bool is_output,
+    bool shuffle,
+    bool loop,
+    bool downmix,
+    unsigned max_frames,
+    unsigned max_channels,
+    unsigned storage_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2156,15 +2156,15 @@ rocalAudioFileSourceSingleShard(
 
 RocalTensor  ROCAL_API_CALL
 rocalAudioFileSource(
-        RocalContext p_context,
-        const char* source_path,
-        unsigned internal_shard_count,
-        bool is_output,
-        bool shuffle,
-        bool loop,
-        bool downmix,
-        unsigned max_frames,
-        unsigned max_channels) {
+    RocalContext p_context,
+    const char* source_path,
+    unsigned internal_shard_count,
+    bool is_output,
+    bool shuffle,
+    bool loop,
+    bool downmix,
+    unsigned max_frames,
+    unsigned max_channels) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {

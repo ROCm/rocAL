@@ -26,7 +26,6 @@ THE SOFTWARE.
 #include <iostream>
 #include <vector>
 
-#include "parameter_factory.h"
 #include "sndfile.h"
 
 class AudioDecoder {
@@ -40,7 +39,7 @@ class AudioDecoder {
         NO_MEMORY
     };
     virtual AudioDecoder::Status initialize(const char* src_filename) = 0;                           // This function is responsible for initializing the audio decoder. It takes the source filename as input and returns the status of the initialization process.
-    virtual AudioDecoder::Status decode(float* buffer) = 0;                                          // to pass buffer & number of frames/samples to decode
+    virtual AudioDecoder::Status decode(float* buffer) = 0;                                          // to read audio frames and store in the buffer provided
     virtual AudioDecoder::Status decode_info(int* samples, int* channels, float* sample_rates) = 0;  // to decode info about the audio samples
     virtual void release() = 0;
     virtual ~AudioDecoder() = default;
