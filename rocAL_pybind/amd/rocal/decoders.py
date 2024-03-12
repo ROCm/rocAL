@@ -404,6 +404,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
     return (image_decoder_slice)
 
 def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, max_frames=1 , max_channels=1 ,sample_rate=0.0, seed=1, storage_type=0, stick_to_shard=False, shard_size=-1):
+    if file_list_path:
+        storage_type = 9
     kwargs_pybind = {
             "source_path": file_root,
             "shard_id": shard_id,
