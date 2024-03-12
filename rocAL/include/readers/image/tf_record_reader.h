@@ -60,7 +60,6 @@ class TFRecordReader : public Reader {
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id; };
 
-
     unsigned count_items() override;
 
     ~TFRecordReader() override;
