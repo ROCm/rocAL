@@ -342,6 +342,9 @@ class ROCALAudioIterator(object):
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
+            self.num_roi_dims = len(dimensions) - 1
+            self.roi_array = np.zeros(self.batch_size * self.num_roi_dims * 2, dtype=np.int32)
+            self.output_tensor_list[i].copy_roi(self.roi_array)
             if self.device == "cpu":
                 torch_dtype = self.output_tensor_list[i].dtype()
                 output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
@@ -358,8 +361,7 @@ class ROCALAudioIterator(object):
 
         # self.labels = self.loader.get_image_labels() #Uncomment when meta-data is added
         # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-
-        return self.output_list, self.labels_tensor, torch.tensor(self.output_tensor_list[0].get_rois().reshape(self.batch_size,4)[...,0:2])
+        return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4])
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)

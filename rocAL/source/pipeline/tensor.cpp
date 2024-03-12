@@ -121,6 +121,10 @@ void TensorInfo::reset_tensor_roi_buffers() {
         }
     } else {
         // TODO - For other tensor types
+        for (unsigned i = 0; i < _batch_size; i++) {
+            unsigned *tensor_shape = _roi[i].end;
+            tensor_shape[i] = _max_shape[i];
+        }
     }
 }
 
@@ -215,26 +219,27 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
         unsigned max_channels = max_dims.at(1);
         auto samples = width;
         auto channels = height;
-        Roi2DCords *roi = _info.roi().get_2D_roi();
+        // Roi2DCords *roi = _info.roi().get_2D_roi();
 
         if (samples.size() != channels.size())
             THROW("Batch size of Tensor height and width info does not match")
         if (samples.size() != info().batch_size())
             THROW("The batch size of actual Tensor height and width different from Tensor batch size " + TOSTR(samples.size()) + " != " + TOSTR(info().batch_size()))
         for (unsigned i = 0; i < info().batch_size(); i++) {
+            unsigned *tensor_shape = _info.roi()[i].end;
             if (samples[i] > max_samples) {
                 ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
-                roi[i].xywh.x = max_samples;
+                tensor_shape[0] = max_samples;
             }
             else {
-                roi[i].xywh.x = samples[i];
+                tensor_shape[0] = samples[i];
             }
             if (channels[i] > max_channels) {
                 ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
-                roi[i].xywh.y = max_channels;
+                tensor_shape[1] = max_channels;
             }
             else {
-                roi[i].xywh.y = channels[i];
+                tensor_shape[1] = channels[i];
             }
         }
     }
