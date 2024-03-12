@@ -361,7 +361,7 @@ class ROCALAudioIterator(object):
 
         # self.labels = self.loader.get_image_labels() #Uncomment when meta-data is added
         # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-        return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4])
+        return self.output_list, self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
