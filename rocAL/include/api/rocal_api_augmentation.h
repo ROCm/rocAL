@@ -1098,4 +1098,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(RocalContext context, R
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
+                                                             RocalTensor p_input,
+                                                             RocalTensorOutputType rocal_tensor_output_type,
+                                                             bool is_output,
+                                                             RocalFloatParam p_preemph_coeff = NULL,
+                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
+
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

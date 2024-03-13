@@ -60,9 +60,9 @@ def main():
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     with audio_pipeline:
-        # audio_decode = fn.decoders.audio(audio, file_root=data_path, downmix=True, shard_id=0, num_shards=2,random_shuffle=True)
-        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path=" ", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
-        audio_pipeline.set_outputs(audio_decode)
+        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path="", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
+        pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
+        audio_pipeline.set_outputs(pre_emphasis_filter)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
     cnt = 0

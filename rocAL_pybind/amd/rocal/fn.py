@@ -1068,3 +1068,22 @@ def external_source(*inputs, source, device=None, color_format=types.RGB, random
     external_source_operator = b.externalFileSource(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (external_source_operator, [])  # Labels is Empty
+
+def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, rocal_tensor_output_type=types.FLOAT):
+    '''
+    Applies preemphasis filter to the input data.
+    This filter, in simple form, can be expressed by the formula:
+    Y[t] = X[t] - coeff * X[t-1]    if t > 1
+    Y[t] = X[t] - coeff * X_border  if t == 0
+    with X and Y being the input and output signal, respectively.
+    The value of X_border depends on the border argument:
+    X_border = 0                    if border_type == 'zero'
+    X_border = X[0]                 if border_type == 'clamp'
+    X_border = X[1]                 if border_type == 'reflect'
+    '''
+    preemph_coeff_float_param = b.createFloatParameter(preemph_coeff)
+    kwargs_pybind = {"input_audio0": inputs[0], "rocal_tensor_output_type" :rocal_tensor_output_type,
+                     "is_output": False, "preemph_coeff": preemph_coeff_float_param, 
+                     "preemph_border_type": border}
+    preemphasis_output = b.PreEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (preemphasis_output)
