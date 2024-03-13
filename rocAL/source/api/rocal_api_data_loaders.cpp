@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include "node_audio_loader_single_shard.h"
 #include "audio_source_evaluator.h"
 #include "node_resize.h"
+#include "node_downmix.h"
 #include "rocal_api.h"
 
 
@@ -2142,10 +2143,31 @@ rocalAudioFileSourceSingleShard(
                                                                                         context->master_graph->meta_data_reader()
                                                                                         );
         context->master_graph->set_loop(loop);
-        if(is_output) {
-            auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_node<CopyNode>({output}, {actual_output});
-        }
+        if(downmix) {
+            TensorInfo output_info = info;
+            std::vector<size_t> output_dims = {context->user_batch_size(), info.dims()[1], 1};
+            // std::vector<size_t> output_dims;
+            // output_dims.resize(3);
+            // output_dims.at(0) = context->user_batch_size();
+            // output_dims.at(1) = info.dims()[1];
+            // output_dims.at(2) = 1;
+            output_info.set_dims(output_dims);
+            output_info.set_tensor_layout(RocalTensorlayout::NONE);
+            output_info.set_max_shape();
+
+            auto downmixed_output = context->master_graph->create_tensor(output_info, false);
+            std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
+
+            if(is_output) {
+                auto actual_output = context->master_graph->create_tensor(output_info, is_output);
+                context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
+                output = downmixed_output;
+            }
+        } else { 
+            if(is_output) {
+                auto actual_output = context->master_graph->create_tensor(info, is_output);
+                context->master_graph->add_node<CopyNode>({output}, {actual_output});
+            }
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
@@ -2191,35 +2213,30 @@ rocalAudioFileSource(
                                                                              context->master_graph->mem_type(),
                                                                              context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
-        /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
-        if(downmix)
-        {
-            // For the resize node, user can create an image with a different width and height
+        if(downmix) {
             TensorInfo output_info = info;
-            std::vector<size_t> output_dims;
-            output_dims.resize(3);
-            output_dims.at(0) = context->user_batch_size();
-            output_dims.at(1) = info.dims()[1];
-            output_dims.at(2) = 1;
+            std::vector<size_t> output_dims = {context->user_batch_size(), info.dims()[1], 1};
+            // std::vector<size_t> output_dims;
+            // output_dims.resize(3);
+            // output_dims.at(0) = context->user_batch_size();
+            // output_dims.at(1) = info.dims()[1];
+            // output_dims.at(2) = 1;
             output_info.set_dims(output_dims);
             output_info.set_tensor_layout(RocalTensorlayout::NONE);
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
-            if(is_output)
-            {
+            if(is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
                 output = downmixed_output;
             }
         }
-        else
-        { */
-            if(is_output)
-            {
+        else {
+            if(is_output) {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
-        // } 
+        }
     }
     catch(const std::exception& e) {
         context->capture_error(e.what());
