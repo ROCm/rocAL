@@ -21,20 +21,19 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 
-class DownmixNode : public Node
-{
-public:
+class DownmixNode : public Node {
+   public:
     DownmixNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     DownmixNode() = delete;
     void init(bool normalize_weights);
 
-protected:
+   protected:
     void create_node() override;
     void update_node() override;
 
-private:
+   private:
     bool _normalize_weights = false;
 };
