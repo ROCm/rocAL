@@ -30,19 +30,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <vector>
 
-#include "opencv2/opencv.hpp"
 #include "rocal_api.h"
-using namespace cv;
-
-#if USE_OPENCV_4
-#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
-#define CV_BGR2GRAY COLOR_BGR2GRAY
-#define CV_GRAY2RGB COLOR_GRAY2RGB
-#define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
-#define CV_FILLED FILLED
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
-#endif
 
 #define DISPLAY 1
 #define METADATA 0  // Switch the meta-data part once the meta-data reader (file list reader) is introduced
@@ -214,8 +202,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
-    cv::Mat mat_output, mat_input, mat_color;
+    /*>>>>>>>>>>>>>>>>>>> Diplay Values<<<<<<<<<<<<<<<<<*/
     int iteration = 0;
     RocalTensorList output_tensor_list;
 
