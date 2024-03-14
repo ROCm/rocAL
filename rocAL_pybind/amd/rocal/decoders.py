@@ -408,6 +408,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
         storage_type = 10
     kwargs_pybind = {
             "source_path": file_root,
+            "source_file_list_path" : file_list_path,
             "shard_id": shard_id,
             "num_shards": num_shards,
             "is_output": False,

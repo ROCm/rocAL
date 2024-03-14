@@ -359,8 +359,8 @@ class ROCALAudioIterator(object):
             self.output_list.append(output)
 
 
-        # self.labels = self.loader.get_image_labels() #Uncomment when meta-data is added
-        # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+        self.labels = self.loader.get_image_labels()
+        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
         return self.output_list, self.labels_tensor
 
     def reset(self):

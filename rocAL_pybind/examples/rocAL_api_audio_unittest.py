@@ -70,10 +70,9 @@ def main():
             print("************************************** i *************************************",i)
             print(it)
             for x in range(len(it[0])):
-                for audio_data, label, roi in zip(it[0][x], it[1], it[2]):
+                for audio_data, label in zip(it[0][x], it[1]):
                     print("label", label)
                     print("cnt", cnt)
-                    print("roi", roi)
                     print("audio_data", audio_data)
                     plot_1d_audio(audio_data, label)
                     cnt+=1
