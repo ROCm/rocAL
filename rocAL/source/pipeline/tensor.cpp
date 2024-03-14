@@ -124,7 +124,8 @@ void TensorInfo::reset_tensor_roi_buffers() {
         // TODO - For other tensor types
         for (unsigned i = 0; i < _batch_size; i++) {
             unsigned *tensor_shape = _roi[i].end;
-            tensor_shape[i] = _max_shape[i];
+            for (unsigned j = 0; j < _max_shape.size(); j++)
+                tensor_shape[j] = _max_shape[j];
         }
     }
 }
@@ -213,8 +214,7 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
                 roi[i].xywh.h = height[i];
             }
         }
-    }
-    else if(!_info.is_metadata()) { // Audio - Data
+    } else if (!_info.is_metadata()) {  // Audio - Data
         auto max_dims = _info.max_shape();
         unsigned max_samples = max_dims.at(0);
         unsigned max_channels = max_dims.at(1);
@@ -231,15 +231,13 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
             if (samples[i] > max_samples) {
                 ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
                 tensor_shape[0] = max_samples;
-            }
-            else {
+            } else {
                 tensor_shape[0] = samples[i];
             }
             if (channels[i] > max_channels) {
                 ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
                 tensor_shape[1] = max_channels;
-            }
-            else {
+            } else {
                 tensor_shape[1] = channels[i];
             }
         }
@@ -249,14 +247,12 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
 void Tensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
     if (_info.is_image()) {
         THROW("No sample rate available for Image data")
-    }
-    else if(!_info.is_metadata()) {
+    } else if (!_info.is_metadata()) {
         for (unsigned i = 0; i < info().batch_size(); i++) {
             _info.get_sample_rates()->at(i) = sample_rate[i];
         }
     }
 }
-
 
 void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) {
     auto max_shape = _info.max_shape();
@@ -455,7 +451,7 @@ unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_ty
 
 unsigned Tensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
     if (_mem_handle == nullptr) return 0;
-    //TODO : Handle this case for HIP buffer
+    // TODO : Handle this case for HIP buffer
     auto max_shape_x1 = _info.max_shape().at(0);
     auto dtype_size = _info.data_type_size();
     auto src_stride = (max_shape_x1 * _info.max_shape().at(1) * dtype_size);
