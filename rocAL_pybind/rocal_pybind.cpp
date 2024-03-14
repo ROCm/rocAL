@@ -396,6 +396,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
+    py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+        .value("ZERO", ZERO)
+        .value("CLAMP", CLAMP)
+        .value("REFLECT", REFLECT)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -709,5 +714,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
+    m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
+            py::return_value_policy::reference);
 }
 }  // namespace rocal

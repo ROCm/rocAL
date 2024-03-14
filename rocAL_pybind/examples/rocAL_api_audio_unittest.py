@@ -58,7 +58,8 @@ def main():
     with audio_pipeline:
         audio, label = fn.readers.file(file_root=data_path, file_list=file_list)
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=1, storage_type=10, stick_to_shard=False)
-        audio_pipeline.set_outputs(audio_decode)
+        pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
+        audio_pipeline.set_outputs(pre_emphasis_filter)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
     cnt = 0

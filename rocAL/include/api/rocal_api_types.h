@@ -376,4 +376,10 @@ enum RocalExternalSourceMode {
     ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
 };
 
+enum RocalAudioBorderType {
+    ZERO = 0,
+    CLAMP,
+    REFLECT
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
