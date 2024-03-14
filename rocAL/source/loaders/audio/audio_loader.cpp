@@ -26,7 +26,6 @@ THE SOFTWARE.
 #include <thread>
 
 #include "audio_read_and_decode.h"
-#include "vx_ext_amd.h"
 
 AudioLoader::AudioLoader(void* dev_resources) : _circ_buff(dev_resources),
                                                 _swap_handle_time("Swap_handle_time", DBG_TIMING) {
@@ -158,7 +157,7 @@ AudioLoader::load_routine() {
     // Initially record number of all the audios that are going to be loaded, this is used to know how many still there
 
     while (_internal_thread_running) {
-        auto data = (float*)_circ_buff.get_write_buffer();
+        auto data = reinterpret_cast<float*>(_circ_buff.get_write_buffer());
         if (!_internal_thread_running)
             break;
 
@@ -204,10 +203,6 @@ AudioLoader::load_routine() {
 bool AudioLoader::is_out_of_data() {
     return (remaining_count() < 0);
 }
-
-// size_t AudioLoader::last_batch_padded_size() {
-//     return _audio_loader->last_batch_padded_size();
-// }
 
 LoaderModuleStatus
 AudioLoader::update_output_audio() {
