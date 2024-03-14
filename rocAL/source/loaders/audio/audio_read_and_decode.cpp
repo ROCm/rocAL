@@ -122,16 +122,16 @@ AudioReadAndDecode::load(float *buff,
             _actual_decoded_samples[i] = max_decoded_samples;
             _actual_decoded_channels[i] = max_decoded_channels;
             int original_samples, original_channels;
-            float original_sample_rates;
+            float original_sample_rate;
             if (_decoder[i]->initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
                 THROW("Decoder can't be initialized for file: " + _audio_names[i].c_str())
             }
-            if (_decoder[i]->decode_info(&original_samples, &original_channels, &original_sample_rates) != AudioDecoder::Status::OK) {
+            if (_decoder[i]->decode_info(&original_samples, &original_channels, &original_sample_rate) != AudioDecoder::Status::OK) {
                 THROW("Unable to fetch decode info for file: " + _audio_names[i].c_str())
             }
             _original_channels[i] = original_channels;
             _original_samples[i] = original_samples;
-            _original_sample_rates[i] = original_sample_rates;
+            _original_sample_rates[i] = original_sample_rate;
             if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
                 THROW("Decoder failed for file: " + _audio_names[i].c_str())
             }

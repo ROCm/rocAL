@@ -2104,8 +2104,7 @@ rocalAudioFileSourceSingleShard(
     bool loop,
     bool downmix,
     unsigned max_frames,
-    unsigned max_channels,
-    unsigned storage_type) {
+    unsigned max_channels) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2127,7 +2126,7 @@ rocalAudioFileSourceSingleShard(
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
                                                                                         source_path,
                                                                                         "",
-                                                                                        StorageType(storage_type),
+                                                                                        StorageType::FILE_SYSTEM,
                                                                                         DecoderType::SNDFILE,
                                                                                         shuffle,
                                                                                         loop,

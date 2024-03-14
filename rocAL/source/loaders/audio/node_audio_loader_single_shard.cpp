@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "node_audio_loader_single_shard.h"
-
 #include "exception.h"
 
 AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
