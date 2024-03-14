@@ -41,10 +41,7 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
-find_library(libsnd_LIBS
-    NAMES sndfile libsndfile
-    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
-    PATH_SUFFIXES lib lib64)
+find_package(SndFile QUIET)
 
 if(DEFINED ENV{ROCM_PATH})
   set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -193,11 +190,9 @@ if(NOT HALF_FOUND)
     set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
-if (${libsnd_LIBS} STREQUAL "libsnd_LIBS-NOTFOUND")
-    set(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires libsnd (sndfile), but it was not found. Try specifying its location with `-DLIBSND_ROOT_DIR`.${ColourReset}")
-else()
-    message(STATUS "Found libsnd: ${libsnd_LIBS}")
+if(NOT SndFile_FOUND)	
+    set(BUILD_ROCAL false)	
+    message("-- ${Yellow}NOTE: rocAL library requires SndFile, Not Found ${ColourReset}")	
 endif()
 
 if(${BUILD_ROCAL})
@@ -231,7 +226,7 @@ if(${BUILD_ROCAL})
     include_directories(${HALF_INCLUDE_DIRS})
     # SndFile
     include_directories(${SndFile_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} sndfile)
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
