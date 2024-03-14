@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +22,18 @@ THE SOFTWARE.
 
 #pragma once
 #include <dirent.h>
+
 #include <memory>
-#include "commons.h"
-#include "sndfile_decoder.h"
-#include "reader_factory.h"
-#include "timing_debug.h"
-#include "loader_module.h"
+
 #include "audio_decoder.h"
+#include "commons.h"
+#include "loader_module.h"
+#include "reader_factory.h"
+#include "sndfile_decoder.h"
+#include "timing_debug.h"
 
 class AudioReadAndDecode {
-public:
+   public:
     AudioReadAndDecode();
     ~AudioReadAndDecode();
     size_t count();
@@ -45,21 +47,22 @@ public:
     /// \param roi_samples is set by the load() function to the samples of the region that decoded audio is located. It's less than max_samples and is either equal to the original audio samples if original audio samples is smaller than max_samples or downscaled if necessary to fit the max_samples criterion.
     /// \param roi_channels  is set by the load() function to the samples of the region that decoded audio is located.It's less than max_channels and is either equal to the original audio channels if original audio channels is smaller than max_channels or downscaled if necessary to fit the max_channels criterion.
     LoaderModuleStatus load(
-            float* buff,
-            std::vector<std::string>& names,
-            const size_t  max_decoded_samples,
-            const size_t max_decoded_channels,
-            std::vector<uint32_t> &actual_samples,
-            std::vector<uint32_t> &actual_channels,
-            std::vector<float> &actual_sample_rates);
+        float *buff,
+        std::vector<std::string> &names,
+        const size_t max_decoded_samples,
+        const size_t max_decoded_channels,
+        std::vector<uint32_t> &actual_samples,
+        std::vector<uint32_t> &actual_channels,
+        std::vector<float> &actual_sample_rates);
     //! returns timing info or other status information
     Timing timing();
-private:
+
+   private:
     std::vector<std::shared_ptr<AudioDecoder>> _decoder;
     std::shared_ptr<Reader> _reader;
     std::vector<std::string> _audio_names;
     std::vector<std::string> _audio_file_path;
-    std::vector<float*> _decompressed_buff_ptrs;
+    std::vector<float *> _decompressed_buff_ptrs;
     std::vector<size_t> _actual_decoded_samples;
     std::vector<size_t> _actual_decoded_channels;
     std::vector<size_t> _original_samples;

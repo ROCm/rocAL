@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,23 +21,21 @@ THE SOFTWARE.
 */
 
 #include "node_audio_loader_single_shard.h"
+
 #include "exception.h"
 
-
-AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(Tensor *output, void* device_resources):
-        Node({}, {output}) {
+AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<AudioLoader>(device_resources);
 }
 
-void
-AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_list_path,
-                                 StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, 
-                                 RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    if(!_loader_module)
+void AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_list_path,
+                                      StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count,
+                                      RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    if (!_loader_module)
         THROW("ERROR: loader module is not set for AudioLoaderNode, cannot initialize")
-    if(shard_count < 1)
+    if (shard_count < 1)
         THROW("Shard count should be greater than or equal to one")
-    if(shard_id >= shard_count)
+    if (shard_id >= shard_count)
         THROW("Shard is should be smaller than shard count")
     _loader_module->set_output(_outputs[0]);
     // Set reader and decoder config accordingly for the AudioLoaderNode
@@ -52,7 +50,7 @@ AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsign
 }
 
 std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
-    if(!_loader_module)
+    if (!_loader_module)
         WRN("AudioLoaderSingleShardNode's loader module is null, not initialized")
     return _loader_module;
 }
@@ -60,4 +58,3 @@ std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
 AudioLoaderSingleShardNode::~AudioLoaderSingleShardNode() {
     _loader_module = nullptr;
 }
-

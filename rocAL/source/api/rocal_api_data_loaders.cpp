@@ -2194,7 +2194,6 @@ rocalAudioFileSource(
         /*  Commenting out this peice of code in this PR - Next PR will contain augmentations & this code will be uncommented
         if(downmix)
         {
-            // For the resize node, user can create an image with a different width and height
             TensorInfo output_info = info;
             std::vector<size_t> output_dims;
             output_dims.resize(3);

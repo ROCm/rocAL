@@ -127,7 +127,7 @@ void TensorInfo::reset_tensor_roi_buffers() {
 void TensorInfo::reallocate_tensor_sample_rate_buffers() {
     if (_is_image)
         THROW("No sample rate available for Image data")
-    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
+    _sample_rates = std::make_shared<std::vector<float>>(_batch_size);
 }
 
 TensorInfo::TensorInfo()
@@ -246,7 +246,7 @@ void Tensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_ra
     }
     else if(!_info.is_metadata()) {
         for (unsigned i = 0; i < info().batch_size(); i++) {
-            _info.get_sample_rate()->at(i) = sample_rate[i];
+            _info.get_sample_rates()->at(i) = sample_rate[i];
         }
     }
 }

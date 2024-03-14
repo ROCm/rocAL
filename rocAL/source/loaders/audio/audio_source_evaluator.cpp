@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "audio_source_evaluator.h"
+
 #include "audio_decoder_factory.h"
 #include "reader_factory.h"
 
@@ -37,7 +38,7 @@ AudioSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
     AudioSourceEvaluatorStatus status = AudioSourceEvaluatorStatus::OK;
     // Can initialize it to any decoder types if needed
     _input_path = reader_cfg.path();
-    if(_input_path.back() != '/') {
+    if (_input_path.back() != '/') {
         _input_path = _input_path + "/";
     }
     _decoder = create_audio_decoder(std::move(decoder_cfg));
@@ -46,25 +47,24 @@ AudioSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
     return status;
 }
 
-void
-AudioSourceEvaluator::find_max_dimension() {
+void AudioSourceEvaluator::find_max_dimension() {
     _reader->reset();
-    while( _reader->count_items() ) {
+    while (_reader->count_items()) {
         size_t fsize = _reader->open();
-        if( (fsize) == 0 )
+        if ((fsize) == 0)
             continue;
         auto file_name = _reader->file_path();
-        if(_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
-            WRN("Could not initialize audio decoder for file : "+ _reader->id())
+        if (_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
+            WRN("Could not initialize audio decoder for file : " + _reader->id())
             continue;
         }
         int samples, channels;
         float sample_rates;
-        if(_decoder->decode_info(&samples, &channels, &sample_rates) != AudioDecoder::Status::OK) {
-            WRN("Could not decode the header of the: "+ _reader->id())
+        if (_decoder->decode_info(&samples, &channels, &sample_rates) != AudioDecoder::Status::OK) {
+            WRN("Could not decode the header of the: " + _reader->id())
             continue;
         }
-        if(samples <= 0 || channels <= 0)
+        if (samples <= 0 || channels <= 0)
             continue;
         _samples_max = std::max(samples, _samples_max);
         _channels_max = std::max(channels, _channels_max);
@@ -73,5 +73,3 @@ AudioSourceEvaluator::find_max_dimension() {
     // return the reader read pointer to the begining of the resource
     _reader->reset();
 }
-
-
