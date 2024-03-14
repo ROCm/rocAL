@@ -86,7 +86,7 @@ AudioReadAndDecode::load(float *buff,
                          const size_t max_decoded_channels,
                          std::vector<uint32_t> &roi_samples,
                          std::vector<uint32_t> &roi_channels,
-                         std::vector<float> &actual_sample_rates) {
+                         std::vector<float> &original_sample_rates) {
     if (max_decoded_samples == 0 || max_decoded_channels == 0)
         THROW("Zero audio dimension is not valid")
     if (!buff)
@@ -141,7 +141,7 @@ AudioReadAndDecode::load(float *buff,
             names[i] = _audio_names[i];
             roi_samples[i] = _original_samples[i];
             roi_channels[i] = _original_channels[i];
-            actual_sample_rates[i] = _original_sample_rates[i];
+            original_sample_rates[i] = _original_sample_rates[i];
         }
     }
     _decode_time.end();  // Debug timing

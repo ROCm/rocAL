@@ -45,15 +45,16 @@ class AudioReadAndDecode {
     /// \param max_decoded_samples User's buffer maximum samples per decoded audio. User expects the decoder to downscale the audio if audio's original samples is bigger than max_samples
     /// \param max_decoded_channels user's buffer maximum channels per decoded audio. User expects the decoder to downscale the audio if audio's original channels is bigger than max_channels
     /// \param roi_samples is set by the load() function to the samples of the region that decoded audio is located. It's less than max_samples and is either equal to the original audio samples if original audio samples is smaller than max_samples or downscaled if necessary to fit the max_samples criterion.
-    /// \param roi_channels  is set by the load() function to the samples of the region that decoded audio is located.It's less than max_channels and is either equal to the original audio channels if original audio channels is smaller than max_channels or downscaled if necessary to fit the max_channels criterion.
+    /// \param roi_channels  is set by the load() function to the channels of the region that decoded audio is located.It's less than max_channels and is either equal to the original audio channels if original audio channels is smaller than max_channels or downscaled if necessary to fit the max_channels criterion.
+    /// \param original_sample_rates is set by the load() function to the original sample_rates of the decoded audio samples.
     LoaderModuleStatus load(
         float *buff,
         std::vector<std::string> &names,
         const size_t max_decoded_samples,
         const size_t max_decoded_channels,
-        std::vector<uint32_t> &actual_samples,
-        std::vector<uint32_t> &actual_channels,
-        std::vector<float> &actual_sample_rates);
+        std::vector<uint32_t> &roi_samples,
+        std::vector<uint32_t> &roi_channels,
+        std::vector<float> &original_sample_rates);
     //! returns timing info or other status information
     Timing timing();
 
