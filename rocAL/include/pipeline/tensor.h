@@ -320,7 +320,7 @@ class Tensor : public rocalTensor {
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
-    unsigned copy_data(void* user_buffer, uint max_channels, uint max_y1);
+    unsigned copy_data(void* user_buffer, uint max_cols, uint max_rows);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();

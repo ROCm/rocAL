@@ -449,20 +449,23 @@ unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_ty
     return 0;
 }
 
-unsigned Tensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
+unsigned Tensor::copy_data(void *user_buffer, uint max_cols, uint max_rows) {
     if (_mem_handle == nullptr) return 0;
     // TODO : Handle this case for HIP buffer
-    auto max_shape_x1 = _info.max_shape().at(0);
+    auto max_shape_rows = _info.max_shape().at(0);
     auto dtype_size = _info.data_type_size();
-    auto src_stride = (max_shape_x1 * _info.max_shape().at(1) * dtype_size);
-    auto dst_stride = (max_y1 * max_x1 * dtype_size);
+    auto num_of_bytes_max_rows = max_shape_rows * dtype_size;
+    auto src_stride = (_info.max_shape().at(1) * num_of_bytes_max_rows);
+    auto num_of_bytes_rows = max_rows * dtype_size;
+    auto dst_stride = (max_cols * num_of_bytes_rows);
+
     for (uint i = 0; i < _info._batch_size; i++) {
         auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
         auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
-        for (uint height = 0; height < max_y1; height++) {
-            memcpy(temp_dst_ptr, temp_src_ptr, max_x1 * dtype_size);
-            temp_src_ptr += max_shape_x1 * dtype_size;
-            temp_dst_ptr += max_x1 * dtype_size;
+        for (uint height = 0; height < max_cols; height++) {
+            memcpy(temp_dst_ptr, temp_src_ptr, num_of_bytes_rows);
+            temp_src_ptr += num_of_bytes_max_rows;
+            temp_dst_ptr += num_of_bytes_rows;
         }
     }
     return 0;
