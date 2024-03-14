@@ -240,7 +240,7 @@ AudioLoader::update_output_audio() {
 
 Timing AudioLoader::timing() {
     auto t = _audio_loader->timing();
-    t.audio_process_time = _swap_handle_time.get_timing();
+    t.process_time = _swap_handle_time.get_timing();
     return t;
 }
 

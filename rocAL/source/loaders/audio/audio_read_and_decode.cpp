@@ -31,8 +31,8 @@ THE SOFTWARE.
 Timing
 AudioReadAndDecode::timing() {
     Timing t;
-    t.audio_decode_time = _decode_time.get_timing();
-    t.audio_read_time = _file_load_time.get_timing();
+    t.decode_time = _decode_time.get_timing();
+    t.read_time = _file_load_time.get_timing();
     return t;
 }
 

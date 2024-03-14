@@ -153,7 +153,4 @@ struct Timing {
     long long unsigned video_read_time= 0;
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
-    long long unsigned audio_read_time = 0;
-    long long unsigned audio_decode_time = 0;
-    long long unsigned audio_process_time = 0;
 };
