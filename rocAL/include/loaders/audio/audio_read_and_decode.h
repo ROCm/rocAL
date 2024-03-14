@@ -72,5 +72,4 @@ class AudioReadAndDecode {
     TimingDBG _file_load_time, _decode_time;
     size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;
-    std::string _input_path;
 };

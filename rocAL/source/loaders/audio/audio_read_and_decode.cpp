@@ -64,10 +64,6 @@ void AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         }
     }
     _reader = create_reader(reader_config);
-    _input_path = reader_config.path();
-    _num_threads = reader_config.get_cpu_num_threads();
-    if (_input_path.back() != '/')
-        _input_path = _input_path + "/";
 }
 
 void AudioReadAndDecode::reset() {

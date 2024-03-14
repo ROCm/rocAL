@@ -45,5 +45,4 @@ class AudioSourceEvaluator {
     int _samples_max = 0, _channels_max = 0;
     std::shared_ptr<AudioDecoder> _decoder;
     std::shared_ptr<Reader> _reader;
-    std::string _input_path;
 };
