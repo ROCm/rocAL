@@ -21,42 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "node.h"
+#include "graph.h"
 
-#include "node_warp_affine.h"
-#include "node_exposure.h"
-#include "node_vignette.h"
-#include "node_jitter.h"
-#include "node_snp_noise.h"
-#include "node_snow.h"
-#include "node_rain.h"
-#include "node_color_temperature.h"
-#include "node_fog.h"
-#include "node_pixelate.h"
-#include "node_lens_correction.h"
-#include "node_gamma.h"
-#include "node_flip.h"
-#include "node_crop_resize.h"
-#include "node_brightness.h"
-#include "node_contrast.h"
-#include "node_blur.h"
-#include "node_fisheye.h"
-#include "node_blend.h"
-#include "node_resize.h"
-#include "node_rotate.h"
-#include "node_color_twist.h"
-#include "node_hue.h"
-#include "node_saturation.h"
-#include "node_crop_mirror_normalize.h"
-#include "node_resize_mirror_normalize.h"
-#include "node_resize_crop_mirror.h"
-#include "node_ssd_random_crop.h"
-#include "node_crop.h"
-#include "node_random_crop.h"
-#include "node_copy.h"
-#include "node_nop.h"
-#include "node_sequence_rearrange.h"
-#include "node_preemphasis_filter.h"
-#include "node_non_silent_region.h"
-#include "node_spectrogram.h"
-#include "node_to_decibels.h"
-#include "node_normalize.h"
+class NormalizeNode : public Node {
+public:
+    NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    NormalizeNode() = delete;
+    void init(float mean, float std_dev, std::vector<int> axes, bool batch, float scale, float shift, int ddof, float epsilon);
+protected:
+    void create_node() override;
+    void update_node() override;
+private:
+    float _mean, _std_dev;
+    float _scale = 1.0;
+    float _shift = 0.0;
+    float _epsilon = 0.0;
+    int _ddof = 0;
+    int _axis_mask = 0;
+    bool _batch = false;
+};

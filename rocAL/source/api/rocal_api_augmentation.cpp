@@ -2286,3 +2286,66 @@ rocalSpectrogram(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalToDecibels(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    float cutoff_db,
+    float multiplier,
+    float reference_magnitude,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_data_type);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<ToDeciblesNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalNormalize(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output, bool batch,
+    std::vector<int> axes,
+    float mean, float std_dev,
+    float scale, float shift,
+    int ddof, float epsilon,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        if ((mean > 0.0f) && (std_dev > 0.0f) && (axes.size()))
+            THROW("Axes must not be passed when both mean and standard deviation are specified")
+        TensorInfo output_info = input->info();
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        output_info.set_data_type(op_tensor_data_type);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        output->reset_tensor_roi();
+        context->master_graph->add_node<NormalizeNode>({input}, {output})->init(mean, std_dev, axes, batch, scale, shift, ddof, epsilon);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

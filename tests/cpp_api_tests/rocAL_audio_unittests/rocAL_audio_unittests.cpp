@@ -126,14 +126,14 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     switch (test_case)
     {
-        // case 0:
-        // {
-        //     RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
-        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-        //     output = rocalToDecibels(handle, input1, tensorLayout, tensorOutputType, true);
-        //     std::cerr<<"\n Calls rocalToDecibels";
-        // }
-        // break;
+        case 0:
+        {
+            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalToDecibels(handle, input1, tensorLayout, tensorOutputType, true);
+            std::cerr<<"\n Calls rocalToDecibels";
+        }
+        break;
         case 1:
         {
             std::cout<< "\n Augmentation - rocalPreEmphasisFilter ";
@@ -186,14 +186,14 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         //     output = rocalSlice(handle, input1, tensorOutputType, true, non_silent_region_output.first, non_silent_region_output.second, {0.3f});
         // }
         // break;
-        // case 6:
-        // {
-        //     std::cerr<<"\n Normalize";
-        //     RocalTensorLayout tensorLayout;
-        //     RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-        //     output = rocalNormalize(handle, input1, tensorOutputType, true, false, {1});
-        // }
-        // break;
+        case 6:
+        {
+            std::cerr<<"\n Normalize";
+            RocalTensorLayout tensorLayout;
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            output = rocalNormalize(handle, input1, tensorOutputType, true, false, {1});
+        }
+        break;
         // case 7:
         // {
         //     std::cerr<<"\nPad";

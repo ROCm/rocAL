@@ -730,5 +730,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
             py::return_value_policy::reference);
     m.def("Spectrogram", &rocalSpectrogram,
             py::return_value_policy::reference);
+    m.def("audioNormalize", &rocalNormalize,"Normalizes the input by removing the mean and dividing by the standard deviation",
+        py::return_value_policy::reference);
+    m.def("ToDecibels", &rocalToDecibels, "Converts to Decibels",
+        py::return_value_policy::reference);
 }
 }  // namespace rocal

@@ -1109,3 +1109,33 @@ def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, lay
                      "layout": layout, "power": power, "nfft": nfft, "window_length": window_length, "window_step": window_step, "rocal_tensor_output_type": rocal_tensor_output_type}
     spectrogram_output = b.Spectrogram(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return spectrogram_output
+
+def to_decibels(*inputs, bytes_per_sample_hint = [0], cutoff_db = -200.0, multiplier = 10.0, reference = 0.0, seed = -1, rocal_tensor_output_type = types.FLOAT):
+    '''
+    Converts a magnitude (real, positive) to the decibel scale.
+
+    Conversion is done according to the following formula:
+
+    min_ratio = pow(10, cutoff_db / multiplier)
+    out[i] = multiplier * log10( max(min_ratio, input[i] / reference) )
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_DB": cutoff_db, "multiplier": multiplier, "reference_magnitude": reference, "rocal_tensor_output_type": rocal_tensor_output_type}
+    decibel_scale = b.ToDecibels(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return decibel_scale
+
+def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_sample_hint = [0], ddof = 0, epsilon = 0.0, mean = 0.0, scale = 1.0, seed = -1, shift = 0.0, stddev = 0.0, rocal_tensor_output_type=types.FLOAT):
+    '''
+    Normalizes the input by removing the mean and dividing by the standard deviation.
+
+    The mean and standard deviation can be calculated internally for the specified subset of axes or can be externally provided as the mean and stddev arguments.
+
+    The normalization is done following the formula:
+
+    out = scale * (in - mean) / stddev + shift
+
+    The formula assumes that out and in are equally shaped tensors, but mean and stddev might be either tensors of same shape, scalars, or a mix of these.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "batch": batch, "axes": axes, "mean": mean, "stddev": stddev,
+                     "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "rocal_tensor_output_type": rocal_tensor_output_type}
+    normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return normalize_output
