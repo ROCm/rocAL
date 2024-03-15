@@ -78,6 +78,9 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
         case RocalTensorDataType::INT8:
+            return VX_TYPE_INT8;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -123,7 +126,8 @@ void TensorInfo::reset_tensor_roi_buffers() {
         // TODO - For other tensor types
         for (unsigned i = 0; i < _batch_size; i++) {
             unsigned *tensor_shape = _roi[i].end;
-            tensor_shape[i] = _max_shape[i];
+            for(unsigned j = 0; j < _max_shape.size() ; j++)
+                tensor_shape[j] = _max_shape[j];
         }
     }
 }
