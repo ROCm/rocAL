@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include <vector>
 
 #include "commons.h"
-#include "reader.h"
+#include "image_reader.h"
 #include "timing_debug.h"
 
 class FileListReader : public Reader {

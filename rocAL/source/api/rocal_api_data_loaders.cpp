@@ -2102,6 +2102,7 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSourceSingleShard(
     RocalContext p_context,
     const char* source_path,
+    const char* source_file_list_path,
     unsigned shard_id,
     unsigned shard_count,
     bool is_output,
@@ -2133,7 +2134,7 @@ rocalAudioFileSourceSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
                                                                                         source_path,
-                                                                                        "",
+                                                                                        source_file_list_path,
                                                                                         StorageType(storage_type),
                                                                                         DecoderType::SNDFILE,
                                                                                         shuffle,
@@ -2181,6 +2182,7 @@ RocalTensor  ROCAL_API_CALL
 rocalAudioFileSource(
     RocalContext p_context,
     const char* source_path,
+    const char* source_file_list_path,
     unsigned internal_shard_count,
     bool is_output,
     bool shuffle,
@@ -2205,7 +2207,7 @@ rocalAudioFileSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
                                                                              source_path,
-                                                                             "",
+                                                                             source_file_list_path,
                                                                              StorageType::FILE_SYSTEM,
                                                                              DecoderType::SNDFILE,
                                                                              shuffle,

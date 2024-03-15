@@ -141,6 +141,7 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {1, "float16"},
     {2, "uint8"},
     {3, "int8"},
+    {4, "int32"},
 };
 
 PYBIND11_MODULE(rocal_pybind, m) {
@@ -277,27 +278,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
             R"code(
                 Returns a rocal tensor at given position `idx` in the rocalTensorlist.
                 )code",
-            py::keep_alive<0, 1>())
-            
-            
-        .def(
-            "get_rois",
-                [](rocalTensor &output_tensor)
-                {
-                    return py::array(py::buffer_info(
-                            (int *)(output_tensor.get_roi()),
-                            sizeof(int),
-                            py::format_descriptor< int>::format(),
-                            1,
-                            {output_tensor.dims().at(0) * 4},
-                            {sizeof(int) }));
-                },
-                R"code(
-                Returns a tensor ROI
-                ex : width, height in case of an image data
-                ex : samples , channels in case of an audio data
-                )code"
-            );
+            py::keep_alive<0, 1>());
     py::class_<rocalTensorList>(m, "rocalTensorList")
         .def(
             "__getitem__",
@@ -415,6 +396,20 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
+        .export_values();
+    py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+        .value("ZERO", ZERO)
+        .value("CLAMP", CLAMP)
+        .value("REFLECT", REFLECT)
+        .export_values();
+    py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
+        .value("FT", FT)
+        .value("TF", TF)
+        .export_values();
+    py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
+        .value("PAD", PAD)
+        .value("TRIMTOSHAPE", TRIMTOSHAPE)
+        .value("ERROR", ERROR)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
@@ -650,6 +645,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
+    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
+    m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
@@ -725,5 +724,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
+    m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
+            py::return_value_policy::reference);
+    m.def("NonSilentRegion", &rocalNonSilentRegion,
+            py::return_value_policy::reference);
+    m.def("Spectrogram", &rocalSpectrogram,
+            py::return_value_policy::reference);
 }
 }  // namespace rocal

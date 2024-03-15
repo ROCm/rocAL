@@ -828,6 +828,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
 /// If the files are not in standard audio compression formats they will be ignored.
 /// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
+/// \param source_file_list_path A NULL terminated char string pointing to the file list location on the disk
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded audio to be part of the output or not.
 /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -838,6 +839,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
 /// \return Reference to the output audio
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                             const char* source_path,
+                                                            const char* source_file_list_path,
                                                             unsigned shard_count,
                                                             bool is_output,
                                                             bool shuffle = false,
@@ -850,6 +852,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext contex
 /// If the files are not in standard audio compression formats they will be ignored.
 /// \param context Rocal context
 /// \param source_path A NULL terminated char string pointing to the location on the disk
+/// \param source_file_list_path A NULL terminated char string pointing to the file list location on the disk
 /// \param shard_id Shard id for this loader
 /// \param shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
 /// \param is_output Determines if the user wants the loaded audio to be part of the output or not.
@@ -862,6 +865,7 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSource(RocalContext contex
 /// \return Reference to the output audio
 extern "C"  RocalTensor  ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,
+                                                                        const char* source_file_list_path,
                                                                         unsigned shard_id,
                                                                         unsigned shard_count,
                                                                         bool is_output,
