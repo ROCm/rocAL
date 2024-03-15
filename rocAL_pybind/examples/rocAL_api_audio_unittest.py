@@ -57,7 +57,7 @@ def main():
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu)
     with audio_pipeline:
         audio, label = fn.readers.file(file_root=data_path, file_list=file_list)
-        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=1, storage_type=10, stick_to_shard=False)
+        audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=1, storage_type=10, stick_to_shard=False)
         begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
         pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
         spec = fn.spectrogram(
@@ -66,7 +66,7 @@ def main():
             window_length=320,
             window_step=160,
             rocal_tensor_output_type = types.FLOAT)
-        audio_pipeline.set_outputs(length)
+        audio_pipeline.set_outputs(spec)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
     cnt = 0
