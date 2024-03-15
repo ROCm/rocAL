@@ -184,15 +184,14 @@ class ROCALGenericIteratorDetection(object):
                     self.labels = np.zeros(
                         (self.bs) * (self.loader._num_classes), dtype="int32")
                     self.loader.get_one_hot_encoded_labels(
-                        self.labels.ctypes.data_as(
-                    ctypes.c_void_p), device="cpu")
+                        self.labels.ctypes.data, self.loader._output_memory_type)
                     self.labels = np.reshape(
                         self.labels, (-1, self.bs, self.loader._num_classes))
                 else:
                     self.labels = cp.zeros(
                         (self.bs) * (self.loader._num_classes), dtype="int32")
-                    self.loader.get_one_hot_encoded_labels_cupy(
-                        self.labels.data.ptr)
+                    self.loader.get_one_hot_encoded_labels(
+                        self.labels.data.ptr, self.loader._output_memory_type)
                     self.labels = cp.reshape(
                         self.labels, (-1, self.bs, self.loader._num_classes))
                     

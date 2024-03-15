@@ -152,14 +152,8 @@ class Pipeline(object):
         b.rocalToTensor(self._handle, ctypes.c_void_p(array.data_ptr()), tensor_format, tensor_dtype,
                         multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0), self._output_memory_type, max_roi_height, max_roi_width)
 
-    def get_one_hot_encoded_labels(self, array_ptr, device):
-        if device == "cpu":
-            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, types.HOST_MEMORY)
-        else:
-            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, types.DEVICE_MEMORY)
-    
-    def get_one_hot_encoded_labels_cupy(self, array_ptr):
-        b.getCupyOneHotEncodedLabels(self._handle, array_ptr, self._num_classes)
+    def get_one_hot_encoded_labels(self, array_ptr, dest_device_type):
+            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, dest_device_type)
 
     def set_outputs(self, *output_list):
         b.setOutputs(self._handle, len(output_list), output_list)
