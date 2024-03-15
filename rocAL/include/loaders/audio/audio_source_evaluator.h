@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,29 +21,28 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <memory>
 #include <map>
-#include "sndfile_decoder.h"
-#include "reader_factory.h"
-#include "timing_debug.h"
+#include <memory>
+
 #include "loader_module.h"
+#include "reader_factory.h"
+#include "sndfile_decoder.h"
 
 enum class AudioSourceEvaluatorStatus {
     OK = 0,
     UNSUPPORTED_DECODER_TYPE,
-    UNSUPPORTED_STORAGE_TYPE,
+    UNSUPPORTED_STORAGE_TYPE
 };
 
 class AudioSourceEvaluator {
-public:
+   public:
     AudioSourceEvaluatorStatus create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
     void find_max_dimension();
     size_t max_samples();
     size_t max_channels();
-private:
+
+   private:
     int _samples_max = 0, _channels_max = 0;
     std::shared_ptr<AudioDecoder> _decoder;
     std::shared_ptr<Reader> _reader;
-    std::string _input_path;
 };
-

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,13 +32,13 @@ SndFileDecoder::SndFileDecoder(){};
 AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
     int read_frame_count = 0;
     read_frame_count = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
+    AudioDecoder::Status status = Status::OK;
     if (read_frame_count != _sfinfo.frames) {
         printf("Not able to decode all frames. Only decoded %d frames\n", read_frame_count);
         sf_close(_sf_ptr);
         AudioDecoder::Status status = Status::CONTENT_DECODE_FAILED;
         return status;
     }
-    AudioDecoder::Status status = Status::OK;
     return status;
 }
 
@@ -53,13 +53,13 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, fl
         sf_close(_sf_ptr);
         status = Status::HEADER_DECODE_FAILED;
         return status;
-    };
+    }
     if (_sfinfo.frames < 1) {
         THROW("Not able to process less than" + TOSTR(_sfinfo.frames) + "frames");
         sf_close(_sf_ptr);
         status = Status::HEADER_DECODE_FAILED;
         return status;
-    };
+    }
     return status;
 }
 
@@ -70,13 +70,13 @@ AudioDecoder::Status SndFileDecoder::initialize(const char* src_filename) {
     memset(&_sfinfo, 0, sizeof(_sfinfo));
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo))) {
         /* Open failed so print an error message. */
-        printf("Not able to open input file %s.\n", src_filename);
+        WRN("Not able to open input file : " + src_filename)
         /* Print the error message from libsndfile. */
         puts(sf_strerror(NULL));
         sf_close(_sf_ptr);
         status = Status::HEADER_DECODE_FAILED;
         return status;
-    };
+    }
     return status;
 }
 
