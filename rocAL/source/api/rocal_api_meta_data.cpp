@@ -56,9 +56,9 @@ RocalMetaData
         THROW("Invalid rocal context passed to rocalCreateLabelReader")
     auto context = static_cast<Context*>(p_context);
     if (strlen(file_list_path) == 0)
-        return context->master_graph->create_label_reader(source_path, file_list_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
+        return context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
     else
-        return context->master_graph->create_label_reader(source_path, file_list_path, MetaDataReaderType::FILE_LIST_META_DATA_READER);
+        return context->master_graph->create_label_reader(source_path, MetaDataReaderType::FILE_LIST_META_DATA_READER, file_list_path);
 }
 
 RocalMetaData
@@ -154,7 +154,7 @@ RocalMetaData
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateTextFileBasedLabelReader")
     auto context = static_cast<Context*>(p_context);
-    return context->master_graph->create_label_reader(source_path, "", MetaDataReaderType::TEXT_FILE_META_DATA_READER);
+    return context->master_graph->create_label_reader(source_path, MetaDataReaderType::TEXT_FILE_META_DATA_READER);
 }
 
 void
