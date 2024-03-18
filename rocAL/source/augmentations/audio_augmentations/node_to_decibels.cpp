@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,25 +20,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
 #include "node_to_decibels.h"
+
+#include <vx_ext_rpp.h>
+
 #include "exception.h"
 
-ToDeciblesNode::ToDeciblesNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-    Node(inputs, outputs) {}
+ToDeciblesNode::ToDeciblesNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void ToDeciblesNode::create_node() {
-    if(_node)
+    if (_node)
         return;
 
     vx_status status = VX_SUCCESS;
     vx_scalar cutoff_db = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cutoff_db);
     vx_scalar multiplier = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_multiplier);
     vx_scalar reference_magnitude = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_reference_magnitude);
-    _node = vxExtRppToDecibels(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, cutoff_db, multiplier, reference_magnitude);
+    _node = vxExtRppToDecibels(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), cutoff_db, multiplier, reference_magnitude);
 
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the to_decibels (vxRppToDecibels) node failed: "+ TOSTR(status))
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the to_decibels (vxRppToDecibels) node failed: " + TOSTR(status))
 }
 
 void ToDeciblesNode::update_node() {}

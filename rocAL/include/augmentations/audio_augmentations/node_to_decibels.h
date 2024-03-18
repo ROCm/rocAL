@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,18 +21,20 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 
 class ToDeciblesNode : public Node {
-public:
+   public:
     ToDeciblesNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ToDeciblesNode() = delete;
     void init(float cutoff_db, float multiplier, float reference_magnitude);
-protected:
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
     float _cutoff_db = -200.0;
     float _multiplier = 10.0;
     float _reference_magnitude = 0.0;

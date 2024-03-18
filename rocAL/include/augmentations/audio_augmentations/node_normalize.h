@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,18 +21,20 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 
 class NormalizeNode : public Node {
-public:
+   public:
     NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     NormalizeNode() = delete;
     void init(float mean, float std_dev, std::vector<int> axes, bool batch, float scale, float shift, int ddof, float epsilon);
-protected:
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
     float _mean, _std_dev;
     float _scale = 1.0;
     float _shift = 0.0;
@@ -40,4 +42,5 @@ private:
     int _ddof = 0;
     int _axis_mask = 0;
     bool _batch = false;
+    unsigned _num_of_dims;
 };

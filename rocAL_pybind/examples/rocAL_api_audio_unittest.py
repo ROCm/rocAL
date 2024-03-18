@@ -73,8 +73,8 @@ def main():
             cutoff_db=np.log(1e-20),
             rocal_tensor_output_type=types.FLOAT,
         )
-        normalize_audio = fn.normalize(to_decibels, axes=[1])
-        audio_pipeline.set_outputs(normalize_audio)
+        # normalize_audio = fn.normalize(to_decibels, axes=[1])  // To be uncommented after kernel is added in RPP
+        audio_pipeline.set_outputs(to_decibels)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
     cnt = 0

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,15 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
 #include "node_normalize.h"
+
+#include <vx_ext_rpp.h>
+
 #include "exception.h"
 
-NormalizeNode::NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-    Node(inputs, outputs) {}
+NormalizeNode::NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void NormalizeNode::create_node() {
-    if(_node)
+    if (_node)
         return;
 
     vx_scalar mean = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_mean);
@@ -38,12 +39,12 @@ void NormalizeNode::create_node() {
     vx_scalar epsilon = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_epsilon);
     vx_scalar ddof = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_ddof);
     vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
-    _node = vxExtRppNormalize(_graph->get(), _inputs[0]->handle(), _src_tensor_roi, _outputs[0]->handle(), _dst_tensor_roi, axis_mask, mean, std_dev,
-                              scale, shift, epsilon, ddof);
+    _node = vxExtRppNormalize(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), axis_mask, mean, std_dev,
+                              scale, shift, epsilon, ddof, _num_of_dims);
 
     vx_status status;
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the normalize (vxRppNormalize) node failed: "+ TOSTR(status))
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the normalize (vxRppNormalize) node failed: " + TOSTR(status))
 }
 
 void NormalizeNode::update_node() {}
@@ -57,8 +58,9 @@ void NormalizeNode::init(float mean, float std_dev, std::vector<int> axes, bool 
     _shift = shift;
     _ddof = ddof;
     _epsilon = epsilon;
-    if(((_mean > 0.0f) || (_std_dev > 0.0f)) && (!axes.size()))
+    _num_of_dims = _inputs[0]->info().num_of_dims() - 1;
+    if (((_mean > 0.0f) || (_std_dev > 0.0f)) && (!axes.size()))
         std::iota(axes.begin(), axes.end(), 0);
-    for(unsigned d = 0; d < axes.size(); d++)
+    for (unsigned d = 0; d < axes.size(); d++)
         _axis_mask |= (1 << axes[d]);
 }
