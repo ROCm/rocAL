@@ -53,9 +53,6 @@ def main():
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
-    crop = 300
-    local_rank = 0
-    world_size = 1
     print("*********************************************************************")
     audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
     with audio_pipeline:
