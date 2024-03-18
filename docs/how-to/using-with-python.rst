@@ -91,7 +91,6 @@ Given below is an example of a file reader, which takes a folder of images as in
         images = fn.decoders.image(jpegs, file_root=data_path, device=decoder_device, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=True)
         images = fn.resize(images, device=rocal_device, resize_x=300, resize_y=300)
 
-
 Defining the Pipeline
 ------------------------
 
@@ -190,8 +189,6 @@ To build the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybi
 Running the Pipeline
 -----------------------------
 
-To run/use the pipeline, simply create a data loader using the pipeline and iterate through it to get the next batch of images with labels.
-
 To run the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168`
 
 .. code-block:: python
@@ -245,7 +242,6 @@ To run the pipeline, see:
     pipe_out = pipe.run()
     images, labels = pipe_out
     show_images(images)
-
 
 rocAL Data Types
 =========================
