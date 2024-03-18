@@ -22,22 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <iostream>
-#include <cstring>
+#include <unistd.h>
+
 #include <chrono>
 #include <cstdio>
-#include <unistd.h>
+#include <cstring>
+#include <iostream>
 #include <vector>
 
 #include "rocal_api.h"
 
 #define DISPLAY 1
-#define METADATA 0 // Switch the meta-data part once the meta-data reader (file list reader) is introduced
+#define METADATA 0  // Switch the meta-data part once the meta-data reader (file list reader) is introduced
 using namespace std::chrono;
 
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu);
-int main(int argc, const char **argv)
-{
+int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     printf("Usage: audio_augmentation <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0 \n");
@@ -75,8 +75,7 @@ int main(int argc, const char **argv)
     return return_val;
 }
 
-int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu)
-{
+int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu) {
     int inputBatchSize = 10;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
@@ -116,11 +115,9 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         }
 
     }
-    
-   output = input1;
+
     rocalVerify(handle);
-    if (rocalGetStatus(handle) != ROCAL_OK)
-    {
+    if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Could not verify the augmentation graph " << rocalGetErrorMessage(handle);
         return -1;
     }
@@ -139,21 +136,20 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         output_tensor_list = rocalGetOutputTensors(handle);
         std::cout << "\n *****************************Audio output**********************************\n";
         std::cout << "\n **************Printing the first 5 values of the Audio buffer**************\n";
-        for(uint idx = 0; idx < output_tensor_list->size(); idx++) {
-            float * buffer = (float *)output_tensor_list->at(idx)->buffer();
-            for(int n = 0; n < 5; n++)
+        for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
+            float *buffer = (float *)output_tensor_list->at(idx)->buffer();
+            for (int n = 0; n < 5; n++)
                 std::cout << buffer[n] << "\n";
         }
 
         if (METADATA) {
             RocalTensorList labels = rocalGetImageLabels(handle);
-            for(uint i = 0; i < labels->size(); i++) {
-                int * labels_buffer = (int *)(labels->at(i)->buffer());
+            for (uint i = 0; i < labels->size(); i++) {
+                int *labels_buffer = (int *)(labels->at(i)->buffer());
                 std::cout << ">>>>> LABELS : " << labels_buffer[0] << "\t";
             }
-
         }
-        std::cout<<"******************************************************************************\n";
+        std::cout << "******************************************************************************\n";
     }
     rocalRelease(handle);
     return 0;
