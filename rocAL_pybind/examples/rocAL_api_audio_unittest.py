@@ -44,19 +44,16 @@ def main():
     except OSError as error:
         print(error)
     data_path = sys.argv[1]
-    file_list = sys.argv[2]
-    if(sys.argv[3] == "cpu"):
-        _rali_cpu = True
-    else:
-        _rali_cpu = False
+    file_list = " "
+    _rocal_cpu = True # The GPU support for Audio is not given yet
     batch_size = int(sys.argv[4])
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     print("*********************************************************************")
-    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu)
+    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu)
     with audio_pipeline:
-        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path=" ", downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
+        audio_decode = fn.decoders.audio(file_root=data_path, file_list_path=file_list, downmix=False, shard_id=0, num_shards=2, storage_type=0, stick_to_shard=False)
         audio_pipeline.set_outputs(audio_decode)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
