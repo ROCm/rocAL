@@ -180,7 +180,7 @@ class TensorInfo {
             }
         } else {                                                             // For other tensors
             if (!_max_shape.size()) _max_shape.resize(_num_of_dims - 1, 0);  // Since 2 values will be stored in the vector
-            _max_shape.assign(_dims.begin() + 1, _dims.end()); // RECHECK for audio tensors
+            _max_shape.assign(_dims.begin() + 1, _dims.end());
         }
         reset_tensor_roi_buffers();
     }
@@ -267,7 +267,7 @@ class TensorInfo {
     bool is_metadata() const { return _is_metadata; }
     void set_roi_ptr(unsigned* roi_ptr) { _roi.reset_ptr(roi_ptr); }
     void copy_roi(void* roi_buffer) { _roi.copy(roi_buffer); }
-    std::shared_ptr<std::vector<float>> get_sample_rate() const { return _sample_rate; }
+    std::shared_ptr<std::vector<float>> get_sample_rates() const { return _sample_rates; }
 
    private:
     Type _type = Type::UNKNOWN;                                  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
@@ -288,7 +288,7 @@ class TensorInfo {
     bool _is_image = false;
     bool _is_metadata = false;
     size_t _channels = 3;  //!< stores the channel dimensions in the tensor
-    std::shared_ptr<std::vector<float>> _sample_rate;
+    std::shared_ptr<std::vector<float>> _sample_rates;
     void reallocate_tensor_sample_rate_buffers();
 };
 
@@ -320,7 +320,7 @@ class Tensor : public rocalTensor {
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
-    unsigned copy_data(void* user_buffer, uint max_x1, uint max_y1);
+    unsigned copy_data(void* user_buffer, uint max_cols, uint max_rows);
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();

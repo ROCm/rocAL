@@ -174,7 +174,7 @@ class Reader {
     //! Returns the number of items remained in this resource
 
      //! Returns the path of the last item opened in this resource
-    virtual std::string file_path() = 0;
+    virtual std::string file_path() { return {}; }
 
     virtual unsigned count_items() = 0;
 

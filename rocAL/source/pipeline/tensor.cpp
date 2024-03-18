@@ -126,7 +126,7 @@ void TensorInfo::reset_tensor_roi_buffers() {
         // TODO - For other tensor types
         for (unsigned i = 0; i < _batch_size; i++) {
             unsigned *tensor_shape = _roi[i].end;
-            for(unsigned j = 0; j < _max_shape.size() ; j++)
+            for (unsigned j = 0; j < _max_shape.size(); j++)
                 tensor_shape[j] = _max_shape[j];
         }
     }
@@ -135,7 +135,7 @@ void TensorInfo::reset_tensor_roi_buffers() {
 void TensorInfo::reallocate_tensor_sample_rate_buffers() {
     if (_is_image)
         THROW("No sample rate available for Image data")
-    _sample_rate = std::make_shared<std::vector<float>>(_batch_size);
+    _sample_rates = std::make_shared<std::vector<float>>(_batch_size);
 }
 
 TensorInfo::TensorInfo()
@@ -216,14 +216,12 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
                 roi[i].xywh.h = height[i];
             }
         }
-    }
-    else if(!_info.is_metadata()) { // Audio - Data
+    } else if (!_info.is_metadata()) {  // Audio - Data
         auto max_dims = _info.max_shape();
         unsigned max_samples = max_dims.at(0);
         unsigned max_channels = max_dims.at(1);
         auto samples = width;
         auto channels = height;
-        // Roi2DCords *roi = _info.roi().get_2D_roi();
 
         if (samples.size() != channels.size())
             THROW("Batch size of Tensor height and width info does not match")
@@ -234,15 +232,13 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
             if (samples[i] > max_samples) {
                 ERR("Given ROI width is larger than buffer width for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
                 tensor_shape[0] = max_samples;
-            }
-            else {
+            } else {
                 tensor_shape[0] = samples[i];
             }
             if (channels[i] > max_channels) {
                 ERR("Given ROI height is larger than buffer with for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
                 tensor_shape[1] = max_channels;
-            }
-            else {
+            } else {
                 tensor_shape[1] = channels[i];
             }
         }
@@ -252,14 +248,12 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
 void Tensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
     if (_info.is_image()) {
         THROW("No sample rate available for Image data")
-    }
-    else if(!_info.is_metadata()) {
+    } else if (!_info.is_metadata()) {
         for (unsigned i = 0; i < info().batch_size(); i++) {
-            _info.get_sample_rate()->at(i) = sample_rate[i];
+            _info.get_sample_rates()->at(i) = sample_rate[i];
         }
     }
 }
-
 
 void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) {
     auto max_shape = _info.max_shape();
@@ -456,20 +450,23 @@ unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_ty
     return 0;
 }
 
-unsigned Tensor::copy_data(void *user_buffer, uint max_y1, uint max_x1) {
+unsigned Tensor::copy_data(void *user_buffer, uint max_cols, uint max_rows) {
     if (_mem_handle == nullptr) return 0;
-    //TODO : Handle this case for HIP buffer
-    auto max_shape_x1 = _info.max_shape().at(0);
+    // TODO : Handle this case for HIP buffer
+    auto max_shape_rows = _info.max_shape().at(0);
     auto dtype_size = _info.data_type_size();
-    auto src_stride = (max_shape_x1 * _info.max_shape().at(1) * dtype_size);
-    auto dst_stride = (max_y1 * max_x1 * dtype_size);
+    auto num_of_bytes_max_rows = max_shape_rows * dtype_size;
+    auto src_stride = (_info.max_shape().at(1) * num_of_bytes_max_rows);
+    auto num_of_bytes_rows = max_rows * dtype_size;
+    auto dst_stride = (max_cols * num_of_bytes_rows);
+
     for (uint i = 0; i < _info._batch_size; i++) {
         auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride;
         auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
-        for (uint height = 0; height < max_y1; height++) {
-            memcpy(temp_dst_ptr, temp_src_ptr, max_x1 * dtype_size);
-            temp_src_ptr += max_shape_x1 * dtype_size;
-            temp_dst_ptr += max_x1 * dtype_size;
+        for (uint height = 0; height < max_cols; height++) {
+            memcpy(temp_dst_ptr, temp_src_ptr, num_of_bytes_rows);
+            temp_src_ptr += num_of_bytes_max_rows;
+            temp_dst_ptr += num_of_bytes_rows;
         }
     }
     return 0;

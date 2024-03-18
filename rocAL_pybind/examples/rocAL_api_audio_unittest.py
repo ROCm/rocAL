@@ -46,15 +46,15 @@ def main():
     data_path = sys.argv[1]
     file_list = sys.argv[2]
     if(sys.argv[3] == "cpu"):
-        _rocal_cpu = True
+        rocal_cpu = True
     else:
-        _rocal_cpu = False
+        rocal_cpu = False
     batch_size = int(sys.argv[4])
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     print("*********************************************************************")
-    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rocal_cpu)
+    audio_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=rocal_cpu)
     with audio_pipeline:
         audio, label = fn.readers.file(file_root=data_path, file_list=file_list)
         audio_decode = fn.decoders.audio(audio, file_root=data_path, file_list_path=file_list, downmix=True, shard_id=0, num_shards=1, storage_type=10, stick_to_shard=False)
@@ -75,7 +75,6 @@ def main():
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
-            print(it)
             for x in range(len(it[0])):
                 for audio_data, label in zip(it[0][x], it[1]):
                     print("label", label)
