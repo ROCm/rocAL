@@ -376,6 +376,9 @@ enum RocalExternalSourceMode {
     ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
 };
 
+/*! \brief rocAL Audio Border Type enum
+ * \ingroup group_rocal_types
+ */
 enum RocalAudioBorderType {
     ZERO = 0,
     CLAMP,

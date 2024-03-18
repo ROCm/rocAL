@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ class AudioLoaderSharded : public LoaderModule {
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
     void set_output(Tensor* output_audio) override;
-    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override{THROW("set_random_bbox_data_reader is not compatible with this implementation")};
+    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override{ THROW("set_random_bbox_data_reader is not compatible with this implementation") };
     size_t remaining_count() override;
     void reset() override;
     void start_loading() override;
@@ -42,7 +42,7 @@ class AudioLoaderSharded : public LoaderModule {
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
-                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {}
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override { THROW("feed_external_input is not compatible with this implementation") }
 
    private:
     void increment_loader_idx();

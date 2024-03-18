@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,15 +21,15 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "audio_loader_sharded.h"
 #include "graph.h"
+#include "node.h"
 
-class AudioLoaderNode: public Node {
-public:
+class AudioLoaderNode : public Node {
+   public:
     /// \param device_resources shard count from user
     /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
-    AudioLoaderNode(Tensor *output, void* device_resources);
+    AudioLoaderNode(Tensor *output, void *device_resources);
     ~AudioLoaderNode() override;
     AudioLoaderNode() = delete;
     /// \param internal_shard_count Defines the amount of parallelism user wants for the load and decode process to be handled internally.
@@ -46,10 +46,11 @@ public:
     void init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_file_list, StorageType storage_type,
               DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader);
     std::shared_ptr<LoaderModule> get_loader_module();
-protected:
-    void create_node() override {};
-    void update_node() override {};
-private:
+
+   protected:
+    void create_node() override{};
+    void update_node() override{};
+
+   private:
     std::shared_ptr<AudioLoaderSharded> _loader_module = nullptr;
 };
-
