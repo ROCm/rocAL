@@ -63,6 +63,7 @@ void AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
             _decoder[i] = create_audio_decoder(decoder_config);
         }
     }
+    _num_threads = reader_config.get_cpu_num_threads();
     _reader = create_reader(reader_config);
 }
 
