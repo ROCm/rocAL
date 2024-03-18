@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,22 +21,24 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 #include "parameter_factory.h"
 #include "parameter_vx.h"
 #include "rocal_api_types.h"
 
 class PreemphasisFilterNode : public Node {
-public:
+   public:
     PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     PreemphasisFilterNode() = delete;
-    void init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border);
-protected:
+    void init(FloatParam *preemph_coeff, RocalAudioBorderType preemph_border);
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
     ParameterVX<float> _preemph_coeff;
-    constexpr static float PREEMPH_COEFF_RANGE [2] = {0.97, 0.97};
+    constexpr static float PREEMPH_COEFF_RANGE[2] = {0.97, 0.97};
     RocalAudioBorderType _preemph_border;
 };
