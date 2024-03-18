@@ -23,7 +23,6 @@ def draw_patches(img, idx, device):
     image = img.detach().numpy()
     audio_data = image.flatten()
     label = idx
-    # label = idx.cpu().detach().numpy() #TODO: Uncomment after the meta-data is enabled
     print("label: ", label)
     # Saving the array in a text file
     file = open("results/rocal_data_new"+str(label)+".txt", "w+")

@@ -2,8 +2,8 @@
 #
 # MIT License
 #
-# Copyright (c) 2018 - 2024 Advanced Micro Devices, Inc.
-#
+#Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -43,29 +43,11 @@ include(GNUInstallDirs)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../amd_openvx/cmake)
 
-find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/mivisionx/rocal)
 link_directories(${ROCM_PATH}/lib/)
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
-
-if(OpenCV_FOUND)
-    if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
-        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
-        include_directories(${OpenCV_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-        if(${OpenCV_VERSION_MAJOR} EQUAL 4)
-	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
-        else()
-	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
-        endif()
-    else()
-        message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
-    endif()
-else()
-    message(FATAL_ERROR "OpenCV Not Found -- No Display Support")
-endif()
 
 target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")

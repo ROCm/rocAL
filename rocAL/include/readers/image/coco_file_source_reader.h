@@ -58,9 +58,6 @@ class COCOFileSourceReader : public Reader {
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id; };
 
-    //! Returns the name of the latest file_path opened
-    std::string file_path() override { return _last_file_name; }
-
     unsigned count_items() override;
 
     ~COCOFileSourceReader() override;

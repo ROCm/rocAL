@@ -313,12 +313,9 @@ class ROCALAudioIterator(object):
     fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
 
     """
-    def __init__(self, pipeline, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0, 1.0, 1.0], offset = [0.0, 0.0, 0.0], tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
+    def __init__(self, pipeline, tensor_layout = types.NONE, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
         self.loader = pipeline
         self.tensor_format = tensor_layout
-        self.multiplier = multiplier
-        self.offset = offset
-        self.reverse_channels = reverse_channels
         self.device = device
         self.device_id = device_id
         self.output = None
@@ -328,7 +325,6 @@ class ROCALAudioIterator(object):
         self.output_list = None
         self.labels_size = self.batch_size
         self.output_memory_type = self.loader._output_memory_type
-
 
     def next(self):
         return self.__next__()
@@ -358,9 +354,6 @@ class ROCALAudioIterator(object):
             self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
             self.output_list.append(output)
 
-
-        # self.labels = self.loader.get_image_labels() #Uncomment when meta-data is added
-        # self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
         return self.output_list, self.labels_tensor
 
     def reset(self):

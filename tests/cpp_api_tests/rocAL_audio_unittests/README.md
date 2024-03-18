@@ -1,5 +1,5 @@
-# rocAL Unit Tests
-This application can be used to verify the functionality of the API offered by rocAL.
+# rocAL Audio Unit Tests
+This application can be used to verify the functionality of the Audio APIs offered by rocAL.
 
 ## Build Instructions
 
