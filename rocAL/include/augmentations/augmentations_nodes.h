@@ -60,3 +60,8 @@ THE SOFTWARE.
 #include "node_spectrogram.h"
 #include "node_to_decibels.h"
 #include "node_normalize.h"
+#include "node_resample.h"
+#include "node_uniform_distribution.h"
+#include "node_normal_distribution.h"
+#include "node_tensor_mul_scalar.h"
+#include "node_tensor_add_tensor.h"

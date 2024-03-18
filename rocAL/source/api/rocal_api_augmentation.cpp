@@ -2348,3 +2348,154 @@ rocalNormalize(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalResample(RocalContext p_context,
+              RocalTensor p_input,
+              RocalTensor p_input_resample_rate,
+              RocalTensorOutputType rocal_tensor_output_datatype,
+              bool is_output,
+              float sample_hint) {
+    if (!p_context || !p_input_resample_rate || !p_input)
+        THROW("Null values passed as input")
+    Tensor* resampled_output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto input_resample_rate = static_cast<Tensor*>(p_input_resample_rate);
+    RocalTensorDataType op_tensor_data_type;
+    try {
+        TensorInfo output_info = input->info();
+        op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        output_info.set_tensor_layout(RocalTensorlayout::NONE);
+        output_info.set_data_type(op_tensor_data_type);
+        if (sample_hint > 0) {
+            std::vector<size_t> max_dims = output_info.max_shape();
+            std::vector<size_t> dims = output_info.dims();
+            dims[1] = std::ceil(sample_hint);
+            dims[2] = max_dims[1];
+            output_info.set_dims(dims);
+        } else {
+            THROW("Please pass a valid resample hint")
+        }
+        resampled_output = context->master_graph->create_tensor(output_info, is_output);
+        resampled_output->reset_tensor_roi();
+        context->master_graph->add_node<ResampleNode>({input}, {resampled_output})->init(input_resample_rate, 50.0);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return resampled_output;
+}
+
+RocalTensor rocalTensorMulScalar(RocalContext p_context,
+                                 RocalTensor p_input,
+                                 bool is_output,
+                                 RocalTensorOutputType rocal_tensor_output_type,
+                                 float scalar) {
+    if (!p_context || !p_input)
+        THROW("Null values passed as input")
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    RocalTensorDataType op_tensor_data_type;
+    try {
+        op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_type;
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_data_type);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor rocalTensorAddTensor(RocalContext p_context,
+                                 RocalTensor p_input1,
+                                 RocalTensor p_input2,
+                                 bool is_output,
+                                 RocalTensorOutputType rocal_tensor_output_datatype) {
+    if (!p_context || !p_input1 || !p_input2)
+        THROW("Null values passed as input")
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input1 = static_cast<Tensor*>(p_input1);
+    auto input2 = static_cast<Tensor*>(p_input2);
+    RocalTensorDataType op_tensor_data_type;
+    try {
+        op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        TensorInfo output_info = input1->info();
+        output_info.set_data_type(op_tensor_data_type);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<TensorAddTensorNode>({input1, input2}, {output})->init();
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor rocalUniformDistribution(RocalContext p_context,
+                                     RocalTensor p_input,
+                                     bool is_output,
+                                     std::vector<float>& range) {
+    if (!p_context)
+        THROW("Null values passed as input")
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        std::cerr << "Here in Uniform Dist";
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        unsigned num_of_dims = 3;
+        std::vector<size_t> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->user_batch_size();
+        dims.at(1) = 1;
+        dims.at(2) = 1;
+        auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
+                               context->master_graph->mem_type(),
+                               tensor_data_type);
+        output = context->master_graph->create_tensor(info, is_output);
+        output->create_from_handle(context->master_graph->get_vx_context());
+        context->master_graph->add_node<UniformDistributionNode>({input}, {output})->init(range);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor rocalNormalDistribution(RocalContext p_context,
+                                    RocalTensor p_input,
+                                    bool is_output,
+                                    float mean,
+                                    float stddev) {
+    if (!p_context)
+        THROW("Null values passed as input")
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        unsigned num_of_dims = 3;
+        std::vector<size_t> dims;
+        dims.resize(num_of_dims);
+        dims.at(0) = context->user_batch_size();
+        dims.at(1) = 1;
+        dims.at(2) = 1;
+        auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
+                               context->master_graph->mem_type(),
+                               tensor_data_type);
+        output = context->master_graph->create_tensor(info, is_output);
+        output->create_from_handle(context->master_graph->get_vx_context());
+        output->reset_tensor_roi();
+        context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev);
+
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

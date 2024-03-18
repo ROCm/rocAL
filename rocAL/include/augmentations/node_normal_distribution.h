@@ -21,26 +21,27 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "batch_rng.h"
+#include "node.h"
+#include "graph.h"
+#include <random>
 
-template <typename T>
-class Parameter {
-   public:
-    virtual T default_value() const = 0;
-    ///
-    /// \return returns the updated value of the parameter
-    virtual T get() = 0;
 
-    /// used to internally renew state of the parameter if needed (for random parameters)
-    virtual void renew(){};
-
-    /// allocates memory for the array with specified size
-    virtual void create_array(unsigned size){};
-
-    /// used to fetch the updated param values
-    virtual std::vector<T> get_array() { return {}; };
-
-    virtual ~Parameter() {}
-    ///
-    /// \return returns if this parameter takes a single value (vs a range of values or many values)
-    virtual bool single_value() const = 0;
+class NormalDistributionNode : public Node
+{
+public:
+    NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    NormalDistributionNode() = delete;
+    void init(float mean, float stddev);
+    void update_param();
+protected:
+    void create_node() override;
+    void update_node() override;
+    float _mean, _std_dev;
+    std::normal_distribution<float> _dist_normal;
+    std::vector<float> _normal_distribution_array;
+    unsigned _num_of_dims;
+    vx_size * _stride;
+    BatchRNG<std::mt19937> _rngs = {89, 2}; // Random Seed & BatchSize for initialization 
 };
+

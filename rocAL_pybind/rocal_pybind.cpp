@@ -20,20 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/numpy.h>
-#include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
-#include "rocal_api_types.h"
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include <iostream>
+
 #include "rocal_api.h"
-#include "rocal_api_tensor.h"
-#include "rocal_api_parameters.h"
-#include "rocal_api_data_loaders.h"
 #include "rocal_api_augmentation.h"
+#include "rocal_api_data_loaders.h"
 #include "rocal_api_data_transfer.h"
 #include "rocal_api_info.h"
+#include "rocal_api_parameters.h"
+#include "rocal_api_tensor.h"
+#include "rocal_api_types.h"
 namespace py = pybind11;
 
 using float16 = half_float::half;
@@ -134,8 +136,7 @@ std::unordered_map<int, std::string> rocalToPybindLayout = {
     {1, "NCHW"},
     {2, "NFHWC"},
     {3, "NFCHW"},
-    {4, "NONE"}
-};
+    {4, "NONE"}};
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {0, "float32"},
@@ -400,7 +401,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
-    py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+    py::enum_<RocalAudioBorderType>(types_m, "RocalAudioBorderType", "Rocal Audio Border Type")
         .value("ZERO", ZERO)
         .value("CLAMP", CLAMP)
         .value("REFLECT", REFLECT)
@@ -649,9 +650,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
     m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
-            py::return_value_policy::reference);
+          py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
-            py::return_value_policy::reference);
+          py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
@@ -727,15 +728,25 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
-    m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
-            py::return_value_policy::reference);
+    m.def("PreEmphasisFilter", &rocalPreEmphasisFilter,
+          py::return_value_policy::reference);
     m.def("NonSilentRegion", &rocalNonSilentRegion,
-            py::return_value_policy::reference);
+          py::return_value_policy::reference);
     m.def("Spectrogram", &rocalSpectrogram,
-            py::return_value_policy::reference);
-    m.def("audioNormalize", &rocalNormalize,"Normalizes the input by removing the mean and dividing by the standard deviation",
-        py::return_value_policy::reference);
+          py::return_value_policy::reference);
+    m.def("audioNormalize", &rocalNormalize, "Normalizes the input by removing the mean and dividing by the standard deviation",
+          py::return_value_policy::reference);
     m.def("ToDecibels", &rocalToDecibels, "Converts to Decibels",
-        py::return_value_policy::reference);
+          py::return_value_policy::reference);
+    m.def("Resample", &rocalResample, "Resamples the audio",
+          py::return_value_policy::reference);
+    m.def("NormalDistribution", &rocalNormalDistribution, "Generates random numbers following a normal distribution",
+          py::return_value_policy::reference);
+    m.def("UniformDistribution", &rocalUniformDistribution, "Generates random numbers following a uniform distribution",
+          py::return_value_policy::reference);
+    m.def("TensorMulScalar", &rocalTensorMulScalar, "Multiplies a given Tensor Value with Scalar - Arithmetic Operation",
+          py::return_value_policy::reference);
+    m.def("TensorAddTensor", &rocalTensorAddTensor, "Adds a given Tensor with another Tensor - Arithmetic Operation",
+          py::return_value_policy::reference);
 }
 }  // namespace rocal

@@ -21,26 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "node.h"
+#include "graph.h"
+#include "rocal_api_types.h"
 
-template <typename T>
-class Parameter {
-   public:
-    virtual T default_value() const = 0;
-    ///
-    /// \return returns the updated value of the parameter
-    virtual T get() = 0;
+class ResampleNode : public Node {
+public:
+    ResampleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    ResampleNode() = delete;
+    void init(Tensor* resample_rate, float quality);
+protected:
+    void create_node() override;
+    void update_node() override;
+private:
+    Tensor* _resample_rate;
+    float _quality;
+    vx_array _src_sample_rate_array;
+    std::vector<unsigned> _src_frames, _src_channels;
 
-    /// used to internally renew state of the parameter if needed (for random parameters)
-    virtual void renew(){};
-
-    /// allocates memory for the array with specified size
-    virtual void create_array(unsigned size){};
-
-    /// used to fetch the updated param values
-    virtual std::vector<T> get_array() { return {}; };
-
-    virtual ~Parameter() {}
-    ///
-    /// \return returns if this parameter takes a single value (vs a range of values or many values)
-    virtual bool single_value() const = 0;
 };

@@ -1139,3 +1139,31 @@ def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_samp
                      "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "rocal_tensor_output_type": rocal_tensor_output_type}
     normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return normalize_output
+
+def resample(*inputs, resample_rate=None, rocal_tensor_output_type=types.FLOAT, resample_hint=-1):
+    """
+    Resamples an audio signal.
+
+    The resampling is achieved by applying a sinc filter with Hann window with an extent controlled by the quality argument.
+    """
+    kwargs_pybind = {"input_image0": inputs[0], "resample_rate": resample_rate, "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "resample_hint":resample_hint}
+    resample_output = b.Resample(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return resample_output
+
+def tensor_add_tensor_float(*inputs, rocal_tensor_output_type=types.FLOAT):
+    """
+    Adds a rocalTensor with another rocalTensor.
+    """
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "rocal_tensor_output_type": rocal_tensor_output_type}
+    tensor_add_tensor_float = b.TensorAddTensor(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return tensor_add_tensor_float
+
+def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.FLOAT):
+    """
+    Multiplies a rocalTensor with a scalar float value.
+    """
+    print("Scalar in fn : ", scalar)
+    print(inputs[0])
+    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_output_type": rocal_tensor_output_type, "scalar": scalar}
+    tensor_mul_scalar_float = b.TensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return tensor_mul_scalar_float

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,27 +20,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#include <vx_ext_rpp.h>
+#include "node_tensor_mul_scalar.h"
+#include "exception.h"
 
-template <typename T>
-class Parameter {
-   public:
-    virtual T default_value() const = 0;
-    ///
-    /// \return returns the updated value of the parameter
-    virtual T get() = 0;
+TensorMulScalarNode::TensorMulScalarNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+        Node(inputs, outputs) { }
 
-    /// used to internally renew state of the parameter if needed (for random parameters)
-    virtual void renew(){};
+void TensorMulScalarNode::create_node()
+{
+    if(_node)
+        return;
+    vx_scalar scalar_value = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scalar);
+    _node = vxExtRppTensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value, _batch_size);
+    vx_status status;
+    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the (vxExtRppTensorMulScalar) node failed: "+ TOSTR(status))
+}
 
-    /// allocates memory for the array with specified size
-    virtual void create_array(unsigned size){};
+void TensorMulScalarNode::update_node() {
+}
 
-    /// used to fetch the updated param values
-    virtual std::vector<T> get_array() { return {}; };
-
-    virtual ~Parameter() {}
-    ///
-    /// \return returns if this parameter takes a single value (vs a range of values or many values)
-    virtual bool single_value() const = 0;
-};
+void TensorMulScalarNode::init(float scalar) {
+    _scalar = scalar;
+}

@@ -20,27 +20,43 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef BATCHRNG
+#define BATCHRNG
 
-template <typename T>
-class Parameter {
-   public:
-    virtual T default_value() const = 0;
-    ///
-    /// \return returns the updated value of the parameter
-    virtual T get() = 0;
+#include <random>
 
-    /// used to internally renew state of the parameter if needed (for random parameters)
-    virtual void renew(){};
+template <typename RNG = std::mt19937>
+class BatchRNG {
+ public:
+  /**
+   * @brief Used to keep batch of RNGs
+   *
+   * @param seed Used to generate seed_seq to initialize batch of RNGs
+   * @param batch_size How many RNGs to store
+   * @param state_size How many seed are used to initialize one RNG. Used to
+   * lower probablity of collisions between seeds used to initialize RNGs in
+   * different operators.
+   */
+  BatchRNG(int64_t seed = 1, int batch_size = 1, int state_size = 4)
+      : seed_(seed) {
+    std::seed_seq seq{seed_};
+    std::vector<uint32_t> seeds(batch_size * state_size);
+    seq.generate(seeds.begin(), seeds.end());
+    rngs_.reserve(batch_size);
+    for (int i = 0; i < batch_size * state_size; i += state_size) {
+      std::seed_seq s(seeds.begin() + i, seeds.begin() + i + state_size);
+      rngs_.emplace_back(s);
+    }
+  }
 
-    /// allocates memory for the array with specified size
-    virtual void create_array(unsigned size){};
+  /**
+   * Returns engine corresponding to given sample ID
+   */
+  RNG &operator[](int sample) noexcept { return rngs_[sample]; }
 
-    /// used to fetch the updated param values
-    virtual std::vector<T> get_array() { return {}; };
-
-    virtual ~Parameter() {}
-    ///
-    /// \return returns if this parameter takes a single value (vs a range of values or many values)
-    virtual bool single_value() const = 0;
+ private:
+  int64_t seed_;
+  std::vector<RNG> rngs_;
 };
+
+#endif
