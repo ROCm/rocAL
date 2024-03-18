@@ -1100,11 +1100,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(RocalContext context, R
 
 extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
                                                              RocalTensor p_input,
-                                                             RocalTensorOutputType rocal_tensor_output_type,
                                                              bool is_output,
                                                              RocalFloatParam p_preemph_coeff = NULL,
-                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP);
-
+                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP,
+                                                             RocalTensorOutputType output_datatype = ROCAL_FP32);
 /*! \brief A
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context

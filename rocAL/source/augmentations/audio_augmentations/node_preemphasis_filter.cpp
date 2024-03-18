@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,30 +20,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
 #include "node_preemphasis_filter.h"
+
+#include <vx_ext_rpp.h>
+
 #include "exception.h"
 
-PreemphasisFilterNode::PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs),
-        _preemph_coeff(PREEMPH_COEFF_RANGE[0], PREEMPH_COEFF_RANGE[1]) { }
+PreemphasisFilterNode::PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
+                                                                                                                          _preemph_coeff(PREEMPH_COEFF_RANGE[0], PREEMPH_COEFF_RANGE[1]) {}
 
 void PreemphasisFilterNode::create_node() {
-    if(_node)
+    if (_node)
         return;
-    _preemph_coeff.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
+    _preemph_coeff.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     vx_scalar border_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_preemph_border);
     _node = vxExtRppPreemphasisFilter(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), _preemph_coeff.default_array(), border_type);
     vx_status status;
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the vxExtRppPreemphasisFilter node failed: " + TOSTR(status))
 }
 
 void PreemphasisFilterNode::update_node() {
-     _preemph_coeff.update_array();
+    _preemph_coeff.update_array();
 }
 
-void PreemphasisFilterNode::init(FloatParam* preemph_coeff, RocalAudioBorderType preemph_border) {
+void PreemphasisFilterNode::init(FloatParam *preemph_coeff, RocalAudioBorderType preemph_border) {
     _preemph_coeff.set_param(core(preemph_coeff));
     _preemph_border = preemph_border;
 }

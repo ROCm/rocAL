@@ -2159,10 +2159,10 @@ rocalNop(
 RocalTensor ROCAL_API_CALL
 rocalPreEmphasisFilter(RocalContext p_context,
                        RocalTensor p_input,
-                       RocalTensorOutputType rocal_tensor_output_datatype,
                        bool is_output,
                        RocalFloatParam p_preemph_coeff,
-                       RocalAudioBorderType preemph_border_type) {
+                       RocalAudioBorderType preemph_border_type,
+                       RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2172,14 +2172,13 @@ rocalPreEmphasisFilter(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
     try {
-        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(rocal_tensor_output_datatype);
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
-        output_info.set_tensor_layout(RocalTensorlayout::NONE);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         output->reset_tensor_roi();
         context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
@@ -2203,7 +2202,7 @@ rocalNonSilentRegion(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;   // TODO - Change to INT32
         unsigned number_of_dims = 4;
         std::vector<size_t> dims1(number_of_dims, 1);
         dims1.at(0) = context->user_batch_size();

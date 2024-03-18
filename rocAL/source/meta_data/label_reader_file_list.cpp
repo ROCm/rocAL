@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -81,7 +81,7 @@ void LabelReaderFileList::release(std::string __sample) {
 
 void LabelReaderFileList::lookup(const std::vector<std::string>& sample_names) {
     if (sample_names.empty()) {
-        WRN("No image names passed")
+        WRN("No file names passed")
         return;
     }
     if (sample_names.size() != static_cast<unsigned>(_output->size()))
@@ -96,18 +96,6 @@ void LabelReaderFileList::lookup(const std::vector<std::string>& sample_names) {
 }
 
 void LabelReaderFileList::read_all(const std::string& _path) {
-    std::string _folder_path = _path;
-    if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
-        THROW("ERROR: Failed opening the directory at " + _folder_path);
-    std::vector<std::string> entry_name_list;
-    std::string _full_path = _folder_path;
-    while ((_entity = readdir(_sub_dir)) != nullptr) {
-        std::string entry_name(_entity->d_name);
-        if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0) continue;
-        entry_name_list.push_back(entry_name);
-    }
-    std::sort(entry_name_list.begin(), entry_name_list.end());
-    closedir(_sub_dir);
     std::ifstream infile(_file_list_path);
     std::string line;
     while (std::getline(infile, line)) {

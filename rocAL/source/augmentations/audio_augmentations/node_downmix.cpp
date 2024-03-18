@@ -33,7 +33,6 @@ void DownmixNode::create_node() {
         return;
 
     vx_status status = VX_SUCCESS;
-    vx_scalar normalize_weights = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_normalize_weights);
     _node = vxExtRppDownmix(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor());
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
@@ -41,7 +40,3 @@ void DownmixNode::create_node() {
 }
 
 void DownmixNode::update_node() {}
-
-void DownmixNode::init(bool normalize_weights) {
-    _normalize_weights = normalize_weights;
-}

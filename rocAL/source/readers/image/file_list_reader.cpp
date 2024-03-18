@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -91,24 +91,17 @@ size_t FileListReader::open() {
     if (std::string::npos != last_slash_idx) {
         _last_id.erase(0, last_slash_idx + 1);
     }
-
     _current_fPtr = fopen(file_path.c_str(), "rb");  // Open the file,
-
     if (!_current_fPtr)  // Check if it is ready for reading
         return 0;
-
     fseek(_current_fPtr, 0, SEEK_END);  // Take the file read pointer to the end
-
     _current_file_size = ftell(_current_fPtr);  // Check how many bytes are there between and the current read pointer position (end of the file)
-
     if (_current_file_size == 0) {  // If file is empty continue
         fclose(_current_fPtr);
         _current_fPtr = nullptr;
         return 0;
     }
-
     fseek(_current_fPtr, 0, SEEK_SET);  // Take the file pointer back to the start
-
     return _current_file_size;
 }
 

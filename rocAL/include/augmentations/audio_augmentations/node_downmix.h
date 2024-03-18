@@ -28,12 +28,8 @@ class DownmixNode : public Node {
    public:
     DownmixNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     DownmixNode() = delete;
-    void init(bool normalize_weights);
 
    protected:
     void create_node() override;
     void update_node() override;
-
-   private:
-    bool _normalize_weights = false;
 };
