@@ -2116,14 +2116,12 @@ rocalAudioFileSourceSingleShard(
             THROW("Shard id should be smaller than shard count")
         auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, "");
         INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
-        RocalTensorlayout tensor_layout = RocalTensorlayout::NONE;
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
         auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
                                context->master_graph->mem_type(),
                                tensor_data_type);
         info.set_max_shape();
-        info.set_tensor_layout(tensor_layout);
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);

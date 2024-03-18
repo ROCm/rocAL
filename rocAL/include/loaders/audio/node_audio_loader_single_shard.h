@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,13 +21,13 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "audio_loader_sharded.h"
 #include "graph.h"
+#include "node.h"
 
-class AudioLoaderSingleShardNode: public Node {
-public:
-    AudioLoaderSingleShardNode(Tensor *output, void* device_resources);
+class AudioLoaderSingleShardNode : public Node {
+   public:
+    AudioLoaderSingleShardNode(Tensor *output, void *device_resources);
     ~AudioLoaderSingleShardNode() override;
     /// \param user_shard_count shard count from user
     /// \param  user_shard_id shard id from user
@@ -42,12 +42,14 @@ public:
     /// The loader will repeat Audios if necessary to be able to have Audios in multiples of the load_batch_count,
     /// for example if there are 10 Audios in the dataset and load_batch_count is 3, the loader repeats 2 Audios as if there are 12 Audios available.
     void init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_file_list,
-              StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, 
+              StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type,
               std::shared_ptr<MetaDataReader> meta_data_reader);
     std::shared_ptr<LoaderModule> get_loader_module();
-protected:
-    void create_node() override {};
-    void update_node() override {};
-private:
+
+   protected:
+    void create_node() override{};
+    void update_node() override{};
+
+   private:
     std::shared_ptr<AudioLoader> _loader_module = nullptr;
 };

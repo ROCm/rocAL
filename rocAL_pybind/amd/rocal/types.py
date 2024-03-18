@@ -62,6 +62,8 @@ from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
+from rocal_pybind.types import NONE
+
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -89,7 +91,7 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
-# Rocal External Source Mode
+#     Rocal External Source Mode
 from rocal_pybind.types import EXTSOURCE_FNAME
 from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
 from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
@@ -127,6 +129,8 @@ _known_types = {
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
+    NONE: ("NONE", NONE),
+
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
