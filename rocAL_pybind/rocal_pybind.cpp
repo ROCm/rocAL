@@ -142,7 +142,8 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {1, "float16"},
     {2, "uint8"},
     {3, "int8"},
-    {4, "int32"},
+    {4, "uint32"},
+    {5, "int32"},
 };
 
 PYBIND11_MODULE(rocal_pybind, m) {
