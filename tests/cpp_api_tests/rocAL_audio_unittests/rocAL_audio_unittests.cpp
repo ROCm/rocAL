@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -35,6 +36,78 @@ THE SOFTWARE.
 #define DISPLAY 1
 #define METADATA 0  // Switch the meta-data part once the meta-data reader (file list reader) is introduced
 using namespace std::chrono;
+
+void verify_output(float *dstPtr, long int frames, int inputBatchSize, int iteration)
+{
+    std::fstream refFile;
+    int fileMatch = 0;
+
+    // read data from golden outputs
+    long int oBufferSize = inputBatchSize * frames;
+    float *refOutput = static_cast<float *>(malloc(oBufferSize * sizeof(float)));
+    std::string outFile = "/media/audio_reference_outputs/ref_output_" + std::to_string(iteration)+".bin";
+    std::fstream fin(outFile, std::ios::in | std::ios::binary);
+    if(fin.is_open())
+    {
+        for(long int i = 0; i < oBufferSize; i++)
+        {
+            if(!fin.eof())
+                fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float));
+            else
+            {
+                std::cout<<"\nUnable to read all data from golden outputs\n";
+                return;
+            }
+        }
+    }
+    else
+    {
+        std::cout<<"\nCould not open the reference output. Please check the path specified\n";
+        return;
+    }
+
+    // iterate over all samples in a batch and compare with reference outputs
+    for (int batchCount = 0; batchCount < inputBatchSize; batchCount++)
+    {
+        float *dstPtrCurrent = dstPtr + batchCount * frames;
+        float *refPtrCurrent = refOutput + batchCount * frames;
+        float *dstPtrRow = dstPtrCurrent;
+        float *refPtrRow = refPtrCurrent;
+        int hStride = frames;
+
+        int matchedIndices = 0;
+        float *dstPtrTemp = dstPtrRow;
+        std::cerr<<"\n "<<iteration<<inputBatchSize<<frames;
+        float *refPtrTemp = refPtrRow ;
+        for (int j = 0; j < frames; j++)
+        {
+            float refVal, outVal;
+            refVal = refPtrTemp[j];
+            outVal = dstPtrTemp[j];
+            bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
+            if (!invalidComparision && abs(outVal - refVal) < 1e-20)
+                matchedIndices += 1;
+            else
+            {
+                std::cerr<<"\n mismatches : "<< j <<" "<<outVal<<" "<<refVal;
+            }
+        }
+        if (matchedIndices == (frames) && matchedIndices !=0)
+            fileMatch++;
+    }
+
+    std::cout << std::endl << "Results for Test case: " << std::endl;
+    if (fileMatch == inputBatchSize)
+    {
+        std::cout << "PASSED!" << std::endl;
+    }
+    else
+    {
+        std::cout << "FAILED! " << fileMatch << "/" << inputBatchSize << " outputs are matching with reference outputs" << std::endl;
+    }
+
+    free(refOutput);
+}
 
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu);
 int main(int argc, const char **argv) {
@@ -76,7 +149,7 @@ int main(int argc, const char **argv) {
 }
 
 int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu) {
-    int inputBatchSize = 10;
+    int inputBatchSize = 1;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
@@ -113,10 +186,22 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
             break;
         }
         output_tensor_list = rocalGetOutputTensors(handle);
+        int image_name_length[inputBatchSize];
+        int img_size = rocalGetImageNameLen(handle, image_name_length);
+        char img_name[img_size];
+        void* roi_buf = malloc(4 * sizeof(int)); // Allocate memory for four floats
+        rocalGetImageName(handle, img_name);
+        std::cerr << "\nPrinting image names of batch: " << img_name;
         std::cout << "\n *****************************Audio output**********************************\n";
         std::cout << "\n **************Printing the first 5 values of the Audio buffer**************\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             float *buffer = (float *)output_tensor_list->at(idx)->buffer();
+            output_tensor_list->at(idx)->copy_roi(roi_buf);
+            int* int_buf = static_cast<int*>(roi_buf);
+            long int frames = int_buf[2];
+            int channels = output_tensor_list->at(idx)->dims().at(2);
+            if(iteration == 10)
+                verify_output(buffer, frames, inputBatchSize, iteration - 1);
             for (int n = 0; n < 5; n++)
                 std::cout << buffer[n] << "\n";
         }
