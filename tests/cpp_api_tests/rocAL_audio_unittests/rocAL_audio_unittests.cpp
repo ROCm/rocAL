@@ -34,10 +34,9 @@ THE SOFTWARE.
 #include "rocal_api.h"
 
 #define DISPLAY 1
-#define METADATA 0  // Switch the meta-data part once the meta-data reader (file list reader) is introduced
 using namespace std::chrono;
 
-void verify_output(float *dstPtr, long int frames, int inputBatchSize, int iteration)
+void verify_output(float *dstPtr, long int frames, int inputBatchSize, int output_idx)
 {
     std::fstream refFile;
     int fileMatch = 0;
@@ -45,7 +44,7 @@ void verify_output(float *dstPtr, long int frames, int inputBatchSize, int itera
     // read data from golden outputs
     long int oBufferSize = inputBatchSize * frames;
     float *refOutput = static_cast<float *>(malloc(oBufferSize * sizeof(float)));
-    std::string outFile = "/media/audio_reference_outputs/ref_output_" + std::to_string(iteration)+".bin";
+    std::string outFile = "/media/audio_reference_outputs/ref_output_" + std::to_string(output_idx)+".bin";
     std::fstream fin(outFile, std::ios::in | std::ios::binary);
     if(fin.is_open())
     {
@@ -77,7 +76,7 @@ void verify_output(float *dstPtr, long int frames, int inputBatchSize, int itera
 
         int matchedIndices = 0;
         float *dstPtrTemp = dstPtrRow;
-        std::cerr<<"\n "<<iteration<<inputBatchSize<<frames;
+        std::cerr<<"\n "<< output_idx <<inputBatchSize << frames;
         float *refPtrTemp = refPtrRow ;
         for (int j = 0; j < frames; j++)
         {
@@ -176,42 +175,28 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     /*>>>>>>>>>>>>>>>>>>> Diplay Values<<<<<<<<<<<<<<<<<*/
     int iteration = 0;
-    RocalTensorList output_tensor_list;
-
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize)) {
         std::cout << "\n rocalGetRemainingAudios:: " << rocalGetRemainingImages(handle) << "\t inputBatchsize:: " << inputBatchSize;
-        std::cout << "\n iteration:: " << iteration;
+        std::cout << "\n Iteration:: " << iteration;
         iteration++;
         if (rocalRun(handle) != 0) {
             break;
         }
-        output_tensor_list = rocalGetOutputTensors(handle);
+        RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
         int image_name_length[inputBatchSize];
         int img_size = rocalGetImageNameLen(handle, image_name_length);
         char img_name[img_size];
-        void* roi_buf = malloc(4 * sizeof(int)); // Allocate memory for four floats
+        std::vector<int> roi(4, 0);
         rocalGetImageName(handle, img_name);
         std::cerr << "\nPrinting image names of batch: " << img_name;
-        std::cout << "\n *****************************Audio output**********************************\n";
-        std::cout << "\n **************Printing the first 5 values of the Audio buffer**************\n";
+        std::cout << "\n *****************************Verifying Audio output**********************************\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
-            float *buffer = (float *)output_tensor_list->at(idx)->buffer();
-            output_tensor_list->at(idx)->copy_roi(roi_buf);
-            int* int_buf = static_cast<int*>(roi_buf);
-            long int frames = int_buf[2];
+            float *buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
+            output_tensor_list->at(idx)->copy_roi(roi.data());
+            long int frames = roi[2];
             int channels = output_tensor_list->at(idx)->dims().at(2);
-            if(iteration == 10)
+            if(iteration == 9)
                 verify_output(buffer, frames, inputBatchSize, iteration - 1);
-            for (int n = 0; n < 5; n++)
-                std::cout << buffer[n] << "\n";
-        }
-
-        if (METADATA) {
-            RocalTensorList labels = rocalGetImageLabels(handle);
-            for (uint i = 0; i < labels->size(); i++) {
-                int *labels_buffer = (int *)(labels->at(i)->buffer());
-                std::cout << ">>>>> LABELS : " << labels_buffer[0] << "\t";
-            }
         }
         std::cout << "******************************************************************************\n";
     }
