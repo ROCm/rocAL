@@ -33,7 +33,6 @@ Refer [rocAL build instructions](https://github.com/ROCmSoftwarePlatform/rocAL#b
 ## rocAL Python
 
 *   rocAL Python package has been created using Pybind11 which enables data transfer between rocAL C++ API and Python API.
-*   Module imports are made similar to other data loaders like NVidia's DALI.
 *   rocal_pybind package has both PyTorch and TensorFlow framework support.
 *   Various reader format support including FileReader, COCOReader, and TFRecordReader.
 *   example folder contains sample implementations for each reader variation as well as sample training script for PyTorch
