@@ -395,4 +395,17 @@ enum RocalOutOfBoundsPolicy {
     TRIMTOSHAPE,
     ERROR
 };
+
+/*! \brief Tensor Last Batch Policies
+ *  \ingroup group_rocal_types
+ These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
+        FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
+        DROP - The last batch is dropped if when there are not enough samples from the current epoch.
+        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to handled from python end)
+ */
+enum RocalLastBatchPolicy {
+    ROCAL_LAST_BATCH_FILL = 0,
+    ROCAL_LAST_BATCH_DROP = 1,
+    ROCAL_LAST_BATCH_PARTIAL = 2
+};
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
