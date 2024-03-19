@@ -44,7 +44,6 @@ class AudioDecoder {
     virtual ~AudioDecoder() = default;
 
    protected:
-    const char* _src_filename = NULL;
     SF_INFO _sfinfo;
     SNDFILE* _sf_ptr;
 };

@@ -144,35 +144,7 @@ void FileSourceReader::reset() {
 Reader::Status FileSourceReader::subfolder_reading() {
     std::vector<std::string> entry_name_list;
     auto ret = Reader::Status::OK;
-    for (auto& entry : filesys::recursive_directory_iterator(_folder_path.c_str())) {
-        try {
-            std::string entry_path = entry.path().string();
-            auto entry_path_id = entry_path;
-            auto last_slash_idx = entry_path_id.find_last_of("\\/");
-            if (std::string::npos != last_slash_idx) {
-                entry_path_id.erase(0, last_slash_idx + 1);
-            }
-            if (filesys::is_regular_file(entry.path())) {
-                if (!_meta_data_reader || _meta_data_reader->exists(entry_path_id)) {
-                    if (get_file_shard_id() != _shard_id) {
-                        _file_count_all_shards++;
-                        incremenet_file_id();
-                        continue;
-                    }
-                    _in_batch_read_count++;
-                    _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
-                    std::string file_path = entry_path;
-                    _last_file_name = file_path;
-                    _file_names.push_back(file_path);
-                    _file_count_all_shards++;
-                    incremenet_file_id();
-                }
-            }
-        } catch (const filesys::filesystem_error& ex) {
-            if (ex.code() == std::errc::permission_denied)
-                THROW("Permission denied for directory: " + entry.path().string());
-        }
-    }
+    ret = open_folder();
 
     if (_file_names.empty())
         WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
@@ -201,33 +173,41 @@ Reader::Status FileSourceReader::open_folder() {
     if ((_src_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
-    while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
-            continue;
-
-        std::string filename(_entity->d_name);
-        auto file_extension_idx = filename.find_last_of(".");
-        if (file_extension_idx != std::string::npos) {
-            std::string file_extension = filename.substr(file_extension_idx + 1);
-            std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
-                           [](unsigned char c) { return std::tolower(c); });
-            if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp"))
-                continue;
+        for (auto& entry : filesys::recursive_directory_iterator(_folder_path.c_str())) {
+        try {
+            std::string entry_path = entry.path().string();
+             auto file_extension_idx = entry_path.find_last_of(".");
+            if (file_extension_idx != std::string::npos) {
+                std::string file_extension = entry_path.substr(file_extension_idx + 1);
+                std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(), [](unsigned char c) { return std::tolower(c); });
+                if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp") && (file_extension != "wav") )
+                    continue;
+            }
+            auto entry_path_id = entry_path;
+            auto last_slash_idx = entry_path_id.find_last_of("\\/");
+            if (std::string::npos != last_slash_idx) {
+                entry_path_id.erase(0, last_slash_idx + 1);
+            }
+            if (filesys::is_regular_file(entry.path())) {
+                if (!_meta_data_reader || _meta_data_reader->exists(entry_path_id)) {
+                    if (get_file_shard_id() != _shard_id) {
+                        _file_count_all_shards++;
+                        incremenet_file_id();
+                        continue;
+                    }
+                    _in_batch_read_count++;
+                    _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
+                    std::string file_path = entry_path;
+                    _last_file_name = file_path;
+                    _file_names.push_back(file_path);
+                    _file_count_all_shards++;
+                    incremenet_file_id();
+                }
+            }
+        } catch (const filesys::filesystem_error& ex) {
+            if (ex.code() == std::errc::permission_denied)
+                THROW("Permission denied for directory: " + entry.path().string());
         }
-        if (get_file_shard_id() != _shard_id) {
-            _file_count_all_shards++;
-            incremenet_file_id();
-            continue;
-        }
-        _in_batch_read_count++;
-        _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
-        std::string file_path = _folder_path;
-        file_path.append("/");
-        file_path.append(_entity->d_name);
-        _last_file_name = file_path;
-        _file_names.push_back(file_path);
-        _file_count_all_shards++;
-        incremenet_file_id();
     }
     if (_file_names.empty())
         WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
