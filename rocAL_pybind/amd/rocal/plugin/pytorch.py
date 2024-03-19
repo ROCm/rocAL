@@ -122,14 +122,14 @@ class ROCALGenericIterator(object):
                     output = torch.empty(
                         dimensions, dtype=getattr(torch, torch_dtype))
                     self.labels_tensor = torch.empty(
-                        self.labels_size, dtype=getattr(torch, torch_dtype))
+                        self.labels_size, dtype=getattr(torch, "int32"))
                 else:
                     torch_gpu_device = torch.device('cuda', self.device_id)
                     torch_dtype = self.output_tensor_list[i].dtype()
                     output = torch.empty(dimensions, dtype=getattr(
                         torch, torch_dtype), device=torch_gpu_device)
                     self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(
-                        torch, torch_dtype), device=torch_gpu_device)
+                        torch, "int32"), device=torch_gpu_device)
 
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(
                     output.data_ptr()), self.output_memory_type)
@@ -193,7 +193,7 @@ class ROCALGenericIterator(object):
         else:
             if self.loader._one_hot_encoding:
                 self.loader.get_one_hot_encoded_labels(
-                    self.labels_tensor, self.device)
+                    self.labels_tensor.data_ptr(), self.loader._output_memory_type)
                 self.labels_tensor = self.labels_tensor.reshape(
                     -1, self.batch_size, self.loader._num_classes)
             else:

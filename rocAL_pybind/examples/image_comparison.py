@@ -23,6 +23,7 @@ import os
 import sys
 import datetime
 import logging
+import ast
 
 
 def compare_pixels(img1, img2, aug_name, width, height, image_offset=0):
@@ -54,6 +55,18 @@ def compare_pixels(img1, img2, aug_name, width, height, image_offset=0):
                 pixel_difference[0] += channel
     return pixel_difference, total_valid_pixel_count
 
+def compare_file_with_list(filename, reference_list):
+    with open(filename, 'r') as file:
+        file_contents = file.read().strip()
+    file_contents = ast.literal_eval(file_contents)
+    if len(file_contents) != len(reference_list):
+        print("File content and existing list have different lengths.")
+        return -1  # Return a negative value to indicate a mismatch in lengths
+    mismatch_count = 0
+    for file_inner_list, list_inner_list in zip(file_contents, reference_list):
+        if file_inner_list != list_inner_list:
+            mismatch_count += 1
+    return mismatch_count
 
 def main():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S_")
@@ -67,7 +80,6 @@ def main():
         logging.error(
             "Please pass ref_output_folder_path rocal_ouput_folder_path")
         exit(0)
-
     # Open the two images
     ref_output_path = sys.argv[1]
     rocal_output_path = sys.argv[2]
@@ -75,7 +87,6 @@ def main():
     if not (os.path.exists(ref_output_path) and os.path.exists(rocal_output_path)):
         logging.error("Path does not Exists")
         exit()
-
     total_case_count = 0
     passed_case_count = 0
     failed_case_count = 0
@@ -83,6 +94,7 @@ def main():
     golden_output_dir_list = os.listdir(ref_output_path)
     rocal_output_dir_list = os.listdir(rocal_output_path)
     randomized_augmentation = ["Snow", "Rain", "Jitter", "SNPNoise"]
+    spl_case_meta_data = ["OneHot"]
     golden_file_path = ""
     for aug_name in rocal_output_dir_list:
         temp = aug_name.split(".")
@@ -100,6 +112,21 @@ def main():
             logging.info("Running %s", augmentation_name)
             passed_case_count = passed_case_count + 1
             logging.info("PASSED ")
+        elif file_name_split[0] in spl_case_meta_data:
+            total_case_count = total_case_count + 1
+            reference_list = [[1, 0], [1, 0]]
+            rocal_file_path = rocal_output_path + aug_name
+            if os.path.exists(rocal_file_path):
+                logging.info("Running %s ", aug_name.split(".")[0])
+            total_mismatches = compare_file_with_list(rocal_file_path, reference_list)
+            if total_mismatches == 0:
+                passed_case_count = passed_case_count + 1
+                logging.info("PASSED")
+            else:
+                failed_case_list.append(file_name_split[0])
+                failed_case_count = failed_case_count + 1
+                logging.info("FAILED")
+                logging.info("Printing total mismatches in one hot encode %s", total_mismatches)
         elif golden_file_path in golden_output_dir_list:
             total_case_count = total_case_count + 1
             ref_file_path = ref_output_path + golden_file_path

@@ -153,7 +153,7 @@ int main(int argc, const char **argv) {
 
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
     size_t num_threads = 1;
-    unsigned int inputBatchSize = 2;
+    unsigned int input_batch_size = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     int pipeline_type = -1;
@@ -163,7 +163,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24
                                               : RocalImageColor::ROCAL_COLOR_U8;
 
-    auto handle = rocalCreate(inputBatchSize,
+    auto handle = rocalCreate(input_batch_size,
                               gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0,
                               1);
 
@@ -669,7 +669,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     }
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
-    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
+    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1;  // 1920 / w;
@@ -685,42 +685,39 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
 
-    while (rocalGetRemainingImages(handle) >= inputBatchSize) {
+    while (rocalGetRemainingImages(handle) >= input_batch_size) {
         index++;
         if (rocalRun(handle) != 0)
             break;
-        int numOfClasses = 0;
-        int image_name_length[inputBatchSize];
+        int image_name_length[input_batch_size];
         switch (pipeline_type) {
             case 1: {   // classification pipeline
                 RocalTensorList labels = rocalGetImageLabels(handle);
                 int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
                 char img_name[img_size];
-                numOfClasses = num_of_classes;
-                int label_one_hot_encoded[inputBatchSize * numOfClasses];
+                int label_one_hot_encoded[input_batch_size * num_of_classes];
                 rocalGetImageName(handle, img_name);
-                /*if (num_of_classes != 0)
-                {
-                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded, numOfClasses,0);
-                }*/
+                if (num_of_classes != 0) {
+                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded, num_of_classes, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+                }
                 std::cerr << "\nPrinting image names of batch: " << img_name << "\n";
-                for (unsigned int i = 0; i < inputBatchSize; i++) {
+                for (unsigned int i = 0; i < input_batch_size; i++) {
                     std::cerr << "\t Printing label_id : " << label_id[i] << std::endl;
-                    /*if(num_of_classes != 0)
+                    if(num_of_classes != 0)
                     {
                         std::cout << "One Hot Encoded labels:"<<"\t";
-                        for (int j = 0; j < numOfClasses; j++)
+                        for (int j = 0; j < num_of_classes; j++)
                         {
-                            int idx_value = label_one_hot_encoded[(i*numOfClasses)+j];
+                            int idx_value = label_one_hot_encoded[(i*num_of_classes)+j];
                             if(idx_value == 0)
-                                std::cout << idx_value;
+                                std::cout << idx_value << "\t";
                             else
                             {
-                                std::cout << idx_value;
+                                std::cout << idx_value << "\t";
                             }
                         }
-                    }*/
+                    }
                     std::cout << "\n";
                 }
             } break;
@@ -741,15 +738,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                     for (unsigned j = 0, j4 = 0; j < bbox_coords->at(i)->dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 }
-                int img_sizes_batch[inputBatchSize * 2];
+                int img_sizes_batch[input_batch_size * 2];
                 rocalGetImageSizes(handle, img_sizes_batch);
-                for (int i = 0; i < (int)inputBatchSize; i++) {
+                for (int i = 0; i < (int)input_batch_size; i++) {
                     std::cout << "\nwidth:" << img_sizes_batch[i * 2];
                     std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
             } break;
             case 3: {   // keypoints pipeline
-                int size = inputBatchSize;
+                int size = input_batch_size;
                 RocalJointsData *joints_data;
                 rocalGetJointsDataPtr(handle, &joints_data);
                 for (int i = 0; i < size; i++) {

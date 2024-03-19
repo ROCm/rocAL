@@ -48,7 +48,7 @@ def main():
     rocal_cpu = False if args.rocal_gpu else True
     device = "cpu" if rocal_cpu else "gpu"
     batch_size = args.batch_size
-    one_hot_labels = 0
+    one_hot_labels = 1 if args.one_hot_encode else 0
     num_threads = args.num_threads
     tensor_layout = types.NHWC if args.NHWC else types.NCHW
     tf_record_reader_type = 0
