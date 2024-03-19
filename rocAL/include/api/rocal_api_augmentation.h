@@ -1103,7 +1103,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
                                                              bool is_output,
                                                              RocalFloatParam p_preemph_coeff = NULL,
                                                              RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP,
-                                                             RocalTensorOutputType output_datatype = ROCAL_FP32,
-);
+                                                             RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

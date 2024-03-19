@@ -2162,7 +2162,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
                        bool is_output,
                        RocalFloatParam p_preemph_coeff,
                        RocalAudioBorderType preemph_border_type,
-                       RocalTensorOutputType output_datatype,
+                       RocalTensorOutputType output_datatype
 ) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
