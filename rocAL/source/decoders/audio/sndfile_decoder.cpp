@@ -38,8 +38,7 @@ AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
     if (read_frame_count != _sfinfo.frames) {
         ERR("Not able to decode all frames. Only decoded" + TOSTR(read_frame_count) + "frames");
         sf_close(_sf_ptr);
-        AudioDecoder::Status status = Status::CONTENT_DECODE_FAILED;
-        return status;
+        status = Status::CONTENT_DECODE_FAILED;
     }
     return status;
 }

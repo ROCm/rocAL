@@ -49,8 +49,7 @@ void AudioSourceEvaluator::find_max_dimension() {
     _reader->reset();
     while (_reader->count_items()) {
         size_t fsize = _reader->open();
-        if ((fsize) == 0)
-            continue;
+        if (!fsize) continue;
         auto file_name = _reader->file_path();
         if (_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
             WRN("Could not initialize audio decoder for file : " + _reader->id())
