@@ -273,9 +273,8 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 class ROCALAudioIterator(object):
     """
     ROCAL iterator for audio tasks for PyTorch
-    Please keep in mind that Tensors returned by the iterator are
-    still owned by ROCAL. They are valid till the next iterator call.
-    If the content needs to be preserved please copy it to another tensor.
+    The Tensors that are returned by the iterator will be owned by ROCAL 
+    and would be valid until next iteration.
     Parameters
     ----------
     pipelines : list of amd.rocalLI.pipeline.Pipeline
