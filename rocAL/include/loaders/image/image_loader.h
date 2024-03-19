@@ -55,6 +55,7 @@ class ImageLoader : public LoaderModule {
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
+    size_t last_batch_padded_size() override;
 
    private:
     bool is_out_of_data();
@@ -63,7 +64,6 @@ class ImageLoader : public LoaderModule {
     std::shared_ptr<ImageReadAndDecode> _image_loader;
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
-
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     Tensor* _output_tensor;
     std::vector<std::string> _output_names;  //!< image name/ids that are stores in the _output_image
@@ -91,4 +91,6 @@ class ImageLoader : public LoaderModule {
     size_t _max_tensor_width, _max_tensor_height;
     bool _external_source_reader = false;  //!< Set to true if external source reader
     bool _external_input_eos = false;      //!< Set to true for last batch for the sequence
+    RocalBatchPolicy _last_batch_policy;
+    bool last_batch_padded;
 };

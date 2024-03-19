@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -113,6 +113,13 @@ void ImageLoaderSharded::start_loading() {
         _loaders[i]->set_cpu_affinity(cpuset);
 #endif
     }
+}
+
+size_t ImageLoaderSharded::last_batch_padded_size() {
+    size_t sum = 0;
+    for(auto& loader: _loaders)
+        sum += loader->last_batch_padded_size();
+    return sum;
 }
 
 void ImageLoaderSharded::shut_down() {

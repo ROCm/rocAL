@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -189,7 +189,8 @@ rocalJpegFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -385,7 +386,8 @@ rocalSequenceReaderSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::SEQUENCE_FILE_SYSTEM, DecoderType::TURBO_JPEG, shuffle, loop, context->master_graph->sequence_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, std::map<std::string, std::string>(), sequence_length, step, stride);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::SEQUENCE_FILE_SYSTEM, DecoderType::TURBO_JPEG, shuffle, loop, context->master_graph->sequence_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded(), std::map<std::string, std::string>(), sequence_length, step, stride);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -505,7 +507,8 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE2_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE2_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -626,7 +629,8 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -937,7 +941,8 @@ rocalMXNetRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::MXNET_RECORDIO, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::MXNET_RECORDIO, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1061,7 +1066,8 @@ rocalJpegCOCOFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, context->master_graph->last_batch_policy(),
+                                                                                        context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1336,6 +1342,7 @@ rocalJpegTFRecordSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
@@ -1364,7 +1371,8 @@ rocalJpegTFRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(),
+                                                                                        decoder_keep_original, context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1422,7 +1430,7 @@ rocalRawTFRecordSource(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
-        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", feature_key_map, StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, record_name_prefix, 0, 0, 0);
+        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", feature_key_map, StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), record_name_prefix, 0, 0, 0);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1475,7 +1483,8 @@ rocalRawTFRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), 
+                                                                                        decoder_keep_original, context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1534,7 +1543,7 @@ rocalFusedJpegCropSingleShard(
                                color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio);
+        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -2126,7 +2135,7 @@ rocalAudioFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType(storage_type), DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType(storage_type), DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix) {
             TensorInfo output_info = info;
@@ -2167,7 +2176,9 @@ rocalAudioFileSource(
     bool loop,
     bool downmix,
     unsigned max_frames,
-    unsigned max_channels) {
+    unsigned max_channels,
+    bool stick_to_shard,
+    int shard_size) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2183,7 +2194,7 @@ rocalAudioFileSource(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix) {
             TensorInfo output_info = info;

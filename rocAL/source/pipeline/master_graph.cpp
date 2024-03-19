@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -93,31 +93,33 @@ MasterGraph::~MasterGraph() {
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type) : _ring_buffer(prefetch_queue_depth),
-                                                                                                                                                                                     _graph(nullptr),
-                                                                                                                                                                                     _affinity(affinity),
-                                                                                                                                                                                     _cpu_num_threads(cpu_thread_count),
-                                                                                                                                                                                     _gpu_id(gpu_id),
-                                                                                                                                                                                     _convert_time("Conversion Time", DBG_TIMING),
-                                                                                                                                                                                     _process_time("Process Time", DBG_TIMING),
-                                                                                                                                                                                     _bencode_time("BoxEncoder Time", DBG_TIMING),
-                                                                                                                                                                                     _user_batch_size(batch_size),
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded) : _ring_buffer(prefetch_queue_depth),
+                                                                                                                                                                                                                                                 _graph(nullptr),
+                                                                                                                                                                                                                                                 _affinity(affinity),
+                                                                                                                                                                                                                                                 _cpu_num_threads(cpu_thread_count),
+                                                                                                                                                                                                                                                 _gpu_id(gpu_id),
+                                                                                                                                                                                                                                                 _convert_time("Conversion Time", DBG_TIMING),
+                                                                                                                                                                                                                                                 _process_time("Process Time", DBG_TIMING),
+                                                                                                                                                                                                                                                 _bencode_time("BoxEncoder Time", DBG_TIMING),
+                                                                                                                                                                                                                                                 _user_batch_size(batch_size),
 #if ENABLE_HIP
-                                                                                                                                                                                     _mem_type((_affinity == RocalAffinity::GPU) ? RocalMemType::HIP : RocalMemType::HOST),
+                                                                                                                                                                                                                                                 _mem_type((_affinity == RocalAffinity::GPU) ? RocalMemType::HIP : RocalMemType::HOST),
 #elif ENABLE_OPENCL
-                                                                                                                                                                                     _mem_type((_affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST),
+                                                                                                                                                                                                                                                 _mem_type((_affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST),
 #else
-                                                                                                                                                                                     _mem_type(RocalMemType::HOST),
+                                                                                                                                                                                                                                                 _mem_type(RocalMemType::HOST),
 #endif
-                                                                                                                                                                                     _first_run(true),
-                                                                                                                                                                                     _processing(false),
-                                                                                                                                                                                     _prefetch_queue_depth(prefetch_queue_depth),
-                                                                                                                                                                                     _out_data_type(output_tensor_data_type),
+                                                                                                                                                                                                                                                 _first_run(true),
+                                                                                                                                                                                                                                                 _processing(false),
+                                                                                                                                                                                                                                                 _prefetch_queue_depth(prefetch_queue_depth),
+                                                                                                                                                                                                                                                 _out_data_type(output_tensor_data_type),
 #if ENABLE_HIP
-                                                                                                                                                                                     _box_encoder_gpu(nullptr),
+                                                                                                                                                                                                                                                 _box_encoder_gpu(nullptr),
 #endif
-                                                                                                                                                                                     _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
-                                                                                                                                                                                     _rb_block_if_full_time("Ring Buffer Block IF Full Time") {
+                                                                                                                                                                                                                                                 _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
+                                                                                                                                                                                                                                                 _rb_block_if_full_time("Ring Buffer Block IF Full Time",
+                                                                                                                                                                                                                                                _last_batch_policy(last_batch_policy),
+                                                                                                                                                                                                                                                _last_batch_padded(last_batch_padded)) {
     try {
         vx_status status;
         vxRegisterLogCallback(NULL, log_callback, vx_false_e);
@@ -434,6 +436,20 @@ MasterGraph::remaining_count() {
 RocalMemType
 MasterGraph::mem_type() {
     return _mem_type;
+}
+
+RocalBatchPolicy
+MasterGraph::last_batch_policy() {
+    return _last_batch_policy;
+}
+
+bool MasterGraph::last_batch_padded() {
+    return _last_batch_padded;
+}
+
+uint 
+MasterGraph::last_batch_padded_size() {
+    return _loader_module->last_batch_padded_size();
 }
 
 Timing
@@ -882,6 +898,9 @@ void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
     try {
         while (_processing) {
+            if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
+                _final_batch_padded_size = _loader_module->last_batch_padded_size();
+            }
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func

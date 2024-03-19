@@ -137,6 +137,11 @@ void ImageReadAndDecode::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxC
     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
 }
 
+size_t
+ImageReadAndDecode::last_batch_padded_size() {
+    return _reader->last_batch_padded_size();
+}
+
 std::vector<std::vector<float>>&
 ImageReadAndDecode::get_batch_random_bbox_crop_coords() {
     // Return the crop co-ordinates for a batch of images

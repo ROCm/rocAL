@@ -68,6 +68,8 @@ class FileListReader : public Reader {
 
     FileListReader();
 
+    size_t last_batch_padded_size() override;
+
    private:
     //! opens the folder containing the images
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
@@ -97,6 +99,14 @@ class FileListReader : public Reader {
     int _read_counter = 0;
     //!< _file_count_all_shards total_number of files to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
+    size_t _shard_count = 1; // equivalent of batch size
+    signed _shard_size = -1;
+    std::pair<RocalBatchPolicy, bool> _last_batch_info;
+    size_t _last_batch_padded_size = 0;
+    bool _stick_to_shard = false;
+    void generate_file_names();
+    //!<// Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
+    void increment_shard_id();
     void increment_read_ptr();
     int release();
     size_t get_file_shard_id();

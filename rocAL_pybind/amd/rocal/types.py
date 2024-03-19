@@ -110,6 +110,9 @@ from rocal_pybind.types import PAD
 from rocal_pybind.types import TRIMTOSHAPE
 from rocal_pybind.types import ERROR
 
+from rocal_pybind.types import LAST_BATCH_FILL
+from rocal_pybind.types import LAST_BATCH_DROP
+from rocal_pybind.types import LAST_BATCH_PARTIAL
 
 _known_types = {
 
@@ -175,6 +178,10 @@ _known_types = {
     ZERO: ("ZERO", ZERO),
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
+    
+    LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
+    LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
+    LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
 }
 
 def data_type_function(dtype):

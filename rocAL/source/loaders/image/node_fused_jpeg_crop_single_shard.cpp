@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(Tensor *output, void 
 
 void FusedJpegCropSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, StorageType storage_type,
                                         DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
-                                        unsigned num_attempts, std::vector<float> &area_factor, std::vector<float> &aspect_ratio) {
+                                        unsigned num_attempts, std::vector<float> &area_factor, std::vector<float> &aspect_ratio, RocalBatchPolicy _last_batch_policy, bool last_batch_padded) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for FusedJpegCropSingleShardNode, cannot initialize")
     if (shard_count < 1)

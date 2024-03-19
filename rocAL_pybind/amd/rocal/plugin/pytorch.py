@@ -273,9 +273,8 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 class ROCALAudioIterator(object):
     """
     ROCAL iterator for audio tasks for PyTorch
-    Please keep in mind that Tensors returned by the iterator are
-    still owned by ROCAL. They are valid till the next iterator call.
-    If the content needs to be preserved please copy it to another tensor.
+    The Tensors that are returned by the iterator will be owned by ROCAL 
+    and would be valid until next iteration.
     Parameters
     ----------
     pipelines : list of amd.rocalLI.pipeline.Pipeline
@@ -313,7 +312,7 @@ class ROCALAudioIterator(object):
     fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
 
     """
-    def __init__(self, pipeline, tensor_layout = types.NONE, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
+    def __init__(self, pipeline, tensor_layout = types.NONE, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0, size = -1, auto_reset=False):
         self.loader = pipeline
         self.tensor_format = tensor_layout
         self.device = device
@@ -325,16 +324,28 @@ class ROCALAudioIterator(object):
         self.output_list = None
         self.labels_size = self.batch_size
         self.output_memory_type = self.loader._output_memory_type
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
+        self.last_batch_policy = self.loader._last_batch_policy
+        self.shard_size = self.loader._shard_size or size
+        self.auto_reset = auto_reset
+        self.batch_count = 0
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocal_run() != 0:
+        if self.loader.rocal_run() != 0 and self.shard_size < 0:
+            if self.auto_reset:
+                self.reset()
+            raise StopIteration
+        elif self.shard_size > 0 and self.batch_count >= self.shard_size :
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
-
+        self.batch_count += self.batch_size
+        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle) #Every Time the padded size is going to differ
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
@@ -353,13 +364,13 @@ class ROCALAudioIterator(object):
 
             self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
             self.output_list.append(output)
-
-
-        self.labels = self.loader.get_image_labels()
-        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-        return self.output_list, self.labels_tensor
+        if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 : #Check this condition
+            return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
+        else:
+            return self.output_list, self.labels_tensor
 
     def reset(self):
+        self.batch_count = 0
         b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):

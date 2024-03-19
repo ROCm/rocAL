@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -67,13 +67,14 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=0, device_id=-1, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None):
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None, 
+                 last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
         if (rocal_cpu):
             self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
         else:
             self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
 
         if (b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
@@ -123,6 +124,9 @@ class Pipeline(object):
         self._is_external_source_operator = False
         self._external_source = None
         self._external_source_mode = None
+        self._last_batch_policy = last_batch_policy
+        self.last_batch_padded = last_batch_padded
+        self.shard_size = -1
 
     def build(self):
         """!Build the pipeline using rocalVerify call
@@ -263,6 +267,9 @@ class Pipeline(object):
 
     def get_output_tensors(self):
         return b.getOutputTensors(self._handle)
+    
+    def get_last_batch_padded_size(self):
+        return b.getLastBatchPaddedSize(self._handle)
 
     def run(self):
         """

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ class MasterGraph {
                         NO_MORE_DATA = 2,
                         NOT_IMPLEMENTED = 3,
                         INVALID_ARGUMENTS };
-    MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded);
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
@@ -100,6 +100,9 @@ class MasterGraph {
     Status run();
     Timing timing();
     RocalMemType mem_type();
+    RocalBatchPolicy last_batch_policy();
+    bool last_batch_padded();
+    uint last_batch_padded_size();
     void release();
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
@@ -223,6 +226,9 @@ class MasterGraph {
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
+    RocalBatchPolicy _last_batch_policy; // Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values
+    bool _last_batch_padded; // Determines whether the end of the data consists of data from the next shard (False) or is duplicated dummy data (True).
+    size_t _final_batch_padded_size; // Returns the size of the padded data
 };
 
 template <typename T>

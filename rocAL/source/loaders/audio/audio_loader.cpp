@@ -204,6 +204,10 @@ bool AudioLoader::is_out_of_data() {
     return (remaining_count() < 0);
 }
 
+size_t AudioLoader::last_batch_padded_size() {
+    return _audio_loader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
 AudioLoader::update_output_audio() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;

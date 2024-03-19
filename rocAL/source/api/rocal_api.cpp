@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,9 @@ rocalCreate(
     int gpu_id,
     size_t cpu_thread_count,
     size_t prefetch_queue_depth,
-    RocalTensorOutputType output_tensor_data_type) {
+    RocalTensorOutputType output_tensor_data_type,
+    RocalLastBatchPolicy last_batch_policy,
+    bool last_batch_padded) {
     RocalContext context = nullptr;
     try {
         auto translate_process_mode = [](RocalProcessMode process_mode) {
@@ -68,7 +70,17 @@ rocalCreate(
                     THROW("Unkown Rocal data type")
             }
         };
-        context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type));
+        auto translate_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
+            switch (last_batch_policy) {
+                case ROCAL_LAST_BATCH_FILL:
+                    return RocalBatchPolicy::BATCH_FILL;
+                case ROCAL_LAST_BATCH_DROP:
+                    return RocalBatchPolicy::DROP;
+                case ROCAL_LAST_BATCH_PARTIAL:
+                    return RocalBatchPolicy::PARTIAL;
+            }
+        };
+        context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type), translate_last_batch_policy(last_batch_policy), last_batch_padded);
         // Reset seed in case it's being randomized during context creation
     } catch (const std::exception& e) {
         ERR(STR("Failed to init the Rocal context, ") + STR(e.what()))

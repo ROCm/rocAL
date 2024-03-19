@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -63,6 +63,8 @@ class CIFAR10DataReader : public Reader {
     CIFAR10DataReader();
 
     unsigned get_file_index() { return _last_file_idx; }
+
+    size_t last_batch_padded_size() override { return 0; }
 
    private:
     //! opens the folder containing the images
