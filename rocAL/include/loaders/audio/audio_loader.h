@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include "commons.h"
 #include "meta_data_reader.h"
 
+#ifdef ROCAL_AUDIO
+
 // AudioLoader runs an internal thread for loading an decoding of audios asynchronously
 // It uses a circular buffer to store decoded audios for the user
 class AudioLoader : public LoaderModule {
@@ -83,3 +85,4 @@ class AudioLoader : public LoaderModule {
     int _device_id;
     size_t _max_decoded_samples, _max_decoded_channels;
 };
+#endif

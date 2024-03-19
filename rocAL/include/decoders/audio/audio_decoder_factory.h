@@ -26,4 +26,6 @@ THE SOFTWARE.
 #include "audio_decoder.h"
 #include "decoder.h"
 
+#ifdef ROCAL_AUDIO
 std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config);
+#endif

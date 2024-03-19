@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "audio_decoder_factory.h"
 #include "reader_factory.h"
 
+#ifdef ROCAL_AUDIO
+
 size_t AudioSourceEvaluator::max_samples() {
     return _samples_max;
 }
@@ -69,3 +71,4 @@ void AudioSourceEvaluator::find_max_dimension() {
     // return the reader read pointer to the begining of the resource
     _reader->reset();
 }
+#endif

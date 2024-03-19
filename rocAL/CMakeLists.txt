@@ -326,6 +326,7 @@ if(${BUILD_ROCAL})
         include_directories(${SndFile_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
         message("-- ${White}rocAL built with SndFile Functionality${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

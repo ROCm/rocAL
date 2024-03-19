@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include "sndfile_decoder.h"
 #include "timing_debug.h"
 
+#ifdef ROCAL_AUDIO
+
 class AudioReadAndDecode {
    public:
     AudioReadAndDecode();
@@ -73,3 +75,4 @@ class AudioReadAndDecode {
     size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;
 };
+#endif

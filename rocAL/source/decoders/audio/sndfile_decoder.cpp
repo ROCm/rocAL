@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include <cstdio>
 #include <cstring>
 
+#ifdef ROCAL_AUDIO
+
 SndFileDecoder::SndFileDecoder(){};
 
 AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
@@ -85,3 +87,4 @@ void SndFileDecoder::release() {
 }
 
 SndFileDecoder::~SndFileDecoder() {}
+#endif

@@ -28,6 +28,8 @@ THE SOFTWARE.
 #include "reader_factory.h"
 #include "sndfile_decoder.h"
 
+#ifdef ROCAL_AUDIO
+
 enum class AudioSourceEvaluatorStatus {
     OK = 0,
     UNSUPPORTED_DECODER_TYPE,
@@ -46,3 +48,4 @@ class AudioSourceEvaluator {
     std::shared_ptr<AudioDecoder> _decoder;
     std::shared_ptr<Reader> _reader;
 };
+#endif
