@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2023 Advanced Micro Devices, Inc.
+# Copyright (c) 2023 - 2024 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -190,10 +190,6 @@ if(NOT HALF_FOUND)
     set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
-if(NOT SndFile_FOUND)	
-    set(BUILD_ROCAL false)	
-    message("-- ${Yellow}NOTE: rocAL library requires SndFile, Not Found ${ColourReset}")	
-endif()
 
 if(${BUILD_ROCAL})
     # AMD RPP
@@ -224,9 +220,6 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
     # half
     include_directories(${HALF_INCLUDE_DIRS})
-    # SndFile
-    include_directories(${SndFile_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
@@ -325,6 +318,14 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with std experimental Filesystem${ColourReset}")
     else()
         message(FATAL_ERROR "No filesystem library found.")
+    endif()
+    # SndFile
+    if(NOT SndFile_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
+    else()
+        include_directories(${SndFile_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
+        message("-- ${White}rocAL built with SndFile Functionality${ColourReset}")
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

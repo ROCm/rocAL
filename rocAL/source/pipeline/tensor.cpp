@@ -121,7 +121,6 @@ void TensorInfo::reset_tensor_roi_buffers() {
             roi[i].xywh.h = _max_shape.at(1);
         }
     } else {
-        // TODO - For other tensor types
         for (unsigned i = 0; i < _batch_size; i++) {
             unsigned *tensor_shape = _roi[i].end;
             for (unsigned j = 0; j < _max_shape.size(); j++)
