@@ -131,7 +131,7 @@ void TensorInfo::reset_tensor_roi_buffers() {
 
 void TensorInfo::reallocate_tensor_sample_rate_buffers() {
     if (_is_image)
-        THROW("No sample rate available for Image data")
+        THROW("Sample rate not available for Image data")
     _sample_rates = std::make_shared<std::vector<float>>(_batch_size);
 }
 

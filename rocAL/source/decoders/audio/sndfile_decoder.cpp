@@ -36,7 +36,7 @@ AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
     read_frame_count = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
     AudioDecoder::Status status = Status::OK;
     if (read_frame_count != _sfinfo.frames) {
-        printf("Not able to decode all frames. Only decoded %d frames\n", read_frame_count);
+        ERR("Not able to decode all frames. Only decoded" + TOSTR(read_frame_count) + "frames");
         sf_close(_sf_ptr);
         AudioDecoder::Status status = Status::CONTENT_DECODE_FAILED;
         return status;

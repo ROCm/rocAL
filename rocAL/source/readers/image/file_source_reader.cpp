@@ -215,7 +215,7 @@ Reader::Status FileSourceReader::open_folder() {
             if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp") && (file_extension != "wav"))
                 continue;
         }
-        if (!_meta_data_reader || _meta_data_reader->exists(_entity->d_name)) {
+        if (!_meta_data_reader || _meta_data_reader->exists(_entity->d_name)) { // Check if the file is present in metadata reader and add to file names list, to avoid issues while lookup
             if (get_file_shard_id() != _shard_id) {
                 _file_count_all_shards++;
                 incremenet_file_id();

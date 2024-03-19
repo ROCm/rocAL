@@ -2130,17 +2130,7 @@ rocalAudioFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads,
-                                                                                        source_path,
-                                                                                        "",
-                                                                                        StorageType::FILE_SYSTEM,
-                                                                                        DecoderType::SNDFILE,
-                                                                                        shuffle,
-                                                                                        loop,
-                                                                                        context->user_batch_size(),
-                                                                                        context->master_graph->mem_type(),
-                                                                                        context->master_graph->meta_data_reader()
-                                                                                        );
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
         if (is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
@@ -2182,16 +2172,7 @@ rocalAudioFileSource(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads,
-                                                                             source_path,
-                                                                             "",
-                                                                             StorageType::FILE_SYSTEM,
-                                                                             DecoderType::SNDFILE,
-                                                                             shuffle,
-                                                                             loop,
-                                                                             context->user_batch_size(),
-                                                                             context->master_graph->mem_type(),
-                                                                             context->master_graph->meta_data_reader());
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
         if (is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
