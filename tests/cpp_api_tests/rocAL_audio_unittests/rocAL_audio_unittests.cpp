@@ -161,7 +161,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         return -1;
     }
 
-    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, false, max_frames, max_channels);
+    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, false);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;

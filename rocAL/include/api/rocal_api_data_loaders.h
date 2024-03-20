@@ -833,8 +833,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
  * \param [in] loop Determines if the user wants to indefinitely loops through audio or not.
  * \param [in] downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
- * \param [in] max_frames The maximum frames of the decoded audio.
- * \param [in] max_channels The maximum channels of the decoded audio.
  * \return Reference to the output audio
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
@@ -843,9 +841,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                            bool is_output,
                                                            bool shuffle = false,
                                                            bool loop = false,
-                                                           bool downmix = false,
-                                                           unsigned max_frames = 1,
-                                                           unsigned max_channels = 1);
+                                                           bool downmix = false);
 
 /*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
  * If the files are not in standard audio compression formats they will be ignored.
@@ -857,8 +853,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
  * \param [in] loop Determines if the user wants to indefinitely loops through audio or not.
  * \param [in] downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
- * \param [in] max_frames The maximum frames of the decoded audio.
- * \param [in] max_channels The maximum channels of the decoded audio.
  * \return Reference to the output audio
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
@@ -868,8 +862,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       bool is_output,
                                                                       bool shuffle = false,
                                                                       bool loop = false,
-                                                                      bool downmix = false,
-                                                                      unsigned max_frames = 1,
-                                                                      unsigned max_channels = 1);
+                                                                      bool downmix = false);
 
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H

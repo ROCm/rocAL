@@ -325,7 +325,7 @@ if(${BUILD_ROCAL})
     else()
         include_directories(${SndFile_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
-        message("-- ${White}rocAL built with SndFile Functionality${ColourReset}")
+        message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     endif()
     # -Wall -- Enable most warning messages

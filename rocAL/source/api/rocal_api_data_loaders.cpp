@@ -2108,9 +2108,7 @@ rocalAudioFileSourceSingleShard(
     bool is_output,
     bool shuffle,
     bool loop,
-    bool downmix,
-    unsigned max_frames,
-    unsigned max_channels) {
+    bool downmix) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2154,9 +2152,7 @@ rocalAudioFileSource(
     bool is_output,
     bool shuffle,
     bool loop,
-    bool downmix,
-    unsigned max_frames,
-    unsigned max_channels) {
+    bool downmix) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
