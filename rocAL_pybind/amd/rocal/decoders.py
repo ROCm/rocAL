@@ -413,8 +413,6 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
             "loop": False,
             "downmix": downmix,
             "max_frames": max_frames,
-            "max_channels": max_channels,
-            "storage_type": storage_type
-            }
+            "max_channels": max_channels}
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio

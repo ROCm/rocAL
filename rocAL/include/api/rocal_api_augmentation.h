@@ -1097,6 +1097,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(RocalContext context, R
                                                          int num_of_attempts = 20,
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Applies preemphasis filter to the input data.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
