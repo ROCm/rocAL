@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 #include "audio_loader_sharded.h"
 
+#ifdef ROCAL_AUDIO
+
 AudioLoaderSharded::AudioLoaderSharded(void* dev_resources) : _dev_resources(dev_resources) {
     _loader_idx = 0;
 }
@@ -152,3 +154,4 @@ Timing AudioLoaderSharded::timing() {
     t.process_time = swap_handle_time;
     return t;
 }
+#endif

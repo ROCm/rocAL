@@ -19,13 +19,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "audio_decoder_factory.h"
-
-#include <audio_decoder.h>
-#include <sndfile_decoder.h>
 
 #include "commons.h"
 #include "decoder_factory.h"
+#include "audio_decoder_factory.h"
+#include "audio_decoder.h"
+#include "sndfile_decoder.h"
+
+#ifdef ROCAL_AUDIO
 
 std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
     switch (config.type()) {
@@ -35,3 +36,4 @@ std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
             THROW("Unsupported decoder type " + TOSTR(config.type()));
     }
 }
+#endif

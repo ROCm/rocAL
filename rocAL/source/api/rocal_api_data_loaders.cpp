@@ -28,18 +28,21 @@ THE SOFTWARE.
 #include "commons.h"
 #include "context.h"
 #include "image_source_evaluator.h"
+#ifdef ROCAL_AUDIO
 #include "audio_source_evaluator.h"
+#include "node_audio_loader.h"
+#include "node_audio_loader_single_shard.h"
+#endif
 #include "node_cifar10_loader.h"
 #include "node_copy.h"
 #include "node_fused_jpeg_crop.h"
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "node_image_loader.h"
 #include "node_image_loader_single_shard.h"
-#include "node_audio_loader.h"
-#include "node_audio_loader_single_shard.h"
 #include "node_resize.h"
 #include "rocal_api.h"
 
+#ifdef ROCAL_AUDIO
 std::tuple<unsigned, unsigned>
 evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
                         const std::string& source_path, const std::string& json_path) {
@@ -52,7 +55,8 @@ evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
         THROW("Cannot find size of the audio files or files cannot be accessed")
     LOG("Maximum input audio dimension [ " + TOSTR(max_samples) + " x " + TOSTR(max_channels) + " ] for audio's in " + source_path)
     return std::make_tuple(max_samples, max_channels);
-};
+}
+#endif
 
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
@@ -2105,12 +2109,11 @@ rocalAudioFileSourceSingleShard(
     bool is_output,
     bool shuffle,
     bool loop,
-    bool downmix,
-    unsigned max_frames,
-    unsigned max_channels) {
+    bool downmix) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_AUDIO
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
         if (shard_id >= shard_count)
@@ -2133,6 +2136,9 @@ rocalAudioFileSourceSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Audio decoder is not enabled since sndfile is not present")
+#endif
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
@@ -2149,12 +2155,11 @@ rocalAudioFileSource(
     bool is_output,
     bool shuffle,
     bool loop,
-    bool downmix,
-    unsigned max_frames,
-    unsigned max_channels) {
+    bool downmix) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_AUDIO
         auto storage_type = (strlen(source_file_list_path) == 0) ? StorageType::FILE_SYSTEM : StorageType::FILE_LIST_SYSTEM;
         auto [max_frames, max_channels] = evaluate_audio_data_set(storage_type, DecoderType::SNDFILE, source_path, source_file_list_path);
         INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
@@ -2173,6 +2178,9 @@ rocalAudioFileSource(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Audio decoder is not enabled since sndfile is not present")
+#endif
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';

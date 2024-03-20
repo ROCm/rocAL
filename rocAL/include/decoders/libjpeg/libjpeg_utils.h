@@ -26,5 +26,4 @@ THE SOFTWARE.
 extern "C" {
 #include "jerror.h"  
 #include "jpeglib.h" 
-#include "jpegint.h"
 }

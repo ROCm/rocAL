@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <cstddef>
 #include <vector>
 
+#ifdef ROCAL_AUDIO
 #include "sndfile.h"
 
 class AudioDecoder {
@@ -47,3 +48,4 @@ class AudioDecoder {
     SF_INFO _sfinfo;
     SNDFILE* _sf_ptr;
 };
+#endif

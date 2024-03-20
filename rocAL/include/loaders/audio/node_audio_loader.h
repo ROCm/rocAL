@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "graph.h"
 #include "node.h"
 
+#ifdef ROCAL_AUDIO
+
 class AudioLoaderNode : public Node {
    public:
     /// \param device_resources shard count from user
@@ -54,3 +56,4 @@ class AudioLoaderNode : public Node {
    private:
     std::shared_ptr<AudioLoaderSharded> _loader_module = nullptr;
 };
+#endif

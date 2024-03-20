@@ -77,8 +77,6 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
-        case RocalTensorDataType::INT8:
-            return VX_TYPE_INT8;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -131,7 +129,7 @@ void TensorInfo::reset_tensor_roi_buffers() {
 
 void TensorInfo::reallocate_tensor_sample_rate_buffers() {
     if (_is_image)
-        THROW("No sample rate available for Image data")
+        THROW("Sample rate not available for Image data")
     _sample_rates = std::make_shared<std::vector<float>>(_batch_size);
 }
 

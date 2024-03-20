@@ -83,7 +83,7 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
       /* If we get here, the JPEG code has signaled an error. */
-      retval = -1;  goto bailout;
+      return -1;
     }
 
     // set up, read header, set image parameters, save size
@@ -144,8 +144,8 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     jpeg_skip_scanlines(&cinfo, cinfo.output_height - crop_y - crop_height);
     jpeg_finish_decompress(&cinfo);
 
-    bailout:
-    if (cinfo.global_state > DSTATE_START) jpeg_abort_decompress(&cinfo);
+  bailout:
+    jpeg_destroy_decompress(&cinfo);
     if (row_pointer) free(row_pointer);
     return retval;
 }
@@ -178,7 +178,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
         /* If we get here, the JPEG code has signaled an error. */
-        retval = -1;  goto bailout;
+        return -1;
     }
 
     jpeg_mem_src(&cinfo, jpegBuf, jpegSize);
@@ -259,7 +259,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jpeg_finish_decompress(&cinfo);
 
   bailout:
-    if (cinfo.global_state > DSTATE_START) jpeg_abort_decompress(&cinfo);
+    jpeg_destroy_decompress(&cinfo);
     if (row_pointer) free(row_pointer);
     if (tmp_row) free(tmp_row);
     return retval;
