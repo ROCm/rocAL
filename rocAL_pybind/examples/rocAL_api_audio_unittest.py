@@ -30,7 +30,7 @@ import numpy as np
 
 np.set_printoptions(threshold=1000, edgeitems=10000)
 
-def plot_audio_wav(audio_tensor, idx, device):
+def plot_audio_wav(audio_tensor, idx):
     # audio is expected as a tensor
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
@@ -45,19 +45,18 @@ def plot_audio_wav(audio_tensor, idx, device):
 
 def main():
     if len(sys.argv) < 3:
-        print("Please pass audio_folder file_list cpu/gpu batch_size")
+        print("Please pass audio_folder batch_size")
         exit(0)
     try:
-        path = "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "audio"
+        path = "results"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
     except OSError as error:
         print(error)
     data_path = sys.argv[1]
-    file_list = ""
     rocal_cpu = True  # The GPU support for Audio is not given yet
-    batch_size = int(sys.argv[4])
+    batch_size = int(sys.argv[2])
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
@@ -72,7 +71,6 @@ def main():
     with audio_pipeline:
         audio_decode = fn.decoders.audio(
             file_root=data_path,
-            file_list_path=file_list,
             downmix=False,
             shard_id=0,
             num_shards=2,
@@ -88,11 +86,12 @@ def main():
         for i, it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************", i)
             for x in range(len(it[0])):
-                for audio_tensor, label in zip(it[0][x], it[1]):
+                for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
                     print("label", label)
                     print("cnt", cnt)
                     print("Audio", audio_tensor)
-                    plot_audio_wav(audio_tensor, cnt, "cpu")
+                    print("Roi", roi)
+                    plot_audio_wav(audio_tensor, cnt)
                     cnt += 1
         print("EPOCH DONE", e)
 

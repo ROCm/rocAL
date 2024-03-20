@@ -317,7 +317,7 @@ class ROCALAudioIterator(object):
         self.device = device
         self.device_id = device_id
         self.output = None
-        self.iterator_length = b.getRemainingImages(self.loader._handle)
+        self.iterator_length = b.getRemainingImages(self.loader._handle) # To change the name of getRemainingImages to getRemainingSamples in upcoming PRs
         self.max_shape = None
         self.batch_size = self.loader._batch_size
         self.output_list = None
@@ -336,7 +336,7 @@ class ROCALAudioIterator(object):
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
-            self.num_roi_dims = len(dimensions) - 1
+            self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
             self.roi_array = np.zeros(self.batch_size * self.num_roi_dims * 2, dtype=np.int32)
             self.output_tensor_list[i].copy_roi(self.roi_array)
             if self.device == "cpu":
@@ -352,7 +352,7 @@ class ROCALAudioIterator(object):
             self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
             self.output_list.append(output)
 
-        return self.output_list, self.labels_tensor
+        return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4])
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
