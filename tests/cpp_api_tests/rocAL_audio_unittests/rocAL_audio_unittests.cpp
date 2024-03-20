@@ -112,7 +112,7 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
-    printf("Usage: audio_augmentation <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0 \n");
+    printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0 \n");
     if (argc < MIN_ARG_COUNT)
         return -1;
 
