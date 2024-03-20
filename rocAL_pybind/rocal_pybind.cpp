@@ -380,7 +380,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
         .value("NFCHW", ROCAL_NFCHW)
-        .value("NONE", ROCAL_NONE)
         .export_values();
     py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
         .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -716,7 +715,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
-    m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
+    m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
 }
 }  // namespace rocal

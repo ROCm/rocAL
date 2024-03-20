@@ -97,23 +97,17 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
 
     RocalTensor output, input1;
 
-    switch (test_case)
-    {
-        case 1:
-        {
-            std::cout<< "\n Augmentation - rocalPreEmphasisFilter ";
-            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+    switch (test_case) {
+        case 1: {
+            std::cout << "\n Augmentation - rocalPreEmphasisFilter ";
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
-            
-        }
-        break;
-        default:
-        {
+
+        } break;
+        default: {
             std::cout << "Not a valid pipeline type ! Exiting!\n";
             return -1;
         }
-
     }
 
     rocalVerify(handle);
