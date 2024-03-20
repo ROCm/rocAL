@@ -1,16 +1,65 @@
-# Chapter 4: Using with Python API
+.. meta::
+  :description: rocAL documentation and API reference library
+  :keywords: rocAL, ROCm, API, documentation
+
+.. _using-with-python:
+
+********************************************************************
+Using rocAL with Python API
+********************************************************************
 
 rocAL uses simple Python operators to provide high performance and flexibility by utilizing the underlying hardware capabilities in a very efficient manner. 
 
-## 4.1 Creating a Basic Pipeline
+*   rocAL Python package has been created using Pybind11 which enables data transfer between rocAL C++ API and Python API
+*   Module imports are made similar to other data loaders like NVidia's DALI
+*   ``rocal_pybind`` package has both PyTorch and TensorFlow framework support as described in :ref:`framework`
+*   Various reader format support including ``FileReader``, ``COCOReader``, and ``TFRecordReader``
+*   Example folder contains sample implementations for each reader variation as well as sample training script for PyTorch
+*   rocAL is integrated into MLPerf as described in :ref:`ml-perf`
+
+
+rocAL Python API
+=====================
+
+``amd.rocal.fn``
+-----------------------------
+
+*  Contains the image augmentations & file read and decode operations which are linked to rocAL C++ API
+*  All ops (listed below) are supported for the single input image and batched inputs.
+
+``amd.rocal.pipeline``
+-----------------------
+
+* Contains Pipeline class which has all the data needed to build and run the rocAL graph.
+* Contains support for context/graph creation, verify and run the graph.
+* Has data transfer functions to exchange data between frameworks and rocAL
+* define_graph functionality has been implemented to add nodes to build a pipeline graph.
+
+``amd.rocal.types``
+------------------------
+
+``amd.rocal.types`` are enums exported from C++ API to Python. Some examples include CPU, GPU, FLOAT, FLOAT16, RGB, GRAY, etc..
+
+``amd.rocal.plugin.pytorch``
+-----------------------------
+
+*  Contains ``ROCALGenericIterator`` for Pytorch.
+*  ``ROCALClassificationIterator`` class implements iterator for image classification and return images with corresponding labels.
+*  From the above classes, any hybrid iterator pipeline can be created by adding augmentations.
+*  See `PyTorch Simple Example <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch>`_. Requires PyTorch.
+
+
+Creating a Basic Pipeline
+============================
 
 The rocAL pipeline is a Python script that defines a data loader, augmentation graph, and instructions to build and execute it. The most significant part of data processing with rocAL is pipeline creation. A pipeline is composed of multiple operations connected in an ordered graph that is encapsulated in an object of amd.rocal.pipeline. amd.rocal.pipeline is a single library that can be integrated to build preprocessing pipelines for both training and inference applications. 
 
 To import a rocAL pipeline using the library, use:
 
-```
-from amd.rocal.pipeline import Pipeline
-```
+.. code-block:: python
+
+    from amd.rocal.pipeline import Pipeline
+
 
 The library provides functions required to define, build, and run the pipeline. 
 
@@ -21,24 +70,27 @@ To start using a rocAL pipeline, perform the steps below, which are explained in
 3. Build the pipeline.
 4. Run the pipeline.
 
-## 4.1.1 Instantiating the Pipeline Class
+Instantiating the pipeline class
+-----------------------------------
 
 A pipeline is defined by instantiating a pipeline object and adding rocAL operators into the pipeline. 
 
 Given below is an example of a file reader, which takes a folder of images as input and decodes the images followed by a resize augmentation. The pipeline runs on the CPU if rocal_cpu is True, or else it runs on the device with the specified device_id.
 
-```
-# Create Pipeline instance
+.. code-block:: python
+   :caption: Create Pipeline Instance
+
     pipe = SimplePipeline(batch_size=batch_size, num_threads=num_threads, device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC if args.NHWC else types.NCHW , tensor_dtype=types.FLOAT16 if args.fp16 else types.FLOAT)
     # Set Params
     output_set = 0
     rocal_device = 'cpu' if rocal_cpu else 'gpu'
     decoder_device = 'cpu' if rocal_cpu else 'gpu'
-    # Use pipeline instance to make calls to reader, decoder & augmentation's
+    # Use pipeline instance to make calls to reader, decoder & augmentations 
     with pipe:
         jpegs, _ = fn.readers.file(file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
         images = fn.decoders.image(jpegs, file_root=data_path, device=decoder_device, output_type=types.RGB, shard_id=0, num_shards=1, random_shuffle=True)
         images = fn.resize(images, device=rocal_device, resize_x=300, resize_y=300)
+<<<<<<< HEAD:docs/user_guide/ch4.md
 ```
 
 ## 4.1.2 Defining the Pipeline
@@ -47,9 +99,22 @@ To define a pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/mas
 
 ```
 class Pipeline(object):
+=======
+>>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
 
 
-    """Pipeline class internally calls RocalCreate which returns context which will have all
+Defining the Pipeline
+------------------------
+
+To define a pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L29`.
+
+.. code-block:: shell
+   :caption: Pipeline Class
+
+    class Pipeline(object):
+
+
+    Pipeline class internally calls RocalCreate which returns context which will have all
     the info set by the user.
 
 
@@ -87,7 +152,7 @@ class Pipeline(object):
         queues executor, with buffer queue size `x` for cpu stage
         and `y` for mixed and gpu stages. It is not supported when both `exec_async`
         and `exec_pipelined` are set to `False`.
-        Executor will buffer cpu and gpu stages separatelly,
+        Executor will buffer cpu and gpu stages separately,
         and will fill the buffer queues when the first :meth:`amd.rocal.pipeline.Pipeline.run`
         is issued.
     `exec_async` : bool, optional, default = True
@@ -108,98 +173,138 @@ class Pipeline(object):
         unrestricted number of streams is assumed).
     `default_cuda_stream_priority` : int, optional, default = 0
         HIP stream priority used by ROCAL. 
-```
 
-Following are the important functions available in the Pipeline class, which is an instance of `amd.rocal.pipeline`:
 
-- `build()`: Used to build a pipeline graph
-- `__init__ constructor`: Defines all the operators to be used in the graph with the corresponding parameters
-- `is_empty()`: Used to check if all the pipeline handles are empty
-- `rocalResetLoaders()`: Used to reset the iterator to the beginning
-- `set_outputs()`: Used to set the augmentations output of the graph
+Following are the important functions available in the Pipeline class, which is an instance of ``amd.rocal.pipeline``:
 
-## 4.1.3 Building the Pipeline
+* ``build()``: Used to build a pipeline graph
+* ``__init__ constructor``: Defines all the operators to be used in the graph with the corresponding parameters
+* ``is_empty()``: Used to check if all the pipeline handles are empty
+* ``rocalResetLoaders()``: Used to reset the iterator to the beginning
+* ``set_outputs()``: Used to set the augmentations output of the graph
+
+Building the Pipeline
+-------------------------
 
 Building the pipeline ensures that all operators are validated with the corresponding inputs and outputs.
 
+<<<<<<< HEAD:docs/user_guide/ch4.md
 To build the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L166
+=======
+To build the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L166`
+>>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
 
-```
-# build the pipeline
-  pipe = SimplePipeline(batch_size=max_batch_size, num_threads=1, device_id=0)
-  pipe.build()
-```
+.. code-block:: python
+   :caption: Build the Pipeline
 
-## 4.1.4 Running the Pipeline
+    # build the pipeline
+    pipe = SimplePipeline(batch_size=max_batch_size, num_threads=1, device_id=0)
+    pipe.build()
+
+
+Running the Pipeline
+-----------------------------
 
 To run/use the pipeline, simply create a data loader using the pipeline and iterate through it to get the next batch of images with labels.
 
+<<<<<<< HEAD:docs/user_guide/ch4.md
 To run the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168
+=======
+To run the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168`
 
-```
+.. code-block:: python
+   :caption: Run the Pipeline
+>>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
+
     # Dataloader
     data_loader = ROCALClassificationIterator(pipe,device=device)
     # Enumerate over the Dataloader
     for epoch in range(int(args.num_epochs)):
         print("EPOCH:::::", epoch)
         for i, it in enumerate(data_loader, 0):
-```
 
-## 4.1.5 Pipeline Output 
+
+Pipeline Output 
+-------------------------
 
 The output of the pipeline created above for 4 iterations (number of epochs) with a batch size of 2 is shown below for your reference. Each image is decoded and resized to 224x224.
 
-![Sample](../data/ch4_sample.png)
-Figure 3.	Sample Pipeline Output
+.. figure:: ../data/ch4_sample.png
 
-## 4.2 Performing Augmentations
+   Sample Pipeline Output
+
+
+Performing Augmentations
+================================
 
 rocAL not only reads images from the disk and batches them into tensors, it can also perform various augmentations on those images. 
 
+<<<<<<< HEAD:docs/user_guide/ch4.md
 To read images, decode them, and rotate them in the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L77
+=======
+To read images, decode them, and rotate them in the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L77`
+>>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
 
-```
-def rotated_pipeline():
-    jpegs, labels = fn.readers.file(file_root=image_dir, random_shuffle=True)
-    images = fn.decoders.image(jpegs, device='cpu')
+.. code-block:: python
+   :caption: Perform Augmentations
 
-# Rotate the decoded images at an angle of 10ᵒ and fill the remaining space
-With black color (0)
-    rotated_images = fn.rotate(images, angle=10.0, fill_value=0)
-    return rotated_images, labels
+    def rotated_pipeline():
+        jpegs, labels = fn.readers.file(file_root=image_dir, random_shuffle=True)
+        images = fn.decoders.image(jpegs, device='cpu')
 
-pipe = rotated_pipeline(batch_size=max_batch_size, num_threads=1, device_id=0)
-pipe.build()
-```
+    # Rotate the decoded images at an angle of 10ᵒ and fill the remaining space
+    With black color (0)
+        rotated_images = fn.rotate(images, angle=10.0, fill_value=0)
+        return rotated_images, labels
+
+    pipe = rotated_pipeline(batch_size=max_batch_size, num_threads=1, device_id=0)
+    pipe.build()
+
 
 To run the pipeline, see:
 
-```
-pipe_out = pipe.run()
-images, labels = pipe_out
-show_images(images)
-```
+.. code-block:: python
 
-## 4.3 rocAL Data Types
+    pipe_out = pipe.run()
+    images, labels = pipe_out
+    show_images(images)
 
+<<<<<<< HEAD:docs/user_guide/ch4.md
 All the rocAL data types are defined under [amd.rocal.types](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/rocAL/rocAL_pybind/amd/rocal/types.py). Import this library in the application to access the various data types such as rocAL status, processing mode, tensor output type, image size evaluation policy, image color, tensor layout, decode device, resize scaling mode, and resize interpolation type. 
+=======
+
+rocAL Data Types
+=========================
+
+All the rocAL data types are defined under `amd.rocal.types <https://github.com/ROCm/MIVisionX/blob/master/rocAL/rocAL_pybind/amd/rocal/types.py>`_. Import this library in the application to access the various data types such as rocAL status, processing mode, tensor output type, image size evaluation policy, image color, tensor layout, decode device, resize scaling mode, and resize interpolation type. 
+>>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
 
 Here are some of the commonly used rocAL data types:
 
-- Processing modes: Values (GPU/CPU). Use the rocal_cpu argument in the pipeline to set the processing mode. 
-    - rocal_cpu = True: This performs data loading on the CPU. If GPUs are heavily used for training, it is viable to create the data-loading pipeline using CPU.
-    - rocal_cpu = False: This performs data loading on the available GPU as specified using the device_id argument in the pipeline.
-- Tensor output types: Values (NCHW/NHWC). Example: 
-    - tensor_layout = types.NCHW
-    - tensor_layout = types.NHWC
-- Tensor data types: Values (FLOAT/FLOAT16). Example: 
-    - tensor_dtype = types.FLOAT
-    - tensor_dtype = types.FLOAT16
+* Processing modes: Values (GPU/CPU). Use the rocal_cpu argument in the pipeline to set the processing mode. 
 
+<<<<<<< HEAD:docs/user_guide/ch4.md
 To see the usage of the above-mentioned data types, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L97
+=======
+   * rocal_cpu = True: This performs data loading on the CPU. If GPUs are heavily used for training, it is viable to create the data-loading pipeline using CPU.
+   * rocal_cpu = False: This performs data loading on the available GPU as specified using the device_id argument in the pipeline.
+>>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
 
-```
-def __init__(self, batch_size=-1, num_threads=-1, device_id=-1, seed=-1,
+* Tensor output types: Values (NCHW/NHWC). Example: 
+
+   * tensor_layout = types.NCHW
+   * tensor_layout = types.NHWC
+
+* Tensor data types: Values (FLOAT/FLOAT16). Example: 
+
+   * tensor_dtype = types.FLOAT
+   * tensor_dtype = types.FLOAT16
+
+To see the usage of the above-mentioned data types, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L97`
+
+.. code-block:: python
+
+    def __init__(self, batch_size=-1, num_threads=-1, device_id=-1, seed=-1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout = types.NCHW, reverse_channels = False, multiplier = [1.0,1.0,1.0], offset = [0.0, 0.0, 0.0], tensor_dtype=types.FLOAT):
@@ -211,4 +316,4 @@ def __init__(self, batch_size=-1, num_threads=-1, device_id=-1, seed=-1,
             print("comes to gpu")
             self._handle = b.rocalCreate(
                 batch_size, types.GPU, device_id, num_threads,prefetch_queue_depth,types.FLOAT)  
-```
+
