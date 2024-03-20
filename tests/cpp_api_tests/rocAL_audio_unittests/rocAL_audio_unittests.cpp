@@ -33,71 +33,46 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
-#define DISPLAY 1
 using namespace std::chrono;
 
-void verify_output(float *dstPtr, long int frames, const char *ref_path)
+bool verify_output(float *dstPtr, long int frames, const char *ref_path)
 {
     std::fstream refFile;
-
+    bool pass_status = false;
     // read data from golden outputs
     long int oBufferSize = frames;
-    float *refOutput = static_cast<float *>(malloc(oBufferSize * sizeof(float)));
+    std::vector<float> refOutput(oBufferSize);
     std::fstream fin(ref_path, std::ios::in | std::ios::binary);
-    if(fin.is_open())
-    {
-        for(long int i = 0; i < oBufferSize; i++)
-        {
-            if(!fin.eof())
-                fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float));
-            else
-            {
+    if(fin.is_open()) {
+        for(long int i = 0; i < oBufferSize; i++) {
+            if(!fin.eof()) {
+                fin.read(reinterpret_cast<char*>(refOutput.data()), sizeof(float));
+            } else {
                 std::cout<<"\nUnable to read all data from golden outputs\n";
-                return;
+                return pass_status;
             }
         }
-    }
-    else
-    {
+    } else {
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
-        return;
+        return pass_status;
     }
 
-        // float *dstPtrCurrent = dstPtr;
-        // float *refPtrCurrent = refOutput;
-        // float *dstPtrRow = dstPtrCurrent;
-        // float *refPtrRow = refPtrCurrent;
-        // int hStride = frames;
-
-        int matchedIndices = 0;
-        // float *dstPtrTemp = dstPtrRow;
-        // // std::cerr<<"\n "<< output_idx <<inputBatchSize << frames;
-        // float *refPtrTemp = refPtrRow ;
-        for (int j = 0; j < frames; j++)
-        {
-            float refVal, outVal;
-            refVal = refOutput[j];
-            outVal = dstPtr[j];
-            bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
-            if (!invalidComparision && abs(outVal - refVal) < 1e-20)
-                matchedIndices += 1;
-            else
-            {
-                std::cerr<<"\n mismatches : "<< j <<" "<<outVal<<" "<<refVal;
-            }
-        }
+    int matchedIndices = 0;
+    for (int j = 0; j < frames; j++) {
+        float refVal, outVal;
+        refVal = refOutput[j];
+        outVal = dstPtr[j];
+        bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
+        if (!invalidComparision && abs(outVal - refVal) < 1e-20)
+            matchedIndices += 1;
+    }
 
     std::cout << std::endl << "Results for Test case: " << std::endl;
-    if (matchedIndices == (frames) && matchedIndices !=0)
-    {
-        std::cout << "PASSED!" << std::endl;
-    }
-    else
-    {
-        std::cout << "FAILED!" << std::endl;
+    if ((matchedIndices == frames) && matchedIndices != 0) {
+        pass_status = true;
     }
 
-    free(refOutput);
+    return pass_status;
 }
 
 int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu);
@@ -110,10 +85,13 @@ int main(int argc, const char **argv) {
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
-    const char *ref_path = argv[++argIdx];
+    const char *ref_path = nullptr;
     unsigned test_case = 0;
     bool downmix = false;
     bool gpu = 0;
+
+    if (argc >= argIdx + MIN_ARG_COUNT)
+        ref_path = argv[++argIdx];
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
@@ -123,6 +101,11 @@ int main(int argc, const char **argv) {
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
+    
+    if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
+        std::cerr << "WRN : Currently Audio unit test supports only HOST backend\n";
+        gpu = false;
+    }
 
     int return_val = test(test_case, path, ref_path, downmix, gpu);
     return return_val;
@@ -142,22 +125,24 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
         return -1;
     }
 
-    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, false);
+    std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
+    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 
+    // Calling the API to verify and build the augmentation graph
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Could not verify the augmentation graph " << rocalGetErrorMessage(handle);
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>>>>> Diplay Values<<<<<<<<<<<<<<<<<*/
     int iteration = 0;
-    float *buffer;
+    float *buffer = nullptr;
     int frames = 0;
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize)) {
         std::cout << "\n Iteration:: " << iteration<<"\n";
         iteration++;
@@ -168,17 +153,32 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
         int image_name_length[inputBatchSize];
         int img_size = rocalGetImageNameLen(handle, image_name_length);
         char img_name[img_size];
-        std::vector<int> roi(4, 0);
+        std::vector<int> roi(4 * inputBatchSize, 0);
         rocalGetImageName(handle, img_name);
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
-            frames = roi[2];
+            frames = roi[idx * 4 + 2];
         }
     }
-    std::cout << "\n *****************************Verifying Audio output**********************************\n";
-    verify_output(buffer, frames, ref_path);
-    free(buffer);
+
+    if (ref_path) {
+        std::cout << "\n *****************************Verifying Audio output**********************************\n";
+        if (verify_output(buffer, frames, ref_path)) {
+            std::cout << "PASSED!\n\n";
+        } else {
+            std::cout << "FAILED!\n\n";
+        }
+    }
+
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto dur = duration_cast<microseconds>(t2 - t1).count();
+    auto rocal_timing = rocalGetTimingInfo(handle);
+    std::cout << "Load     time " << rocal_timing.load_time << std::endl;
+    std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
+    std::cout << "Process  time " << rocal_timing.process_time << std::endl;
+    std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
+    std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     return 0;
 }
