@@ -36,16 +36,14 @@ THE SOFTWARE.
 #define DISPLAY 1
 using namespace std::chrono;
 
-void verify_output(float *dstPtr, long int frames, int inputBatchSize, int output_idx)
+void verify_output(float *dstPtr, long int frames, const char *ref_path)
 {
     std::fstream refFile;
-    int fileMatch = 0;
 
     // read data from golden outputs
-    long int oBufferSize = inputBatchSize * frames;
+    long int oBufferSize = frames;
     float *refOutput = static_cast<float *>(malloc(oBufferSize * sizeof(float)));
-    std::string outFile = "/media/audio_reference_outputs/ref_output_" + std::to_string(output_idx)+".bin";
-    std::fstream fin(outFile, std::ios::in | std::ios::binary);
+    std::fstream fin(ref_path, std::ios::in | std::ios::binary);
     if(fin.is_open())
     {
         for(long int i = 0; i < oBufferSize; i++)
@@ -65,24 +63,21 @@ void verify_output(float *dstPtr, long int frames, int inputBatchSize, int outpu
         return;
     }
 
-    // iterate over all samples in a batch and compare with reference outputs
-    for (int batchCount = 0; batchCount < inputBatchSize; batchCount++)
-    {
-        float *dstPtrCurrent = dstPtr + batchCount * frames;
-        float *refPtrCurrent = refOutput + batchCount * frames;
-        float *dstPtrRow = dstPtrCurrent;
-        float *refPtrRow = refPtrCurrent;
-        int hStride = frames;
+        // float *dstPtrCurrent = dstPtr;
+        // float *refPtrCurrent = refOutput;
+        // float *dstPtrRow = dstPtrCurrent;
+        // float *refPtrRow = refPtrCurrent;
+        // int hStride = frames;
 
         int matchedIndices = 0;
-        float *dstPtrTemp = dstPtrRow;
-        std::cerr<<"\n "<< output_idx <<inputBatchSize << frames;
-        float *refPtrTemp = refPtrRow ;
+        // float *dstPtrTemp = dstPtrRow;
+        // // std::cerr<<"\n "<< output_idx <<inputBatchSize << frames;
+        // float *refPtrTemp = refPtrRow ;
         for (int j = 0; j < frames; j++)
         {
             float refVal, outVal;
-            refVal = refPtrTemp[j];
-            outVal = dstPtrTemp[j];
+            refVal = refOutput[j];
+            outVal = dstPtr[j];
             bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
             if (!invalidComparision && abs(outVal - refVal) < 1e-20)
                 matchedIndices += 1;
@@ -91,24 +86,21 @@ void verify_output(float *dstPtr, long int frames, int inputBatchSize, int outpu
                 std::cerr<<"\n mismatches : "<< j <<" "<<outVal<<" "<<refVal;
             }
         }
-        if (matchedIndices == (frames) && matchedIndices !=0)
-            fileMatch++;
-    }
 
     std::cout << std::endl << "Results for Test case: " << std::endl;
-    if (fileMatch == inputBatchSize)
+    if (matchedIndices == (frames) && matchedIndices !=0)
     {
         std::cout << "PASSED!" << std::endl;
     }
     else
     {
-        std::cout << "FAILED! " << fileMatch << "/" << inputBatchSize << " outputs are matching with reference outputs" << std::endl;
+        std::cout << "FAILED!" << std::endl;
     }
 
     free(refOutput);
 }
 
-int test(int test_case, const char *path, int downmix, int gpu);
+int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
@@ -118,6 +110,7 @@ int main(int argc, const char **argv) {
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
+    const char *ref_path = argv[++argIdx];
     unsigned test_case = 0;
     bool downmix = false;
     bool gpu = 0;
@@ -131,11 +124,11 @@ int main(int argc, const char **argv) {
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
 
-    int return_val = test(test_case, path, downmix, gpu);
+    int return_val = test(test_case, path, ref_path, downmix, gpu);
     return return_val;
 }
 
-int test(int test_case, const char *path, int downmix, int gpu) {
+int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu) {
     int inputBatchSize = 1;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
@@ -163,9 +156,10 @@ int test(int test_case, const char *path, int downmix, int gpu) {
 
     /*>>>>>>>>>>>>>>>>>>> Diplay Values<<<<<<<<<<<<<<<<<*/
     int iteration = 0;
+    float *buffer;
+    int frames = 0;
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize)) {
-        std::cout << "\n rocalGetRemainingAudios:: " << rocalGetRemainingImages(handle) << "\t inputBatchsize:: " << inputBatchSize;
-        std::cout << "\n Iteration:: " << iteration;
+        std::cout << "\n Iteration:: " << iteration<<"\n";
         iteration++;
         if (rocalRun(handle) != 0) {
             break;
@@ -176,18 +170,15 @@ int test(int test_case, const char *path, int downmix, int gpu) {
         char img_name[img_size];
         std::vector<int> roi(4, 0);
         rocalGetImageName(handle, img_name);
-        std::cerr << "\nPrinting image names of batch: " << img_name;
-        std::cout << "\n *****************************Verifying Audio output**********************************\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
-            float *buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
+            buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
-            long int frames = roi[2];
-            int channels = output_tensor_list->at(idx)->dims().at(2);
-            if(iteration == 9)
-                verify_output(buffer, frames, inputBatchSize, iteration - 1);
+            frames = roi[2];
         }
-        std::cout << "******************************************************************************\n";
     }
+    std::cout << "\n *****************************Verifying Audio output**********************************\n";
+    verify_output(buffer, frames, ref_path);
+    free(buffer);
     rocalRelease(handle);
     return 0;
 }
