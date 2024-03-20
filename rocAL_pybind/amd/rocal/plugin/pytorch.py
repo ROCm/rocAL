@@ -312,9 +312,8 @@ class ROCALAudioIterator(object):
     fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
 
     """
-    def __init__(self, pipeline, tensor_layout = types.NONE, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
+    def __init__(self, pipeline, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
         self.loader = pipeline
-        self.tensor_format = tensor_layout
         self.device = device
         self.device_id = device_id
         self.output = None
