@@ -27,6 +27,7 @@ import sys
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+from parse_config import parse_args
 
 np.set_printoptions(threshold=1000, edgeitems=10000)
 
@@ -43,6 +44,29 @@ def plot_audio_wav(audio_tensor, idx):
     plt.savefig("results/rocal_data_new" + str(idx) + ".png")
     plt.close()
 
+def verify_output(audio_tensor, roi_tensor, ref_path, test_results):
+    data_array = np.fromfile(ref_path, dtype=np.float32)
+    audio_data = audio_tensor.detach().numpy()
+    audio_data = audio_data.flatten()
+    roi_data = roi_tensor.detach().numpy()
+    matched_indices = 0
+    for j in range(roi_data[0]):
+        ref_val = data_array[j]
+        out_val = audio_data[j]
+        invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
+        if not invalid_comparison and np.abs(out_val - ref_val) < 1e-20:
+            matched_indices += 1
+
+    # Print results
+    print("Results for Test case:")
+    if matched_indices == roi_data[0] and matched_indices != 0:
+        print("PASSED!")
+        test_results.append("PASSED")
+    else:
+        print("FAILED!")
+        test_results.append("FAILED")
+
+
 def main():
     if len(sys.argv) < 3:
         print("Please pass audio_folder batch_size")
@@ -54,12 +78,24 @@ def main():
             os.makedirs(path)
     except OSError as error:
         print(error)
-    data_path = sys.argv[1]
-    rocal_cpu = True  # The GPU support for Audio is not given yet
-    batch_size = int(sys.argv[2])
+
+    args = parse_args()
+
+    audio_path = args.audio_path
+    rocal_cpu = False if args.rocal_gpu else True
+    batch_size = args.batch_size
+    test_case = args.test_case
+    ref_path = args.ref_path
+    qa_mode = args.qa_mode
     num_threads = 1
     device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
+    if not rocal_cpu:
+        print("The GPU support for Audio is not given yet. running on cpu")
+        rocal_cpu = True
+    if qa_mode:
+        batch_size = 1
+
     print("*********************************************************************")
     audio_pipeline = Pipeline(
         batch_size=batch_size,
@@ -70,29 +106,47 @@ def main():
     )
     with audio_pipeline:
         audio_decode = fn.decoders.audio(
-            file_root=data_path,
+            file_root=audio_path,
             downmix=False,
             shard_id=0,
-            num_shards=2,
+            num_shards=1,
             stick_to_shard=False,
         )
         audio_pipeline.set_outputs(audio_decode)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
     cnt = 0
-    for e in range(1):
+    out_tensor = None
+    out_roi = None
+    test_results = []
+    import timeit
+    start = timeit.default_timer()
+    # Enumerate over the Dataloader
+    for e in range(int(args.num_epochs)):
         print("Epoch :: ", e)
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i, it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************", i)
             for x in range(len(it[0])):
                 for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
-                    print("label", label)
-                    print("cnt", cnt)
-                    print("Audio", audio_tensor)
-                    print("Roi", roi)
-                    plot_audio_wav(audio_tensor, cnt)
-                    cnt += 1
+                    if args.print_tensor:
+                        print("label", label)
+                        print("cnt", cnt)
+                        print("Audio", audio_tensor)
+                        print("Roi", roi)
+                    if args.dump_output:
+                        plot_audio_wav(audio_tensor, cnt)
+                    out_tensor = audio_tensor
+                    out_roi = roi
+                    cnt+=1
+        if qa_mode :
+            verify_output(out_tensor, out_roi, ref_path, test_results)
+            num_passed = test_results.count("PASSED")
+            num_failed = test_results.count("FAILED")
+
+            print("Number of PASSED tests:", num_passed)
+            print("Number of FAILED tests:", num_failed)
+
         print("EPOCH DONE", e)
 
 
