@@ -134,7 +134,6 @@ std::unordered_map<int, std::string> rocalToPybindLayout = {
     {1, "NCHW"},
     {2, "NFHWC"},
     {3, "NFCHW"},
-    {4, "NONE"}
 };
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
