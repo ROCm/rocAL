@@ -37,7 +37,7 @@ enum class DecoderType {
     OVX_FFMPEG = 5,        //!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
     FFMPEG_SOFTWARE_DECODE = 6,
     FFMPEG_HARDWARE_DECODE = 7,
-    SNDFILE = 8,           //!< Uses sndfile to decode audio files
+    SNDFILE = 8            //!< Uses sndfile to decode audio files
 };
 
 class DecoderConfig {

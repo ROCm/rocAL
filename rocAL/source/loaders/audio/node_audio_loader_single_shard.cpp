@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include "node_audio_loader_single_shard.h"
 #include "exception.h"
 
+#ifdef ROCAL_AUDIO
+
 AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<AudioLoader>(device_resources);
 }
@@ -57,3 +59,4 @@ std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
 AudioLoaderSingleShardNode::~AudioLoaderSingleShardNode() {
     _loader_module = nullptr;
 }
+#endif

@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2023 - 2024 Advanced Micro Devices, Inc.
+# Copyright (c) 2023 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -325,7 +325,8 @@ if(${BUILD_ROCAL})
     else()
         include_directories(${SndFile_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
-        message("-- ${White}rocAL built with SndFile Functionality${ColourReset}")
+        message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

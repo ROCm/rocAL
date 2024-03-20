@@ -25,7 +25,7 @@
 ################################################################################
 cmake_minimum_required(VERSION 3.5)
 
-project (rocAL_audio_unittests)
+project (rocal_audio_unittests)
 set(CMAKE_CXX_STANDARD 14)
 
 # ROCm Path
