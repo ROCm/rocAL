@@ -21,5 +21,5 @@ This application can be used to verify the functionality of the Audio APIs offer
   ````
 ./rocal_audio_unittests <audio-dataset-folder>
 
-Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0
+Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0>
   ````

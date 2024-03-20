@@ -108,46 +108,34 @@ void verify_output(float *dstPtr, long int frames, int inputBatchSize, int outpu
     free(refOutput);
 }
 
-int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu);
+int test(int test_case, const char *path, int downmix, int gpu);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
-    printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0 \n");
+    printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0> \n");
     if (argc < MIN_ARG_COUNT)
         return -1;
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
     unsigned test_case = 0;
-    float sample_rate = 0.0;
     bool downmix = false;
-    unsigned max_frames = 1;
-    unsigned max_channels = 1;
     bool gpu = 0;
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
-        sample_rate = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
         downmix = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        max_frames = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        max_channels = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
 
-    int return_val = test(test_case, path, sample_rate, downmix, max_frames, max_channels, gpu);
+    int return_val = test(test_case, path, downmix, gpu);
     return return_val;
 }
 
-int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu) {
+int test(int test_case, const char *path, int downmix, int gpu) {
     int inputBatchSize = 1;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
