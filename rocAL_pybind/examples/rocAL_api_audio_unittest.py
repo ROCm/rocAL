@@ -57,10 +57,11 @@ def main():
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
             for x in range(len(it[0])):
-                for audio_tensor, label in zip(it[0][x], it[1]):
+                for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
                     print("label", label)
                     print("cnt", cnt)
                     print("Audio", audio_tensor)
+                    print("Roi", roi)
                     plot_audio_wav(audio_tensor, cnt)
                     cnt+=1
         print("EPOCH DONE", e)
