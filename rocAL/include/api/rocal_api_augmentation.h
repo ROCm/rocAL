@@ -1097,7 +1097,16 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(RocalContext context, R
                                                          int num_of_attempts = 20,
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
+/*! \brief Applies preemphasis filter to the input data.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] p_preemph_coeff Preemphasis coefficient coeff.
+ * \param [in] preemph_border_type Border value policy. Possible values are "zero", "clamp", "reflect".
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
 extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
                                                              RocalTensor p_input,
                                                              bool is_output,
