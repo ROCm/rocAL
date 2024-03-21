@@ -715,6 +715,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
     m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
-            py::return_value_policy::reference);
+          py::return_value_policy::reference);
 }
 }  // namespace rocal
