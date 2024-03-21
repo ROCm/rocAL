@@ -20,15 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "file_source_reader.h"
-
-#include <commons.h>
-
-#include <algorithm>
 #include <cassert>
+#include <algorithm>
 #include <cstring>
-#include <fstream>
-
+#include <commons.h>
+#include "file_source_reader.h"
 #include "filesystem.h"
 
 FileSourceReader::FileSourceReader() {
@@ -267,7 +263,7 @@ Reader::Status FileSourceReader::open_folder() {
             _file_count_all_shards++;
             incremenet_file_id();
         } else {
-            WRN("Skipping file," + _entity->d_name + " as it is not present in metadata reader")
+            WRN("Skipping file," + std::string(_entity->d_name) + " as it is not present in metadata reader")
         }
     }
     if (_file_names.empty())

@@ -48,7 +48,6 @@ enum class StorageType {
     MXNET_RECORDIO = 7,
     VIDEO_FILE_SYSTEM = 8,
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
-    FILE_LIST_SYSTEM = 10          // to support reading from file lists
 };
 
 enum class ExternalSourceFileMode {

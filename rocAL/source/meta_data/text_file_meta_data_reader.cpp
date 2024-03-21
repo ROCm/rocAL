@@ -84,7 +84,6 @@ void TextFileMetaDataReader::read_all(const std::string &path) {
             if (std::string::npos != last_slash_idx) {
                 _last_id.erase(0, last_slash_idx + 1);
             }
-            std::cerr << _last_id << " " << file_label << "\n";
             add(_last_id, file_label);
         }
     } else {

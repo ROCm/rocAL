@@ -133,6 +133,7 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
     }
 
     RocalTensor output, input1;
+
     switch (test_case) {
         case 1: {
             std::cout << "\n Augmentation - rocalPreEmphasisFilter ";

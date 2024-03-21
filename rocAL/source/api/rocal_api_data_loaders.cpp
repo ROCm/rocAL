@@ -2118,8 +2118,7 @@ rocalAudioFileSourceSingleShard(
             THROW("Shard count should be bigger than 0")
         if (shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
-        auto storage_type = (strlen(source_file_list_path) == 0) ? StorageType::FILE_SYSTEM : StorageType::FILE_LIST_SYSTEM;
-        auto [max_frames, max_channels] = evaluate_audio_data_set(storage_type, DecoderType::SNDFILE, source_path, source_file_list_path);
+        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, source_file_list_path);
         INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
@@ -2130,7 +2129,7 @@ rocalAudioFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, storage_type, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
         if (is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
@@ -2160,8 +2159,7 @@ rocalAudioFileSource(
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_AUDIO
-        auto storage_type = (strlen(source_file_list_path) == 0) ? StorageType::FILE_SYSTEM : StorageType::FILE_LIST_SYSTEM;
-        auto [max_frames, max_channels] = evaluate_audio_data_set(storage_type, DecoderType::SNDFILE, source_path, source_file_list_path);
+        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, source_file_list_path);
         INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
@@ -2172,7 +2170,7 @@ rocalAudioFileSource(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, source_file_list_path, storage_type, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
         if (is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
