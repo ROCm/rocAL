@@ -56,5 +56,4 @@ THE SOFTWARE.
 #include "node_nop.h"
 #include "node_sequence_rearrange.h"
 #include "node_preemphasis_filter.h"
-#include "node_non_silent_region.h"
 #include "node_spectrogram.h"

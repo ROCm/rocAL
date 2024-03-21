@@ -1114,24 +1114,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
                                                              RocalFloatParam p_preemph_coeff = NULL,
                                                              RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP,
                                                              RocalTensorOutputType output_datatype = ROCAL_FP32);
-/*! \brief A
- * \ingroup group_rocal_augmentations
- * \param [in] p_context Rocal context
- * \param [in] p_input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] cutoff_db threshold(dB) below which the signal is considered silent
- * \param [in] reference_power reference power that is used to convert the signal to dB
- * \param [in] window_length size of the sliding window used to calculate of the short-term power of the signal
- * \param [in] reset_interval number of samples after which the moving mean average is recalculated to avoid loss of precision
- * \return std::pair<RocalTensor, RocalTensor>
- */
-extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
-                                                                                   RocalTensor input,
-                                                                                   bool is_output,
-                                                                                   float cutoff_db,
-                                                                                   float reference_power,
-                                                                                   int reset_interval,
-                                                                                   int window_length);
 
 /*! \brief A
  * \ingroup group_rocal_augmentations

@@ -116,7 +116,6 @@ def main():
             num_shards=1,
             stick_to_shard=False,
         )
-        begin, length = fn.nonsilent_region(audio_decode, cutoff_db=-60)
         pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
         spec = fn.spectrogram(
             pre_emphasis_filter,

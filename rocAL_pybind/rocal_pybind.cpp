@@ -727,8 +727,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
-    m.def("NonSilentRegion", &rocalNonSilentRegion,
-            py::return_value_policy::reference);
     m.def("Spectrogram", &rocalSpectrogram,
             py::return_value_policy::reference);
 }
