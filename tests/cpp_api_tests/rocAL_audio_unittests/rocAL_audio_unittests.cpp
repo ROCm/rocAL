@@ -150,11 +150,12 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
             break;
         }
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-        int image_name_length[inputBatchSize];
-        int img_size = rocalGetImageNameLen(handle, image_name_length);
-        char img_name[img_size];
+        int file_name_length[inputBatchSize];
+        int file_name_size = rocalGetImageNameLen(handle, file_name_length);
+        char audio_file_name[file_name_size];
         std::vector<int> roi(4 * inputBatchSize, 0);
-        rocalGetImageName(handle, img_name);
+        rocalGetImageName(handle, audio_file_name);
+        std::cerr << "Audio file : " << audio_file_name << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
