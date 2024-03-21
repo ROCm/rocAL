@@ -1085,7 +1085,7 @@ def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, output_d
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False,
                     "preemph_coeff": preemph_coeff_float_param, "preemph_border_type": border,
                     "output_dtype" :output_dtype}
-    preemphasis_output = b.PreEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    preemphasis_output = b.preEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (preemphasis_output)
 
 def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_sample_hint = [0], cutoff_db = -60, reference_power = 0.0, reset_interval = 8192, seed = -1, window_length = 2048):
