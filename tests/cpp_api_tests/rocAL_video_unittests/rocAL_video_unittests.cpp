@@ -152,6 +152,7 @@ int main(int argc, const char **argv) {
         std::cout << "Could not create the Rocal contex\n";
         return -1;
     }
+    rocalSetSeed(0);
     if (reader_case == 3) {
         if (check_extension(source_path) < 0) {
             std::cerr << "\n[ERR]   Text file/ Video File passed as input to SEQUENCE READER\n";
