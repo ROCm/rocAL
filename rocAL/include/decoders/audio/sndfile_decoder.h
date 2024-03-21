@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include "audio_decoder.h"
 
+#ifdef ROCAL_AUDIO
 class SndFileDecoder : public AudioDecoder {
    public:
     //! Default constructor
@@ -34,3 +35,4 @@ class SndFileDecoder : public AudioDecoder {
     void release() override;
     ~SndFileDecoder() override;
 };
+#endif

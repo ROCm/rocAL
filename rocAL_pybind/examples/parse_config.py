@@ -98,6 +98,18 @@ def parse_args():
                                   help='interpolation type used for resize and crop')
     python_unit_test.add_argument('--scaling-mode', '-sm', type=int, default=0,
                                   help='scaling mode type used for resize')
+
+    # rocAL_api_audio_unittest.py related options
+    audio_unit_test = parser.add_argument_group(
+        'python-unittest', 'python-unittest-related options')
+    audio_unit_test.add_argument('--audio_path', type=str, default="",
+                                  help='audio files path')
+    audio_unit_test.add_argument('--test_case', type=int, default=0,
+                                  help='test case')
+    audio_unit_test.add_argument('--qa_mode', type=int, default=0,
+                                  help='enable qa mode to compare audio output with ref outputs')
+    audio_unit_test.add_argument('--dump_output', action="store_true",
+                                  help='--dump_output: to dump tensor output from the pipeline')
     # rocAL_api_coco_pipeline.py related options
     coco_pipeline = parser.add_argument_group(
         'coco-pipeline', 'coco-pipeline-related options')

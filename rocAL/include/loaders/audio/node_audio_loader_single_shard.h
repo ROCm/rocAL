@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "graph.h"
 #include "node.h"
 
+#ifdef ROCAL_AUDIO
+
 class AudioLoaderSingleShardNode : public Node {
    public:
     AudioLoaderSingleShardNode(Tensor *output, void *device_resources);
@@ -53,3 +55,4 @@ class AudioLoaderSingleShardNode : public Node {
    private:
     std::shared_ptr<AudioLoader> _loader_module = nullptr;
 };
+#endif
