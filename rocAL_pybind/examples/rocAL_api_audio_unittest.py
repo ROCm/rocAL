@@ -41,7 +41,7 @@ def plot_audio_wav(audio_tensor, idx):
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
     plt.plot(audio_data)
-    plt.savefig("results/rocal_data_new" + str(idx) + ".png")
+    plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
     plt.close()
 
 def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
@@ -86,7 +86,7 @@ def main():
 
     if args.display:
         try:
-            path = "results"
+            path = "OUTPUT_FOLDER/AUDIO_READER"
             isExist = os.path.exists(path)
             if not isExist:
                 os.makedirs(path)
@@ -99,11 +99,14 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. running on cpu")
         rocal_cpu = True
+    if audio_path == "":
+        audio_path = f'{rocal_data_path}/audio/wav/'
+    else:
+        print("QA mode is disabled for custom audio data")
+        qa_mode = 0
     if qa_mode and batch_size != 1:
         print("QA mode is enabled. Batch size is set to 1.")
         batch_size = 1
-    if audio_path == "":
-        audio_path = f'{rocal_data_path}/audio/wav/'
 
     print("*********************************************************************")
     audio_pipeline = Pipeline(
