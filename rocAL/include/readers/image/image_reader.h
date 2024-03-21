@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -80,12 +80,6 @@ struct ReaderConfig {
     void set_sequence_length(unsigned sequence_length) { _sequence_length = sequence_length; }
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
-    void set_last_batch_policy(RocalBatchPolicy last_batch_policy, bool last_batch_padded) {
-        _last_batch_policy = last_batch_policy;
-        _last_batch_padded = last_batch_padded;
-    }
-    void set_stick_to_shard(bool stick_to_shard) { _stick_to_shard = stick_to_shard; }
-    void set_shard_size(signed shard_size) { _shard_size = shard_size; }
     void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }

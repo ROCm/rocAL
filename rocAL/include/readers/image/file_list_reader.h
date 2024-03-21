@@ -68,8 +68,6 @@ class FileListReader : public Reader {
 
     FileListReader();
 
-    size_t last_batch_padded_size() override;
-
    private:
     //! opens the folder containing the images
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
