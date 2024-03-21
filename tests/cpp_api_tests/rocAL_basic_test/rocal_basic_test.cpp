@@ -91,6 +91,7 @@ int main(int argc, const char **argv) {
         std::cout << "Could not create the Rocal contex\n";
         return -1;
     }
+    rocalSetSeed(0);
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
     RocalTensor decoded_output;

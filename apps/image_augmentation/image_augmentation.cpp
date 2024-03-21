@@ -107,6 +107,7 @@ int main(int argc, const char** argv) {
         std::cout << "Could not create the rocAL contex\n";
         return -1;
     }
+    rocalSetSeed(0);
 
     RocalDecoderType dec_type = (RocalDecoderType)decoder_type;
 

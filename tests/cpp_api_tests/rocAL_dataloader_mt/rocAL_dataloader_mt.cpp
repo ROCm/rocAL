@@ -87,6 +87,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
                   << " could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
+    rocalSetSeed(0);
     // create meta data reader
     rocalCreateLabelReader(handle, path);
 
