@@ -208,10 +208,6 @@ bool VideoLoader::is_out_of_data() {
     return (remaining_count() < _batch_size);
 }
 
-size_t VideoLoader::last_batch_padded_size() {
-    return _video_loader->last_batch_padded_size();
-}
-
 LoaderModuleStatus
 VideoLoader::update_output_image() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;
@@ -297,13 +293,6 @@ std::vector<std::vector<float>> VideoLoader::get_sequence_frame_timestamps() {
     sequence_frame_timestamp = _sequence_frame_timestamps_vec.back();
     _sequence_frame_timestamps_vec.pop_back();
     return sequence_frame_timestamp;
-}
-
-size_t VideoLoaderSharded::last_batch_padded_size() {
-    size_t sum = 0;
-    for (auto &loader : _loaders)
-        sum += loader->last_batch_padded_size();
-    return sum;
 }
 
 #endif

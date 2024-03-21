@@ -234,10 +234,6 @@ bool ImageLoader::is_out_of_data() {
     return (remaining_count() < _batch_size);
 }
 
-size_t ImageLoader::last_batch_padded_size() {
-    return _image_loader->last_batch_padded_size();
-}
-
 LoaderModuleStatus
 ImageLoader::update_output_image() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;

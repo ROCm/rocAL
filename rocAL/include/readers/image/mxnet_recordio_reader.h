@@ -66,8 +66,6 @@ class MXNetRecordIOReader : public Reader {
 
     MXNetRecordIOReader();
 
-    size_t last_batch_padded_size() override { return 0; }
-
    private:
     //! opens the folder containnig the images
     Reader::Status record_reading();

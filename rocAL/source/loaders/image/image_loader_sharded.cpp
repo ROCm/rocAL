@@ -115,13 +115,6 @@ void ImageLoaderSharded::start_loading() {
     }
 }
 
-size_t ImageLoaderSharded::last_batch_padded_size() {
-    size_t sum = 0;
-    for(auto& loader: _loaders)
-        sum += loader->last_batch_padded_size();
-    return sum;
-}
-
 void ImageLoaderSharded::shut_down() {
     for (unsigned i = 0; i < _loaders.size(); i++)
         _loaders[i]->shut_down();

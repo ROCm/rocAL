@@ -125,12 +125,6 @@ void VideoReadAndDecode::decode_sequence(size_t sequence_index) {
     }
 }
 
-//For video loader , the support for last batch policy is not added.
-size_t
-VideoReadAndDecode::last_batch_padded_size() {
-    return 0;
-}
-
 LoaderModuleStatus
 VideoReadAndDecode::load(unsigned char *buff,
                          std::vector<std::string> &names,

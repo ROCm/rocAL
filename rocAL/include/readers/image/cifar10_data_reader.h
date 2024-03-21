@@ -64,8 +64,6 @@ class CIFAR10DataReader : public Reader {
 
     unsigned get_file_index() { return _last_file_idx; }
 
-    size_t last_batch_padded_size() override { return 0; }
-
    private:
     //! opens the folder containing the images
     Reader::Status open_folder();

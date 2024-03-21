@@ -80,7 +80,6 @@ class VideoReadAndDecode {
 
     //! returns timing info or other status information
     Timing timing();
-    size_t last_batch_padded_size();
 
    private:
     struct video_map {

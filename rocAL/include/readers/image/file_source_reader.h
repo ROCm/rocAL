@@ -67,8 +67,6 @@ class FileSourceReader : public Reader {
 
     FileSourceReader();
 
-    size_t last_batch_padded_size() override;
-
    private:
     //! opens the folder containnig the images
     Reader::Status open_folder();

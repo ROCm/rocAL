@@ -448,7 +448,7 @@ bool MasterGraph::last_batch_padded() {
 }
 
 uint 
-MasterGraph::last_batch_padded_size() {
+MasterGraph::() {
     return _loader_module->last_batch_padded_size();
 }
 

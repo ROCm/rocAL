@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 namespace filesys = boost::filesystem;
 
-FileListReader::FileListReader() : _shuffle_time("shuffle_time", DBG_TIMING) {
+FileListReader::FileListReader() : {
     _src_dir = nullptr;
     _sub_dir = nullptr;
     _entity = nullptr;
@@ -74,10 +74,8 @@ Reader::Status FileListReader::initialize(ReaderConfig desc) {
     _meta_data_reader = desc.meta_data_reader();
     ret = subfolder_reading();
     // shuffle dataset if set
-    _shuffle_time.start();
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
-    _shuffle_time.end();
     return ret;
 }
 
@@ -141,9 +139,7 @@ int FileListReader::release() {
 }
 
 void FileListReader::reset() {
-    _shuffle_time.start();
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
-    _shuffle_time.end();
     if (_stick_to_shard == true) {
         if (_shard_size > 0) {
             // Reset the variables

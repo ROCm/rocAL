@@ -64,8 +64,6 @@ class SequenceFileSourceReader : public Reader {
 
     SequenceFileSourceReader();
 
-    size_t last_batch_padded_size() override { return 0; }
-
    private:
     //! opens the folder containnig the images
     Reader::Status open_folder();
