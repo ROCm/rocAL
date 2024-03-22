@@ -40,9 +40,8 @@ def plot_audio_wav(audio_tensor, idx):
     # audio is expected as a tensor
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
-    label = idx.cpu().detach().numpy()
     plt.plot(audio_data)
-    plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(label) + ".png")
+    plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
     plt.close()
 
 def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
@@ -132,7 +131,7 @@ def main():
         audio_pipeline.set_outputs(pre_emphasis_filter)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
-    cnt = torch.tensor(0, dtype=torch.int8)
+    cnt = 0
     test_results = {}
     import timeit
     start = timeit.default_timer()
@@ -148,7 +147,7 @@ def main():
                         print("Audio", audio_tensor)
                         print("Roi", roi)
                     if args.display:
-                        plot_audio_wav(audio_tensor, label if file_list != "" else cnt)
+                        plot_audio_wav(audio_tensor, cnt)
                     cnt+=1
         if qa_mode :
             verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name)
