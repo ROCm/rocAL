@@ -80,17 +80,18 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name) {
     return pass_status;
 }
 
-int test(int test_case, const char *path, int qa_mode, int downmix, int gpu);
+int test(int test_case, const char *path, const char *file_list_path, int qa_mode, int downmix, int gpu);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
+        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <audio-file-list-path> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
         return -1;
     }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
+    const char *file_list_path = argv[++argIdx];
     int qa_mode = 0;
     unsigned test_case = 0;
     bool downmix = false;
@@ -113,11 +114,11 @@ int main(int argc, const char **argv) {
         gpu = false;
     }
 
-    int return_val = test(test_case, path, qa_mode, downmix, gpu);
+    int return_val = test(test_case, path, file_list_path, qa_mode, downmix, gpu);
     return return_val;
 }
 
-int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
+int test(int test_case, const char *path, const char *file_list_path, int qa_mode, int downmix, int gpu) {
     int input_batch_size = 1;
     bool is_output_audio_decoder = false;
     std::cout << ">>> test case " << test_case << std::endl;
@@ -133,12 +134,12 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     }
 
     std::cout << ">>>>>>> Running LABEL READER" << std::endl;
-    rocalCreateLabelReader(handle, path);
+    rocalCreateLabelReader(handle, path, file_list_path);
 
     RocalTensor decoded_output;
     if (test_case == 0)
         is_output_audio_decoder = true;
-    decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
+    decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path, 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
@@ -188,7 +189,10 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         char audio_file_name[file_name_size];
         std::vector<int> roi(4 * input_batch_size, 0);
         rocalGetImageName(handle, audio_file_name);
+        RocalTensorList labels = rocalGetImageLabels(handle);
+        int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
         std::cerr << "Audio file : " << audio_file_name << "\n";
+        std::cerr << "Label : " << label_id << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
