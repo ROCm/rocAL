@@ -158,7 +158,7 @@ Reader::Status FileSourceReader::subfolder_reading() {
     std::sort(entry_name_list.begin(), entry_name_list.end());
 
     auto ret = Reader::Status::OK;
-    if (!_file_list_path.empty()) {
+    if (!_file_list_path.empty()) {  // Reads the file paths from the file list and adds to file_names vector for decoding
         std::ifstream fp(_file_list_path);
         if (fp.is_open()) {
             while (fp) {
