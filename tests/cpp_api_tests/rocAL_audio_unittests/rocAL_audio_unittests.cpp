@@ -160,7 +160,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
 
         } break;
         default: {
-            std::cout << "Not a valid pipeline type ! Exiting!\n";
+            std::cout << "Not a valid test case ! Exiting!\n";
             return -1;
         }
     }
