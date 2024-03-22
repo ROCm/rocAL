@@ -139,9 +139,9 @@ def main():
     test_results = {}
     for case in case_list:
         case_name = test_case_augmentation_map.get(case)
-        if case == 0:
+        if case_name == "audio_decoder":
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
-        if case == 1:
+        if case_name == "preemphasis_filter":
             audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
         audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
@@ -165,24 +165,24 @@ def main():
             if qa_mode :
                 verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name)
             print("EPOCH DONE", e)
-            stop = timeit.default_timer()
+        
+        stop = timeit.default_timer()
+        print('\nTime: ', stop - start)
 
-            print('\n Time: ', stop - start)
-            print('Number of times loop iterates is:', cnt)
+    if qa_mode:
+        passed_cases = []
+        failed_cases = []
 
-    passed_cases = []
-    failed_cases = []
+        for augmentation_name, result in test_results.items():
+            if result == "PASSED":
+                passed_cases.append(augmentation_name)
+            else:
+                failed_cases.append(augmentation_name)
 
-    for augmentation_name, result in test_results.items():
-        if result == "PASSED":
-            passed_cases.append(augmentation_name)
-        else:
-            failed_cases.append(augmentation_name)
-
-    print("Number of PASSED tests:", len(passed_cases))
-    print(passed_cases)
-    print("Number of FAILED tests:", len(failed_cases))
-    print(failed_cases)
+        print("Number of PASSED tests:", len(passed_cases))
+        print(passed_cases)
+        print("Number of FAILED tests:", len(failed_cases))
+        print(failed_cases)
 
 
 if __name__ == "__main__":

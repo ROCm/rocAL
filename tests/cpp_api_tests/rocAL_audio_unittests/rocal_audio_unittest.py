@@ -29,14 +29,14 @@ test_case_augmentation_map = {
     1: "preemphasis_filter"
 }
 
-def run_unit_test(src_path, qa_mode, gpu, down_mix, build_folder_path, case_list):
+def run_unit_test(src_path, qa_mode, gpu, downmix, build_folder_path, case_list):
     passed_cases = []
     failed_cases = []
     num_passed = 0
     num_failed = 0
     for case in case_list:
         print("\n\n")
-        result = subprocess.run([build_folder_path + "/build/rocal_audio_unittests", src_path, str(case), str(gpu), str(down_mix), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
+        result = subprocess.run([build_folder_path + "/build/rocal_audio_unittests", src_path, str(case), str(gpu), str(downmix), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
         decoded_stdout = result.stdout.decode()
 
         # check the QA status of the test case
@@ -58,9 +58,9 @@ def run_unit_test(src_path, qa_mode, gpu, down_mix, build_folder_path, case_list
 def audio_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", type = int, default = 0, help = "Backend to run (1 - GPU / 0 - CPU)")
-    parser.add_argument("--down-mix", type = bool, default = False, help = "Runs the Audio with downMix option (True / False)")
+    parser.add_argument("--downmix", type = bool, default = False, help = "Runs the Audio with downMix option (True / False)")
     parser.add_argument("--test_case", type = int, default = None, help = "Testing case")
-    parser.add_argument("--qa_mode", type = int, default = 0, help = "Compare outputs with reference outputs (0 - disabled / 1 - enabled)")
+    parser.add_argument("--qa_mode", type = int, default = 1, help = "Compare outputs with reference outputs (0 - disabled / 1 - enabled)")
     args = parser.parse_args()
     return args
 
@@ -77,7 +77,7 @@ def main():
 
     args = audio_test_suite_parser_and_validator()
     gpu = args.gpu
-    down_mix = args.down_mix
+    downmix = args.downmix
     test_case = args.test_case
     qa_mode = args.qa_mode
 
@@ -100,7 +100,7 @@ def main():
     subprocess.run(["cmake", script_path], cwd=".")   # nosec
     subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-    run_unit_test(input_file_path, qa_mode, gpu, down_mix, build_folder_path, case_list)
+    run_unit_test(input_file_path, qa_mode, gpu, downmix, build_folder_path, case_list)
 
 if __name__ == "__main__":
     main()
