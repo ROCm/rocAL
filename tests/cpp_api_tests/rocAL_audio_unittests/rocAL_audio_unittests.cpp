@@ -107,7 +107,7 @@ int main(int argc, const char **argv) {
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         qa_mode = atoi(argv[++argIdx]);
-    
+
     if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
         std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
         gpu = false;
@@ -135,8 +135,8 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << ">>>>>>> Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path);
 
-    RocalTensor output, decoded_output;
-    if(test_case == 0)
+    RocalTensor decoded_output;
+    if (test_case == 0)
         is_output_audio_decoder = true;
     decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
@@ -154,9 +154,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << ">>>>>>> Running PREEMPHASIS" << std::endl;
             case_name = "preemphasis_filter";
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP;
+            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP;
             RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
-            output = rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
+            rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
 
         } break;
         default: {
