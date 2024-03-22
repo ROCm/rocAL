@@ -154,7 +154,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
         case MetaDataReaderType::FILE_LIST_META_DATA_READER: {
             if (config.type() != MetaDataType::Label)
                 THROW("FileListMetaDataReader can only be used to load labels")
-            auto meta_data_reader = std::make_shared<LabelReaderFileList>();
+            auto meta_data_reader = std::make_shared<TextFileMetaDataReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;

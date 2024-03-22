@@ -380,8 +380,14 @@ enum RocalExternalSourceMode {
  * \ingroup group_rocal_types
  */
 enum RocalAudioBorderType {
+    /*! \brief ZERO
+     */
     ZERO = 0,
+    /*! \brief CLAMP
+     */
     CLAMP,
+    /*! \brief REFLECT
+     */
     REFLECT
 };
 

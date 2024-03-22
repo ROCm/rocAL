@@ -728,6 +728,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
     m.def("Spectrogram", &rocalSpectrogram,
-            py::return_value_policy::reference);
+          py::return_value_policy::reference);
 }
 }  // namespace rocal

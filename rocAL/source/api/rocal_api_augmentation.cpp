@@ -2173,6 +2173,10 @@ rocalPreEmphasisFilter(RocalContext p_context,
     auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
     try {
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_datatype != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for this augmentation.")
+            op_tensor_datatype = RocalTensorDataType::FP32;
+        }
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);

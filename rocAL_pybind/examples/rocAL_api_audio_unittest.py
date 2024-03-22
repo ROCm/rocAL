@@ -31,6 +31,11 @@ from parse_config import parse_args
 
 np.set_printoptions(threshold=1000, edgeitems=10000)
 
+test_case_augmentation_map = {
+    0: "audio_decoder",
+}
+
+
 def plot_audio_wav(audio_tensor, idx):
     # audio is expected as a tensor
     audio_data = audio_tensor.detach().numpy()
@@ -45,7 +50,9 @@ def plot_audio_wav(audio_tensor, idx):
     plt.savefig("results/rocal_data_new" + str(label) + ".png")
     plt.close()
 
-def verify_output(audio_tensor, roi_tensor, ref_path, test_results):
+def verify_output(audio_tensor, roi_tensor, test_results, case_name):
+    rocal_data_path = os.environ.get("ROCAL_DATA_PATH")
+    ref_path = f'{rocal_data_path}/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
@@ -54,12 +61,14 @@ def verify_output(audio_tensor, roi_tensor, ref_path, test_results):
     for j in range(roi_data[0]):
         ref_val = data_array[j]
         out_val = audio_data[j]
+        # ensuring that out_val is not exactly zero while ref_val is non-zero.
         invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
+        #comparing the absolute difference between the output value (out_val) and the reference value (ref_val) with a tolerance threshold of 1e-20.
         if not invalid_comparison and np.abs(out_val - ref_val) < 1e-20:
             matched_indices += 1
 
     # Print results
-    print("Results for Test case:")
+    print(f"Results for {case_name}:")
     if matched_indices == roi_data[0] and matched_indices != 0:
         print("PASSED!")
         test_results.append("PASSED")
@@ -87,15 +96,16 @@ def main():
     rocal_cpu = False if args.rocal_gpu else True
     batch_size = args.batch_size
     test_case = args.test_case
-    ref_path = args.ref_path
     qa_mode = args.qa_mode
     num_threads = 1
     device_id = 0
+    case_name = test_case_augmentation_map.get(test_case)
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. running on cpu")
         rocal_cpu = True
-    if qa_mode:
+    if qa_mode and batch_size != 1:
+        print("QA mode is enabled. Batch size is set to 1.")
         batch_size = 1
 
     print("*********************************************************************")
@@ -137,21 +147,19 @@ def main():
         print("Epoch :: ", e)
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i, it in enumerate(audioIteratorPipeline):
-            print("************************************** i *************************************", i)
             for x in range(len(it[0])):
                 for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
                     if args.print_tensor:
                         print("label", label)
-                        print("cnt", cnt)
                         print("Audio", audio_tensor)
                         print("Roi", roi)
-                    if args.dump_output:
+                    if args.display:
                         plot_audio_wav(audio_tensor, label)
                     out_tensor = audio_tensor
                     out_roi = roi
                     cnt+=1
         if qa_mode :
-            verify_output(out_tensor, out_roi, ref_path, test_results)
+            verify_output(out_tensor, out_roi, test_results, case_name)
             num_passed = test_results.count("PASSED")
             num_failed = test_results.count("FAILED")
 
