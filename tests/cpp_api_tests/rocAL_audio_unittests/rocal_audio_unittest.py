@@ -43,7 +43,7 @@ def run_unit_test(src_path, qa_mode, gpu, down_mix, build_folder_path, case_list
         if "PASSED" in decoded_stdout:
             num_passed += 1
             passed_cases.append(test_case_augmentation_map[case])
-        elif "FAILED" in decoded_stdout:
+        else:
             num_failed += 1
             failed_cases.append(test_case_augmentation_map[case])
         print(result.stdout.decode())
