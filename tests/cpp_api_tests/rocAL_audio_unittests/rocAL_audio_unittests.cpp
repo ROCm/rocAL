@@ -190,7 +190,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         char audio_file_name[file_name_size];
         std::vector<int> roi(4 * inputBatchSize, 0);
         rocalGetImageName(handle, audio_file_name);
-        std::cout << "Audio file : " << audio_file_name << "\n";
+        std::cerr << "Audio file : " << audio_file_name << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());

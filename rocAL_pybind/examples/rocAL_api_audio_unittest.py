@@ -73,7 +73,9 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
 
 @pipeline_def(seed=seed)
 def audio_decoder_pipeline(path):
+    audio, labels = fn.readers.file(file_root=path)
     return fn.decoders.audio(
+        audio,
         file_root=path,
         downmix=False,
         shard_id=0,
@@ -82,13 +84,15 @@ def audio_decoder_pipeline(path):
 
 @pipeline_def(seed=seed)
 def pre_emphasis_filter_pipeline(path):
-    input = fn.decoders.audio(
+    audio, labels = fn.readers.file(file_root=path)
+    decoded_audio = fn.decoders.audio(
+        audio,
         file_root=path,
         downmix=False,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
-    return fn.preemphasis_filter(input)
+    return fn.preemphasis_filter(decoded_audio)
 
 def main():
     args = parse_args()
