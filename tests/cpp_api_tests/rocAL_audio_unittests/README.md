@@ -21,7 +21,7 @@ This application can be used to verify the functionality of the Audio APIs offer
   ````
 ./rocal_audio_unittests <audio-dataset-folder>
 
-Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0>
+Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0> <qa_mode>
   ````
 
 ### Output verification 
@@ -33,6 +33,5 @@ Input data is available in the following link : [MIVisionX-data](https://github.
 `export ROCAL_DATA_PATH=<absolute_path_to_rocal_data>`
 
 ```
-python3 rocal_audio_unittest.py <device_type 0/1> <downmix 0/1>
+python3 rocal_audio_unittest.py --gpu <0/1> --downmix <True/False> --test_case <case_number> --qa_mode <0/1>
 ```
-
