@@ -29,7 +29,6 @@ THE SOFTWARE.
 #include "caffe_lmdb_record_reader.h"
 #include "cifar10_data_reader.h"
 #include "coco_file_source_reader.h"
-#include "file_list_reader.h"
 #include "external_source_reader.h"
 #include "file_source_reader.h"
 #include "mxnet_recordio_reader.h"
@@ -90,12 +89,6 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             auto ret = std::make_shared<ExternalSourceReader>();
             if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("ExternalSourceReader cannot access the storage");
-            return ret;
-        } break;
-        case StorageType::FILE_LIST_SYSTEM: {
-            auto ret = std::make_shared<FileListReader>();
-            if (ret->initialize(config) != Reader::Status::OK)
-                throw std::runtime_error("FileListReader cannot access the storage");
             return ret;
         } break;
         default:

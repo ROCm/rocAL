@@ -134,7 +134,6 @@ std::unordered_map<int, std::string> rocalToPybindLayout = {
     {1, "NCHW"},
     {2, "NFHWC"},
     {3, "NFCHW"},
-    {4, "NONE"}
 };
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
@@ -382,7 +381,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
         .value("NFCHW", ROCAL_NFCHW)
-        .value("NONE", ROCAL_NONE)
         .export_values();
     py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
         .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -408,11 +406,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
     py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
         .value("FT", FT)
         .value("TF", TF)
-        .export_values();
-    py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
-        .value("PAD", PAD)
-        .value("TRIMTOSHAPE", TRIMTOSHAPE)
-        .value("ERROR", ERROR)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
@@ -727,11 +720,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
-    m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
-            py::return_value_policy::reference);
-    m.def("NonSilentRegion", &rocalNonSilentRegion,
+    m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
     m.def("Spectrogram", &rocalSpectrogram,
-            py::return_value_policy::reference);
+          py::return_value_policy::reference);
 }
 }  // namespace rocal

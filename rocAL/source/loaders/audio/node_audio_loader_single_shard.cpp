@@ -23,11 +23,13 @@ THE SOFTWARE.
 #include "node_audio_loader_single_shard.h"
 #include "exception.h"
 
+#ifdef ROCAL_AUDIO
+
 AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<AudioLoader>(device_resources);
 }
 
-void AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_list_path,
+void AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path,
                                       StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count,
                                       RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader) {
     if (!_loader_module)
@@ -38,12 +40,13 @@ void AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
         THROW("Shard is should be smaller than shard count")
     _loader_module->set_output(_outputs[0]);
     // Set reader and decoder config accordingly for the AudioLoaderNode
-    auto reader_cfg = ReaderConfig(storage_type, source_path, source_list_path, std::map<std::string, std::string>(), shuffle, loop);
+    auto reader_cfg = ReaderConfig(storage_type, source_path, "", std::map<std::string, std::string>(), shuffle, loop);
     reader_cfg.set_shard_count(shard_count);
     reader_cfg.set_shard_id(shard_id);
     reader_cfg.set_batch_count(load_batch_count);
     reader_cfg.set_meta_data_reader(meta_data_reader);
     reader_cfg.set_cpu_num_threads(cpu_num_threads);
+    reader_cfg.set_file_list_path(file_list_path);
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }
@@ -57,3 +60,4 @@ std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
 AudioLoaderSingleShardNode::~AudioLoaderSingleShardNode() {
     _loader_module = nullptr;
 }
+#endif

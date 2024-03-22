@@ -62,8 +62,6 @@ from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
-from rocal_pybind.types import NONE
-
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -105,12 +103,6 @@ from rocal_pybind.types import REFLECT
 from rocal_pybind.types import FT
 from rocal_pybind.types import TF
 
-#     RocalOutOfBoundsPolicy
-from rocal_pybind.types import PAD
-from rocal_pybind.types import TRIMTOSHAPE
-from rocal_pybind.types import ERROR
-
-
 _known_types = {
 
     OK: ("OK", OK),
@@ -139,8 +131,6 @@ _known_types = {
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
-    NONE: ("NONE", NONE),
-
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -171,7 +161,7 @@ _known_types = {
     EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
     EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
     EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
-    
+
     ZERO: ("ZERO", ZERO),
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
