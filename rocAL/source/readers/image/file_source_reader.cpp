@@ -20,15 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "file_source_reader.h"
-
-#include <commons.h>
-
-#include <algorithm>
 #include <cassert>
+#include <algorithm>
 #include <cstring>
-#include <fstream>
-
+#include <commons.h>
+#include "file_source_reader.h"
 #include "filesystem.h"
 
 FileSourceReader::FileSourceReader() {
@@ -56,7 +52,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
-    _file_list_path = desc.json_path();
+    _file_list_path = desc.file_list_path();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
@@ -162,7 +158,7 @@ Reader::Status FileSourceReader::subfolder_reading() {
     std::sort(entry_name_list.begin(), entry_name_list.end());
 
     auto ret = Reader::Status::OK;
-    if (!_file_list_path.empty()) {
+    if (!_file_list_path.empty()) {  // Reads the file paths from the file list and adds to file_names vector for decoding
         std::ifstream fp(_file_list_path);
         if (fp.is_open()) {
             while (fp) {
@@ -172,19 +168,24 @@ Reader::Status FileSourceReader::subfolder_reading() {
                 std::string file_path;
                 std::getline(ss, file_path, ' ');
                 file_path = _folder_path + "/" + file_path;
+                std::string file_name = file_path.substr(file_path.find_last_of("/\\") + 1);
 
-                if (filesys::is_regular_file(file_path)) {
-                    if (get_file_shard_id() != _shard_id) {
+                if (!_meta_data_reader || _meta_data_reader->exists(file_name)) {  // Check if the file is present in metadata reader and add to file names list, to avoid issues while lookup
+                    if (filesys::is_regular_file(file_path)) {
+                        if (get_file_shard_id() != _shard_id) {
+                            _file_count_all_shards++;
+                            incremenet_file_id();
+                            continue;
+                        }
+                        _in_batch_read_count++;
+                        _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
+                        _last_file_name = file_path;
+                        _file_names.push_back(file_path);
                         _file_count_all_shards++;
                         incremenet_file_id();
-                        continue;
                     }
-                    _in_batch_read_count++;
-                    _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
-                    _last_file_name = file_path;
-                    _file_names.push_back(file_path);
-                    _file_count_all_shards++;
-                    incremenet_file_id();
+                } else {
+                    WRN("Skipping file," + std::string(file_path) + " as it is not present in metadata reader")
                 }
             }
         }
@@ -267,7 +268,7 @@ Reader::Status FileSourceReader::open_folder() {
             _file_count_all_shards++;
             incremenet_file_id();
         } else {
-            WRN("Skipping file," + _entity->d_name + " as it is not present in metadata reader")
+            WRN("Skipping file," + std::string(_entity->d_name) + " as it is not present in metadata reader")
         }
     }
     if (_file_names.empty())

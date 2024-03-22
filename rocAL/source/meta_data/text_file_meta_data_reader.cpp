@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 void TextFileMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
-    _file_list_path = cfg.path();
+    _path = cfg.path();
     _output = meta_data_batch;
 }
 
@@ -67,25 +67,23 @@ void TextFileMetaDataReader::lookup(const std::vector<std::string> &image_names)
 }
 
 void TextFileMetaDataReader::read_all(const std::string &path) {
-    std::ifstream text_file(_file_list_path.c_str());
+    std::ifstream text_file(_path.c_str());
     if (text_file.good()) {
         //_text_file.open(path.c_str(), std::ifstream::in);
         std::string line;
         while (std::getline(text_file, line)) {
-            std::istringstream read_stream(line);
+            std::istringstream line_ss(line);
+            int label;
             std::string file_name;
-            uint file_label;
-            if (!(read_stream >> file_name >> file_label)) {
-                break;
-            }
+            if (!(line_ss >> file_name >> label))
+                continue;
             // process pair (file_name, label)
-            auto _last_id = file_name;
-            auto last_slash_idx = _last_id.find_last_of("\\/");
+            auto last_id = file_name;
+            auto last_slash_idx = last_id.find_last_of("\\/");
             if (std::string::npos != last_slash_idx) {
-                _last_id.erase(0, last_slash_idx + 1);
+                last_id.erase(0, last_slash_idx + 1);
             }
-            std::cerr << _last_id << " " << file_label << "\n";
-            add(_last_id, file_label);
+            add(last_id, label);
         }
     } else {
         THROW("Can't open the metadata file at " + path)

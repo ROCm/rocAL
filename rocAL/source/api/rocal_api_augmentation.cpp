@@ -2174,13 +2174,12 @@ rocalPreEmphasisFilter(RocalContext p_context,
     try {
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_datatype != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for this augmentation.")
+            WRN("Only FP32 dtype is supported for PreEmphasis filter augmentation.")
             op_tensor_datatype = RocalTensorDataType::FP32;
         }
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
     } catch (const std::exception& e) {
         context->capture_error(e.what());

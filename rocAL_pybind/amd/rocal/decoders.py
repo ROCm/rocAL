@@ -406,7 +406,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
 def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, sample_rate=0.0, seed=1, stick_to_shard=False, shard_size=-1):
     kwargs_pybind = {
             "source_path": file_root,
-            "source_file_list_path" : file_list_path,
+            "source_file_list_path": file_list_path,
             "shard_id": shard_id,
             "num_shards": num_shards,
             "is_output": False,

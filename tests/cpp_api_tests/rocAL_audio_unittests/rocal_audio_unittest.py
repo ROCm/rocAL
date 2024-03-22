@@ -22,20 +22,47 @@ import os
 import sys
 import subprocess  # nosec
 import shutil
+import argparse
 
-def run_unit_test(src_path, ref_out_path, test_case, gpu, down_mix, build_folder_path):
-    print("\n\n")
-    result = subprocess.run([build_folder_path + "/build/rocal_audio_unittests", src_path, ref_out_path, str(test_case), str(gpu), str(down_mix)], stdout=subprocess.PIPE)    # nosec
-    decoded_stdout = result.stdout.decode()
+test_case_augmentation_map = {
+    0: "audio_decoder",
+    1: "preemphasis_filter"
+}
 
-    # Count the occurrences of "PASSED" and "FAILED"
-    num_passed = decoded_stdout.count("PASSED")
-    num_failed = decoded_stdout.count("FAILED")
-    print(result.stdout.decode())
-    print("Number of PASSED:", num_passed)
-    print("Number of FAILED:", num_failed)
+def run_unit_test(src_path, qa_mode, gpu, downmix, build_folder_path, case_list):
+    passed_cases = []
+    failed_cases = []
+    num_passed = 0
+    num_failed = 0
+    for case in case_list:
+        print("\n\n")
+        result = subprocess.run([build_folder_path + "/build/rocal_audio_unittests", src_path, str(case), str(gpu), str(downmix), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
+        decoded_stdout = result.stdout.decode()
 
+        # check the QA status of the test case
+        if "PASSED" in decoded_stdout:
+            num_passed += 1
+            passed_cases.append(test_case_augmentation_map[case])
+        else:
+            num_failed += 1
+            failed_cases.append(test_case_augmentation_map[case])
+        print(result.stdout.decode())
+
+    if qa_mode:
+        print("Number of PASSED:", num_passed)
+        print(passed_cases)
+        print("Number of FAILED:", num_failed)
+        print(failed_cases)
     print("------------------------------------------------------------------------------------------")
+
+def audio_test_suite_parser_and_validator():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gpu", type = int, default = 0, help = "Backend to run (1 - GPU / 0 - CPU)")
+    parser.add_argument("--downmix", type = bool, default = False, help = "Runs the Audio with downMix option (True / False)")
+    parser.add_argument("--test_case", type = int, default = None, help = "Testing case")
+    parser.add_argument("--qa_mode", type = int, default = 1, help = "Compare outputs with reference outputs (0 - disabled / 1 - enabled)")
+    args = parser.parse_args()
+    return args
 
 def main():
     script_path = os.path.dirname(os.path.realpath(__file__))
@@ -46,16 +73,22 @@ def main():
 
     sys.dont_write_bytecode = True
     input_file_path = rocal_data_path + "/audio/wav"
-    ref_out_path = rocal_data_path + "/GoldenOutputsTensor/reference_outputs_audio/audio_decoder_output.bin"
-    test_case = 0
     build_folder_path = os.getcwd()
 
-    if len(sys.argv) < 3:
-            print("Please pass cpu/gpu(0/1) and down_mix(True/False)")
-            exit(0)
+    args = audio_test_suite_parser_and_validator()
+    gpu = args.gpu
+    downmix = args.downmix
+    test_case = args.test_case
+    qa_mode = args.qa_mode
 
-    gpu = sys.argv[1]
-    down_mix = sys.argv[2]
+    case_list = list(test_case_augmentation_map.keys())
+
+    if test_case is not None: 
+        if test_case not in case_list:
+            print(" Invalid Test Case! ")
+            exit()
+        else:
+            case_list = [test_case]
 
     # Enable extglob
     if os.path.exists(build_folder_path + "/build"):
@@ -67,7 +100,7 @@ def main():
     subprocess.run(["cmake", script_path], cwd=".")   # nosec
     subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-    run_unit_test(input_file_path, ref_out_path, test_case, gpu, down_mix, build_folder_path)
+    run_unit_test(input_file_path, qa_mode, gpu, downmix, build_folder_path, case_list)
 
 if __name__ == "__main__":
     main()
