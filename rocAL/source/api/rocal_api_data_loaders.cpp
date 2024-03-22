@@ -45,9 +45,9 @@ THE SOFTWARE.
 #ifdef ROCAL_AUDIO
 std::tuple<unsigned, unsigned>
 evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
-                        const std::string& source_path, const std::string& json_path) {
+                        const std::string& source_path, const std::string& file_list_path) {
     AudioSourceEvaluator source_evaluator;
-    if (source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
+    if (source_evaluator.create(ReaderConfig(storage_type, source_path, file_list_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed")
     auto max_samples = source_evaluator.max_samples();
     auto max_channels = source_evaluator.max_channels();

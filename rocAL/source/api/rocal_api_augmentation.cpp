@@ -2174,7 +2174,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
     try {
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_datatype != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for this augmentation.")
+            WRN("Only FP32 dtype is supported for PreEmphasis filter augmentation.")
             op_tensor_datatype = RocalTensorDataType::FP32;
         }
         TensorInfo output_info = input->info();
