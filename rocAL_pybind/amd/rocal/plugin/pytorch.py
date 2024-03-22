@@ -271,46 +271,14 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 class ROCALAudioIterator(object):
-    """
-    ROCAL iterator for audio tasks for PyTorch
-    The Tensors that are returned by the iterator will be owned by ROCAL 
-    and would be valid until next iteration.
-    Parameters
-    ----------
-    pipelines : list of amd.rocalLI.pipeline.Pipeline
-                List of pipelines to use
-    size : int
-           Number of samples in the epoch (Usually the size of the dataset).
-    auto_reset : bool, optional, default = False
-                 Whether the iterator resets itself for the next epoch
-                 or it requires reset() to be called separately.
-    fill_last_batch : bool, optional, default = True
-                 Whether to fill the last batch with data up to 'self.batch_size'.
-                 The iterator would return the first integer multiple
-                 of self._num_gpus * self.batch_size entries which exceeds 'size'.
-                 Setting this flag to False will cause the iterator to return
-                 exactly 'size' entries.
-    dynamic_shape: bool, optional, default = False
-                 Whether the shape of the output of the RALI pipeline can
-                 change during execution. If True, the pytorch tensor will be resized accordingly
-                 if the shape of RALI returned tensors changes during execution.
-                 If False, the iterator will fail in case of change.
-    last_batch_padded : bool, optional, default = False
-                 Whether the last batch provided by RALI is padded with the last sample
-                 or it just wraps up. In the conjunction with `fill_last_batch` it tells
-                 if the iterator returning last batch with data only partially filled with
-                 data from the current epoch is dropping padding samples or samples from
-                 the next epoch. If set to False next epoch will end sooner as data from
-                 it was consumed but dropped. If set to True next epoch would be the
-                 same length as the first one.
-    Example
-    -------
-    With the data set [1,2,3,4,5,6,7] and the batch size 2:
-    fill_last_batch = False, last_batch_padded = True  -> last batch = [7], next iteration will return [1, 2]
-    fill_last_batch = False, last_batch_padded = False -> last batch = [7], next iteration will return [2, 3]
-    fill_last_batch = True, last_batch_padded = True   -> last batch = [7, 7], next iteration will return [1, 2]
-    fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
-
+    """! ROCAL iterator for audio tasks for PyTorch
+    The Tensors that are returned by the iterator will be owned by ROCAL and would be valid until next iteration.
+        @param pipeline            The rocAL pipeline to use for processing data.
+        @param tensor_dtype        Data type of the output tensors.
+        @size                      Number of samples in the epoch (Usually the size of the dataset).
+        @auto_reset                Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
+        @param device              The device to use for processing
+        @param device_id           The ID of the device to use
     """
     def __init__(self, pipeline, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
         self.loader = pipeline

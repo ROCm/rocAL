@@ -41,17 +41,11 @@ def plot_audio_wav(audio_tensor, idx):
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
     label = idx.cpu().detach().numpy()
-    # Saving the array in a text file
-    file = open("results/rocal_data_new" + str(label) + ".txt", "w+")
-    content = str(audio_data)
-    file.write(content)
-    file.close()
     plt.plot(audio_data)
-    plt.savefig("results/rocal_data_new" + str(label) + ".png")
+    plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(label) + ".png")
     plt.close()
 
-def verify_output(audio_tensor, roi_tensor, test_results, case_name):
-    rocal_data_path = os.environ.get("ROCAL_DATA_PATH")
+def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
     ref_path = f'{rocal_data_path}/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor.detach().numpy()
@@ -71,24 +65,13 @@ def verify_output(audio_tensor, roi_tensor, test_results, case_name):
     print(f"Results for {case_name}:")
     if matched_indices == roi_data[0] and matched_indices != 0:
         print("PASSED!")
-        test_results.append("PASSED")
+        test_results[case_name] = "PASSED"
     else:
         print("FAILED!")
-        test_results.append("FAILED")
+        test_results[case_name] = "FAILED"
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Please pass audio_folder batch_size")
-        exit(0)
-    try:
-        path = "results"
-        isExist = os.path.exists(path)
-        if not isExist:
-            os.makedirs(path)
-    except OSError as error:
-        print(error)
-
     args = parse_args()
 
     audio_path = args.audio_path
@@ -101,9 +84,28 @@ def main():
     device_id = 0
     case_name = test_case_augmentation_map.get(test_case)
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
+    rocal_data_path = os.environ.get("ROCAL_DATA_PATH")
+
+    if args.display:
+        try:
+            path = "OUTPUT_FOLDER/AUDIO_READER"
+            isExist = os.path.exists(path)
+            if not isExist:
+                os.makedirs(path)
+        except OSError as error:
+            print(error)
+
+    if rocal_data_path is None:
+        print("Need to export ROCAL_DATA_PATH")
+        sys.exit()
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. running on cpu")
         rocal_cpu = True
+    if audio_path == "":
+        audio_path = f'{rocal_data_path}/audio/wav/'
+    else:
+        print("QA mode is disabled for custom audio data")
+        qa_mode = 0
     if qa_mode and batch_size != 1:
         print("QA mode is enabled. Batch size is set to 1.")
         batch_size = 1
@@ -130,10 +132,8 @@ def main():
         audio_pipeline.set_outputs(pre_emphasis_filter)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
-    cnt = 0
-    out_tensor = None
-    out_roi = None
-    test_results = []
+    cnt = torch.tensor(0, dtype=torch.int8)
+    test_results = {}
     import timeit
     start = timeit.default_timer()
     # Enumerate over the Dataloader
@@ -148,17 +148,23 @@ def main():
                         print("Audio", audio_tensor)
                         print("Roi", roi)
                     if args.display:
-                        plot_audio_wav(audio_tensor, label)
-                    out_tensor = audio_tensor
-                    out_roi = roi
+                        plot_audio_wav(audio_tensor, label if file_list != "" else cnt)
                     cnt+=1
         if qa_mode :
-            verify_output(out_tensor, out_roi, test_results, case_name)
-            num_passed = test_results.count("PASSED")
-            num_failed = test_results.count("FAILED")
+            verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name)
+            passed_cases = []
+            failed_cases = []
 
-            print("Number of PASSED tests:", num_passed)
-            print("Number of FAILED tests:", num_failed)
+            for augmentation_name, result in test_results.items():
+                if result == "PASSED":
+                    passed_cases.append(augmentation_name)
+                else:
+                    failed_cases.append(augmentation_name)
+
+            print("Number of PASSED tests:", len(passed_cases))
+            print(passed_cases)
+            print("Number of FAILED tests:", len(failed_cases))
+            print(failed_cases)
 
         print("EPOCH DONE", e)
 
