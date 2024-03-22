@@ -134,7 +134,14 @@ def main():
             window_length=320,
             window_step=160,
             rocal_tensor_output_type = types.FLOAT)
-        audio_pipeline.set_outputs(spec)
+        to_decibels = fn.to_decibels(
+            spec,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            rocal_tensor_output_type=types.FLOAT,
+        )
+        audio_pipeline.set_outputs(to_decibels)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
     cnt = 0

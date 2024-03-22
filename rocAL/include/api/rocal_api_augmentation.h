@@ -1144,4 +1144,20 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        int window_step = 256,
                                                        RocalTensorOutputType output_datatype = ROCAL_FP32);
 
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
+                                                      RocalTensor p_input,
+                                                      bool is_output,
+                                                      float cutoff_db,
+                                                      float multiplier,
+                                                      float reference_magnitude,
+                                                      RocalTensorOutputType rocal_tensor_output_type);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H
