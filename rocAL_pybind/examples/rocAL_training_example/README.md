@@ -5,7 +5,7 @@ This version has been modified to use rocAL. It assumes that the dataset is raw 
 
 To run use the following command
 ```bash
-python3 main.py -a resnet50 --dist-url='tcp://127.0.0.1:4321' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 -j$(nproc) --batch-size 1024 --epochs 91 /media/imageNetCompleteDataset/
+python3 main.py -a resnet50 --dist-url='tcp://127.0.0.1:4321' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 -j$(nproc) --batch-size 1024 --rocal-cpu --epochs 91 /media/imageNetCompleteDataset/
 ```
 
 ## Requirements
