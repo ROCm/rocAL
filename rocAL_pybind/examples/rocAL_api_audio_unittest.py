@@ -21,6 +21,7 @@
 from amd.rocal.pipeline import Pipeline
 from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import amd.rocal.fn as fn
+import amd.rocal.types as types
 import random
 import os
 import sys
@@ -124,8 +125,7 @@ def main():
             downmix=False,
             shard_id=0,
             num_shards=1,
-            stick_to_shard=False,
-        )
+            stick_to_shard=False)
         pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
         spec = fn.spectrogram(
             pre_emphasis_filter,
@@ -133,7 +133,7 @@ def main():
             window_length=320,
             window_step=160,
             rocal_tensor_output_type = types.FLOAT)
-        audio_pipeline.set_outputs(length)
+        audio_pipeline.set_outputs(spec)
     audio_pipeline.build()
     audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
     cnt = 0

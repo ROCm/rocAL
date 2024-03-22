@@ -392,13 +392,12 @@ enum RocalAudioBorderType {
 };
 
 enum RocalSpectrogramLayout {
+    /*! \brief Frequency Major
+     */
     FT = 0,
+    /*! \brief Time Major
+     */
     TF
 };
 
-enum RocalOutOfBoundsPolicy {
-    PAD = 0,
-    TRIMTOSHAPE,
-    ERROR
-};
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

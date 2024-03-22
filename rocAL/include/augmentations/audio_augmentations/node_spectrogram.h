@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 #include "rocal_api_types.h"
 
 inline void hann_window(float *output, int window_size) {
@@ -34,15 +34,17 @@ inline void hann_window(float *output, int window_size) {
 }
 
 class SpectrogramNode : public Node {
-public:
+   public:
     SpectrogramNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SpectrogramNode() = delete;
     void init(bool is_center_windows, bool is_reflect_padding, RocalSpectrogramLayout spectrogram_layout, int power, int nfft,
               int window_length, int window_step, std::vector<float> &window_fn);
-protected:
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
     vx_array _window_fn_vx_array;
     std::vector<float> _window_fn;
     RocalSpectrogramLayout _spectrogram_layout = RocalSpectrogramLayout::FT;
