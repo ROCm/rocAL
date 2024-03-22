@@ -89,7 +89,6 @@ int main(int argc, const char **argv) {
     if (argc < MIN_ARG_COUNT) {
         printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
         return -1;
-
     }
 
     int argIdx = 0;
@@ -135,6 +134,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
+    std::cout << ">>>>>>> Running LABEL READER" << std::endl;
+    rocalCreateLabelReader(handle, path);
+
     RocalTensor output, decoded_output;
     if(test_case == 0)
         is_output_audio_decoder = true;
@@ -177,7 +179,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     int frames = 0;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize)) {
-        std::cout << "\n Iteration:: " << iteration<<"\n";
+        std::cerr << "\n Iteration:: " << iteration<<"\n";
         iteration++;
         if (rocalRun(handle) != 0) {
             break;
