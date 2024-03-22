@@ -117,12 +117,14 @@ def main():
         rocal_cpu=rocal_cpu,
     )
     with audio_pipeline:
+        audio, labels = fn.readers.file(file_root=audio_path)
         audio_decode = fn.decoders.audio(
+            audio,
             file_root=audio_path,
             downmix=False,
             shard_id=0,
             num_shards=1,
-            stick_to_shard=False,
+            stick_to_shard=False
         )
         audio_pipeline.set_outputs(audio_decode)
     audio_pipeline.build()
