@@ -35,14 +35,15 @@ THE SOFTWARE.
 
 using namespace std::chrono;
 
-bool verify_output(float *dstPtr, long int frames, const char *ref_path)
+bool verify_output(float *dstPtr, long int frames, const char *ref_path, std::string case_name)
 {
     std::fstream refFile;
     bool pass_status = false;
     // read data from golden outputs
+    std::string file_path = std::string(ref_path)+ case_name + "_output.bin";
     long int oBufferSize = frames;
     std::vector<float> refOutput(oBufferSize);
-    std::fstream fin(ref_path, std::ios::in | std::ios::binary);
+    std::fstream fin(file_path, std::ios::in | std::ios::binary);
     if(fin.is_open()) {
         for(long int i = 0; i < oBufferSize; i++) {
             if(!fin.eof()) {
@@ -107,12 +108,18 @@ int main(int argc, const char **argv) {
         gpu = false;
     }
 
+    if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
+        std::cerr << "WRN : Currently Audio unit test supports only HOST backend\n";
+        gpu = false;
+    }
+
     int return_val = test(test_case, path, ref_path, downmix, gpu);
     return return_val;
 }
 
 int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu) {
     int inputBatchSize = 1;
+    bool is_output_audio_decoder = false;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
@@ -125,20 +132,28 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
         return -1;
     }
 
-    std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
-    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, downmix);
+    RocalTensor output, input1;
+    if(test_case == 0)
+        is_output_audio_decoder = true;
+    input1 = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 
-    RocalTensor output, input1;
-
+    std::string case_name="";
     switch (test_case) {
+        case 0: {
+            case_name = "audio_decoder";
+            std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
+        } break;
         case 1: {
             std::cout << "\n Augmentation - rocalPreEmphasisFilter ";
+            case_name = "preemphasis_filter";
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
+            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP;
+            RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
+            output = rocalPreEmphasisFilter(handle, input1, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
 
         } break;
         default: {
@@ -180,7 +195,7 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
 
     if (ref_path) {
         std::cout << "\n *****************************Verifying Audio output**********************************\n";
-        if (verify_output(buffer, frames, ref_path)) {
+        if (verify_output(buffer, frames, ref_path, case_name)) {
             std::cout << "PASSED!\n\n";
         } else {
             std::cout << "FAILED!\n\n";
