@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "exception.h"
 
 void TextFileMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
-    _file_list_path = cfg.path();
+    _path = cfg.path();
     _output = meta_data_batch;
 }
 
@@ -67,7 +67,7 @@ void TextFileMetaDataReader::lookup(const std::vector<std::string> &image_names)
 }
 
 void TextFileMetaDataReader::read_all(const std::string &path) {
-    std::ifstream text_file(_file_list_path.c_str());
+    std::ifstream text_file(_path.c_str());
     if (text_file.good()) {
         //_text_file.open(path.c_str(), std::ifstream::in);
         std::string line;
