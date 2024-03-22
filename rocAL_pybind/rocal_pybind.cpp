@@ -407,11 +407,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("FT", FT)
         .value("TF", TF)
         .export_values();
-    py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
-        .value("PAD", PAD)
-        .value("TRIMTOSHAPE", TRIMTOSHAPE)
-        .value("ERROR", ERROR)
-        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)

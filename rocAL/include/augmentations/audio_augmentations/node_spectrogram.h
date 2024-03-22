@@ -45,7 +45,6 @@ class SpectrogramNode : public Node {
     void update_node() override;
 
    private:
-    vx_array _window_fn_vx_array;
     std::vector<float> _window_fn;
     RocalSpectrogramLayout _spectrogram_layout = RocalSpectrogramLayout::FT;
     int _power = 2;

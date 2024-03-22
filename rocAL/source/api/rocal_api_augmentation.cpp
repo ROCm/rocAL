@@ -2214,14 +2214,12 @@ rocalSpectrogram(
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         std::vector<size_t> max_dims = input->info().max_shape();
         TensorInfo output_info = input->info();
-        int window_offset = 0;
-        if(!center_windows)
-            window_offset = window_length;
+        int window_offset = (!center_windows) ? window_length :  0;
         int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
         max_frame = std::max(0, max_frame);
         int bins = std::max(0, (nfft / 2) + 1);
         std::vector<size_t> dims = output_info.dims();
-        if(spectrogram_layout == RocalSpectrogramLayout::FT) {
+        if (spectrogram_layout == RocalSpectrogramLayout::FT) {
             dims[1] = max_frame;
             dims[2] = bins;
         } else {
@@ -2231,7 +2229,7 @@ rocalSpectrogram(
         output_info.set_dims(dims);
         output_info.set_data_type(op_tensor_data_type);
         if(power != 1 || power != 2) {
-            WRN("rocalSpectrogram power value can be 1 or 2 setting it to default 2")
+            WRN("rocalSpectrogram power value can be 1 or 2, setting it to default 2")
             power = 2;
         }
         output = context->master_graph->create_tensor(output_info, is_output);
