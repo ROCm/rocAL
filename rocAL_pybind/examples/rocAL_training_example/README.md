@@ -1,11 +1,17 @@
 # ImageNet training in PyTorch
 
 This implements training of popular model architectures, such as ResNet, AlexNet, and VGG on the ImageNet dataset.
+This version has been modified to use rocAL. It assumes that the dataset is raw JPEGs from the ImageNet dataset. If offers CPU and GPU based pipeline for rocAL - use rocal-cpu switch to enable CPU one and use rocal-gpu switch to enable GPU one.
+
+To run use the following command
+```bash
+python3 main.py -a resnet50 --dist-url='tcp://127.0.0.1:4321' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 -j$(nproc) --batch-size 1024 --epochs 91 /media/imageNetCompleteDataset/
+```
 
 ## Requirements
 
 - Install PyTorch for [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/3rd-party/pytorch-install.html)
-- `pip install -r requirements.txt`
+- Install rocAL for running rocAL trainings
 - Download the ImageNet dataset from http://www.image-net.org/
   - Then, move and extract the training and validation images to labeled subfolders, using [the following shell script](extract_ILSVRC.sh)
 
