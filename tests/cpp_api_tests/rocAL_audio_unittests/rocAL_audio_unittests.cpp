@@ -35,64 +35,66 @@ THE SOFTWARE.
 
 using namespace std::chrono;
 
-bool verify_output(float *dstPtr, long int frames, const char *ref_path)
-{
-    std::fstream refFile;
+bool verify_output(float *dst_ptr, long int frames, std::string case_name) {
     bool pass_status = false;
     // read data from golden outputs
-    long int oBufferSize = frames;
-    std::vector<float> refOutput(oBufferSize);
-    std::fstream fin(ref_path, std::ios::in | std::ios::binary);
-    if(fin.is_open()) {
-        for(long int i = 0; i < oBufferSize; i++) {
-            if(!fin.eof()) {
-                fin.read(reinterpret_cast<char*>(refOutput.data()), sizeof(float));
+    const char *rocal_data_path = std::getenv("ROCAL_DATA_PATH");
+    if (strcmp(rocal_data_path, "") == 0) {
+        std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+        exit(0);
+    }
+
+    std::string ref_file_path = std::string(rocal_data_path) + "GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
+    long int out_buffer_size = frames;
+    std::vector<float> ref_output(out_buffer_size);
+    std::fstream fin(ref_file_path, std::ios::in | std::ios::binary);
+    if (fin.is_open()) {
+        for (long int i = 0; i < out_buffer_size; i++) {
+            if (!fin.eof()) {
+                fin.read(reinterpret_cast<char *>(ref_output.data()), sizeof(float));
             } else {
-                std::cout<<"\nUnable to read all data from golden outputs\n";
+                std::cout << "\nUnable to read all data from golden outputs\n";
                 return pass_status;
             }
         }
     } else {
-        std::cout<<"\nCould not open the reference output. Please check the path specified\n";
+        std::cout << "\nCould not open the reference output. Please check the path specified\n";
         return pass_status;
     }
 
-    int matchedIndices = 0;
+    int matched_indices = 0;
     for (int j = 0; j < frames; j++) {
-        float refVal, outVal;
-        refVal = refOutput[j];
-        outVal = dstPtr[j];
-        bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
-        if (!invalidComparision && abs(outVal - refVal) < 1e-20)
-            matchedIndices += 1;
+        float ref_val, out_val;
+        ref_val = ref_output[j];
+        out_val = dst_ptr[j];
+        bool invalid_comparison = ((out_val == 0.0f) && (ref_val != 0.0f));
+        if (!invalid_comparison && abs(out_val - ref_val) < 1e-20)
+            matched_indices += 1;
     }
 
     std::cout << std::endl << "Results for Test case: " << std::endl;
-    if ((matchedIndices == frames) && matchedIndices != 0) {
+    if ((matched_indices == frames) && matched_indices != 0) {
         pass_status = true;
     }
 
     return pass_status;
 }
 
-int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu);
+int test(int test_case, const char *path, int qa_mode, int downmix, int gpu);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0> \n");
+        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
         return -1;
     }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
-    const char *ref_path = nullptr;
+    int qa_mode = 0;
     unsigned test_case = 0;
     bool downmix = false;
     bool gpu = 0;
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        ref_path = argv[++argIdx];
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
@@ -102,22 +104,26 @@ int main(int argc, const char **argv) {
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
-    
+
+    if (argc >= argIdx + MIN_ARG_COUNT)
+        qa_mode = atoi(argv[++argIdx]);
+
     if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
-        std::cerr << "WRN : Currently Audio unit test supports only HOST backend\n";
+        std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
         gpu = false;
     }
 
-    int return_val = test(test_case, path, ref_path, downmix, gpu);
+    int return_val = test(test_case, path, qa_mode, downmix, gpu);
     return return_val;
 }
 
-int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu) {
-    int inputBatchSize = 1;
+int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
+    int input_batch_size = 1;
+    bool is_output_audio_decoder = false;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
-    auto handle = rocalCreate(inputBatchSize,
+    auto handle = rocalCreate(input_batch_size,
                               gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0,
                               1);
 
@@ -128,12 +134,26 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
 
     std::cout << ">>>>>>> Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path);
-    
-    std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
-    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, downmix);
+
+    RocalTensor decoded_output;
+    if (test_case == 0)
+        is_output_audio_decoder = true;
+    decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
+    }
+
+    std::string case_name = "";
+    switch (test_case) {
+        case 0: {
+            case_name = "audio_decoder";
+            std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
+        } break;
+        default: {
+            std::cout << "Not a valid test case ! Exiting!\n";
+            return -1;
+        }
     }
 
     // Calling the API to verify and build the augmentation graph
@@ -147,29 +167,29 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
     float *buffer = nullptr;
     int frames = 0;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize)) {
-        std::cerr << "\n Iteration:: " << iteration<<"\n";
+    while (rocalGetRemainingImages(handle) >= static_cast<size_t>(input_batch_size)) {
+        std::cerr << "\n Iteration:: " << iteration << "\n";
         iteration++;
         if (rocalRun(handle) != 0) {
             break;
         }
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-        int file_name_length[inputBatchSize];
+        int file_name_length[input_batch_size];
         int file_name_size = rocalGetImageNameLen(handle, file_name_length);
         char audio_file_name[file_name_size];
-        std::vector<int> roi(4 * inputBatchSize, 0);
+        std::vector<int> roi(4 * input_batch_size, 0);
         rocalGetImageName(handle, audio_file_name);
         std::cerr << "Audio file : " << audio_file_name << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
-            buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
+            buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
             frames = roi[idx * 4 + 2];
         }
     }
 
-    if (ref_path) {
+    if (qa_mode) {
         std::cout << "\n *****************************Verifying Audio output**********************************\n";
-        if (verify_output(buffer, frames, ref_path)) {
+        if (verify_output(buffer, frames, case_name)) {
             std::cout << "PASSED!\n\n";
         } else {
             std::cout << "FAILED!\n\n";
