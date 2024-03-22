@@ -1115,7 +1115,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
                                                              RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP,
                                                              RocalTensorOutputType output_datatype = ROCAL_FP32);
 
-/*! \brief A
+/*! \brief Produces a spectrogram from a 1D signal (for example, audio).
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
@@ -1125,9 +1125,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_cont
  * \param [in] reflect_padding Indicates the padding policy when sampling outside the bounds of the audio data
  * \param [in] spectrogram_layout output spectrogram layout
  * \param [in] power Exponent of the magnitude of the spectrum
- * \param [in] nfft Size of the FFT
- * \param [in] window_length Window size in number of samples
- * \param [in] window_step Step betweeen the STFT windows in number of samples
+ * \param [in] nfft Size of the Fast Fourier transform (FFT)
+ * \param [in] window_length Window size in the number of samples
+ * \param [in] window_step Step between the Short-time Fourier transform (STFT) windows in number of samples
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
@@ -1140,8 +1140,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        RocalSpectrogramLayout spectrogram_layout,
                                                        int power,
                                                        int nfft,
-                                                       int window_length,
-                                                       int window_step,
-                                                       RocalTensorOutputType output_datatype);
+                                                       int window_length = 512,
+                                                       int window_step = 256,
+                                                       RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H
