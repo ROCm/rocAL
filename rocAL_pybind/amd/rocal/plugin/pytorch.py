@@ -271,13 +271,8 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 class ROCALAudioIterator(object):
-    """!
-    ROCAL iterator for audio tasks for PyTorch
-    The Tensors that are returned by the iterator will be owned by ROCAL 
-    and would be valid until next iteration.
-    Parameters
-    Iterator for processing data
-
+    """! ROCAL iterator for audio tasks for PyTorch
+    The Tensors that are returned by the iterator will be owned by ROCAL and would be valid until next iteration.
         @param pipeline            The rocAL pipeline to use for processing data.
         @param tensor_dtype        Data type of the output tensors.
         @size                      Number of samples in the epoch (Usually the size of the dataset).
