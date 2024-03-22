@@ -135,7 +135,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << ">>>>>>> Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path);
 
-    RocalTensor output, decoded_output;
+    RocalTensor decoded_output;
     if(test_case == 0)
         is_output_audio_decoder = true;
     decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
@@ -156,7 +156,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP;
             RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
-            output = rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
+            rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
 
         } break;
         default: {
