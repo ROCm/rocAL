@@ -106,8 +106,6 @@ def parse_args():
                                   help='audio files path')
     audio_unit_test.add_argument('--file_list_path', type=str, default="",
                                   help='file list path')
-    audio_unit_test.add_argument('--ref_path', type=str, default="",
-                                  help='referenece output path to compare the outputs')
     audio_unit_test.add_argument('--test_case', type=int, default=0,
                                   help='test case')
     audio_unit_test.add_argument('--qa_mode', type=int, default=1,
