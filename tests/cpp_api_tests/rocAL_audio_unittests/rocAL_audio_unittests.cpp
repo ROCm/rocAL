@@ -35,12 +35,13 @@ THE SOFTWARE.
 
 using namespace std::chrono;
 
-bool verify_output(float *dstPtr, long int frames, const char *ref_path, std::string case_name)
+bool verify_output(float *dstPtr, long int frames, std::string case_name)
 {
     std::fstream refFile;
     bool pass_status = false;
     // read data from golden outputs
-    std::string file_path = std::string(ref_path)+ case_name + "_output.bin";
+    const char *ref_path = std::getenv("ROCAL_DATA_PATH");
+    std::string file_path = std::string(ref_path)+ "GoldenOutputsTensor/reference_outputs_audio/" +case_name + "_output.bin";
     long int oBufferSize = frames;
     std::vector<float> refOutput(oBufferSize);
     std::fstream fin(file_path, std::ios::in | std::ios::binary);
@@ -76,7 +77,7 @@ bool verify_output(float *dstPtr, long int frames, const char *ref_path, std::st
     return pass_status;
 }
 
-int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu);
+int test(int test_case, const char *path, int qa_mode, int downmix, int gpu);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
@@ -86,13 +87,10 @@ int main(int argc, const char **argv) {
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
-    const char *ref_path = nullptr;
+    int qa_mode = 0;
     unsigned test_case = 0;
     bool downmix = false;
     bool gpu = 0;
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        ref_path = argv[++argIdx];
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
@@ -102,6 +100,9 @@ int main(int argc, const char **argv) {
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
+
+    if (argc >= argIdx + MIN_ARG_COUNT)
+        qa_mode = atoi(argv[++argIdx]);
     
     if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
         std::cerr << "WRN : Currently Audio unit test supports only HOST backend\n";
@@ -113,11 +114,11 @@ int main(int argc, const char **argv) {
         gpu = false;
     }
 
-    int return_val = test(test_case, path, ref_path, downmix, gpu);
+    int return_val = test(test_case, path, qa_mode, downmix, gpu);
     return return_val;
 }
 
-int test(int test_case, const char *path, const char *ref_path, int downmix, int gpu) {
+int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     int inputBatchSize = 1;
     bool is_output_audio_decoder = false;
     std::cout << ">>> test case " << test_case << std::endl;
@@ -193,9 +194,9 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
         }
     }
 
-    if (ref_path) {
+    if (qa_mode) {
         std::cout << "\n *****************************Verifying Audio output**********************************\n";
-        if (verify_output(buffer, frames, ref_path, case_name)) {
+        if (verify_output(buffer, frames, case_name)) {
             std::cout << "PASSED!\n\n";
         } else {
             std::cout << "FAILED!\n\n";
