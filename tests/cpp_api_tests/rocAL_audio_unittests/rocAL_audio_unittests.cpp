@@ -40,8 +40,13 @@ bool verify_output(float *dstPtr, long int frames, std::string case_name)
     std::fstream refFile;
     bool pass_status = false;
     // read data from golden outputs
-    const char *ref_path = std::getenv("ROCAL_DATA_PATH");
-    std::string file_path = std::string(ref_path)+ "GoldenOutputsTensor/reference_outputs_audio/" +case_name + "_output.bin";
+    const char *rocal_data_path = std::getenv("ROCAL_DATA_PATH");
+    if (strcmp(rocal_data_path, "") == 0) {
+        std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+        exit(0);
+    }
+
+    std::string file_path = std::string(rocal_data_path)+ "GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     long int oBufferSize = frames;
     std::vector<float> refOutput(oBufferSize);
     std::fstream fin(file_path, std::ios::in | std::ios::binary);
@@ -81,9 +86,11 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
-    printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0> \n");
-    if (argc < MIN_ARG_COUNT)
+    if (argc < MIN_ARG_COUNT) {
+        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
         return -1;
+
+    }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
@@ -105,12 +112,7 @@ int main(int argc, const char **argv) {
         qa_mode = atoi(argv[++argIdx]);
     
     if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
-        std::cerr << "WRN : Currently Audio unit test supports only HOST backend\n";
-        gpu = false;
-    }
-
-    if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
-        std::cerr << "WRN : Currently Audio unit test supports only HOST backend\n";
+        std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
         gpu = false;
     }
 
@@ -133,10 +135,10 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
-    RocalTensor output, input1;
+    RocalTensor output, decoded_output;
     if(test_case == 0)
         is_output_audio_decoder = true;
-    input1 = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
+    decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
@@ -149,12 +151,12 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
         } break;
         case 1: {
-            std::cout << "\n Augmentation - rocalPreEmphasisFilter ";
+            std::cout << ">>>>>>> Running PREEMPHASIS" << std::endl;
             case_name = "preemphasis_filter";
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP;
             RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
-            output = rocalPreEmphasisFilter(handle, input1, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
+            output = rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
 
         } break;
         default: {
@@ -186,7 +188,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         char audio_file_name[file_name_size];
         std::vector<int> roi(4 * inputBatchSize, 0);
         rocalGetImageName(handle, audio_file_name);
-        std::cerr << "Audio file : " << audio_file_name << "\n";
+        std::cout << "Audio file : " << audio_file_name << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float*>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
