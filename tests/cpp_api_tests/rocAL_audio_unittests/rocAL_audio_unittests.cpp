@@ -79,9 +79,10 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
-    printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0> \n");
-    if (argc < MIN_ARG_COUNT)
+    if (argc < MIN_ARG_COUNT) {
+        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0> \n");
         return -1;
+    }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
@@ -125,6 +126,9 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
         return -1;
     }
 
+    std::cout << ">>>>>>> Running LABEL READER" << std::endl;
+    rocalCreateLabelReader(handle, path);
+    
     std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
     rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
@@ -144,7 +148,7 @@ int test(int test_case, const char *path, const char *ref_path, int downmix, int
     int frames = 0;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize)) {
-        std::cout << "\n Iteration:: " << iteration<<"\n";
+        std::cerr << "\n Iteration:: " << iteration<<"\n";
         iteration++;
         if (rocalRun(handle) != 0) {
             break;
