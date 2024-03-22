@@ -192,7 +192,7 @@ int test(int test_case, const char *path, const char *file_list_path, int qa_mod
         RocalTensorList labels = rocalGetImageLabels(handle);
         int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
         std::cerr << "Audio file : " << audio_file_name << "\n";
-        std::cerr << "Label : " << label_id << "\n";
+        std::cerr << "Label : " << *label_id << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());

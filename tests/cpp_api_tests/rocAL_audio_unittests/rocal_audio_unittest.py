@@ -72,7 +72,7 @@ def main():
         sys.exit()
 
     sys.dont_write_bytecode = True
-    input_file_path = rocal_data_path + "/audio/wav"
+    input_file_path = rocal_data_path + "/audio"
     input_file_list_path = rocal_data_path + "/audio/wav_file_list.txt"
     build_folder_path = os.getcwd()
 
