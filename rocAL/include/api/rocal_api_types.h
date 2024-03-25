@@ -380,15 +380,15 @@ enum RocalExternalSourceMode {
  * \ingroup group_rocal_types
  */
 enum RocalAudioBorderType {
-    /*! \brief ZERO
+    /*! \brief AMD ROCAL_ZERO
      */
-    ZERO = 0,
-    /*! \brief CLAMP
+    ROCAL_ZERO = 0,
+    /*! \brief AMD ROCAL_CLAMP
      */
-    CLAMP,
-    /*! \brief REFLECT
+    ROCAL_CLAMP = 1,
+    /*! \brief AMD ROCAL_REFLECT
      */
-    REFLECT
+    ROCAL_REFLECT = 2
 };
 
 enum RocalSpectrogramLayout {
