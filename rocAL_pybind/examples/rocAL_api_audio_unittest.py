@@ -133,8 +133,9 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. running on cpu")
         rocal_cpu = True
-    if audio_path == "":
-        audio_path = f'{rocal_data_path}/audio/wav/'
+    if audio_path == "" and file_list == "":
+        audio_path = f'{rocal_data_path}/audio/'
+        file_list = f'{rocal_data_path}/audio/wav_file_list.txt'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0

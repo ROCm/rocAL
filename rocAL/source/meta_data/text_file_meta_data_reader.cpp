@@ -67,7 +67,7 @@ void TextFileMetaDataReader::lookup(const std::vector<std::string> &image_names)
 }
 
 void TextFileMetaDataReader::read_all(const std::string &path) {
-    std::ifstream text_file(_path.c_str());
+    std::ifstream text_file(path.c_str());
     if (text_file.good()) {
         std::string line;
         while (std::getline(text_file, line)) {

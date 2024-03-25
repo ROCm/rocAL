@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -167,8 +167,11 @@ Reader::Status FileSourceReader::subfolder_reading() {
                 std::istringstream ss(file_label_path);
                 std::string file_path;
                 std::getline(ss, file_path, ' ');
-                if (!filesys::exists(filesys::path(file_path)))  // Only add root path if the file list contains relative file paths
+                if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
+                    if (!filesys::exists(_folder_path))
+                        THROW("File list contains relative paths but root path doesn't exists");
                     file_path = _folder_path + "/" + file_path;
+                }
                 std::string file_name = file_path.substr(file_path.find_last_of("/\\") + 1);
 
                 if (!_meta_data_reader || _meta_data_reader->exists(file_name)) {  // Check if the file is present in metadata reader and add to file names list, to avoid issues while lookup
