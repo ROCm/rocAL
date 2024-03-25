@@ -36,7 +36,8 @@ seed = random.SystemRandom().randint(0, 2**32 - 1)
 
 test_case_augmentation_map = {
     0: "audio_decoder",
-    1: "preemphasis_filter"
+    1: "preemphasis_filter",
+    2: "to_decibels"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -104,7 +105,7 @@ def to_decibels_pipeline(path, file_list):
         audio,
         file_root=path,
         file_list_path=file_list,
-        downmix=False,
+        downmix=True,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
