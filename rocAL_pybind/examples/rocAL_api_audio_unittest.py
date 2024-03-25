@@ -76,25 +76,13 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
         test_results[case_name] = "FAILED"
 
 @pipeline_def(seed=seed)
-def audio_decoder_pipeline(path, file_list):
+def audio_decoder_pipeline(path, file_list, downmix=False):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     return fn.decoders.audio(
         audio,
         file_root=path,
         file_list_path=file_list,
-        downmix=False,
-        shard_id=0,
-        num_shards=1,
-        stick_to_shard=False)
-
-@pipeline_def(seed=seed)
-def downmix_pipeline(path, file_list):
-    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
-    return fn.decoders.audio(
-        audio,
-        file_root=path,
-        file_list_path=file_list,
-        downmix=True,
+        downmix=downmix,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
@@ -147,7 +135,7 @@ def to_decibels_pipeline(path, file_list):
             multiplier=np.log(10),
             reference=1.0,
             cutoff_db=np.log(1e-20),
-            rocal_tensor_output_type=types.FLOAT)
+            output_dtype=types.FLOAT)
 
 def main():
     args = parse_args()
@@ -206,7 +194,7 @@ def main():
         if case_name == "spectrogram":
             audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "downmix":
-            audio_pipeline = downmix_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list, downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()

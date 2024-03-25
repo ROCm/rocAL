@@ -2259,12 +2259,15 @@ rocalToDecibels(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for To decibels augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
-        context->master_graph->add_node<ToDeciblesNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
+        context->master_graph->add_node<ToDecibelsNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

@@ -2145,11 +2145,9 @@ rocalAudioFileSourceSingleShard(
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
                 return downmixed_output;
             }
-        } else {
-            if (is_output) {
-                auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output});
-            }
+        } else if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
         THROW("Audio decoder is not enabled since sndfile is not present")
@@ -2199,11 +2197,9 @@ rocalAudioFileSource(
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
                 return downmixed_output;
             }
-        } else {
-            if (is_output) {
-                auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output});
-            }
+        } else if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 #else
         THROW("Audio decoder is not enabled since sndfile is not present")
