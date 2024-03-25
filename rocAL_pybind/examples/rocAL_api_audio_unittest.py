@@ -37,7 +37,7 @@ seed = random.SystemRandom().randint(0, 2**32 - 1)
 test_case_augmentation_map = {
     0: "audio_decoder",
     1: "preemphasis_filter",
-    2: "spectrogram""
+    2: "spectrogram",
 }
 
 def plot_audio_wav(audio_tensor, idx):
