@@ -37,7 +37,9 @@ seed = random.SystemRandom().randint(0, 2**32 - 1)
 test_case_augmentation_map = {
     0: "audio_decoder",
     1: "preemphasis_filter",
-    2: "to_decibels"
+    2: "spectogram",
+    3: "downmix",
+    4: "to_decibels"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -86,6 +88,18 @@ def audio_decoder_pipeline(path, file_list):
         stick_to_shard=False)
 
 @pipeline_def(seed=seed)
+def downmix_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    return fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=True,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+
+@pipeline_def(seed=seed)
 def pre_emphasis_filter_pipeline(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
@@ -99,24 +113,40 @@ def pre_emphasis_filter_pipeline(path, file_list):
     return fn.preemphasis_filter(decoded_audio)
 
 @pipeline_def(seed=seed)
+def spectogram_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return fn.spectrogram(
+            decoded_audio,
+            nfft=512,
+            window_length=320,
+            window_step=160,
+            rocal_tensor_output_type = types.FLOAT)
+
+@pipeline_def(seed=seed)
 def to_decibels_pipeline(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
         audio,
         file_root=path,
         file_list_path=file_list,
-        downmix=True,
+        downmix=False,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
-    pre_emphasis_filter = fn.preemphasis_filter(decoded_audio)
     return fn.to_decibels(
-            pre_emphasis_filter,
+            decoded_audio,
             multiplier=np.log(10),
             reference=1.0,
             cutoff_db=np.log(1e-20),
-            rocal_tensor_output_type=types.FLOAT,
-    )
+            rocal_tensor_output_type=types.FLOAT)
 
 def main():
     args = parse_args()
@@ -172,6 +202,10 @@ def main():
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "preemphasis_filter":
             audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "spectogram":
+            audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "downmix":
+            audio_pipeline = downmix_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
