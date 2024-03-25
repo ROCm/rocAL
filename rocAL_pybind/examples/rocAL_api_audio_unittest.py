@@ -37,7 +37,7 @@ seed = random.SystemRandom().randint(0, 2**32 - 1)
 test_case_augmentation_map = {
     0: "audio_decoder",
     1: "preemphasis_filter",
-    2: "spectogram",
+    2: "spectrogram",
     3: "downmix",
     4: "to_decibels"
 }
@@ -113,7 +113,7 @@ def pre_emphasis_filter_pipeline(path, file_list):
     return fn.preemphasis_filter(decoded_audio)
 
 @pipeline_def(seed=seed)
-def spectogram_pipeline(path, file_list):
+def spectrogram_pipeline(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
         audio,
@@ -203,8 +203,8 @@ def main():
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "preemphasis_filter":
             audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
-        if case_name == "spectogram":
-            audio_pipeline = spectogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "spectrogram":
+            audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "downmix":
             audio_pipeline = downmix_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "to_decibels":
