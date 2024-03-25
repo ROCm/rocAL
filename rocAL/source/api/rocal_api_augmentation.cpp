@@ -2232,7 +2232,6 @@ rocalSpectrogram(
             power = 2;
         }
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding, spectrogram_layout,
                                                                                   power, nfft, window_length,
                                                                                   window_step, window_fn);
