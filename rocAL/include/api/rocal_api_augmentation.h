@@ -1115,10 +1115,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext contex
                                                              RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP,
                                                              RocalTensorOutputType output_datatype = ROCAL_FP32);
 
-/*! \brief Produces a spectrogram from a 1D signal (for example, audio).
+/*! \brief Produces a spectrogram from a 1D audio signal.
  * \ingroup group_rocal_augmentations
- * \param [in] p_context Rocal context
- * \param [in] p_input Input Rocal tensor
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] window_fn values of the window function
  * \param [in] center_windows boolean value to specify whether extracted windows should be padded so that the window function is centered at multiples of window_step
@@ -1131,8 +1131,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext contex
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
-                                                       RocalTensor p_input,
+extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext context,
+                                                       RocalTensor input,
                                                        bool is_output,
                                                        std::vector<float> &window_fn,
                                                        bool center_windows,
