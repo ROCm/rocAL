@@ -141,8 +141,6 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {1, "float16"},
     {2, "uint8"},
     {3, "int8"},
-    {4, "uint32"},
-    {5, "int32"},
 };
 
 PYBIND11_MODULE(rocal_pybind, m) {
@@ -722,7 +720,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
-    m.def("Spectrogram", &rocalSpectrogram,
+    m.def("spectrogram", &rocalSpectrogram,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

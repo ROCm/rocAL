@@ -165,6 +165,9 @@ _known_types = {
     ZERO: ("ZERO", ZERO),
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
+
+    TF: ("TF", TF),
+    FT: ("FT", FT),
 }
 
 def data_type_function(dtype):
