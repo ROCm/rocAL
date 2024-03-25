@@ -2132,12 +2132,10 @@ rocalAudioFileSourceSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
-        if (downmix) {
+        if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
             std::vector<size_t> output_dims = {context->user_batch_size(), info.dims()[1], 1};
             output_info.set_dims(output_dims);
-            output_info.set_tensor_layout(RocalTensorlayout::NONE);
-            output_info.set_max_shape();
 
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
@@ -2145,7 +2143,7 @@ rocalAudioFileSourceSingleShard(
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
-                output = downmixed_output;
+                return downmixed_output;
             }
         } else {
             if (is_output) {
@@ -2190,17 +2188,16 @@ rocalAudioFileSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
-        if (downmix) {
+        if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
             std::vector<size_t> output_dims = {context->user_batch_size(), info.dims()[1], 1};
             output_info.set_dims(output_dims);
-            output_info.set_tensor_layout(RocalTensorlayout::NONE);
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
-                output = downmixed_output;
+                return downmixed_output;
             }
         } else {
             if (is_output) {
