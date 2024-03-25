@@ -167,7 +167,8 @@ Reader::Status FileSourceReader::subfolder_reading() {
                 std::istringstream ss(file_label_path);
                 std::string file_path;
                 std::getline(ss, file_path, ' ');
-                file_path = _folder_path + "/" + file_path;
+                if (!filesys::exists(filesys::path(file_path)))  // Only add root path if the file list contains relative file paths
+                    file_path = _folder_path + "/" + file_path;
                 std::string file_name = file_path.substr(file_path.find_last_of("/\\") + 1);
 
                 if (!_meta_data_reader || _meta_data_reader->exists(file_name)) {  // Check if the file is present in metadata reader and add to file names list, to avoid issues while lookup
