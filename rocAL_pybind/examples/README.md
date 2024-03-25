@@ -66,3 +66,22 @@ example: COCO Pipeline
         --local-rank 0 --world-size $gpus_per_node --num-threads 1 --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_coco_pipeline.txt
 
 ### [ NOTE: REFER parse_config.py for more INFO on other args]
+
+## AUDIO UNIT TEST
+
+To run the Audio unit test with all test cases. Follow the steps below
+
+Export `ROCAL_DATA_PATH`
+```
+export ROCAL_DATA_PATH=<Absolute_path_to_rocal_data>
+```
+
+To run the audio unit test and verify the correctness of the outputs
+```
+python3 rocAL_api_audio_unittest.py
+```
+
+To pass the audio data path, batch size, and run a particular test case use the following command
+```
+python3 rocAL_api_audio_unittest.py --audio_path=<path_to_data> --test_case <case(0-1)> --batch-size <batch_size>
+```

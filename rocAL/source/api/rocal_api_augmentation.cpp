@@ -2155,3 +2155,35 @@ rocalNop(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalPreEmphasisFilter(RocalContext p_context,
+                       RocalTensor p_input,
+                       bool is_output,
+                       RocalFloatParam p_preemph_coeff,
+                       RocalAudioBorderType preemph_border_type,
+                       RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
+    try {
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_datatype != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for PreEmphasis filter augmentation.")
+            op_tensor_datatype = RocalTensorDataType::FP32;
+        }
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

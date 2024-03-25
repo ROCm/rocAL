@@ -259,7 +259,10 @@ enum RocalDecoderType {
     ROCAL_DECODER_VIDEO_FFMPEG_SW = 3,
     /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_HW
      */
-    ROCAL_DECODER_VIDEO_FFMPEG_HW = 4
+    ROCAL_DECODER_VIDEO_FFMPEG_HW = 4,
+    /*! \brief AMD ROCAL_DECODER_AUDIO_SNDFILE
+     */
+    ROCAL_DECODER_AUDIO_SNDFILE = 5
 };
 
 enum RocalOutputMemType {
@@ -371,6 +374,21 @@ enum RocalExternalSourceMode {
     /*! \brief uncompressed raw buffer passed as input
      */
     ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
+};
+
+/*! \brief rocAL Audio Border Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalAudioBorderType {
+    /*! \brief AMD ROCAL_ZERO
+     */
+    ROCAL_ZERO = 0,
+    /*! \brief AMD ROCAL_CLAMP
+     */
+    ROCAL_CLAMP = 1,
+    /*! \brief AMD ROCAL_REFLECT
+     */
+    ROCAL_REFLECT = 2
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
