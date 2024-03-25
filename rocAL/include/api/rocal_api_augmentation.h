@@ -1112,7 +1112,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext contex
                                                              RocalTensor input,
                                                              bool is_output,
                                                              RocalFloatParam preemph_coeff = NULL,
-                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP,
+                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP,
                                                              RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 /*! \brief Produces a spectrogram from a 1D signal (for example, audio).

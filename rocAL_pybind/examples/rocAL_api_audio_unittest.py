@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 from amd.rocal.pipeline import Pipeline
+from amd.rocal.pipeline import pipeline_def
 from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
@@ -31,28 +32,22 @@ import numpy as np
 from parse_config import parse_args
 
 np.set_printoptions(threshold=1000, edgeitems=10000)
+seed = random.SystemRandom().randint(0, 2**32 - 1)
 
 test_case_augmentation_map = {
     0: "audio_decoder",
+    1: "preemphasis_filter"
 }
-
 
 def plot_audio_wav(audio_tensor, idx):
     # audio is expected as a tensor
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
-    label = idx.cpu().detach().numpy()
-    # Saving the array in a text file
-    file = open("results/rocal_data_new" + str(label) + ".txt", "w+")
-    content = str(audio_data)
-    file.write(content)
-    file.close()
     plt.plot(audio_data)
-    plt.savefig("results/rocal_data_new" + str(label) + ".png")
+    plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
     plt.close()
 
-def verify_output(audio_tensor, roi_tensor, test_results, case_name):
-    rocal_data_path = os.environ.get("ROCAL_DATA_PATH")
+def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
     ref_path = f'{rocal_data_path}/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor.detach().numpy()
@@ -72,24 +67,37 @@ def verify_output(audio_tensor, roi_tensor, test_results, case_name):
     print(f"Results for {case_name}:")
     if matched_indices == roi_data[0] and matched_indices != 0:
         print("PASSED!")
-        test_results.append("PASSED")
+        test_results[case_name] = "PASSED"
     else:
         print("FAILED!")
-        test_results.append("FAILED")
+        test_results[case_name] = "FAILED"
 
+@pipeline_def(seed=seed)
+def audio_decoder_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    return fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+
+@pipeline_def(seed=seed)
+def pre_emphasis_filter_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return fn.preemphasis_filter(decoded_audio)
 
 def main():
-    if len(sys.argv) < 3:
-        print("Please pass audio_folder batch_size")
-        exit(0)
-    try:
-        path = "results"
-        isExist = os.path.exists(path)
-        if not isExist:
-            os.makedirs(path)
-    except OSError as error:
-        print(error)
-
     args = parse_args()
 
     audio_path = args.audio_path
@@ -100,73 +108,89 @@ def main():
     qa_mode = args.qa_mode
     num_threads = 1
     device_id = 0
-    case_name = test_case_augmentation_map.get(test_case)
-    random_seed = random.SystemRandom().randint(0, 2**32 - 1)
+    rocal_data_path = os.environ.get("ROCAL_DATA_PATH")
+
+    case_list = list(test_case_augmentation_map.keys())
+
+    if test_case is not None: 
+        if test_case not in case_list:
+            print(" Invalid Test Case! ")
+            exit()
+        else:
+            case_list = [test_case]
+
+    if args.display:
+        try:
+            path = "OUTPUT_FOLDER/AUDIO_READER"
+            isExist = os.path.exists(path)
+            if not isExist:
+                os.makedirs(path)
+        except OSError as error:
+            print(error)
+
+    if rocal_data_path is None:
+        print("Need to export ROCAL_DATA_PATH")
+        sys.exit()
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. running on cpu")
         rocal_cpu = True
+    if audio_path == "":
+        audio_path = f'{rocal_data_path}/audio/wav/'
+    else:
+        print("QA mode is disabled for custom audio data")
+        qa_mode = 0
     if qa_mode and batch_size != 1:
         print("QA mode is enabled. Batch size is set to 1.")
         batch_size = 1
 
     print("*********************************************************************")
-    audio_pipeline = Pipeline(
-        batch_size=batch_size,
-        num_threads=num_threads,
-        device_id=device_id,
-        seed=random_seed,
-        rocal_cpu=rocal_cpu,
-    )
-    with audio_pipeline:
-        audio, label = fn.readers.file(file_root=audio_path, file_list=file_list)
-        audio_decode = fn.decoders.audio(
-            file_root=audio_path,
-            file_list_path=file_list,
-            downmix=False,
-            shard_id=0,
-            num_shards=1,
-            stick_to_shard=False)
-        pre_emphasis_filter = fn.preemphasis_filter(audio_decode)
-        spec = fn.spectrogram(
-            pre_emphasis_filter,
-            nfft=512,
-            window_length=320,
-            window_step=160,
-            rocal_tensor_output_type = types.FLOAT)
-        audio_pipeline.set_outputs(spec)
-    audio_pipeline.build()
-    audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
-    cnt = 0
-    out_tensor = None
-    out_roi = None
-    test_results = []
-    import timeit
-    start = timeit.default_timer()
-    # Enumerate over the Dataloader
-    for e in range(int(args.num_epochs)):
-        print("Epoch :: ", e)
-        torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-        for i, it in enumerate(audioIteratorPipeline):
-            for x in range(len(it[0])):
-                for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
-                    if args.print_tensor:
-                        print("label", label)
-                        print("Audio", audio_tensor)
-                        print("Roi", roi)
-                    if args.display:
-                        plot_audio_wav(audio_tensor, label)
-                    out_tensor = audio_tensor
-                    out_roi = roi
-                    cnt+=1
-        if qa_mode :
-            verify_output(out_tensor, out_roi, test_results, case_name)
-            num_passed = test_results.count("PASSED")
-            num_failed = test_results.count("FAILED")
+    test_results = {}
+    for case in case_list:
+        case_name = test_case_augmentation_map.get(case)
+        if case_name == "audio_decoder":
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "preemphasis_filter":
+            audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        audio_pipeline.build()
+        audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
+        cnt = 0
+        import timeit
+        start = timeit.default_timer()
+        # Enumerate over the Dataloader
+        for e in range(int(args.num_epochs)):
+            print("Epoch :: ", e)
+            torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
+            for i, it in enumerate(audioIteratorPipeline):
+                for x in range(len(it[0])):
+                    for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
+                        if args.print_tensor:
+                            print("label", label)
+                            print("Audio", audio_tensor)
+                            print("Roi", roi)
+                        if args.display:
+                            plot_audio_wav(audio_tensor, cnt)
+                        cnt+=1
+            if qa_mode :
+                verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name)
+            print("EPOCH DONE", e)
+        
+        stop = timeit.default_timer()
+        print('\nTime: ', stop - start)
 
-            print("Number of PASSED tests:", num_passed)
-            print("Number of FAILED tests:", num_failed)
+    if qa_mode:
+        passed_cases = []
+        failed_cases = []
 
-        print("EPOCH DONE", e)
+        for augmentation_name, result in test_results.items():
+            if result == "PASSED":
+                passed_cases.append(augmentation_name)
+            else:
+                failed_cases.append(augmentation_name)
+
+        print("Number of PASSED tests:", len(passed_cases))
+        print(passed_cases)
+        print("Number of FAILED tests:", len(failed_cases))
+        print(failed_cases)
 
 
 if __name__ == "__main__":

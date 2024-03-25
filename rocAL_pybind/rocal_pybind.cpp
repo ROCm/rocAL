@@ -399,9 +399,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
     py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
-        .value("ZERO", ZERO)
-        .value("CLAMP", CLAMP)
-        .value("REFLECT", REFLECT)
+        .value("ZERO", ROCAL_ZERO)
+        .value("CLAMP", ROCAL_CLAMP)
+        .value("REFLECT", ROCAL_REFLECT)
         .export_values();
     py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
         .value("FT", FT)
