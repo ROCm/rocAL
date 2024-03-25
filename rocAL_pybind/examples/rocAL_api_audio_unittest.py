@@ -123,12 +123,13 @@ def spectogram_pipeline(path, file_list):
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
-    return fn.spectrogram(
-            decoded_audio,
-            nfft=512,
-            window_length=320,
-            window_step=160,
-            rocal_tensor_output_type = types.FLOAT)
+    spec = fn.spectrogram(
+        decoded_audio,
+        nfft=512,
+        window_length=320,
+        window_step=160,
+        rocal_tensor_output_type = types.FLOAT)
+    return spec
 
 @pipeline_def(seed=seed)
 def to_decibels_pipeline(path, file_list):

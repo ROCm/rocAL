@@ -404,8 +404,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("REFLECT", ROCAL_REFLECT)
         .export_values();
     py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
-        .value("FT", FT)
-        .value("TF", TF)
+        .value("FT", ROCAL_FT)
+        .value("TF", ROCAL_TF)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())

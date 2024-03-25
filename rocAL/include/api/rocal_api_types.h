@@ -391,13 +391,16 @@ enum RocalAudioBorderType {
     ROCAL_REFLECT = 2
 };
 
+/*! \brief rocAL Spectrogram Layout Type enum
+ * \ingroup group_rocal_types
+ */
 enum RocalSpectrogramLayout {
     /*! \brief Frequency Major
      */
-    FT = 0,
+    ROCAL_FT = 0,
     /*! \brief Time Major
      */
-    TF
+    ROCAL_TF
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

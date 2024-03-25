@@ -46,7 +46,7 @@ class SpectrogramNode : public Node {
 
    private:
     std::vector<float> _window_fn;
-    RocalSpectrogramLayout _spectrogram_layout = RocalSpectrogramLayout::FT;
+    RocalSpectrogramLayout _spectrogram_layout = RocalSpectrogramLayout::ROCAL_FT;
     int _power = 2;
     int _nfft = 2048;
     int _window_length = 512;
