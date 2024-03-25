@@ -85,13 +85,13 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <audio-file-list-path> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
+        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
         return -1;
     }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
-    const char *file_list_path = argv[++argIdx];
+    std::string file_list_path;
     int qa_mode = 0;
     unsigned test_case = 0;
     bool downmix = false;
@@ -114,7 +114,13 @@ int main(int argc, const char **argv) {
         gpu = false;
     }
 
-    int return_val = test(test_case, path, file_list_path, qa_mode, downmix, gpu);
+    if (qa_mode) {  // setting the default file list path from ROCAL_DATA_PATH
+        file_list_path = std::string(std::getenv("ROCAL_DATA_PATH")) + "/audio/wav_file_list.txt";
+    } else {
+        file_list_path = "";  // User should modify this with the file list path
+    }
+
+    int return_val = test(test_case, path, file_list_path.c_str(), qa_mode, downmix, gpu);
     return return_val;
 }
 
