@@ -44,5 +44,5 @@ class TextFileMetaDataReader : public MetaDataReader {
     bool exists(const std::string& image_name) override;
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
-    std::string _path, _file_list_path;
+    std::string _path;
 };
