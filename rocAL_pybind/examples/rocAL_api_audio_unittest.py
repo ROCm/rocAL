@@ -96,8 +96,9 @@ def pre_emphasis_filter_pipeline(path, file_list):
         num_shards=1,
         stick_to_shard=False)
     return fn.preemphasis_filter(decoded_audio)
+
 @pipeline_def(seed=seed)
-def pre_emphasis_filter_pipeline(path, file_list):
+def spectrogram_pipeline(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
         audio,
