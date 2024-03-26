@@ -2218,7 +2218,7 @@ rocalSpectrogram(
         max_frame = std::max(0, max_frame);
         int bins = std::max(0, (nfft / 2) + 1);
         std::vector<size_t> dims = output_info.dims();
-        if (spectrogram_layout == RocalSpectrogramLayout::FT) {
+        if (spectrogram_layout == RocalSpectrogramLayout::TF) {
             dims[1] = max_frame;
             dims[2] = bins;
         } else {
@@ -2232,7 +2232,6 @@ rocalSpectrogram(
             power = 2;
         }
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding, spectrogram_layout,
                                                                                   power, nfft, window_length,
                                                                                   window_step, window_fn);
