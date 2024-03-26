@@ -183,7 +183,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << ">>>>>>> Running SPECTROGRAM" << std::endl;
             case_name = "spectrogram";
             std::vector<float> window_fn;
-            rocalSpectrogram(handle, decoded_output, true, window_fn, true, true, RocalSpectrogramLayout::FT, 2, 512, 320, 160, ROCAL_FP32);
+            rocalSpectrogram(handle, decoded_output, true, window_fn, true, true, RocalSpectrogramLayout::ROCAL_FT, 2, 512, 320, 160, ROCAL_FP32);
 
         } break;
         default: {
