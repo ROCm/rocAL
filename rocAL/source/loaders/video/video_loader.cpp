@@ -277,7 +277,7 @@ std::vector<std::string> VideoLoader::get_id() {
     return _output_names;
 }
 
-decoded_data_info VideoLoader::get_decode_data_info() {
+DecodedDataInfo VideoLoader::get_decode_data_info() {
     return _output_decoded_video_info;
 }
 

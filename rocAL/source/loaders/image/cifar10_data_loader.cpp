@@ -279,7 +279,7 @@ std::vector<std::string> CIFAR10DataLoader::get_id() {
     return _output_names;
 }
 
-decoded_data_info CIFAR10DataLoader::get_decode_data_info() {
+DecodedDataInfo CIFAR10DataLoader::get_decode_data_info() {
     return _output_decoded_img_info;
 }
 

@@ -338,7 +338,7 @@ CircularBuffer::~CircularBuffer() {
     _initialized = false;
 }
 
-decoded_data_info &CircularBuffer::get_data_info() {
+DecodedDataInfo &CircularBuffer::get_data_info() {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if (_level != _circ_data_info.size())

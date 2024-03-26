@@ -40,7 +40,7 @@ class CIFAR10DataLoader : public LoaderModule {
     void reset() override;
     void start_loading() override;
     std::vector<std::string> get_id() override;
-    decoded_data_info get_decode_data_info() override;
+    DecodedDataInfo get_decode_data_info() override;
     crop_image_info get_crop_image_info() override;
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
@@ -59,8 +59,8 @@ class CIFAR10DataLoader : public LoaderModule {
     LoaderModuleStatus load_routine();
     std::shared_ptr<Reader> _reader;
     void *_dev_resources;
-    decoded_data_info _raw_img_info;  // data info to store the names. In this case the ID of image is stored in _roi_width field
-    decoded_data_info _output_decoded_img_info;
+    DecodedDataInfo _raw_img_info;  // data info to store the names. In this case the ID of image is stored in _roi_width field
+    DecodedDataInfo _output_decoded_img_info;
     bool _initialized = false;
     RocalMemType _mem_type;
     size_t _output_mem_size;

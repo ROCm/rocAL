@@ -38,7 +38,7 @@ std::vector<std::string> ImageLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_data_info ImageLoaderSharded::get_decode_data_info() {
+DecodedDataInfo ImageLoaderSharded::get_decode_data_info() {
     return _loaders[_loader_idx]->get_decode_data_info();
 }
 
