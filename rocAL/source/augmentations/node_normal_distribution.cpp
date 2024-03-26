@@ -20,33 +20,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
 #include "node_normal_distribution.h"
+
+#include <vx_ext_rpp.h>
+
 #include "exception.h"
 #include "parameter_factory.h"
 
-NormalDistributionNode::NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs) { }
+NormalDistributionNode::NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void NormalDistributionNode::create_node() {
-    if(_node)
+    if (_node)
         return;
     _stride = (vx_size *)malloc(_num_of_dims * sizeof(float));
     _stride[0] = sizeof(float);
     _stride[1] = _stride[0] * _outputs[0]->info().dims()[0];
     _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
-    for(uint i = 0; i < _batch_size; i++) {
-    update_param();
-    _normal_distribution_array[i] = _dist_normal(_rngs[i]);
+    for (uint i = 0; i < _batch_size; i++) {
+        update_param();
+        _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     }
     _outputs[0]->swap_handle((void *)_normal_distribution_array.data());
-
 }
 
 void NormalDistributionNode::update_node() {
-    for(uint i = 0; i < _batch_size; i++) {
-    update_param();
-    _normal_distribution_array[i] = _dist_normal(_rngs[i]);
+    for (uint i = 0; i < _batch_size; i++) {
+        update_param();
+        _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     }
 }
 
@@ -61,6 +61,6 @@ void NormalDistributionNode::init(float mean, float std_dev) {
     _num_of_dims = _outputs[0]->info().num_of_dims();
     _normal_distribution_array.resize(_batch_size);
     BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
-    _rngs =_rng;
+    _rngs = _rng;
     update_param();
 }

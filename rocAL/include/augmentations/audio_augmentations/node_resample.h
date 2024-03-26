@@ -21,22 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 #include "rocal_api_types.h"
 
 class ResampleNode : public Node {
-public:
+   public:
     ResampleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResampleNode() = delete;
-    void init(Tensor* resample_rate, float quality);
-protected:
+    void init(Tensor *resample_rate, float quality);
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
-    Tensor* _resample_rate;
+
+   private:
+    Tensor *_resample_rate;
     float _quality;
     vx_array _src_sample_rate_array;
     std::vector<unsigned> _src_frames, _src_channels;
-
 };

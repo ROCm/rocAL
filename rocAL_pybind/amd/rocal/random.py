@@ -42,10 +42,10 @@ def coin_flip(*inputs, probability=0.5):
 
 def uniform(*inputs, range=[-1.0, 1.0]):
     kwargs_pybind = { "inputs":inputs[0], "is_output": False, "range":range }
-    output_uniform_distribution = b.UniformDistribution(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    output_uniform_distribution = b.uniformDistribution(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (output_uniform_distribution)
 
 def normal(*inputs, mean=0.0, stddev=1.0):
     kwargs_pybind = { "inputs":inputs[0], "is_output": False, "mean": mean, "stddev": stddev }
-    output_normal_distribution = b.NormalDistribution(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    output_normal_distribution = b.normalDistribution(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return (output_normal_distribution)

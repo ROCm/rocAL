@@ -21,20 +21,20 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 #include "rocal_api_types.h"
 
-class TensorMulScalarNode : public Node
-{
-public:
+class TensorMulScalarNode : public Node {
+   public:
     TensorMulScalarNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorMulScalarNode() = delete;
     void init(float scalar);
 
-protected:
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
     float _scalar;
 };

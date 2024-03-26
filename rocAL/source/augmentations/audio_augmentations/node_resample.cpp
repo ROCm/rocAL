@@ -20,35 +20,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
 #include "node_resample.h"
+
+#include <vx_ext_rpp.h>
+
 #include "exception.h"
 
-ResampleNode::ResampleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs) { }
+ResampleNode::ResampleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void ResampleNode::create_node() {
-    if(_node)
+    if (_node)
         return;
     _src_sample_rate_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size);
     vx_status status;
     status = vxAddArrayItems(_src_sample_rate_array, _batch_size, _inputs[0]->info().get_sample_rates()->data(), sizeof(vx_float32));
-    if(status != 0 ) 
+    if (status != 0)
         THROW("vxAddArrayItems for _src_sample_rate_array failed in the Resample Node (vxExtRppResample) :" + TOSTR(status))
     vx_scalar quality = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_quality);
-    _node = vxExtRppResample(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->get_roi_tensor(), 
-                            _resample_rate->handle(), _src_sample_rate_array, quality);
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) 
-        THROW("Adding the copy (vxExtRppResample) node failed: "+ TOSTR(status))
+    _node = vxExtRppResample(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->get_roi_tensor(),
+                             _resample_rate->handle(), _src_sample_rate_array, quality);
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the copy (vxExtRppResample) node failed: " + TOSTR(status))
 }
 
 void ResampleNode::update_node() {
-    vx_status status = vxCopyArrayRange((vx_array)_src_sample_rate_array, 0, _batch_size , sizeof(vx_float32), _inputs[0]->info().get_sample_rates()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if((status) != 0) 
-        THROW(" Failed calling vxCopyArrayRange for _src_sample_rate_array with status in Resample Node (vxExtRppResample) :" + TOSTR(status) )
+    vx_status status = vxCopyArrayRange((vx_array)_src_sample_rate_array, 0, _batch_size, sizeof(vx_float32), _inputs[0]->info().get_sample_rates()->data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    if ((status) != 0)
+        THROW(" Failed calling vxCopyArrayRange for _src_sample_rate_array with status in Resample Node (vxExtRppResample) :" + TOSTR(status))
 }
 
-void ResampleNode::init(Tensor* resample_rate, float quality) {
+void ResampleNode::init(Tensor *resample_rate, float quality) {
     _resample_rate = resample_rate;
     _quality = quality;
 }

@@ -37,8 +37,10 @@ THE SOFTWARE.
 #include "node_image_loader_single_shard.h"
 #include "node_video_loader.h"
 #include "node_video_loader_single_shard.h"
+#ifdef ROCAL_AUDIO
 #include "node_audio_loader.h"
 #include "node_audio_loader_single_shard.h"
+#endif
 #include "ring_buffer.h"
 #include "timing_debug.h"
 #if ENABLE_HIP
@@ -393,6 +395,7 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
     return node;
 }
 
+#ifdef ROCAL_AUDIO
 /*
  * Explicit specialization for AudioLoaderNode
  */
@@ -429,3 +432,4 @@ template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_n
 
     return node;
 }
+#endif

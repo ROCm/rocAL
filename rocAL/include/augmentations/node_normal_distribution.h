@@ -21,27 +21,26 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "batch_rng.h"
-#include "node.h"
-#include "graph.h"
 #include <random>
 
+#include "batch_rng.h"
+#include "graph.h"
+#include "node.h"
 
-class NormalDistributionNode : public Node
-{
-public:
+class NormalDistributionNode : public Node {
+   public:
     NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     NormalDistributionNode() = delete;
     void init(float mean, float stddev);
     void update_param();
-protected:
+
+   protected:
     void create_node() override;
     void update_node() override;
     float _mean, _std_dev;
     std::normal_distribution<float> _dist_normal;
     std::vector<float> _normal_distribution_array;
     unsigned _num_of_dims;
-    vx_size * _stride;
-    BatchRNG<std::mt19937> _rngs = {89, 2}; // Random Seed & BatchSize for initialization 
+    vx_size *_stride;
+    BatchRNG<std::mt19937> _rngs = {89, 2};  // Random Seed & BatchSize for initialization
 };
-

@@ -4,10 +4,11 @@ This application can be used to verify the functionality of the Audio APIs offer
 ## Build Instructions
 
 ### Pre-requisites
-* Ubuntu Linux, [version `16.04` or later](https://www.microsoft.com/software-download/windows10)
+* Ubuntu Linux, [version `20.04` or later](https://www.microsoft.com/software-download/windows10)
 * rocAL library (Part of the MIVisionX toolkit)
-* [OpenCV 3.4+](https://github.com/opencv/opencv/releases/tag/3.4.0)
 * Radeon Performance Primitives (RPP)
+* MIVisionX
+* Sndfile
 
 ### Build
   ````
@@ -18,7 +19,19 @@ This application can be used to verify the functionality of the Audio APIs offer
   ````
 ### Running the application
   ````
-./rocAL_audio_unittests
+./rocal_audio_unittests <audio-dataset-folder>
 
-Usage: ./rocAL_audio_unittests <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0
+Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix> <device-gpu=1/cpu=0> <qa_mode>
   ````
+
+### Output verification 
+
+The python script `rocal_audio_unittest.py` can be used to run all test cases for audio functionality in rocAL and verify the correctness of the generated outputs with the golden outputs.
+
+Input data is available in the following link : [MIVisionX-data](https://github.com/ROCm/MIVisionX-data/rocal_data)
+
+`export ROCAL_DATA_PATH=<absolute_path_to_rocal_data>`
+
+```
+python3 rocal_audio_unittest.py --gpu <0/1> --downmix <True/False> --test_case <case_number> --qa_mode <0/1>
+```

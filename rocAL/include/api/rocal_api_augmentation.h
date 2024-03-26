@@ -1098,49 +1098,41 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSSDRandomCrop(RocalContext context, R
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext p_context,
-                                                             RocalTensor p_input,
-                                                             bool is_output,
-                                                             RocalFloatParam p_preemph_coeff = NULL,
-                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::CLAMP,
-                                                             RocalTensorOutputType output_datatype = ROCAL_FP32);
-/*! \brief A
+/*! \brief Applies preemphasis filter to the input data.
  * \ingroup group_rocal_augmentations
- * \param [in] p_context Rocal context
- * \param [in] p_input Input Rocal tensor
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] cutoff_db threshold(dB) below which the signal is considered silent
- * \param [in] reference_power reference power that is used to convert the signal to dB
- * \param [in] window_length size of the sliding window used to calculate of the short-term power of the signal
- * \param [in] reset_interval number of samples after which the moving mean average is recalculated to avoid loss of precision
- * \return std::pair<RocalTensor, RocalTensor>
+ * \param [in] preemph_coeff Preemphasis coefficient
+ * \param [in] preemph_border_type Border value policy. Possible values are "zero", "clamp", "reflect".
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
  */
-extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
-                                                                                   RocalTensor input,
-                                                                                   bool is_output,
-                                                                                   float cutoff_db,
-                                                                                   float reference_power,
-                                                                                   int reset_interval,
-                                                                                   int window_length);
+extern "C" RocalTensor ROCAL_API_CALL rocalPreEmphasisFilter(RocalContext context,
+                                                             RocalTensor input,
+                                                             bool is_output,
+                                                             RocalFloatParam preemph_coeff = NULL,
+                                                             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP,
+                                                             RocalTensorOutputType output_datatype = ROCAL_FP32);
 
-/*! \brief A
+/*! \brief Produces a spectrogram from a 1D audio signal.
  * \ingroup group_rocal_augmentations
- * \param [in] p_context Rocal context
- * \param [in] p_input Input Rocal tensor
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] window_fn values of the window function
  * \param [in] center_windows boolean value to specify whether extracted windows should be padded so that the window function is centered at multiples of window_step
  * \param [in] reflect_padding Indicates the padding policy when sampling outside the bounds of the audio data
  * \param [in] spectrogram_layout output spectrogram layout
  * \param [in] power Exponent of the magnitude of the spectrum
- * \param [in] nfft Size of the FFT
- * \param [in] window_length Window size in number of samples
- * \param [in] window_step Step betweeen the STFT windows in number of samples
+ * \param [in] nfft Size of the Fast Fourier transform (FFT)
+ * \param [in] window_length Window size in the number of samples
+ * \param [in] window_step Step between the Short-time Fourier transform (STFT) windows in number of samples
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
-                                                       RocalTensor p_input,
+extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext context,
+                                                       RocalTensor input,
                                                        bool is_output,
                                                        std::vector<float> &window_fn,
                                                        bool center_windows,
@@ -1148,16 +1140,19 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext p_context,
                                                        RocalSpectrogramLayout spectrogram_layout,
                                                        int power,
                                                        int nfft,
-                                                       int window_length,
-                                                       int window_step,
-                                                       RocalTensorOutputType output_datatype);
+                                                       int window_length = 512,
+                                                       int window_step = 256,
+                                                       RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 /*! \brief A
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] output_datatype the data type of the output tensor
+ * \param[in] cutoff_db minimum or cut-off ratio in dB
+ * \param[in] multiplier factor by which the logarithm is multiplied
+ * \param[in] reference_magnitude Reference magnitude which if not provided uses maximum value of input as reference
+ * \param [in] rocal_tensor_output_type the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
@@ -1167,16 +1162,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
                                                       float multiplier,
                                                       float reference_magnitude,
                                                       RocalTensorOutputType rocal_tensor_output_type);
-
-extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
-                                                     RocalTensor p_input,
-                                                     bool is_output,
-                                                     bool batch,
-                                                     std::vector<int> axes,
-                                                     float mean, float std_dev,
-                                                     float scale, float shift,
-                                                     int ddof, float epsilon,
-                                                     RocalTensorOutputType rocal_tensor_output_type);
 
 extern "C" RocalTensor ROCAL_API_CALL rocalResample(RocalContext p_context,
                                                     RocalTensor p_input,

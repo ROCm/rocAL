@@ -21,17 +21,19 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 #include "rocal_api_types.h"
 
 class TensorAddTensorNode : public Node {
-public:
+   public:
     TensorAddTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorAddTensorNode() = delete;
     void init();
-protected:
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
 };

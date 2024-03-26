@@ -20,22 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
 #include "node_tensor_mul_scalar.h"
+
+#include <vx_ext_rpp.h>
+
 #include "exception.h"
 
-TensorMulScalarNode::TensorMulScalarNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs) { }
+TensorMulScalarNode::TensorMulScalarNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
-void TensorMulScalarNode::create_node()
-{
-    if(_node)
+void TensorMulScalarNode::create_node() {
+    if (_node)
         return;
     vx_scalar scalar_value = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scalar);
     _node = vxExtRppTensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value, _batch_size);
     vx_status status;
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the (vxExtRppTensorMulScalar) node failed: "+ TOSTR(status))
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the (vxExtRppTensorMulScalar) node failed: " + TOSTR(status))
 }
 
 void TensorMulScalarNode::update_node() {

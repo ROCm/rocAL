@@ -32,36 +32,36 @@ UniformDistributionNode::UniformDistributionNode(
     : Node(inputs, outputs) {}
 
 void UniformDistributionNode::create_node() {
-  if (_node) return;
-  _stride = (vx_size *)malloc(_num_of_dims * sizeof(float));
-  _stride[0] = sizeof(float);
-  _stride[1] = _stride[0] * _outputs[0]->info().dims()[0];
-  _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
-  for (uint i = 0; i < _batch_size; i++) {
-    update_param();
-    _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
-  }
-  _outputs[0]->swap_handle((void *)_uniform_distribution_array.data());
+    if (_node) return;
+    _stride = (vx_size *)malloc(_num_of_dims * sizeof(float));
+    _stride[0] = sizeof(float);
+    _stride[1] = _stride[0] * _outputs[0]->info().dims()[0];
+    _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
+    for (uint i = 0; i < _batch_size; i++) {
+        update_param();
+        _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
+    }
+    _outputs[0]->swap_handle((void *)_uniform_distribution_array.data());
 }
 
 void UniformDistributionNode::update_node() {
-  for (uint i = 0; i < _batch_size; i++) {
-    update_param();
-    _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
-  }
+    for (uint i = 0; i < _batch_size; i++) {
+        update_param();
+        _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
+    }
 }
 
 void UniformDistributionNode::update_param() {
-  std::uniform_real_distribution<float> dist_uniform(_min, _max);
-  _dist_uniform = dist_uniform;
+    std::uniform_real_distribution<float> dist_uniform(_min, _max);
+    _dist_uniform = dist_uniform;
 }
 
 void UniformDistributionNode::init(std::vector<float> &range) {
-  _min = range[0];
-  _max = range[1];
-  _num_of_dims = _outputs[0]->info().num_of_dims();
-  _uniform_distribution_array.resize(_batch_size);
-  BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
-  _rngs = _rng;
-  update_param();
+    _min = range[0];
+    _max = range[1];
+    _num_of_dims = _outputs[0]->info().num_of_dims();
+    _uniform_distribution_array.resize(_batch_size);
+    BatchRNG<std::mt19937> _rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
+    _rngs = _rng;
+    update_param();
 }

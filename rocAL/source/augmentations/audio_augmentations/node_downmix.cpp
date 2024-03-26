@@ -36,7 +36,7 @@ void DownmixNode::create_node() {
     _node = vxExtRppDownmix(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor());
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the copy (vxExtRppDownmix) node failed: " + TOSTR(status))
+        THROW("Adding the downmix (vxExtRppDownmix) node failed: " + TOSTR(status))
 }
 
 void DownmixNode::update_node() {}
