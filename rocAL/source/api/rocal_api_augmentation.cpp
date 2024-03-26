@@ -2223,7 +2223,7 @@ rocalSpectrogram(
         max_frame = std::max(0, max_frame);
         int bins = std::max(0, (nfft / 2) + 1);
         std::vector<size_t> dims = output_info.dims();
-        if (spectrogram_layout == RocalSpectrogramLayout::ROCAL_TF) {
+        if (spectrogram_layout == RocalSpectrogramLayout::ROCAL_FT) {
             dims[1] = max_frame;
             dims[2] = bins;
         } else {
