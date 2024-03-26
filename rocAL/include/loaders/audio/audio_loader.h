@@ -49,7 +49,7 @@ class AudioLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     std::vector<std::string> get_id() override;
-    decoded_sample_info get_decode_sample_info() override;
+    DecodedDataInfo get_decode_data_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void set_gpu_device_id(int device_id);
     void shut_down() override;
@@ -71,8 +71,8 @@ class AudioLoader : public LoaderModule {
     size_t _batch_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_sample_info _decoded_audio_info;
-    decoded_sample_info _output_decoded_audio_info;
+    DecodedDataInfo _decoded_audio_info;
+    DecodedDataInfo _output_decoded_audio_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;
     bool _is_initialized;
