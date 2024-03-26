@@ -396,6 +396,15 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
+    py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+        .value("ZERO", ROCAL_ZERO)
+        .value("CLAMP", ROCAL_CLAMP)
+        .value("REFLECT", ROCAL_REFLECT)
+        .export_values();
+    py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
+        .value("FT", ROCAL_FT)
+        .value("TF", ROCAL_TF)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -630,6 +639,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
+    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
+    m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
@@ -704,6 +717,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("colorTemp", &rocalColorTemp,
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
+          py::return_value_policy::reference);
+    m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
+            py::return_value_policy::reference);
+    m.def("spectrogram", &rocalSpectrogram,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

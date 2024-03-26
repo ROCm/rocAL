@@ -1068,3 +1068,32 @@ def external_source(*inputs, source, device=None, color_format=types.RGB, random
     external_source_operator = b.externalFileSource(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (external_source_operator, [])  # Labels is Empty
+
+def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, output_dtype=types.FLOAT):
+    """
+    Applies preemphasis filter to the input data.
+    This filter, in simple form, can be expressed by the formula:
+    Y[t] = X[t] - coeff * X[t-1]    if t > 1
+    Y[t] = X[t] - coeff * X_border  if t == 0
+    with X and Y being the input and output signal, respectively.
+    The value of X_border depends on the border argument:
+    X_border = 0                    if border_type == 'zero'
+    X_border = X[0]                 if border_type == 'clamp'
+    X_border = X[1]                 if border_type == 'reflect'
+    """
+    preemph_coeff_float_param = b.createFloatParameter(preemph_coeff)
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False,
+                    "preemph_coeff": preemph_coeff_float_param, "preemph_border_type": border,
+                    "output_dtype" :output_dtype}
+    preemphasis_output = b.preEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (preemphasis_output)
+
+def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, layout = types.FT, nfft = None, power = 2, reflect_padding = True, seed = -1, window_fn = [], window_length = 512, window_step = 256, rocal_tensor_output_type = types.FLOAT) :
+    """
+    Produces a spectrogram from a 1D signal.
+    Input data is expected to be one channel - The shape of the input can be (srcLength, 1) of the data type float32.
+    """
+    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "window_fn": window_fn, "center_windows": center_windows, "reflect_padding": reflect_padding,
+                     "layout": layout, "power": power, "nfft": nfft, "window_length": window_length, "window_step": window_step, "rocal_tensor_output_type": rocal_tensor_output_type}
+    spectrogram_output = b.spectrogram(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (spectrogram_output)

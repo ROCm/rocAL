@@ -116,7 +116,7 @@ void LabelReaderFolders::read_all(const std::string& _path) {
                 std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
                 std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
                                [](unsigned char c) { return std::tolower(c); });
-                if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp"))
+                if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp") && (file_extension != "wav"))
                     continue;
             }
             read_files(_folder_path);
@@ -152,7 +152,7 @@ void LabelReaderFolders::read_files(const std::string& _path) {
             std::string file_extension = filename.substr(file_extension_idx + 1);
             std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
                            [](unsigned char c) { return std::tolower(c); });
-            if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp"))
+            if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp") && (file_extension != "wav"))
                 continue;
         }
         file_path.append(_entity->d_name);
