@@ -2210,15 +2210,20 @@ rocalSpectrogram(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 data-type is supported for Spectrogram augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
         std::vector<size_t> max_dims = input->info().max_shape();
+        if (max_dims[1] != 1) THROW("Spectrogram only supports single channel inputs. Please check the input passed.")
         TensorInfo output_info = input->info();
         int window_offset = (!center_windows) ? window_length :  0;
         int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
         max_frame = std::max(0, max_frame);
         int bins = std::max(0, (nfft / 2) + 1);
         std::vector<size_t> dims = output_info.dims();
-        if (spectrogram_layout == RocalSpectrogramLayout::TF) {
+        if (spectrogram_layout == RocalSpectrogramLayout::ROCAL_TF) {
             dims[1] = max_frame;
             dims[2] = bins;
         } else {

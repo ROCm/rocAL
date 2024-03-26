@@ -25,6 +25,9 @@ THE SOFTWARE.
 #include "node.h"
 #include "rocal_api_types.h"
 
+/// @brief Generates hann window for spectrogram
+/// @param output 
+/// @param window_size 
 inline void hann_window(float *output, int window_size) {
     double a = (2.0 * M_PI) / window_size;
     for (int t = 0; t < window_size; t++) {
@@ -46,7 +49,7 @@ class SpectrogramNode : public Node {
 
    private:
     std::vector<float> _window_fn;
-    RocalSpectrogramLayout _spectrogram_layout = RocalSpectrogramLayout::FT;
+    RocalSpectrogramLayout _spectrogram_layout = RocalSpectrogramLayout::ROCAL_FT;
     int _power = 2;
     int _nfft = 2048;
     int _window_length = 512;

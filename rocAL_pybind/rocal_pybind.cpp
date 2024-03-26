@@ -141,8 +141,6 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {1, "float16"},
     {2, "uint8"},
     {3, "int8"},
-    {4, "uint32"},
-    {5, "int32"},
 };
 
 PYBIND11_MODULE(rocal_pybind, m) {
@@ -404,8 +402,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("REFLECT", ROCAL_REFLECT)
         .export_values();
     py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
-        .value("FT", FT)
-        .value("TF", TF)
+        .value("FT", ROCAL_FT)
+        .value("TF", ROCAL_TF)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
@@ -722,7 +720,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
-    m.def("Spectrogram", &rocalSpectrogram,
+    m.def("spectrogram", &rocalSpectrogram,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

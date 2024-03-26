@@ -36,7 +36,8 @@ seed = random.SystemRandom().randint(0, 2**32 - 1)
 
 test_case_augmentation_map = {
     0: "audio_decoder",
-    1: "preemphasis_filter"
+    1: "preemphasis_filter",
+    2: "spectrogram",
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -97,6 +98,25 @@ def pre_emphasis_filter_pipeline(path, file_list):
         stick_to_shard=False)
     return fn.preemphasis_filter(decoded_audio)
 
+@pipeline_def(seed=seed)
+def spectrogram_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    spec = fn.spectrogram(
+        decoded_audio,
+        nfft=512,
+        window_length=320,
+        window_step=160,
+        rocal_tensor_output_type = types.FLOAT)
+    return spec
+
 def main():
     args = parse_args()
 
@@ -134,8 +154,9 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. running on cpu")
         rocal_cpu = True
-    if audio_path == "":
-        audio_path = f'{rocal_data_path}/audio/wav/'
+    if audio_path == "" and file_list == "":
+        audio_path = f'{rocal_data_path}/audio/'
+        file_list = f'{rocal_data_path}/audio/wav_file_list.txt'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0

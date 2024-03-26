@@ -1133,13 +1133,14 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
     if (strlen(source_path) == 0 && strlen(file_list_path) == 0)
         THROW("Either source path or file list path needs to be provided")
     const char *root_path;
-    if (strlen(file_list_path) == 0)
+    if (strlen(file_list_path) == 0) {
         root_path = source_path;
-    else
+    } else {
         root_path = file_list_path;
+    }
     MetaDataConfig config(MetaDataType::Label, reader_type, root_path);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
-    _meta_data_reader->read_all(source_path);
+    _meta_data_reader->read_all(root_path);
 
     std::vector<size_t> dims = {1};
     auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default labels Info
