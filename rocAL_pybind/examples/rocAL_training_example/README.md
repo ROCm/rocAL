@@ -1,20 +1,13 @@
 # ImageNet training in PyTorch
 
-This implements training of popular model architectures, such as ResNet, AlexNet, and VGG on the ImageNet dataset.
-This version has been modified to use rocAL. It assumes that the dataset is raw JPEGs from the ImageNet dataset. If offers CPU and GPU based pipeline for rocAL - use rocal-cpu switch to enable CPU one and use rocal-gpu switch to enable GPU one.
-
-To run use the following command
-```bash
-rm *.pth.tar # Remove older checkpoints saved in the folder if the example has been run before
-python3 main.py -a resnet50 --dist-url='tcp://127.0.0.1:4321' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 -j$(nproc) --batch-size 1024 --rocal-cpu --epochs 91 /media/imageNetCompleteDataset/
-```
+This example implements training of popular model architectures, such as ResNet, AlexNet, and VGG on the ImageNet dataset.
+This version has been modified to use rocAL. It assumes that the dataset is raw JPEGs from the ImageNet dataset. If offers CPU and GPU based pipeline for rocAL - use `rocal-cpu` switch to enable CPU and use `rocal-gpu` switch to enable GPU.
 
 ## Requirements
 
 - Install PyTorch for [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/3rd-party/pytorch-install.html)
 - Install rocAL for running rocAL trainings
-- Download the ImageNet dataset from http://www.image-net.org/
-  - Then, move and extract the training and validation images to labeled subfolders, using [the following shell script](extract_ILSVRC.sh)
+- Download the ImageNet dataset from http://www.image-net.org/ and use [the following shell script](https://github.com/pytorch/examples/blob/main/imagenet/extract_ILSVRC.sh) to move and extract the training and validation images to labeled subfolders
 
 ## Training
 
@@ -29,6 +22,13 @@ The default learning rate schedule starts at 0.1 and decays by a factor of 10 ev
 ```bash
 python main.py -a alexnet --lr 0.01 [imagenet-folder with train and val folders]
 ```
+To run a rocAL integrated training, use `rocal-cpu` or `rocal-gpu`
+
+```bash
+python3 main.py -a resnet50 -j$(nproc) --batch-size 1024 --rocal-cpu [imagenet-folder with train and val folders]
+```
+
+Make sure to remove older checkpoints (`rm *.pth.tar`) saved in the folder if the example has been run before
 
 ## Use Dummy Data
 
