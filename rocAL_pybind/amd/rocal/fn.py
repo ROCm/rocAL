@@ -1133,8 +1133,6 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.
     """
     Multiplies a rocalTensor with a scalar float value.
     """
-    print("Scalar in fn : ", scalar)
-    print(inputs[0])
     kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_output_type": rocal_tensor_output_type, "scalar": scalar}
     tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
