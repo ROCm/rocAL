@@ -135,10 +135,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << ">>>>>>> Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path);
 
-    RocalTensor decoded_output;
     if (test_case == 0)
         is_output_audio_decoder = true;
-    decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
+    RocalTensor decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
