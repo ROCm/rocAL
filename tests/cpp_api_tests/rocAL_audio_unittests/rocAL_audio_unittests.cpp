@@ -45,10 +45,10 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name, int m
     }
 
     std::string ref_file_path = std::string(rocal_data_path) + "GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
-    std::ifstream fin(ref_file_path, std::ios::binary); // Open the binary file for reading
+    std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
-        std::cerr << "Error: Unable to open the input binary file\n";
+        std::cout << "Error: Unable to open the input binary file\n";
         return 1;
     }
 
@@ -64,10 +64,10 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name, int m
     std::vector<float> ref_output(numFloats);
 
     // Read the floats from the file
-    fin.read(reinterpret_cast<char*>(ref_output.data()), fileSize);
+    fin.read(reinterpret_cast<char *>(ref_output.data()), fileSize);
 
     if (fin.fail()) {
-        std::cerr << "Error: Failed to read from the input binary file\n";
+        std::cout << "Error: Failed to read from the input binary file\n";
         return 1;
     }
 
@@ -75,19 +75,19 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name, int m
     fin.close();
 
     int matched_indices = 0;
-    for(int i = 0; i < max_samples; i++)
-    {
+    for (int i = 0; i < max_samples; i++) {
         for (int j = 0; j < frames; j++) {
             float ref_val, out_val;
             ref_val = ref_output[i * frames + j];
-            out_val = dst_ptr[ i * max_channels + j];
+            out_val = dst_ptr[i * max_channels + j];
             bool invalid_comparison = ((out_val == 0.0f) && (ref_val != 0.0f));
             if (!invalid_comparison && abs(out_val - ref_val) < 1e-20)
                 matched_indices += 1;
         }
     }
 
-    std::cout << std::endl << "Results for Test case: " << std::endl;
+    std::cout << std::endl
+              << "Results for Test case: " << std::endl;
     if ((matched_indices == buffer_size) && matched_indices != 0) {
         pass_status = true;
     }
@@ -147,8 +147,8 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
-    std::string file_list_path = "";    // User can modify this with the file list path if required
-    if (qa_mode) {  // setting the default file list path from ROCAL_DATA_PATH
+    std::string file_list_path = "";  // User can modify this with the file list path if required
+    if (qa_mode && test_case != 3) {  // setting the default file list path from ROCAL_DATA_PATH
         file_list_path = std::string(std::getenv("ROCAL_DATA_PATH")) + "/audio/wav_file_list.txt";
     }
 
@@ -156,8 +156,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     rocalCreateLabelReader(handle, path, file_list_path.c_str());
 
     RocalTensor decoded_output;
-    if (test_case == 0)
-        is_output_audio_decoder = true;
+    is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
     decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path.c_str(), 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
@@ -186,6 +185,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             rocalSpectrogram(handle, decoded_output, true, window_fn, true, true, RocalSpectrogramLayout::ROCAL_FT, 2, 512, 320, 160, ROCAL_FP32);
 
         } break;
+        case 3: {
+            case_name = "downmix";
+            std::cout << ">>>>>>> Running AUDIO DECODER + DOWNMIX" << std::endl;
+        } break;
+        case 4: {
+            std::cout << ">>>>>>> Running TO DECIBELS" << std::endl;
+            case_name = "to_decibels";
+            rocalToDecibels(handle, decoded_output, true, std::log(1e-20), std::log(10), 1.0f, ROCAL_FP32);
+        } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";
             return -1;
@@ -202,12 +210,12 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     int iteration = 0;
     float *buffer = nullptr;
     int frames = 0;
-    int max_channels  = 0;
+    int max_channels = 0;
     int max_samples = 0;
     int buffer_size = 0;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(input_batch_size)) {
-        std::cerr << "\n Iteration:: " << iteration << "\n";
+        std::cout << "\n Iteration:: " << iteration << "\n";
         iteration++;
         if (rocalRun(handle) != 0) {
             break;
@@ -220,19 +228,17 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         rocalGetImageName(handle, audio_file_name);
         RocalTensorList labels = rocalGetImageLabels(handle);
         int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
-        std::cerr << "Audio file : " << audio_file_name << "\n";
-        std::cerr << "Label : " << *label_id << "\n";
+        std::cout << "Audio file : " << audio_file_name << "\n";
+        std::cout << "Label : " << *label_id << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
-            if (output_tensor_list->at(idx)->dims().at(2) == 1)
-            {
+            if (output_tensor_list->at(idx)->dims().at(2) == 1) {
                 max_samples = 1;
                 max_channels = 1;
                 frames = roi[idx * 4 + 2];
                 buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
-            }
-            else {
+            } else {
                 max_samples = output_tensor_list->at(idx)->dims().at(1);
                 max_channels = output_tensor_list->at(idx)->dims().at(2);
                 frames = roi[idx * 4 + 2];
