@@ -46,7 +46,7 @@ def plot_audio_wav(audio_tensor, idx):
     plt.close()
 
 def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
-    ref_path = f'{rocal_data_path}/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
+    ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
@@ -118,7 +118,7 @@ def main():
         print("The GPU support for Audio is not given yet. running on cpu")
         rocal_cpu = True
     if audio_path == "":
-        audio_path = f'{rocal_data_path}/audio/wav/'
+        audio_path = f'{rocal_data_path}/rocal_data/audio/wav/'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
