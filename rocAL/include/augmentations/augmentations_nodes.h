@@ -55,3 +55,6 @@ THE SOFTWARE.
 #include "node_copy.h"
 #include "node_nop.h"
 #include "node_sequence_rearrange.h"
+#include "node_preemphasis_filter.h"
+#include "node_spectrogram.h"
+#include "node_to_decibels.h"

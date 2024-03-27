@@ -37,6 +37,10 @@ THE SOFTWARE.
 #include "node_image_loader_single_shard.h"
 #include "node_video_loader.h"
 #include "node_video_loader_single_shard.h"
+#ifdef ROCAL_AUDIO
+#include "node_audio_loader.h"
+#include "node_audio_loader_single_shard.h"
+#endif
 #include "ring_buffer.h"
 #include "timing_debug.h"
 #if ENABLE_HIP
@@ -105,7 +109,7 @@ class MasterGraph {
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
     Tensor *create_loader_output_tensor(const TensorInfo &info);
-    std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type, const char *file_list_path = "");
     std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool ltrb_bbox = true, bool is_box_encoder = false,
                                                                 bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, bool is_box_iou_matcher = false, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);
@@ -389,3 +393,42 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
 
     return node;
 }
+
+#ifdef ROCAL_AUDIO
+/*
+ * Explicit specialization for AudioLoaderNode
+ */
+template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<AudioLoaderNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<AudioLoaderNode>(outputs[0], nullptr);
+#endif
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], nullptr);
+#endif
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+#endif

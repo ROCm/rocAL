@@ -78,7 +78,7 @@ def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_l
     Pipeline._current_pipeline._reader = "labelReader"
     # Output
     labels = []
-    kwargs_pybind = {"source_path": file_root}
+    kwargs_pybind = {"source_path": file_root, "file_list": file_list}
     label_reader_meta_data = b.labelReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (label_reader_meta_data, labels)
