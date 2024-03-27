@@ -177,6 +177,7 @@ def main():
     if audio_path == "" and file_list == "":
         audio_path = f'{rocal_data_path}/audio/'
         file_list = f'{rocal_data_path}/audio/wav_file_list.txt'
+        downmix_audio_path = f'{rocal_data_path}/multi_channel_wav/'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
@@ -195,7 +196,7 @@ def main():
         if case_name == "spectrogram":
             audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "downmix":
-            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list, downmix=True)
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=downmix_audio_path, file_list="", downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
