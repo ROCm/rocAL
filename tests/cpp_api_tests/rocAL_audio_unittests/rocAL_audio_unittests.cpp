@@ -44,7 +44,7 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name) {
         exit(0);
     }
 
-    std::string ref_file_path = std::string(rocal_data_path) + "GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
+    std::string ref_file_path = std::string(rocal_data_path) + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     long int out_buffer_size = frames;
     std::vector<float> ref_output(out_buffer_size);
     std::fstream fin(ref_file_path, std::ios::in | std::ios::binary);
@@ -135,10 +135,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << ">>>>>>> Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path);
 
-    RocalTensor decoded_output;
     if (test_case == 0)
         is_output_audio_decoder = true;
-    decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
+    RocalTensor decoded_output = rocalAudioFileSourceSingleShard(handle, path, 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;

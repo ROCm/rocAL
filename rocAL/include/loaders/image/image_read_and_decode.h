@@ -48,7 +48,7 @@ class ImageReadAndDecode {
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos);
     //! Loads a decompressed batch of images into the buffer indicated by buff
-    /// \param buff User's buffer provided to be filled with decoded image samples
+    /// \param buff User's buffer provided to be filled with decoded image data
     /// \param names User's buffer provided to be filled with name of the images decoded
     /// \param max_decoded_width User's buffer maximum width per decoded image. User expects the decoder to downscale the image if image's original width is bigger than max_width
     /// \param max_decoded_height user's buffer maximum height per decoded image. User expects the decoder to downscale the image if image's original height is bigger than max_height

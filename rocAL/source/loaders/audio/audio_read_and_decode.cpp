@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <cstring>
 #include <iterator>
 
-#include "audio_decoder_factory.h"
+#include "audio_decoder_factory.hpp"
 #include "decoder_factory.h"
 
 #ifdef ROCAL_AUDIO

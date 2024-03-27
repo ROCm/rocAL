@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 #ifdef ROCAL_AUDIO
 
-// AudioLoader runs an internal thread for loading an decoding of audios asynchronously
+// AudioLoader runs an internal thread for loading and decoding of audios asynchronously
 // It uses a circular buffer to store decoded audios for the user
 class AudioLoader : public LoaderModule {
    public:
@@ -49,7 +49,7 @@ class AudioLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     std::vector<std::string> get_id() override;
-    decoded_sample_info get_decode_sample_info() override;
+    DecodedDataInfo get_decode_data_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void set_gpu_device_id(int device_id);
     void shut_down() override;
@@ -64,15 +64,15 @@ class AudioLoader : public LoaderModule {
     LoaderModuleStatus update_output_audio();
     LoaderModuleStatus load_routine();
     Tensor* _output_tensor;
-    std::vector<std::string> _output_names;  //!< audio name/ids that are stores in the _output_audio
+    std::vector<std::string> _output_names;  //!< audio file name/ids that are stored in the _output_audio
     size_t _output_mem_size;
     MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
     bool _internal_thread_running;
     size_t _batch_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_sample_info _decoded_audio_info;
-    decoded_sample_info _output_decoded_audio_info;
+    DecodedDataInfo _decoded_audio_info;
+    DecodedDataInfo _output_decoded_audio_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;
     bool _is_initialized;

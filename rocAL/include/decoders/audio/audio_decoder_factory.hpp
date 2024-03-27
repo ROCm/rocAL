@@ -20,15 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "commons.h"
-#include "decoder_factory.h"
-#include "audio_decoder_factory.h"
+#pragma once
+
 #include "audio_decoder.h"
 #include "sndfile_decoder.h"
 
 #ifdef ROCAL_AUDIO
-
-std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
+static std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
     switch (config.type()) {
         case DecoderType::SNDFILE:
             return std::make_shared<SndFileDecoder>();

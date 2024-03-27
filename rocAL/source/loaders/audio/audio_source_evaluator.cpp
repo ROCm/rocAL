@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "audio_source_evaluator.h"
 
-#include "audio_decoder_factory.h"
+#include "audio_decoder_factory.hpp"
 #include "reader_factory.h"
 
 #ifdef ROCAL_AUDIO
