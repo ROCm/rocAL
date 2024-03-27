@@ -44,7 +44,7 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name) {
         exit(0);
     }
 
-    std::string ref_file_path = std::string(rocal_data_path) + "GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
+    std::string ref_file_path = std::string(rocal_data_path) + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     long int out_buffer_size = frames;
     std::vector<float> ref_output(out_buffer_size);
     std::fstream fin(ref_file_path, std::ios::in | std::ios::binary);
