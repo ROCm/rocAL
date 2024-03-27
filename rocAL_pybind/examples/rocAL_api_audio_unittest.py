@@ -50,25 +50,25 @@ def plot_audio_wav(audio_tensor, idx):
     plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
     plt.close()
 
-def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
+def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name, dimensions):
     ref_path = f'{rocal_data_path}/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
     roi_data = roi_tensor.detach().numpy()
+    buffer_size = roi_data[0] * roi_data[1]
     matched_indices = 0
-    for j in range(roi_data[0]):
-        ref_val = data_array[j]
-        out_val = audio_data[j]
-        # ensuring that out_val is not exactly zero while ref_val is non-zero.
-        invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
-        #comparing the absolute difference between the output value (out_val) and the reference value (ref_val) with a tolerance threshold of 1e-20.
-        if not invalid_comparison and np.abs(out_val - ref_val) < 1e-20:
-            matched_indices += 1
+    for i in range(roi_data[1]):
+        for j in range(roi_data[0]):
+            ref_val = data_array[i * roi_data[0] + j]
+            out_val = audio_data[i * dimensions[2] + j]
+            invalid_comparison = (out_val == 0.0 and ref_val != 0.0)
+            if not invalid_comparison and abs(out_val - ref_val) < 1e-20:
+                matched_indices += 1
 
     # Print results
     print(f"Results for {case_name}:")
-    if matched_indices == roi_data[0] and matched_indices != 0:
+    if matched_indices == buffer_size and matched_indices != 0:
         print("PASSED!")
         test_results[case_name] = "PASSED"
     else:
@@ -177,6 +177,7 @@ def main():
     if audio_path == "" and file_list == "":
         audio_path = f'{rocal_data_path}/audio/'
         file_list = f'{rocal_data_path}/audio/wav_file_list.txt'
+        downmix_audio_path = f'{rocal_data_path}/multi_channel_wav/'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
@@ -195,11 +196,13 @@ def main():
         if case_name == "spectrogram":
             audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "downmix":
-            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list, downmix=True)
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=downmix_audio_path, file_list="", downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
+        output_tensor_list = audio_pipeline.get_output_tensors()
+        dimensions = output_tensor_list[0].dimensions()
         cnt = 0
         import timeit
         start = timeit.default_timer()
@@ -218,7 +221,7 @@ def main():
                             plot_audio_wav(audio_tensor, cnt)
                         cnt+=1
             if qa_mode :
-                verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name)
+                verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name, dimensions)
             print("EPOCH DONE", e)
         
         stop = timeit.default_timer()
