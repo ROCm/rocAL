@@ -38,9 +38,9 @@ class AudioReadAndDecode {
    public:
     AudioReadAndDecode();
     ~AudioReadAndDecode();
-    size_t count();
-    void reset();
-    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id = 0);
+    size_t Count();
+    void Reset();
+    void Create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id = 0);
     //! Loads a decompressed batch of audios into the buffer indicated by buff
     /// \param buff User's buffer provided to be filled with decoded audio samples
     /// \param names User's buffer provided to be filled with name of the audio files
@@ -49,7 +49,7 @@ class AudioReadAndDecode {
     /// \param roi_samples is set by the load() function to the samples of the region that decoded audio is located. It's less than max_samples and is either equal to the original audio samples if original audio samples is smaller than max_samples.
     /// \param roi_channels  is set by the load() function to the channels of the region that decoded audio is located. It's less than max_channels and is either equal to the original audio channels if original audio channels is smaller than max_channels.
     /// \param original_sample_rates is set by the load() function to the original sample_rates of the decoded audio samples.
-    LoaderModuleStatus load(
+    LoaderModuleStatus Load(
         float *buff,
         std::vector<std::string> &names,
         const size_t max_decoded_samples,
@@ -58,7 +58,7 @@ class AudioReadAndDecode {
         std::vector<uint32_t> &roi_channels,
         std::vector<float> &original_sample_rates);
     //! returns timing info or other status information
-    Timing timing();
+    Timing GetTiming();
 
    private:
     std::vector<std::shared_ptr<AudioDecoder>> _decoder;

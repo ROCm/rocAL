@@ -31,7 +31,7 @@ THE SOFTWARE.
 #ifdef ROCAL_AUDIO
 
 Timing
-AudioReadAndDecode::timing() {
+AudioReadAndDecode::GetTiming() {
     Timing t;
     t.decode_time = _decode_time.get_timing();
     t.read_time = _file_load_time.get_timing();
@@ -47,7 +47,7 @@ AudioReadAndDecode::~AudioReadAndDecode() {
     _decoder.clear();
 }
 
-void AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id) {
+void AudioReadAndDecode::Create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id) {
     // Can initialize it to any decoder types if needed
     _batch_size = batch_size;
     _decoder.resize(batch_size);
@@ -69,17 +69,17 @@ void AudioReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _reader = create_reader(reader_config);
 }
 
-void AudioReadAndDecode::reset() {
+void AudioReadAndDecode::Reset() {
     _reader->reset();
 }
 
 size_t
-AudioReadAndDecode::count() {
+AudioReadAndDecode::Count() {
     return _reader->count_items();
 }
 
 LoaderModuleStatus
-AudioReadAndDecode::load(float *buff,
+AudioReadAndDecode::Load(float *buff,
                          std::vector<std::string> &names,
                          const size_t max_decoded_samples,
                          const size_t max_decoded_channels,
@@ -122,19 +122,19 @@ AudioReadAndDecode::load(float *buff,
             _actual_decoded_channels[i] = max_decoded_channels;
             int original_samples, original_channels;
             float original_sample_rate;
-            if (_decoder[i]->initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
+            if (_decoder[i]->Initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
                 THROW("Decoder can't be initialized for file: " + _audio_names[i].c_str())
             }
-            if (_decoder[i]->decode_info(&original_samples, &original_channels, &original_sample_rate) != AudioDecoder::Status::OK) {
+            if (_decoder[i]->DecodeInfo(&original_samples, &original_channels, &original_sample_rate) != AudioDecoder::Status::OK) {
                 THROW("Unable to fetch decode info for file: " + _audio_names[i].c_str())
             }
             _original_channels[i] = original_channels;
             _original_samples[i] = original_samples;
             _original_sample_rates[i] = original_sample_rate;
-            if (_decoder[i]->decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
+            if (_decoder[i]->Decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
                 THROW("Decoder failed for file: " + _audio_names[i].c_str())
             }
-            _decoder[i]->release();
+            _decoder[i]->Release();
         }
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _audio_names[i];
