@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,24 +26,24 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
+#include "audio_read_and_decode.h"
 #include "circular_buffer.h"
 #include "commons.h"
-#include "video_read_and_decode.h"
+#include "meta_data_reader.h"
 
-#ifdef ROCAL_VIDEO
+#ifdef ROCAL_AUDIO
 
-//
-// VideoLoader runs an internal thread for loading an decoding of sequences asynchronously
-// it uses a circular buffer to store decoded sequence of frames for the user
-class VideoLoader : public LoaderModule {
+// AudioLoader runs an internal thread for loading and decoding of audios asynchronously
+// It uses a circular buffer to store decoded audios for the user
+class AudioLoader : public LoaderModule {
    public:
-    explicit VideoLoader(void* dev_resources);
-    ~VideoLoader() override;
+    explicit AudioLoader(void* dev_resources);
+    ~AudioLoader() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
-    void set_output(Tensor* output_image) override;
+    void set_output(Tensor* output_audio) override;
     size_t remaining_count() override;  // returns number of remaining items to be loaded
-    void reset() override;              // Resets the loader to load from the beginning
+    void reset() override;              // Resets the loader to load from the beginning of the media
     Timing timing() override;
     void start_loading() override;
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
@@ -51,43 +51,37 @@ class VideoLoader : public LoaderModule {
     std::vector<std::string> get_id() override;
     DecodedDataInfo get_decode_data_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
-    crop_image_info get_crop_image_info() override { return _crop_img_info; }
-    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override{};
-    std::vector<size_t> get_sequence_start_frame_number() override;
-    std::vector<std::vector<float>> get_sequence_frame_timestamps() override;
+    void set_gpu_device_id(int device_id);
     void shut_down() override;
-    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
-                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {}
+    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer, const std::vector<ROIxywh>& roi_xywh,
+                             unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override { THROW("feed_external_input is not compatible with this implementation") }
 
    private:
     bool is_out_of_data();
     void de_init();
     void stop_internal_thread();
-    std::shared_ptr<VideoReadAndDecode> _video_loader;
-    LoaderModuleStatus update_output_image();
+    std::shared_ptr<AudioReadAndDecode> _audio_loader;
+    LoaderModuleStatus update_output_audio();
     LoaderModuleStatus load_routine();
     Tensor* _output_tensor;
-    std::vector<std::string> _output_names;  //!< frame name/ids that are stored in the _output_image
+    std::vector<std::string> _output_names;  //!< audio file name/ids that are stored in the _output_audio
     size_t _output_mem_size;
+    MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
     bool _internal_thread_running;
     size_t _batch_size;
-    size_t _sequence_length;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    DecodedDataInfo _decoded_video_info;
-    DecodedDataInfo _output_decoded_video_info;
+    DecodedDataInfo _decoded_audio_info;
+    DecodedDataInfo _output_decoded_audio_info;
     CircularBuffer _circ_buff;
     TimingDBG _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
-    bool _loop;                         //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop
-    size_t _prefetch_queue_depth;       // Used for circular buffer's internal buffer
-    size_t _image_counter = 0;          //!< How many frames have been loaded already
-    size_t _remaining_sequences_count;  //!< How many frames are there yet to be loaded
-    bool _decoder_keep_original = false;
-    std::vector<std::vector<size_t>> _sequence_start_framenum_vec;
-    std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;
-    crop_image_info _crop_img_info;
-    size_t _max_tensor_width, _max_tensor_height;
+    bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/audios/...) and wouldn't stop
+    size_t _prefetch_queue_depth;   // Used for circular buffer's internal buffer
+    size_t _audio_counter = 0;      //!< How many audios have been loaded already
+    size_t _remaining_audio_count;  //!< How many audios are there yet to be loaded
+    int _device_id;
+    size_t _max_decoded_samples, _max_decoded_channels;
 };
 #endif

@@ -41,6 +41,7 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
+find_package(SndFile QUIET)
 
 if(DEFINED ENV{ROCM_PATH})
   set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -231,13 +232,16 @@ if(${BUILD_ROCAL})
                 include/augmentations/color_augmentations/
                 include/augmentations/effects_augmentations/
                 include/augmentations/geometry_augmentations/
+                include/augmentations/audio_augmentations/
                 include/decoders/image/
                 include/decoders/video/
+                include/decoders/audio/
                 include/decoders/libjpeg/
                 include/device/
                 include/loaders/
                 include/loaders/image/
                 include/loaders/video/
+                include/loaders/audio/
                 include/meta_data/
                 include/parameters/
                 include/pipeline/
@@ -314,6 +318,15 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with std experimental Filesystem${ColourReset}")
     else()
         message(FATAL_ERROR "No filesystem library found.")
+    endif()
+    # SndFile
+    if(NOT SndFile_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
+    else()
+        include_directories(${SndFile_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
+        message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
