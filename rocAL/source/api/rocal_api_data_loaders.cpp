@@ -2141,11 +2141,11 @@ rocalAudioFileSourceSingleShard(
 
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
+            output = downmixed_output;
 
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
-                return downmixed_output;
             }
         } else if (is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
@@ -2194,10 +2194,10 @@ rocalAudioFileSource(
             output_info.set_dims(output_dims);
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
+            output = downmixed_output;
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
-                return downmixed_output;
             }
         } else if (is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);
