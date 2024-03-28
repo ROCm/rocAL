@@ -64,7 +64,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
 
 # Install MIVisionX
 RUN git clone https://github.com/ROCm/MIVisionX && cd MIVisionX && \
-        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../ && make -j8 && make install
+        mkdir build && cd build && cmake -DBACKEND=HIP ../ && make -j8 && make install
 
 ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE

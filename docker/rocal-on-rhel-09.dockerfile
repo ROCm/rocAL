@@ -34,4 +34,4 @@ WORKDIR $ROCAL_WORKSPACE
 
 # Install MIVisionX
 RUN git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git && \
-        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../MIVisionX && make -j8 && make install
+        mkdir build && cd build && cmake -DBACKEND=HIP ../MIVisionX && make -j8 && make install
