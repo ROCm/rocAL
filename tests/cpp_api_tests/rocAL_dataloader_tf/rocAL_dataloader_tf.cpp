@@ -110,7 +110,6 @@ int main(int argc, const char **argv) {
         std::cout << "JPEG source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
-    rocalSetSeed(0);
 
 #if 0
     const size_t num_values = 3;
