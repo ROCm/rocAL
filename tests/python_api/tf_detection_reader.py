@@ -66,7 +66,7 @@ def draw_patches(img, idx, bboxes, device_type, args=None):
         image = cv2.UMat(image).get()
         image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
             (loc_[2])), int((loc_[3]))), color, thickness)
-        cv2.imwrite("OUTPUT_FOLDER/TF_READER/DETECTION/" +
+        cv2.imwrite("output_folder/tf_reader/detection/" +
                     str(idx) + "_" + "train" + ".png", image)
 
 
@@ -92,7 +92,7 @@ def main():
         'image/filename': 'image/filename'
     }
     try:
-        path = "OUTPUT_FOLDER/TF_READER/DETECTION"
+        path = "output_folder/tf_reader/detection"
         is_exist = os.path.exists(path)
         if not is_exist:
             os.makedirs(path)

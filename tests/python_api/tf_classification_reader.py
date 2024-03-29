@@ -37,7 +37,7 @@ def draw_patches(img, idx, device_type, args=None):
     if not args.NHWC:
         img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("OUTPUT_FOLDER/TF_READER/CLASSIFICATION/" +
+    cv2.imwrite("output_folder/tf_reader/classification/" +
                 str(idx) + "_" + "train" + ".png", image)
 
 
@@ -58,7 +58,7 @@ def main():
         'image/filename': 'image/filename'
     }
     try:
-        path = "OUTPUT_FOLDER/TF_READER/CLASSIFICATION/"
+        path = "output_folder/tf_reader/classification/"
         is_exist = os.path.exists(path)
         if not is_exist:
             os.makedirs(path)

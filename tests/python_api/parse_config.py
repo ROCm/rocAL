@@ -105,10 +105,10 @@ def parse_args():
                                   help='interpolation type used for resize and crop')
     python_unit_test.add_argument('--scaling-mode', '-sm', type=int, default=0,
                                   help='scaling mode type used for resize')
-    # coco_pipeline.py related options
-    coco_pipeline = parser.add_argument_group(
+    # coco_reader.py related options
+    coco_reader = parser.add_argument_group(
         'coco-pipeline', 'coco-pipeline-related options')
-    coco_pipeline.add_argument('--json-path', '-json-path', type=str,
+    coco_reader.add_argument('--json-path', '-json-path', type=str,
                                help='coco dataset json path')
     # caffe_reader.py related options
     caffe_pipeline = parser.add_argument_group(

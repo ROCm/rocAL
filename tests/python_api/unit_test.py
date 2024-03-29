@@ -101,7 +101,7 @@ def main():
         sys.exit(0)
 
     try:
-        path = "OUTPUT_FOLDER/FILE_READER/" + args.augmentation_name
+        path = "output_folder/file_reader/" + args.augmentation_name
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)

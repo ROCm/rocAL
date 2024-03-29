@@ -138,7 +138,7 @@ def draw_patches(img, idx, bboxes, device, dtype, layout):
         image = cv2.UMat(image).get()
         image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
             (loc_[2])), int((loc_[3]))), color, thickness)
-        cv2.imwrite("OUTPUT_FOLDER/COCO_READER/" +
+        cv2.imwrite("output_folder/coco_reader/" +
                     str(idx)+"_"+"train"+".png", image)
 
 
@@ -157,7 +157,7 @@ def main():
     tensor_format = types.NHWC if args.NHWC else types.NCHW
     tensor_dtype = types.FLOAT16 if args.fp16 else types.FLOAT
     try:
-        path = "OUTPUT_FOLDER/COCO_READER/"
+        path = "output_folder/coco_reader/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)

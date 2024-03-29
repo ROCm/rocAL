@@ -103,10 +103,10 @@ def draw_frames(img, batch_idx, iter_idx, layout):
         image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     import os
-    if not os.path.exists("OUTPUT_FOLDER/VIDEO_READER"):
-        os.makedirs("OUTPUT_FOLDER/VIDEO_READER")
+    if not os.path.exists("output_folder/video_reader"):
+        os.makedirs("output_folder/video_reader")
     image = cv2.UMat(image).get()
-    cv2.imwrite("OUTPUT_FOLDER/VIDEO_READER/" +
+    cv2.imwrite("output_folder/video_reader/" +
                 "iter_"+str(iter_idx)+"_batch_"+str(batch_idx)+".png", image)
 
 

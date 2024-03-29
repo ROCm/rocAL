@@ -38,7 +38,7 @@ def draw_patches(img, idx, bboxes=None, args=None):
         image = image.transpose([1, 2, 0])
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     if args.classification:
-        cv2.imwrite("OUTPUT_FOLDER/CAFFE_READER/CLASSIFICATION/" +
+        cv2.imwrite("output_folder/caffe_reader/classification/" +
                     str(idx)+"_"+"train"+".png", image)
     else:
         if bboxes is not None:
@@ -49,7 +49,7 @@ def draw_patches(img, idx, bboxes=None, args=None):
                 thickness = 2
                 image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
                     (loc_[2])), int((loc_[3]))), color, thickness)
-        cv2.imwrite("OUTPUT_FOLDER/CAFFE_READER/DETECTION/" +
+        cv2.imwrite("output_folder/caffe_reader/detection/" +
                     str(idx)+"_"+"train"+".png", image)
 
 def main():
@@ -68,9 +68,9 @@ def main():
     num_classes = len(next(os.walk(image_path))[1])
     try:
         if args.classification:
-            path = "OUTPUT_FOLDER/CAFFE_READER/CLASSIFICATION/"
+            path = "output_folder/caffe_reader/classification/"
         else:
-            path = "OUTPUT_FOLDER/CAFFE_READER/DETECTION/"
+            path = "output_folder/caffe_reader/detection/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)

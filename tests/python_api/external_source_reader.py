@@ -16,21 +16,21 @@ def main():
         "/coco/coco_10_img/train_10images_2017/"
     device = "cpu"
     try:
-        path_mode0 = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE0/"
+        path_mode0 = "output_folder/external_source_reader/mode0/"
         isExist = os.path.exists(path_mode0)
         if not isExist:
             os.makedirs(path_mode0)
     except OSError as error:
         print(error)
     try:
-        path_mode1 = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE1/"
+        path_mode1 = "output_folder/external_source_reader/mode1/"
         isExist = os.path.exists(path_mode1)
         if not isExist:
             os.makedirs(path_mode1)
     except OSError as error:
         print(error)
     try:
-        path_mode2 = "OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE2/"
+        path_mode2 = "output_folder/external_source_reader/mode2/"
         isExist = os.path.exists(path_mode2)
         if not isExist:
             os.makedirs(path_mode2)
@@ -44,7 +44,7 @@ def main():
         img = (img).astype('uint8')
         if mode!=2:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        cv2.imwrite("OUTPUT_IMAGES_PYTHON/EXTERNAL_SOURCE_READER/MODE" + str(mode) + "/"+
+        cv2.imwrite("output_folder/external_source_reader/mode" + str(mode) + "/"+
                     str(idx)+"_"+"train"+".png", img)
 
     ##################### MODE 0 #########################

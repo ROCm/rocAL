@@ -95,11 +95,11 @@ ver=$(python3 -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2
 # USER TO MAKE CHANGES HERE FOR TEST
 # Make the respective " Pipeline " to test equal to 1
 unit_test=1
-coco_pipeline=1
+coco_reader=1
 caffe_reader=1
 caffe2_reader=1
 tf_classification_reader=1
-tf_detection_pipeline=1
+tf_detection_reader=1
 video_pipeline=1
 ####################################################################################################################################
 
@@ -134,7 +134,7 @@ fi
 
 
 ####################################################################################################################################
-if [[ coco_pipeline -eq 1 ]]; then
+if [[ coco_reader -eq 1 ]]; then
 
     # Mention dataset_path
     data_dir=$ROCAL_DATA_PATH/rocal_data/coco/coco_10_img/val_10images_2017/
@@ -143,11 +143,11 @@ if [[ coco_pipeline -eq 1 ]]; then
     # Mention json path
     json_path=$ROCAL_DATA_PATH/rocal_data/coco/coco_10_img/annotations/instances_val2017.json
 
-    # coco_pipeline.py
+    # coco_reader.py
     # By default : cpu backend, NCHW format , fp32
     # Please pass annotation path in addition to other common args
     # Annotation must be a json file
-    python"$ver" coco_pipeline.py \
+    python"$ver" coco_reader.py \
         --image-dataset-path $data_dir \
         --json-path $json_path \
         --batch-size $batch_size \
@@ -300,16 +300,16 @@ fi
 
 
 ####################################################################################################################################
-if [[ tf_detection_pipeline -eq 1 ]]; then
+if [[ tf_detection_reader -eq 1 ]]; then
 
     # Mention dataset_path
     # Detection
     data_dir=$ROCAL_DATA_PATH/rocal_data/tf/detection/
-    # tf_detection_pipeline.py
+    # tf_detection_reader.py
     # By default : cpu backend, NCHW format , fp32
     # use --classification for Classification / --no-classification for Detection
 
-    python"$ver" tf_detection_pipeline.py \
+    python"$ver" tf_detection_reader.py \
         --image-dataset-path $data_dir \
         --no-classification \
         --batch-size 100 \
