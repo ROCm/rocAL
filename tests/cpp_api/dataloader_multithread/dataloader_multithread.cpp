@@ -195,9 +195,8 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf(
-            "Usage: dataloader_multithread <image_dataset_folder/video_file> <num_gpus>1(gpu)/cpu=0>  num_shards, \
-                decode_width decode_height batch_size shuffle display_on_off dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>\n");
+        std::cout << "Usage: dataloader_multithread <image_dataset_folder/video_folder - required> <num_gpus - 1 (gpu)/cpu=0> " <<
+                    "num_shards decode_width decode_height batch_size shuffle display_on_off dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>" << std::endl;
         return -1;
     }
     int argIdx = 0;
