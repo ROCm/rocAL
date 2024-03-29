@@ -142,7 +142,7 @@ install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal)
 
 enable_testing()
 include(CTest)
-add_subdirectory(tests/cpp_api_tests)
+add_subdirectory(tests/cpp_api)
 
 # set package information
 set(CPACK_PACKAGE_VERSION       ${VERSION})

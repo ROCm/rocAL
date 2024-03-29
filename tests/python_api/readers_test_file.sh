@@ -94,30 +94,30 @@ ver=$(python3 -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2
 ####################################################################################################################################
 # USER TO MAKE CHANGES HERE FOR TEST
 # Make the respective " Pipeline " to test equal to 1
-rocAL_api_python_unittest=1
+unit_test=1
 coco_pipeline=1
 caffe_reader=1
 caffe2_reader=1
-rocAL_api_tf_classification_reader=1
-rocAL_api_tf_detection_pipeline=1
-rocAL_api_video_pipeline=1
+tf_classification_reader=1
+tf_detection_pipeline=1
+video_pipeline=1
 ####################################################################################################################################
 
 
 
 
 ####################################################################################################################################
-if [[ rocAL_api_python_unittest -eq 1 ]]; then
+if [[ unit_test -eq 1 ]]; then
 
     # Mention dataset_path
     data_dir=$ROCAL_DATA_PATH/rocal_data/images_jpg/labels_folder/
 
 
-    # rocAL_api_python_unittest.py
+    # unit_test.py
     # By default : cpu backend, NCHW format , fp32
     # Please pass image_folder augmentation_nanme in addition to other common args
     # Refer rocAL_api_python_unitest.py for all augmentation names
-    python"$ver" rocAL_api_python_unittest.py \
+    python"$ver" unit_test.py \
         --image-dataset-path $data_dir \
         --augmentation-name snow \
         --batch-size $batch_size \
@@ -274,16 +274,16 @@ fi
 
 
 ####################################################################################################################################
-if [[ rocAL_api_tf_classification_reader -eq 1 ]]; then
+if [[ tf_classification_reader -eq 1 ]]; then
 
     # Mention dataset_path
     # Classification
     data_dir=$ROCAL_DATA_PATH/rocal_data/tf/classification/
-    # rocAL_api_tf_classification_reader.py
+    # tf_classification_reader.py
     # By default : cpu backend, NCHW format , fp32
     # use --classification for Classification / --no-classification for Detection
 
-    python"$ver" rocAL_api_tf_classification_reader.py \
+    python"$ver" tf_classification_reader.py \
         --image-dataset-path $data_dir \
         --classification \
         --batch-size $batch_size \
@@ -300,16 +300,16 @@ fi
 
 
 ####################################################################################################################################
-if [[ rocAL_api_tf_detection_pipeline -eq 1 ]]; then
+if [[ tf_detection_pipeline -eq 1 ]]; then
 
     # Mention dataset_path
     # Detection
     data_dir=$ROCAL_DATA_PATH/rocal_data/tf/detection/
-    # rocAL_api_tf_detection_pipeline.py
+    # tf_detection_pipeline.py
     # By default : cpu backend, NCHW format , fp32
     # use --classification for Classification / --no-classification for Detection
 
-    python"$ver" rocAL_api_tf_detection_pipeline.py \
+    python"$ver" tf_detection_pipeline.py \
         --image-dataset-path $data_dir \
         --no-classification \
         --batch-size 100 \
@@ -326,15 +326,15 @@ fi
 
 
 ####################################################################################################################################
-if [[ rocAL_api_video_pipeline -eq 1 ]]; then
+if [[ video_pipeline -eq 1 ]]; then
 
     # Mention dataset_path
     # Detection
     data_dir=$ROCAL_DATA_PATH/rocal_data/video_and_sequence_samples/labelled_videos/
-    # rocAL_api_video_pipeline.py
+    # video_pipeline.py
     # By default : cpu backend, NCHW format , fp32
 
-    python"$ver" rocAL_api_video_pipeline.py \
+    python"$ver" video_pipeline.py \
         --video-path $data_dir \
         --$backend_arg \
         --batch-size 10 \
