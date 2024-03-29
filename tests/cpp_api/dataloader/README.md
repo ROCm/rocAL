@@ -20,5 +20,5 @@ This application demonstrates a basic usage of rocAL's C API to load RAW images 
   ````
 ### running the application
   ````
-  ./dataloader <path-to-image-dataset>
+  ./dataloader <image_dataset_folder/video_folder> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off
   ````
