@@ -29,7 +29,8 @@ test_case_augmentation_map = {
     1: "preemphasis_filter",
     2: "spectrogram",
     3: "downmix",
-    4: "to_decibels"
+    4: "to_decibels",
+    5: "resample"
 }
 
 def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list):

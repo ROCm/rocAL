@@ -1111,13 +1111,13 @@ def to_decibels(*inputs, bytes_per_sample_hint = [0], cutoff_db = -200.0, multip
     decibel_scale = b.toDecibels(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decibel_scale
 
-def resample(*inputs, resample_rate=None, rocal_tensor_output_type=types.FLOAT, resample_hint=-1):
+def resample(*inputs, resample_rate=None, rocal_tensor_output_type=types.FLOAT, resample_hint=-1, quality=50.0):
     """
     Resamples an audio signal.
 
     The resampling is achieved by applying a sinc filter with Hann window with an extent controlled by the quality argument.
     """
-    kwargs_pybind = {"input_image0": inputs[0], "resample_rate": resample_rate, "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "resample_hint":resample_hint}
+    kwargs_pybind = {"input_image0": inputs[0], "resample_rate": resample_rate, "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "resample_hint": resample_hint, "quality": quality}
     resample_output = b.resample(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return resample_output
 

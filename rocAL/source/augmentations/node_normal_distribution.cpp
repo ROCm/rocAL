@@ -32,10 +32,7 @@ NormalDistributionNode::NormalDistributionNode(const std::vector<Tensor *> &inpu
 void NormalDistributionNode::create_node() {
     if (_node)
         return;
-    _stride = (vx_size *)malloc(_num_of_dims * sizeof(float));
-    _stride[0] = sizeof(float);
-    _stride[1] = _stride[0] * _outputs[0]->info().dims()[0];
-    _stride[2] = _stride[1] * _outputs[0]->info().dims()[1];
+
     for (uint i = 0; i < _batch_size; i++) {
         update_param();
         _normal_distribution_array[i] = _dist_normal(_rngs[i]);
