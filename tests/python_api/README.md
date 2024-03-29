@@ -94,7 +94,7 @@ python3 decoder.py gpu <path to image folder>
 
 ## External source reader test:
 
-This test runs a pipeline making use of the external source reader in 3 different modes.
+This test runs a pipeline making use of the external source reader in 3 different modes. It uses coco2017 images by default.
 * Mode 0 - Filename
 * Mode 1 - Raw compressed images
 * Mode 2 - JPEG reader with OpenCV
