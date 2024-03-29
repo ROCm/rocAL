@@ -24,7 +24,7 @@ Prerequisites
 * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
 * `RPP <https://github.com/ROCm/rpp>`_
 * `AMD OpenVX™ <https://github.com/ROCm/MIVisionX/tree/master/amd_openvx>`_ and AMD OpenVX™ Extensions: ``VX_RPP`` and ``AMD Media`` - MIVisionX Components
-* `Turbo JPEG <https://libjpeg-turbo.org/>`_ - Version 2.0.6.2 from ``https://github.com/rrawther/libjpeg-turbo.git``
+* `Turbo JPEG <https://libjpeg-turbo.org/>`_ - Version 3.0.1 from ``https://github.com/libjpeg-turbo/libjpeg-turbo.git``
 * `Half-precision floating-point <https://half.sourceforge.net>`_ library - Version 1.12.0 or higher
 * `Google Protobuf <https://developers.google.com/protocol-buffers>`_ - Version 3.12.4 or higher
 * `LMBD Library <http://www.lmdb.tech/doc/>`_
