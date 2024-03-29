@@ -35,6 +35,9 @@ dev_end=1
 rgb_start=0
 rgb_end=1
 
+# python version
+ver=$(python3 -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";)
+
 if [ "$#" -gt 0 ]; then 
     if [ "$1" -eq 0 ]; then # For only HOST backend
         dev_start=0
