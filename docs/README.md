@@ -24,11 +24,11 @@ These pipelines are programmable by the user using both C++ and Python APIs.
 
 ## Prerequisites
 
-Refer [rocAL Prerequisites](https://github.com/ROCmSoftwarePlatform/rocAL#prerequisites)
+Refer [rocAL Prerequisites](https://github.com/ROCm/rocAL#prerequisites)
 
 ## Build instructions
 
-Refer [rocAL build instructions](https://github.com/ROCmSoftwarePlatform/rocAL#build-instructions)
+Refer [rocAL build instructions](https://github.com/ROCm/rocAL#build-instructions)
 
 ## rocAL Python
 
@@ -81,12 +81,11 @@ amd.rocal.types are enums exported from C++ API to python. Some examples include
 *  From the above classes, any hybrid iterator pipeline can be created by adding augmentations.
 *  see example [PyTorch Simple Example](./examples). Requires PyTorch.
 
-### installing rocAL python plugin (Python 3.6)
+### installing rocAL python plugin (Python 3.9+)
 
 *  Build and install RPP
-*  Build and install MIVisionX which installs rocAL c++ lib
-*  Go to the [rocal_pybind](https://github.com/ROCm/rocAL/tree/develop/rocAL_pybind) folder
-*  sudo ./run.sh
+*  Build and install MIVisionX
+*  Build and install [rocAL](https://github.com/ROCm/rocAL/)
 
 ### Steps to run MLPerf Resnet50 classification training with rocAL on a system with MI50+ and ROCm
 
@@ -110,7 +109,7 @@ git clone -b mlperf-v1.1-rocal https://github.com/rrawther/MLPerf-mGPU
 
 ### MIVisionX Pytorch Docker
 
-* Refer to the [docker](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX#docker) page for prerequisites and information on building the docker
+* Refer to the [docker](https://github.com/ROCm/MIVisionX#docker) page for prerequisites and information on building the docker
 * Step 1: Run the docker image*
   
 ``` bash

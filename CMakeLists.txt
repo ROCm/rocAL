@@ -152,7 +152,7 @@ set(CPACK_PACKAGE_CONTACT       "rocAL Support <mivisionx.support@amd.com>")
 set(CPACK_PACKAGE_VENDOR        "AMD Radeon")
 set(CPACK_PACKAGE_ICON          "${CMAKE_SOURCE_DIR}/docs/data/rocAL_logo.png")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
-set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCmSoftwarePlatform/rocAL")
+set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rocAL")
 
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION   "AMD rocAL is a comprehensive Augmentation Library
   The AMD ROCm Augmentation Library (rocAL) is designed to efficiently decode and process images \
