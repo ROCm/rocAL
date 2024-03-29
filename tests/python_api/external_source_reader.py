@@ -13,7 +13,7 @@ from PIL import Image
 def main():
     batch_size = 3
     data_dir = os.environ["ROCAL_DATA_PATH"] + \
-        "/coco/coco_10_img/train_10images_2017/"
+        "rocal_data/coco/coco_10_img/train_10images_2017/"
     device = "cpu"
     try:
         path_mode0 = "output_folder/external_source_reader/mode0/"
