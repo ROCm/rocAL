@@ -405,6 +405,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("FT", ROCAL_FT)
         .value("TF", ROCAL_TF)
         .export_values();
+    py::enum_<RocalMelScaleFormula>(types_m, "RocalMelScaleFormula", "Rocal Audio Mel Formula")
+        .value("SLANEY", SLANEY)
+        .value("HTK", HTK)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -735,6 +739,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("tensorAddTensor", &rocalTensorAddTensor,
           py::return_value_policy::reference);
     m.def("normalize", &rocalNormalize,
+          py::return_value_policy::reference);
+    m.def("melFilterBank", &rocalMelFilterBank,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

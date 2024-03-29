@@ -1153,3 +1153,14 @@ def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_samp
                      "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "rocal_tensor_output_type": rocal_tensor_output_type}
     normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return normalize_output
+
+def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, rocal_tensor_output_type = types.FLOAT):
+    '''
+    Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters.
+
+    The frequency (‘f’) dimension is selected from the input layout. In case of no layout, “f”, “ft”, or “*ft” is assumed, depending on the number of dimensions.
+    '''
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "freq_high": freq_high, "freq_low": freq_low, "mel_formula": mel_formula,
+                     "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "rocal_tensor_output_type": rocal_tensor_output_type}
+    mel_filter_bank_output = b.melFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return mel_filter_bank_output

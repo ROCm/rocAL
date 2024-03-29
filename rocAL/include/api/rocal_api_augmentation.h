@@ -1211,4 +1211,30 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
                                                      int ddof, float epsilon,
                                                      RocalTensorOutputType rocal_tensor_output_type);
 
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] freq_high maximum frequency
+ * \param [in] freq_low minimum frequency
+ * \param [in] mel_formula formula used to convert frequencies from hertz to mel and from mel to hertz
+ * \param [in] nfilter number of mel filters
+ * \param [in] normalize boolean variable that determine whether to normalize weights / not
+ * \param [in] sample_rate sampling rate of the audio data
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+
+extern "C" RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
+                                                         RocalTensor p_input,
+                                                         bool is_output,
+                                                         float freq_high,
+                                                         float freq_low,
+                                                         RocalMelScaleFormula mel_formula,
+                                                         int nfilter,
+                                                         bool normalize,
+                                                         float sample_rate,
+                                                         RocalTensorOutputType output_datatype);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

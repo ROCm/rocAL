@@ -103,6 +103,10 @@ from rocal_pybind.types import REFLECT
 from rocal_pybind.types import FT
 from rocal_pybind.types import TF
 
+#     RocalMelScaleFormula
+from rocal_pybind.types import SLANEY
+from rocal_pybind.types import HTK
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -168,6 +172,9 @@ _known_types = {
 
     TF: ("TF", TF),
     FT: ("FT", FT),
+
+    SLANEY: ("SLANEY", SLANEY),
+    HTK: ("HTK", HTK),
 }
 
 def data_type_function(dtype):
