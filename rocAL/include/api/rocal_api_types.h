@@ -403,4 +403,19 @@ enum RocalSpectrogramLayout {
     ROCAL_TF
 };
 
+/*! \brief rocAL Out Of Bounds Policy Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalOutOfBoundsPolicy {
+    /*! \brief Pad
+     */
+    ROCAL_PAD = 0,
+    /*! \brief Trimtoshape
+     */
+    ROCAL_TRIMTOSHAPE,
+    /*! \brief Error
+     */
+    ROCAL_ERROR
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

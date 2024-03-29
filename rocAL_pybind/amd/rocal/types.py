@@ -103,6 +103,11 @@ from rocal_pybind.types import REFLECT
 from rocal_pybind.types import FT
 from rocal_pybind.types import TF
 
+#     RocalOutOfBoundsPolicy
+from rocal_pybind.types import PAD
+from rocal_pybind.types import TRIMTOSHAPE
+from rocal_pybind.types import ERROR
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -168,6 +173,10 @@ _known_types = {
 
     TF: ("TF", TF),
     FT: ("FT", FT),
+    
+    PAD: ("PAD", PAD),
+    TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
+    ERROR: ("ERROR", ERROR),
 }
 
 def data_type_function(dtype):

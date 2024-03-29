@@ -63,3 +63,5 @@ THE SOFTWARE.
 #include "node_normal_distribution.h"
 #include "node_tensor_mul_scalar.h"
 #include "node_tensor_add_tensor.h"
+#include "node_non_silent_region.h"
+#include "node_slice.h"

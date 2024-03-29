@@ -1136,3 +1136,34 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.
     kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_output_type": rocal_tensor_output_type, "scalar": scalar}
     tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
+
+//TODO: To modify the comments wrt earlier augmentations
+def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_sample_hint = [0], cutoff_db = -60, reference_power = 0.0, reset_interval = 8192, seed = -1, window_length = 2048):
+    """
+    Performs leading and trailing silence detection in an audio buffer.
+    The operator returns the beginning and length of the non-silent region by comparing the short term power calculated for window_length of the signal with a silence cut-off threshold. The signal is considered to be silent when the short_term_power_db is less than the cutoff_db. where:
+    short_term_power_db = 10 * log10( short_term_power / reference_power )
+    Unless specified otherwise, reference_power is the maximum power of the signal.
+    """
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
+                     "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
+    non_silent_region_output = b.sonSilentRegion(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return non_silent_region_output
+
+//TODO: To modify the comments wrt earlier augmentations
+def slice(*inputs, anchor = [], shape = [], axes = [1, 0], axis_names = "WH", bytes_per_sample_hint = [0], dtype = types.FLOAT, end = [], fill_values = [0.0], normalized_anchor = True, normalized_shape = True,  out_of_bounds_policy = types.ERROR, rel_end = [], rel_shape = [], rel_start = [], seed = -1, start = [] , rocal_tensor_output_type = types.FLOAT):
+    """
+    The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
+    The slice arguments can be specified by the following named arguments:
+    start: Slice start coordinates (absolute)
+    rel_start: Slice start coordinates (relative)
+    end: Slice end coordinates (absolute)
+    rel_end: Slice end coordinates (relative)
+    shape: Slice shape (absolute)
+    rel_shape: Slice shape (relative)
+    """
+
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values, "axes": axes,
+                     "normalized_anchor": normalized_anchor , "normalized_shape": normalized_shape, "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
+    slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return slice_output

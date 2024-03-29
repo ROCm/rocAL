@@ -136,6 +136,28 @@ def to_decibels_pipeline(path, file_list):
             reference=1.0,
             cutoff_db=np.log(1e-20),
             output_dtype=types.FLOAT)
+    
+@pipeline_def(seed=seed)
+def non_silent_region_and_slice(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    trim_silence = fn.slice(
+        decoded_audio,
+        anchor=[begin],
+        shape=[length],
+        normalized_anchor=False,
+        normalized_shape=False,
+        axes=[0],
+        rocal_tensor_output_type = types.FLOAT)
+    return trim_silence
 
 def main():
     args = parse_args()
