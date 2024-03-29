@@ -1163,30 +1163,73 @@ extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
                                                       float reference_magnitude,
                                                       RocalTensorOutputType rocal_tensor_output_type);
 
+/*! \brief Accepts F32 audio buffers
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] p_output_resample_rate the output resample rate for a batch of audio samples
+ * \param [in] output_datatype the data type of the output tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] sample_hint sample_hint value is the value required to allocate the max memory for output tensor wrt resample_rate and the samples
+ * \return RocalTensor
+ */
 extern "C" RocalTensor ROCAL_API_CALL rocalResample(RocalContext p_context,
                                                     RocalTensor p_input,
-                                                    RocalTensor p_input_resample_rate,
+                                                    RocalTensor p_output_resample_rate,
                                                     RocalTensorOutputType rocal_tensor_output_type,
                                                     bool is_output,
-                                                    float sample_hint);
+                                                    float sample_hint,
+                                                    float quality = 50.0);
 
+/*! \brief Accepts F32 audio buffers
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] range The range for generating uniform distribution
+ * \return RocalTensor
+ */
 extern "C" RocalTensor ROCAL_API_CALL rocalUniformDistribution(RocalContext p_context,
                                                                RocalTensor p_input,
                                                                bool is_output,
                                                                std::vector<float> &range);
 
+/*! \brief Accepts F32 audio buffers
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] mean The mean value for generating the normal distribution
+ * \param [in] stddev The stddev value for generating the normal distribution
+ * \return RocalTensor
+ */
 extern "C" RocalTensor ROCAL_API_CALL rocalNormalDistribution(RocalContext p_context,
                                                               RocalTensor p_input,
                                                               bool is_output,
                                                               float mean = 0.0,
                                                               float stddev = 0.0);
 
+/*! \brief Accepts F32 audio buffers
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_datatype the data type of the output tensor
+ * \param [in] scalar The scalar value to be multiplied with the input tensor
+ * \return RocalTensor
+ */
 extern "C" RocalTensor ROCAL_API_CALL rocalTensorMulScalar(RocalContext p_context,
                                                            RocalTensor p_input,
                                                            bool is_output,
                                                            RocalTensorOutputType rocal_tensor_output_type,
                                                            float scalar = 0.0);
 
+/*! \brief Accepts F32 audio buffers
+ * \param [in] p_context Rocal context
+ * \param [in] p_input1 Input Rocal tensor1
+ * \param [in] p_input2 Input Rocal tensor2
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
 extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_context,
                                                            RocalTensor p_input1,
                                                            RocalTensor p_input2,
