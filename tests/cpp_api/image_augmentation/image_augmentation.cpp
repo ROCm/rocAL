@@ -209,8 +209,8 @@ int main(int argc, const char** argv) {
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     // initializations for logos and heading
     cv::Mat AMD_Epyc_Black_resize, AMD_ROCm_Black_resize;
-    AMD_Epyc_Black_resize = cv::imread("../../../samples/images/amd-epyc-black-resize.png");
-    AMD_ROCm_Black_resize = cv::imread("../../../samples/images/rocm-black-resize.png");
+    AMD_Epyc_Black_resize = cv::imread("../../../../docs/data/amd-epyc-black-resize.png");
+    AMD_ROCm_Black_resize = cv::imread("../../../../docs/data/rocm-black-resize.png");
     int fontFace = CV_FONT_HERSHEY_DUPLEX;
     int thickness = 1.3;
     std::string bufferName = "rocAL Image Augmentation";

@@ -47,7 +47,7 @@ set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 
 find_package(AMDRPP REQUIRED)
 find_package(MIVisionX REQUIRED)
