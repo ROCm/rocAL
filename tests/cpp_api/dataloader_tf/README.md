@@ -19,5 +19,5 @@ This application demonstrates a basic usage of rocAL's C API to load TfRecords f
   ````
 ### running the application
   ````
-  ./dataloader_tf <path-to-TFRecord> <proc_dev> <decode_width> <decode_height> <batch_size> <grayscale/rgb> <dispay_on_or_off>
+  ./dataloader_tf <path-to-TFRecord-folder - required> <proc_dev> <decode_width> <decode_height> <batch_size> <grayscale/rgb> <dispay_on_or_off>
   ````
