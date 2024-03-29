@@ -166,6 +166,19 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("transfer_time", &TimingInfo::transfer_time);
     py::class_<rocalTensor>(m, "rocalTensor")
         .def(
+                "__mul__",
+                [](rocalTensor *output_tensor, float scalar)
+                {
+                    py::object fn_module = py::module::import("amd.rocal.fn");
+                    auto fn_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a=scalar).cast<RocalTensor>();
+                    return fn_call;
+                },
+                R"code(
+                Returns a tensor
+                Adds a node for arithmetic operation
+                )code", py::return_value_policy::reference
+            )
+        .def(
             "max_shape",
             [](rocalTensor &output_tensor) {
                 return output_tensor.shape();

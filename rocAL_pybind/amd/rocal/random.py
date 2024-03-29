@@ -24,6 +24,7 @@
 # @brief File containing randomization functions used for creating RNG generators
 
 import rocal_pybind as b
+from amd.rocal.pipeline import Pipeline
 
 
 def coin_flip(*inputs, probability=0.5):
