@@ -30,8 +30,8 @@ except ImportError:
     print('Install rocAL for running rocAL trainings')
 
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR', nargs='?', default='imagenet',
@@ -39,8 +39,8 @@ parser.add_argument('data', metavar='DIR', nargs='?', default='imagenet',
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
+                    ' | '.join(model_names) +
+                    ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
@@ -79,72 +79,91 @@ parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
 parser.add_argument('--gpu', default=None, type=int,
                     help='GPU id to use.')
-parser.add_argument('--rocal-gpu', action='store_true', help='enable rocal-gpu based training')
-parser.add_argument('--rocal-cpu', action='store_true', help='enable rocal-cpu based training')
+parser.add_argument('--rocal-gpu', action='store_true',
+                    help='enable rocal-gpu based training')
+parser.add_argument('--rocal-cpu', action='store_true',
+                    help='enable rocal-cpu based training')
 parser.add_argument('--multiprocessing-distributed', action='store_true',
                     help='Use multi-processing distributed training to launch '
                          'N processes per node, which has N GPUs. This is the '
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
-parser.add_argument('--dummy', action='store_true', help="use fake data to benchmark")
+parser.add_argument('--dummy', action='store_true',
+                    help="use fake data to benchmark")
 
 best_acc1 = 0
 
+
 def train_pipeline(data_path, batch_size, local_rank, world_size, num_thread, crop, rocal_cpu, fp16):
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_thread, device_id=local_rank, seed=local_rank+10, rocal_cpu=rocal_cpu, tensor_dtype = types.FLOAT16 if fp16 else types.FLOAT, tensor_layout=types.NCHW, prefetch_queue_depth = 6, mean = [0.485 * 255,0.456 * 255,0.406 * 255], std = [0.229 * 255,0.224 * 255,0.225 * 255], output_memory_type = types.HOST_MEMORY if rocal_cpu else types.DEVICE_MEMORY)
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_thread, device_id=local_rank, seed=local_rank+10, rocal_cpu=rocal_cpu, tensor_dtype=types.FLOAT16 if fp16 else types.FLOAT, tensor_layout=types.NCHW,
+                    prefetch_queue_depth=6, mean=[0.485 * 255, 0.456 * 255, 0.406 * 255], std=[0.229 * 255, 0.224 * 255, 0.225 * 255], output_memory_type=types.HOST_MEMORY if rocal_cpu else types.DEVICE_MEMORY)
     with pipe:
         jpegs, labels = fn.readers.file(file_root=data_path)
         rocal_device = 'cpu' if rocal_cpu else 'gpu'
         decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
-                                        file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
-        res = fn.resize(decode, resize_width=224, resize_height=224, output_layout = types.NHWC, output_dtype = types.UINT8, interpolation_type=types.TRIANGULAR_INTERPOLATION)
+                                         file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
+        res = fn.resize(decode, resize_width=224, resize_height=224, output_layout=types.NHWC,
+                        output_dtype=types.UINT8, interpolation_type=types.TRIANGULAR_INTERPOLATION)
         flip_coin = fn.random.coin_flip(probability=0.5)
         cmnp = fn.crop_mirror_normalize(res,
-                                        output_layout = types.NCHW,
-                                        output_dtype = types.FLOAT,
+                                        output_layout=types.NCHW,
+                                        output_dtype=types.FLOAT,
                                         crop=(crop, crop),
                                         mirror=flip_coin,
-                                        mean=[0.485 * 255,0.456 * 255,0.406 * 255],
-                                        std=[0.229 * 255,0.224 * 255,0.225 * 255])
+                                        mean=[0.485 * 255, 0.456 *
+                                              255, 0.406 * 255],
+                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255])
         pipe.set_outputs(cmnp)
     print('rocal "{0}" variant'.format(rocal_device))
     return pipe
+
 
 def get_rocal_train_loader(data_path, batch_size, local_rank, world_size, num_thread, crop, rocal_cpu, fp16=False):
     traindir = os.path.join(data_path, 'train')
-    pipe_train = train_pipeline(traindir, batch_size, local_rank, world_size, num_thread, crop, rocal_cpu, fp16)
+    pipe_train = train_pipeline(
+        traindir, batch_size, local_rank, world_size, num_thread, crop, rocal_cpu, fp16)
     pipe_train.build()
-    train_loader = ROCALClassificationIterator(pipe_train, device="cpu" if rocal_cpu else "cuda", device_id = local_rank)
+    train_loader = ROCALClassificationIterator(
+        pipe_train, device="cpu" if rocal_cpu else "cuda", device_id=local_rank)
     return Prefetcher(train_loader, rocal_cpu, batch_size)
 
+
 def val_pipeline(data_path, batch_size, local_rank, world_size, num_thread, crop, rocal_cpu, fp16):
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_thread, device_id=local_rank, seed=local_rank + 10, rocal_cpu=rocal_cpu, tensor_dtype = types.FLOAT16 if fp16 else types.FLOAT, tensor_layout=types.NCHW, prefetch_queue_depth = 6, mean = [0.485 * 255,0.456 * 255,0.406 * 255], std = [0.229 * 255,0.224 * 255,0.225 * 255], output_memory_type = types.HOST_MEMORY if rocal_cpu else types.DEVICE_MEMORY)
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_thread, device_id=local_rank, seed=local_rank + 10, rocal_cpu=rocal_cpu, tensor_dtype=types.FLOAT16 if fp16 else types.FLOAT, tensor_layout=types.NCHW,
+                    prefetch_queue_depth=6, mean=[0.485 * 255, 0.456 * 255, 0.406 * 255], std=[0.229 * 255, 0.224 * 255, 0.225 * 255], output_memory_type=types.HOST_MEMORY if rocal_cpu else types.DEVICE_MEMORY)
     with pipe:
         jpegs, labels = fn.readers.file(file_root=data_path)
         rocal_device = 'cpu' if rocal_cpu else 'gpu'
-        decode = fn.decoders.image(jpegs,file_root=data_path, max_decoded_width=1000, max_decoded_height=1000, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
-        res = fn.resize(decode, resize_shorter = 256, scaling_mode=types.SCALING_MODE_NOT_SMALLER, interpolation_type=types.TRIANGULAR_INTERPOLATION, output_layout = types.NHWC, output_dtype = types.UINT8)
+        decode = fn.decoders.image(jpegs, file_root=data_path, max_decoded_width=1000, max_decoded_height=1000,
+                                   output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
+        res = fn.resize(decode, resize_shorter=256, scaling_mode=types.SCALING_MODE_NOT_SMALLER,
+                        interpolation_type=types.TRIANGULAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8)
         cmnp = fn.crop_mirror_normalize(res,
-                                        output_layout = types.NCHW,
-                                        output_dtype = types.FLOAT,
+                                        output_layout=types.NCHW,
+                                        output_dtype=types.FLOAT,
                                         crop=(crop, crop),
                                         mirror=0,
-                                        mean=[0.485 * 255,0.456 * 255,0.406 * 255],
-                                        std=[0.229 * 255,0.224 * 255,0.225 * 255])
+                                        mean=[0.485 * 255, 0.456 *
+                                              255, 0.406 * 255],
+                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255])
         pipe.set_outputs(cmnp)
     print('rocal "{0}" variant'.format(rocal_device))
     return pipe
 
+
 def get_rocal_val_loader(data_path, batch_size, local_rank, world_size, num_thread, crop, rocal_cpu, fp16=False):
     valdir = data_path + "/val/"
-    pipe_val = val_pipeline(valdir, batch_size, local_rank, world_size, num_thread, crop, rocal_cpu, fp16)
+    pipe_val = val_pipeline(valdir, batch_size, local_rank,
+                            world_size, num_thread, crop, rocal_cpu, fp16)
     pipe_val.build()
-    val_loader = ROCALClassificationIterator(pipe_val, device="cpu" if rocal_cpu else "cuda", device_id = local_rank)
+    val_loader = ROCALClassificationIterator(
+        pipe_val, device="cpu" if rocal_cpu else "cuda", device_id=local_rank)
     val_data = []
     for (img, target) in Prefetcher(val_loader, rocal_cpu, batch_size):
         val_data.append((img.clone(), target.clone()))
     del val_loader
     return val_data
+
 
 class Prefetcher:
     def __init__(self, data_loader, rocal_cpu, batch_size):
@@ -159,7 +178,7 @@ class Prefetcher:
 
     def __iter__(self):
         return self
-    
+
     def __len__(self):
         return len(self.data_loader) // self.bs
 
@@ -177,13 +196,15 @@ class Prefetcher:
             self.done = True
 
     def reset(self):
-        if isinstance(self.data_loader, list): pass
+        if isinstance(self.data_loader, list):
+            pass
         self.data_loader.reset()
         self.images, self.targets = None, None
         self.done = False
 
     def __next__(self):
-        if self.rocal_cpu: torch.cuda.current_stream().wait_stream(self.loader_stream)
+        if self.rocal_cpu:
+            torch.cuda.current_stream().wait_stream(self.loader_stream)
         if self.images is None and not self.done:
             self.prefetch()
         if self.done:
@@ -192,6 +213,7 @@ class Prefetcher:
             images, targets = self.images, self.targets
             self.images, self.targets = None, None
             return images, targets
+
 
 def main():
     args = parser.parse_args()
@@ -219,7 +241,8 @@ def main():
     if torch.cuda.is_available():
         ngpus_per_node = torch.cuda.device_count()
         if ngpus_per_node == 1 and args.dist_backend == "nccl":
-            warnings.warn("nccl backend >=2.5 requires GPU count>1, perhaps use 'gloo'")
+            warnings.warn(
+                "nccl backend >= 2.5 requires GPU count > 1, perhaps use 'gloo'")
     else:
         ngpus_per_node = 1
 
@@ -229,7 +252,8 @@ def main():
         args.world_size = ngpus_per_node * args.world_size
         # Use torch.multiprocessing.spawn to launch distributed processes: the
         # main_worker process function
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+        mp.spawn(main_worker, nprocs=ngpus_per_node,
+                 args=(ngpus_per_node, args))
     else:
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
@@ -260,6 +284,9 @@ def main_worker(gpu, ngpus_per_node, args):
         model = models.__dict__[args.arch]()
 
     if not torch.cuda.is_available() and not torch.backends.mps.is_available():
+        if args.rocal_gpu:
+            args.rocal_gpu = False
+            args.rocal_cpu = True
         print('using CPU, this will be slow')
     elif args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -273,8 +300,10 @@ def main_worker(gpu, ngpus_per_node, args):
                 # DistributedDataParallel, we need to divide the batch size
                 # ourselves based on the total number of GPUs of the current node.
                 args.batch_size = int(args.batch_size / ngpus_per_node)
-                args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
-                model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+                args.workers = int(
+                    (args.workers + ngpus_per_node - 1) / ngpus_per_node)
+                model = torch.nn.parallel.DistributedDataParallel(
+                    model, device_ids=[args.gpu])
             else:
                 model.cuda()
                 # DistributedDataParallel will divide and allocate batch_size to all
@@ -309,10 +338,10 @@ def main_worker(gpu, ngpus_per_node, args):
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-    
+
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
-    
+
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -336,26 +365,36 @@ def main_worker(gpu, ngpus_per_node, args):
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
-
     # Data loading code
     if args.dummy:
         print("=> Dummy data is used!")
-        train_dataset = datasets.FakeData(1281167, (3, 224, 224), 1000, transforms.ToTensor())
-        val_dataset = datasets.FakeData(50000, (3, 224, 224), 1000, transforms.ToTensor())
+        train_dataset = datasets.FakeData(
+            1281167, (3, 224, 224), 1000, transforms.ToTensor())
+        val_dataset = datasets.FakeData(
+            50000, (3, 224, 224), 1000, transforms.ToTensor())
     if args.rocal_gpu or args.rocal_cpu:
-      get_train_loader = get_rocal_train_loader
-      get_val_loader = get_rocal_val_loader
+        get_train_loader = get_rocal_train_loader
+        get_val_loader = get_rocal_val_loader
+        local_rank = 0
+        world_size = 1
 
-      crop_size = 224
-      train_loader = get_train_loader(data_path=args.data, batch_size=args.batch_size, local_rank = args.rank, world_size = args.world_size,
-                                                      num_thread=args.workers, crop=crop_size, rocal_cpu=False if args.rocal_gpu else True, fp16=False)
-      
-      val_loader = get_val_loader(data_path=args.data, batch_size=args.batch_size, local_rank=args.rank, world_size=args.world_size, num_thread=args.workers, crop=crop_size, rocal_cpu=False if args.rocal_gpu else True, fp16=False)
+        crop_size = 224
+        if args.distributed or args.gpu:
+            local_rank = args.rank if args.distributed else args.gpu
+        if args.world_size != -1:
+            world_size = args.world_size
+        if local_rank == None:
+            local_rank = 0
+        train_loader = get_train_loader(data_path=args.data, batch_size=args.batch_size, local_rank=local_rank, world_size=world_size,
+                                        num_thread=args.workers, crop=crop_size, rocal_cpu=False if args.rocal_gpu else True, fp16=False)
+
+        val_loader = get_val_loader(data_path=args.data, batch_size=args.batch_size, local_rank=local_rank, world_size=world_size,
+                                    num_thread=args.workers, crop=crop_size, rocal_cpu=False if args.rocal_gpu else True, fp16=False)
     else:
         traindir = os.path.join(args.data, 'train')
         valdir = os.path.join(args.data, 'val')
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+                                         std=[0.229, 0.224, 0.225])
 
         train_dataset = datasets.ImageFolder(
             traindir,
@@ -376,14 +415,17 @@ def main_worker(gpu, ngpus_per_node, args):
             ]))
 
         if args.distributed:
-            train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-            val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset, shuffle=False, drop_last=True)
+            train_sampler = torch.utils.data.distributed.DistributedSampler(
+                train_dataset)
+            val_sampler = torch.utils.data.distributed.DistributedSampler(
+                val_dataset, shuffle=False, drop_last=True)
         else:
             train_sampler = None
             val_sampler = None
 
         train_loader = torch.utils.data.DataLoader(
-            train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
+            train_dataset, batch_size=args.batch_size, shuffle=(
+                train_sampler is None),
             num_workers=args.workers, pin_memory=True, sampler=train_sampler)
 
         val_loader = torch.utils.data.DataLoader(
@@ -403,22 +445,22 @@ def main_worker(gpu, ngpus_per_node, args):
 
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args)
-        
+
         scheduler.step()
-        
+
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                and args.rank % ngpus_per_node == 0):
+                                                    and args.rank % ngpus_per_node == 0):
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
-                'optimizer' : optimizer.state_dict(),
-                'scheduler' : scheduler.state_dict()
+                'optimizer': optimizer.state_dict(),
+                'scheduler': scheduler.state_dict()
             }, is_best)
 
 
@@ -467,7 +509,8 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
         if i % args.print_freq == 0:
             progress.display(i + 1)
 
-    if args.rocal_cpu or args.rocal_gpu: train_loader.reset()
+    if args.rocal_cpu or args.rocal_gpu:
+        train_loader.reset()
 
 
 def validate(val_loader, model, criterion, args):
@@ -507,7 +550,8 @@ def validate(val_loader, model, criterion, args):
     top1 = AverageMeter('Acc@1', ':6.2f', Summary.AVERAGE)
     top5 = AverageMeter('Acc@5', ':6.2f', Summary.AVERAGE)
     progress = ProgressMeter(
-        len(val_loader) + (args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset))) if not (args.rocal_cpu or args.rocal_gpu) else len(val_loader),
+        len(val_loader) + (args.distributed and (len(val_loader.sampler) * args.world_size <
+                                                 len(val_loader.dataset))) if not (args.rocal_cpu or args.rocal_gpu) else len(val_loader),
         [batch_time, losses, top1, top5],
         prefix='Test: ')
 
@@ -522,7 +566,7 @@ def validate(val_loader, model, criterion, args):
     if not (args.rocal_cpu or args.rocal_gpu):
         if args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset)):
             aux_val_dataset = Subset(val_loader.dataset,
-                                    range(len(val_loader.sampler) * args.world_size, len(val_loader.dataset)))
+                                     range(len(val_loader.sampler) * args.world_size, len(val_loader.dataset)))
             aux_val_loader = torch.utils.data.DataLoader(
                 aux_val_dataset, batch_size=args.batch_size, shuffle=False,
                 num_workers=args.workers, pin_memory=True)
@@ -538,14 +582,17 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     if is_best:
         shutil.copyfile(filename, 'model_best.pth.tar')
 
+
 class Summary(Enum):
     NONE = 0
     AVERAGE = 1
     SUM = 2
     COUNT = 3
 
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self, name, fmt=':f', summary_type=Summary.AVERAGE):
         self.name = name
         self.fmt = fmt
@@ -571,7 +618,8 @@ class AverageMeter(object):
             device = torch.device("mps")
         else:
             device = torch.device("cpu")
-        total = torch.tensor([self.sum, self.count], dtype=torch.float32, device=device)
+        total = torch.tensor([self.sum, self.count],
+                             dtype=torch.float32, device=device)
         dist.all_reduce(total, dist.ReduceOp.SUM, async_op=False)
         self.sum, self.count = total.tolist()
         self.avg = self.sum / self.count
@@ -579,7 +627,7 @@ class AverageMeter(object):
     def __str__(self):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
         return fmtstr.format(**self.__dict__)
-    
+
     def summary(self):
         fmtstr = ''
         if self.summary_type is Summary.NONE:
@@ -592,7 +640,7 @@ class AverageMeter(object):
             fmtstr = '{name} {count:.3f}'
         else:
             raise ValueError('invalid summary type %r' % self.summary_type)
-        
+
         return fmtstr.format(**self.__dict__)
 
 
@@ -606,7 +654,7 @@ class ProgressMeter(object):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
         print('\t'.join(entries))
-        
+
     def display_summary(self):
         entries = [" *"]
         entries += [meter.summary() for meter in self.meters]
@@ -616,6 +664,7 @@ class ProgressMeter(object):
         num_digits = len(str(num_batches // 1))
         fmt = '{:' + str(num_digits) + 'd}'
         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
+
 
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""

@@ -1,7 +1,7 @@
 # ImageNet training in PyTorch
 
 This example implements training of popular model architectures, such as ResNet, AlexNet, and VGG on the ImageNet dataset.
-This version has been modified to use rocAL. It assumes that the dataset is raw JPEGs from the ImageNet dataset. If offers CPU and GPU based pipeline for rocAL - use `rocal-cpu` switch to enable CPU and use `rocal-gpu` switch to enable GPU.
+This version has been modified to use rocAL. It assumes that the dataset is raw JPEGs from the ImageNet dataset. If offers CPU and GPU based pipeline for rocAL - use `rocal-cpu` argument to enable CPU and use `rocal-gpu` argument to enable GPU.
 
 ## Requirements
 
@@ -11,31 +11,31 @@ This version has been modified to use rocAL. It assumes that the dataset is raw 
 
 ## Training
 
-To train a model, run `main.py` with the desired model architecture and the path to the ImageNet dataset:
+To train a model, run `imagenet_training.py` with the desired model architecture and the path to the ImageNet dataset:
 
 ```bash
-python main.py -a resnet18 [imagenet-folder with train and val folders]
+python imagenet_training.py -a resnet18 [imagenet-folder with train and val folders]
 ```
 
 The default learning rate schedule starts at 0.1 and decays by a factor of 10 every 30 epochs. This is appropriate for ResNet and models with batch normalization, but too high for AlexNet and VGG. Use 0.01 as the initial learning rate for AlexNet or VGG:
 
 ```bash
-python main.py -a alexnet --lr 0.01 [imagenet-folder with train and val folders]
+python imagenet_training.py -a alexnet --lr 0.01 [imagenet-folder with train and val folders]
 ```
 To run a rocAL integrated training, use `rocal-cpu` or `rocal-gpu`
 
 ```bash
-python3 main.py -a resnet50 -j$(nproc) --batch-size 1024 --rocal-cpu [imagenet-folder with train and val folders]
+python3 imagenet_training.py -a resnet50 -j$(nproc) --batch-size 1024 --rocal-cpu [imagenet-folder with train and val folders]
 ```
 
 Make sure to remove older checkpoints (`rm *.pth.tar`) saved in the folder if the example has been run before
 
 ## Use Dummy Data
 
-ImageNet dataset is large and time-consuming to download. To get started quickly, run `main.py` using dummy data by "--dummy". It's also useful for training speed benchmark. Note that the loss or accuracy is useless in this case.
+ImageNet dataset is large and time-consuming to download. To get started quickly, run `imagenet_training.py` using dummy data by "--dummy". It's also useful for training speed benchmark. Note that the loss or accuracy is useless in this case.
 
 ```bash
-python main.py -a resnet18 --dummy
+python imagenet_training.py -a resnet18 --dummy
 ```
 
 ## Multi-processing Distributed Data Parallel Training
@@ -45,7 +45,7 @@ You should always use the NCCL backend for multi-processing distributed training
 ### Single node, multiple GPUs:
 
 ```bash
-python main.py -a resnet50 --dist-url 'tcp://127.0.0.1:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 [imagenet-folder with train and val folders]
+python imagenet_training.py -a resnet50 --dist-url 'tcp://127.0.0.1:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 [imagenet-folder with train and val folders]
 ```
 
 ### Multiple nodes:
@@ -53,19 +53,19 @@ python main.py -a resnet50 --dist-url 'tcp://127.0.0.1:FREEPORT' --dist-backend 
 Node 0:
 
 ```bash
-python main.py -a resnet50 --dist-url 'tcp://IP_OF_NODE0:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 0 [imagenet-folder with train and val folders]
+python imagenet_training.py -a resnet50 --dist-url 'tcp://IP_OF_NODE0:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 0 [imagenet-folder with train and val folders]
 ```
 
 Node 1:
 
 ```bash
-python main.py -a resnet50 --dist-url 'tcp://IP_OF_NODE0:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 1 [imagenet-folder with train and val folders]
+python imagenet_training.py -a resnet50 --dist-url 'tcp://IP_OF_NODE0:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 1 [imagenet-folder with train and val folders]
 ```
 
 ## Usage
 
 ```bash
-usage: main.py [-h] [-a ARCH] [-j N] [--epochs N] [--start-epoch N] [-b N] [--lr LR] [--momentum M] [--wd W] [-p N] [--resume PATH] [-e] [--pretrained] [--world-size WORLD_SIZE] [--rank RANK]
+usage: imagenet_training.py [-h] [-a ARCH] [-j N] [--epochs N] [--start-epoch N] [-b N] [--lr LR] [--momentum M] [--wd W] [-p N] [--resume PATH] [-e] [--pretrained] [--world-size WORLD_SIZE] [--rank RANK]
                [--dist-url DIST_URL] [--dist-backend DIST_BACKEND] [--seed SEED] [--gpu GPU] [--multiprocessing-distributed] [--dummy]
                [DIR]
 
