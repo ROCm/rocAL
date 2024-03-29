@@ -724,6 +724,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("toDecibels", &rocalToDecibels,
           py::return_value_policy::reference);
+    m.def("resample", &rocalResample,
+          py::return_value_policy::reference);
+    m.def("normalDistribution", &rocalNormalDistribution,
+          py::return_value_policy::reference);
+    m.def("uniformDistribution", &rocalUniformDistribution,
+          py::return_value_policy::reference);
+    m.def("tensorMulScalar", &rocalTensorMulScalar,
+          py::return_value_policy::reference);
+    m.def("tensorAddTensor", &rocalTensorAddTensor,
+          py::return_value_policy::reference);
     m.def("normalize", &rocalNormalize,
           py::return_value_policy::reference);
 }

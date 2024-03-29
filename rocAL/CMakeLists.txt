@@ -233,6 +233,7 @@ if(${BUILD_ROCAL})
                 include/augmentations/effects_augmentations/
                 include/augmentations/geometry_augmentations/
                 include/augmentations/audio_augmentations/
+                include/augmentations/arithmetic_augmentations/
                 include/decoders/image/
                 include/decoders/video/
                 include/decoders/audio/

@@ -1163,6 +1163,36 @@ extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
                                                       float reference_magnitude,
                                                       RocalTensorOutputType rocal_tensor_output_type);
 
+extern "C" RocalTensor ROCAL_API_CALL rocalResample(RocalContext p_context,
+                                                    RocalTensor p_input,
+                                                    RocalTensor p_input_resample_rate,
+                                                    RocalTensorOutputType rocal_tensor_output_type,
+                                                    bool is_output,
+                                                    float sample_hint);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalUniformDistribution(RocalContext p_context,
+                                                               RocalTensor p_input,
+                                                               bool is_output,
+                                                               std::vector<float> &range);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalNormalDistribution(RocalContext p_context,
+                                                              RocalTensor p_input,
+                                                              bool is_output,
+                                                              float mean = 0.0,
+                                                              float stddev = 0.0);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorMulScalar(RocalContext p_context,
+                                                           RocalTensor p_input,
+                                                           bool is_output,
+                                                           RocalTensorOutputType rocal_tensor_output_type,
+                                                           float scalar = 0.0);
+
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_context,
+                                                           RocalTensor p_input1,
+                                                           RocalTensor p_input2,
+                                                           bool is_output,
+                                                           RocalTensorOutputType rocal_tensor_output_type);
+
 /*! \brief A
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context

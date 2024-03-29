@@ -40,13 +40,12 @@ def coin_flip(*inputs, probability=0.5):
     return output_array
 
 
-def uniform(*inputs, range=[-1, 1]):
-    """!Generates random values uniformly distributed within a specified range.
+def uniform(*inputs, range=[-1.0, 1.0]):
+    kwargs_pybind = { "inputs":inputs[0], "is_output": False, "range":range }
+    output_uniform_distribution = b.uniformDistribution(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (output_uniform_distribution)
 
-        @param inputs    list of input arguments.
-        @param range     Range for the uniform distribution.
-
-        @return    random values uniformly distributed within the specified range.
-    """
-    output_param = b.createFloatUniformRand(range[0], range[1])
-    return output_param
+def normal(*inputs, mean=0.0, stddev=1.0):
+    kwargs_pybind = { "inputs":inputs[0], "is_output": False, "mean": mean, "stddev": stddev }
+    output_normal_distribution = b.normalDistribution(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (output_normal_distribution)
