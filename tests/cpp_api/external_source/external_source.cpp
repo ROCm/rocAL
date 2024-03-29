@@ -63,7 +63,7 @@ int main(int argc, const char **argv) {
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
         printf(
-            "Usage: external_source <image_dataset_folder> "
+            "Usage: external_source <image_dataset_folder - required> "
             "<processing_device=1/cpu=0>  decode_width decode_height batch_size "
             "gray_scale/rgb/rgbplanar display_on_off external_source_mode<external_file_mode=0/raw_compressed_mode=1/raw_uncompresses_mode=2>\n");
         return -1;
