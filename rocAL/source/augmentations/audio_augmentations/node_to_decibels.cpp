@@ -26,25 +26,25 @@ THE SOFTWARE.
 
 #include "exception.h"
 
-ToDeciblesNode::ToDeciblesNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
+ToDecibelsNode::ToDecibelsNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
-void ToDeciblesNode::create_node() {
+void ToDecibelsNode::create_node() {
     if (_node)
         return;
 
     vx_status status = VX_SUCCESS;
-    vx_scalar cutoff_db = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cutoff_db);
-    vx_scalar multiplier = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_multiplier);
-    vx_scalar reference_magnitude = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_reference_magnitude);
-    _node = vxExtRppToDecibels(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), cutoff_db, multiplier, reference_magnitude);
+    vx_scalar cutoff_db_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cutoff_db);
+    vx_scalar multiplier_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_multiplier);
+    vx_scalar reference_magnitude_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_reference_magnitude);
+    _node = vxExtRppToDecibels(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), cutoff_db_vx, multiplier_vx, reference_magnitude_vx);
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the to_decibels (vxRppToDecibels) node failed: " + TOSTR(status))
 }
 
-void ToDeciblesNode::update_node() {}
+void ToDecibelsNode::update_node() {}
 
-void ToDeciblesNode::init(float cutoff_db, float multiplier, float reference_magnitude) {
+void ToDecibelsNode::init(float cutoff_db, float multiplier, float reference_magnitude) {
     _cutoff_db = cutoff_db;
     _multiplier = multiplier;
     _reference_magnitude = reference_magnitude;

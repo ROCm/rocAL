@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "graph.h"
 #include "node.h"
 
+#ifdef ROCAL_AUDIO
+
 class AudioLoaderNode : public Node {
    public:
     /// \param device_resources shard count from user
@@ -34,6 +36,7 @@ class AudioLoaderNode : public Node {
     AudioLoaderNode() = delete;
     /// \param internal_shard_count Defines the amount of parallelism user wants for the load and decode process to be handled internally.
     /// \param source_path Defines the path that includes the Audio dataset
+    /// \param file_list_path Defines the path that contains the file list
     /// \param storage_type Determines the storage type
     /// \param decoder_type Determines the decoder_type
     /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -43,7 +46,7 @@ class AudioLoaderNode : public Node {
     /// \param meta_data_reader Determines the meta-data information
     /// The loader will repeat Audios if necessary to be able to have Audios in multiples of the load_batch_count,
     /// for example if there are 10 Audios in the dataset and load_batch_count is 3, the loader repeats 2 Audios as if there are 12 Audios available.
-    void init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_file_list, StorageType storage_type,
+    void init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path, StorageType storage_type,
               DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader);
     std::shared_ptr<LoaderModule> get_loader_module();
 
@@ -54,3 +57,4 @@ class AudioLoaderNode : public Node {
    private:
     std::shared_ptr<AudioLoaderSharded> _loader_module = nullptr;
 };
+#endif

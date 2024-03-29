@@ -1,23 +1,34 @@
-# Anywhere {branch} is used, the branch name will be substituted.
-# These comments will also be removed.
 defaults:
   numbered: False
-root: doxygen/html/index
+#root: doxygen/html/index
+root: index
 subtrees:
-- caption: User Guide
-  entries:
-    - file: README
-      subtrees:
-        - entries:
-          - file: user_guide/ch1
-          - file: user_guide/ch2
-          - file: user_guide/ch3
-          - file: user_guide/ch4
-          - file: user_guide/ch5
-          - file: user_guide/ch6
-- caption: Examples
-  entries:
-    - file: examples
-- caption: About
-  entries:
-    - file: license
+- entries:
+  - file: install/install.rst
+    title: Installation
+  - file: how-to/index.rst
+    title: How To
+    subtrees:
+    - entries:
+      - file: how-to/overview.rst
+      - file: how-to/architecture.rst
+      - file: how-to/using-with-cpp.rst
+      - file: how-to/using-with-python.rst
+      - file: how-to/framework.rst
+  - file: doxygen/html/modules
+    title: rocAL API Reference
+    subtrees:
+    - entries:
+      - file: doxygen/html/group__group__rocal
+      - file: doxygen/html/group__group__rocal__types
+      - file: doxygen/html/group__group__rocal__augmentations
+      - file: doxygen/html/group__group__rocal__data__loaders
+      - file: doxygen/html/group__group__rocal__data__transfer
+      - file: doxygen/html/group__group__rocal__info
+      - file: doxygen/html/group__group__rocal__meta__data
+      - file: doxygen/html/group__group__rocal__parameters
+      - file: doxygen/html/files
+        title: rocAL Header files
+  - file: examples.rst
+    title: Examples
+  - file: license.rst

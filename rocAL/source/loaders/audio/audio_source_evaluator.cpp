@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "audio_decoder_factory.h"
 #include "reader_factory.h"
 
+#ifdef ROCAL_AUDIO
+
 size_t AudioSourceEvaluator::max_samples() {
     return _samples_max;
 }
@@ -47,8 +49,7 @@ void AudioSourceEvaluator::find_max_dimension() {
     _reader->reset();
     while (_reader->count_items()) {
         size_t fsize = _reader->open();
-        if ((fsize) == 0)
-            continue;
+        if (!fsize) continue;
         auto file_name = _reader->file_path();
         if (_decoder->initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
             WRN("Could not initialize audio decoder for file : " + _reader->id())
@@ -69,3 +70,4 @@ void AudioSourceEvaluator::find_max_dimension() {
     // return the reader read pointer to the begining of the resource
     _reader->reset();
 }
+#endif

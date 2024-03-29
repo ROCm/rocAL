@@ -27,60 +27,118 @@ THE SOFTWARE.
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
 #include "rocal_api.h"
 
-#define DISPLAY 1
-#define METADATA 0  // Switch the meta-data part once the meta-data reader (file list reader) is introduced
 using namespace std::chrono;
 
-int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu);
+bool verify_output(float *dst_ptr, long int frames, std::string case_name, int max_samples, int max_channels, int buffer_size) {
+    bool pass_status = false;
+    // read data from golden outputs
+    const char *rocal_data_path = std::getenv("ROCAL_DATA_PATH");
+    if (strcmp(rocal_data_path, "") == 0) {
+        std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+        exit(0);
+    }
+
+    std::string ref_file_path = std::string(rocal_data_path) + "GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
+    std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
+
+    if (!fin.is_open()) {
+        std::cout << "Error: Unable to open the input binary file\n";
+        return 1;
+    }
+
+    // Get the size of the file
+    fin.seekg(0, std::ios::end);
+    std::streampos fileSize = fin.tellg();
+    fin.seekg(0, std::ios::beg);
+
+    // Calculate the number of floats in the file
+    std::size_t numFloats = fileSize / sizeof(float);
+
+    // Create a vector to store the floats
+    std::vector<float> ref_output(numFloats);
+
+    // Read the floats from the file
+    fin.read(reinterpret_cast<char *>(ref_output.data()), fileSize);
+
+    if (fin.fail()) {
+        std::cout << "Error: Failed to read from the input binary file\n";
+        return 1;
+    }
+
+    // Close the file
+    fin.close();
+
+    int matched_indices = 0;
+    for (int i = 0; i < max_samples; i++) {
+        for (int j = 0; j < frames; j++) {
+            float ref_val, out_val;
+            ref_val = ref_output[i * frames + j];
+            out_val = dst_ptr[i * max_channels + j];
+            bool invalid_comparison = ((out_val == 0.0f) && (ref_val != 0.0f));
+            if (!invalid_comparison && abs(out_val - ref_val) < 1e-20)
+                matched_indices += 1;
+        }
+    }
+
+    std::cout << std::endl
+              << "Results for Test case: " << std::endl;
+    if ((matched_indices == buffer_size) && matched_indices != 0) {
+        pass_status = true;
+    }
+
+    return pass_status;
+}
+
+int test(int test_case, const char *path, int qa_mode, int downmix, int gpu);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
-    printf("Usage: audio_augmentation <audio-dataset-folder> <test_case> <sample-rate> <downmix> <max_frames> <max_channels> gpu=1/cpu=0 \n");
-    if (argc < MIN_ARG_COUNT)
+    if (argc < MIN_ARG_COUNT) {
+        printf("Usage: ./rocal_audio_unittests <audio-dataset-folder> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
         return -1;
+    }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
+    int qa_mode = 0;
     unsigned test_case = 0;
-    float sample_rate = 0.0;
     bool downmix = false;
-    unsigned max_frames = 1;
-    unsigned max_channels = 1;
     bool gpu = 0;
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         test_case = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
-        sample_rate = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
         downmix = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        max_frames = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        max_channels = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
 
-    int return_val = test(test_case, path, sample_rate, downmix, max_frames, max_channels, gpu);
+    if (argc >= argIdx + MIN_ARG_COUNT)
+        qa_mode = atoi(argv[++argIdx]);
+
+    if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
+        std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
+        gpu = false;
+    }
+
+    int return_val = test(test_case, path, qa_mode, downmix, gpu);
     return return_val;
 }
 
-int test(int test_case, const char *path, float sample_rate, int downmix, unsigned max_frames, unsigned max_channels, int gpu) {
-    int inputBatchSize = 10;
+int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
+    int input_batch_size = 1;
+    bool is_output_audio_decoder = false;
     std::cout << ">>> test case " << test_case << std::endl;
     std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
-    auto handle = rocalCreate(inputBatchSize,
+    auto handle = rocalCreate(input_batch_size,
                               gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0,
                               1);
 
@@ -89,68 +147,123 @@ int test(int test_case, const char *path, float sample_rate, int downmix, unsign
         return -1;
     }
 
-    rocalAudioFileSourceSingleShard(handle, path, 0, 1, true, false, false, false, max_frames, max_channels);
+    std::string file_list_path = "";  // User can modify this with the file list path if required
+    if (qa_mode && test_case != 3) {  // setting the default file list path from ROCAL_DATA_PATH
+        file_list_path = std::string(std::getenv("ROCAL_DATA_PATH")) + "/audio/wav_file_list.txt";
+    }
+
+    std::cout << ">>>>>>> Running LABEL READER" << std::endl;
+    rocalCreateLabelReader(handle, path, file_list_path.c_str());
+
+    RocalTensor decoded_output;
+    is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
+    decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path.c_str(), 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 
-    RocalTensor output, input1;
-
-    switch (test_case)
-    {
-        case 1:
-        {
-            std::cout<< "\n Augmentation - rocalPreEmphasisFilter ";
-            RocalTensorLayout tensorLayout; // = RocalTensorLayout::None;
+    std::string case_name = "";
+    switch (test_case) {
+        case 0: {
+            case_name = "audio_decoder";
+            std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
+        } break;
+        case 1: {
+            std::cout << ">>>>>>> Running PREEMPHASIS" << std::endl;
+            case_name = "preemphasis_filter";
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            output = rocalPreEmphasisFilter(handle, input1, tensorOutputType, true);
-            
-        }
-        break;
-        default:
-        {
-            std::cout << "Not a valid pipeline type ! Exiting!\n";
+            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP;
+            RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
+            rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
+
+        } break;
+        case 2: {
+            std::cout << ">>>>>>> Running SPECTROGRAM" << std::endl;
+            case_name = "spectrogram";
+            std::vector<float> window_fn;
+            rocalSpectrogram(handle, decoded_output, true, window_fn, true, true, RocalSpectrogramLayout::ROCAL_FT, 2, 512, 320, 160, ROCAL_FP32);
+
+        } break;
+        case 3: {
+            case_name = "downmix";
+            std::cout << ">>>>>>> Running AUDIO DECODER + DOWNMIX" << std::endl;
+        } break;
+        case 4: {
+            std::cout << ">>>>>>> Running TO DECIBELS" << std::endl;
+            case_name = "to_decibels";
+            rocalToDecibels(handle, decoded_output, true, std::log(1e-20), std::log(10), 1.0f, ROCAL_FP32);
+        } break;
+        default: {
+            std::cout << "Not a valid test case ! Exiting!\n";
             return -1;
         }
-
     }
 
+    // Calling the API to verify and build the augmentation graph
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Could not verify the augmentation graph " << rocalGetErrorMessage(handle);
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>>>>> Diplay Values<<<<<<<<<<<<<<<<<*/
     int iteration = 0;
-    RocalTensorList output_tensor_list;
-
-    while (rocalGetRemainingImages(handle) >= static_cast<size_t>(inputBatchSize)) {
-        std::cout << "\n rocalGetRemainingAudios:: " << rocalGetRemainingImages(handle) << "\t inputBatchsize:: " << inputBatchSize;
-        std::cout << "\n iteration:: " << iteration;
+    float *buffer = nullptr;
+    int frames = 0;
+    int max_channels = 0;
+    int max_samples = 0;
+    int buffer_size = 0;
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    while (rocalGetRemainingImages(handle) >= static_cast<size_t>(input_batch_size)) {
+        std::cout << "\n Iteration:: " << iteration << "\n";
         iteration++;
         if (rocalRun(handle) != 0) {
             break;
         }
-        output_tensor_list = rocalGetOutputTensors(handle);
-        std::cout << "\n *****************************Audio output**********************************\n";
-        std::cout << "\n **************Printing the first 5 values of the Audio buffer**************\n";
+        RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
+        int file_name_length[input_batch_size];
+        int file_name_size = rocalGetImageNameLen(handle, file_name_length);
+        char audio_file_name[file_name_size];
+        std::vector<int> roi(4 * input_batch_size, 0);
+        rocalGetImageName(handle, audio_file_name);
+        RocalTensorList labels = rocalGetImageLabels(handle);
+        int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
+        std::cout << "Audio file : " << audio_file_name << "\n";
+        std::cout << "Label : " << *label_id << "\n";
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
-            float *buffer = (float *)output_tensor_list->at(idx)->buffer();
-            for (int n = 0; n < 5; n++)
-                std::cout << buffer[n] << "\n";
-        }
-
-        if (METADATA) {
-            RocalTensorList labels = rocalGetImageLabels(handle);
-            for (uint i = 0; i < labels->size(); i++) {
-                int *labels_buffer = (int *)(labels->at(i)->buffer());
-                std::cout << ">>>>> LABELS : " << labels_buffer[0] << "\t";
+            buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
+            output_tensor_list->at(idx)->copy_roi(roi.data());
+            if (output_tensor_list->at(idx)->dims().at(2) == 1) {
+                max_samples = 1;
+                max_channels = 1;
+                frames = roi[idx * 4 + 2];
+                buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
+            } else {
+                max_samples = output_tensor_list->at(idx)->dims().at(1);
+                max_channels = output_tensor_list->at(idx)->dims().at(2);
+                frames = roi[idx * 4 + 2];
+                buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
             }
         }
-        std::cout << "******************************************************************************\n";
     }
+
+    if (qa_mode) {
+        std::cout << "\n *****************************Verifying Audio output**********************************\n";
+        if (verify_output(buffer, frames, case_name, max_samples, max_channels, buffer_size)) {
+            std::cout << "PASSED!\n\n";
+        } else {
+            std::cout << "FAILED!\n\n";
+        }
+    }
+
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto dur = duration_cast<microseconds>(t2 - t1).count();
+    auto rocal_timing = rocalGetTimingInfo(handle);
+    std::cout << "Load     time " << rocal_timing.load_time << std::endl;
+    std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
+    std::cout << "Process  time " << rocal_timing.process_time << std::endl;
+    std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
+    std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     return 0;
 }

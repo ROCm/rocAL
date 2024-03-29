@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include <cstdio>
 #include <cstring>
 
+#ifdef ROCAL_AUDIO
+
 SndFileDecoder::SndFileDecoder(){};
 
 AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
@@ -34,38 +36,28 @@ AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
     read_frame_count = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
     AudioDecoder::Status status = Status::OK;
     if (read_frame_count != _sfinfo.frames) {
-        printf("Not able to decode all frames. Only decoded %d frames\n", read_frame_count);
+        ERR("Not able to decode all frames. Only decoded" + TOSTR(read_frame_count) + "frames");
         sf_close(_sf_ptr);
-        AudioDecoder::Status status = Status::CONTENT_DECODE_FAILED;
-        return status;
+        status = Status::CONTENT_DECODE_FAILED;
     }
     return status;
 }
 
 AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, float* sample_rate) {
-    // Set the samples and channels using the struct variables _sfinfo.samples and _sfinfo.channels
+    // Set the samples and channels using the struct variables _sfinfo.frames and _sfinfo.channels
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
     *sample_rate = _sfinfo.samplerate;
     AudioDecoder::Status status = Status::OK;
-    if (_sfinfo.channels < 1) {
-        THROW("Not able to process less than" + TOSTR(_sfinfo.channels) + "channels");
+    if (_sfinfo.frames < 1 || _sfinfo.channels < 1 || _sfinfo.samplerate < 1) {
         sf_close(_sf_ptr);
         status = Status::HEADER_DECODE_FAILED;
-        return status;
-    }
-    if (_sfinfo.frames < 1) {
-        THROW("Not able to process less than" + TOSTR(_sfinfo.frames) + "frames");
-        sf_close(_sf_ptr);
-        status = Status::HEADER_DECODE_FAILED;
-        return status;
     }
     return status;
 }
 
 // Initialize will open a new decoder and initialize the context
 AudioDecoder::Status SndFileDecoder::initialize(const char* src_filename) {
-    _src_filename = src_filename;
     AudioDecoder::Status status = Status::OK;
     memset(&_sfinfo, 0, sizeof(_sfinfo));
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo))) {
@@ -86,3 +78,4 @@ void SndFileDecoder::release() {
 }
 
 SndFileDecoder::~SndFileDecoder() {}
+#endif

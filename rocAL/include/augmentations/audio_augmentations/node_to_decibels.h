@@ -24,10 +24,10 @@ THE SOFTWARE.
 #include "graph.h"
 #include "node.h"
 
-class ToDeciblesNode : public Node {
+class ToDecibelsNode : public Node {
    public:
-    ToDeciblesNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    ToDeciblesNode() = delete;
+    ToDecibelsNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    ToDecibelsNode() = delete;
     void init(float cutoff_db, float multiplier, float reference_magnitude);
 
    protected:
