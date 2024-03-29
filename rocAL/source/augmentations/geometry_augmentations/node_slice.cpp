@@ -32,9 +32,14 @@ void SliceNode::create_node() {
     if (_node)
         return;
 
+    auto max_shape = _outputs[0]->info().max_shape();
+    _slice_roi.resize(_batch_size, std::vector<uint32_t>(max_shape.size()));
+    for (uint i = 0; i < _batch_size; i++)
+        for (uint j = 0; j < max_shape.size(); j++)
+            _slice_roi[i][j] = max_shape[j];
     const int buffer_size = _batch_size;
     // Added newly
-        int input_layout = static_cast<int>(_inputs[0]->info().layout());
+    int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
@@ -45,10 +50,10 @@ void SliceNode::create_node() {
         THROW(" vxAddArrayItems failed in the slice (vxExtRppSlice) node: " + TOSTR(status));
     vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
     _node = vxExtRppSlice(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                        //  _outputs[0]->get_roi_tensor(), 
-                         _anchor->handle(), _shape->handle(), 
-                         _fill_values_array, policy, input_layout_vx, roi_type_vx);
-                          // What is input layout and ROI type
+                          //  _outputs[0]->get_roi_tensor(),
+                          _anchor->handle(), _shape->handle(),
+                          _fill_values_array, policy, input_layout_vx, roi_type_vx);
+    // What is input layout and ROI type
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the slice node (vxRppSlice) failed: " + TOSTR(status))

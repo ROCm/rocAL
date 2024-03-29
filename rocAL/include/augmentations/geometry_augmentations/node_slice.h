@@ -37,7 +37,6 @@ class SliceNode : public Node {
    protected:
     void create_node() override;
     void update_node() override;
-    void create_shape_tensor();
 
    private:
     vx_array _fill_values_array;
