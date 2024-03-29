@@ -2388,9 +2388,10 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
         dims.at(0) = context->user_batch_size();
         dims.at(1) = 1;
         dims.at(2) = 1;
-        auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
                                tensor_data_type);
+        info.set_dims(dims);
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());
         context->master_graph->add_node<UniformDistributionNode>({input}, {output})->init(range);
@@ -2419,9 +2420,10 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
         dims.at(0) = context->user_batch_size();
         dims.at(1) = 1;
         dims.at(2) = 1;
-        auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
+        auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
                                tensor_data_type);
+        info.set_dims(dims);
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev);
