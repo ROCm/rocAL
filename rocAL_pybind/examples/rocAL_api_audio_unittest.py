@@ -39,7 +39,8 @@ test_case_augmentation_map = {
     1: "preemphasis_filter",
     2: "spectrogram",
     3: "downmix",
-    4: "to_decibels"
+    4: "to_decibels",
+    5: "resample"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -159,6 +160,26 @@ def non_silent_region_and_slice(path, file_list):
         rocal_tensor_output_type = types.FLOAT)
     return trim_silence
 
+@pipeline_def(seed=seed)
+def resample_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=True,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    resample = 16000.00
+    uniform_distribution_resample = fn.random.uniform(decoded_audio, range=[1.15,1.15])
+    resampled_rate = uniform_distribution_resample * resample
+    return fn.resample(
+            decoded_audio,
+            resample_rate=resampled_rate,
+            resample_hint=1.15 * 38240,
+            rocal_tensor_output_type=types.FLOAT)
+
 def main():
     args = parse_args()
 
@@ -221,6 +242,8 @@ def main():
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=downmix_audio_path, file_list="", downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "resample":
+            audio_pipeline = resample_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         output_tensor_list = audio_pipeline.get_output_tensors()

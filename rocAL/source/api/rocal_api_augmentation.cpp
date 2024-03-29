@@ -2333,6 +2333,7 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
         op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_type;
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
+        output->reset_tensor_roi();
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar);
     } catch (const std::exception& e) {
@@ -2389,6 +2390,7 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
                                context->master_graph->mem_type(),
                                tensor_data_type);
         output = context->master_graph->create_tensor(info, is_output);
+        output->reset_tensor_roi();
         output->create_from_handle(context->master_graph->get_vx_context());
         context->master_graph->add_node<UniformDistributionNode>({input}, {output})->init(range);
     } catch (const std::exception& e) {
