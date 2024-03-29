@@ -1137,7 +1137,7 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.
     tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
 
-//TODO: To modify the comments wrt earlier augmentations
+# //TODO: To modify the comments wrt earlier augmentations
 def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_sample_hint = [0], cutoff_db = -60, reference_power = 0.0, reset_interval = 8192, seed = -1, window_length = 2048):
     """
     Performs leading and trailing silence detection in an audio buffer.
@@ -1150,7 +1150,7 @@ def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_
     non_silent_region_output = b.sonSilentRegion(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return non_silent_region_output
 
-//TODO: To modify the comments wrt earlier augmentations
+# //TODO: To modify the comments wrt earlier augmentations
 def slice(*inputs, anchor = [], shape = [], axes = [1, 0], axis_names = "WH", bytes_per_sample_hint = [0], dtype = types.FLOAT, end = [], fill_values = [0.0], normalized_anchor = True, normalized_shape = True,  out_of_bounds_policy = types.ERROR, rel_end = [], rel_shape = [], rel_start = [], seed = -1, start = [] , rocal_tensor_output_type = types.FLOAT):
     """
     The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
