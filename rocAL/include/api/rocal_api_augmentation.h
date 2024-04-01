@@ -1236,6 +1236,52 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_contex
                                                            bool is_output,
                                                            RocalTensorOutputType rocal_tensor_output_type);
 
+/*! \brief Performs silence detection in the input audio tensor
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] cutoff_db threshold(dB) below which the signal is considered silent
+ * \param [in] reference_power reference power that is used to convert the signal to dB
+ * \param [in] reset_interval number of samples after which the moving mean average is recalculated to avoid loss of precision
+ * \param [in] window_length size of the sliding window used to calculate of the short-term power of the signal
+ * \return std::pair<RocalTensor, RocalTensor>
+ */
+extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
+                                                                                   RocalTensor input,
+                                                                                   bool is_output,
+                                                                                   float cutoff_db,
+                                                                                   float reference_power,
+                                                                                   int reset_interval,
+                                                                                   int window_length);
+
+/*! \brief Extracts the sub-tensors from a given input tensor
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] anchor_tensor anchor values used for specifying the starting indices of slice
+ * \param [in] shape_tensor shape values used for specifying the length of slice
+ * \param [in] fill_values fill values based on out of Bound policy
+ * \param [in] axes axes along which slice is needed
+ * \param [in] normalized_anchor determines whether the anchor positional input should be interpreted as normalized or as absolute coordinates
+ * \param [in] normalized_shape determines whether the shape positional input should be interpreted as normalized or as absolute coordinates
+ * \param [in] policy
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
+                                                 RocalTensor input,
+                                                 bool is_output,
+                                                 RocalTensor anchor_tensor,
+                                                 RocalTensor shape_tensor,
+                                                 std::vector<float> fill_values,
+                                                 std::vector<unsigned> axes,
+                                                 bool normalized_anchor,
+                                                 bool normalized_shape,
+                                                 RocalOutOfBoundsPolicy policy,
+                                                 RocalTensorOutputType output_datatype);
+
 /*! \brief A
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context

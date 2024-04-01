@@ -141,6 +141,8 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {1, "float16"},
     {2, "uint8"},
     {3, "int8"},
+    {4, "uint32"},
+    {5, "int32"},
 };
 
 PYBIND11_MODULE(rocal_pybind, m) {
@@ -427,6 +429,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
     py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
         .value("FT", ROCAL_FT)
         .value("TF", ROCAL_TF)
+        .export_values();
+    py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
+        .value("PAD", ROCAL_PAD)
+        .value("TRIMTOSHAPE", ROCAL_TRIMTOSHAPE)
+        .value("ERROR", ROCAL_ERROR)
         .export_values();
     py::enum_<RocalMelScaleFormula>(types_m, "RocalMelScaleFormula", "Rocal Audio Mel Formula")
         .value("SLANEY", SLANEY)
@@ -760,6 +767,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("tensorMulScalar", &rocalTensorMulScalar,
           py::return_value_policy::reference);
     m.def("tensorAddTensor", &rocalTensorAddTensor,
+          py::return_value_policy::reference);
+    m.def("nonSilentRegion", &rocalNonSilentRegion,
+          py::return_value_policy::reference);
+    m.def("slice", &rocalSlice,
           py::return_value_policy::reference);
     m.def("normalize", &rocalNormalize,
           py::return_value_policy::reference);

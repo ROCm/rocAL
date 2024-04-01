@@ -40,7 +40,8 @@ test_case_augmentation_map = {
     2: "spectrogram",
     3: "downmix",
     4: "to_decibels",
-    5: "resample"
+    5: "non_silent_region",
+    6: "slice"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -139,6 +140,42 @@ def to_decibels_pipeline(path, file_list):
             output_dtype=types.FLOAT)
 
 @pipeline_def(seed=seed)
+def non_silent_region(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    return begin, length
+
+@pipeline_def(seed=seed)
+def non_silent_region_and_slice(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    trim_silence = fn.slice(
+        decoded_audio,
+        anchor=[begin],
+        shape=[length],
+        normalized_anchor=False,
+        normalized_shape=False,
+        axes=[0],
+        rocal_tensor_output_type = types.FLOAT)
+    return trim_silence
+
+@pipeline_def(seed=seed)
 def resample_pipeline(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
@@ -220,8 +257,10 @@ def main():
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=downmix_audio_path, file_list="", downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
-        if case_name == "resample":
-            audio_pipeline = resample_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "slice":
+            audio_pipeline = non_silent_region_and_slice(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "non_silent_region":
+            audio_pipeline = non_silent_region(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         output_tensor_list = audio_pipeline.get_output_tensors()
