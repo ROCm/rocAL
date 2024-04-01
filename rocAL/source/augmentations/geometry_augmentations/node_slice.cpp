@@ -65,7 +65,6 @@ void SliceNode::update_node() {
         std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), _fill_values[0]);
     }
     vx_status status = VX_SUCCESS;
-    _outputs[0]->update_tensor_roi(_slice_roi);
     status = vxCopyArrayRange((vx_array)_fill_values_array, 0, _batch_size, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
     if (status != 0)
         WRN("ERROR: vxCopyArrayRange failed in the slice node (vxExtRppSlice) node: " + TOSTR(status))

@@ -31,7 +31,6 @@ class SliceNode : public Node {
    public:
     SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SliceNode() = delete;
-    ~SliceNode();
     void init(Tensor *anchor_param, Tensor *shape_param, std::vector<float> &fill_values_param, RocalOutOfBoundsPolicy policy);
 
    protected:
@@ -40,10 +39,8 @@ class SliceNode : public Node {
 
    private:
     vx_array _fill_values_array;
-    void *_shape_array;
     Tensor *_anchor, *_shape;
     std::vector<float> _fill_values, _fill_values_vec;
-    std::vector<int> _anchor_vec, _shape_vec;
     std::vector<std::vector<uint32_t>> _slice_roi;
-    RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ROCAL_PAD;
+    RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ROCAL_ERROR;
 };

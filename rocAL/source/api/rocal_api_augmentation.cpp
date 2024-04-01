@@ -2450,7 +2450,7 @@ rocalNonSilentRegion(
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
-        unsigned number_of_dims = 4;
+        unsigned number_of_dims = 3;
         std::vector<size_t> dims1(number_of_dims, 1);
         dims1.at(0) = context->user_batch_size();
         auto info1 = TensorInfo(std::vector<size_t>(std::move(dims1)),
@@ -2465,6 +2465,8 @@ rocalNonSilentRegion(
         output2 = context->master_graph->create_tensor(info2, is_output);
         output_tensors.push_back(output1);
         output_tensors.push_back(output2);
+        output1->reset_tensor_roi();
+        output2->reset_tensor_roi();
         context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cutoff_db, reference_power, window_length, reset_interval);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
