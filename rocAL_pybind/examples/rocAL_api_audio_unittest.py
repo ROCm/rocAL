@@ -217,7 +217,8 @@ def main():
         if case_name == "spectrogram":
             audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "downmix":
-            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=downmix_audio_path, file_list="", downmix=True)
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu,
+                                                    path=downmix_audio_path if qa_mode else audio_path, file_list="" if qa_mode else file_list, downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "resample":
