@@ -32,14 +32,13 @@ void TensorMulScalarNode::create_node() {
     if (_node)
         return;
     vx_scalar scalar_value = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scalar);
-    _node = vxExtRppTensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value, _batch_size);
+    _node = vxExtRppTensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the (vxExtRppTensorMulScalar) node failed: " + TOSTR(status))
 }
 
-void TensorMulScalarNode::update_node() {
-}
+void TensorMulScalarNode::update_node() {}
 
 void TensorMulScalarNode::init(float scalar) {
     _scalar = scalar;

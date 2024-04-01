@@ -2284,7 +2284,7 @@ RocalTensor ROCAL_API_CALL
 rocalResample(RocalContext p_context,
               RocalTensor p_input,
               RocalTensor p_output_resample_rate,
-              RocalTensorOutputType rocal_tensor_output_datatype,
+              RocalTensorOutputType output_datatype,
               bool is_output,
               float sample_hint,
               float quality) {
@@ -2299,7 +2299,11 @@ rocalResample(RocalContext p_context,
     auto output_resample_rate = static_cast<Tensor*>(p_output_resample_rate);
     try {
         TensorInfo output_info = input->info();
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for resample augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
         output_info.set_data_type(op_tensor_data_type);
         if (sample_hint > 0) {
             std::vector<size_t> max_dims = output_info.max_shape();
@@ -2349,7 +2353,7 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
                                  RocalTensor p_input1,
                                  RocalTensor p_input2,
                                  bool is_output,
-                                 RocalTensorOutputType rocal_tensor_output_datatype) {
+                                 RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input1 == nullptr) || (p_input2 == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2359,11 +2363,11 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     auto input1 = static_cast<Tensor*>(p_input1);
     auto input2 = static_cast<Tensor*>(p_input2);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_datatype;
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         TensorInfo output_info = input1->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<TensorAddTensorNode>({input1, input2}, {output})->init();
+        context->master_graph->add_node<TensorAddTensorNode>({input1, input2}, {output});
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -2375,9 +2379,11 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
                                      RocalTensor p_input,
                                      bool is_output,
                                      std::vector<float>& range) {
-    if (!p_context)
-        THROW("Null values passed as input")
     Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
@@ -2407,9 +2413,11 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
                                     bool is_output,
                                     float mean,
                                     float stddev) {
-    if (!p_context)
-        THROW("Null values passed as input")
     Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
