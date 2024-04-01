@@ -52,10 +52,23 @@ def plot_audio_wav(audio_tensor, idx):
     plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
     plt.close()
 
-def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name, dimensions):
+def verify_non_silent_region_output(output_list, rocal_data_path, test_results, case_name):
+    ref_path = f'{rocal_data_path}/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
+    data_array = np.fromfile(ref_path, dtype=np.int32)
+    begin_nsr = output_list[0].detach().numpy()
+    length_nsr = output_list[1].detach().numpy()
+
+    if begin_nsr[0] == data_array[0] and length_nsr == data_array[1]:
+        print("PASSED!")
+        test_results[case_name] = "PASSED"
+    else:
+        print("FAILED!")
+        test_results[case_name] = "FAILED"
+
+def verify_output(output_list, rocal_data_path, roi_tensor, test_results, case_name, dimensions):
     ref_path = f'{rocal_data_path}/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
-    audio_data = audio_tensor.detach().numpy()
+    audio_data = output_list[0].detach().numpy()
     audio_data = audio_data.flatten()
     roi_data = roi_tensor.detach().numpy()
     buffer_size = roi_data[0] * roi_data[1]
@@ -273,6 +286,7 @@ def main():
             print("Epoch :: ", e)
             torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
             for i, it in enumerate(audioIteratorPipeline):
+                output_list = []
                 for x in range(len(it[0])):
                     for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
                         if args.print_tensor:
@@ -282,10 +296,15 @@ def main():
                         if args.display:
                             plot_audio_wav(audio_tensor, cnt)
                         cnt+=1
+                        output_list.append(audio_tensor)
             if qa_mode :
-                verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name, dimensions)
+                if case_name == "non_silent_region":
+                    print(output_list)
+                    verify_non_silent_region_output(output_list, rocal_data_path, test_results, case_name)
+                else:
+                    verify_output(output_list, rocal_data_path, roi, test_results, case_name, dimensions)
             print("EPOCH DONE", e)
-        
+
         stop = timeit.default_timer()
         print('\nTime: ', stop - start)
 
