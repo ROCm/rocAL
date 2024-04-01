@@ -2284,10 +2284,10 @@ RocalTensor ROCAL_API_CALL
 rocalResample(RocalContext p_context,
               RocalTensor p_input,
               RocalTensor p_output_resample_rate,
-              RocalTensorOutputType output_datatype,
               bool is_output,
               float sample_hint,
-              float quality) {
+              float quality,
+              RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr) || (p_output_resample_rate == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2326,8 +2326,8 @@ rocalResample(RocalContext p_context,
 RocalTensor rocalTensorMulScalar(RocalContext p_context,
                                  RocalTensor p_input,
                                  bool is_output,
-                                 RocalTensorOutputType output_datatype,
-                                 float scalar) {
+                                 float scalar,
+                                 RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2337,6 +2337,10 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for TensorMulScalar augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -2363,6 +2367,10 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     auto input2 = static_cast<Tensor*>(p_input2);
     try {
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for TensorAddTensor augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
         TensorInfo output_info = input1->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -2386,11 +2394,10 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), 1};
         auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
-                               tensor_data_type);
+                               RocalTensorDataType::FP32);
         info.set_dims(dims);
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());
@@ -2415,11 +2422,10 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), 1};
         auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
-                               tensor_data_type);
+                               RocalTensorDataType::FP32);
         info.set_dims(dims);
         output = context->master_graph->create_tensor(info, is_output);
         output->create_from_handle(context->master_graph->get_vx_context());

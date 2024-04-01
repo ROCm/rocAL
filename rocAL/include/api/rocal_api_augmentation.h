@@ -1168,21 +1168,21 @@ extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
  * \param [in] p_output_resample_rate the output resample rate for a batch of audio samples
- * \param [in] output_datatype the data type of the output tensor
  * \param [in] is_output Is the output tensor part of the graph output
  * \param [in] sample_hint sample_hint value is the value required to allocate the max memory for output tensor wrt resample_rate and the samples
  * \param [in] quality The resampling is achieved by applying a sinc filter with Hann window with an extent controlled by the quality argument
+ * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalResample(RocalContext p_context,
                                                     RocalTensor p_input,
                                                     RocalTensor p_output_resample_rate,
-                                                    RocalTensorOutputType output_datatype,
                                                     bool is_output,
                                                     float sample_hint,
-                                                    float quality = 50.0);
+                                                    float quality = 50.0,
+                                                    RocalTensorOutputType output_datatype = ROCAL_FP32);
 
-/*! \brief Creates rocALTensor generated from an uniform distribution
+/*! \brief Creates and returns rocALTensor generated from an uniform distribution
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
@@ -1195,7 +1195,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalUniformDistribution(RocalContext p_co
                                                                bool is_output,
                                                                std::vector<float> &range);
 
-/*! \brief Creates rocALTensor generated from an normal distribution
+/*! \brief Creates and returns rocALTensor generated from an normal distribution
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
  * \param [in] is_output Is the output tensor part of the graph output
@@ -1213,15 +1213,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNormalDistribution(RocalContext p_con
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
  * \param [in] is_output Is the output tensor part of the graph output
- * \param [in] output_datatype the data type of the output tensor
  * \param [in] scalar The scalar value to be multiplied with the input tensor
+ * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalTensorMulScalar(RocalContext p_context,
                                                            RocalTensor p_input,
                                                            bool is_output,
-                                                           RocalTensorOutputType output_datatype = ROCAL_FP32,
-                                                           float scalar = 0.0);
+                                                           float scalar = 0.0,
+                                                           RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 /*! \brief Adds two tensors and returns the output.
  * \param [in] p_context Rocal context

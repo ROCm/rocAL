@@ -36,23 +36,23 @@ class BatchRNG {
      * different operators.
      */
     BatchRNG(int64_t seed = 1, int batch_size = 1, int state_size = 4)
-        : seed_(seed) {
-        std::seed_seq seq{seed_};
+        : _seed(seed) {
+        std::seed_seq seq{_seed};
         std::vector<uint32_t> seeds(batch_size * state_size);
         seq.generate(seeds.begin(), seeds.end());
-        rngs_.reserve(batch_size);
+        _rngs.reserve(batch_size);
         for (int i = 0; i < batch_size * state_size; i += state_size) {
             std::seed_seq s(seeds.begin() + i, seeds.begin() + i + state_size);
-            rngs_.emplace_back(s);
+            _rngs.emplace_back(s);
         }
     }
 
     /**
      * Returns engine corresponding to given sample ID
      */
-    RNG &operator[](int sample) noexcept { return rngs_[sample]; }
+    RNG &operator[](int sample) noexcept { return _rngs[sample]; }
 
    private:
-    int64_t seed_;
-    std::vector<RNG> rngs_;
+    int64_t _seed;
+    std::vector<RNG> _rngs;
 };

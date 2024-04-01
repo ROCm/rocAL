@@ -153,14 +153,14 @@ def resample_pipeline(path, file_list):
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
-    resample = 16000.00
-    uniform_distribution_resample = fn.random.uniform(decoded_audio, range=[1.15,1.15])
-    resampled_rate = uniform_distribution_resample * resample
+    input_sample_rate = 16000.00
+    uniform_distribution_resample = fn.random.uniform(decoded_audio, range=[1.15, 1.15])
+    resampled_rate = uniform_distribution_resample * input_sample_rate
     return fn.resample(
-            decoded_audio,
-            resample_rate=resampled_rate,
-            resample_hint=1.15 * 255840,
-            output_datatype=types.FLOAT)
+        decoded_audio,
+        resample_rate=resampled_rate,
+        resample_hint=1.15 * 255840,
+        output_datatype=types.FLOAT)
 
 @pipeline_def(seed=seed)
 def tensor_add_tensor_pipeline(path, file_list):

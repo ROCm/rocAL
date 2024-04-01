@@ -1117,7 +1117,7 @@ def resample(*inputs, resample_rate=None, output_datatype=types.FLOAT, resample_
 
     The resampling is achieved by applying a sinc filter with Hann window with an extent controlled by the quality argument.
     """
-    kwargs_pybind = {"input_audio": inputs[0], "resample_rate": resample_rate, "output_datatype": output_datatype, "is_output": False, "resample_hint": resample_hint, "quality": quality}
+    kwargs_pybind = {"input_audio": inputs[0], "resample_rate": resample_rate, "is_output": False, "resample_hint": resample_hint, "quality": quality, "output_datatype": output_datatype}
     resample_output = b.resample(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return resample_output
 
@@ -1133,6 +1133,6 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, output_datatype=types.FLOAT):
     """
     Multiplies a rocalTensor with a scalar float value.
     """
-    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "output_datatype": output_datatype, "scalar": scalar}
+    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "scalar": scalar, "output_datatype": output_datatype}
     tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
