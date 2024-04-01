@@ -30,7 +30,9 @@ test_case_augmentation_map = {
     2: "spectrogram",
     3: "downmix",
     4: "to_decibels",
-    5: "resample"
+    5: "resample",
+    6: "tensor_add_tensor",
+    7: "tensor_mul_scalar"
 }
 
 def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list):

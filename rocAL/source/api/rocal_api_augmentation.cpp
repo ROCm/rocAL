@@ -2315,7 +2315,6 @@ rocalResample(RocalContext p_context,
             THROW("Please pass a valid resample hint")
         }
         resampled_output = context->master_graph->create_tensor(output_info, is_output);
-        resampled_output->reset_tensor_roi();
         context->master_graph->add_node<ResampleNode>({input}, {resampled_output})->init(output_resample_rate, quality);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
@@ -2327,7 +2326,7 @@ rocalResample(RocalContext p_context,
 RocalTensor rocalTensorMulScalar(RocalContext p_context,
                                  RocalTensor p_input,
                                  bool is_output,
-                                 RocalTensorOutputType rocal_tensor_output_type,
+                                 RocalTensorOutputType output_datatype,
                                  float scalar) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
@@ -2337,7 +2336,7 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)rocal_tensor_output_type;
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -2363,7 +2362,7 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     auto input1 = static_cast<Tensor*>(p_input1);
     auto input2 = static_cast<Tensor*>(p_input2);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input1->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
@@ -2388,12 +2387,7 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
-        unsigned num_of_dims = 3;
-        std::vector<size_t> dims;
-        dims.resize(num_of_dims);
-        dims.at(0) = context->user_batch_size();
-        dims.at(1) = 1;
-        dims.at(2) = 1;
+        std::vector<size_t> dims = {context->user_batch_size(), 1};
         auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
                                tensor_data_type);
@@ -2422,12 +2416,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
-        unsigned num_of_dims = 3;
-        std::vector<size_t> dims;
-        dims.resize(num_of_dims);
-        dims.at(0) = context->user_batch_size();
-        dims.at(1) = 1;
-        dims.at(2) = 1;
+        std::vector<size_t> dims = {context->user_batch_size(), 1};
         auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
                                tensor_data_type);

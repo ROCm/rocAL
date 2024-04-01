@@ -20,9 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef BATCHRNG
-#define BATCHRNG
-
+#pragma once
 #include <random>
 
 template <typename RNG = std::mt19937>
@@ -58,5 +56,3 @@ class BatchRNG {
     int64_t seed_;
     std::vector<RNG> rngs_;
 };
-
-#endif

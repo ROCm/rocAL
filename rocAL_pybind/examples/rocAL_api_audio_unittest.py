@@ -160,7 +160,7 @@ def resample_pipeline(path, file_list):
             decoded_audio,
             resample_rate=resampled_rate,
             resample_hint=1.15 * 255840,
-            rocal_tensor_output_type=types.FLOAT)
+            output_datatype=types.FLOAT)
 
 @pipeline_def(seed=seed)
 def tensor_add_tensor_pipeline(path, file_list):

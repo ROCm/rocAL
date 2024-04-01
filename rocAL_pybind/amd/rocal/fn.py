@@ -1111,28 +1111,28 @@ def to_decibels(*inputs, bytes_per_sample_hint = [0], cutoff_db = -200.0, multip
     decibel_scale = b.toDecibels(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decibel_scale
 
-def resample(*inputs, resample_rate=None, rocal_tensor_output_type=types.FLOAT, resample_hint=-1, quality=50.0):
+def resample(*inputs, resample_rate=None, output_datatype=types.FLOAT, resample_hint=-1, quality=50.0):
     """
     Resamples an audio signal.
 
     The resampling is achieved by applying a sinc filter with Hann window with an extent controlled by the quality argument.
     """
-    kwargs_pybind = {"input_image0": inputs[0], "resample_rate": resample_rate, "rocal_tensor_output_type": rocal_tensor_output_type, "is_output": False, "resample_hint": resample_hint, "quality": quality}
+    kwargs_pybind = {"input_audio": inputs[0], "resample_rate": resample_rate, "output_datatype": output_datatype, "is_output": False, "resample_hint": resample_hint, "quality": quality}
     resample_output = b.resample(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return resample_output
 
-def tensor_add_tensor_float(*inputs, rocal_tensor_output_type=types.FLOAT):
+def tensor_add_tensor_float(*inputs, output_datatype=types.FLOAT):
     """
     Adds a rocalTensor with another rocalTensor.
     """
-    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "rocal_tensor_output_type": rocal_tensor_output_type}
+    kwargs_pybind = {"input_audio": inputs[0], "input_image1": inputs[1], "is_output": False, "output_datatype": output_datatype}
     tensor_add_tensor_float = b.tensorAddTensor(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_add_tensor_float
 
-def tensor_mul_scalar_float(*inputs, scalar=1.0, rocal_tensor_output_type=types.FLOAT):
+def tensor_mul_scalar_float(*inputs, scalar=1.0, output_datatype=types.FLOAT):
     """
     Multiplies a rocalTensor with a scalar float value.
     """
-    kwargs_pybind = {"input_image0": inputs[0], "is_output": False, "rocal_tensor_output_type": rocal_tensor_output_type, "scalar": scalar}
+    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "output_datatype": output_datatype, "scalar": scalar}
     tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
