@@ -29,11 +29,8 @@ class TensorAddTensorNode : public Node {
    public:
     TensorAddTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorAddTensorNode() = delete;
-    void init();
 
    protected:
     void create_node() override;
     void update_node() override;
-
-   private:
 };

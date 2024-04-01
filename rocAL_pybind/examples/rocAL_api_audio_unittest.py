@@ -155,7 +155,7 @@ def resample_pipeline(path, file_list):
     return fn.resample(
             decoded_audio,
             resample_rate=resampled_rate,
-            resample_hint=1.15 * 38240,
+            resample_hint=1.15 * 255840,
             rocal_tensor_output_type=types.FLOAT)
 
 def main():

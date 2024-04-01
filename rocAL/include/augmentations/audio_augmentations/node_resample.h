@@ -39,5 +39,4 @@ class ResampleNode : public Node {
     Tensor *_output_resample_rate;
     float _quality;
     vx_array _src_sample_rate_array;
-    std::vector<unsigned> _src_frames, _src_channels;
 };
