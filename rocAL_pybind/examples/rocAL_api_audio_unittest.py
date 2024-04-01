@@ -40,7 +40,9 @@ test_case_augmentation_map = {
     2: "spectrogram",
     3: "downmix",
     4: "to_decibels",
-    5: "resample"
+    5: "resample",
+    6: "tensor_add_tensor",
+    7: "tensor_mul_scalar"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -63,7 +65,9 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
         for j in range(roi_data[0]):
             ref_val = data_array[i * roi_data[0] + j]
             out_val = audio_data[i * dimensions[2] + j]
-            invalid_comparison = (out_val == 0.0 and ref_val != 0.0)
+            # ensuring that out_val is not exactly zero while ref_val is non-zero.
+            invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
+            #comparing the absolute difference between the output value (out_val) and the reference value (ref_val) with a tolerance threshold of 1e-20.
             if not invalid_comparison and abs(out_val - ref_val) < 1e-20:
                 matched_indices += 1
 
@@ -155,8 +159,35 @@ def resample_pipeline(path, file_list):
     return fn.resample(
             decoded_audio,
             resample_rate=resampled_rate,
-            resample_hint=1.15 * 38240,
+            resample_hint=1.15 * 255840,
             rocal_tensor_output_type=types.FLOAT)
+
+@pipeline_def(seed=seed)
+def tensor_add_tensor_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    pre_emphasis_output = fn.preemphasis_filter(decoded_audio)
+    return decoded_audio + pre_emphasis_output
+
+@pipeline_def(seed=seed)
+def tensor_mul_scalar_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=True,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return decoded_audio * 1.15
 
 def main():
     args = parse_args()
@@ -223,6 +254,10 @@ def main():
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "resample":
             audio_pipeline = resample_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "tensor_add_tensor":
+            audio_pipeline = tensor_add_tensor_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "tensor_mul_scalar":
+            audio_pipeline = tensor_mul_scalar_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         output_tensor_list = audio_pipeline.get_output_tensors()
