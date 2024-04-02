@@ -50,7 +50,7 @@ void SliceNode::create_node() {
         THROW(" vxAddArrayItems failed in the slice (vxExtRppSlice) node: " + TOSTR(status));
     vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
     _node = vxExtRppSlice(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                          //  _outputs[0]->get_roi_tensor(),
+                           _outputs[0]->get_roi_tensor(),
                           _anchor->handle(), _shape->handle(),
                           _fill_values_array, policy, input_layout_vx, roi_type_vx);
     // What is input layout and ROI type

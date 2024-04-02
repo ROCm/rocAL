@@ -38,10 +38,10 @@ class UniformDistributionNode : public Node {
    protected:
     void create_node() override;
     void update_node() override;
+
+   private:
     float _min, _max;
     std::uniform_real_distribution<float> _dist_uniform;  // uniform distribution
     std::vector<float> _uniform_distribution_array;
-    unsigned _num_of_dims;
-    vx_size *_stride;
     BatchRNG<std::mt19937> _rngs = {89, 2};  // Random Seed, Random BatchSize for initialization
 };

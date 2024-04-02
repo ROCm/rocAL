@@ -57,10 +57,8 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name, int m
     std::streampos fileSize = fin.tellg();
     fin.seekg(0, std::ios::beg);
 
-    // Calculate the number of floats in the file
     std::size_t numFloats = fileSize / sizeof(float);
 
-    // Create a vector to store the floats
     std::vector<float> ref_output(numFloats);
 
     // Read the floats from the file
@@ -71,7 +69,6 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name, int m
         return 1;
     }
 
-    // Close the file
     fin.close();
 
     int matched_indices = 0;
@@ -194,6 +191,29 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             case_name = "to_decibels";
             rocalToDecibels(handle, decoded_output, true, std::log(1e-20), std::log(10), 1.0f, ROCAL_FP32);
         } break;
+        case 5: {
+            std::cout << ">>>>>>> Running RESAMPLE" << std::endl;
+            case_name = "resample";
+            float resample = 16000.00;
+            std::vector<float> range = {1.15, 1.15};
+            RocalTensor uniform_distribution_resample = rocalUniformDistribution(handle, decoded_output, false, range);
+            RocalTensor resampled_rate = rocalTensorMulScalar(handle, uniform_distribution_resample, false, resample, ROCAL_FP32);
+            rocalResample(handle, decoded_output, resampled_rate, true, 1.15 * 255840, 50.0, ROCAL_FP32);
+        } break;
+        case 6: {
+            std::cout << ">>>>>>> Running TENSOR ADD TENSOR" << std::endl;
+            case_name = "tensor_add_tensor";
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP;
+            RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
+            RocalTensor p_preemph_output = rocalPreEmphasisFilter(handle, decoded_output, false, p_preemph_coeff, preemph_border_type, tensorOutputType);
+            rocalTensorAddTensor(handle, decoded_output, p_preemph_output, true, ROCAL_FP32);
+        } break;
+        case 7: {
+            std::cout << ">>>>>>> Running TENSOR MUL SCALAR" << std::endl;
+            case_name = "tensor_mul_scalar";
+            rocalTensorMulScalar(handle, decoded_output, true, 1.15, ROCAL_FP32);
+        } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";
             return -1;
@@ -233,17 +253,10 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
             buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
             output_tensor_list->at(idx)->copy_roi(roi.data());
-            if (output_tensor_list->at(idx)->dims().at(2) == 1) {
-                max_samples = 1;
-                max_channels = 1;
-                frames = roi[idx * 4 + 2];
-                buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
-            } else {
-                max_samples = output_tensor_list->at(idx)->dims().at(1);
-                max_channels = output_tensor_list->at(idx)->dims().at(2);
-                frames = roi[idx * 4 + 2];
-                buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
-            }
+            max_channels = output_tensor_list->at(idx)->dims().at(2);
+            max_samples = max_channels == 1 ? 1 : output_tensor_list->at(idx)->dims().at(1);
+            frames = roi[idx * 4 + 2];
+            buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
         }
     }
 
