@@ -239,7 +239,7 @@ RocalTensorList
 
 void
     ROCAL_API_CALL
-    rocalGetOneHotImageLabels(RocalContext p_context, void* buf, int numOfClasses, int dest) {
+    rocalGetOneHotImageLabels(RocalContext p_context, void* buf, int num_of_classes, RocalOutputMemType output_mem_type) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalGetOneHotImageLabels")
     auto context = static_cast<Context*>(p_context);
@@ -252,29 +252,26 @@ void
     if (context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
 
-    int labels_buf[meta_data_batch_size];
-    int one_hot_encoded[meta_data_batch_size * numOfClasses];
-    memset(one_hot_encoded, 0, sizeof(int) * meta_data_batch_size * numOfClasses);
-    memcpy(labels_buf, meta_data.second->get_labels_batch().data(), sizeof(int) * meta_data_batch_size);
-
+    int one_hot_encoded[meta_data_batch_size * num_of_classes];
+    memset(one_hot_encoded, 0, sizeof(int) * meta_data_batch_size * num_of_classes);
+    auto labels = meta_data.second->get_labels_batch();
     for (uint i = 0; i < meta_data_batch_size; i++) {
-        int label_index = labels_buf[i];
-        if (label_index > 0 && label_index <= numOfClasses) {
-            one_hot_encoded[(i * numOfClasses) + label_index - 1] = 1;
-
-        } else if (label_index == 0) {
-            one_hot_encoded[(i * numOfClasses) + numOfClasses - 1] = 1;
+        int label_index = labels[i][0];
+        if (label_index > 0 && label_index <= num_of_classes) {
+            one_hot_encoded[(i * num_of_classes) + label_index - 1] = 1;
+        } else if (!label_index) {
+            one_hot_encoded[(i * num_of_classes) + num_of_classes - 1] = 1;
         }
     }
-    if (dest == 0)  // HOST DESTINATION
-        memcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * numOfClasses);
+    if (output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST)
+        memcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * num_of_classes);
     else {
 #if ENABLE_HIP
-        hipError_t err = hipMemcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * numOfClasses, hipMemcpyHostToDevice);
+        hipError_t err = hipMemcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * num_of_classes, hipMemcpyHostToDevice);
         if (err != hipSuccess)
             THROW("Invalid Data Pointer: Error copying to device memory")
 #elif ENABLE_OPENCL
-        if (clEnqueueWriteBuffer(context->master_graph->get_ocl_cmd_q(), (cl_mem)buf, CL_TRUE, 0, sizeof(int) * meta_data_batch_size * numOfClasses, one_hot_encoded, 0, NULL, NULL) != CL_SUCCESS)
+        if (clEnqueueWriteBuffer(context->master_graph->get_ocl_cmd_q(), (cl_mem)buf, CL_TRUE, 0, sizeof(int) * meta_data_batch_size * num_of_classes, one_hot_encoded, 0, NULL, NULL) != CL_SUCCESS)
             THROW("Invalid Data Pointer: Error copying to device memory")
 
 #endif
