@@ -30,19 +30,18 @@ void SliceNode::create_node() {
     if (_node)
         return;
 
-    const int buffer_size = _batch_size;
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
-    _fill_values_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, buffer_size);
-    vx_status status = vxAddArrayItems(_fill_values_array, buffer_size, _fill_values_vec.data(), sizeof(vx_float32));
+    _fill_values_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size);
+    vx_status status = vxAddArrayItems(_fill_values_array, _batch_size, _fill_values_vec.data(), sizeof(vx_float32));
     if (status != 0)
         THROW(" vxAddArrayItems failed in the slice (vxExtRppSlice) node: " + TOSTR(status));
-    vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
+    vx_scalar policy_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
     _node = vxExtRppSlice(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
                           _outputs[0]->get_roi_tensor(), _anchor->handle(), _shape->handle(),
-                          _fill_values_array, policy, input_layout_vx, roi_type_vx);
+                          _fill_values_array, policy_vx, input_layout_vx, roi_type_vx);
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the slice node (vxRppSlice) failed: " + TOSTR(status))
