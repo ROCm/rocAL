@@ -34,6 +34,15 @@ THE SOFTWARE.
 
 #ifdef ROCAL_AUDIO
 
+// Contains all the meta info for the audio file
+struct AudioMetaInfo {
+    std::string file_name;  // Name of audio file
+    std::string file_path;  // Absolute path to the audio file
+    size_t samples;
+    size_t channels;
+    float sample_rate;
+};
+
 class AudioReadAndDecode {
    public:
     AudioReadAndDecode();
@@ -63,14 +72,8 @@ class AudioReadAndDecode {
    private:
     std::vector<std::shared_ptr<AudioDecoder>> _decoder;
     std::shared_ptr<Reader> _reader;
-    std::vector<std::string> _audio_names;
-    std::vector<std::string> _audio_file_path;
     std::vector<float *> _decompressed_buff_ptrs;
-    std::vector<size_t> _actual_decoded_samples;
-    std::vector<size_t> _actual_decoded_channels;
-    std::vector<size_t> _original_samples;
-    std::vector<size_t> _original_channels;
-    std::vector<float> _original_sample_rates;
+    std::vector<AudioMetaInfo> _audio_meta_info;
     TimingDBG _file_load_time, _decode_time;
     size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;

@@ -50,15 +50,9 @@ AudioReadAndDecode::~AudioReadAndDecode() {
 void AudioReadAndDecode::Create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id) {
     // Can initialize it to any decoder types if needed
     _batch_size = batch_size;
-    _decoder.resize(batch_size);
-    _audio_names.resize(batch_size);
-    _audio_file_path.resize(batch_size);
+    _decoder.resize(_batch_size);
     _decompressed_buff_ptrs.resize(_batch_size);
-    _actual_decoded_samples.resize(_batch_size);
-    _actual_decoded_channels.resize(_batch_size);
-    _original_channels.resize(_batch_size);
-    _original_samples.resize(_batch_size);
-    _original_sample_rates.resize(_batch_size);
+    _audio_meta_info.resize(_batch_size);
     _decoder_config = decoder_config;
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
         for (int i = 0; i < batch_size; i++) {
@@ -104,8 +98,8 @@ AudioReadAndDecode::Load(float *buff,
             WRN("Opened file " + _reader->id() + " of size 0");
             continue;
         }
-        _audio_names[file_counter] = _reader->id();
-        _audio_file_path[file_counter] = _reader->file_path();
+        _audio_meta_info[file_counter].file_name = _reader->id();
+        _audio_meta_info[file_counter].file_path = _reader->file_path();
         _reader->close();
         file_counter++;
     }
@@ -117,30 +111,27 @@ AudioReadAndDecode::Load(float *buff,
         }
 #pragma omp parallel for num_threads(_num_threads)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++) {
-            // initialize the actual decoded channels and samples with the maximum
-            _actual_decoded_samples[i] = max_decoded_samples;
-            _actual_decoded_channels[i] = max_decoded_channels;
             int original_samples, original_channels;
             float original_sample_rate;
-            if (_decoder[i]->Initialize(_audio_file_path[i].c_str()) != AudioDecoder::Status::OK) {
-                THROW("Decoder can't be initialized for file: " + _audio_names[i].c_str())
+            if (_decoder[i]->Initialize(_audio_meta_info[i].file_path.c_str()) != AudioDecoder::Status::OK) {
+                THROW("Decoder can't be initialized for file: " + _audio_meta_info[i].file_name.c_str())
             }
             if (_decoder[i]->DecodeInfo(&original_samples, &original_channels, &original_sample_rate) != AudioDecoder::Status::OK) {
-                THROW("Unable to fetch decode info for file: " + _audio_names[i].c_str())
+                THROW("Unable to fetch decode info for file: " + _audio_meta_info[i].file_name.c_str())
             }
-            _original_channels[i] = original_channels;
-            _original_samples[i] = original_samples;
-            _original_sample_rates[i] = original_sample_rate;
+            _audio_meta_info[i].channels = original_channels;
+            _audio_meta_info[i].samples = original_samples;
+            _audio_meta_info[i].sample_rate = original_sample_rate;
             if (_decoder[i]->Decode(_decompressed_buff_ptrs[i]) != AudioDecoder::Status::OK) {
-                THROW("Decoder failed for file: " + _audio_names[i].c_str())
+                THROW("Decoder failed for file: " + _audio_meta_info[i].file_name.c_str())
             }
             _decoder[i]->Release();
         }
         for (size_t i = 0; i < _batch_size; i++) {
-            names[i] = _audio_names[i];
-            roi_samples[i] = _original_samples[i];
-            roi_channels[i] = _original_channels[i];
-            original_sample_rates[i] = _original_sample_rates[i];
+            names[i] = _audio_meta_info[i].file_name;
+            roi_samples[i] = _audio_meta_info[i].samples;
+            roi_channels[i] = _audio_meta_info[i].channels;
+            original_sample_rates[i] = _audio_meta_info[i].sample_rate;
         }
     }
     _decode_time.end();  // Debug timing
