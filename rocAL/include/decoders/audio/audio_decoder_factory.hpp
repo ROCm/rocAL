@@ -28,7 +28,7 @@ THE SOFTWARE.
 #ifdef ROCAL_AUDIO
 static std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
     switch (config.type()) {
-        case DecoderType::SNDFILE:
+        case DecoderType::AUDIO_SOFTWARE_DECODE:
             return std::make_shared<SndFileDecoder>();
         default:
             THROW("Unsupported decoder type " + TOSTR(config.type()));
