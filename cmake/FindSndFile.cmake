@@ -23,7 +23,7 @@
 # SOFTWARE.
 # 
 ################################################################################
-find_path(SndFile_INCLUDE_DIRS
+find_path(SNDFILE_INCLUDE_DIRS
     NAMES sndfile.h
     HINTS
     $ENV{SNDFILE_PATH}/include
@@ -31,9 +31,9 @@ find_path(SndFile_INCLUDE_DIRS
     /usr/local/include
     /usr/include
 )
-mark_as_advanced(SndFile_INCLUDE_DIRS)
+mark_as_advanced(SNDFILE_INCLUDE_DIRS)
 
-find_library(SndFile_LIBRARIES
+find_library(SNDFILE_LIBRARIES
     NAMES sndfile libsndfile
     HINTS
     $ENV{SNDFILE_PATH}/lib
@@ -44,26 +44,26 @@ find_library(SndFile_LIBRARIES
     /usr/local/
     PATH_SUFFIXES lib lib64
 )
-mark_as_advanced(SndFile_LIBRARIES)
+mark_as_advanced(SNDFILE_LIBRARIES)
 
-if(SndFile_LIBRARIES AND SndFile_INCLUDE_DIRS)
-    set(SndFile_FOUND TRUE)
+if(SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
+    set(SNDFILE_FOUND TRUE)
 endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SndFile 
-    FOUND_VAR  SndFile_FOUND 
+    FOUND_VAR  SNDFILE_FOUND 
     REQUIRED_VARS
-        SndFile_LIBRARIES
-        SndFile_INCLUDE_DIRS
+        SNDFILE_LIBRARIES
+        SNDFILE_INCLUDE_DIRS
 )
 
-set(SndFile_FOUND ${SndFile_FOUND} CACHE INTERNAL "")
-set(SndFile_LIBRARIES ${SndFile_LIBRARIES} CACHE INTERNAL "")
-set(SndFile_INCLUDE_DIRS ${SndFile_INCLUDE_DIRS} CACHE INTERNAL "")
+set(SNDFILE_FOUND ${SNDFILE_FOUND} CACHE INTERNAL "")
+set(SNDFILE_LIBRARIES ${SNDFILE_LIBRARIES} CACHE INTERNAL "")
+set(SNDFILE_INCLUDE_DIRS ${SNDFILE_INCLUDE_DIRS} CACHE INTERNAL "")
 
-if(SndFile_FOUND)
-    message("-- ${White}Using SndFile -- \n\tLibraries:${SndFile_LIBRARIES} \n\tIncludes:${SndFile_INCLUDE_DIRS}${ColourReset}")   
+if(SNDFILE_FOUND)
+    message("-- ${White}Using SndFile -- \n\tLibraries:${SNDFILE_LIBRARIES} \n\tIncludes:${SNDFILE_INCLUDE_DIRS}${ColourReset}")   
 else()
     message( "-- ${Yellow}NOTE: FindSndFile failed to find -- SndFile${ColourReset}" )
 endif()

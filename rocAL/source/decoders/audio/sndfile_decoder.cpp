@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 SndFileDecoder::SndFileDecoder(){};
 
-AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
+AudioDecoder::Status SndFileDecoder::Decode(float* buffer) {
     int read_frame_count = 0;
     read_frame_count = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
     AudioDecoder::Status status = Status::OK;
@@ -43,7 +43,7 @@ AudioDecoder::Status SndFileDecoder::decode(float* buffer) {
     return status;
 }
 
-AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, float* sample_rate) {
+AudioDecoder::Status SndFileDecoder::DecodeInfo(int* samples, int* channels, float* sample_rate) {
     // Set the samples and channels using the struct variables _sfinfo.frames and _sfinfo.channels
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
@@ -57,7 +57,7 @@ AudioDecoder::Status SndFileDecoder::decode_info(int* samples, int* channels, fl
 }
 
 // Initialize will open a new decoder and initialize the context
-AudioDecoder::Status SndFileDecoder::initialize(const char* src_filename) {
+AudioDecoder::Status SndFileDecoder::Initialize(const char* src_filename) {
     AudioDecoder::Status status = Status::OK;
     memset(&_sfinfo, 0, sizeof(_sfinfo));
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo))) {
@@ -72,7 +72,7 @@ AudioDecoder::Status SndFileDecoder::initialize(const char* src_filename) {
     return status;
 }
 
-void SndFileDecoder::release() {
+void SndFileDecoder::Release() {
     if (_sf_ptr != NULL)
         sf_close(_sf_ptr);
 }

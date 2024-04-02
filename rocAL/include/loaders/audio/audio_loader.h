@@ -60,15 +60,14 @@ class AudioLoader : public LoaderModule {
     bool is_out_of_data();
     void de_init();
     void stop_internal_thread();
-    std::shared_ptr<AudioReadAndDecode> _audio_loader;
     LoaderModuleStatus update_output_audio();
     LoaderModuleStatus load_routine();
+    std::shared_ptr<AudioReadAndDecode> _audio_loader;
     Tensor* _output_tensor;
     std::vector<std::string> _output_names;  //!< audio file name/ids that are stored in the _output_audio
-    size_t _output_mem_size;
     MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
     bool _internal_thread_running;
-    size_t _batch_size;
+    size_t _output_mem_size, _batch_size, _max_decoded_samples, _max_decoded_channels;
     std::thread _load_thread;
     RocalMemType _mem_type;
     DecodedDataInfo _decoded_audio_info;
@@ -82,6 +81,5 @@ class AudioLoader : public LoaderModule {
     size_t _audio_counter = 0;      //!< How many audios have been loaded already
     size_t _remaining_audio_count;  //!< How many audios are there yet to be loaded
     int _device_id;
-    size_t _max_decoded_samples, _max_decoded_channels;
 };
 #endif

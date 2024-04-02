@@ -47,12 +47,12 @@ class AudioLoaderSharded : public LoaderModule {
 
    private:
     void increment_loader_idx();
+    void fast_forward_through_empty_loaders();
     void* _dev_resources;
     bool _initialized = false;
     std::vector<std::shared_ptr<AudioLoader>> _loaders;
     size_t _loader_idx;
     size_t _shard_count = 1;
-    void fast_forward_through_empty_loaders();
     size_t _prefetch_queue_depth;
     Tensor* _output_tensor;
 };
