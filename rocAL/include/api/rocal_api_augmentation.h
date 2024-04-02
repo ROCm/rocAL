@@ -1256,7 +1256,7 @@ extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegi
                                                                                    int reset_interval,
                                                                                    int window_length);
 
-/*! \brief Extracts the sub-tensors from a given input tensor
+/*! \brief Extracts the sub-tensor from a given input tensor
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
@@ -1280,7 +1280,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
                                                  std::vector<unsigned> axes,
                                                  bool normalized_anchor,
                                                  bool normalized_shape,
-                                                 RocalOutOfBoundsPolicy policy,
-                                                 RocalTensorOutputType output_datatype);
+                                                 RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
+                                                 RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

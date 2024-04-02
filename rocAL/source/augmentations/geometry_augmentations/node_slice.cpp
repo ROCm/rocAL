@@ -21,9 +21,7 @@ THE SOFTWARE.
 */
 
 #include "node_slice.h"
-
 #include <vx_ext_rpp.h>
-
 #include "exception.h"
 
 SliceNode::SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
@@ -32,11 +30,6 @@ void SliceNode::create_node() {
     if (_node)
         return;
 
-    auto max_shape = _outputs[0]->info().max_shape();
-    _slice_roi.resize(_batch_size, std::vector<uint32_t>(max_shape.size()));
-    for (uint i = 0; i < _batch_size; i++)
-        for (uint j = 0; j < max_shape.size(); j++)
-            _slice_roi[i][j] = max_shape[j];
     const int buffer_size = _batch_size;
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
