@@ -394,6 +394,7 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
 
     return node;
 }
+#endif
 
 #ifdef ROCAL_AUDIO
 /*
