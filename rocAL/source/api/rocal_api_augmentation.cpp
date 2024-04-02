@@ -2455,23 +2455,23 @@ rocalNonSilentRegion(
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
-        unsigned number_of_dims = 2;
+        unsigned number_of_dims = 3;
         std::vector<size_t> dims1(number_of_dims, 1);
         dims1.at(0) = context->user_batch_size();
         auto info1 = TensorInfo(std::vector<size_t>(std::move(dims1)),
                                context->master_graph->mem_type(),
                                tensor_data_type);
+        info1.set_max_shape();
         std::vector<size_t> dims2(number_of_dims, 1);
         dims2.at(0) = context->user_batch_size();
         auto info2 = TensorInfo(std::vector<size_t>(std::move(dims2)),
                                context->master_graph->mem_type(),
                                tensor_data_type);
+        info2.set_max_shape();
         output1 = context->master_graph->create_tensor(info1, is_output);
         output2 = context->master_graph->create_tensor(info2, is_output);
         output_tensors.push_back(output1);
         output_tensors.push_back(output2);
-        output1->reset_tensor_roi();
-        output2->reset_tensor_roi();
         context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cutoff_db, reference_power, window_length, reset_interval);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
@@ -2505,8 +2505,8 @@ rocalSlice(
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
+        output_info.set_max_shape();
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values, policy);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
