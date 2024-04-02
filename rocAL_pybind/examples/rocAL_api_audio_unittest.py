@@ -187,9 +187,6 @@ def non_silent_region_and_slice(path, file_list):
         decoded_audio,
         anchor=[begin],
         shape=[length],
-        normalized_anchor=False,
-        normalized_shape=False,
-        axes=[0],
         rocal_tensor_output_type = types.FLOAT)
     return trim_silence
 

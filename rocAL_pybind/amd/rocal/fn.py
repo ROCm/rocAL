@@ -1150,7 +1150,7 @@ def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_inte
     non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return non_silent_region_output
 
-def slice(*inputs, anchor = [], shape = [], axes = [1, 0], fill_values = [0.0], normalized_anchor = True, normalized_shape = True,  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
+def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
     """
     The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
     @param anchor (int or 1D RocalTensor of ints)                                      The absolute starting co-ordinate points of the slice.
@@ -1160,7 +1160,7 @@ def slice(*inputs, anchor = [], shape = [], axes = [1, 0], fill_values = [0.0], 
     @param rocal_tensor_output_type (float)                                            Output DataType of the Tensor
     """
 
-    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values, "axes": axes,
-                     "normalized_anchor": normalized_anchor , "normalized_shape": normalized_shape, "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values,
+                     "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
     slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return slice_output

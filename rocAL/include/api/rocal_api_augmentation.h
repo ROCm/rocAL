@@ -1261,12 +1261,9 @@ extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegi
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] anchor_tensor anchor values used for specifying the starting indices of slice
- * \param [in] shape_tensor shape values used for specifying the length of slice
+ * \param [in] anchor anchor values used for specifying the starting indices of slice
+ * \param [in] shape shape values used for specifying the length of slice
  * \param [in] fill_values fill values based on out of Bound policy
- * \param [in] axes axes along which slice is needed
- * \param [in] normalized_anchor determines whether the anchor positional input should be interpreted as normalized or as absolute coordinates
- * \param [in] normalized_shape determines whether the shape positional input should be interpreted as normalized or as absolute coordinates
  * \param [in] policy
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -1274,12 +1271,9 @@ extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegi
 extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
                                                  RocalTensor input,
                                                  bool is_output,
-                                                 RocalTensor anchor_tensor,
-                                                 RocalTensor shape_tensor,
+                                                 RocalTensor anchor,
+                                                 RocalTensor shape,
                                                  std::vector<float> fill_values,
-                                                 std::vector<unsigned> axes,
-                                                 bool normalized_anchor,
-                                                 bool normalized_shape,
                                                  RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
                                                  RocalTensorOutputType output_datatype = ROCAL_FP32);
 
