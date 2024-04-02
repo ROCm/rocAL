@@ -144,6 +144,7 @@ For the convenience of the developer, we here provide the setup script which wil
     ```
 
     + run the below commands to build rocAL
+    **Note:** Use `-DPYTHONVERSION=3.x` with `cmake` for using a specific Python3 version if required.
     ```
     mkdir build-hip
     cd build-hip
