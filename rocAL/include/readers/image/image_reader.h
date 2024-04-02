@@ -80,6 +80,12 @@ struct ReaderConfig {
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
+    void set_last_batch_policy(RocalBatchPolicy last_batch_policy, bool last_batch_padded) {
+        _last_batch_policy = last_batch_policy;
+        _last_batch_padded = last_batch_padded;
+    }
+    void set_stick_to_shard(bool stick_to_shard) { _stick_to_shard = stick_to_shard; }
+    void set_shard_size(signed shard_size) { _shard_size = shard_size; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -182,12 +188,12 @@ class Reader {
     virtual std::string id() = 0;
     //! Returns the number of items remained in this resource
 
-     //! Returns the path of the last item opened in this resource
+    //! Returns the path of the last item opened in this resource
     virtual std::string file_path() { return {}; }
 
     virtual unsigned count_items() = 0;
 
     virtual ~Reader() = default;
 
-    virtual size_t last_batch_padded_size() { return 0; }
+    virtual size_t last_batch_padded_size() = 0;
 };
