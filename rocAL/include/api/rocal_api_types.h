@@ -239,6 +239,12 @@ enum RocalTensorOutputType {
     /*! \brief AMD ROCAL_INT8
      */
     ROCAL_INT8 = 3
+    /*! \brief AMD ROCAL_UINT32
+     */
+    ROCAL_UINT32 = 4,
+    /*! \brief AMD ROCAL_INT32
+     */
+    ROCAL_INT32 = 5
 };
 
 /*! \brief rocAL Decoder Type enum

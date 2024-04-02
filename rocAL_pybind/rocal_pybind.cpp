@@ -431,10 +431,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("TF", ROCAL_TF)
         .export_values();
     py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
-            .value("PAD", ROCAL_PAD)
-            .value("TRIMTOSHAPE", ROCAL_TRIMTOSHAPE)
-            .value("ERROR", ROCAL_ERROR)
-            .export_values();
+        .value("PAD", ROCAL_PAD)
+        .value("TRIMTOSHAPE", ROCAL_TRIMTOSHAPE)
+        .value("ERROR", ROCAL_ERROR)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -764,9 +764,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("tensorAddTensor", &rocalTensorAddTensor,
           py::return_value_policy::reference);
-    m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection, "Performs leading and trailing silence detection in an audio buffer",
+    m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection,
           py::return_value_policy::reference);
-    m.def("slice", &rocalSlice, "The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
+    m.def("slice", &rocalSlice,
           py::return_value_policy::reference);
 }
 }  // namespace rocal
