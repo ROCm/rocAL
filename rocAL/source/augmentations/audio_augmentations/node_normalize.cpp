@@ -44,7 +44,7 @@ void NormalizeNode::create_node() {
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the normalize (vxRppNormalize) node failed: " + TOSTR(status))
+        THROW("Adding the normalize (vxExtRppNormalize) node failed: " + TOSTR(status))
 }
 
 void NormalizeNode::update_node() {}

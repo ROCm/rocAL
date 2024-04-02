@@ -2538,8 +2538,9 @@ rocalNormalize(
         TensorInfo output_info = input->info();
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         output_info.set_data_type(op_tensor_data_type);
+        auto dims = output_info.dims();
+        output_info.set_dims(dims);
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         context->master_graph->add_node<NormalizeNode>({input}, {output})->init(mean, std_dev, axes, batch, scale, shift, ddof, epsilon);
     } catch (const std::exception& e) {
         context->capture_error(e.what());

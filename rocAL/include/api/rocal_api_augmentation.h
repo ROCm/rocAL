@@ -1283,7 +1283,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
                                                  RocalOutOfBoundsPolicy policy,
                                                  RocalTensorOutputType output_datatype);
 
-/*! \brief A
+/*! \brief Applies mean-stddev normalization on the input tensor
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
@@ -1301,7 +1301,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
                                                      int ddof, float epsilon,
                                                      RocalTensorOutputType rocal_tensor_output_type);
 
-/*! \brief A
+/*! \brief Applies mel-filter bank augmentation on the given input tensor
  * \ingroup group_rocal_augmentations
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor

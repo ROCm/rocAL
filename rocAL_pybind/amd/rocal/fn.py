@@ -1168,30 +1168,25 @@ def slice(*inputs, anchor = [], shape = [], axes = [1, 0], axis_names = "WH", by
     slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return slice_output
 
-def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_sample_hint = [0], ddof = 0, epsilon = 0.0, mean = 0.0, scale = 1.0, seed = -1, shift = 0.0, stddev = 0.0, rocal_tensor_output_type=types.FLOAT):
+def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_sample_hint = [0], ddof = 0, epsilon = 0.0, mean = 0.0, scale = 1.0, seed = -1, shift = 0.0, stddev = 0.0, output_datatype = types.FLOAT):
     '''
     Normalizes the input by removing the mean and dividing by the standard deviation.
-
     The mean and standard deviation can be calculated internally for the specified subset of axes or can be externally provided as the mean and stddev arguments.
-
     The normalization is done following the formula:
-
     out = scale * (in - mean) / stddev + shift
-
     The formula assumes that out and in are equally shaped tensors, but mean and stddev might be either tensors of same shape, scalars, or a mix of these.
     '''
-    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "batch": batch, "axes": axes, "mean": mean, "stddev": stddev,
-                     "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "rocal_tensor_output_type": rocal_tensor_output_type}
+    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "batch": batch, "axes": axes, "mean": mean, "stddev": stddev,
+                     "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "output_datatype": output_datatype}
     normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return normalize_output
 
-def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, rocal_tensor_output_type = types.FLOAT):
+def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, output_datatype = types.FLOAT):
     '''
     Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters.
-
-    The frequency (‘f’) dimension is selected from the input layout. In case of no layout, “f”, “ft”, or “*ft” is assumed, depending on the number of dimensions.
+    The frequency ('f') dimension is selected from the input layout. In case of no layout, “f”, “ft”, or “*ft” is assumed, depending on the number of dimensions.
     '''
-    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "freq_high": freq_high, "freq_low": freq_low, "mel_formula": mel_formula,
-                     "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "rocal_tensor_output_type": rocal_tensor_output_type}
+    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "freq_high": freq_high, "freq_low": freq_low, "mel_formula": mel_formula,
+                     "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "output_datatype": output_datatype}
     mel_filter_bank_output = b.melFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return mel_filter_bank_output
