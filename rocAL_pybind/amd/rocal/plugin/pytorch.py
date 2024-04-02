@@ -271,54 +271,21 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 class ROCALAudioIterator(object):
+    """! ROCAL iterator for audio tasks for PyTorch
+    The Tensors that are returned by the iterator will be owned by ROCAL and would be valid until next iteration.
+        @param pipeline            The rocAL pipeline to use for processing data.
+        @param tensor_dtype        Data type of the output tensors.
+        @size                      Number of samples in the epoch (Usually the size of the dataset).
+        @auto_reset                Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
+        @param device              The device to use for processing
+        @param device_id           The ID of the device to use
     """
-    ROCAL iterator for audio tasks for PyTorch
-    The Tensors that are returned by the iterator will be owned by ROCAL 
-    and would be valid until next iteration.
-    Parameters
-    ----------
-    pipelines : list of amd.rocalLI.pipeline.Pipeline
-                List of pipelines to use
-    size : int
-           Number of samples in the epoch (Usually the size of the dataset).
-    auto_reset : bool, optional, default = False
-                 Whether the iterator resets itself for the next epoch
-                 or it requires reset() to be called separately.
-    fill_last_batch : bool, optional, default = True
-                 Whether to fill the last batch with data up to 'self.batch_size'.
-                 The iterator would return the first integer multiple
-                 of self._num_gpus * self.batch_size entries which exceeds 'size'.
-                 Setting this flag to False will cause the iterator to return
-                 exactly 'size' entries.
-    dynamic_shape: bool, optional, default = False
-                 Whether the shape of the output of the RALI pipeline can
-                 change during execution. If True, the pytorch tensor will be resized accordingly
-                 if the shape of RALI returned tensors changes during execution.
-                 If False, the iterator will fail in case of change.
-    last_batch_padded : bool, optional, default = False
-                 Whether the last batch provided by RALI is padded with the last sample
-                 or it just wraps up. In the conjunction with `fill_last_batch` it tells
-                 if the iterator returning last batch with data only partially filled with
-                 data from the current epoch is dropping padding samples or samples from
-                 the next epoch. If set to False next epoch will end sooner as data from
-                 it was consumed but dropped. If set to True next epoch would be the
-                 same length as the first one.
-    Example
-    -------
-    With the data set [1,2,3,4,5,6,7] and the batch size 2:
-    fill_last_batch = False, last_batch_padded = True  -> last batch = [7], next iteration will return [1, 2]
-    fill_last_batch = False, last_batch_padded = False -> last batch = [7], next iteration will return [2, 3]
-    fill_last_batch = True, last_batch_padded = True   -> last batch = [7, 7], next iteration will return [1, 2]
-    fill_last_batch = True, last_batch_padded = False  -> last batch = [7, 1], next iteration will return [2, 3]
-
-    """
-    def __init__(self, pipeline, tensor_layout = types.NONE, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0, size = -1, auto_reset=False):
+    def __init__(self, pipeline, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
         self.loader = pipeline
-        self.tensor_format = tensor_layout
         self.device = device
         self.device_id = device_id
         self.output = None
-        self.iterator_length = b.getRemainingImages(self.loader._handle)
+        self.iterator_length = b.getRemainingImages(self.loader._handle) # To change the name of getRemainingImages to getRemainingSamples in upcoming PRs
         self.max_shape = None
         self.batch_size = self.loader._batch_size
         self.output_list = None
@@ -349,8 +316,10 @@ class ROCALAudioIterator(object):
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
-            self.num_roi_dims = len(dimensions) - 1
+            self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
             self.roi_array = np.zeros(self.batch_size * self.num_roi_dims * 2, dtype=np.int32)
+            max_x1 = np.max(roi[...,2:3])
+            max_y1 = np.max(roi[...,3:4])
             self.output_tensor_list[i].copy_roi(self.roi_array)
             if self.device == "cpu":
                 torch_dtype = self.output_tensor_list[i].dtype()
@@ -362,12 +331,18 @@ class ROCALAudioIterator(object):
                 output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
 
-            self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
+            self.output_tensor_list[0].copy_data(ctypes.c_void_p(output.data_ptr()), max_y1, max_x1)
             self.output_list.append(output)
-        if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 : #Check this condition
-            return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
+
+        self.labels = self.loader.get_image_labels()
+        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
+        roi = self.roi_array.reshape(self.batch_size,4)
+
+        if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
+            return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4][0:self.last_batch_size,:])
         else:
-            return self.output_list, self.labels_tensor
+            return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4])
+
 
     def reset(self):
         self.batch_count = 0

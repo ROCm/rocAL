@@ -318,7 +318,7 @@ else:
               ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j 4; sudo make install )')
     # RPP
     os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b '+rppVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git; cd rpp; mkdir build-'+backend+'; cd build-'+backend+'; ' +
+    os.system('(cd '+deps_dir+'; git clone -b '+rppVersion+' https://github.com/ROCm/rpp; cd rpp; mkdir build-'+backend+'; cd build-'+backend+'; ' +
               linuxCMake+' -DBACKEND='+backend+' -DCMAKE_INSTALL_PREFIX='+ROCM_PATH+' ../; make -j4; sudo make install)')
     # RapidJSON
     os.system('sudo -v')
@@ -345,8 +345,8 @@ else:
         os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                   ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-devel hipcub-devel python3-devel')
     os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b v12.2.0 https://github.com/ROCmSoftwarePlatform/cupy.git; export CUPY_INSTALL_USE_HIP=1; export ROCM_HOME=/opt/rocm; cd cupy; git submodule update --init; pip install -e . --no-cache-dir -vvvv)')
-    os.system('pip install numpy==1.21')
+    os.system('pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.*')
+    os.system('(cd '+deps_dir+'; git clone -b rocm6.1_internal_testing https://github.com/ROCm/cupy.git; export CUPY_INSTALL_USE_HIP=1; export ROCM_HOME=/opt/rocm; cd cupy; git submodule update --init; pip install -e . --no-cache-dir -vvvv)')
 
     # Install ffmpeg
     if "Ubuntu" in platfromInfo:
@@ -419,7 +419,7 @@ else:
 
     # MIVisionX
     os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
+    os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/ROCm/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
               linuxCMake+' -DBACKEND='+backend+' -DROCAL=OFF ../; make -j4; sudo make install)')
 
     print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")

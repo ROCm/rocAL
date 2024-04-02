@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include "commons.h"
 #include "meta_data_reader.h"
 
+#ifdef ROCAL_AUDIO
+
 // AudioLoader runs an internal thread for loading an decoding of audios asynchronously
 // It uses a circular buffer to store decoded audios for the user
 class AudioLoader : public LoaderModule {
@@ -40,7 +42,6 @@ class AudioLoader : public LoaderModule {
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
     void set_output(Tensor* output_audio) override;
-    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override {THROW("set_random_bbox_data_reader is not compatible with this implementation")};
     size_t remaining_count() override;  // returns number of remaining items to be loaded
     void reset() override;              // Resets the loader to load from the beginning of the media
     Timing timing() override;
@@ -86,3 +87,4 @@ class AudioLoader : public LoaderModule {
     RocalBatchPolicy _last_batch_policy;
     bool last_batch_padded;
 };
+#endif

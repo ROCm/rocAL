@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
-ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/5.4.1/ubuntu/focal/amdgpu-install_5.4.50401-1_all.deb 
-ARG ROCM_INSTALLER_PACKAGE=amdgpu-install_5.4.50401-1_all.deb
+ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/6.0.2/ubuntu/focal/amdgpu-install_6.0.60002-1_all.deb
+ARG ROCM_INSTALLER_PACKAGE=amdgpu-install_6.0.60002-1_all.deb
 
 ENV ROCAL_DEPS_ROOT=/rocAL-deps
 WORKDIR $ROCAL_DEPS_ROOT
@@ -17,7 +17,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-de
         wget ${ROCM_INSTALLER_REPO} && \
         sudo apt-get install -y ./${ROCM_INSTALLER_PACKAGE} && \
         sudo apt-get update -y && \
-        sudo amdgpu-install -y --usecase=graphics,rocm
+        sudo amdgpu-install -y --usecase=graphics,rocm --no-32
 
 # install OpenCV
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy \
@@ -41,10 +41,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rocblas rocblas-dev miopen
 
 # install rocAL dependency
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget libbz2-dev libssl-dev python-dev python3-dev libgflags-dev libgoogle-glog-dev liblmdb-dev nasm yasm libjsoncpp-dev clang && \
-        git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
-        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ../ && make -j4 && sudo make install && cd ../../ && \
-        git clone -b 1.1.0  https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && cd rpp && mkdir build && cd build && \
+        git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
+        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../ && \
+        git clone https://github.com/ROCm/rpp && cd rpp && mkdir build && cd build && \
         cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd ../../ && \
         git clone -b v3.12.4 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
@@ -55,12 +54,18 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
         cmake ../ && make -j4 && sudo make install && cd ../../ && \
         pip install pytest==3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
         cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
-        git clone https://github.com/ROCmSoftwarePlatform/cupy.git && cd cupy && git submodule update --init && \
-        pip install -e . --no-cache-dir -vvvv && pip install numpy==1.21
+        pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.* git+https://github.com/ROCmSoftwarePlatform/hipify_torch.git && \
+        env CC=$MPI_HOME/bin/mpicc python -m pip install mpi4py && \
+        git clone -b rocm6.1_internal_testing https://github.com/ROCm/cupy.git && cd cupy && git submodule update --init && \
+        pip install -e . --no-cache-dir -vvvv
+
+# install MIVisionX 
+RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
+        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../ && make -j8 && make install
 
 ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE
 
-# install MIVisionX 
-RUN git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git && \
-        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../MIVisionX && make -j8 && make install
+# Install rocAL
+RUN git clone -b develop https://github.com/ROCm/rocAL && \
+        mkdir build && cd build && cmake ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install

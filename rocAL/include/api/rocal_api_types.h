@@ -380,20 +380,42 @@ enum RocalExternalSourceMode {
  * \ingroup group_rocal_types
  */
 enum RocalAudioBorderType {
-    ZERO = 0,
-    CLAMP,
-    REFLECT
+    /*! \brief AMD ROCAL_ZERO
+     */
+    ROCAL_ZERO = 0,
+    /*! \brief AMD ROCAL_CLAMP
+     */
+    ROCAL_CLAMP = 1,
+    /*! \brief AMD ROCAL_REFLECT
+     */
+    ROCAL_REFLECT = 2
 };
 
+/*! \brief rocAL Spectrogram Layout Type enum
+ * \ingroup group_rocal_types
+ */
 enum RocalSpectrogramLayout {
-    FT = 0,
-    TF
+    /*! \brief Frequency Major
+     */
+    ROCAL_FT = 0,
+    /*! \brief Time Major
+     */
+    ROCAL_TF
 };
 
+/*! \brief rocAL Out Of Bounds Policy Type enum
+ * \ingroup group_rocal_types
+ */
 enum RocalOutOfBoundsPolicy {
-    PAD = 0,
-    TRIMTOSHAPE,
-    ERROR
+    /*! \brief Pad
+     */
+    ROCAL_PAD = 0,
+    /*! \brief Trimtoshape
+     */
+    ROCAL_TRIMTOSHAPE,
+    /*! \brief Error
+     */
+    ROCAL_ERROR
 };
 
 /*! \brief Tensor Last Batch Policies

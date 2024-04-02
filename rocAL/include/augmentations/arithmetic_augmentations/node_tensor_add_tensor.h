@@ -23,24 +23,14 @@ THE SOFTWARE.
 #pragma once
 #include "graph.h"
 #include "node.h"
+#include "rocal_api_types.h"
 
-class NormalizeNode : public Node {
+class TensorAddTensorNode : public Node {
    public:
-    NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    NormalizeNode() = delete;
-    void init(float mean, float std_dev, std::vector<int> axes, bool batch, float scale, float shift, int ddof, float epsilon);
+    TensorAddTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    TensorAddTensorNode() = delete;
 
    protected:
     void create_node() override;
     void update_node() override;
-
-   private:
-    float _mean, _std_dev;
-    float _scale = 1.0;
-    float _shift = 0.0;
-    float _epsilon = 0.0;
-    int _ddof = 0;
-    int _axis_mask = 0;
-    bool _batch = false;
-    unsigned _num_of_dims;
 };

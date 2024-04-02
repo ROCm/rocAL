@@ -28,7 +28,11 @@ THE SOFTWARE.
 #include "commons.h"
 #include "context.h"
 #include "image_source_evaluator.h"
+#ifdef ROCAL_AUDIO
 #include "audio_source_evaluator.h"
+#include "node_audio_loader.h"
+#include "node_audio_loader_single_shard.h"
+#endif
 #include "node_cifar10_loader.h"
 #include "node_copy.h"
 #include "node_downmix.h"
@@ -36,16 +40,17 @@ THE SOFTWARE.
 #include "node_fused_jpeg_crop_single_shard.h"
 #include "node_image_loader.h"
 #include "node_image_loader_single_shard.h"
-#include "node_audio_loader.h"
-#include "node_audio_loader_single_shard.h"
 #include "node_resize.h"
 #include "rocal_api.h"
 
+#ifdef ROCAL_AUDIO
 std::tuple<unsigned, unsigned>
 evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
-                        const std::string& source_path, const std::string& json_path) {
+                        const std::string& source_path, const std::string& file_list_path) {
     AudioSourceEvaluator source_evaluator;
-    if (source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
+    auto reader_config = ReaderConfig(storage_type, source_path);
+    reader_config.set_file_list_path(file_list_path);
+    if (source_evaluator.create(reader_config, DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed")
     auto max_samples = source_evaluator.max_samples();
     auto max_channels = source_evaluator.max_channels();
@@ -53,7 +58,8 @@ evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
         THROW("Cannot find size of the audio files or files cannot be accessed")
     LOG("Maximum input audio dimension [ " + TOSTR(max_samples) + " x " + TOSTR(max_channels) + " ] for audio's in " + source_path)
     return std::make_tuple(max_samples, max_channels);
-};
+}
+#endif
 
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
@@ -2085,10 +2091,12 @@ rocalJpegExternalFileSource(
                                color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->set_external_source_reader_flag();
-
+        
         unsigned shard_count = 1;  // Hardcoding the shard count to 1 for now.
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(shard_count, cpu_num_threads, "", "", std::map<std::string, std::string>(), StorageType::EXTERNAL_FILE_SOURCE, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, "", 0, 0, 0, ExternalSourceFileMode(external_source_mode));
+        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(shard_count, cpu_num_threads, "", "", std::map<std::string, std::string>(), StorageType::EXTERNAL_FILE_SOURCE,
+                                                                             decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(),
+                                                                             decoder_keep_original, "", 0, 0, 0, ExternalSourceFileMode(external_source_mode));
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -2113,18 +2121,16 @@ rocalAudioFileSourceSingleShard(
     bool is_output,
     bool shuffle,
     bool loop,
-    bool downmix,
-    unsigned max_frames,
-    unsigned max_channels,
-    unsigned storage_type) {
+    bool downmix) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_AUDIO
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
         if (shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
-        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, "");
+        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, source_file_list_path);
         INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
@@ -2137,12 +2143,10 @@ rocalAudioFileSourceSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType(storage_type), DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
-        if (downmix) {
+        if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
             std::vector<size_t> output_dims = {context->user_batch_size(), info.dims()[1], 1};
             output_info.set_dims(output_dims);
-            output_info.set_tensor_layout(RocalTensorlayout::NONE);
-            output_info.set_max_shape();
 
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
@@ -2150,14 +2154,15 @@ rocalAudioFileSourceSingleShard(
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
-                output = downmixed_output;
             }
-        } else {
-            if (is_output) {
-                auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output});
-            }
+            return downmixed_output;
+        } else if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Audio decoder is not enabled since sndfile is not present")
+#endif
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
@@ -2175,15 +2180,13 @@ rocalAudioFileSource(
     bool shuffle,
     bool loop,
     bool downmix,
-    unsigned max_frames,
-    unsigned max_channels,
     bool stick_to_shard,
     int shard_size) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
-        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE,
-                                                                  source_path, "");
+#ifdef ROCAL_AUDIO
+        auto [max_frames, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::SNDFILE, source_path, source_file_list_path);
         INFO("Internal buffer size for audio frames = " + TOSTR(max_frames))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_frames, max_channels};
@@ -2196,24 +2199,24 @@ rocalAudioFileSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
         context->master_graph->add_node<AudioLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::SNDFILE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
-        if (downmix) {
+        if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
             std::vector<size_t> output_dims = {context->user_batch_size(), info.dims()[1], 1};
             output_info.set_dims(output_dims);
-            output_info.set_tensor_layout(RocalTensorlayout::NONE);
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
                 context->master_graph->add_node<CopyNode>({downmixed_output}, {actual_output});
-                output = downmixed_output;
             }
-        } else {
-            if (is_output) {
-                auto actual_output = context->master_graph->create_tensor(info, is_output);
-                context->master_graph->add_node<CopyNode>({output}, {actual_output});
-            }
+            return downmixed_output;
+        } else if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Audio decoder is not enabled since sndfile is not present")
+#endif
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';

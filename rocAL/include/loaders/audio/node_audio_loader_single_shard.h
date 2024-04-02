@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "graph.h"
 #include "node.h"
 
+#ifdef ROCAL_AUDIO
+
 class AudioLoaderSingleShardNode : public Node {
    public:
     AudioLoaderSingleShardNode(Tensor *output, void *device_resources);
@@ -32,6 +34,7 @@ class AudioLoaderSingleShardNode : public Node {
     /// \param user_shard_count shard count from user
     /// \param  user_shard_id shard id from user
     /// \param source_path Defines the path that includes the Audio dataset
+    /// \param file_list_path Defines the path that contains the file list
     /// \param storage_type Determines the storage type
     /// \param decoder_type Determines the decoder_type
     /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -41,7 +44,7 @@ class AudioLoaderSingleShardNode : public Node {
     /// \param meta_data_reader Determines the meta-data information
     /// The loader will repeat Audios if necessary to be able to have Audios in multiples of the load_batch_count,
     /// for example if there are 10 Audios in the dataset and load_batch_count is 3, the loader repeats 2 Audios as if there are 12 Audios available.
-    void init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &source_file_list,
+    void init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path,
               StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type,
               std::shared_ptr<MetaDataReader> meta_data_reader, RocalBatchPolicy _last_batch_policy = RocalBatchPolicy::BATCH_FILL, 
               bool last_batch_padded = false, bool stick_to_shard = false, signed shard_size = -1);
@@ -54,3 +57,4 @@ class AudioLoaderSingleShardNode : public Node {
    private:
     std::shared_ptr<AudioLoader> _loader_module = nullptr;
 };
+#endif

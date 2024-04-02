@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "audio_read_and_decode.h"
 
+#ifdef ROCAL_AUDIO
+
 AudioLoader::AudioLoader(void* dev_resources) : _circ_buff(dev_resources),
                                                 _swap_handle_time("Swap_handle_time", DBG_TIMING) {
     _output_tensor = nullptr;
@@ -122,10 +124,11 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     int device_id = reader_cfg.get_shard_id();
     try {
         // set the device_id for decoder same as shard_id for number of shards > 1
-        if (shard_count > 1)
+        if (shard_count > 1) {
             _audio_loader->create(reader_cfg, decoder_cfg, _batch_size, device_id);
-        else
+        } else {
             _audio_loader->create(reader_cfg, decoder_cfg, _batch_size);
+        }
     } catch (const std::exception& e) {
         de_init();
         throw;
@@ -280,3 +283,4 @@ std::vector<std::string> AudioLoader::get_id() {
 decoded_sample_info AudioLoader::get_decode_sample_info() {
     return _output_decoded_audio_info;
 }
+#endif

@@ -190,10 +190,6 @@ if(NOT HALF_FOUND)
     set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
-if(NOT SndFile_FOUND)	
-    set(BUILD_ROCAL false)	
-    message("-- ${Yellow}NOTE: rocAL library requires SndFile, Not Found ${ColourReset}")	
-endif()
 
 if(${BUILD_ROCAL})
     # AMD RPP
@@ -209,8 +205,8 @@ if(${BUILD_ROCAL})
     # Threads
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
     # TurboJPEG
-    include_directories(${TurboJpeg_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
+    include_directories(${TurboJpeg_INCLUDE_DIRS} {LIBJPEG_INCLUDE_DIR})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES} ${LIBJPEG_LIBRARIES})
     # Protobuf
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
@@ -224,9 +220,6 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
     # half
     include_directories(${HALF_INCLUDE_DIRS})
-    # SndFile
-    include_directories(${SndFile_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
 
     # rocAL uses C++ 17 features
     set(CMAKE_CXX_STANDARD 17)
@@ -240,6 +233,7 @@ if(${BUILD_ROCAL})
                 include/augmentations/effects_augmentations/
                 include/augmentations/geometry_augmentations/
                 include/augmentations/audio_augmentations/
+                include/augmentations/arithmetic_augmentations/
                 include/decoders/image/
                 include/decoders/video/
                 include/decoders/audio/
@@ -325,6 +319,15 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with std experimental Filesystem${ColourReset}")
     else()
         message(FATAL_ERROR "No filesystem library found.")
+    endif()
+    # SndFile
+    if(NOT SndFile_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
+    else()
+        include_directories(${SndFile_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
+        message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

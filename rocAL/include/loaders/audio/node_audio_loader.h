@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "graph.h"
 #include "node.h"
 
+#ifdef ROCAL_AUDIO
+
 class AudioLoaderNode : public Node {
    public:
     /// \param device_resources shard count from user
@@ -34,6 +36,7 @@ class AudioLoaderNode : public Node {
     AudioLoaderNode() = delete;
     /// \param internal_shard_count Defines the amount of parallelism user wants for the load and decode process to be handled internally.
     /// \param source_path Defines the path that includes the Audio dataset
+    /// \param file_list_path Defines the path that contains the file list
     /// \param storage_type Determines the storage type
     /// \param decoder_type Determines the decoder_type
     /// \param shuffle Determines if the user wants to shuffle the dataset or not.
@@ -57,3 +60,4 @@ class AudioLoaderNode : public Node {
    private:
     std::shared_ptr<AudioLoaderSharded> _loader_module = nullptr;
 };
+#endif

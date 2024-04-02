@@ -32,7 +32,6 @@ THE SOFTWARE.
 #include "coco_meta_data_reader.h"
 #include "coco_meta_data_reader_key_points.h"
 #include "exception.h"
-#include "label_reader_file_list.h"
 #include "label_reader_folders.h"
 #include "mxnet_meta_data_reader.h"
 #include "text_file_meta_data_reader.h"
@@ -147,14 +146,6 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             if (config.type() != MetaDataType::Label)
                 THROW("MXNetMetaDataReader can only be used to load labels")
             auto meta_data_reader = std::make_shared<MXNetMetaDataReader>();
-            meta_data_batch = std::make_shared<LabelBatch>();
-            meta_data_reader->init(config, meta_data_batch);
-            return meta_data_reader;
-        }
-        case MetaDataReaderType::FILE_LIST_META_DATA_READER: {
-            if (config.type() != MetaDataType::Label)
-                THROW("FileListMetaDataReader can only be used to load labels")
-            auto meta_data_reader = std::make_shared<LabelReaderFileList>();
             meta_data_batch = std::make_shared<LabelBatch>();
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;

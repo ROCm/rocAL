@@ -28,6 +28,8 @@ THE SOFTWARE.
 #include "audio_decoder_factory.h"
 #include "decoder_factory.h"
 
+#ifdef ROCAL_AUDIO
+
 Timing
 AudioReadAndDecode::timing() {
     Timing t;
@@ -149,3 +151,4 @@ AudioReadAndDecode::load(float *buff,
     _decode_time.end();  // Debug timing
     return LoaderModuleStatus::OK;
 }
+#endif

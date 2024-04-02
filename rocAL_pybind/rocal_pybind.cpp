@@ -134,7 +134,6 @@ std::unordered_map<int, std::string> rocalToPybindLayout = {
     {1, "NCHW"},
     {2, "NFHWC"},
     {3, "NFCHW"},
-    {4, "NONE"}
 };
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
@@ -161,6 +160,29 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("process_time", &TimingInfo::process_time)
         .def_readwrite("transfer_time", &TimingInfo::transfer_time);
     py::class_<rocalTensor>(m, "rocalTensor")
+        .def(
+            "__add__",
+            [](rocalTensor *output_tensor, rocalTensor *output_tensor1) {
+                py::object fn_module = py::module::import("amd.rocal.fn");
+                auto fn_call = fn_module.attr("tensor_add_tensor_float")(output_tensor, output_tensor1).cast<RocalTensor>();
+                return fn_call;
+            },
+            R"code(
+                Adds a node for arithmetic operation
+                )code",
+            py::return_value_policy::reference)
+        .def(
+            "__mul__",
+            [](rocalTensor *output_tensor, float scalar) {
+                py::object fn_module = py::module::import("amd.rocal.fn");
+                auto fn_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a = scalar).cast<RocalTensor>();
+                return fn_call;
+            },
+            R"code(
+                Returns a tensor
+                Adds a node for arithmetic operation
+                )code",
+            py::return_value_policy::reference)
         .def(
             "max_shape",
             [](rocalTensor &output_tensor) {
@@ -375,7 +397,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
         .value("NFCHW", ROCAL_NFCHW)
-        .value("NONE", ROCAL_NONE)
         .export_values();
     py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
         .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -394,24 +415,24 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
     py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
-        .value("ZERO", ZERO)
-        .value("CLAMP", CLAMP)
-        .value("REFLECT", REFLECT)
+        .value("ZERO", ROCAL_ZERO)
+        .value("CLAMP", ROCAL_CLAMP)
+        .value("REFLECT", ROCAL_REFLECT)
         .export_values();
     py::enum_<RocalSpectrogramLayout>(types_m, "RocalSpectrogramLayout", "Rocal Audio Spectrogram Layout")
-        .value("FT", FT)
-        .value("TF", TF)
+        .value("FT", ROCAL_FT)
+        .value("TF", ROCAL_TF)
         .export_values();
     py::enum_<RocalOutOfBoundsPolicy>(types_m, "RocalOutOfBoundsPolicy", "Rocal Audio Out Of Bounds Policy")
-        .value("PAD", PAD)
-        .value("TRIMTOSHAPE", TRIMTOSHAPE)
-        .value("ERROR", ERROR)
+        .value("PAD", ROCAL_PAD)
+        .value("TRIMTOSHAPE", ROCAL_TRIMTOSHAPE)
+        .value("ERROR", ROCAL_ERROR)
         .export_values();
     py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
-            .value("LAST_BATCH_FILL",ROCAL_LAST_BATCH_FILL)
-            .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
-            .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)
-            .export_values();
+        .value("LAST_BATCH_FILL",ROCAL_LAST_BATCH_FILL)
+        .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
+        .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -727,15 +748,25 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
-    m.def("PreEmphasisFilter", &rocalPreEmphasisFilter, 
+    m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
-    m.def("NonSilentRegion", &rocalNonSilentRegion,
-            py::return_value_policy::reference);
-    m.def("Spectrogram", &rocalSpectrogram,
-            py::return_value_policy::reference);
-    m.def("audioNormalize", &rocalNormalize,"Normalizes the input by removing the mean and dividing by the standard deviation",
-        py::return_value_policy::reference);
-    m.def("ToDecibels", &rocalToDecibels, "Converts to Decibels",
-        py::return_value_policy::reference);
+    m.def("spectrogram", &rocalSpectrogram,
+          py::return_value_policy::reference);
+    m.def("toDecibels", &rocalToDecibels,
+          py::return_value_policy::reference);
+    m.def("resample", &rocalResample,
+          py::return_value_policy::reference);
+    m.def("normalDistribution", &rocalNormalDistribution,
+          py::return_value_policy::reference);
+    m.def("uniformDistribution", &rocalUniformDistribution,
+          py::return_value_policy::reference);
+    m.def("tensorMulScalar", &rocalTensorMulScalar,
+          py::return_value_policy::reference);
+    m.def("tensorAddTensor", &rocalTensorAddTensor,
+          py::return_value_policy::reference);
+    m.def("nonSilentRegion", &rocalNonSilentRegion, "Performs leading and trailing silence detection in an audio buffer",
+          py::return_value_policy::reference);
+    m.def("slice", &rocalSlice, "The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
+          py::return_value_policy::reference);
 }
 }  // namespace rocal

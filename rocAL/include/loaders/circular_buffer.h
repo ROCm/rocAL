@@ -37,9 +37,9 @@ struct decoded_sample_info {
     std::vector<uint32_t> _roi_height;
     std::vector<uint32_t> _original_width;
     std::vector<uint32_t> _original_height;
-    std::vector<uint32_t> _original_audio_samples;
-    std::vector<uint32_t> _original_audio_channels;
-    std::vector<float> _original_audio_sample_rates;
+    std::vector<uint32_t> _original_audio_samples; //! Amplitude of an audio signal at a specific point in time
+    std::vector<uint32_t> _original_audio_channels; //! Number of audio channels in an audio signal
+    std::vector<float> _original_audio_sample_rates; //! The number of samples of audio carried per second
 };
 
 struct crop_image_info {

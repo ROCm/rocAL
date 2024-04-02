@@ -23,6 +23,8 @@ THE SOFTWARE.
 #pragma once
 #include "audio_loader.h"
 
+#ifdef ROCAL_AUDIO
+
 // AudioLoaderSharded Can be used to run load and decode in multiple shards, each shard by a single loader instance,
 // It improves load and decode performance since each loader loads the audios in parallel using an internal thread
 class AudioLoaderSharded : public LoaderModule {
@@ -32,7 +34,6 @@ class AudioLoaderSharded : public LoaderModule {
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
     void set_output(Tensor* output_audio) override;
-    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override{ THROW("set_random_bbox_data_reader is not compatible with this implementation") };
     size_t remaining_count() override;
     void reset() override;
     void start_loading() override;
@@ -56,3 +57,4 @@ class AudioLoaderSharded : public LoaderModule {
     size_t _prefetch_queue_depth;
     Tensor* _output_tensor;
 };
+#endif

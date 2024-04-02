@@ -36,7 +36,14 @@ void DownmixNode::create_node() {
     _node = vxExtRppDownmix(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor());
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the copy (vxExtRppDownmix) node failed: " + TOSTR(status))
+        THROW("Adding the downmix (vxExtRppDownmix) node failed: " + TOSTR(status))
 }
 
-void DownmixNode::update_node() {}
+void DownmixNode::update_node() {
+    for (unsigned i = 0; i < _batch_size; i++) {
+        unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
+        unsigned *output_tensor_shape = _outputs[0]->info().roi()[i].end;
+        output_tensor_shape[0] = tensor_shape[0];
+        output_tensor_shape[1] = 1;  // Setting channels to 1 for downmix output
+    }
+}

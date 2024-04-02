@@ -48,7 +48,6 @@ enum class StorageType {
     MXNET_RECORDIO = 7,
     VIDEO_FILE_SYSTEM = 8,
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
-    FILE_LIST_SYSTEM = 10          // to support reading from file lists
 };
 
 enum class ExternalSourceFileMode {
@@ -97,6 +96,8 @@ struct ReaderConfig {
     std::map<std::string, std::string> feature_key_map() { return _feature_key_map; }
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
+    void set_file_list_path(const std::string &file_list_path) { _file_list_path = file_list_path; }
+    std::string file_list_path() { return _file_list_path; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     ExternalSourceFileMode mode() { return _file_mode; }
     std::pair<RocalBatchPolicy, bool> get_last_batch_policy() { return std::pair<RocalBatchPolicy, bool>(_last_batch_policy, _last_batch_padded); }
@@ -118,6 +119,7 @@ struct ReaderConfig {
     bool _shuffle = false;
     bool _loop = false;
     std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_list_path = "";  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
     RocalBatchPolicy _last_batch_policy = RocalBatchPolicy::BATCH_FILL;

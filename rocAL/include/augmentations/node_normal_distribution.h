@@ -21,35 +21,26 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <dirent.h>
+#include <random>
 
-#include <map>
+#include "batch_rng.h"
+#include "graph.h"
+#include "node.h"
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
-
-class LabelReaderFileList : public MetaDataReader {
+class NormalDistributionNode : public Node {
    public:
-    void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
-    void lookup(const std::vector<std::string>& image_names) override;
-    void read_all(const std::string& path) override;
-    void release(std::string image_name);
-    void release() override;
-    void print_map_contents();
-    bool set_timestamp_mode() override { return false; }
-    const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
-    LabelReaderFileList();
+    NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    NormalDistributionNode() = delete;
+    void init(float mean, float stddev);
+    void update_param();
+
+   protected:
+    void create_node() override;
+    void update_node() override;
 
    private:
-    bool exists(const std::string& image_name) override;
-    void add(std::string image_name, int label);
-    std::map<std::string, std::shared_ptr<MetaData>> _map_content;
-    std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
-    std::string _path, _file_list_path;
-    pMetaDataBatch _output;
-    DIR *_src_dir, *_sub_dir;
-    struct dirent* _entity;
-    std::vector<std::string> _file_names;
-    std::vector<std::string> _subfolder_file_names;
+    float _mean, _std_dev;
+    std::normal_distribution<float> _dist_normal;
+    std::vector<float> _normal_distribution_array;
+    BatchRNG<std::mt19937> _rngs = {89, 2};  // Random Seed & BatchSize for initialization
 };
