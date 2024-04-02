@@ -2455,7 +2455,7 @@ rocalNonSilentRegion(
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
-        unsigned number_of_dims = 3;
+        unsigned number_of_dims = 2;
         std::vector<size_t> dims1(number_of_dims, 1);
         dims1.at(0) = context->user_batch_size();
         auto info1 = TensorInfo(std::vector<size_t>(std::move(dims1)),
