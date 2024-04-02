@@ -30,7 +30,9 @@ test_case_augmentation_map = {
     2: "spectrogram",
     3: "downmix",
     4: "to_decibels",
-    5: "resample"
+    5: "resample",
+    6: "tensor_add_tensor",
+    7: "tensor_mul_scalar"
 }
 
 def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list):
@@ -46,7 +48,11 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
             src_path = rocal_data_path + "/audio"
         print("\n\n")
         result = subprocess.run([build_folder_path + "/build/rocal_audio_unittests", src_path, str(case), str(downmix), str(gpu), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
-        decoded_stdout = result.stdout.decode()
+        try:
+            decoded_stdout = result.stdout.decode('utf-8')
+        except UnicodeDecodeError as e:
+            # Handle the error by replacing or ignoring problematic characters
+            decoded_stdout = result.stdout.decode('utf-8', errors='replace')
 
         # check the QA status of the test case
         if "PASSED" in decoded_stdout:
@@ -55,7 +61,7 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
         else:
             num_failed += 1
             failed_cases.append(test_case_augmentation_map[case])
-        print(result.stdout.decode())
+        print(decoded_stdout)
 
     if qa_mode:
         print("Number of PASSED:", num_passed)
