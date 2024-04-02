@@ -28,12 +28,10 @@ TensorAddTensorNode::TensorAddTensorNode(const std::vector<Tensor *> &inputs, co
 void TensorAddTensorNode::create_node() {
     if (_node)
         return;
-    _node = vxExtRppTensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->get_roi_tensor(), _batch_size);
+    _node = vxExtRppTensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->get_roi_tensor());
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the (vxExtRppTensorAddTensor) node failed: " + TOSTR(status))
 }
 
 void TensorAddTensorNode::update_node() {}
-
-void TensorAddTensorNode::init() {}
