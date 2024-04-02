@@ -40,11 +40,11 @@ test_case_augmentation_map = {
     2: "spectrogram",
     3: "downmix",
     4: "to_decibels",
-    5: "non_silent_region",
-    6: "slice"
-    7: "resample",
-    8: "tensor_add_tensor",
-    9: "tensor_mul_scalar"
+    5: "resample",
+    6: "tensor_add_tensor",
+    7: "tensor_mul_scalar",
+    8: "non_silent_region",
+    9: "slice"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -324,10 +324,9 @@ def main():
         for e in range(int(args.num_epochs)):
             print("Epoch :: ", e)
             torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-            for i, it in enumerate(audioIteratorPipeline):
-                output_list = []
-                for x in range(len(it[0])):
-                    for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
+            for i, output_list in enumerate(audioIteratorPipeline):
+                for x in range(len(output_list[0])):
+                    for audio_tensor, label, roi in zip(output_list[0][x], output_list[1], output_list[2]):
                         if args.print_tensor:
                             print("label", label)
                             print("Audio", audio_tensor)
@@ -335,13 +334,11 @@ def main():
                         if args.display:
                             plot_audio_wav(audio_tensor, cnt)
                         cnt+=1
-                        output_list.append(audio_tensor)
             if qa_mode :
                 if case_name == "non_silent_region":
-                    print(output_list)
-                    verify_non_silent_region_output(output_list, rocal_data_path, test_results, case_name)
+                    verify_non_silent_region_output(output_list[0], rocal_data_path, test_results, case_name)
                 else:
-                    verify_output(output_list, rocal_data_path, roi, test_results, case_name, dimensions)
+                    verify_output(output_list[0], rocal_data_path, roi, test_results, case_name, dimensions)
             print("EPOCH DONE", e)
 
         stop = timeit.default_timer()
