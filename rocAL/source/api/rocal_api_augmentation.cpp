@@ -2438,7 +2438,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
 }
 
 std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL
-rocalNonSilentRegion(
+rocalNonSilentRegionDetection(
         RocalContext p_context,
         RocalTensor p_input,
         bool is_output,
@@ -2472,7 +2472,7 @@ rocalNonSilentRegion(
         output2 = context->master_graph->create_tensor(info2, is_output);
         output_tensors.push_back(output1);
         output_tensors.push_back(output2);
-        context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cutoff_db, reference_power, window_length, reset_interval);
+        context->master_graph->add_node<NonSilentRegionDetectionNode>({input}, {output1, output2})->init(cutoff_db, reference_power, window_length, reset_interval);
     } catch(const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

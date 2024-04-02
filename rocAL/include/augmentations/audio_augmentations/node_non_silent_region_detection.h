@@ -24,10 +24,10 @@ THE SOFTWARE.
 #include "node.h"
 #include "graph.h"
 
-class NonSilentRegionNode : public Node {
+class NonSilentRegionDetectionNode : public Node {
 public:
-    NonSilentRegionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    NonSilentRegionNode() = delete;
+    NonSilentRegionDetectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    NonSilentRegionDetectionNode() = delete;
     void init(float cutoff_db, float reference_power, int reset_interval, int window_length);
 protected:
     void create_node() override;

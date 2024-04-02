@@ -21,13 +21,13 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_non_silent_region.h"
+#include "node_non_silent_region_detection.h"
 #include "exception.h"
 
-NonSilentRegionNode::NonSilentRegionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
+NonSilentRegionDetectionNode::NonSilentRegionDetectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
         Node(inputs, outputs) { }
 
-void NonSilentRegionNode::create_node() {
+void NonSilentRegionDetectionNode::create_node() {
     if(_node)
         return;
 
@@ -35,17 +35,17 @@ void NonSilentRegionNode::create_node() {
     vx_scalar reference_power = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_reference_power);
     vx_scalar window_length = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_length);
     vx_scalar reset_interval = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_reset_interval);
-    _node = vxExtRppNonSilentRegion(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[1]->handle(),
+    _node = vxExtRppNonSilentRegionDetection(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[1]->handle(),
                                     cutoff_db, reference_power, window_length, reset_interval);
 
     vx_status status;
     if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Error adding the non silent region node (vxRppNonSilentRegion) failed: " + TOSTR(status))
+        THROW("Error adding the non silent region node (vxRppNonSilentRegionDetection) failed: " + TOSTR(status))
 }
 
-void NonSilentRegionNode::update_node() { }
+void NonSilentRegionDetectionNode::update_node() { }
 
-void NonSilentRegionNode::init(float cutoff_db, float reference_power, int window_length, int reset_interval) {
+void NonSilentRegionDetectionNode::init(float cutoff_db, float reference_power, int window_length, int reset_interval) {
     _cutoff_db = cutoff_db;
     _reference_power = reference_power;
     _window_length = window_length;

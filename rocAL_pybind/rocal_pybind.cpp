@@ -764,7 +764,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("tensorAddTensor", &rocalTensorAddTensor,
           py::return_value_policy::reference);
-    m.def("nonSilentRegion", &rocalNonSilentRegion, "Performs leading and trailing silence detection in an audio buffer",
+    m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection, "Performs leading and trailing silence detection in an audio buffer",
           py::return_value_policy::reference);
     m.def("slice", &rocalSlice, "The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms",
           py::return_value_policy::reference);

@@ -1248,7 +1248,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_contex
  * \param [in] window_length size of the sliding window used to calculate of the short-term power of the signal
  * \return std::pair<RocalTensor, RocalTensor>
  */
-extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegion(RocalContext context,
+extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegionDetection(RocalContext context,
                                                                                    RocalTensor input,
                                                                                    bool is_output,
                                                                                    float cutoff_db,

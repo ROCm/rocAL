@@ -1147,7 +1147,7 @@ def nonsilent_region(*inputs, rocal_tensor_output_type = types.FLOAT, bytes_per_
     """
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
-    non_silent_region_output = b.nonSilentRegion(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return non_silent_region_output
 
 # //TODO: To modify the comments wrt earlier augmentations
