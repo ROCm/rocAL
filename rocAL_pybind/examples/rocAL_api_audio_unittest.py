@@ -221,8 +221,8 @@ def tensor_add_tensor_pipeline(path, file_list):
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
-    pre_emphasis_output = fn.preemphasis_filter(decoded_audio)
-    return decoded_audio + pre_emphasis_output
+    uniform_distribution_sample = fn.random.uniform(decoded_audio, range=[1.15, 1.15])
+    return decoded_audio + uniform_distribution_sample
 
 @pipeline_def(seed=seed)
 def tensor_mul_scalar_pipeline(path, file_list):
