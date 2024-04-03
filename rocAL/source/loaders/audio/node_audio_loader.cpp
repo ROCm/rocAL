@@ -30,8 +30,10 @@ AudioLoaderNode::AudioLoaderNode(Tensor *output, void *device_resources) : Node(
     _loader_module = std::make_shared<AudioLoaderSharded>(device_resources);
 }
 
-void AudioLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path, StorageType storage_type,
-                           DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool stick_to_shard, signed shard_size) {
+void AudioLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path,
+                           StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, 
+                           size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
+                           RocalBatchPolicy last_batch_policy, bool last_batch_padded, bool stick_to_shard, signed shard_size) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for AudioLoaderNode, cannot initialize")
     if (internal_shard_count < 1)

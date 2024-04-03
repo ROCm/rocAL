@@ -834,6 +834,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
  * \param [in] loop Determines if the user wants to indefinitely loops through audio or not.
  * \param [in] downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
+ * \param [in] stick_to_shard Determines weather or not the dataset when sharding is done should stick to a single shards dataset or to be considered in a round robin fashion.
+ * \param [in] shard_size Provides the data-size of the shard for an iterator.
  * \return Reference to the output audio
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
@@ -843,7 +845,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                            bool is_output,
                                                            bool shuffle = false,
                                                            bool loop = false,
-                                                           bool downmix = false);
+                                                           bool downmix = false,
+                                                           bool stick_to_shard = false,
+                                                           int shard_size = -1);
 
 /*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
  * If the files are not in standard audio compression formats they will be ignored.
@@ -856,6 +860,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
  * \param [in] loop Determines if the user wants to indefinitely loops through audio or not.
  * \param [in] downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
+ * \param [in] stick_to_shard Determines weather or not the dataset when sharding is done should stick to a single shards dataset or to be considered in a round robin fashion.
+ * \param [in] shard_size Provides the data-size of the shard for an iterator.
  * \return Reference to the output audio
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
@@ -866,6 +872,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       bool is_output,
                                                                       bool shuffle = false,
                                                                       bool loop = false,
-                                                                      bool downmix = false);
+                                                                      bool downmix = false,
+                                                                      bool stick_to_shard = false,
+                                                                      int shard_size = -1);
 
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H

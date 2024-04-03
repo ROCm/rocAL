@@ -117,9 +117,9 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
                                                                                                                                                                                                                                                  _box_encoder_gpu(nullptr),
 #endif
                                                                                                                                                                                                                                                  _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
-                                                                                                                                                                                                                                                 _rb_block_if_full_time("Ring Buffer Block IF Full Time",
+                                                                                                                                                                                                                                                 _rb_block_if_full_time("Ring Buffer Block IF Full Time"),
                                                                                                                                                                                                                                                 _last_batch_policy(last_batch_policy),
-                                                                                                                                                                                                                                                _last_batch_padded(last_batch_padded)) {
+                                                                                                                                                                                                                                                _last_batch_padded(last_batch_padded) {
     try {
         vx_status status;
         vxRegisterLogCallback(NULL, log_callback, vx_false_e);
@@ -444,12 +444,13 @@ MasterGraph::last_batch_policy() {
     return _last_batch_policy;
 }
 
-bool MasterGraph::last_batch_padded() {
+bool
+MasterGraph::last_batch_padded() {
     return _last_batch_padded;
 }
 
 uint 
-MasterGraph::() {
+MasterGraph::last_batch_padded_size() {
     return _loader_module->last_batch_padded_size();
 }
 
