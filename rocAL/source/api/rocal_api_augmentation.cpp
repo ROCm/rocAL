@@ -2438,77 +2438,67 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
 }
 
 std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL
-rocalNonSilentRegion(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        float cutoff_db,
-        float reference_power,
-        int reset_interval,
-        int window_length) {
-    Tensor* output1 = nullptr;
-    Tensor* output2 = nullptr;
+rocalNonSilentRegionDetection(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    float cutoff_db,
+    float reference_power,
+    int reset_interval,
+    int window_length) {
+    Tensor* anchor_output = nullptr;
+    Tensor* shape_output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr))
         ERR("Invalid ROCAL context or invalid input tensor")
-    TensorList output_tensors;
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        RocalTensorDataType tensor_data_type = RocalTensorDataType::INT32;
-        unsigned number_of_dims = 2;
-        std::vector<size_t> dims1(number_of_dims, 1);
-        dims1.at(0) = context->user_batch_size();
+        std::vector<size_t> dims1 = {context->user_batch_size(), 1};
         auto info1 = TensorInfo(std::vector<size_t>(std::move(dims1)),
-                               context->master_graph->mem_type(),
-                               tensor_data_type);
-        std::vector<size_t> dims2(number_of_dims, 1);
-        dims2.at(0) = context->user_batch_size();
+                                context->master_graph->mem_type(),
+                                RocalTensorDataType::INT32);
+        info1.set_max_shape();
+        std::vector<size_t> dims2 = {context->user_batch_size(), 1};
         auto info2 = TensorInfo(std::vector<size_t>(std::move(dims2)),
-                               context->master_graph->mem_type(),
-                               tensor_data_type);
-        output1 = context->master_graph->create_tensor(info1, is_output);
-        output2 = context->master_graph->create_tensor(info2, is_output);
-        output_tensors.push_back(output1);
-        output_tensors.push_back(output2);
-        output1->reset_tensor_roi();
-        output2->reset_tensor_roi();
-        context->master_graph->add_node<NonSilentRegionNode>({input}, {output1, output2})->init(cutoff_db, reference_power, window_length, reset_interval);
-    } catch(const std::exception& e) {
+                                context->master_graph->mem_type(),
+                                RocalTensorDataType::INT32);
+        info2.set_max_shape();
+        anchor_output = context->master_graph->create_tensor(info1, is_output);
+        shape_output = context->master_graph->create_tensor(info2, is_output);
+        context->master_graph->add_node<NonSilentRegionDetectionNode>({input}, {anchor_output, shape_output})->init(cutoff_db, reference_power, window_length, reset_interval);
+    } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
 
-    return std::make_pair(output_tensors.at(0), output_tensors.at(1));
+    return std::make_pair(anchor_output, shape_output);
 }
 
 RocalTensor ROCAL_API_CALL
 rocalSlice(
-        RocalContext p_context,
-        RocalTensor p_input,
-        bool is_output,
-        RocalTensor anchor_tensor,
-        RocalTensor shape_tensor,
-        std::vector<float> fill_values,
-        std::vector<unsigned> axes, // TODO: Remove
-        bool normalized_anchor, // TODO: Remove
-        bool normalized_shape, // TODO: Remove
-        RocalOutOfBoundsPolicy policy,
-        RocalTensorOutputType output_datatype) {
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    RocalTensor p_anchor,
+    RocalTensor p_shape,
+    std::vector<float> fill_values,
+    RocalOutOfBoundsPolicy policy,
+    RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr))
         ERR("Invalid ROCAL context or invalid input tensor")
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto anchor = static_cast<Tensor*>(anchor_tensor);
-    auto shape = static_cast<Tensor*>(shape_tensor);
+    auto anchor = static_cast<Tensor*>(p_anchor);
+    auto shape = static_cast<Tensor*>(p_shape);
     try {
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
+        output_info.set_max_shape();
         output = context->master_graph->create_tensor(output_info, is_output);
-        output->reset_tensor_roi();
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values, policy);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
