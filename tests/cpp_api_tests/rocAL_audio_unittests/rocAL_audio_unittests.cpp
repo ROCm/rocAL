@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "rocal_api.h"
 
@@ -120,7 +121,7 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name, int m
             ref_val = ref_output[i * frames + j];
             out_val = dst_ptr[i * max_channels + j];
             bool invalid_comparison = ((out_val == 0.0f) && (ref_val != 0.0f));
-            if (!invalid_comparison && abs(out_val - ref_val) < 1e-20)
+            if (!invalid_comparison && std::abs(out_val - ref_val) < 1e-20)
                 matched_indices += 1;
         }
     }
@@ -245,11 +246,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         case 6: {
             std::cout << ">>>>>>> Running TENSOR ADD TENSOR" << std::endl;
             case_name = "tensor_add_tensor";
-            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
-            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP;
-            RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
-            RocalTensor p_preemph_output = rocalPreEmphasisFilter(handle, decoded_output, false, p_preemph_coeff, preemph_border_type, tensorOutputType);
-            rocalTensorAddTensor(handle, decoded_output, p_preemph_output, true, ROCAL_FP32);
+            std::vector<float> range = {1.15, 1.15};
+            RocalTensor uniform_distribution_sample = rocalUniformDistribution(handle, decoded_output, false, range);
+            rocalTensorAddTensor(handle, decoded_output, uniform_distribution_sample, true, ROCAL_FP32);
         } break;
         case 7: {
             std::cout << ">>>>>>> Running TENSOR MUL SCALAR" << std::endl;

@@ -64,6 +64,13 @@ def draw_patches(img, idx, device, args=None):
     cv2.imwrite(args.output_file_name + ".png", img,
                 [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
+def dump_meta_data(labels, device, args=None):
+    if device == "gpu":
+        labels = cp.asnumpy(labels)
+    labels_list = labels.tolist()
+    with open(args.output_file_name, 'w') as file:
+        for label in labels_list:
+            file.write(str(label) + '\n')
 
 def main():
     args = parse_args()
@@ -117,7 +124,7 @@ def main():
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
         if reader_type == "file":
-            jpegs, _ = fn.readers.file(file_root=data_path)
+            jpegs, labels = fn.readers.file(file_root=data_path)
             images = fn.decoders.image(jpegs,
                                        file_root=data_path,
                                        device=decoder_device,
@@ -471,6 +478,16 @@ def main():
                                     crop=[2, 224, 224],
                                     output_layout=tensor_layout,
                                     output_dtype=tensor_dtype)
+        elif augmentation_name == "one_hot":
+            output = fn.crop(images,
+                             crop=(3, 224, 224),
+                             crop_pos_x=0.0,
+                             crop_pos_y=0.0,
+                             crop_pos_z=0.0,
+                             output_layout=tensor_layout,
+                             output_dtype=tensor_dtype)
+            num_classes = len(next(os.walk(data_path))[1])
+            labels_onehot = fn.one_hot(labels, num_classes=num_classes)
 
         if output_set == 0:
             pipe.set_outputs(output)
@@ -495,8 +512,11 @@ def main():
                     print("\nLABELS:\n", labels)
                     print("**************ends*******************")
                     print("**************", i, "*******************")
-                draw_patches(output_list[j], cnt, rocal_device, args=args)
-                cnt += len(output_list[j])
+                if args.augmentation_name == "one_hot":
+                    dump_meta_data(labels, rocal_device, args=args)
+                else:
+                    draw_patches(output_list[j], cnt, rocal_device, args=args)
+                    cnt += len(output_list[j])
 
         data_loader.reset()
 

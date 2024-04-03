@@ -8,6 +8,7 @@ then
 fi
 
 # Path to inputs and outputs available in MIVisionX-data
+one_hot_data_path=${ROCAL_DATA_PATH}/rocal_data/images_jpg/labels_folder/
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/train_10images_2017/
 coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/train_10images_2017/
 coco_json_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/annotations/instances_train2017.json
@@ -151,6 +152,9 @@ do
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 3 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_lanczos_default_caffe2Classification"
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$caffe2_detection_path" --reader-type "caffe2_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 5 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_default_caffe2Detection"
         python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$mxnet_path" --reader-type "mxnet" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 4 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_gaussian_default_mxnet"
+
+        # Special Case - One Hot Encoded Labels
+        python"$ver" rocAL_api_python_unittest.py --image-dataset-path "$one_hot_data_path" --augmentation-name one_hot --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}OneHot_${rgb_name[$rgb]}_${device_name}"
 
     done
 done
