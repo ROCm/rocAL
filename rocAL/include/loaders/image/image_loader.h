@@ -74,9 +74,7 @@ class ImageLoader : public LoaderModule {
     size_t _batch_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    DecodedDataInfo _decoded_img_info;
     CropImageInfo _crop_image_info;
-    DecodedDataInfo _output_decoded_img_info;
     CropImageInfo _output_cropped_img_info;
     CircularBuffer _circ_buff;
     TimingDbg _swap_handle_time;

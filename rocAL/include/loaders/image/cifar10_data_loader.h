@@ -59,8 +59,6 @@ class CIFAR10DataLoader : public LoaderModule {
     LoaderModuleStatus load_routine();
     std::shared_ptr<Reader> _reader;
     void *_dev_resources;
-    DecodedDataInfo _raw_img_info;  // data info to store the names. In this case the ID of image is stored in _roi_width field
-    DecodedDataInfo _output_decoded_img_info;
     bool _initialized = false;
     RocalMemType _mem_type;
     size_t _output_mem_size;

@@ -74,8 +74,6 @@ class VideoLoader : public LoaderModule {
     size_t _sequence_length;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    DecodedDataInfo _decoded_video_info;
-    DecodedDataInfo _output_decoded_video_info;
     CircularBuffer _circ_buff;
     TimingDbg _swap_handle_time;
     bool _is_initialized;
