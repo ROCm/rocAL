@@ -30,12 +30,21 @@ void SliceNode::create_node() {
     if (_node)
         return;
 
+    // if fill values passed by user less than what is required, replicate the values
+    if (_fill_values.size() == 1)
+        std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), _fill_values[0]);
+
+    vx_status status = VX_SUCCESS;
+    status = vxCopyArrayRange((vx_array)_fill_values_array_vx, 0, _batch_size, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+    if (status != 0)
+        WRN("ERROR: vxCopyArrayRange failed in the slice node (vxExtRppSlice) node: " + TOSTR(status))
+
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
     _fill_values_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size);
-    vx_status status = vxAddArrayItems(_fill_values_array_vx, _batch_size, _fill_values_vec.data(), sizeof(vx_float32));
+    status = vxAddArrayItems(_fill_values_array_vx, _batch_size, _fill_values_vec.data(), sizeof(vx_float32));
     if (status != 0)
         THROW(" vxAddArrayItems failed in the slice (vxExtRppSlice) node: " + TOSTR(status));
     vx_scalar policy_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_policy);
@@ -47,16 +56,7 @@ void SliceNode::create_node() {
         THROW("Adding the slice node (vxRppSlice) failed: " + TOSTR(status))
 }
 
-void SliceNode::update_node() {
-    // if fill values passed by user less than what is required, replicate the values
-    if (_fill_values.size() == 1) {
-        std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), _fill_values[0]);
-    }
-    vx_status status = VX_SUCCESS;
-    status = vxCopyArrayRange((vx_array)_fill_values_array_vx, 0, _batch_size, sizeof(vx_float32), _fill_values_vec.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-    if (status != 0)
-        WRN("ERROR: vxCopyArrayRange failed in the slice node (vxExtRppSlice) node: " + TOSTR(status))
-}
+void SliceNode::update_node() {}
 
 void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_values, RocalOutOfBoundsPolicy policy) {
     _policy = policy;
