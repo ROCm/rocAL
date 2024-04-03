@@ -908,7 +908,7 @@ void MasterGraph::output_routine() {
             auto CropImageInfo = _loader_module->get_crop_image_info();
 
             if (full_batch_data_names.size() != _user_batch_size)
-                WRN("Internal problem: names count " + TOSTR(full_batch_data_names.size()))
+                WRN("Master Graph: Names count does not equal batch_size" + TOSTR(full_batch_data_names.size()))
 
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
