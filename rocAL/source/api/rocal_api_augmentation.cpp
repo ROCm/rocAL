@@ -2506,15 +2506,10 @@ rocalSlice(
 }
 
 RocalTensor ROCAL_API_CALL
-rocalNormalize(
-    RocalContext p_context,
-    RocalTensor p_input,
-    bool is_output, bool batch,
-    std::vector<int> axes,
-    float mean, float std_dev,
-    float scale, float shift,
-    int ddof, float epsilon,
-    RocalTensorOutputType output_datatype) {
+rocalNormalize(RocalContext p_context, RocalTensor p_input, std::vector<unsigned>& axes,
+               std::vector<float>& mean, std::vector<float>& std_dev, bool is_output,
+               float scale, float shift,
+               RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
         ERR("Invalid ROCAL context or invalid input tensor")
@@ -2523,15 +2518,12 @@ rocalNormalize(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        if ((mean > 0.0f) && (std_dev > 0.0f) && (axes.size()))
-            THROW("Axes must not be passed when both mean and standard deviation are specified")
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
-        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
-        output_info.set_data_type(op_tensor_data_type);
-        auto dims = output_info.dims();
-        output_info.set_dims(dims);
+        output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<NormalizeNode>({input}, {output})->init(mean, std_dev, axes, batch, scale, shift, ddof, epsilon);
+        std::shared_ptr<NormalizeNode> normalize_node = context->master_graph->add_node<NormalizeNode>({input}, {output});
+        normalize_node->init(axes, mean, std_dev, scale, shift);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

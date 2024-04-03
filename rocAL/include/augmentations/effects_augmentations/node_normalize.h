@@ -23,24 +23,24 @@ THE SOFTWARE.
 #pragma once
 #include "graph.h"
 #include "node.h"
+#include "parameter_vx.h"
 
 class NormalizeNode : public Node {
    public:
     NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     NormalizeNode() = delete;
-    void init(float mean, float std_dev, std::vector<int> axes, bool batch, float scale, float shift, int ddof, float epsilon);
+    void init(std::vector<unsigned> &axes, std::vector<float> &mean, std::vector<float> &std_dev, float scale, float shift);
 
    protected:
     void create_node() override;
-    void update_node() override;
+    void update_node() override{};
 
    private:
-    float _mean, _std_dev;
-    float _scale = 1.0;
-    float _shift = 0.0;
-    float _epsilon = 0.0;
-    int _ddof = 0;
     int _axis_mask = 0;
-    bool _batch = false;
-    unsigned _num_of_dims;
+    uint _compute_mean, _compute_stddev;
+    vx_array _mean_vx_array, _stddev_vx_array;
+    std::vector<unsigned> _axes;
+    std::vector<float> _mean, _std_dev;
+    float _scale, _shift;
+    std::vector<std::vector<uint32_t>> _normalize_roi;
 };

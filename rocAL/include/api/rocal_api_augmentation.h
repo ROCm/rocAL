@@ -1277,23 +1277,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
                                                  RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
                                                  RocalTensorOutputType output_datatype = ROCAL_FP32);
 
-/*! \brief Applies mean-stddev normalization on the input tensor
+/*! \brief Performs mean-stddev normalization on images.
  * \ingroup group_rocal_augmentations
- * \param [in] p_context Rocal context
- * \param [in] p_input Input Rocal tensor
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] axes axes list for tensor normalization
+ * \param [in] mean mean value (specified for each channel) for tensor normalization
+ * \param [in] std_dev standard deviation value (specified for each channel) for tensor normalization
+ * \param [in] scale scale value (specified for each channel) for tensor normalization
+ * \param [in] shift shift value (specified for each channel) for tensor normalization
  * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] mirror controls horizontal flip of the tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext p_context,
-                                                     RocalTensor p_input,
+extern "C" RocalTensor ROCAL_API_CALL rocalNormalize(RocalContext context, RocalTensor input,
+                                                     std::vector<unsigned> &axes,
+                                                     std::vector<float> &mean,
+                                                     std::vector<float> &std_dev,
                                                      bool is_output,
-                                                     bool batch,
-                                                     std::vector<int> axes,
-                                                     float mean, float std_dev,
-                                                     float scale, float shift,
-                                                     int ddof, float epsilon,
-                                                     RocalTensorOutputType rocal_tensor_output_type);
+                                                     float scale = 1.0, float shift = 0.0,
+                                                     RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 /*! \brief Applies mel-filter bank augmentation on the given input tensor
  * \ingroup group_rocal_augmentations

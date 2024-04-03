@@ -1165,7 +1165,7 @@ def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_
     slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return slice_output
 
-def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_sample_hint = [0], ddof = 0, epsilon = 0.0, mean = 0.0, scale = 1.0, seed = -1, shift = 0.0, stddev = 0.0, output_datatype = types.FLOAT):
+def normalize(*inputs, axes=[], mean=[], stddev=[], scale=1.0, shift=0.0, output_datatype=types.FLOAT):
     '''
     Normalizes the input by removing the mean and dividing by the standard deviation.
     The mean and standard deviation can be calculated internally for the specified subset of axes or can be externally provided as the mean and stddev arguments.
@@ -1173,8 +1173,8 @@ def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_samp
     out = scale * (in - mean) / stddev + shift
     The formula assumes that out and in are equally shaped tensors, but mean and stddev might be either tensors of same shape, scalars, or a mix of these.
     '''
-    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "batch": batch, "axes": axes, "mean": mean, "stddev": stddev,
-                     "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "output_datatype": output_datatype}
+    kwargs_pybind = {"input_tensor": inputs[0], "axes": axes, "mean": mean, "stddev": stddev, "is_output": False,
+                     "scale": scale, "shift": shift, "output_datatype": output_datatype}
     normalize_output = b.normalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return normalize_output
 
