@@ -78,10 +78,6 @@ class CircularBuffer {
     CropImageInfo _last_crop_image_info;              // for Random BBox crop coordinates
     std::queue<CropImageInfo> _circ_crop_image_info;  //!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
     std::mutex _names_buff_lock;
-    /*
-     *  Pinned memory allocated on the host used for fast host to device memory transactions,
-     *  or the regular host memory buffers in the host processing case.
-     */
 #if ENABLE_HIP
     hipStream_t _hip_stream;
     int _hip_device_id, _hip_canMapHostMemory;
