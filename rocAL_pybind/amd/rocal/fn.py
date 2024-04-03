@@ -1175,7 +1175,7 @@ def normalize(*inputs, axes = [], axis_names = "", batch = False, bytes_per_samp
     '''
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "batch": batch, "axes": axes, "mean": mean, "stddev": stddev,
                      "scale": scale , "shift": shift, "ddof": ddof , "epsilon": epsilon, "output_datatype": output_datatype}
-    normalize_output = b.audioNormalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    normalize_output = b.normalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return normalize_output
 
 def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, output_datatype = types.FLOAT):
