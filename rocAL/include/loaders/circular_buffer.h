@@ -74,7 +74,7 @@ class CircularBuffer {
     bool empty();
     size_t _buff_depth;
     DecodedDataInfo _last_data_info;
-    std::queue<DecodedDataInfo> _circ_data_info;    //!< Stores the loaded data names, decoded_width and decoded_height(data is stored in the _circ_buff)
+    std::queue<DecodedDataInfo> _circ_buff_data_info;    //!< Stores the loaded data names, decoded_width and decoded_height(data is stored in the _circ_buff)
     CropImageInfo _last_crop_image_info;              // for Random BBox crop coordinates
     std::queue<CropImageInfo> _circ_crop_image_info;  //!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
     std::mutex _names_buff_lock;
