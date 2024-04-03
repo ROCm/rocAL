@@ -20,15 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
 #include "node_non_silent_region_detection.h"
+#include <vx_ext_rpp.h>
 #include "exception.h"
 
-NonSilentRegionDetectionNode::NonSilentRegionDetectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) :
-        Node(inputs, outputs) { }
+NonSilentRegionDetectionNode::NonSilentRegionDetectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void NonSilentRegionDetectionNode::create_node() {
-    if(_node)
+    if (_node)
         return;
 
     vx_scalar cutoff_db = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_cutoff_db);
@@ -36,14 +35,14 @@ void NonSilentRegionDetectionNode::create_node() {
     vx_scalar window_length = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_length);
     vx_scalar reset_interval = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_reset_interval);
     _node = vxExtRppNonSilentRegionDetection(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[1]->handle(),
-                                    cutoff_db, reference_power, window_length, reset_interval);
+                                             cutoff_db, reference_power, window_length, reset_interval);
 
     vx_status status;
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Error adding the non silent region node (vxRppNonSilentRegionDetection) failed: " + TOSTR(status))
 }
 
-void NonSilentRegionDetectionNode::update_node() { }
+void NonSilentRegionDetectionNode::update_node() {}
 
 void NonSilentRegionDetectionNode::init(float cutoff_db, float reference_power, int window_length, int reset_interval) {
     _cutoff_db = cutoff_db;
