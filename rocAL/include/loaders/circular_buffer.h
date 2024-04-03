@@ -92,7 +92,6 @@ class CircularBuffer {
 #endif
     std::vector<void*> _dev_buffer;  // Actual memory allocated on the device (in the case of GPU affinity)
     std::vector<unsigned char*> _host_buffer_ptrs;
-    std::vector<std::vector<unsigned char>> _actual_host_buffers;
     std::condition_variable _wait_for_load;
     std::condition_variable _wait_for_unload;
     std::mutex _lock;
