@@ -182,6 +182,7 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
             _device.init_ocl(_context);
 #endif
         }
+        ParameterFactory::instance()->set_seed(0);  // Setting default seed for ParameterFactory instance. User can set the seed manually by calling rocalSetSeed(seed_value)
     } catch (const std::exception &e) {
         release();
         throw;
