@@ -122,14 +122,14 @@ class ROCALGenericIterator(object):
                     output = torch.empty(
                         dimensions, dtype=getattr(torch, torch_dtype))
                     self.labels_tensor = torch.empty(
-                        self.labels_size, dtype=getattr(torch, torch_dtype))
+                        self.labels_size, dtype=getattr(torch, "int32"))
                 else:
                     torch_gpu_device = torch.device('cuda', self.device_id)
                     torch_dtype = self.output_tensor_list[i].dtype()
                     output = torch.empty(dimensions, dtype=getattr(
                         torch, torch_dtype), device=torch_gpu_device)
                     self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(
-                        torch, torch_dtype), device=torch_gpu_device)
+                        torch, "int32"), device=torch_gpu_device)
 
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(
                     output.data_ptr()), self.output_memory_type)
@@ -193,7 +193,7 @@ class ROCALGenericIterator(object):
         else:
             if self.loader._one_hot_encoding:
                 self.loader.get_one_hot_encoded_labels(
-                    self.labels_tensor, self.device)
+                    self.labels_tensor.data_ptr(), self.loader._output_memory_type)
                 self.labels_tensor = self.labels_tensor.reshape(
                     -1, self.batch_size, self.loader._num_classes)
             else:
@@ -317,7 +317,9 @@ class ROCALAudioIterator(object):
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
             self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
-            self.roi_array = np.zeros(self.batch_size * self.num_roi_dims * 2, dtype=np.int32)
+            self.num_of_rois = self.num_roi_dims * 2
+            self.roi_array = np.zeros(self.batch_size * self.num_of_rois, dtype=np.int32)
+            roi = self.roi_array.reshape(self.batch_size,4)
             max_x1 = np.max(roi[...,2:3])
             max_y1 = np.max(roi[...,3:4])
             self.output_tensor_list[i].copy_roi(self.roi_array)
@@ -336,12 +338,12 @@ class ROCALAudioIterator(object):
 
         self.labels = self.loader.get_image_labels()
         self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-        roi = self.roi_array.reshape(self.batch_size,4)
+        
 
         if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 :
-            return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4][0:self.last_batch_size,:])
+            return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.roi_array.reshape(self.batch_size, self.num_of_rois)[...,self.num_of_rois-2:self.num_of_rois][0:self.last_batch_size,:])
         else:
-            return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4])
+            return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size, self.num_of_rois)[...,self.num_of_rois-2:self.num_of_rois])
 
 
     def reset(self):

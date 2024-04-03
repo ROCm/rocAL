@@ -38,9 +38,8 @@ class SliceNode : public Node {
     void update_node() override;
 
    private:
-    vx_array _fill_values_array;
+    vx_array _fill_values_array_vx;
     Tensor *_anchor, *_shape;
     std::vector<float> _fill_values, _fill_values_vec;
-    std::vector<std::vector<uint32_t>> _slice_roi;
     RocalOutOfBoundsPolicy _policy = RocalOutOfBoundsPolicy::ROCAL_ERROR;
 };

@@ -362,6 +362,7 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
     return node;
 }
 
+#ifdef ROCAL_VIDEO
 /*
  * Explicit specialization for VideoLoaderNode
  */
@@ -400,6 +401,7 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
 
     return node;
 }
+#endif
 
 #ifdef ROCAL_AUDIO
 /*

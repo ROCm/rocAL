@@ -21,18 +21,20 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
 #include "graph.h"
+#include "node.h"
 
-class NonSilentRegionNode : public Node {
-public:
-    NonSilentRegionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    NonSilentRegionNode() = delete;
+class NonSilentRegionDetectionNode : public Node {
+   public:
+    NonSilentRegionDetectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    NonSilentRegionDetectionNode() = delete;
     void init(float cutoff_db, float reference_power, int reset_interval, int window_length);
-protected:
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
     float _cutoff_db = -60.0;
     float _reference_power = 0.0;
     int _window_length = 2048;
