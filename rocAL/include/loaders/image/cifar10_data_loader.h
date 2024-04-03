@@ -41,7 +41,7 @@ class CIFAR10DataLoader : public LoaderModule {
     void start_loading() override;
     std::vector<std::string> get_id() override;
     DecodedDataInfo get_decode_data_info() override;
-    crop_image_info get_crop_image_info() override;
+    CropImageInfo get_crop_image_info() override;
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
@@ -85,6 +85,6 @@ class CIFAR10DataLoader : public LoaderModule {
     Tensor *_output_tensor;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     std::vector<std::vector<float>> _bbox_coords, _crop_coords_batch;
-    crop_image_info _crop_image_info;
-    crop_image_info _output_cropped_image_info;
+    CropImageInfo _crop_image_info;
+    CropImageInfo _output_cropped_image_info;
 };

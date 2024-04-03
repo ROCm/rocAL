@@ -346,7 +346,7 @@ DecodedDataInfo &CircularBuffer::get_data_info() {
     return _circ_data_info.front();
 }
 
-crop_image_info &CircularBuffer::get_cropped_image_info() {
+CropImageInfo &CircularBuffer::get_cropped_image_info() {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if (_level != _circ_crop_image_info.size())

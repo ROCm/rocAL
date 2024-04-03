@@ -311,7 +311,7 @@ DecodedDataInfo ImageLoader::get_decode_data_info() {
     return _output_decoded_img_info;
 }
 
-crop_image_info ImageLoader::get_crop_image_info() {
+CropImageInfo ImageLoader::get_crop_image_info() {
     return _output_cropped_img_info;
 }
 
