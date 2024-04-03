@@ -77,7 +77,7 @@ class VideoLoader : public LoaderModule {
     DecodedDataInfo _decoded_video_info;
     DecodedDataInfo _output_decoded_video_info;
     CircularBuffer _circ_buff;
-    TimingDBG _swap_handle_time;
+    TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                         //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop

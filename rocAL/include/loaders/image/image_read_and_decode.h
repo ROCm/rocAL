@@ -83,7 +83,7 @@ class ImageReadAndDecode {
     std::vector<size_t> _original_width;
     std::vector<size_t> _original_height;
     static const size_t MAX_COMPRESSED_SIZE = 1 * 1024 * 1024;  // 1 Meg
-    TimingDBG _file_load_time, _decode_time;
+    TimingDbg _file_load_time, _decode_time;
     size_t _batch_size, _shard_count, _num_threads;
     DecoderConfig _decoder_config;
     bool decoder_keep_original;

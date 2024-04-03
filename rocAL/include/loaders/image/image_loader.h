@@ -79,7 +79,7 @@ class ImageLoader : public LoaderModule {
     DecodedDataInfo _output_decoded_img_info;
     CropImageInfo _output_cropped_img_info;
     CircularBuffer _circ_buff;
-    TimingDBG _swap_handle_time;
+    TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop

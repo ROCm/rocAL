@@ -73,7 +73,7 @@ class CIFAR10DataLoader : public LoaderModule {
     std::vector<std::string> _output_names;
     CircularBuffer _circ_buff;
     size_t _prefetch_queue_depth;
-    TimingDBG _file_load_time, _swap_handle_time;
+    TimingDbg _file_load_time, _swap_handle_time;
     size_t _loader_idx;
     size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();
