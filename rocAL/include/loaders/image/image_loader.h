@@ -63,6 +63,7 @@ class ImageLoader : public LoaderModule {
     std::shared_ptr<ImageReadAndDecode> _image_loader;
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
+
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     Tensor* _output_tensor;
     std::vector<std::string> _output_names;  //!< image name/ids that are stores in the _output_image

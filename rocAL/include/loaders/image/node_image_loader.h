@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -40,8 +40,7 @@ class ImageLoaderNode : public Node {
     /// The loader will repeat images if necessary to be able to have images in multiples of the load_batch_count,
     /// for example if there are 10 images in the dataset and load_batch_count is 3, the loader repeats 2 images as if there are 12 images available.
     void init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, const std::map<std::string, std::string> feature_key_map, StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
-              size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig = false,
-              const char *prefix = "", unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0, ExternalSourceFileMode external_file_mode = ExternalSourceFileMode::NONE);
+              size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig = false, const char *prefix = "", unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0, ExternalSourceFileMode external_file_mode = ExternalSourceFileMode::NONE);
 
     std::shared_ptr<LoaderModule> get_loader_module();
 
