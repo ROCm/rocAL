@@ -73,7 +73,7 @@ void BoundingBoxGraph::update_random_bbox_meta_data(pMetaDataBatch input_meta_da
     std::vector<uint32_t> original_width = decode_image_info._original_width;
     std::vector<uint32_t> roi_width = decode_image_info._roi_width;
     std::vector<uint32_t> roi_height = decode_image_info._roi_height;
-    auto crop_cords = CropImageInfo._crop_image_coords;
+    auto crop_cords = crop_image_info._crop_image_coords;
     for (int i = 0; i < input_meta_data->size(); i++) {
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf;
