@@ -23,13 +23,13 @@ THE SOFTWARE.
 #pragma once
 
 #include "audio_decoder.h"
-#include "sndfile_decoder.h"
+#include "generic_audio_decoder.h"
 
 #ifdef ROCAL_AUDIO
 static std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {
     switch (config.type()) {
         case DecoderType::AUDIO_SOFTWARE_DECODE:
-            return std::make_shared<SndFileDecoder>();
+            return std::make_shared<GenericAudioDecoder>();
         default:
             THROW("Unsupported decoder type " + TOSTR(config.type()));
     }

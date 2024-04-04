@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "loader_module.h"
 #include "reader_factory.h"
-#include "sndfile_decoder.h"
+#include "generic_audio_decoder.h"
 #include "timing_debug.h"
 
 #ifdef ROCAL_AUDIO
@@ -74,7 +74,7 @@ class AudioReadAndDecode {
     std::shared_ptr<Reader> _reader;
     std::vector<float *> _decompressed_buff_ptrs;
     std::vector<AudioMetaInfo> _audio_meta_info;
-    TimingDBG _file_load_time, _decode_time;
+    TimingDbg _file_load_time, _decode_time;
     size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;
 };

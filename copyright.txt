@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: rocAL
-Source: https://github.com/ROCmSoftwarePlatform/rocAL.git
+Source: https://github.com/ROCm/rocAL.git
 
 Files: *
 Copyright: 2022 - 2023 Advanced Micro Devices, Inc.
