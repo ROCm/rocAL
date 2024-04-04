@@ -51,7 +51,7 @@ class AudioLoaderNode : public Node {
     void init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path, 
               StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, 
               RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
-              RocalBatchPolicy last_batch_policy = RocalBatchPolicy::BATCH_FILL, bool last_batch_padded = false, bool stick_to_shard = false, signed shard_size = -1);
+              RocalBatchPolicy last_batch_policy = RocalBatchPolicy::FILL, bool last_batch_padded = false, bool stick_to_shard = false, signed shard_size = -1);
     std::shared_ptr<LoaderModule> get_loader_module();
 
    protected:
