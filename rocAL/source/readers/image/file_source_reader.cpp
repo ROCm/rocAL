@@ -63,15 +63,6 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _stick_to_shard = desc.get_stick_to_shard();
     _shard_size = desc.get_shard_size();
     ret = subfolder_reading();
-    // the following code is required to make every shard the same size:: required for multi-gpu training
-    if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size() / _batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count - 1) / _shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count - 1) / _batch_count;
-        if (_num_batches < max_batches_per_shard) {
-            replicate_last_batch_to_pad_partial_shard();
-        }
-    }
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin(), _file_names.end());
@@ -291,7 +282,6 @@ Reader::Status FileSourceReader::generate_file_names() {
 }
 
 Reader::Status FileSourceReader::subfolder_reading() {
-
     auto ret = generate_file_names();
 
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
@@ -308,7 +298,6 @@ Reader::Status FileSourceReader::subfolder_reading() {
 
 void FileSourceReader::replicate_last_image_to_fill_last_shard() {
     if (_last_batch_info.first == RocalBatchPolicy::BATCH_FILL) {
-        _file_names.push_back(_last_file_name);
         if (_last_batch_info.second == true) {
             for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
                 _file_names.push_back(_last_file_name);
