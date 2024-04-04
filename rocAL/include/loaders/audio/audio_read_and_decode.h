@@ -74,7 +74,7 @@ class AudioReadAndDecode {
     std::shared_ptr<Reader> _reader;
     std::vector<float *> _decompressed_buff_ptrs;
     std::vector<AudioMetaInfo> _audio_meta_info;
-    TimingDBG _file_load_time, _decode_time;
+    TimingDbg _file_load_time, _decode_time;
     size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;
 };
