@@ -23,12 +23,12 @@ THE SOFTWARE.
 #pragma once
 #include <list>
 
-#include "circular_buffer.h"
-#include "meta_data.h"
-#include "meta_node.h"
-#include "node.h"
-#include "parameter_factory.h"
-#include "randombboxcrop_meta_data_reader.h"
+#include "loaders/circular_buffer.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_node.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "meta_data/randombboxcrop_meta_data_reader.h"
 
 typedef struct {
     std::vector<float> *anchors;

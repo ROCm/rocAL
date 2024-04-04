@@ -26,12 +26,12 @@ THE SOFTWARE.
 #include <memory>
 #include <vector>
 
-#include "commons.h"
-#include "loader_module.h"
-#include "parameter_random_crop_decoder.h"
-#include "reader_factory.h"
-#include "timing_debug.h"
-#include "turbo_jpeg_decoder.h"
+#include "pipeline/commons.h"
+#include "loaders/loader_module.h"
+#include "parameters/parameter_random_crop_decoder.h"
+#include "readers/image/reader_factory.h"
+#include "pipeline/timing_debug.h"
+#include "decoders/image/turbo_jpeg_decoder.h"
 
 
 class ImageReadAndDecode {

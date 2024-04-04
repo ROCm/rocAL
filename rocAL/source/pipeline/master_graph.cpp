@@ -27,14 +27,14 @@ THE SOFTWARE.
 #include <cstring>
 #include <sched.h>
 #include <half/half.hpp>
-#include "master_graph.h"
-#include "parameter_factory.h"
-#include "ocl_setup.h"
-#include "log.h"
-#include "meta_data_reader_factory.h"
-#include "meta_data_graph_factory.h"
-#include "randombboxcrop_meta_data_reader_factory.h"
-#include "node_copy.h"
+#include "pipeline/master_graph.h"
+#include "parameters/parameter_factory.h"
+#include "device/ocl_setup.h"
+#include "pipeline/log.h"
+#include "meta_data/meta_data_reader_factory.h"
+#include "meta_data/meta_data_graph_factory.h"
+#include "meta_data/randombboxcrop_meta_data_reader_factory.h"
+#include "augmentations/node_copy.h"
 
 using half_float::half;
 

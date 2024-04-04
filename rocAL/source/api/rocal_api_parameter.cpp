@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "commons.h"
-#include "parameter_factory.h"
-#include "rocal_api.h"
+#include "pipeline/commons.h"
+#include "parameters/parameter_factory.h"
+#include "api/rocal_api.h"
 
 void ROCAL_API_CALL
 rocalSetSeed(unsigned seed) {

@@ -20,13 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "rocal_api.h"
+#include "api/rocal_api.h"
 
 #include <exception>
 #include <string>
 
-#include "commons.h"
-#include "context.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
 
 RocalStatus ROCAL_API_CALL
 rocalRelease(RocalContext p_context) {

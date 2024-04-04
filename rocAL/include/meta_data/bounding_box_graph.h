@@ -23,8 +23,8 @@ THE SOFTWARE.
 #pragma once
 #include <list>
 
-#include "meta_data_graph.h"
-#include "meta_node.h"
+#include "meta_data/meta_data_graph.h"
+#include "meta_data/meta_node.h"
 
 typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh;
 

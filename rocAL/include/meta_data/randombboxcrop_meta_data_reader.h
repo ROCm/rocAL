@@ -25,11 +25,11 @@ THE SOFTWARE.
 #include <memory>
 #include <string>
 
-#include "graph.h"
-#include "meta_data_reader.h"
-#include "parameter_factory.h"
-#include "randombboxcrop_meta_data.h"
-#include "image_reader.h"
+#include "pipeline/graph.h"
+#include "meta_data/meta_data_reader.h"
+#include "parameters/parameter_factory.h"
+#include "meta_data/randombboxcrop_meta_data.h"
+#include "readers/image/image_reader.h"
 
 enum class RandomBBoxCrop_MetaDataReaderType {
     RandomBBoxCropReader = 0,

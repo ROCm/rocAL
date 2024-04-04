@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include <graph.h>
-#include "node_crop_mirror_normalize.h"
-#include "exception.h"
+#include "pipeline/graph.h"
+#include "augmentations/geometry_augmentations/node_crop_mirror_normalize.h"
+#include "pipeline/exception.h"
 
 CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<Tensor *> &inputs,
                                                  const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs),

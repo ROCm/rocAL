@@ -24,9 +24,9 @@ THE SOFTWARE.
 // Created by mvx on 3/31/20.
 //
 
-#include "commons.h"
-#include "context.h"
-#include "rocal_api.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
+#include "api/rocal_api.h"
 
 void
     ROCAL_API_CALL

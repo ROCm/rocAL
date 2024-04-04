@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "augmentations_meta_nodes.h"
-#include "augmentations_nodes.h"
-#include "commons.h"
-#include "context.h"
-#include "image_source_evaluator.h"
-#include "rocal_api.h"
+#include "meta_data/augmentations_meta_nodes.h"
+#include "augmentations/augmentations_nodes.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
+#include "loaders/image_source_evaluator.h"
+#include "api/rocal_api.h"
 
 RocalTensor ROCAL_API_CALL
 rocalSequenceRearrange(RocalContext p_context,

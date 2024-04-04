@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <string>
 #include <utility>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 #define DEFAULT_DBG_TIMING 1
 /*! \brief Debugging RocalDbgTiming class

@@ -26,25 +26,25 @@ THE SOFTWARE.
 #include <memory>
 #include <variant>
 
-#include "graph.h"
-#include "meta_data_graph.h"
-#include "meta_data_reader.h"
-#include "node.h"
-#include "node_cifar10_loader.h"
-#include "node_fused_jpeg_crop.h"
-#include "node_fused_jpeg_crop_single_shard.h"
-#include "node_image_loader.h"
-#include "node_image_loader_single_shard.h"
-#include "node_video_loader.h"
-#include "node_video_loader_single_shard.h"
-#include "ring_buffer.h"
-#include "timing_debug.h"
+#include "pipeline/graph.h"
+#include "meta_data/meta_data_graph.h"
+#include "meta_data/meta_data_reader.h"
+#include "pipeline/node.h"
+#include "loaders/image/node_cifar10_loader.h"
+#include "loaders/image/node_fused_jpeg_crop.h"
+#include "loaders/image/node_fused_jpeg_crop_single_shard.h"
+#include "loaders/image/node_image_loader.h"
+#include "loaders/image/node_image_loader_single_shard.h"
+#include "loaders/video/node_video_loader.h"
+#include "loaders/video/node_video_loader_single_shard.h"
+#include "pipeline/ring_buffer.h"
+#include "pipeline/timing_debug.h"
 #if ENABLE_HIP
 #include "box_encoder_hip.h"
-#include "device_manager_hip.h"
+#include "device/device_manager_hip.h"
 #endif
-#include "randombboxcrop_meta_data_reader.h"
-#include "rocal_api_types.h"
+#include "meta_data/randombboxcrop_meta_data_reader.h"
+#include "api/rocal_api_types.h"
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
 #define BBOX_COUNT 4

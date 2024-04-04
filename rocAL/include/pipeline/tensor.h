@@ -31,13 +31,13 @@ THE SOFTWARE.
 #include <queue>
 #include <vector>
 #if ENABLE_HIP
-#include "device_manager_hip.h"
+#include "device/device_manager_hip.h"
 #include "hip/hip_runtime.h"
 #else
-#include "device_manager.h"
+#include "device/device_manager.h"
 #endif
-#include "commons.h"
-#include "rocal_api_tensor.h"
+#include "pipeline/commons.h"
+#include "api/rocal_api_tensor.h"
 
 /*! \brief Converts Rocal Memory type to OpenVX memory type
  *

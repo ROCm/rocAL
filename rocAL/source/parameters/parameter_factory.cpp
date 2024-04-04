@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "parameter_factory.h"
+#include "parameters/parameter_factory.h"
 
 #include <cstdlib>
 #include <ctime>
 
-#include "parameter_simple.h"
+#include "parameters/parameter_simple.h"
 ParameterFactory* ParameterFactory::_instance = nullptr;
 std::mutex ParameterFactory::_mutex;
 

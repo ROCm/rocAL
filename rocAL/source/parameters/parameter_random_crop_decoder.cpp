@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "parameter_random_crop_decoder.h"
+#include "parameters/parameter_random_crop_decoder.h"
 
 #include <cassert>
 

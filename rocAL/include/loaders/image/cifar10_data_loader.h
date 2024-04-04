@@ -23,10 +23,10 @@ THE SOFTWARE.
 #pragma once
 #include <vector>
 
-#include "cifar10_data_reader.h"
-#include "image_loader.h"
-#include "reader_factory.h"
-#include "timing_debug.h"
+#include "readers/image/cifar10_data_reader.h"
+#include "loaders/image/image_loader.h"
+#include "readers/image/reader_factory.h"
+#include "pipeline/timing_debug.h"
 
 class CIFAR10DataLoader : public LoaderModule {
    public:

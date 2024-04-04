@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "commons.h"
-#include "context.h"
-#include "rocal_api.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
+#include "api/rocal_api.h"
 
 size_t ROCAL_API_CALL rocalGetImageWidth(RocalTensor p_image) {
     auto image = static_cast<Tensor *>(p_image);

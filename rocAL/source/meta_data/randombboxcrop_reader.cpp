@@ -20,14 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "randombboxcrop_reader.h"
+#include "meta_data/randombboxcrop_reader.h"
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <utility>
 
-#include "rocal_api.h"
+#include "api/rocal_api.h"
 
 void RandomBBoxCropReader::init(const RandomBBoxCrop_MetaDataConfig &cfg, std::shared_ptr<CropCordBatch> meta_data_batch) {
     _all_boxes_overlap = cfg.all_boxes_overlap();

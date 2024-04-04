@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_loader.h"
+#include "loaders/image/image_loader.h"
 
 #include <chrono>
 #include <thread>
 
-#include "image_read_and_decode.h"
+#include "loaders/image/image_read_and_decode.h"
 #include "vx_ext_amd.h"
 
 ImageLoader::ImageLoader(void *dev_resources) : _circ_buff(dev_resources),
