@@ -103,3 +103,18 @@ This test runs a pipeline making use of the external source reader in 3 differen
 ```
 python3 external_source_reader.py
 ```
+
+## Audio Unit Test
+To run the Audio unit test with all test cases. Follow the steps below
+Export `ROCAL_DATA_PATH`
+```
+export ROCAL_DATA_PATH=<Absolute_path_to_MIVisionX-data>
+```
+To run the audio unit test and verify the correctness of the outputs
+```
+python3 audio_unit_test.py
+```
+To pass the audio data path, batch size, and run a particular test case use the following command
+```
+python3 audio_unit_test.py --audio_path=<path_to_data> --test_case <case(0-1)> --batch-size <batch_size>
+```
