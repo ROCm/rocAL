@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "sndfile_decoder.h"
+#include "generic_audio_decoder.h"
 
 #include <commons.h>
 
@@ -29,9 +29,9 @@ THE SOFTWARE.
 
 #ifdef ROCAL_AUDIO
 
-SndFileDecoder::SndFileDecoder(){};
+GenericAudioDecoder::GenericAudioDecoder(){};
 
-AudioDecoder::Status SndFileDecoder::Decode(float* buffer) {
+AudioDecoder::Status GenericAudioDecoder::Decode(float* buffer) {
     int read_frame_count = 0;
     read_frame_count = sf_readf_float(_sf_ptr, buffer, _sfinfo.frames);
     AudioDecoder::Status status = Status::OK;
@@ -43,7 +43,7 @@ AudioDecoder::Status SndFileDecoder::Decode(float* buffer) {
     return status;
 }
 
-AudioDecoder::Status SndFileDecoder::DecodeInfo(int* samples, int* channels, float* sample_rate) {
+AudioDecoder::Status GenericAudioDecoder::DecodeInfo(int* samples, int* channels, float* sample_rate) {
     // Set the samples and channels using the struct variables _sfinfo.frames and _sfinfo.channels
     *samples = _sfinfo.frames;
     *channels = _sfinfo.channels;
@@ -57,13 +57,13 @@ AudioDecoder::Status SndFileDecoder::DecodeInfo(int* samples, int* channels, flo
 }
 
 // Initialize will open a new decoder and initialize the context
-AudioDecoder::Status SndFileDecoder::Initialize(const char* src_filename) {
+AudioDecoder::Status GenericAudioDecoder::Initialize(const char* src_filename) {
     AudioDecoder::Status status = Status::OK;
     memset(&_sfinfo, 0, sizeof(_sfinfo));
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo))) {
-        /* Open failed so print an error message. */
+        // Open failed so print an error message.
         WRN("Not able to open input file : " + src_filename)
-        /* Print the error message from libsndfile. */
+        // Print the error message from libsndfile.
         puts(sf_strerror(NULL));
         sf_close(_sf_ptr);
         status = Status::HEADER_DECODE_FAILED;
@@ -72,10 +72,10 @@ AudioDecoder::Status SndFileDecoder::Initialize(const char* src_filename) {
     return status;
 }
 
-void SndFileDecoder::Release() {
+void GenericAudioDecoder::Release() {
     if (_sf_ptr != NULL)
         sf_close(_sf_ptr);
 }
 
-SndFileDecoder::~SndFileDecoder() {}
+GenericAudioDecoder::~GenericAudioDecoder() {}
 #endif

@@ -25,14 +25,14 @@ THE SOFTWARE.
 #include "audio_decoder.h"
 
 #ifdef ROCAL_AUDIO
-class SndFileDecoder : public AudioDecoder {
+class GenericAudioDecoder : public AudioDecoder {
    public:
     //! Default constructor
-    SndFileDecoder();
+    GenericAudioDecoder();
     AudioDecoder::Status Initialize(const char* src_filename) override;
     AudioDecoder::Status Decode(float* buffer) override;
     AudioDecoder::Status DecodeInfo(int* samples, int* channels, float* sample_rates) override;
     void Release() override;
-    ~SndFileDecoder() override;
+    ~GenericAudioDecoder() override;
 };
 #endif

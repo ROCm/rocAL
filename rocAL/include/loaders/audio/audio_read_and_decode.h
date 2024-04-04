@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "commons.h"
 #include "loader_module.h"
 #include "reader_factory.h"
-#include "sndfile_decoder.h"
+#include "generic_audio_decoder.h"
 #include "timing_debug.h"
 
 #ifdef ROCAL_AUDIO

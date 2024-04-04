@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 #include "loader_module.h"
 #include "reader_factory.h"
-#include "sndfile_decoder.h"
+#include "generic_audio_decoder.h"
 
 #ifdef ROCAL_AUDIO
 
