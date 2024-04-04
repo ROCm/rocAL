@@ -33,14 +33,14 @@ THE SOFTWARE.
  *
  * Can be used anywhere in the code for adding RocalDbgTiming for debugging and profiling
  */
-class TimingDBG {
+class TimingDbg {
    public:
     //! Constrcutor
     /*!
     \param name Name of the timer,
     \param enable enables the timer module, if not set, timer is disabled
     */
-    explicit TimingDBG(std::string name, bool enable = DEFAULT_DBG_TIMING) : _accumulated_time(_t_start - _t_start),
+    explicit TimingDbg(std::string name, bool enable = DEFAULT_DBG_TIMING) : _accumulated_time(_t_start - _t_start),
                                                                              _count(0),
                                                                              _enable(enable),
                                                                              _name(std::move(name)) {}

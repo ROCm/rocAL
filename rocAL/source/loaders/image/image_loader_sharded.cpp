@@ -42,7 +42,7 @@ DecodedDataInfo ImageLoaderSharded::get_decode_data_info() {
     return _loaders[_loader_idx]->get_decode_data_info();
 }
 
-crop_image_info ImageLoaderSharded::get_crop_image_info() {
+CropImageInfo ImageLoaderSharded::get_crop_image_info() {
     return _loaders[_loader_idx]->get_crop_image_info();
 }
 

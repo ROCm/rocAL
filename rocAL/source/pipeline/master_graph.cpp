@@ -906,10 +906,10 @@ void MasterGraph::output_routine() {
                 break;
             auto full_batch_data_names = _loader_module->get_id();
             auto decode_data_info = _loader_module->get_decode_data_info();
-            auto crop_image_info = _loader_module->get_crop_image_info();
+            auto CropImageInfo = _loader_module->get_crop_image_info();
 
             if (full_batch_data_names.size() != _user_batch_size)
-                WRN("Internal problem: names count " + TOSTR(full_batch_data_names.size()))
+                WRN("Master Graph: Names count does not equal batch_size" + TOSTR(full_batch_data_names.size()))
 
             // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
             if (_meta_data_reader)
@@ -937,7 +937,7 @@ void MasterGraph::output_routine() {
                 output_meta_data = _augmented_meta_data->clone(!_augmentation_metanode);  // copy the data if metadata is not processed by the nodes, else create an empty instance
                 if (_meta_data_graph) {
                     if (_is_random_bbox_crop) {
-                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, output_meta_data, decode_data_info, crop_image_info);
+                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, output_meta_data, decode_data_info, CropImageInfo);
                     } else {
                         _meta_data_graph->update_meta_data(_augmented_meta_data, decode_data_info);
                     }

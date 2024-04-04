@@ -39,7 +39,7 @@ struct DecodedDataInfo {
     std::vector<uint32_t> _original_height;
 };
 
-struct crop_image_info {
+struct CropImageInfo {
     // Batch of Image Crop Coordinates in "xywh" format
     std::vector<std::vector<float>> _crop_image_coords;
 };
@@ -55,9 +55,9 @@ class CircularBuffer {
     void push();            // The latest write goes through, effectively adds one element to the buffer
     void pop();             // The oldest write will be erased and overwritten in upcoming writes
     void set_data_info(const DecodedDataInfo& info) { _last_data_info = info; }
-    void set_crop_image_info(const crop_image_info& info) { _last_crop_image_info = info; }
+    void set_crop_image_info(const CropImageInfo& info) { _last_crop_image_info = info; }
     DecodedDataInfo& get_data_info();
-    crop_image_info& get_cropped_image_info();
+    CropImageInfo& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();
     unsigned char* get_read_buffer_host();  // blocks the caller if the buffer is empty
@@ -74,14 +74,10 @@ class CircularBuffer {
     bool empty();
     size_t _buff_depth;
     DecodedDataInfo _last_data_info;
-    std::queue<DecodedDataInfo> _circ_data_info;    //!< Stores the loaded data names, decoded_width and decoded_height(data is stored in the _circ_buff)
-    crop_image_info _last_crop_image_info;              // for Random BBox crop coordinates
-    std::queue<crop_image_info> _circ_crop_image_info;  //!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
+    std::queue<DecodedDataInfo> _circ_buff_data_info;    //!< Stores the loaded data names, decoded_width and decoded_height(data is stored in the _circ_buff)
+    CropImageInfo _last_crop_image_info;              // for Random BBox crop coordinates
+    std::queue<CropImageInfo> _circ_crop_image_info;  //!< Stores the crop coordinates of the images for random bbox crop (data is stored in the _circ_buff)
     std::mutex _names_buff_lock;
-    /*
-     *  Pinned memory allocated on the host used for fast host to device memory transactions,
-     *  or the regular host memory buffers in the host processing case.
-     */
 #if ENABLE_HIP
     hipStream_t _hip_stream;
     int _hip_device_id, _hip_canMapHostMemory;
@@ -92,7 +88,6 @@ class CircularBuffer {
 #endif
     std::vector<void*> _dev_buffer;  // Actual memory allocated on the device (in the case of GPU affinity)
     std::vector<unsigned char*> _host_buffer_ptrs;
-    std::vector<std::vector<unsigned char>> _actual_host_buffers;
     std::condition_variable _wait_for_load;
     std::condition_variable _wait_for_unload;
     std::mutex _lock;
