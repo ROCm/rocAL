@@ -319,9 +319,9 @@ class ROCALAudioIterator(object):
             self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
             self.num_of_rois = self.num_roi_dims * 2
             self.roi_array = np.zeros(self.batch_size * self.num_of_rois, dtype=np.int32)
-            roi = self.roi_array.reshape(self.batch_size,4)
-            max_x1 = np.max(roi[...,2:3])
-            max_y1 = np.max(roi[...,3:4])
+            roi = self.roi_array.reshape(self.batch_size,self.num_of_rois)
+            max_x1 = np.max(roi[...,self.num_of_rois-2:self.num_of_rois-1])
+            max_y1 = np.max(roi[...,self.num_of_rois-1:self.num_of_rois])
             self.output_tensor_list[i].copy_roi(self.roi_array)
             if self.device == "cpu":
                 torch_dtype = self.output_tensor_list[i].dtype()

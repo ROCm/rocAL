@@ -68,6 +68,7 @@ class Pipeline(object):
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None, 
                  last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+        print("\n BATCH SIZE", batch_size)
         if (rocal_cpu):
             self._handle = b.rocalCreate(
                 batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
@@ -124,8 +125,8 @@ class Pipeline(object):
         self._external_source = None
         self._external_source_mode = None
         self._last_batch_policy = last_batch_policy
-        self.last_batch_padded = last_batch_padded
-        self.shard_size = -1
+        self._last_batch_padded = last_batch_padded
+        self._shard_size = -1
 
     def build(self):
         """!Build the pipeline using rocalVerify call

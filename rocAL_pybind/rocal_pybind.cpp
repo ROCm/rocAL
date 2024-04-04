@@ -268,6 +268,14 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 Copies the ring buffer data to cupy arrays.
                 )code")
         .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1) {
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(static_cast<void *>(ptr), max_x1, max_y1);
+            },
+            R"code(
+                Copies the ring buffer data to python buffer pointers given a ROI with dimensions in x and y direction.
+                )code")
+        .def(
             "at", [](rocalTensor &output_tensor, uint idx) {
                 std::vector<size_t> stride_per_sample(output_tensor.strides());
                 stride_per_sample.erase(stride_per_sample.begin());

@@ -78,6 +78,8 @@ rocalCreate(
                     return RocalBatchPolicy::DROP;
                 case ROCAL_LAST_BATCH_PARTIAL:
                     return RocalBatchPolicy::PARTIAL;
+                default:
+                    THROW("Unkown Rocal last batch policy type")
             }
         };
         context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type), translate_last_batch_policy(last_batch_policy), last_batch_padded);
