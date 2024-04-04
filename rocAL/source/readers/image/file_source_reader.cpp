@@ -319,9 +319,7 @@ void FileSourceReader::replicate_last_image_to_fill_last_shard() {
     } else if (_last_batch_info.first == RocalBatchPolicy::DROP) {
         for (size_t i = 0; i < _in_batch_read_count; i++)
             _file_names.pop_back();
-    }
-
-    else if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
+    } else if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
         if (_last_batch_info.second == true) {
             for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
