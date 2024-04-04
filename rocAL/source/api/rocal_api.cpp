@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -73,7 +73,7 @@ rocalCreate(
         auto translate_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
             switch (last_batch_policy) {
                 case ROCAL_LAST_BATCH_FILL:
-                    return RocalBatchPolicy::BATCH_FILL;
+                    return RocalBatchPolicy::FILL;
                 case ROCAL_LAST_BATCH_DROP:
                     return RocalBatchPolicy::DROP;
                 case ROCAL_LAST_BATCH_PARTIAL:

@@ -137,5 +137,4 @@ extern "C" TimingInfo ROCAL_API_CALL rocalGetTimingInfo(RocalContext rocal_conte
  */
 extern "C"  size_t  ROCAL_API_CALL rocalGetLastBatchPaddedSize(RocalContext rocal_context);
 
-
 #endif  // MIVISIONX_ROCAL_API_INFO_H

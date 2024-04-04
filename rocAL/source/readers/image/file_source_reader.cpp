@@ -291,7 +291,6 @@ Reader::Status FileSourceReader::generate_file_names() {
 }
 
 Reader::Status FileSourceReader::subfolder_reading() {
-
     auto ret = generate_file_names();
 
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
@@ -307,7 +306,7 @@ Reader::Status FileSourceReader::subfolder_reading() {
 }
 
 void FileSourceReader::replicate_last_image_to_fill_last_shard() {
-    if (_last_batch_info.first == RocalBatchPolicy::BATCH_FILL) {
+    if (_last_batch_info.first == RocalBatchPolicy::FILL) {
         _file_names.push_back(_last_file_name);
         if (_last_batch_info.second == true) {
             for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
