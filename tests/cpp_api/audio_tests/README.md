@@ -33,5 +33,5 @@ Input data is available in the following link : [MIVisionX-data](https://github.
 `export ROCAL_DATA_PATH=<absolute_path_to_rocal_data>`
 
 ```
-python3 audio_test.py --gpu <0/1> --downmix <True/False> --test_case <case_number> --qa_mode <0/1>
+python3 audio_tests.py --gpu <0/1> --downmix <True/False> --test_case <case_number> --qa_mode <0/1>
 ```
