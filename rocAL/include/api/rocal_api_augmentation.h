@@ -1284,10 +1284,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
  * \param [in] axes axes list for tensor normalization
  * \param [in] mean mean value (specified for each channel) for tensor normalization
  * \param [in] std_dev standard deviation value (specified for each channel) for tensor normalization
+ * \param [in] is_output is the output tensor part of the graph output
  * \param [in] scale scale value (specified for each channel) for tensor normalization
  * \param [in] shift shift value (specified for each channel) for tensor normalization
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] mirror controls horizontal flip of the tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
