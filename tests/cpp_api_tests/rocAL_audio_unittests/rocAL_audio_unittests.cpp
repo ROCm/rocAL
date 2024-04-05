@@ -269,6 +269,24 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             auto nsr_output = rocalNonSilentRegion(handle, decoded_output, false, -60.0, 0.0, 8192, 2048);
             rocalSlice(handle, decoded_output, true, nsr_output.first, nsr_output.second, fill_values, axes, false, false, ROCAL_ERROR, ROCAL_FP32);
         } break;
+        case 10: {
+            std::cout << ">>>>>>> Running MEL FILTER BANK " << std::endl;
+            case_name = "mel_filter_bank";
+            std::vector<float> window_fn;
+            RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, RocalSpectrogramLayout::ROCAL_FT, 2, 512, 320, 160, ROCAL_FP32);
+            rocalMelFilterBank(handle, spec_output, true, 8000, 0.0, RocalMelScaleFormula::SLANEY, 80, true, 16000, ROCAL_FP32);
+        } break;
+        case 11:
+        {
+            std::cout << ">>>>>>> Running Normalize " << std::endl;
+            case_name = "Normalize";
+            std::vector<unsigned> axes = {1};
+            std::vector<float> mean;
+            std::vector<float> stddev;
+            std::vector<float> window_fn;
+            RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, RocalSpectrogramLayout::ROCAL_FT, 2, 512, 320, 160, ROCAL_FP32);
+            rocalNormalize(handle, spec_output, axes, mean, stddev, true, 1, 0, ROCAL_FP32);
+        } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";
             return -1;
