@@ -258,7 +258,6 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         case 8: {
             std::cout << ">>>>>>> Running NON SILENT REGION " << std::endl;
             case_name = "non_silent_region";
-            std::cerr<<"\n before nsr call";
             rocalNonSilentRegionDetection(handle, decoded_output, true, -60, 0.0, 8192, 2048);
         } break;
         case 9: {
