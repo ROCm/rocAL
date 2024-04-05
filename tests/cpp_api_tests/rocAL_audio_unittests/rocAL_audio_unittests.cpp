@@ -259,15 +259,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << ">>>>>>> Running NON SILENT REGION " << std::endl;
             case_name = "non_silent_region";
             std::cerr<<"\n before nsr call";
-            rocalNonSilentRegion(handle, decoded_output, true, -60, 0.0, 8192, 2048);
+            rocalNonSilentRegionDetection(handle, decoded_output, true, -60, 0.0, 8192, 2048);
         } break;
         case 9: {
             std::cout << ">>>>>>> Running SLICE " << std::endl;
             case_name = "slice";
             std::vector<float> fill_values = {0.0};
             std::vector<unsigned> axes = {0};
-            auto nsr_output = rocalNonSilentRegion(handle, decoded_output, false, -60.0, 0.0, 8192, 2048);
-            rocalSlice(handle, decoded_output, true, nsr_output.first, nsr_output.second, fill_values, axes, false, false, ROCAL_ERROR, ROCAL_FP32);
+            auto nsr_output = rocalNonSilentRegionDetection(handle, decoded_output, false, -60.0, 0.0, 8192, 2048);
+            rocalSlice(handle, decoded_output, true, nsr_output.first, nsr_output.second, fill_values, ROCAL_ERROR, ROCAL_FP32);
         } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";
