@@ -319,10 +319,10 @@ class ROCALAudioIterator(object):
             self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
             self.num_of_rois = self.num_roi_dims * 2
             self.roi_array = np.zeros(self.batch_size * self.num_of_rois, dtype=np.int32)
+            self.output_tensor_list[i].copy_roi(self.roi_array)
             roi = self.roi_array.reshape(self.batch_size,self.num_of_rois)
             max_x1 = np.max(roi[...,self.num_of_rois-2:self.num_of_rois-1])
             max_y1 = np.max(roi[...,self.num_of_rois-1:self.num_of_rois])
-            self.output_tensor_list[i].copy_roi(self.roi_array)
             if self.device == "cpu":
                 torch_dtype = self.output_tensor_list[i].dtype()
                 output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
@@ -333,7 +333,10 @@ class ROCALAudioIterator(object):
                 output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
 
-            self.output_tensor_list[0].copy_data(ctypes.c_void_p(output.data_ptr()), max_y1, max_x1)
+            if (max_x1 == 0 or max_y1 == 0):
+                self.output_tensor_list[0].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
+            else:
+                self.output_tensor_list[0].copy_data(ctypes.c_void_p(output.data_ptr()), max_y1, max_x1)
             self.output_list.append(output)
 
         self.labels = self.loader.get_image_labels()
