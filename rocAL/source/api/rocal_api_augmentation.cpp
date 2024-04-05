@@ -2554,11 +2554,11 @@ rocalMelFilterBank(
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         TensorInfo output_info = input->info();
         std::vector<size_t> max_dims = output_info.max_shape();
-        int max_frame = max_dims[0];
+        int max_frame = max_dims[1];
         max_frame = std::max(0, max_frame);
         std::vector<size_t> dims = output_info.dims();
-        dims[1] = max_frame;
-        dims[2] = nfilter;
+        dims[1] = nfilter;
+        dims[2] = max_frame;
         output_info.set_dims(dims);
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
