@@ -108,6 +108,10 @@ from rocal_pybind.types import PAD
 from rocal_pybind.types import TRIMTOSHAPE
 from rocal_pybind.types import ERROR
 
+#     RocalMelScaleFormula
+from rocal_pybind.types import SLANEY
+from rocal_pybind.types import HTK
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -177,6 +181,9 @@ _known_types = {
     PAD: ("PAD", PAD),
     TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
     ERROR: ("ERROR", ERROR),
+
+    SLANEY: ("SLANEY", SLANEY),
+    HTK: ("HTK", HTK),
 }
 
 def data_type_function(dtype):
