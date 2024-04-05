@@ -278,7 +278,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         case 11:
         {
             std::cout << ">>>>>>> Running Normalize " << std::endl;
-            case_name = "Normalize";
+            case_name = "normalize";
             std::vector<unsigned> axes = {1};
             std::vector<float> mean;
             std::vector<float> stddev;
