@@ -92,7 +92,7 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return 1;
+        return 0;
     }
 
     // Get the size of the file
@@ -109,7 +109,7 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return 1;
+        return 0;
     }
 
     fin.close();
