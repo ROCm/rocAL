@@ -108,6 +108,11 @@ from rocal_pybind.types import PAD
 from rocal_pybind.types import TRIMTOSHAPE
 from rocal_pybind.types import ERROR
 
+#     RocalMelScaleFormula
+from rocal_pybind.types import SLANEY
+from rocal_pybind.types import HTK
+
+#    RocalLastBatchPolicy
 from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
 from rocal_pybind.types import LAST_BATCH_PARTIAL
@@ -181,6 +186,9 @@ _known_types = {
     PAD: ("PAD", PAD),
     TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
     ERROR: ("ERROR", ERROR),
+
+    SLANEY: ("SLANEY", SLANEY),
+    HTK: ("HTK", HTK),
 
     LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
     LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),

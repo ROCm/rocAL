@@ -65,3 +65,5 @@ THE SOFTWARE.
 #include "node_tensor_add_tensor.h"
 #include "node_non_silent_region_detection.h"
 #include "node_slice.h"
+#include "node_normalize.h"
+#include "node_mel_filter_bank.h"
