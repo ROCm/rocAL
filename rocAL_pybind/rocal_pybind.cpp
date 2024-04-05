@@ -451,6 +451,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("LAST_BATCH_FILL",ROCAL_LAST_BATCH_FILL)
         .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
         .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)

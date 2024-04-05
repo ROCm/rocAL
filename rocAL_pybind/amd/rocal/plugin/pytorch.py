@@ -334,9 +334,9 @@ class ROCALAudioIterator(object):
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
 
             if (max_x1 == 0 or max_y1 == 0):
-                self.output_tensor_list[0].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
             else:
-                self.output_tensor_list[0].copy_data(ctypes.c_void_p(output.data_ptr()), max_y1, max_x1)
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), max_y1, max_x1)
             self.output_list.append(output)
 
         self.labels = self.loader.get_image_labels()
