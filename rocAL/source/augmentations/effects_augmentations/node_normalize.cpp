@@ -48,16 +48,19 @@ void NormalizeNode::create_node() {
         mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
     }
     std::vector<float> mean_vec, stddev_vec;
-    mean_vec.resize(_batch_size * mean_stddev_array_size);
-    stddev_vec.resize(_batch_size * mean_stddev_array_size);
+    mean_vec.resize(_batch_size * mean_stddev_array_size, 0);
+    stddev_vec.resize(_batch_size * mean_stddev_array_size, 0);
 
-    if (!_compute_mean && !_compute_stddev)
+    if (!_compute_mean && !_compute_stddev) {
         for (uint i = 0; i < _batch_size; i++) {
-            for (int j = 0; j < mean_stddev_array_size; j++) {
-                mean_vec[i * mean_stddev_array_size + j] = _mean[j];
-                stddev_vec[i * mean_stddev_array_size + j] = _std_dev[j];
+            for (int j = 0; j < mean_stddev_array_size; j += _mean.size()) {
+                for (int k = 0; k < _mean.size(); k++) {
+                    mean_vec[i * mean_stddev_array_size + j + k] = _mean[k];
+                    stddev_vec[i * mean_stddev_array_size + j + k] = _std_dev[k];
+                }
             }
         }
+    }
     vx_status status = VX_SUCCESS;
     _mean_vx_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, mean_vec.size());
     status |= vxAddArrayItems(_mean_vx_array, mean_vec.size(), mean_vec.data(), sizeof(vx_float32));
@@ -78,6 +81,21 @@ void NormalizeNode::create_node() {
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
+
+    std::cerr << "Batch size: " << _batch_size << "\n";
+    std::cerr << "Axis mask: " << _axis_mask << "\n";
+    std::cerr << "Mean std values size: " << mean_stddev_array_size << "\n";
+    // for (uint i = 0; i < _batch_size; i++) {
+    //     for (int j = 0; j < _mean.size(); j++) {
+    //         std::cerr << "Mean: " << mean_vec[i * mean_stddev_array_size + j] << " Std: " << stddev_vec[i * mean_stddev_array_size + j] << "\n";
+    //     }
+    // }
+    std::cerr << "compute_mean: " << _compute_mean << "\n";
+    std::cerr << "compute_stddev: " << _compute_stddev << "\n";
+    std::cerr << "scale: " << _scale << "\n";
+    std::cerr << "shift: " << _shift << "\n";
+    std::cerr << "input_layout_vx: " << input_layout << "\n";
+    std::cerr << "roi_type_vx: " << roi_type << "\n";
 
     _node = vxExtRppNormalize(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), axis_mask,
                               _mean_vx_array, _stddev_vx_array, compute_mean, compute_stddev, scale, shift, input_layout_vx, roi_type_vx);
