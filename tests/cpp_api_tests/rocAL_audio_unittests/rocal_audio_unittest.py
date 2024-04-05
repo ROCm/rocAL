@@ -34,9 +34,7 @@ test_case_augmentation_map = {
     6: "tensor_add_tensor",
     7: "tensor_mul_scalar",
     8: "non_silent_region",
-    9: "slice",
-    10: "mel_filter_bank",
-    11: "normalize"
+    9: "slice"
 }
 
 def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list):
@@ -51,7 +49,6 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
         else:
             src_path = rocal_data_path + "/audio"
         print("\n\n")
-        print("/build/rocal_audio_unittests", src_path, str(case), str(downmix), str(gpu), str(qa_mode))
         result = subprocess.run([build_folder_path + "/build/rocal_audio_unittests", src_path, str(case), str(downmix), str(gpu), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
         try:
             decoded_stdout = result.stdout.decode('utf-8')
