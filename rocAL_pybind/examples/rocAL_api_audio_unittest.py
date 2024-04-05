@@ -81,7 +81,7 @@ def verify_output(output_list, rocal_data_path, roi_tensor, test_results, case_n
     for i in range(roi_data[0]):
         for j in range(roi_data[1]):
             ref_val = data_array[i * roi_data[1] + j]
-            out_val = audio_data[i * dimensions[2] + j]
+            out_val = audio_data[i * roi_data[1] + j]   # Stride upto max_roi
             # ensuring that out_val is not exactly zero while ref_val is non-zero.
             invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
             #comparing the absolute difference between the output value (out_val) and the reference value (ref_val) with a tolerance threshold of 1e-20.

@@ -336,7 +336,7 @@ class ROCALAudioIterator(object):
             if (max_x1 == 0 or max_y1 == 0):
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
             else:
-                self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), max_y1, max_x1)
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), max_x1, max_y1)
             self.output_list.append(output)
 
         self.labels = self.loader.get_image_labels()
