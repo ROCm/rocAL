@@ -78,7 +78,7 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
     return pass_status;
 }
 
-bool verify_output(float *dst_ptr, long int frames, std::string case_name, int max_samples, int max_channels, int buffer_size) {
+bool verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size) {
     bool pass_status = false;
     // read data from golden outputs
     const char *rocal_data_path = std::getenv("ROCAL_DATA_PATH");
@@ -115,10 +115,10 @@ bool verify_output(float *dst_ptr, long int frames, std::string case_name, int m
     fin.close();
 
     int matched_indices = 0;
-    for (int i = 0; i < max_samples; i++) {
-        for (int j = 0; j < frames; j++) {
+    for (int i = 0; i < frames; i++) {
+        for (int j = 0; j < channels; j++) {
             float ref_val, out_val;
-            ref_val = ref_output[i * frames + j];
+            ref_val = ref_output[i * channels + j];
             out_val = dst_ptr[i * max_channels + j];
             bool invalid_comparison = ((out_val == 0.0f) && (ref_val != 0.0f));
             if (!invalid_comparison && std::abs(out_val - ref_val) < 1e-20)
@@ -303,7 +303,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     float *buffer = nullptr;
     int *nsr_begin = nullptr;
     int *nsr_length = nullptr;
-    int frames = 0;
+    int frames = 0, channels = 0;
     int max_channels = 0;
     int max_samples = 0;
     int buffer_size = 0;
@@ -332,9 +332,10 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
                 buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
                 output_tensor_list->at(idx)->copy_roi(roi.data());
-                max_channels = output_tensor_list->at(idx)->dims().at(1);
-                max_samples = max_channels == 1 ? 1 : output_tensor_list->at(idx)->dims().at(2);
+                max_channels = output_tensor_list->at(idx)->dims().at(2);
+                max_samples = max_channels == 1 ? 1 : output_tensor_list->at(idx)->dims().at(1);
                 frames = roi[idx * 4 + 2];
+                channels = roi[idx * 4 + 3];
                 buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
             }
         }
@@ -342,7 +343,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
 
     if (qa_mode) {
         std::cout << "\n *****************************Verifying Audio output**********************************\n";
-        if (test_case != 8 && verify_output(buffer, frames, case_name, max_samples, max_channels, buffer_size)) {
+        if (test_case != 8 && verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size)) {
             std::cout << "PASSED!\n\n";
         }
         else if (test_case == 8 && verify_non_silent_region_output(nsr_begin, nsr_length, case_name)) {
