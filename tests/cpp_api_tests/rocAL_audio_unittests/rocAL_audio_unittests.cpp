@@ -332,8 +332,8 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
                 buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
                 output_tensor_list->at(idx)->copy_roi(roi.data());
-                max_channels = output_tensor_list->at(idx)->dims().at(2);
-                max_samples = max_channels == 1 ? 1 : output_tensor_list->at(idx)->dims().at(1);
+                max_channels = output_tensor_list->at(idx)->dims().at(1);
+                max_samples = max_channels == 1 ? 1 : output_tensor_list->at(idx)->dims().at(2);
                 frames = roi[idx * 4 + 2];
                 buffer_size = roi[idx * 4 + 2] * roi[idx * 4 + 3];
             }
