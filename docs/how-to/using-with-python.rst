@@ -95,7 +95,7 @@ Given below is an example of a file reader, which takes a folder of images as in
 
 ## 4.1.2 Defining the Pipeline
 
-To define a pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L29.
+To define a pipeline, see https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L29.
 
 ```
 class Pipeline(object):
@@ -188,11 +188,7 @@ Building the Pipeline
 
 Building the pipeline ensures that all operators are validated with the corresponding inputs and outputs.
 
-<<<<<<< HEAD:docs/user_guide/ch4.md
-To build the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L166
-=======
-To build the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L166`
->>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
+To build the pipeline, see `https://github.com/ROCm/rocAL/blob/master/tests/python_api/unit_test.py#L166`
 
 .. code-block:: python
    :caption: Build the Pipeline
@@ -207,14 +203,10 @@ Running the Pipeline
 
 To run/use the pipeline, simply create a data loader using the pipeline and iterate through it to get the next batch of images with labels.
 
-<<<<<<< HEAD:docs/user_guide/ch4.md
-To run the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168
-=======
-To run the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168`
+To run the pipeline, see `https://github.com/ROCm/rocAL/blob/master/tests/python_api/unit_test.py#L168`
 
 .. code-block:: python
    :caption: Run the Pipeline
->>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
 
     # Dataloader
     data_loader = ROCALClassificationIterator(pipe,device=device)
@@ -239,11 +231,7 @@ Performing Augmentations
 
 rocAL not only reads images from the disk and batches them into tensors, it can also perform various augmentations on those images. 
 
-<<<<<<< HEAD:docs/user_guide/ch4.md
-To read images, decode them, and rotate them in the pipeline, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L77
-=======
-To read images, decode them, and rotate them in the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L77`
->>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
+To read images, decode them, and rotate them in the pipeline, see `https://github.com/ROCm/rocAL/blob/master/tests/python_api/unit_test.py#L77`
 
 .. code-block:: python
    :caption: Perform Augmentations
@@ -269,26 +257,18 @@ To run the pipeline, see:
     images, labels = pipe_out
     show_images(images)
 
-<<<<<<< HEAD:docs/user_guide/ch4.md
-All the rocAL data types are defined under [amd.rocal.types](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/blob/master/rocAL/rocAL_pybind/amd/rocal/types.py). Import this library in the application to access the various data types such as rocAL status, processing mode, tensor output type, image size evaluation policy, image color, tensor layout, decode device, resize scaling mode, and resize interpolation type. 
-=======
 
 rocAL Data Types
 =========================
 
-All the rocAL data types are defined under `amd.rocal.types <https://github.com/ROCm/MIVisionX/blob/master/rocAL/rocAL_pybind/amd/rocal/types.py>`_. Import this library in the application to access the various data types such as rocAL status, processing mode, tensor output type, image size evaluation policy, image color, tensor layout, decode device, resize scaling mode, and resize interpolation type. 
->>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
+All the rocAL data types are defined under `amd.rocal.types <https://github.com/ROCm/rocAL/blob/master/rocAL/rocAL_pybind/amd/rocal/types.py>`_. Import this library in the application to access the various data types such as rocAL status, processing mode, tensor output type, image size evaluation policy, image color, tensor layout, decode device, resize scaling mode, and resize interpolation type. 
 
 Here are some of the commonly used rocAL data types:
 
 * Processing modes: Values (GPU/CPU). Use the rocal_cpu argument in the pipeline to set the processing mode. 
 
-<<<<<<< HEAD:docs/user_guide/ch4.md
-To see the usage of the above-mentioned data types, see https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L97
-=======
    * rocal_cpu = True: This performs data loading on the CPU. If GPUs are heavily used for training, it is viable to create the data-loading pipeline using CPU.
    * rocal_cpu = False: This performs data loading on the available GPU as specified using the device_id argument in the pipeline.
->>>>>>> 80a9d60 (Documentation - reorg for diataxis (#102)):docs/how-to/using-with-python.rst
 
 * Tensor output types: Values (NCHW/NHWC). Example: 
 
