@@ -31,8 +31,8 @@ typedef  struct { float xc; float yc; float w; float h; } BoundingBoxCord_xcycwh
 class BoundingBoxGraph : public MetaDataGraph {
    public:
     void process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
-    void update_meta_data(pMetaDataBatch meta_data, decoded_sample_info decode_image_info) override;
-    void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_sample_info decoded_image_info, crop_image_info crop_image_info) override;
+    void update_meta_data(pMetaDataBatch meta_data, DecodedDataInfo decode_image_info) override;
+    void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, DecodedDataInfo decoded_image_info, CropImageInfo CropImageInfo) override;
     void update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float> &means, std::vector<float> &stds, float *encoded_boxes_data, int *encoded_labels_data) override;
     void update_box_iou_matcher(BoxIouMatcherInfo &iou_matcher_info, int *matches_idx_buffer, pMetaDataBatch full_batch_meta_data) override;
 };

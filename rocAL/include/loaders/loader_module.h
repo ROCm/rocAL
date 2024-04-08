@@ -53,8 +53,8 @@ class LoaderModule {
     virtual Timing timing() = 0;                    // Returns timing info
     virtual std::vector<std::string> get_id() = 0;  // returns the id of the last batch of images/frames loaded
     virtual void start_loading() = 0;               // starts internal loading thread
-    virtual decoded_sample_info get_decode_sample_info() = 0;
-    virtual crop_image_info get_crop_image_info() { return {}; }
+    virtual DecodedDataInfo get_decode_data_info() = 0;
+    virtual CropImageInfo get_crop_image_info() { return {}; }
     virtual void set_prefetch_queue_depth(size_t prefetch_queue_depth) = 0;
     // introduce meta data reader
     virtual void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) { THROW("set_random_bbox_data_reader is not compatible with this implementation") }
@@ -66,6 +66,8 @@ class LoaderModule {
                                      const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height,
                                      unsigned int channels, ExternalSourceFileMode mode, bool eos) = 0;
     virtual size_t last_batch_padded_size() { return {}; }
+   protected:
+    DecodedDataInfo _decoded_data_info, _output_decoded_data_info;  // Stores the decoded data info
 };
 
 using pLoaderModule = std::shared_ptr<LoaderModule>;

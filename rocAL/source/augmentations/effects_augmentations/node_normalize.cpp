@@ -82,21 +82,6 @@ void NormalizeNode::create_node() {
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    std::cerr << "Batch size: " << _batch_size << "\n";
-    std::cerr << "Axis mask: " << _axis_mask << "\n";
-    std::cerr << "Mean std values size: " << mean_stddev_array_size << "\n";
-    // for (uint i = 0; i < _batch_size; i++) {
-    //     for (int j = 0; j < _mean.size(); j++) {
-    //         std::cerr << "Mean: " << mean_vec[i * mean_stddev_array_size + j] << " Std: " << stddev_vec[i * mean_stddev_array_size + j] << "\n";
-    //     }
-    // }
-    std::cerr << "compute_mean: " << _compute_mean << "\n";
-    std::cerr << "compute_stddev: " << _compute_stddev << "\n";
-    std::cerr << "scale: " << _scale << "\n";
-    std::cerr << "shift: " << _shift << "\n";
-    std::cerr << "input_layout_vx: " << input_layout << "\n";
-    std::cerr << "roi_type_vx: " << roi_type << "\n";
-
     _node = vxExtRppNormalize(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), axis_mask,
                               _mean_vx_array, _stddev_vx_array, compute_mean, compute_stddev, scale, shift, input_layout_vx, roi_type_vx);
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

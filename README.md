@@ -77,8 +77,8 @@ rocAL can be currently used to perform the following operations either with rand
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 *  [ROCm](https://rocmdocs.amd.com/en/latest/deploy/linux/installer/install.html) with --usecase=graphics,rocm
-*  [AMD RPP](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp) - MIVisionX Component
-*  [AMD OpenVX&trade;](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
+*  [AMD RPP](https://github.com/ROCm/rpp) - MIVisionX Component
+*  [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
 *  [Turbo JPEG](https://libjpeg-turbo.org/) - Version 2.0.6.2 from `https://github.com/rrawther/libjpeg-turbo.git`
 *  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
 *  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
@@ -131,7 +131,7 @@ For the convenience of the developer, we here provide the setup script which wil
   + Clone rocAL source code
 
   ```
-  git clone https://github.com/ROCmSoftwarePlatform/rocAL.git
+  git clone https://github.com/ROCm/rocAL.git
   cd rocAL
   ```
   **Note:** rocAL supports **CPU** and two **GPU** backends: **OPENCL**/**HIP**:
@@ -144,6 +144,7 @@ For the convenience of the developer, we here provide the setup script which wil
     ```
 
     + run the below commands to build rocAL
+    **Note:** Use `-DPYTHONVERSION=3.x` with `cmake` for using a specific Python3 version if required.
     ```
     mkdir build-hip
     cd build-hip
@@ -153,7 +154,7 @@ For the convenience of the developer, we here provide the setup script which wil
     sudo make install
     ```
     
-    + run tests - [test option instructions](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/wiki/CTest)
+    + run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
     ```
     make test
     ```
@@ -174,13 +175,13 @@ For the convenience of the developer, we here provide the setup script which wil
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-6`
-* RPP - [1.2.0](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases/tag/1.2.0)
-* MIVisionX - [master](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
+* RPP - [1.2.0](https://github.com/ROCm/rpp/releases/tag/1.2.0)
+* MIVisionX - [master](https://github.com/ROCm/MIVisionX)
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * RapidJSON- [master](https://github.com/Tencent/rapidjson)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* CuPy - [v12.2.0](https://github.com/ROCmSoftwarePlatform/cupy/releases/tag/v12.0.0)
+* CuPy - [v12.2.0](https://github.com/ROCm/cupy/releases/tag/v12.0.0)
 * rocAL Setup Script - `V1.0.2`
 * Dependencies for all the above packages

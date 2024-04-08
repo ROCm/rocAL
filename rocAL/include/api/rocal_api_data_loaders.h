@@ -824,7 +824,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
                                                                   RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
                                                                   RocalExternalSourceMode external_source_mode = RocalExternalSourceMode::ROCAL_EXTSOURCE_FNAME);
 
-/*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
+/*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel if user wants.
  * If the files are not in standard audio compression formats they will be ignored.
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk
@@ -832,7 +832,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
  * \param [in] shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
  * \param [in] is_output Determines if the user wants the loaded audio to be part of the output or not.
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
- * \param [in] loop Determines if the user wants to indefinitely loops through audio or not.
+ * \param [in] loop Determines if the user wants to indefinitely loop through audio or not.
  * \param [in] downmix If set to True, downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
  * \param [in] stick_to_shard Determines weather or not the dataset when sharding is done should stick to a single shards dataset or to be considered in a round robin fashion.
  * \param [in] shard_size Provides the data-size of the shard for an iterator.

@@ -18,4 +18,4 @@ Figure 2.	rocAL Master-Graph Architecture
 
 RPP is a comprehensive high-performance computer vision library optimized for the AMD CPU and GPU with HIP and OpenCL backends. It is available under the AMD ROCm software platform. It provides low-level functionality for all rocAL operators for single, image, and tensor datatypes. RPP provides an extensive library for vision augmentations that includes vision functions, color augmentations, filter augmentations, geometric distortions, and a few more features. 
 
-For more information on RPP along with the list of supported kernels, see https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.
+For more information on RPP along with the list of supported kernels, see https://github.com/ROCm/rpp.

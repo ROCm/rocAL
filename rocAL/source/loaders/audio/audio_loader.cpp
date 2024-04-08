@@ -78,7 +78,7 @@ void AudioLoader::reset() {
     _circ_buff.reset();
     // resetting the reader thread to the start of the media
     _audio_counter = 0;
-    _audio_loader->reset();
+    _audio_loader->Reset();
     // Start loading (writer thread) again
     start_loading();
 }
@@ -125,9 +125,9 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     try {
         // set the device_id for decoder same as shard_id for number of shards > 1
         if (shard_count > 1) {
-            _audio_loader->create(reader_cfg, decoder_cfg, _batch_size, device_id);
+            _audio_loader->Create(reader_cfg, decoder_cfg, _batch_size, device_id);
         } else {
-            _audio_loader->create(reader_cfg, decoder_cfg, _batch_size);
+            _audio_loader->Create(reader_cfg, decoder_cfg, _batch_size);
         }
     } catch (const std::exception& e) {
         de_init();
@@ -135,7 +135,7 @@ void AudioLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_decoded_samples = _output_tensor->info().max_shape().at(0);
     _max_decoded_channels = _output_tensor->info().max_shape().at(1);
-    _decoded_audio_info._sample_names.resize(_batch_size);
+    _decoded_audio_info._data_names.resize(_batch_size);
     _decoded_audio_info._original_audio_samples.resize(_batch_size);
     _decoded_audio_info._original_audio_channels.resize(_batch_size);
     _decoded_audio_info._original_audio_sample_rates.resize(_batch_size);
@@ -148,7 +148,7 @@ void AudioLoader::start_loading() {
     if (!_is_initialized)
         THROW("start_loading() should be called after initialize() function is called")
 
-    _remaining_audio_count = _audio_loader->count();
+    _remaining_audio_count = _audio_loader->Count();
     _internal_thread_running = true;
     _load_thread = std::thread(&AudioLoader::load_routine, this);
 }
@@ -166,8 +166,8 @@ AudioLoader::load_routine() {
 
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
-            load_status = _audio_loader->load(data,
-                                              _decoded_audio_info._sample_names,
+            load_status = _audio_loader->Load(data,
+                                              _decoded_audio_info._data_names,
                                               _max_decoded_samples,
                                               _max_decoded_channels,
                                               _decoded_audio_info._original_audio_samples,
@@ -175,7 +175,7 @@ AudioLoader::load_routine() {
                                               _decoded_audio_info._original_audio_sample_rates);
 
             if (load_status == LoaderModuleStatus::OK) {
-                _circ_buff.set_sample_info(_decoded_audio_info);
+                _circ_buff.set_data_info(_decoded_audio_info);
                 _circ_buff.push();
                 _audio_counter += _output_tensor->info().batch_size();
             }
@@ -235,8 +235,8 @@ AudioLoader::update_output_audio() {
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-    _output_decoded_audio_info = _circ_buff.get_sample_info();
-    _output_names = _output_decoded_audio_info._sample_names;
+    _output_decoded_audio_info = _circ_buff.get_data_info();
+    _output_names = _output_decoded_audio_info._data_names;
     _output_tensor->update_tensor_roi(_output_decoded_audio_info._original_audio_samples, _output_decoded_audio_info._original_audio_channels);
     _output_tensor->update_audio_tensor_sample_rate(_output_decoded_audio_info._original_audio_sample_rates);
     _circ_buff.pop();
@@ -246,7 +246,7 @@ AudioLoader::update_output_audio() {
 }
 
 Timing AudioLoader::timing() {
-    auto t = _audio_loader->timing();
+    auto t = _audio_loader->GetTiming();
     t.process_time = _swap_handle_time.get_timing();
     return t;
 }
@@ -280,7 +280,7 @@ std::vector<std::string> AudioLoader::get_id() {
     return _output_names;
 }
 
-decoded_sample_info AudioLoader::get_decode_sample_info() {
+DecodedDataInfo AudioLoader::get_decode_data_info() {
     return _output_decoded_audio_info;
 }
 #endif

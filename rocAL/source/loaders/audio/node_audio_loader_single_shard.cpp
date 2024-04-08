@@ -29,7 +29,7 @@ AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(Tensor *output, void *dev
     _loader_module = std::make_shared<AudioLoader>(device_resources);
 }
 
-void AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path,
+void AudioLoaderSingleShardNode::Init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path,
                                       StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count,
                                       RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, RocalBatchPolicy last_batch_policy, bool last_batch_padded, bool stick_to_shard, signed shard_size) {
     if (!_loader_module)
@@ -54,7 +54,7 @@ void AudioLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
     _loader_module->start_loading();
 }
 
-std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
+std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::GetLoaderModule() {
     if (!_loader_module)
         WRN("AudioLoaderSingleShardNode's loader module is null, not initialized")
     return _loader_module;

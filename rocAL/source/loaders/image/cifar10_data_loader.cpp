@@ -119,11 +119,11 @@ void CIFAR10DataLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decode
         throw;
     }
     _actual_read_size.resize(batch_size);
-    _raw_img_info._sample_names.resize(_batch_size);
-    _raw_img_info._roi_width.resize(_batch_size);  // used to store the individual image in a big raw file
-    _raw_img_info._roi_height.resize(batch_size);
-    _raw_img_info._original_height.resize(_batch_size);
-    _raw_img_info._original_width.resize(_batch_size);
+    _decoded_data_info._data_names.resize(_batch_size);
+    _decoded_data_info._roi_width.resize(_batch_size);  // used to store the individual image in a big raw file
+    _decoded_data_info._roi_height.resize(batch_size);
+    _decoded_data_info._original_height.resize(_batch_size);
+    _decoded_data_info._original_width.resize(_batch_size);
     _crop_image_info._crop_image_coords.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
     _is_initialized = true;
@@ -182,21 +182,21 @@ CIFAR10DataLoader::load_routine() {
                     continue;
                 }
                 _actual_read_size[file_counter] = _reader->read_data(read_ptr, readSize);
-                _raw_img_info._sample_names[file_counter] = _reader->id();
-                _raw_img_info._roi_width[file_counter] = _output_tensor->info().max_shape()[0];
-                _raw_img_info._roi_height[file_counter] = _output_tensor->info().max_shape()[1];
+                _decoded_data_info._data_names[file_counter] = _reader->id();
+                _decoded_data_info._roi_width[file_counter] = _output_tensor->info().max_shape()[0];
+                _decoded_data_info._roi_height[file_counter] = _output_tensor->info().max_shape()[1];
                 _reader->close();
                 file_counter++;
             }
             if (_randombboxcrop_meta_data_reader) {
                 // Fetch the crop co-ordinates for a batch of images
-                _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_raw_img_info._sample_names);
+                _bbox_coords = _randombboxcrop_meta_data_reader->get_batch_crop_coords(_decoded_data_info._data_names);
                 set_batch_random_bbox_crop_coords(_bbox_coords);
                 _crop_image_info._crop_image_coords = get_batch_random_bbox_crop_coords();
                 _circ_buff.set_crop_image_info(_crop_image_info);
             }
             _file_load_time.end();  // Debug timing
-            _circ_buff.set_sample_info(_raw_img_info);
+            _circ_buff.set_data_info(_decoded_data_info);
             _circ_buff.push();
             _image_counter += _output_tensor->info().batch_size();
             load_status = LoaderModuleStatus::OK;
@@ -254,12 +254,12 @@ CIFAR10DataLoader::update_output_image() {
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_img_info = _circ_buff.get_sample_info();
+    _output_decoded_data_info = _circ_buff.get_data_info();
     if (_randombboxcrop_meta_data_reader) {
         _output_cropped_image_info = _circ_buff.get_cropped_image_info();
     }
-    _output_names = _output_decoded_img_info._sample_names;
-    _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    _output_names = _output_decoded_data_info._data_names;
+    _output_tensor->update_tensor_roi(_output_decoded_data_info._roi_width, _output_decoded_data_info._roi_height);
 
     _circ_buff.pop();
     if (!_loop)
@@ -279,10 +279,10 @@ std::vector<std::string> CIFAR10DataLoader::get_id() {
     return _output_names;
 }
 
-decoded_sample_info CIFAR10DataLoader::get_decode_sample_info() {
-    return _output_decoded_img_info;
+DecodedDataInfo CIFAR10DataLoader::get_decode_data_info() {
+    return _output_decoded_data_info;
 }
 
-crop_image_info CIFAR10DataLoader::get_crop_image_info() {
+CropImageInfo CIFAR10DataLoader::get_crop_image_info() {
     return _output_cropped_image_info;
 }
