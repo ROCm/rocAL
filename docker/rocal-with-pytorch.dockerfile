@@ -45,14 +45,14 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
         cmake ../ && make -j4 && sudo make install && cd ../../ && \
         pip install pytest==3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
         cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
-        pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.* git+https://github.com/ROCmSoftwarePlatform/hipify_torch.git && \
+        pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.* git+https://github.com/ROCm/hipify_torch.git && \
         env CC=$MPI_HOME/bin/mpicc python -m pip install mpi4py && \
         git clone -b rocm6.1_internal_testing https://github.com/ROCm/cupy.git && cd cupy && git submodule update --init && \
         pip install -e . --no-cache-dir -vvvv
 
 # install MIVisionX 
 RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
-        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../ && make -j8 && make install && cd 
+        mkdir build && cd build && cmake -DBACKEND=HIP ../ && make -j8 && make install && cd 
 
 ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE

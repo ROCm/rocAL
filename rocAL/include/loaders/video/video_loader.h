@@ -49,9 +49,9 @@ class VideoLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     std::vector<std::string> get_id() override;
-    decoded_sample_info get_decode_sample_info() override;
+    DecodedDataInfo get_decode_data_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
-    crop_image_info get_crop_image_info() override { return _crop_img_info; }
+    CropImageInfo get_crop_image_info() override { return _crop_img_info; }
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override{};
     std::vector<size_t> get_sequence_start_frame_number() override;
     std::vector<std::vector<float>> get_sequence_frame_timestamps() override;
@@ -74,10 +74,8 @@ class VideoLoader : public LoaderModule {
     size_t _sequence_length;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_sample_info _decoded_img_info;
-    decoded_sample_info _output_decoded_img_info;
     CircularBuffer _circ_buff;
-    TimingDBG _swap_handle_time;
+    TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                         //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop
@@ -87,7 +85,7 @@ class VideoLoader : public LoaderModule {
     bool _decoder_keep_original = false;
     std::vector<std::vector<size_t>> _sequence_start_framenum_vec;
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;
-    crop_image_info _crop_img_info;
+    CropImageInfo _crop_img_info;
     size_t _max_tensor_width, _max_tensor_height;
 };
 #endif

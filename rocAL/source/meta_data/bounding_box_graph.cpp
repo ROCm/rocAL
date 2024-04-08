@@ -31,7 +31,7 @@ void BoundingBoxGraph::process(pMetaDataBatch input_meta_data, pMetaDataBatch ou
 }
 
 // This function is used to rescale the metadata values w.r.t the decoded image sizes
-void BoundingBoxGraph::update_meta_data(pMetaDataBatch input_meta_data, decoded_sample_info decode_image_info) {
+void BoundingBoxGraph::update_meta_data(pMetaDataBatch input_meta_data, DecodedDataInfo decode_image_info) {
     std::vector<uint32_t> original_height = decode_image_info._original_height;
     std::vector<uint32_t> original_width = decode_image_info._original_width;
     std::vector<uint32_t> roi_width = decode_image_info._roi_width;
@@ -68,12 +68,12 @@ inline float ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const fl
     return (float)(intersection_area / (box1_area + box2_area - intersection_area));
 }
 
-void BoundingBoxGraph::update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_sample_info decode_image_info, crop_image_info crop_image_info) {
+void BoundingBoxGraph::update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, DecodedDataInfo decode_image_info, CropImageInfo CropImageInfo) {
     std::vector<uint32_t> original_height = decode_image_info._original_height;
     std::vector<uint32_t> original_width = decode_image_info._original_width;
     std::vector<uint32_t> roi_width = decode_image_info._roi_width;
     std::vector<uint32_t> roi_height = decode_image_info._roi_height;
-    auto crop_cords = crop_image_info._crop_image_coords;
+    auto crop_cords = CropImageInfo._crop_image_coords;
     for (int i = 0; i < input_meta_data->size(); i++) {
         auto bb_count = input_meta_data->get_labels_batch()[i].size();
         BoundingBoxCords coords_buf;

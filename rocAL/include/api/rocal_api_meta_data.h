@@ -239,7 +239,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalC
  * \param [out] buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
  * \param [in] dest destination can be host=0 / device=1
  */
-extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context, void* buf, int numOfClasses, int dest);
+extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context, void* buf, int numOfClasses, RocalOutputMemType output_mem_type);
 
 extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam aspect_ratio = NULL, bool has_shape = false, int crop_width = 0, int crop_height = 0, int num_attempts = 1, RocalFloatParam scaling = NULL, int total_num_attempts = 0, int64_t seed = 0);
 
