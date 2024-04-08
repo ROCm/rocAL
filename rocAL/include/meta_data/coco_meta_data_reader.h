@@ -58,5 +58,5 @@ class COCOMetaDataReader : public MetaDataReader {
     std::map<std::string, ImgSize>::iterator itr;
     std::map<int, int> _label_info;
     std::map<int, int>::iterator _it_label;
-    TimingDBG _coco_metadata_read_time;
+    TimingDbg _coco_metadata_read_time;
 };

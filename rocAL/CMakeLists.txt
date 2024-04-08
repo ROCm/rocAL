@@ -225,30 +225,10 @@ if(${BUILD_ROCAL})
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
-    include_directories(
-                ${CMAKE_CURRENT_BINARY_DIR}
-                include/api/
-                include/augmentations/
-                include/augmentations/color_augmentations/
-                include/augmentations/effects_augmentations/
-                include/augmentations/geometry_augmentations/
-                include/augmentations/audio_augmentations/
-                include/augmentations/arithmetic_augmentations/
-                include/decoders/image/
-                include/decoders/video/
-                include/decoders/audio/
-                include/decoders/libjpeg/
-                include/device/
-                include/loaders/
-                include/loaders/image/
-                include/loaders/video/
-                include/loaders/audio/
-                include/meta_data/
-                include/parameters/
-                include/pipeline/
-                include/readers/image/
-                include/readers/video/
-    )
+    file(GLOB_RECURSE ROCAL_INCLUDE_DIRS LIST_DIRECTORIES true "include/*")
+    list(FILTER ROCAL_INCLUDE_DIRS EXCLUDE REGEX "\\.(h|hpp)$")
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}
+                        ${ROCAL_INCLUDE_DIRS})
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
 
@@ -321,11 +301,11 @@ if(${BUILD_ROCAL})
         message(FATAL_ERROR "No filesystem library found.")
     endif()
     # SndFile
-    if(NOT SndFile_FOUND)
+    if(NOT SNDFILE_FOUND)
         message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
     else()
-        include_directories(${SndFile_INCLUDE_DIRS})
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SndFile_LIBRARIES})
+        include_directories(${SNDFILE_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SNDFILE_LIBRARIES})
         message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     endif()

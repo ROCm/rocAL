@@ -80,4 +80,4 @@ rocAL operators offer the flexibility to run on CPU or GPU for building hybrid p
 | Image_random_crop | Decodes and randomly crops JPEG images |
 | Image_slice       | Decodes and slices JPEG images         |
 
-To see examples demonstrating the usage of decoders and readers, [click here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocAL/rocAL_pybind/examples)
+To see examples demonstrating the usage of decoders and readers, [click here](https://github.com/ROCm/rocAL/tree/master/rocAL/docs/examples)

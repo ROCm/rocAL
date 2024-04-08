@@ -41,8 +41,8 @@ class MetaDataGraph {
    public:
     virtual ~MetaDataGraph() = default;
     virtual void process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) = 0;
-    virtual void update_meta_data(pMetaDataBatch meta_data, decoded_sample_info decoded_image_info) = 0;
-    virtual void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_sample_info decoded_image_info, crop_image_info crop_image_info) = 0;
+    virtual void update_meta_data(pMetaDataBatch meta_data, DecodedDataInfo decoded_image_info) = 0;
+    virtual void update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, DecodedDataInfo decoded_image_info, CropImageInfo CropImageInfo) = 0;
     virtual void update_box_encoder_meta_data(std::vector<float> *anchors, pMetaDataBatch full_batch_meta_data, float criteria, bool offset, float scale, std::vector<float> &means, std::vector<float> &stds, float *encoded_boxes_data, int *encoded_labels_data) = 0;
     virtual void update_box_iou_matcher(BoxIouMatcherInfo &iou_matcher_info, int *matches_idx_buffer, pMetaDataBatch full_batch_meta_data) = 0;
     std::list<std::shared_ptr<MetaNode>> _meta_nodes;
