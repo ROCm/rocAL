@@ -14,7 +14,7 @@ Build a rocAL PyTorch docker by following the steps here.
 
 Follow these steps:
 
-1. Import libraries for [rocAL](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/docs/examples/pytorch/test_training.py#L28).
+1. Import libraries for [rocAL](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L28).
 
 ```
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
@@ -23,7 +23,7 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 ```
 
-2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a fileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the [pipeline](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/docs/examples/pytorch/test_training.py#L38).
+2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a fileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the [pipeline](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L38).
 
 ```
 def trainPipeline(data_path, batch_size, num_classes, one_hot, local_rank, world_size, num_thread, crop, rocal_cpu, fp16):
@@ -61,7 +61,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 ```
 
-4. Call the training pipeline with rocAL classification data [loader](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/docs/examples/pytorch/test_training.py#L78).
+4. Call the training pipeline with rocAL classification data [loader](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L78).
 
 ```
 Def get_pytorch_train_loader(self):
@@ -72,7 +72,7 @@ Def get_pytorch_train_loader(self):
         train_loader = ROCALClassificationIterator(pipe_train, device=”cpu” if self.rocal_cpu else “cuda”, device_id = self.local_rank)
 ```
 
-5. Run the [training](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/docs/examples/pytorch/test_training.py#L179).
+5. Run the [training](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L179).
 
 ```
 # Training loop
@@ -88,9 +88,9 @@ Def get_pytorch_train_loader(self):
             inputs, labels = inputs.to(device), labels.to(device)
 ```
 
-6. Run the training as shown [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/develop/rocAL/docs/examples/pytorch).
+6. Run the training as shown [here](https://github.com/ROCm/rocAL/tree/develop/rocAL/docs/examples/pytorch/toynet_training).
 
-To see a sample training script, click [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/develop/rocAL/docs/examples/pytorch). 
+To see a sample training script, click [here](https://github.com/ROCm/rocAL/tree/develop/rocAL/docs/examples/pytorch/toynet_training). 
 
 ## 5.2 TensorFlow Integration
 
@@ -104,7 +104,7 @@ Build a rocAL TensorFlow docker by following the steps here.
 
 Follow these steps:
 
-1. Import libraries for [rocAL](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/tf_petsTrainingExample/train_withROCAL_withTFRecordReader.py#L22).
+1. Import libraries for [rocAL](https://github.com/ROCm/rocAL/blob/master/docs/examples/tf/pets_training/train.py#L22).
 
 ```
 from amd.rocal.plugin.tf import ROCALIterator
@@ -113,7 +113,7 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 ```
 
-2. See a rocAL pipeline for TensorFlow below. It reads data from the TFRecords using TFRecord Reader and uses fn.decoders.image to decode the raw [images](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/tf_petsTrainingExample/train_withROCAL_withTFRecordReader.py#L128).
+2. See a rocAL pipeline for TensorFlow below. It reads data from the TFRecords using TFRecord Reader and uses fn.decoders.image to decode the raw [images](https://github.com/ROCm/rocAL/blob/master/examples/tf/pets_training/train.py#L128).
 
 ```
 trainPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=1, rocal_cpu=RUN_ON_HOST, tensor_layout = types.NHWC)
@@ -140,7 +140,7 @@ trainPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=1, rocal_cpu=RUN_O
 trainPipe.build()
 ```
 
-3. Import libraries for [TensorFlow](https://github.com/ROCmSoftwarePlatform/rocAL/blob/master/rocAL_pybind/examples/tf_petsTrainingExample/train_withROCAL_withTFRecordReader.py#L174).
+3. Import libraries for [TensorFlow](https://github.com/ROCm/rocAL/blob/master/examples/tf/pets_training/train.py#L174).
 
 ```
 import tensorflow.compat.v1 as tf
@@ -159,6 +159,6 @@ Run the training Session
                 train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
 ```
 
-4. Run the training as shown [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
+4. Run the training as shown [here](https://github.com/ROCm/rocAL/tree/master/rocAL/examples/tf/pets_training/).
 
-To see a sample training script, click [here](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample).
+To see a sample training script, click [here](https://github.com/ROCm/rocAL/tree/master/rocAL/examples/tf/pets_training/).
