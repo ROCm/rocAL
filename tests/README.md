@@ -3,5 +3,5 @@
 rocAL test suite to verify installation and functionality
 
 ## C++ API Test
-
-rocAL C++ API functionality tests
+* [C++ API functionality tests](cpp_api)
+* [Python API functionality tests](python_api)

@@ -187,7 +187,7 @@ class MasterGraph {
     size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
     const int _gpu_id;                                                            //!< Defines the device id used for processing
     pLoaderModule _loader_module;                                                 //!< Keeps the loader module used to feed the input the tensors of the graph
-    TimingDBG _convert_time, _process_time, _bencode_time;
+    TimingDbg _convert_time, _process_time, _bencode_time;
     const size_t _user_batch_size;                                                //!< Batch size provided by the user
     vx_context _context;
     const RocalMemType _mem_type;                                                 //!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
@@ -224,7 +224,7 @@ class MasterGraph {
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
-    TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
+    TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
 };
 
 template <typename T>
@@ -355,6 +355,7 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
     return node;
 }
 
+#ifdef ROCAL_VIDEO
 /*
  * Explicit specialization for VideoLoaderNode
  */
@@ -393,6 +394,7 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
 
     return node;
 }
+#endif
 
 #ifdef ROCAL_AUDIO
 /*
@@ -406,7 +408,7 @@ template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const s
 #else
     auto node = std::make_shared<AudioLoaderNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
+    _loader_module = node->GetLoaderModule();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
@@ -423,7 +425,7 @@ template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_n
 #else
     auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
+    _loader_module = node->GetLoaderModule();
     _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
