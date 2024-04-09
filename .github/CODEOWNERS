@@ -1,8 +1,8 @@
 # Documentation files
-docs/* @LisaDelaney @kiritigowda @rrawther
-*.md  @LisaDelaney @kiritigowda @rrawther
-*.rst  @LisaDelaney
+docs/* @randyh62 @kiritigowda @rrawther
+*.md  @randyh62 @kiritigowda @rrawther
+*.rst  @randyh62
 # Header directory
-library/include/*  @LisaDelaney @kiritigowda @rrawther
+library/include/*  @randyh62 @kiritigowda @rrawther
 # Source code
 @kiritigowda @rrawther
