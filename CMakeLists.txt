@@ -20,7 +20,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(rocAL)
-set(VERSION "1.0.0")
+set(VERSION "2.0.0")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
