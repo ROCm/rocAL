@@ -952,6 +952,15 @@ INPUT                  = ../../README.md \
                         ../../rocAL/include/api/rocal_api_parameters.h \
                         ../../rocAL/include/api/rocal_api_types.h \
                         ../../rocAL/include/api/rocal_api.h
+                        ../../rocAL_pybind/amd/rocal/decoders.py \
+                        ../../rocAL_pybind/amd/rocal/fn.py \
+                        ../../rocAL_pybind/amd/rocal/pipeline.py \
+                        ../../rocAL_pybind/amd/rocal/random.py \
+                        ../../rocAL_pybind/amd/rocal/readers.py \
+                        ../../rocAL_pybind/amd/rocal/types.py \
+                        ../../rocAL_pybind/amd/rocal/plugin/generic.py \
+                        ../../rocAL_pybind/amd/rocal/plugin/pytorch.py \
+                        ../../rocAL_pybind/amd/rocal/plugin/tf.py
                        
 
 # This tag can be used to specify the character encoding of the source files
