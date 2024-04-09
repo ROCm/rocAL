@@ -55,6 +55,7 @@ void AudioSourceEvaluator::find_max_dimension() {
             WRN("Could not initialize audio decoder for file : " + _reader->id())
             continue;
         }
+        _reader->close();
         int samples, channels;
         float sample_rate;
         if (_decoder->decode_info(&samples, &channels, &sample_rate) != AudioDecoder::Status::OK) {
