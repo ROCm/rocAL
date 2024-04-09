@@ -38,10 +38,10 @@ class AudioDecoder {
         FAILED,
         NO_MEMORY
     };
-    virtual AudioDecoder::Status initialize(const char* src_filename) = 0;                           // This function is responsible for initializing the audio decoder. It takes the source filename as input and returns the status of the initialization process.
-    virtual AudioDecoder::Status decode(float* buffer) = 0;                                          // to read audio frames and store in the buffer provided
-    virtual AudioDecoder::Status decode_info(int* samples, int* channels, float* sample_rates) = 0;  // to decode info about the audio samples
-    virtual void release() = 0;
+    virtual AudioDecoder::Status Initialize(const char* src_filename) = 0;
+    virtual AudioDecoder::Status Decode(float* buffer) = 0;
+    virtual AudioDecoder::Status DecodeInfo(int* samples, int* channels, float* sample_rates) = 0;
+    virtual void Release() = 0;
     virtual ~AudioDecoder() = default;
 
    protected:

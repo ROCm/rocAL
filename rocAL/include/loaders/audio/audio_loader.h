@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 #ifdef ROCAL_AUDIO
 
-// AudioLoader runs an internal thread for loading an decoding of audios asynchronously
+// AudioLoader runs an internal thread for loading and decoding of audios asynchronously
 // It uses a circular buffer to store decoded audios for the user
 class AudioLoader : public LoaderModule {
    public:
@@ -49,7 +49,7 @@ class AudioLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     std::vector<std::string> get_id() override;
-    decoded_sample_info get_decode_sample_info() override;
+    DecodedDataInfo get_decode_data_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void set_gpu_device_id(int device_id);
     void shut_down() override;
@@ -61,21 +61,20 @@ class AudioLoader : public LoaderModule {
     bool is_out_of_data();
     void de_init();
     void stop_internal_thread();
-    std::shared_ptr<AudioReadAndDecode> _audio_loader;
     LoaderModuleStatus update_output_audio();
     LoaderModuleStatus load_routine();
+    std::shared_ptr<AudioReadAndDecode> _audio_loader;
     Tensor* _output_tensor;
-    std::vector<std::string> _output_names;  //!< audio name/ids that are stores in the _output_audio
-    size_t _output_mem_size;
+    std::vector<std::string> _output_names;  //!< audio file name/ids that are stored in the _output_audio
     MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
     bool _internal_thread_running;
-    size_t _batch_size;
+    size_t _output_mem_size, _batch_size, _max_decoded_samples, _max_decoded_channels;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_sample_info _decoded_audio_info;
-    decoded_sample_info _output_decoded_audio_info;
+    DecodedDataInfo _decoded_audio_info;
+    DecodedDataInfo _output_decoded_audio_info;
     CircularBuffer _circ_buff;
-    TimingDBG _swap_handle_time;
+    TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/audios/...) and wouldn't stop
@@ -83,7 +82,6 @@ class AudioLoader : public LoaderModule {
     size_t _audio_counter = 0;      //!< How many audios have been loaded already
     size_t _remaining_audio_count;  //!< How many audios are there yet to be loaded
     int _device_id;
-    size_t _max_decoded_samples, _max_decoded_channels;
     RocalBatchPolicy _last_batch_policy;
     bool last_batch_padded;
 };

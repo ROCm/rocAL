@@ -49,8 +49,8 @@ class ImageLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
-    decoded_sample_info get_decode_sample_info() override;
-    crop_image_info get_crop_image_info() override;
+    DecodedDataInfo get_decode_data_info() override;
+    CropImageInfo get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
@@ -74,12 +74,10 @@ class ImageLoader : public LoaderModule {
     size_t _batch_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_sample_info _decoded_img_info;
-    crop_image_info _crop_image_info;
-    decoded_sample_info _output_decoded_img_info;
-    crop_image_info _output_cropped_img_info;
+    CropImageInfo _crop_image_info;
+    CropImageInfo _output_cropped_img_info;
     CircularBuffer _circ_buff;
-    TimingDBG _swap_handle_time;
+    TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop

@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 #include "loader_module.h"
 #include "reader_factory.h"
-#include "sndfile_decoder.h"
+#include "generic_audio_decoder.h"
 
 #ifdef ROCAL_AUDIO
 
@@ -38,10 +38,10 @@ enum class AudioSourceEvaluatorStatus {
 
 class AudioSourceEvaluator {
    public:
-    AudioSourceEvaluatorStatus create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
-    void find_max_dimension();
-    size_t max_samples();
-    size_t max_channels();
+    AudioSourceEvaluatorStatus Create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
+    void FindMaxDimension();
+    size_t GetMaxSamples();
+    size_t GetMaxChannels();
 
    private:
     int _samples_max = 0, _channels_max = 0;
