@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
-#include "api/rocal_api.h"
+#include "rocal_api.h"
 
 size_t ROCAL_API_CALL rocalGetImageWidth(RocalTensor p_image) {
     auto image = static_cast<Tensor *>(p_image);

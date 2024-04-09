@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
 #include "loaders/image_source_evaluator.h"
-#include "api/rocal_api.h"
+#include "rocal_api.h"
 
 RocalTensor ROCAL_API_CALL
 rocalSequenceRearrange(RocalContext p_context,

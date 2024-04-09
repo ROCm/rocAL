@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include "pipeline/node.h"
-#include "api/rocal_api_types.h"
+#include "rocal_api_types.h"
 
 class ResizeNode : public Node {
 public:

@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "parameters/parameter_crop_factory.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
-#include "api/rocal_api_types.h"
+#include "rocal_api_types.h"
 
 class ResizeCropMirrorNode : public CropNode {
    public:

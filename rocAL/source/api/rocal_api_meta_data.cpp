@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
-#include "api/rocal_api.h"
+#include "rocal_api.h"
 
 void
     ROCAL_API_CALL

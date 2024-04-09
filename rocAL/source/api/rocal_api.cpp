@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "api/rocal_api.h"
+#include "rocal_api.h"
 
 #include <exception>
 #include <string>

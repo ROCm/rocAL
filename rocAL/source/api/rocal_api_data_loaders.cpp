@@ -35,7 +35,7 @@ THE SOFTWARE.
 #include "loaders/image/node_image_loader.h"
 #include "loaders/image/node_image_loader_single_shard.h"
 #include "augmentations/geometry_augmentations/node_resize.h"
-#include "api/rocal_api.h"
+#include "rocal_api.h"
 
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,

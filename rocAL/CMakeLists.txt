@@ -227,6 +227,7 @@ if(${BUILD_ROCAL})
     include_directories(
                 ${CMAKE_CURRENT_BINARY_DIR}
                 include/
+                include/api/
     )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})

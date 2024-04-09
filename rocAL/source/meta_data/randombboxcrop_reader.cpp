@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <utility>
 
-#include "api/rocal_api.h"
+#include "rocal_api.h"
 
 void RandomBBoxCropReader::init(const RandomBBoxCrop_MetaDataConfig &cfg, std::shared_ptr<CropCordBatch> meta_data_batch) {
     _all_boxes_overlap = cfg.all_boxes_overlap();

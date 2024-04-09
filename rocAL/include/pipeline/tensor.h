@@ -37,7 +37,7 @@ THE SOFTWARE.
 #include "device/device_manager.h"
 #endif
 #include "pipeline/commons.h"
-#include "api/rocal_api_tensor.h"
+#include "rocal_api_tensor.h"
 
 /*! \brief Converts Rocal Memory type to OpenVX memory type
  *
