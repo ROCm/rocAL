@@ -20,15 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "label_reader_folders.h"
+#include "meta_data/label_reader_folders.h"
 
 #include <string.h>
 
 #include <algorithm>
-#include "commons.h"
-#include "exception.h"
-#include "label_reader_folders.h"
-#include "filesystem.h"
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
+#include "pipeline/filesystem.h"
 
 using namespace std;
 

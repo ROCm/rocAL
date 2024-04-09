@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "external_source_reader.h"
+#include "readers/image/external_source_reader.h"
 
 #include <algorithm>
 #include <cassert>

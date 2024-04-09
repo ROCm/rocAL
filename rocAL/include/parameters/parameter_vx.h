@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 #include <vector>
 
-#include "parameter_factory.h"
+#include "parameters/parameter_factory.h"
 
 template <typename T>
 class ParameterVX {

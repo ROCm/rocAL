@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "commons.h"
-#include "context.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
 #include "rocal_api.h"
 #if ENABLE_OPENCL
 #include "CL/cl.h"
