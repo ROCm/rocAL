@@ -28,7 +28,6 @@ THE SOFTWARE.
 #endif
 #include <queue>
 
-
 #include "pipeline/commons.h"
 #include "device/device_manager.h"
 #include "device/device_manager_hip.h"
