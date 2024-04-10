@@ -297,8 +297,7 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cout << "Total time " << dur << std::endl;
-    std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
 
     rocalRelease(handle);
 

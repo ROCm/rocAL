@@ -145,7 +145,7 @@ int main(int argc, const char **argv) {
         std::cout << "Start test id " << test_id << "\n";
         std::cout << "Available images = " << rocalGetRemainingImages(handle) << std::endl;
         int process_image_count = ((test_case == 0) ? rocalGetRemainingImages(handle) : run_len[test_id]);
-        std::cout << ">>>>> Going to process " << process_image_count << " images , press a key" << std::endl;
+        std::cout << "Process " << process_image_count << " images" << std::endl;
         if (DISPLAY)
             cv::waitKey(0);
         const unsigned number_of_cols = process_image_count / inputBatchSize;
