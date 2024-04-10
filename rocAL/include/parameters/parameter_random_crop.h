@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "parameter_crop.h"
+#include "parameters/parameter_crop.h"
 
 class RocalRandomCropParam : public CropParam {
    public:

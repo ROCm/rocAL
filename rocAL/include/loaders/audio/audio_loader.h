@@ -26,10 +26,10 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
-#include "audio_read_and_decode.h"
-#include "circular_buffer.h"
-#include "commons.h"
-#include "meta_data_reader.h"
+#include "loaders/audio/audio_read_and_decode.h"
+#include "loaders/circular_buffer.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data_reader.h"
 
 #ifdef ROCAL_AUDIO
 

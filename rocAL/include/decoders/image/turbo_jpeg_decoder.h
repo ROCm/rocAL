@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "decoder.h"
+#include "decoders/image/decoder.h"
 #include <turbojpeg.h>
 
 class TJDecoder : public Decoder {

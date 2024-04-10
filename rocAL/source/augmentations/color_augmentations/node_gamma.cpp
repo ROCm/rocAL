@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_gamma.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_gamma.h"
+#include "pipeline/exception.h"
 
 GammaNode::GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                   _gamma(GAMMA_RANGE[0], GAMMA_RANGE[1]) {}

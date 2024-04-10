@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_snow.h"
-#include "exception.h"
+#include "augmentations/effects_augmentations/node_snow.h"
+#include "pipeline/exception.h"
 
 SnowNode::SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _snow_value(SNOW_VALUE_RANGE[0], SNOW_VALUE_RANGE[1]) {}

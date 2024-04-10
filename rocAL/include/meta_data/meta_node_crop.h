@@ -24,11 +24,11 @@ THE SOFTWARE.
 #include <memory>
 #include <set>
 
-#include "bounding_box_graph.h"
-#include "meta_data.h"
-#include "node.h"
-#include "node_crop.h"
-#include "parameter_vx.h"
+#include "meta_data/bounding_box_graph.h"
+#include "meta_data/meta_data.h"
+#include "pipeline/node.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_vx.h"
 class CropMetaNode : public MetaNode {
    public:
     CropMetaNode(){};

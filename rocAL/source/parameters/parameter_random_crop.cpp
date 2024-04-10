@@ -23,9 +23,9 @@ THE SOFTWARE.
 #include <cmath>
 #include <VX/vx.h>
 #include <VX/vx_compatibility.h>
-#include <graph.h>
-#include "parameter_random_crop.h"
-#include "commons.h"
+#include "pipeline/graph.h"
+#include "parameters/parameter_random_crop.h"
+#include "pipeline/commons.h"
 
 void RocalRandomCropParam::set_area_factor(Parameter<float>* crop_area_factor) {
     if (!crop_area_factor)

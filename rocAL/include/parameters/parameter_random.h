@@ -32,8 +32,8 @@ THE SOFTWARE.
 #include <variant>
 #include <vector>
 
-#include "log.h"
-#include "parameter.h"
+#include "pipeline/log.h"
+#include "parameters/parameter.h"
 template <typename T>
 class UniformRand : public Parameter<T> {
    public:

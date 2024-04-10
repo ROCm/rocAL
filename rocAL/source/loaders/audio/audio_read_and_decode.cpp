@@ -20,13 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "audio_read_and_decode.h"
+#include "loaders/audio/audio_read_and_decode.h"
 
 #include <cstring>
 #include <iterator>
 
-#include "audio_decoder_factory.hpp"
-#include "decoder_factory.h"
+#include "decoders/audio/audio_decoder_factory.hpp"
+#include "decoders/image/decoder_factory.h"
 
 #ifdef ROCAL_AUDIO
 

@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "meta_node_crop_resize.h"
+#include "meta_data/meta_node_crop_resize.h"
 void CropResizeMetaNode::initialize() {
     _x1_val.resize(_batch_size);
     _y1_val.resize(_batch_size);

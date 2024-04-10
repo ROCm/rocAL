@@ -26,10 +26,10 @@ THE SOFTWARE.
 #include <tuple>
 #include <vector>
 
-#include "commons.h"
-#include "meta_data_reader.h"
-#include "image_reader.h"
-#include "video_properties.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data_reader.h"
+#include "readers/image/image_reader.h"
+#include "readers/video/video_properties.h"
 
 #ifdef ROCAL_VIDEO
 struct SequenceInfo {

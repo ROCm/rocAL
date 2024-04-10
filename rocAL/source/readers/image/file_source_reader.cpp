@@ -23,9 +23,9 @@ THE SOFTWARE.
 #include <cassert>
 #include <algorithm>
 #include <cstring>
-#include <commons.h>
-#include "file_source_reader.h"
-#include "filesystem.h"
+#include "pipeline/commons.h"
+#include "readers/image/file_source_reader.h"
+#include "pipeline/filesystem.h"
 
 FileSourceReader::FileSourceReader() {
     _src_dir = nullptr;

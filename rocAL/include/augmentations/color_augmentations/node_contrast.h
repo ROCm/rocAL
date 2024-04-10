@@ -23,9 +23,9 @@ THE SOFTWARE.
 #pragma once
 #include <list>
 
-#include "graph.h"
-#include "node.h"
-#include "parameter_vx.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_vx.h"
 
 class ContrastNode : public Node {
    public:

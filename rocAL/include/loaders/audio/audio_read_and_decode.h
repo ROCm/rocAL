@@ -25,12 +25,12 @@ THE SOFTWARE.
 
 #include <memory>
 
-#include "audio_decoder.h"
-#include "commons.h"
-#include "loader_module.h"
-#include "reader_factory.h"
-#include "generic_audio_decoder.h"
-#include "timing_debug.h"
+#include "decoders/audio/audio_decoder.h"
+#include "pipeline/commons.h"
+#include "loaders/loader_module.h"
+#include "readers/image/reader_factory.h"
+#include "decoders/audio/generic_audio_decoder.h"
+#include "pipeline/timing_debug.h"
 
 #ifdef ROCAL_AUDIO
 

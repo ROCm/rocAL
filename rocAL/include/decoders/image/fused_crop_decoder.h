@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "decoder.h"
+#include "decoders/image/decoder.h"
 #include <turbojpeg.h>
 class FusedCropTJDecoder : public Decoder {
    public:

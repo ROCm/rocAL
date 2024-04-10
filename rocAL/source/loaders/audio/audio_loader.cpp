@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "audio_loader.h"
+#include "loaders/audio/audio_loader.h"
+#include "loaders/audio/audio_read_and_decode.h"
 
 #include <chrono>
 #include <thread>
 
-#include "audio_read_and_decode.h"
 
 #ifdef ROCAL_AUDIO
 

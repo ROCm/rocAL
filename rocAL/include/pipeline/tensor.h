@@ -31,12 +31,12 @@ THE SOFTWARE.
 #include <queue>
 #include <vector>
 #if ENABLE_HIP
-#include "device_manager_hip.h"
+#include "device/device_manager_hip.h"
 #include "hip/hip_runtime.h"
 #else
-#include "device_manager.h"
+#include "device/device_manager.h"
 #endif
-#include "commons.h"
+#include "pipeline/commons.h"
 #include "rocal_api_tensor.h"
 
 /*! \brief Converts Rocal Memory type to OpenVX memory type
@@ -321,7 +321,7 @@ class Tensor : public rocalTensor {
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
     //! Copying the output buffer with specified max_cols and max_rows values for the 2D buffer of size batch_size
-    unsigned copy_data(void* user_buffer, uint max_cols, uint max_rows); 
+    unsigned copy_data(void* user_buffer, uint max_rows, uint max_cols); 
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();
