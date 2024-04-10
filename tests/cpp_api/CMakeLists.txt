@@ -185,7 +185,7 @@ add_test(NAME unit_tests_gpu
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 add_test(NAME unit_tests_gray 
-              COMMAND unittests 
+              COMMAND unit_tests 
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 
