@@ -168,36 +168,36 @@ add_test(NAME performance_tests_with_depth_gpu
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth)
 
-# unittests
+# unit_tests
 add_test(
   NAME
-    unittests_cpu
+    unit_tests_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/unittests"
-                              "${CMAKE_CURRENT_BINARY_DIR}/unittests"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/unit_tests"
             --build-generator "${CMAKE_GENERATOR}"
-            --test-command "unittests"
+            --test-command "unit_tests"
             0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 0 1
 )
-add_test(NAME unittests_gpu 
-              COMMAND unittests 
+add_test(NAME unit_tests_gpu 
+              COMMAND unit_tests 
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unittests)
-add_test(NAME unittests_gray 
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
+add_test(NAME unit_tests_gray 
               COMMAND unittests 
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unittests)
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 
-# video_unittests
+# video_tests
 add_test(
   NAME
-  video_unittests
+  video_tests
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_unittests"
-                              "${CMAKE_CURRENT_BINARY_DIR}/video_unittests"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
             --build-generator "${CMAKE_GENERATOR}"
-            --test-command "video_unittests"
+            --test-command "video_tests"
             ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
 )
