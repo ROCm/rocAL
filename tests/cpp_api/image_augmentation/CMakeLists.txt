@@ -50,7 +50,7 @@ find_package(MIVisionX REQUIRED)
 find_package(OpenCV QUIET)
 
 # Application Includes & Libraries
-include_directories(${MIVisionX_INCLUDE_DIRS} ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
+include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
 link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(${PROJECT_NAME} image_augmentation.cpp)

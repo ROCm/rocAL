@@ -78,8 +78,7 @@ else()
     message("-- ${Yellow}NOTE: GPU Support Not Found or Turned OFF -- rali_dataloader_mt app built for CPU only${ColourReset}")
 endif()
 
-
-include_directories (${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
+include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
 link_directories    (${ROCM_PATH}/lib)
 
 add_executable(${PROJECT_NAME} ./dataloader_multithread.cpp)
