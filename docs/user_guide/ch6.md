@@ -72,7 +72,7 @@ extern "C"  RocalStatus  ROCAL_API_CALL rocalRelease(RocalContext rocal_context)
 
 ## 6.1.5 Image Augmentation Using C++ API
 
-The example below shows how to create a pipeline, read JPEG images, perform certain augmentations on them, and show the output using OpenCV by utilizing C++ [APIs](https://github.com/ROCm/rocAL/blob/develop/tests/cpp_api_tests/image_augmentation/image_augmentation.cpp#L103).
+The example below shows how to create a pipeline, read JPEG images, perform certain augmentations on them, and show the output using OpenCV by utilizing C++ [APIs](https://github.com/ROCm/rocAL/blob/develop/tests/cpp_api/image_augmentation/image_augmentation.cpp#L103).
 
 ```
 Auto handle = rocalCreate(inputBatchSize, processing_device?RocalProcessMode::ROCAL_PROCESS_GPU:RocalProcessMode::ROCAL_PROCESS_CPU, 0,1);
@@ -109,4 +109,4 @@ while (!rocalIsEmpty(handle))
 }
 ```
 
-To see a sample image augmentation application in C++, click [here](https://github.com/ROCm/rocAL/tree/develop/tests/cpp_api_tests/image_augmentation). 
+To see a sample image augmentation application in C++, click [here](https://github.com/ROCm/rocAL/tree/develop/tests/cpp_api/image_augmentation). 
