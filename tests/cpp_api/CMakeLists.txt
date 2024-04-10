@@ -78,15 +78,15 @@ add_test(
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
 )
 add_test(NAME basic_test_gpu 
-              COMMAND rocal_basic_test 
+              COMMAND basic_test 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
-add_test(NAME rocAL_basic_test_gray 
-              COMMAND rocal_basic_test 
+add_test(NAME basic_test_gray 
+              COMMAND basic_test 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
-add_test(NAME rocAL_basic_test_rgb 
-              COMMAND rocal_basic_test 
+add_test(NAME basic_test_rgb 
+              COMMAND basic_test 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
 
@@ -106,7 +106,7 @@ add_test(NAME rocAL_basic_test_rgb
 # dataloader_multithread
 add_test(
   NAME
-  rocAL_dataloader_mt_cpu
+  dataloader_mt_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
@@ -164,7 +164,7 @@ add_test(
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 0
 )
 add_test(NAME performance_tests_with_depth_gpu 
-              COMMAND rocal_performance_tests_with_depth 
+              COMMAND performance_tests_with_depth 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth)
 
@@ -185,7 +185,7 @@ add_test(NAME unittests_gpu
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unittests)
 add_test(NAME unittests_gray 
-              COMMAND rocal_unittests 
+              COMMAND unittests 
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unittests)
 
