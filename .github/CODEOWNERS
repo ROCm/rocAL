@@ -1,8 +1,8 @@
 # Documentation files
-docs/* @randyh62 @kiritigowda @rrawther
-*.md  @randyh62 @kiritigowda @rrawther
-*.rst  @randyh62
+docs/* @ROCm/rocm-documentation @kiritigowda @rrawther
+*.md  @ROCm/rocm-documentation @kiritigowda @rrawther
+*.rst  @ROCm/rocm-documentation
 # Header directory
-library/include/*  @randyh62 @kiritigowda @rrawther
+library/include/*  @ROCm/rocm-documentation @kiritigowda @rrawther
 # Source code
 @kiritigowda @rrawther
