@@ -322,6 +322,7 @@ if(${BUILD_ROCAL})
             include/api/rocal_api_data_transfer.h
             include/api/rocal_api_parameters.h
             include/api/rocal_api_meta_data.h
+            include/api/rocal_api_tensor.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
 else()
     message(FATAL_ERROR "-- ${Red}rocAL dependencies not satisfied${ColourReset}")
