@@ -21,7 +21,7 @@ This application demonstrates a basic usage of rocAL's C++ API to load images fr
   make 
   ````
 
-### running the application  
+### running the application
 
   ```
   ./external_source <image_dataset_folder - required> <processing_device=1/cpu=0>  decode_width decode_height batch_size gray_scale/rgb/rgbplanar display_on_off external_source_mode
