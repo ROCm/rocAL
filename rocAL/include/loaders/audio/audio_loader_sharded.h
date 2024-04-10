@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "audio_loader.h"
+#include "loaders/audio/audio_loader.h"
 
 #ifdef ROCAL_AUDIO
 

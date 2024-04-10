@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "audio_loader_sharded.h"
-#include "graph.h"
-#include "node.h"
+#include "loaders/audio/audio_loader_sharded.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
 
 #ifdef ROCAL_AUDIO
 

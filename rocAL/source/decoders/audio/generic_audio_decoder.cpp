@@ -20,9 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "generic_audio_decoder.h"
-
-#include <commons.h>
+#include "decoders/audio/generic_audio_decoder.h"
+#include "pipeline/commons.h"
 
 #include <cstdio>
 #include <cstring>
