@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_sequence_rearrange.h"
+#include "augmentations/node_sequence_rearrange.h"
 
 #include <VX/vx_compatibility.h>
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

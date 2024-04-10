@@ -21,10 +21,10 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "graph.h"
-#include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
 class BlurNode : public Node {
    public:

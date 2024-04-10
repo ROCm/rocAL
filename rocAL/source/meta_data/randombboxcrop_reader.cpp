@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "randombboxcrop_reader.h"
+#include "meta_data/randombboxcrop_reader.h"
 
 #include <algorithm>
 #include <fstream>

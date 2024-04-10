@@ -22,24 +22,24 @@ THE SOFTWARE.
 
 #include <assert.h>
 #ifdef ROCAL_VIDEO
-#include "node_video_loader.h"
-#include "node_video_loader_single_shard.h"
+#include "loaders/video/node_video_loader.h"
+#include "loaders/video/node_video_loader_single_shard.h"
 #endif
-#include "commons.h"
-#include "context.h"
-#include "image_source_evaluator.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
+#include "loaders/image_source_evaluator.h"
+#include "loaders/image/node_cifar10_loader.h"
+#include "augmentations/node_copy.h"
+#include "loaders/image/node_fused_jpeg_crop.h"
+#include "loaders/image/node_fused_jpeg_crop_single_shard.h"
+#include "loaders/image/node_image_loader.h"
+#include "loaders/image/node_image_loader_single_shard.h"
 #ifdef ROCAL_AUDIO
-#include "audio_source_evaluator.h"
-#include "node_audio_loader.h"
-#include "node_audio_loader_single_shard.h"
+#include "loaders/audio/audio_source_evaluator.h"
+#include "loaders/audio/node_audio_loader.h"
+#include "loaders/audio/node_audio_loader_single_shard.h"
 #endif
-#include "node_cifar10_loader.h"
-#include "node_copy.h"
-#include "node_fused_jpeg_crop.h"
-#include "node_fused_jpeg_crop_single_shard.h"
-#include "node_image_loader.h"
-#include "node_image_loader_single_shard.h"
-#include "node_resize.h"
+#include "augmentations/geometry_augmentations/node_resize.h"
 #include "rocal_api.h"
 
 #ifdef ROCAL_AUDIO

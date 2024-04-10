@@ -30,8 +30,8 @@ THE SOFTWARE.
 #include <cstring>
 #include <stdexcept>
 
-#include "commons.h"
-#include "tensor.h"
+#include "pipeline/commons.h"
+#include "pipeline/tensor.h"
 
 vx_enum vx_mem_type(RocalMemType mem) {
     switch (mem) {

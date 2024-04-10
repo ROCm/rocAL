@@ -26,8 +26,8 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
-#include "circular_buffer.h"
-#include "commons.h"
+#include "loaders/circular_buffer.h"
+#include "pipeline/commons.h"
 #include "video_read_and_decode.h"
 
 #ifdef ROCAL_VIDEO

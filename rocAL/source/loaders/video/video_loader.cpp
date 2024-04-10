@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_loader.h"
+#include "loaders/video/video_loader.h"
 
 #include <chrono>
 #include <thread>
 
-#include "video_read_and_decode.h"
+#include "loaders/video/video_read_and_decode.h"
 #include "vx_ext_amd.h"
 
 #ifdef ROCAL_VIDEO

@@ -20,24 +20,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "meta_data_reader_factory.h"
+#include "meta_data/meta_data_reader_factory.h"
 
 #include <memory>
 
-#include "caffe2_meta_data_reader.h"
-#include "caffe2_meta_data_reader_detection.h"
-#include "caffe_meta_data_reader.h"
-#include "caffe_meta_data_reader_detection.h"
-#include "cifar10_meta_data_reader.h"
-#include "coco_meta_data_reader.h"
-#include "coco_meta_data_reader_key_points.h"
-#include "exception.h"
-#include "label_reader_folders.h"
-#include "mxnet_meta_data_reader.h"
-#include "text_file_meta_data_reader.h"
-#include "tf_meta_data_reader.h"
-#include "tf_meta_data_reader_detection.h"
-#include "video_label_reader.h"
+#include "meta_data/caffe2_meta_data_reader.h"
+#include "meta_data/caffe2_meta_data_reader_detection.h"
+#include "meta_data/caffe_meta_data_reader.h"
+#include "meta_data/caffe_meta_data_reader_detection.h"
+#include "meta_data/cifar10_meta_data_reader.h"
+#include "meta_data/coco_meta_data_reader.h"
+#include "meta_data/coco_meta_data_reader_key_points.h"
+#include "pipeline/exception.h"
+#include "meta_data/label_reader_folders.h"
+#include "meta_data/mxnet_meta_data_reader.h"
+#include "meta_data/text_file_meta_data_reader.h"
+#include "meta_data/tf_meta_data_reader.h"
+#include "meta_data/tf_meta_data_reader_detection.h"
+#include "meta_data/video_label_reader.h"
 
 std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& config, pMetaDataBatch& meta_data_batch) {
     switch (config.reader_type()) {

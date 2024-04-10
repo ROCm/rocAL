@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_blend.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_blend.h"
+#include "pipeline/exception.h"
 
 BlendNode::BlendNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                   _ratio(RATIO_RANGE[0], RATIO_RANGE[1]) {

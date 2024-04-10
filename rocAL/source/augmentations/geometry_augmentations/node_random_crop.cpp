@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_random_crop.h"
+#include "augmentations/geometry_augmentations/node_random_crop.h"
 
-#include <graph.h>
+#include "pipeline/graph.h"
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 RandomCropNode::RandomCropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs) {
     _crop_param = std::make_shared<RocalRandomCropParam>(_batch_size);
