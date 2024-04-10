@@ -2,9 +2,9 @@ name: Linting
 
 on:
   push:
-    branches: [develop, main]
+    branches: [master]
   pull_request:
-    branches: [develop, main]
+    branches: [master]
 
 jobs:
   call-workflow-passing-data:
