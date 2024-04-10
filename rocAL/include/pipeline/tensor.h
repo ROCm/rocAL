@@ -321,7 +321,7 @@ class Tensor : public rocalTensor {
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
     //! Copying the output buffer with specified max_cols and max_rows values for the 2D buffer of size batch_size
-    unsigned copy_data(void* user_buffer, uint max_cols, uint max_rows); 
+    unsigned copy_data(void* user_buffer, uint max_rows, uint max_cols); 
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();
