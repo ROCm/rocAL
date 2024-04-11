@@ -38,7 +38,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(BUILD_ROCAL_PYBIND true)
-set(ROCAL_PYTHON ON)
 
 find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)

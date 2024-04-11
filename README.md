@@ -75,10 +75,27 @@ rocAL can be currently used to perform the following operations either with rand
 *  OpenMP
 *  C++17
 
-## Build and install instructions
+### Prerequisites setup script
 
-* [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+For your convenience, we provide the setup script,[rocAL-setup.py](https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py), which installs all required dependencies. Run this script only once.
+
+```shell
+python rocAL-setup.py --directory [setup directory - optional (default:~/)]
+                      --opencv    [OpenCV Version - optional (default:4.6.0)]
+                      --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
+                      --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
+                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
+                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
+                      --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
+```
+
+## Installation instructions
+
+The installation process uses the following steps:
+
+* [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
 * Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=graphics,rocm --no-32`
+* Use either [Package install](#package-install) or [Source install](#source-install) as described below.
 
 ### Package install
 
@@ -87,56 +104,26 @@ Install rocAL runtime, development, and test packages.
 * Development package - `rocal-dev`/`rocal-devel` provides the libraries, executables, header files, and samples
 * Test package - `rocal-test` provides ctest to verify installation
 
-##### On `Ubuntu`
+##### `Ubuntu`
   ```shell
   sudo apt-get install rocal rocal-dev rocal-test
   ```
-##### On `CentOS`/`RedHat`
+##### `CentOS`/`RedHat`
   ```shell
   sudo yum install rocal rocal-devel rocal-test
   ```
-##### On `SLES`
+##### `SLES`
   ```shell
   sudo zypper install rocal rocal-devel rocal-test
   ```
 
-  **Note:**
-  * Package install requires `Turbo JPEG`, `PyBind 11 v2.10.4` and `Protobuf V3.12.4`  manual install
-  * `CentOS`/`RedHat`/`SLES` requires `FFMPEG Dev` package manual install
+>[!NOTE]
+> * Package install requires `Turbo JPEG`, `PyBind 11 v2.10.4` and `Protobuf V3.12.4`  manual install
+> * `CentOS`/`RedHat`/`SLES` requires `FFMPEG Dev` package manual install
 
-#### Source build and install
+#### Source install
 
-### Prerequisites setup script for Linux - rocAL-setup.py
-
-For the convenience of the developer, we here provide the setup script which will install all the dependencies required by this project.
-
-**NOTE:** This script only needs to be executed once.
-
-### Prerequisites for running the script
-
-* Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RedHat - `8` / `9`
-  + SLES - `15-SP4`
-* [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
-* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=graphics,rocm --no-32`
-
-**usage:**
-
-```shell
-python rocAL-setup.py       --directory [setup directory - optional (default:~/)]
-                            --opencv    [OpenCV Version - optional (default:4.6.0)]
-                            --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
-                            --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
-                            --reinstall [Remove previous setup and reinstall (default:OFF)[options:ON/OFF]]
-                            --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
-                            --rocm_path [ROCm Installation Path - optional (default:/opt/rocm) - ROCm Installation Required]
-```
-**Note:**
-  * **ROCm upgrade** requires the setup script **rerun**.
-
-### Using rocAL-setup.py
+To build rocAL from source and install, follow the steps below:
   
 * Clone rocAL source code
 
@@ -161,23 +148,25 @@ git clone https://github.com/ROCm/rocAL.git
   sudo cmake --build . --target PyPackageInstall
   sudo make install
   ```
+>[!NOTE]
+> * `PyPackageInstall` used for rocal_pybind installation
+> * `sudo` required for pybind installation
+
 
   + run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
   ```shell
   make test
   ```
 
-  **Note:**
-    + `PyPackageInstall` used for rocal_pybind installation
-    + `sudo` required for pybind installation
-  
+>[!NOTE]
+> To run tests with verbose option, use `make test ARGS="-VV"`.
+
 * Instructions for building rocAL with [**OPENCL** GPU backend](https://github.com/ROCm/rocAL/wiki/OpenCL-Backend)
 
-  **Note:**
-  + rocAL_pybind is not supported on OPENCL backend
-  + rocAL cannot be installed for both GPU backends in the same default folder (i.e., /opt/rocm/)
-  + if an app interested in installing rocAL with both GPU backends, then add **-DCMAKE_INSTALL_PREFIX** in the cmake
-  commands to install rocAL with OPENCL and HIP backends into two separate custom folders.
+>[!NOTE]
+> + rocAL_pybind is not supported on OPENCL backend
+> + rocAL cannot be installed for both GPU backends in the same default folder (i.e., /opt/rocm/)
+> + if an app interested in installing rocAL with both GPU backends, then add **-DCMAKE_INSTALL_PREFIX** in the cmake commands to install rocAL with OPENCL and HIP backends into two separate custom folders.
 
 ## Verify installation
 
