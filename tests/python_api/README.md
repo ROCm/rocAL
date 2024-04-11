@@ -7,12 +7,12 @@
 ## Reader Pipeline Tests
 
 * To test all the reader pipelines with a single script. The `readers_test_file.sh` tests the following cases:
-    * unit test
-    * coco reader
-    * caffe reader
-    * caffe2 reader
-    * tf classification reader
-    * tf detection reader
+  * unit test
+  * coco reader
+  * caffe reader
+  * caffe2 reader
+  * tf classification reader
+  * tf detection reader
 * The default value of number of gpu's is "1" & display is "ON" by default
 `./readers_test_file.sh`
 
@@ -37,9 +37,9 @@ tf_detection_reader=0
 ```
 
 * To set options:
-    * Number of GPUs `-n`
-    * display `-d`
-    * backend `-b`
+  * Number of GPUs `-n`
+  * display `-d`
+  * backend `-b`
 
 ```shell
 ./readers_test_file.sh -n <number_of_gpus> -d <true/false>

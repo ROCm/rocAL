@@ -21,7 +21,7 @@ This application demonstrates the basic usage of rocAL's C API to load JPEG imag
  make 
 ```
 
-### Running the application 
+### Running the application
 
 ```bash
 ./image_augmentation <path-to-image-dataset>

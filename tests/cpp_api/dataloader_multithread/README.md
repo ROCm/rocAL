@@ -4,6 +4,7 @@ This application demonstrates a basic usage of rocAL's C API to use sharded data
 <p align="center"><img width="90%" src="https://www.github.com/ROCm/rocAL/docs/data/image_augmentation.png" /></p>
 
 ## Pre-requisites
+
 * Ubuntu Linux, [version `16.04` or later](https://www.microsoft.com/software-download/windows10)
 * rocAL library
 * [OpenCV 3.1](https://github.com/opencv/opencv/releases) or higher
@@ -18,6 +19,7 @@ This application demonstrates a basic usage of rocAL's C API to use sharded data
   cmake ../
   make
   ````
+
 ### running the application
 
   ````shell

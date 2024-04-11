@@ -54,7 +54,7 @@ SAVE_FRAMES : Saves the output frames or avi files in the build/output_frames fo
 
 DEVICE : CPU:0/GPU:1 device is supported.
 
-HARDWARE_DECODE_MODE : Uses Hardware decoder if set to true. 
+HARDWARE_DECODE_MODE : Uses Hardware decoder if set to true.
 
 SHUFFLE : Shuffles the sequences if set to true.
 
@@ -90,10 +90,10 @@ ENABLE_SEQUENCE_REARRANGE : If set to true, the frames in each sequence will be 
 
 Arguments to be modified in testScript.sh to get the following output:
 
-- BATCH_SIZE=2
-- SEQUENCE_LENGTH= 3
-- STEP=3
-- STRIDE=5
+* BATCH_SIZE=2
+* SEQUENCE_LENGTH= 3
+* STEP=3
+* STRIDE=5
 
 ![video_reader.png](./samples/video_reader.png)
 
