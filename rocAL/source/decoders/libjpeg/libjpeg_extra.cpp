@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "libjpeg_extra.h"
+#include "decoders/libjpeg/libjpeg_extra.h"
 #include <setjmp.h>
 #include <string.h>
-#include "commons.h"
+#include "pipeline/commons.h"
 
 enum { COMPRESS = 1, DECOMPRESS = 2 };
 static J_COLOR_SPACE pf2cs[TJ_NUMPF] = {

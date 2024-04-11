@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_saturation.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_saturation.h"
+#include "pipeline/exception.h"
 
 SaturationNode::SaturationNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _saturation(SAT_RANGE[0], SAT_RANGE[1]) {}

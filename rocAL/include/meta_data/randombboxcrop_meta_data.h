@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 struct CropCord {
     CropCord() {

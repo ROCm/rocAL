@@ -26,9 +26,9 @@ THE SOFTWARE.
 #include <tuple>
 #include <vector>
 
-#include "commons.h"
-#include "timing_debug.h"
-#include "video_reader.h"
+#include "pipeline/commons.h"
+#include "pipeline/timing_debug.h"
+#include "readers/video/video_reader.h"
 
 #ifdef ROCAL_VIDEO
 class VideoFileSourceReader : public VideoReader {

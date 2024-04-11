@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_blur.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_blur.h"
+#include "pipeline/exception.h"
 
 BlurNode::BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _kernel_size(KERNEL_SIZE_RANGE[0], KERNEL_SIZE_RANGE[1]) {}

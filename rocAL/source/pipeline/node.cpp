@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node.h"
+#include "pipeline/node.h"
 
 Node::~Node() {
     if (_node) vxReleaseNode(&_node);

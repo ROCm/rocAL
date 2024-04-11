@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "cifar10_data_loader.h"
+#include "loaders/image/cifar10_data_loader.h"
 
 #include <chrono>
 #include <thread>

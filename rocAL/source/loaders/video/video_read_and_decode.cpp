@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_read_and_decode.h"
-#include "video_decoder_factory.h"
+#include "loaders/video/video_read_and_decode.h"
+#include "decoders/video/video_decoder_factory.h"
 
 #ifdef ROCAL_VIDEO
 std::tuple<VideoDecoder::ColorFormat, unsigned, AVPixelFormat>

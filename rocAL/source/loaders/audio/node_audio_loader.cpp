@@ -20,9 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_audio_loader.h"
-
-#include "exception.h"
+#include "loaders/audio/node_audio_loader.h"
+#include "pipeline/exception.h"
 
 #ifdef ROCAL_AUDIO
 

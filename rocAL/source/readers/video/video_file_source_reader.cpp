@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_file_source_reader.h"
+#include "readers/video/video_file_source_reader.h"
 
 #ifdef ROCAL_VIDEO
 VideoFileSourceReader::VideoFileSourceReader() {

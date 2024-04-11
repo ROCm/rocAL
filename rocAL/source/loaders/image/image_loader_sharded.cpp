@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_loader_sharded.h"
+#include "loaders/image/image_loader_sharded.h"
 
 ImageLoaderSharded::ImageLoaderSharded(void* dev_resources) : _dev_resources(dev_resources) {
     _loader_idx = 0;

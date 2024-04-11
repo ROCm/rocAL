@@ -33,7 +33,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 #endif
-#include "commons.h"
+#include "pipeline/commons.h"
 
 #ifdef ROCAL_VIDEO
 typedef struct VideoProperties {

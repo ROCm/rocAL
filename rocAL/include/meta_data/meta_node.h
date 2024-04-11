@@ -24,10 +24,10 @@ THE SOFTWARE.
 #include <memory>
 #include <set>
 
-#include "meta_data.h"
-#include "meta_data_graph.h"
-#include "node.h"
-#include "parameter_factory.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_graph.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
 
 class MetaNode {
    public:

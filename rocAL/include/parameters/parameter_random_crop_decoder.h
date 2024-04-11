@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <random>
 #include <thread>
 
-#include "parameter_factory.h"
+#include "parameters/parameter_factory.h"
 
 struct CropWindow {
     unsigned x, y, H, W;

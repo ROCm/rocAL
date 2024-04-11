@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_nop.h"
+#include "augmentations/node_nop.h"
 #include <vx_ext_rpp.h>
-#include "exception.h"
+#include "pipeline/exception.h"
 
 NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

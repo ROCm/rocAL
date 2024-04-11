@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "audio_loader_sharded.h"
+#include "loaders/audio/audio_loader_sharded.h"
 
 #ifdef ROCAL_AUDIO
 

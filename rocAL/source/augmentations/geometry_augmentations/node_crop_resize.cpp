@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include <graph.h>
-#include "node_crop_resize.h"
-#include "exception.h"
+#include "pipeline/graph.h"
+#include "augmentations/geometry_augmentations/node_crop_resize.h"
+#include "pipeline/exception.h"
 
 CropResizeNode::CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs) {
     _crop_param = std::make_shared<RocalRandomCropParam>(_batch_size);

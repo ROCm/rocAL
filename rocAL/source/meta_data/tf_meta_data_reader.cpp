@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "tf_meta_data_reader.h"
+#include "meta_data/tf_meta_data_reader.h"
 
 #include <google/protobuf/message_lite.h>
 #include <stdint.h>

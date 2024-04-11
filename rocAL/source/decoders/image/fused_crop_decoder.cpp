@@ -21,11 +21,11 @@ THE SOFTWARE.
 */
 
 
-#include <commons.h>
+#include "pipeline/commons.h"
 #include <stdio.h>
 #include <string.h>
-#include "fused_crop_decoder.h"
-#include "libjpeg_extra.h"
+#include "decoders/image/fused_crop_decoder.h"
+#include "decoders/libjpeg/libjpeg_extra.h"
 
 
 FusedCropTJDecoder::FusedCropTJDecoder() {
