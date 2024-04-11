@@ -24,9 +24,8 @@ THE SOFTWARE.
 #include <map>
 #include <memory>
 
-#include "loader_module.h"
-#include "reader_factory.h"
-#include "generic_audio_decoder.h"
+#include "loaders/loader_module.h"
+#include "decoders/audio/generic_audio_decoder.h"
 
 #ifdef ROCAL_AUDIO
 

@@ -23,8 +23,8 @@ THE SOFTWARE.
 #pragma once
 #include <tuple>
 
-#include "graph.h"
-#include "node.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
 #include "video_loader_sharded.h"
 
 #ifdef ROCAL_VIDEO

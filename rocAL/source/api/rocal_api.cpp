@@ -25,8 +25,8 @@ THE SOFTWARE.
 #include <exception>
 #include <string>
 
-#include "commons.h"
-#include "context.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
 
 RocalStatus ROCAL_API_CALL
 rocalRelease(RocalContext p_context) {

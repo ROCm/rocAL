@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_cifar10_loader.h"
+#include "loaders/image/node_cifar10_loader.h"
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 Cifar10LoaderNode::Cifar10LoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<CIFAR10DataLoader>(device_resources);

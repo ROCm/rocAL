@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "meta_node_rotate.h"
+#include "meta_data/meta_node_rotate.h"
 void RotateMetaNode::initialize() {
     _angle_val.resize(_batch_size);
 }

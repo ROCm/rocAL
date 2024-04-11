@@ -25,8 +25,8 @@ THE SOFTWARE.
 #include <cstddef>
 #include <iostream>
 #include <vector>
-#include "parameter_factory.h"
-#include "parameter_random_crop_decoder.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_random_crop_decoder.h"
 
 enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode

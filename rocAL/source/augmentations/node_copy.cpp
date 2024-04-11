@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_copy.h"
+#include "augmentations/node_copy.h"
 
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
-#include "node_copy.h"
+#include "pipeline/exception.h"
+#include "augmentations/node_copy.h"
 
 CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

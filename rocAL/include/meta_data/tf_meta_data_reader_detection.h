@@ -28,9 +28,9 @@ THE SOFTWARE.
 #include <memory>
 #include <variant>
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
 
 class TFMetaDataReaderDetection : public MetaDataReader {
    public:

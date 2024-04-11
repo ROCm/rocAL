@@ -31,8 +31,8 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "image_reader.h"
-#include "timing_debug.h"
+#include "readers/image/image_reader.h"
+#include "pipeline/timing_debug.h"
 
 class MXNetRecordIOReader : public Reader {
    public:
