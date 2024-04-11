@@ -73,7 +73,7 @@ AudioReadAndDecode::Count() {
 }
 
 LoaderModuleStatus
-AudioReadAndDecode::Load(float *buff,
+AudioReadAndDecode::Load(float *audio_buffer,
                          std::vector<std::string> &names,
                          const size_t max_decoded_samples,
                          const size_t max_decoded_channels,
@@ -82,14 +82,14 @@ AudioReadAndDecode::Load(float *buff,
                          std::vector<float> &original_sample_rates) {
     if (max_decoded_samples == 0 || max_decoded_channels == 0)
         THROW("Zero audio dimension is not valid")
-    if (!buff)
+    if (!audio_buffer)
         THROW("Null pointer passed as output buffer")
     if (_reader->count_items() < _batch_size)
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
-    // load audios/frames from the disk and push them as a large audio onto the buff
+    // load audios from the disk and push them into the buff
     unsigned file_counter = 0;
     const size_t audio_size = max_decoded_samples * max_decoded_channels;
-    // Decode with the channels and size equal to a single audio
+    // Decode with the channels and size for a single audio
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing
     while ((file_counter != _batch_size) && _reader->count_items() > 0) {
@@ -107,7 +107,7 @@ AudioReadAndDecode::Load(float *buff,
     _decode_time.start();   // Debug timing
     if (_decoder_config._type != DecoderType::SKIP_DECODE) {
         for (size_t i = 0; i < _batch_size; i++) {
-            _decompressed_buff_ptrs[i] = buff + (audio_size * i);
+            _decompressed_buff_ptrs[i] = audio_buffer + (audio_size * i);
         }
 #pragma omp parallel for num_threads(_num_threads)  // default(none) TBD: option disabled in Ubuntu 20.04
         for (size_t i = 0; i < _batch_size; i++) {

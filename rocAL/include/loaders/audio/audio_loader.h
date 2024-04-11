@@ -53,8 +53,9 @@ class AudioLoader : public LoaderModule {
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void set_gpu_device_id(int device_id);
     void shut_down() override;
-    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer, const std::vector<ROIxywh>& roi_xywh,
-                             unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override { THROW("feed_external_input is not compatible with this implementation") }
+    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels,
+                             ExternalSourceFileMode mode, bool eos) override { THROW("external source feed is not supported in audio loader") }
 
    private:
     bool is_out_of_data();
@@ -77,7 +78,7 @@ class AudioLoader : public LoaderModule {
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/audios/...) and wouldn't stop
-    size_t _prefetch_queue_depth;   // Used for circular buffer's internal buffer
+    size_t _prefetch_queue_depth = 0;   // Used for circular buffer's internal buffer
     size_t _audio_counter = 0;      //!< How many audios have been loaded already
     size_t _remaining_audio_count;  //!< How many audios are there yet to be loaded
     int _device_id;

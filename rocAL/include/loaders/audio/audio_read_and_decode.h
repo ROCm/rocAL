@@ -59,7 +59,7 @@ class AudioReadAndDecode {
     /// \param roi_channels  is set by the load() function to the channels of the region that decoded audio is located. It's less than max_channels and is either equal to the original audio channels if original audio channels is smaller than max_channels.
     /// \param original_sample_rates is set by the load() function to the original sample_rates of the decoded audio samples.
     LoaderModuleStatus Load(
-        float *buff,
+        float *audio_buffer,
         std::vector<std::string> &names,
         const size_t max_decoded_samples,
         const size_t max_decoded_channels,
