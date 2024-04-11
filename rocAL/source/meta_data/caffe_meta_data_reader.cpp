@@ -20,13 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "caffe_meta_data_reader.h"
+#include "meta_data/caffe_meta_data_reader.h"
 
 #include <string.h>
 
 #include <algorithm>
-#include "commons.h"
-#include "exception.h"
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
 
 using caffe_protos::Datum;
 using std::string;

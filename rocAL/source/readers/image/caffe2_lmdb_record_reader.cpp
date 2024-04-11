@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "caffe2_lmdb_record_reader.h"
+#include "readers/image/caffe2_lmdb_record_reader.h"
 #include <iostream>
 #include <sstream>
 #include <string>

@@ -24,12 +24,12 @@ THE SOFTWARE.
 // Created by svcbuild on 11/4/19.
 //
 #if ENABLE_OPENCL
-#include "ocl_setup.h"
+#include "device/ocl_setup.h"
 
 #include <vector>
 
-#include "exception.h"
-#include "log.h"
+#include "pipeline/exception.h"
+#include "pipeline/log.h"
 int get_device_and_context(int devIdx, cl_context *pContext, cl_device_id *pDevice, cl_device_type clDeviceType) {
     cl_int error = CL_DEVICE_NOT_FOUND;
 

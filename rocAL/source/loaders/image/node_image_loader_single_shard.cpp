@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_image_loader_single_shard.h"
+#include "loaders/image/node_image_loader_single_shard.h"
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoader>(device_resources);

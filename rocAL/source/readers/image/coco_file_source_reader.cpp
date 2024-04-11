@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "coco_file_source_reader.h"
-#include "meta_data_reader_factory.h"
-#include "meta_data_graph_factory.h"
-#include "filesystem.h"
+#include "readers/image/coco_file_source_reader.h"
+#include "meta_data/meta_data_reader_factory.h"
+#include "meta_data/meta_data_graph_factory.h"
+#include "pipeline/filesystem.h"
 
 #define USE_STDIO_FILE 0
 

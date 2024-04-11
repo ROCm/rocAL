@@ -23,9 +23,9 @@ THE SOFTWARE.
 #include <cassert>
 #include <algorithm>
 #include <cstring>
-#include <commons.h>
-#include "sequence_file_source_reader.h"
-#include "filesystem.h"
+#include "pipeline/commons.h"
+#include "readers/video/sequence_file_source_reader.h"
+#include "pipeline/filesystem.h"
 
 SequenceFileSourceReader::SequenceFileSourceReader() {
     _src_dir = nullptr;

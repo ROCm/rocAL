@@ -41,7 +41,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 #endif
-#include "parameter_factory.h"
+#include "parameters/parameter_factory.h"
 
 #ifdef ROCAL_VIDEO
 class VideoDecoder {

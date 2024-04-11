@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_color_twist.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_color_twist.h"
+#include "pipeline/exception.h"
 
 ColorTwistNode::ColorTwistNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),

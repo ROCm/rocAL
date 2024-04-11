@@ -33,8 +33,8 @@ THE SOFTWARE.
 
 #include "caffe2_protos.pb.h"
 #include <lmdb.h>
-#include "image_reader.h"
-#include "timing_debug.h"
+#include "readers/image/image_reader.h"
+#include "pipeline/timing_debug.h"
 
 class Caffe2LMDBRecordReader : public Reader {
    public:
