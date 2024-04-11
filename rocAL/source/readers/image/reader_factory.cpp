@@ -25,12 +25,12 @@ THE SOFTWARE.
 #include <memory>
 #include <stdexcept>
 
+#include "readers/file_source_reader.h"
 #include "readers/image/caffe2_lmdb_record_reader.h"
 #include "readers/image/caffe_lmdb_record_reader.h"
 #include "readers/image/cifar10_data_reader.h"
 #include "readers/image/coco_file_source_reader.h"
 #include "readers/image/external_source_reader.h"
-#include "readers/image/file_source_reader.h"
 #include "readers/image/mxnet_recordio_reader.h"
 #include "readers/video/sequence_file_source_reader.h"
 #include "readers/image/tf_record_reader.h"
