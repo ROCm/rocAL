@@ -52,6 +52,7 @@ option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(BUILD_WITH_AMD_ADVANCE  "Build rocAL with Advanced GPU support" OFF)
+option(PYTHON_VERSION "Python version to build rocal" "")
 
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -142,6 +143,7 @@ message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [rocAL support for advanced GPU(default:OFF)]${ColourReset}")
+message("-- ${Cyan}     -D PYTHON_VERSION=${PYTHON_VERSION} [User provided python version to use for PyBinding(default:System Version)]${ColourReset}")
 
 add_subdirectory(rocAL)
 if(BUILD_PYPACKAGE)
