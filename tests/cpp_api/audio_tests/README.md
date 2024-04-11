@@ -36,8 +36,5 @@ Input data is available in the following link : [MIVisionX-data](https://github.
 python3 audio_tests.py --gpu <0/1> --downmix <True/False> --test_case <case_number> --qa_mode <0/1>
 ```
 
-**Supported Test cases**
-
-| Case Number |  Test Case Name    |
-| :---:  | :---: |
-|    0   | Audio Decoder |
+**Available Test Cases**
+* Case 0 - Audio Decoder
