@@ -27,9 +27,9 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "commons.h"
-#include "image_reader.h"
-#include "timing_debug.h"
+#include "pipeline/commons.h"
+#include "readers/image/image_reader.h"
+#include "pipeline/timing_debug.h"
 
 class SequenceFileSourceReader : public Reader {
    public:

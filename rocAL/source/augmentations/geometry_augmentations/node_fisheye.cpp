@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_fisheye.h"
-#include "exception.h"
+#include "augmentations/geometry_augmentations/node_fisheye.h"
+#include "pipeline/exception.h"
 
 FisheyeNode::FisheyeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "audio_decoder.h"
+#include "decoders/audio/audio_decoder.h"
 
 #ifdef ROCAL_AUDIO
 class GenericAudioDecoder : public AudioDecoder {

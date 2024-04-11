@@ -25,12 +25,12 @@ THE SOFTWARE.
 
 #include <memory>
 
-#include "audio_decoder.h"
-#include "commons.h"
-#include "loader_module.h"
-#include "reader_factory.h"
-#include "generic_audio_decoder.h"
-#include "timing_debug.h"
+#include "decoders/audio/audio_decoder.h"
+#include "pipeline/commons.h"
+#include "loaders/loader_module.h"
+#include "readers/image/reader_factory.h"
+#include "decoders/audio/generic_audio_decoder.h"
+#include "pipeline/timing_debug.h"
 
 #ifdef ROCAL_AUDIO
 
@@ -52,20 +52,14 @@ class AudioReadAndDecode {
     void Create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id = 0);
     //! Loads a decompressed batch of audios into the buffer indicated by buff
     /// \param buff User's buffer provided to be filled with decoded audio samples
-    /// \param names User's buffer provided to be filled with name of the audio files
+    /// \param audio_info DecodedDataInfo to be filled with name, samples, channels and sample rate of the decoded audio files
     /// \param max_decoded_samples User's buffer maximum samples per decoded audio.
     /// \param max_decoded_channels user's buffer maximum channels per decoded audio.
-    /// \param roi_samples is set by the load() function to the samples of the region that decoded audio is located. It's less than max_samples and is either equal to the original audio samples if original audio samples is smaller than max_samples.
-    /// \param roi_channels  is set by the load() function to the channels of the region that decoded audio is located. It's less than max_channels and is either equal to the original audio channels if original audio channels is smaller than max_channels.
-    /// \param original_sample_rates is set by the load() function to the original sample_rates of the decoded audio samples.
     LoaderModuleStatus Load(
-        float *buff,
-        std::vector<std::string> &names,
+        float *audio_buffer,
+        DecodedDataInfo& audio_info,
         const size_t max_decoded_samples,
-        const size_t max_decoded_channels,
-        std::vector<uint32_t> &roi_samples,
-        std::vector<uint32_t> &roi_channels,
-        std::vector<float> &original_sample_rates);
+        const size_t max_decoded_channels);
     //! returns timing info or other status information
     Timing GetTiming();
 

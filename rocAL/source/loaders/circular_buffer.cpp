@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "circular_buffer.h"
+#include "loaders/circular_buffer.h"
 
-#include "log.h"
+#include "pipeline/log.h"
 
 CircularBuffer::CircularBuffer(void *devres) : _write_ptr(0),
                                                _read_ptr(0),

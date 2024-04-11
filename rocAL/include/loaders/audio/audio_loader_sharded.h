@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "audio_loader.h"
+#include "loaders/audio/audio_loader.h"
 
 #ifdef ROCAL_AUDIO
 
@@ -43,7 +43,8 @@ class AudioLoaderSharded : public LoaderModule {
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
-                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override { THROW("feed_external_input is not compatible with this implementation") }
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, 
+                             ExternalSourceFileMode mode, bool eos) override { THROW("external source feed is not supported in audio loader") }
 
    private:
     void increment_loader_idx();
@@ -53,7 +54,7 @@ class AudioLoaderSharded : public LoaderModule {
     std::vector<std::shared_ptr<AudioLoader>> _loaders;
     size_t _loader_idx;
     size_t _shard_count = 1;
-    size_t _prefetch_queue_depth;
-    Tensor* _output_tensor;
+    size_t _prefetch_queue_depth = 0;
+    Tensor* _output_tensor = nullptr;
 };
 #endif

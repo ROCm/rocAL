@@ -23,9 +23,9 @@ THE SOFTWARE.
 #pragma once
 #include <map>
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
 class TextFileMetaDataReader : public MetaDataReader {
    public:
     void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;

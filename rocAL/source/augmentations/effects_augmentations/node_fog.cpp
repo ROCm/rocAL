@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_fog.h"
-#include "exception.h"
+#include "augmentations/effects_augmentations/node_fog.h"
+#include "pipeline/exception.h"
 
 FogNode::FogNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                               _fog_param(FOG_VALUE_RANGE[0], FOG_VALUE_RANGE[1]) {}

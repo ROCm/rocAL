@@ -27,9 +27,9 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "commons.h"
-#include "image_reader.h"
-#include "timing_debug.h"
+#include "pipeline/commons.h"
+#include "readers/image/image_reader.h"
+#include "pipeline/timing_debug.h"
 
 class FileSourceReader : public Reader {
    public:
@@ -57,7 +57,7 @@ class FileSourceReader : public Reader {
     std::string id() override { return _last_id; };
 
     //! Returns the name of the latest file_path opened
-    std::string file_path() override { return _last_file_path; }
+    const std::string file_path() override { return _last_file_path; }
 
     unsigned count_items() override;
 
