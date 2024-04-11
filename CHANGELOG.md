@@ -15,6 +15,7 @@
 * Python support for audio decoders
 * Pytorch iterator for Audio
 * Python audio unit test, and support to verify outputs
+* Support for Audio augmentation - PreEmphasis filter
 
 ### Optimizations
 
