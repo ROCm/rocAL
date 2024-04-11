@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_properties.h"
+#include "readers/video/video_properties.h"
 
 #include <cmath>
 #include <cassert>
 #include <algorithm>
-#include "filesystem.h"
+#include "pipeline/filesystem.h"
 
 #ifdef ROCAL_VIDEO
 void substring_extraction(std::string const &str, const char delim, std::vector<std::string> &out) {

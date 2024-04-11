@@ -22,10 +22,10 @@ THE SOFTWARE.
 
 #include <vx_ext_rpp.h>
 #include <vx_ext_amd.h>
-#include <graph.h>
-#include "node_crop.h"
-#include "parameter_crop.h"
-#include "exception.h"
+#include "pipeline/graph.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_crop.h"
+#include "pipeline/exception.h"
 
 CropNode::CropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);

@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_fused_jpeg_crop_single_shard.h"
+#include "loaders/image/node_fused_jpeg_crop_single_shard.h"
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoader>(device_resources);

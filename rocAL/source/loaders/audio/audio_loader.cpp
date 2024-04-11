@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "audio_loader.h"
+#include "loaders/audio/audio_loader.h"
+#include "loaders/audio/audio_read_and_decode.h"
 
 #include <chrono>
 #include <thread>
 
-#include "audio_read_and_decode.h"
 
 #ifdef ROCAL_AUDIO
 
@@ -167,12 +167,9 @@ AudioLoader::load_routine() {
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _audio_loader->Load(data,
-                                              _decoded_audio_info._data_names,
+                                              _decoded_audio_info,
                                               _max_decoded_samples,
-                                              _max_decoded_channels,
-                                              _decoded_audio_info._original_audio_samples,
-                                              _decoded_audio_info._original_audio_channels,
-                                              _decoded_audio_info._original_audio_sample_rates);
+                                              _max_decoded_channels);
 
             if (load_status == LoaderModuleStatus::OK) {
                 _circ_buff.set_data_info(_decoded_audio_info);

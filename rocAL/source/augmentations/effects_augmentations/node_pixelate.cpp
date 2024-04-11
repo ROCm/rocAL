@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_pixelate.h"
-#include "exception.h"
+#include "augmentations/effects_augmentations/node_pixelate.h"
+#include "pipeline/exception.h"
 
 PixelateNode::PixelateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

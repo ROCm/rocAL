@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 #ifdef ROCAL_VIDEO
 
-#include "hw_jpeg_decoder.h"
+#include "decoders/image/hw_jpeg_decoder.h"
 
-#include <commons.h>
+#include "pipeline/commons.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

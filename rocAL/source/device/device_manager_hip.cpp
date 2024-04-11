@@ -22,13 +22,13 @@ THE SOFTWARE.
 
 #if ENABLE_HIP
 // device manager functions for HIP backend
-#include "device_manager_hip.h"
+#include "device/device_manager_hip.h"
 
 #include <vx_ext_amd.h>
 
 #include <iostream>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 DeviceManagerHip::~DeviceManagerHip() {
     hipError_t err;

@@ -20,9 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "ring_buffer.h"
-
-#include <device_manager.h>
+#include "pipeline/ring_buffer.h"
+#include "device/device_manager.h"
 
 RingBuffer::RingBuffer(unsigned buffer_depth) : BUFF_DEPTH(buffer_depth),
                                                 _dev_sub_buffer(buffer_depth),

@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_loader_sharded.h"
+#include "loaders/video/video_loader_sharded.h"
 #ifdef ROCAL_VIDEO
 
 VideoLoaderSharded::VideoLoaderSharded(void *dev_resources) : _dev_resources(dev_resources) {
