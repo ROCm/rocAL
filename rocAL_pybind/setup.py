@@ -42,12 +42,14 @@ setup(
     name='amd-rocal',
     description='AMD ROCm Augmentation Library',
     url='https://github.com/ROCm/rocAL',
-    version='1.0.0',
+    version='2.0.0',
     author='AMD',
     license='Apache License 2.0',
     packages=find_packages(where='@TARGET_NAME@'),
     package_dir={'amd': '@TARGET_NAME@/amd'},
     include_package_data=True,
-    ext_modules=[Extension('rocal_pybind',sources=['rocal_pybind.cpp'], include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
+    ext_modules=[Extension('rocal_pybind',
+                    sources=['rocal_pybind.cpp'], 
+                    include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
     distclass=BinaryDistribution
 )
