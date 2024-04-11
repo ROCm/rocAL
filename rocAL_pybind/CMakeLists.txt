@@ -25,7 +25,6 @@ set(VERSION "2.0.0")
 project(rocAL_pybind VERSION ${VERSION} LANGUAGES CXX)
 
 set(TARGET_NAME rocAL_pybind)
-option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
