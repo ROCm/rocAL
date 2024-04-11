@@ -26,8 +26,8 @@ THE SOFTWARE.
 #include <set>
 #include <thread>
 
-#include "parameter_random.h"
-#include "parameter_simple.h"
+#include "parameters/parameter_random.h"
+#include "parameters/parameter_simple.h"
 
 const int MAX_SEEDS = 1024;
 

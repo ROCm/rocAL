@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <memory>
 #include <string>
 
-#include "meta_data.h"
+#include "meta_data/meta_data.h"
 
 enum class MetaDataReaderType {
     FOLDER_BASED_LABEL_READER = 0,  // Used for imagenet-like dataset

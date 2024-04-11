@@ -31,12 +31,12 @@ THE SOFTWARE.
 #include <queue>
 #include <vector>
 #if ENABLE_HIP
-#include "device_manager_hip.h"
+#include "device/device_manager_hip.h"
 #include "hip/hip_runtime.h"
 #else
-#include "device_manager.h"
+#include "device/device_manager.h"
 #endif
-#include "commons.h"
+#include "pipeline/commons.h"
 #include "rocal_api_tensor.h"
 
 /*! \brief Converts Rocal Memory type to OpenVX memory type
@@ -267,7 +267,7 @@ class TensorInfo {
     bool is_metadata() const { return _is_metadata; }
     void set_roi_ptr(unsigned* roi_ptr) { _roi.reset_ptr(roi_ptr); }
     void copy_roi(void* roi_buffer) { _roi.copy(roi_buffer); }
-    std::shared_ptr<std::vector<float>> get_sample_rates() const { return _sample_rates; }  //!< The number of samples of audio carried per second
+    std::shared_ptr<std::vector<float>>& get_sample_rates() { return _sample_rates; }  //!< The number of samples of audio carried per second
 
    private:
     Type _type = Type::UNKNOWN;                                  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
@@ -321,7 +321,7 @@ class Tensor : public rocalTensor {
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
     //! Copying the output buffer with specified max_cols and max_rows values for the 2D buffer of size batch_size
-    unsigned copy_data(void* user_buffer, uint max_cols, uint max_rows); 
+    unsigned copy_data(void* user_buffer, uint max_rows, uint max_cols); 
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();

@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_video_loader_single_shard.h"
+#include "loaders/video/node_video_loader_single_shard.h"
 
-#include "exception.h"
+#include "pipeline/exception.h"
 #ifdef ROCAL_VIDEO
 
 VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {

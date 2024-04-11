@@ -24,16 +24,15 @@ THE SOFTWARE.
 #include <condition_variable>
 #include <vector>
 
-#include "commons.h"
 #if ENABLE_OPENCL
 #include <CL/cl.h>
 #endif
 #include <queue>
 
-#include "commons.h"
-#include "device_manager.h"
-#include "device_manager_hip.h"
-#include "meta_data.h"
+#include "pipeline/commons.h"
+#include "device/device_manager.h"
+#include "device/device_manager_hip.h"
+#include "meta_data/meta_data.h"
 
 using MetaDataNamePair = std::pair<ImageNameBatch, pMetaDataBatch>;
 class RingBuffer {

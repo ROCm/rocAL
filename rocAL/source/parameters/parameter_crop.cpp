@@ -23,9 +23,9 @@ THE SOFTWARE.
 #include <cmath>
 #include <VX/vx.h>
 #include <VX/vx_compatibility.h>
-#include <graph.h>
-#include "parameter_crop.h"
-#include "commons.h"
+#include "pipeline/graph.h"
+#include "parameters/parameter_crop.h"
+#include "pipeline/commons.h"
 
 void CropParam::set_x_drift_factor(Parameter<float> *x_drift) {
     if (!x_drift)

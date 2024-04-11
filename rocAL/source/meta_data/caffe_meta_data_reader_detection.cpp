@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <stdint.h>
 #include <google/protobuf/message_lite.h>
 #include <lmdb.h>
-#include "caffe_meta_data_reader_detection.h"
+#include "meta_data/caffe_meta_data_reader_detection.h"
 #include "caffe_protos.pb.h"
 
 using namespace std;

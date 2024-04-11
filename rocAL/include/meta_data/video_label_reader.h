@@ -25,10 +25,10 @@ THE SOFTWARE.
 
 #include <map>
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
-#include "video_properties.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
+#include "readers/video/video_properties.h"
 
 #ifdef ROCAL_VIDEO
 class VideoLabelReader : public MetaDataReader {

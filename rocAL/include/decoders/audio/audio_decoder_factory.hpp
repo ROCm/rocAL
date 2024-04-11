@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "audio_decoder.h"
-#include "generic_audio_decoder.h"
+#include "decoders/audio/audio_decoder.h"
+#include "decoders/audio/generic_audio_decoder.h"
 
 #ifdef ROCAL_AUDIO
 static std::shared_ptr<AudioDecoder> create_audio_decoder(DecoderConfig config) {

@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 // Defined constants since needed in reader and meta nodes for Pose Estimation
 #define NUMBER_OF_JOINTS 17
