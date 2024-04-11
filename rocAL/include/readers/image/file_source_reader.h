@@ -57,7 +57,7 @@ class FileSourceReader : public Reader {
     std::string id() override { return _last_id; };
 
     //! Returns the name of the latest file_path opened
-    std::string file_path() override { return _last_file_path; }
+    const std::string file_path() override { return _last_file_path; }
 
     unsigned count_items() override;
 
