@@ -28,14 +28,14 @@ THE SOFTWARE.
 #include <cstring>
 #include <map>
 #include <tuple>
-#include "commons.h"
-#include "ffmpeg_video_decoder.h"
-#include "video_reader_factory.h"
-#include "timing_debug.h"
-#include "loader_module.h"
-#include "video_properties.h"
-#include "video_reader.h"
-#include "filesystem.h"
+#include "pipeline/commons.h"
+#include "decoders/video/ffmpeg_video_decoder.h"
+#include "readers/video/video_reader_factory.h"
+#include "pipeline/timing_debug.h"
+#include "loaders/loader_module.h"
+#include "readers/video/video_properties.h"
+#include "readers/video/video_reader.h"
+#include "pipeline/filesystem.h"
 
 #ifdef ROCAL_VIDEO
 extern "C" {

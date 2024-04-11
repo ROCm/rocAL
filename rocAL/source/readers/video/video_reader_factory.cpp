@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_reader_factory.h"
+#include "readers/video/video_reader_factory.h"
 
 #include <memory>
 #include <stdexcept>
 
-#include "video_file_source_reader.h"
+#include "readers/video/video_file_source_reader.h"
 
 #ifdef ROCAL_VIDEO
 std::shared_ptr<VideoReader> create_video_reader(ReaderConfig config) {

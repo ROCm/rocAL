@@ -23,8 +23,8 @@ THE SOFTWARE.
 #include <iostream>
 #include <vx_ext_amd.h>
 
-#include "graph.h"
-#include "commons.h"
+#include "pipeline/graph.h"
+#include "pipeline/commons.h"
 
 AgoTargetAffinityInfo
 get_ago_affinity_info(

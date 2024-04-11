@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "meta_node_crop_mirror_normalize.h"
+#include "meta_data/meta_node_crop_mirror_normalize.h"
 void CropMirrorNormalizeMetaNode::initialize() {
     _width_val.resize(_batch_size);
     _height_val.resize(_batch_size);

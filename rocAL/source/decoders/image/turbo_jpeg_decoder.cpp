@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 
 #include <stdio.h>
-#include <commons.h>
-#include "turbo_jpeg_decoder.h"
-#include "libjpeg_extra.h"
+#include "pipeline/commons.h"
+#include "decoders/image/turbo_jpeg_decoder.h"
+#include "decoders/libjpeg/libjpeg_extra.h"
 
 TJDecoder::TJDecoder() {
     m_jpegDecompressor = tjInitDecompress();

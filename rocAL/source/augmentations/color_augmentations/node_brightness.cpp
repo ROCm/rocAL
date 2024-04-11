@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_brightness.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_brightness.h"
+#include "pipeline/exception.h"
 
 BrightnessNode::BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),

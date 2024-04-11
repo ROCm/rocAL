@@ -28,9 +28,9 @@ THE SOFTWARE.
 #endif
 #include <queue>
 
-#include "commons.h"
-#include "device_manager.h"
-#include "device_manager_hip.h"
+#include "pipeline/commons.h"
+#include "device/device_manager.h"
+#include "device/device_manager_hip.h"
 struct DecodedDataInfo {
     std::vector<std::string> _data_names;
     std::vector<uint32_t> _roi_width;

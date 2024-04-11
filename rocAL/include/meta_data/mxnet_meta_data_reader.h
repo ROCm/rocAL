@@ -30,10 +30,10 @@ THE SOFTWARE.
 #include <string>
 #include <variant>
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
-#include "image_reader.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
+#include "readers/image/image_reader.h"
 
 class MXNetMetaDataReader : public MetaDataReader {
    public:

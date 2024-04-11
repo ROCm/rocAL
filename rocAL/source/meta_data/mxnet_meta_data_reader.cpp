@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "mxnet_meta_data_reader.h"
+#include "meta_data/mxnet_meta_data_reader.h"
 
 #include <memory.h>
 #include <stdint.h>
-#include "filesystem.h"
+#include "pipeline/filesystem.h"
 
 using namespace std;
 
