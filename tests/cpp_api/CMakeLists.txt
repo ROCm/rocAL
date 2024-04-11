@@ -106,7 +106,7 @@ add_test(NAME basic_test_rgb
 # dataloader_multithread
 add_test(
   NAME
-  dataloader_mt_cpu
+  dataloader_multithread_cpu
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
