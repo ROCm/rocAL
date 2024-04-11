@@ -10,7 +10,7 @@
 
 ### Added
 
-* 
+* Support for Audio augmentation - Spectrogram
 
 ### Optimizations
 
