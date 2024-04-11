@@ -1,9 +1,9 @@
 # rocAL Unit Tests
+
 This application can be used to verify the functionality of the API offered by rocAL.
 
-## Build Instructions
+## Pre-requisites
 
-### Pre-requisites
 * Ubuntu Linux, [version `16.04` or later](https://www.microsoft.com/software-download/windows10)
 * rocAL library
 * [OpenCV 3.4+](https://github.com/opencv/opencv/releases/tag/3.4.0)
@@ -13,16 +13,18 @@ This application can be used to verify the functionality of the API offered by r
 
 Install Pillow library using `python3 -m pip install Pillow`
 
-### Build
-````
+## Build Instructions
+
+````bash
 mkdir build
 cd build
 cmake ../
 make
 ````
+
 ## Running the application
 
-```
+```bash
 ./unit_tests
 
 Usage: ./unit_tests reader-type pipeline-type=1(classification)2(detection)3(keypoints) <image-dataset-folder> output_image_name <width> <height> test_case gpu=1/cpu=0 rgb=1/grayscale=0 one_hot_labels=num_of_classes/0  display_all=0(display_last_only)1(display_all)
@@ -36,7 +38,7 @@ Input data is available in the following link : [MIVisionX-data](https://github.
 
 `export ROCAL_DATA_PATH=<absolute_path_to_MIVIsionX-data>`
 
-```
+```bash
 ./testAllScripts.sh <device_type 0/1/2> <color_format 0/1/2>
 ```
 

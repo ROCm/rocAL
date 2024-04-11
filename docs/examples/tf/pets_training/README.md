@@ -12,6 +12,6 @@
 
 To run this example for the first run or subsequent runs, just execute:
 
-```
+```shell
 python3 train.py
 ```
