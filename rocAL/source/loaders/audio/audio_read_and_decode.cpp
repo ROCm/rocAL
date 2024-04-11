@@ -74,12 +74,9 @@ AudioReadAndDecode::Count() {
 
 LoaderModuleStatus
 AudioReadAndDecode::Load(float *audio_buffer,
-                         std::vector<std::string> &names,
+                         DecodedDataInfo& audio_info,
                          const size_t max_decoded_samples,
-                         const size_t max_decoded_channels,
-                         std::vector<uint32_t> &roi_samples,
-                         std::vector<uint32_t> &roi_channels,
-                         std::vector<float> &original_sample_rates) {
+                         const size_t max_decoded_channels) {
     if (max_decoded_samples == 0 || max_decoded_channels == 0)
         THROW("Zero audio dimension is not valid")
     if (!audio_buffer)
@@ -128,10 +125,10 @@ AudioReadAndDecode::Load(float *audio_buffer,
             _decoder[i]->Release();
         }
         for (size_t i = 0; i < _batch_size; i++) {
-            names[i] = _audio_meta_info[i].file_name;
-            roi_samples[i] = _audio_meta_info[i].samples;
-            roi_channels[i] = _audio_meta_info[i].channels;
-            original_sample_rates[i] = _audio_meta_info[i].sample_rate;
+            audio_info._data_names[i] = _audio_meta_info[i].file_name;
+            audio_info._original_audio_samples[i] = _audio_meta_info[i].samples;
+            audio_info._original_audio_channels[i] = _audio_meta_info[i].channels;
+            audio_info._original_audio_sample_rates[i] = _audio_meta_info[i].sample_rate;
         }
     }
     _decode_time.end();  // Debug timing
