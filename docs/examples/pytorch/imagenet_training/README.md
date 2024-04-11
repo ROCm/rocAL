@@ -43,13 +43,13 @@ python imagenet_training.py -a resnet18 --dummy
 
 You should always use the NCCL backend for multi-processing distributed training since it currently provides the best distributed training performance.
 
-### Single node, multiple GPUs:
+### Single node, multiple GPUs
 
 ```shell
 python imagenet_training.py -a resnet50 --dist-url 'tcp://127.0.0.1:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 [imagenet-folder with train and val folders]
 ```
 
-### Multiple nodes:
+### Multiple nodes
 
 Node 0:
 
