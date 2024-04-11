@@ -16,6 +16,7 @@
 * Pytorch iterator for Audio
 * Python audio unit test, and support to verify outputs
 * Support for Audio augmentation - PreEmphasis filter
+* Support for reading from file lists in file reader
 
 ### Optimizations
 
