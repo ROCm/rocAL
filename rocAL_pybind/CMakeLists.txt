@@ -22,9 +22,9 @@ cmake_minimum_required(VERSION 3.5)
 set(VERSION "2.0.0")
 
 # Set Project Version and Language
-project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
+project(rocAL_pybind VERSION ${VERSION} LANGUAGES CXX)
 
-set(TARGET_NAME rocal_pybind)
+set(TARGET_NAME rocAL_pybind)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package" ON)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
@@ -42,8 +42,8 @@ set(BUILD_ROCAL_PYBIND true)
 find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
-if (PYTHON_VERSION)
-    find_package(Python3 "${PYTHON_VERSION}" EXACT QUIET COMPONENTS Interpreter Development)
+if (PYTHON_VERSION_SUGGESTED)
+    find_package(Python3 "${PYTHON_VERSION_SUGGESTED}" EXACT QUIET COMPONENTS Interpreter Development)
 else()
     set(Python3_FIND_VIRTUALENV FIRST)
     find_package(Python3 QUIET COMPONENTS Interpreter Development)

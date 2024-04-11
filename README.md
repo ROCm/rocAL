@@ -153,7 +153,7 @@ git clone https://github.com/ROCm/rocAL.git
 > * `sudo` required for pybind installation
 
 >[!IMPORTANT]
-> Use `-D PYTHON_VERSION=3.x` with `cmake` for using a specific Python3 version if required.
+> Use `-D PYTHON_VERSION_SUGGESTED=3.x` with `cmake` for using a specific Python3 version if required.
 
   + run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
   ```shell
