@@ -10,7 +10,8 @@
 
 ### Added
 
-* 
+* Support for audio augmentation NonSilentRegionDetection 
+* Support for generic augmentation Slice 
 
 ### Optimizations
 
