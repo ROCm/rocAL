@@ -48,7 +48,7 @@ def plot_audio_wav(audio_tensor, idx):
     plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
     plt.close()
 
-def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
+def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name, dimensions):
     ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor.detach().numpy()
