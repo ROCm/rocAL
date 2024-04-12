@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_lens_correction.h"
-#include "exception.h"
+#include "augmentations/geometry_augmentations/node_lens_correction.h"
+#include "pipeline/exception.h"
 
 LensCorrectionNode::LensCorrectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                                     _strength(STRENGTH_RANGE[0], STRENGTH_RANGE[1]),

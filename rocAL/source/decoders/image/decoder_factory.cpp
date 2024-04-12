@@ -20,15 +20,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "decoder_factory.h"
+#include "decoders/image/decoder_factory.h"
 
-#include <decoder.h>
-#include <fused_crop_decoder.h>
-#include <hw_jpeg_decoder.h>
-#include <open_cv_decoder.h>
-#include <turbo_jpeg_decoder.h>
+#include "decoders/image/decoder.h"
+#include "decoders/image/fused_crop_decoder.h"
+#include "decoders/image/hw_jpeg_decoder.h"
+#include "decoders/image/open_cv_decoder.h"
+#include "decoders/image/turbo_jpeg_decoder.h"
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
     switch (config.type()) {

@@ -225,10 +225,11 @@ if(${BUILD_ROCAL})
     set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
-    file(GLOB_RECURSE ROCAL_INCLUDE_DIRS LIST_DIRECTORIES true "include/*")
-    list(FILTER ROCAL_INCLUDE_DIRS EXCLUDE REGEX "\\.(h|hpp)$")
-    include_directories(${CMAKE_CURRENT_BINARY_DIR}
-                        ${ROCAL_INCLUDE_DIRS})
+    include_directories(
+                ${CMAKE_CURRENT_BINARY_DIR}
+                include/
+                include/api/
+    )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
 
@@ -333,7 +334,7 @@ if(${BUILD_ROCAL})
                 include/api/rocal_api_data_transfer.h
                 include/api/rocal_api_parameters.h
                 include/api/rocal_api_meta_data.h
-		include/api/rocal_api_tensor.h
+                include/api/rocal_api_tensor.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
         )
     endif(BUILD_DEV)

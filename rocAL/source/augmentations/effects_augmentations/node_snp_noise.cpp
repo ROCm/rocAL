@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_snp_noise.h"
-#include "exception.h"
+#include "augmentations/effects_augmentations/node_snp_noise.h"
+#include "pipeline/exception.h"
 
 SnPNoiseNode::SnPNoiseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                       _noise_prob(NOISE_PROB_RANGE[0], NOISE_PROB_RANGE[1]),

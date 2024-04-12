@@ -19,13 +19,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "video_decoder_factory.h"
+#include "decoders/video/video_decoder_factory.h"
 
-#include <ffmpeg_video_decoder.h>
-#include <hardware_video_decoder.h>
-#include <video_decoder.h>
+#include "decoders/video/ffmpeg_video_decoder.h"
+#include "decoders/video/hardware_video_decoder.h"
+#include "decoders/video/video_decoder.h"
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 #ifdef ROCAL_VIDEO
 std::shared_ptr<VideoDecoder> create_video_decoder(DecoderConfig config) {

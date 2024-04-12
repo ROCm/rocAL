@@ -27,8 +27,8 @@ THE SOFTWARE.
 #include <vector>
 
 #include <lmdb.h>
-#include "meta_data_reader.h"
-#include "video_properties.h"
+#include "meta_data/meta_data_reader.h"
+#include "readers/video/video_properties.h"
 
 #define CHECK_LMDB_RETURN_STATUS(status)                                                          \
     do {                                                                                          \
@@ -188,8 +188,8 @@ class Reader {
     virtual std::string id() = 0;
     //! Returns the number of items remained in this resource
 
-    //! Returns the path of the last item opened in this resource
-    virtual std::string file_path() { return {}; }
+     //! Returns the path of the last item opened in this resource
+    virtual const std::string file_path() { THROW("File path is not set by the reader") }
 
     virtual unsigned count_items() = 0;
 

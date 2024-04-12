@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_hue.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_hue.h"
+#include "pipeline/exception.h"
 
 HueNode::HueNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                               _hue(HUE_RANGE[0], HUE_RANGE[1]) {}

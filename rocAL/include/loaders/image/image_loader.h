@@ -26,10 +26,10 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
-#include "circular_buffer.h"
-#include "commons.h"
+#include "loaders/circular_buffer.h"
+#include "pipeline/commons.h"
 #include "image_read_and_decode.h"
-#include "meta_data_reader.h"
+#include "meta_data/meta_data_reader.h"
 //
 // ImageLoader runs an internal thread for loading an decoding of images asynchronously
 // it uses a circular buffer to store decoded frames and images for the user
