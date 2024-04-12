@@ -201,7 +201,7 @@ ImageLoader::load_routine() {
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
                     _circ_buff.set_crop_image_info(_crop_image_info);
                 }
-                _circ_buff.set_data_info(_decoded_data_info);
+                _circ_buff.set_decoded_data_info(_decoded_data_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }
@@ -259,7 +259,7 @@ ImageLoader::update_output_image() {
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_data_info = _circ_buff.get_data_info();
+    _output_decoded_data_info = _circ_buff.get_decoded_data_info();
     if (_randombboxcrop_meta_data_reader) {
         _output_cropped_img_info = _circ_buff.get_cropped_image_info();
     }
