@@ -10,7 +10,23 @@
 
 ### Added
 
-* 
+* Support for audio loader and decoder, which uses libsndfile library to decode wav files
+* C++ rocAL audio unit test and python script to run and compare the outputs
+* Python support for audio decoders
+* Pytorch iterator for Audio
+* Python audio unit test, and support to verify outputs
+* Support for Audio augmentation - PreEmphasis filter
+* Support for reading from file lists in file reader
+* Support for Audio augmentation - Spectrogram
+* Support for Audio augmentation - ToDecibels
+* Support for downmixing audio channels during decoding
+* Support for Audio augmentation - Resample
+* Support for TensorTensorAdd and TensorScalarMultiply operations
+* Support for Uniform and Normal distribution nodes
+* Support for Audio augmentation - NonSilentRegionDetection 
+* Support for generic augmentation - Slice 
+* Support for generic augmentation - Normalize
+* Support for Audio augmentation - MelFilterBank
 
 ### Optimizations
 
@@ -36,6 +52,7 @@
 * MIVisionX - [master](https://github.com/ROCm/MIVisionX)
 * Dependencies for all the above packages
 * rocAL Setup Script - `V1.0.2`
+* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
 
 ### Known issues
 

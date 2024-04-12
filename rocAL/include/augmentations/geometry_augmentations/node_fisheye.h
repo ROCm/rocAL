@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "graph.h"
-#include "node.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
 
 class FisheyeNode : public Node {
    public:

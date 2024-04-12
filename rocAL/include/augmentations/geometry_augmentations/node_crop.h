@@ -21,10 +21,10 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "parameter_crop_factory.h"
-#include "parameter_factory.h"
-#include "parameter_rocal_crop.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_crop_factory.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_rocal_crop.h"
 
 class CropNode : public Node {
    public:

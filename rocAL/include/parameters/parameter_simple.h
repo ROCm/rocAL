@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "parameter.h"
+#include "parameters/parameter.h"
 
 template <typename T>
 class SimpleParameter : public Parameter<T> {

@@ -30,9 +30,9 @@ THE SOFTWARE.
 #pragma once
 #include <vector>
 
-#include "exception.h"
-#include "log.h"
-#include "filesystem.h"
+#include "pipeline/exception.h"
+#include "pipeline/log.h"
+#include "pipeline/filesystem.h"
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f

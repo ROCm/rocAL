@@ -20,13 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_read_and_decode.h"
+#include "loaders/image/image_read_and_decode.h"
 
 #include <cstring>
 #include <iterator>
 
-#include "decoder_factory.h"
-#include "external_source_reader.h"
+#include "decoders/image/decoder_factory.h"
+#include "readers/image/external_source_reader.h"
 
 std::tuple<Decoder::ColorFormat, unsigned>
 interpret_color_format(RocalColorFormat color_format) {

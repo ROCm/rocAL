@@ -22,25 +22,25 @@ THE SOFTWARE.
 
 #include <assert.h>
 #ifdef ROCAL_VIDEO
-#include "node_video_loader.h"
-#include "node_video_loader_single_shard.h"
+#include "loaders/video/node_video_loader.h"
+#include "loaders/video/node_video_loader_single_shard.h"
 #endif
-#include "commons.h"
-#include "context.h"
-#include "image_source_evaluator.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
+#include "loaders/image_source_evaluator.h"
+#include "loaders/image/node_cifar10_loader.h"
+#include "augmentations/node_copy.h"
+#include "loaders/image/node_fused_jpeg_crop.h"
+#include "loaders/image/node_fused_jpeg_crop_single_shard.h"
+#include "loaders/image/node_image_loader.h"
+#include "loaders/image/node_image_loader_single_shard.h"
 #ifdef ROCAL_AUDIO
-#include "audio_source_evaluator.h"
-#include "node_audio_loader.h"
-#include "node_audio_loader_single_shard.h"
+#include "loaders/audio/audio_source_evaluator.h"
+#include "loaders/audio/node_audio_loader.h"
+#include "loaders/audio/node_audio_loader_single_shard.h"
+#include "augmentations/audio_augmentations/node_downmix.h"
 #endif
-#include "node_cifar10_loader.h"
-#include "node_copy.h"
-#include "node_downmix.h"
-#include "node_fused_jpeg_crop.h"
-#include "node_fused_jpeg_crop_single_shard.h"
-#include "node_image_loader.h"
-#include "node_image_loader_single_shard.h"
-#include "node_resize.h"
+#include "augmentations/geometry_augmentations/node_resize.h"
 #include "rocal_api.h"
 
 #ifdef ROCAL_AUDIO
@@ -2136,7 +2136,7 @@ rocalAudioFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
@@ -2192,7 +2192,7 @@ rocalAudioFileSource(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(internal_shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(internal_shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;

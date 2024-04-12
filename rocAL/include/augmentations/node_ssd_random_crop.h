@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #pragma once
-#include "node_crop.h"
-#include "parameter_crop_factory.h"
-#include "parameter_factory.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_crop_factory.h"
+#include "parameters/parameter_factory.h"
 
 // todo:: move this to common header
 template <typename T = std::mt19937, std::size_t state_size = T::state_size>

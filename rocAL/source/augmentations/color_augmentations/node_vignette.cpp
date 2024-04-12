@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_vignette.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_vignette.h"
+#include "pipeline/exception.h"
 
 VignetteNode::VignetteNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                         _sdev(SDEV_RANGE[0], SDEV_RANGE[1]) {}
