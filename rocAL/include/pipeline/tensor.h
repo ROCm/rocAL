@@ -267,7 +267,7 @@ class TensorInfo {
     bool is_metadata() const { return _is_metadata; }
     void set_roi_ptr(unsigned* roi_ptr) { _roi.reset_ptr(roi_ptr); }
     void copy_roi(void* roi_buffer) { _roi.copy(roi_buffer); }
-    std::shared_ptr<std::vector<float>>& get_sample_rates() { return _sample_rates; }  //!< The number of samples of audio carried per second
+    std::shared_ptr<std::vector<float>> get_sample_rates() const { return _sample_rates; }  //!< The number of samples of audio carried per second
 
    private:
     Type _type = Type::UNKNOWN;                                  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
