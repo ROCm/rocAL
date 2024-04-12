@@ -57,9 +57,9 @@ class CircularBuffer {
     void unblock_writer();  // Unblocks the thread currently waiting on get_write_buffer
     void push();            // The latest write goes through, effectively adds one element to the buffer
     void pop();             // The oldest write will be erased and overwritten in upcoming writes
-    void set_data_info(const DecodedDataInfo& info) { _last_data_info = info; }
+    void set_decoded_data_info(const DecodedDataInfo& info) { _last_data_info = info; }
     void set_crop_image_info(const CropImageInfo& info) { _last_crop_image_info = info; }
-    DecodedDataInfo& get_data_info();
+    DecodedDataInfo& get_decoded_data_info();
     CropImageInfo& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();
