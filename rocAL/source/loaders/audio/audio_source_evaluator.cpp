@@ -48,15 +48,14 @@ AudioSourceEvaluator::Create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 
 void AudioSourceEvaluator::FindMaxDimension() {
     _reader->reset();
-    std::vector<std::string> vec_string = {};
+    std::vector<std::string> vec_file_paths = {};
     while (_reader->count_items()) {
         size_t fsize = _reader->open();
         if (!fsize) continue;
         std::string file_name = _reader->file_path();
-        bool is_exists = std::find(vec_string.begin(), vec_string.end(), file_name) != vec_string.end();
-        if (vec_string.size() == 0 || !is_exists)
-        {
-            vec_string.push_back(file_name);
+        bool is_exists = std::find(vec_file_paths.begin(), vec_file_paths.end(), file_name) != vec_file_paths.end();
+        if (vec_file_paths.size() == 0 || !is_exists) {
+            vec_file_paths.push_back(file_name);
             if (_decoder->Initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
                 WRN("Could not initialize audio decoder for file : " + _reader->id())
                 continue;
