@@ -208,9 +208,9 @@ Reader::Status FileSourceReader::generate_file_names() {
                 if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
                     if (!filesys::exists(_folder_path))
                         THROW("File list contains relative paths but root path doesn't exists");
-                    absolute_file_path = _folder_path + "/" + file_path;
+                    _absolute_file_path = _folder_path + "/" + file_path;
                 }
-                if (filesys::is_regular_file(absolute_file_path)) {
+                if (filesys::is_regular_file(_absolute_file_path)) {
                     if (get_file_shard_id() != _shard_id) {
                         _file_count_all_shards++;
                         incremenet_file_id();
@@ -218,8 +218,8 @@ Reader::Status FileSourceReader::generate_file_names() {
                     }
                     _in_batch_read_count++;
                     _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
-                    _last_file_name = absolute_file_path;
-                    _file_names.push_back(absolute_file_path);
+                    _last_file_name = _absolute_file_path;
+                    _file_names.push_back(_absolute_file_path);
                     _file_count_all_shards++;
                     incremenet_file_id();
                 }
