@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include "audio_decoder_factory.hpp"
 #include "reader_factory.h"
+#include<algorithm>
 
 #ifdef ROCAL_AUDIO
 
@@ -47,26 +48,32 @@ AudioSourceEvaluator::Create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 
 void AudioSourceEvaluator::FindMaxDimension() {
     _reader->reset();
+    std::vector<std::string> vec_string = {};
     while (_reader->count_items()) {
         size_t fsize = _reader->open();
         if (!fsize) continue;
-        auto file_name = _reader->file_path();
-        if (_decoder->Initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
-            WRN("Could not initialize audio decoder for file : " + _reader->id())
-            continue;
+        std::string file_name = _reader->file_path();
+        bool is_exists = std::find(vec_string.begin(), vec_string.end(), file_name) != vec_string.end();
+        if (vec_string.size() == 0 || !is_exists)
+        {
+            vec_string.push_back(file_name);
+            if (_decoder->Initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
+                WRN("Could not initialize audio decoder for file : " + _reader->id())
+                continue;
+            }
+            int samples, channels;
+            float sample_rate;
+            if (_decoder->DecodeInfo(&samples, &channels, &sample_rate) != AudioDecoder::Status::OK) {
+                WRN("Could not decode the header of the: " + _reader->id())
+                continue;
+            }
+            if (samples <= 0 || channels <= 0)
+                continue;
+            _samples_max = std::max(samples, _samples_max);
+            _channels_max = std::max(channels, _channels_max);
+            _decoder->Release();
         }
         _reader->close();
-        int samples, channels;
-        float sample_rate;
-        if (_decoder->DecodeInfo(&samples, &channels, &sample_rate) != AudioDecoder::Status::OK) {
-            WRN("Could not decode the header of the: " + _reader->id())
-            continue;
-        }
-        if (samples <= 0 || channels <= 0)
-            continue;
-        _samples_max = std::max(samples, _samples_max);
-        _channels_max = std::max(channels, _channels_max);
-        _decoder->Release();
     }
     // return the reader read pointer to the begining of the resource
     _reader->reset();
