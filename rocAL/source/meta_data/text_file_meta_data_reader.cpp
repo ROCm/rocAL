@@ -77,6 +77,7 @@ void TextFileMetaDataReader::read_all(const std::string &path) {
             if (!(line_ss >> file_name >> label))
                 continue;
             // process pair (file_name, label)
+            _relative_file_path.push_back(file_name); // to be used in file source reader to reduce I/O operations
             auto last_id = file_name;
             auto last_slash_idx = last_id.find_last_of("\\/");
             if (std::string::npos != last_slash_idx) {

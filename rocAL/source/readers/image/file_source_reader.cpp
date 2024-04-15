@@ -202,22 +202,44 @@ Reader::Status FileSourceReader::generate_file_names() {
 
     auto ret = Reader::Status::OK;
     if (!_file_list_path.empty()) {  // Reads the file paths from the file list and adds to file_names vector for decoding
-        std::ifstream fp(_file_list_path);
-        if (fp.is_open()) {
-            while (fp) {
-                std::string file_label_path;
-                std::getline(fp, file_label_path);
-                std::istringstream ss(file_label_path);
-                std::string file_path;
-                std::getline(ss, file_path, ' ');
+        if (_meta_data_reader) {
+            auto vec_rel_file_path = _meta_data_reader->get_file_path_content(); // Get the relative file path's from meta_data_reader
+            for(auto file_path: vec_rel_file_path) {
                 if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
                     if (!filesys::exists(_folder_path))
                         THROW("File list contains relative paths but root path doesn't exists");
-                    file_path = _folder_path + "/" + file_path;
+                    absolute_file_path = _folder_path + "/" + file_path;
                 }
-                std::string file_name = file_path.substr(file_path.find_last_of("/\\") + 1);
+                if (filesys::is_regular_file(absolute_file_path)) {
+                    if (get_file_shard_id() != _shard_id) {
+                        _file_count_all_shards++;
+                        incremenet_file_id();
+                        continue;
+                    }
+                    _in_batch_read_count++;
+                    _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
+                    _last_file_name = absolute_file_path;
+                    _file_names.push_back(absolute_file_path);
+                    _file_count_all_shards++;
+                    incremenet_file_id();
+                }
+            }
+        } else {
+            std::ifstream fp(_file_list_path);
+            if (fp.is_open()) {
+                while (fp) {
+                    std::string file_label_path;
+                    std::getline(fp, file_label_path);
+                    std::istringstream ss(file_label_path);
+                    std::string file_path;
+                    std::getline(ss, file_path, ' ');
+                    if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
+                        if (!filesys::exists(_folder_path))
+                            THROW("File list contains relative paths but root path doesn't exists");
+                        file_path = _folder_path + "/" + file_path;
+                    }
+                    std::string file_name = file_path.substr(file_path.find_last_of("/\\") + 1);
 
-                if (!_meta_data_reader || _meta_data_reader->exists(file_name)) {  // Check if the file is present in metadata reader and add to file names list, to avoid issues while lookup
                     if (filesys::is_regular_file(file_path)) {
                         if (get_file_shard_id() != _shard_id) {
                             _file_count_all_shards++;
@@ -231,8 +253,6 @@ Reader::Status FileSourceReader::generate_file_names() {
                         _file_count_all_shards++;
                         incremenet_file_id();
                     }
-                } else {
-                    WRN("Skipping file," + std::string(file_path) + " as it is not present in metadata reader")
                 }
             }
         }

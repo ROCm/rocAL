@@ -83,7 +83,7 @@ class FileSourceReader : public Reader {
     FILE *_current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
-    std::string _last_file_name, _last_file_path;
+    std::string _last_file_name, _last_file_path, absolute_file_path;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     signed _shard_size = -1;
