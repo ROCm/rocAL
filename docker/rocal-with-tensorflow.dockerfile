@@ -59,7 +59,7 @@ WORKDIR $ROCAL_WORKSPACE
 
 # Install rocAL
 RUN git clone -b develop https://github.com/ROCm/rocAL && \
-        mkdir build && cd build && cmake -DPYTHONVERSION=3.9 ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install
+        mkdir build && cd build && cmake -D PYTHON_VERSION_SUGGESTED=3.9 ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install
 
 WORKDIR /workspace
 

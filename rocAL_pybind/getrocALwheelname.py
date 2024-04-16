@@ -19,4 +19,4 @@ def wheel_name(**kwargs):
     return f'{distname}-{tag}.whl'
 
 
-print(wheel_name(name='amd-rocal', version='1.0.0'), end='')
+print(wheel_name(name='amd-rocal', version='2.0.0'), end='')
