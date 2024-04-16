@@ -45,6 +45,11 @@ unsigned FileSourceReader::count_items() {
         return _file_names.size();
 
     int ret = ((int)_file_names.size() - _read_counter);
+    if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
+        ret += _in_batch_read_count;
+    } else if (_last_batch_info.first == RocalBatchPolicy::FILL) {
+        ret += _in_batch_read_count;
+    }
     return ((ret < 0) ? 0 : ret);
 }
 
@@ -72,6 +77,10 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
 
 void FileSourceReader::incremenet_read_ptr() {
     _read_counter++;
+    if (_last_batch_info.first == RocalBatchPolicy::FILL && _last_batch_info.second == true && _read_counter >= _file_names.size()) { // Fill policy
+            _curr_file_idx = _file_names.size() - 1;
+            return;
+    }
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
     if (_last_batch_info.first == RocalBatchPolicy::DROP) {
         if ((_file_names.size() / _batch_count) == _curr_file_idx)  // Check if its last batch
@@ -140,7 +149,7 @@ int FileSourceReader::release() {
 void FileSourceReader::reset() {
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
-    _curr_file_idx = 0;
+    // _curr_file_idx = 0;
     if (_stick_to_shard == true) {
         _curr_file_idx = 0;
         if (_shard_size > 0) {
@@ -176,6 +185,9 @@ void FileSourceReader::reset() {
         if (!_file_names.empty())
             LOG("FileReader in reset function - Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     } else {
+        if (_last_batch_info.first == RocalBatchPolicy::FILL && _last_batch_info.second == false) {
+            return;
+        }
         _curr_file_idx = 0;
         _read_counter = 0;
     }
@@ -297,26 +309,9 @@ Reader::Status FileSourceReader::subfolder_reading() {
 }
 
 void FileSourceReader::replicate_last_image_to_fill_last_shard() {
-    if (_last_batch_info.first == RocalBatchPolicy::FILL) {
-        if (_last_batch_info.second == true) {
-            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
-                _file_names.push_back(_last_file_name);
-        } else {
-            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
-                _file_names.push_back(_file_names.at(i));
-        }
-    } else if (_last_batch_info.first == RocalBatchPolicy::DROP) {
-        for (size_t i = 0; i < _in_batch_read_count; i++)
-            _file_names.pop_back();
-    } else if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
+    if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
-        if (_last_batch_info.second == true) {
-            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
-                _file_names.push_back(_last_file_name);
-        } else {
-            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
-                _file_names.push_back(_file_names.at(i));
-        }
+
     }
 }
 
