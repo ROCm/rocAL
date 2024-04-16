@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "audio_decoder_factory.hpp"
 #include "reader_factory.h"
 #include<algorithm>
-
+#include <unordered_set>
 #ifdef ROCAL_AUDIO
 
 size_t AudioSourceEvaluator::GetMaxSamples() {
@@ -48,14 +48,14 @@ AudioSourceEvaluator::Create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 
 void AudioSourceEvaluator::FindMaxDimension() {
     _reader->reset();
-    std::vector<std::string> vec_file_paths = {};
+    std::unordered_set<std::string> unique_file_paths;
     while (_reader->count_items()) {
         size_t fsize = _reader->open();
         if (!fsize) continue;
         std::string file_name = _reader->file_path();
-        bool is_exists = std::find(vec_file_paths.begin(), vec_file_paths.end(), file_name) != vec_file_paths.end();
-        if (vec_file_paths.size() == 0 || !is_exists) {
-            vec_file_paths.push_back(file_name);
+        if (unique_file_paths.count(file_name) == 0) {
+            std::clog << "\n File Name in Source eval : " << file_name;
+            unique_file_paths.insert(file_name);
             if (_decoder->Initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
                 WRN("Could not initialize audio decoder for file : " + _reader->id())
                 continue;
