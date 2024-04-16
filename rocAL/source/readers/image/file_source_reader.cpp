@@ -65,6 +65,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
     _last_batch_info = desc.get_last_batch_policy();
+    _pad_last_batch = _last_batch_info.second; // Currently last_batch_padded and pad_last_batch are same
     _stick_to_shard = desc.get_stick_to_shard();
     _shard_size = desc.get_shard_size();
     ret = subfolder_reading();
@@ -77,19 +78,21 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
 
 void FileSourceReader::incremenet_read_ptr() {
     _read_counter++;
-    if (_last_batch_info.first == RocalBatchPolicy::FILL && _last_batch_info.second == true && _read_counter >= _file_names.size()) { // Fill policy
+
+    // For DROP policy, when the pad is set to false the last batch is dropped and idx is advanced by skipping one batch in between
+    if (_last_batch_info.first == RocalBatchPolicy::DROP && _pad_last_batch == false) {
+        if (_read_counter + _batch_count - 1 > _file_names.size()) {
+            // Skip last batch entirely along with padded data idx
+            _curr_file_idx = (_curr_file_idx + _batch_count + 1) % _file_names.size();
+            return;
+        }
+    } else if (_pad_last_batch == true && _read_counter >= _file_names.size()) {   // Return last file_idx when pad set to true
             _curr_file_idx = _file_names.size() - 1;
             return;
     }
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
-    if (_last_batch_info.first == RocalBatchPolicy::DROP) {
-        if ((_file_names.size() / _batch_count) == _curr_file_idx)  // Check if its last batch
-        {
-            _curr_file_idx += _batch_count;
-            _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
-        }
-    }
 }
+
 size_t FileSourceReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     incremenet_read_ptr();
@@ -185,9 +188,7 @@ void FileSourceReader::reset() {
         if (!_file_names.empty())
             LOG("FileReader in reset function - Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     } else {
-        if (_last_batch_info.first == RocalBatchPolicy::FILL && _last_batch_info.second == false) {
-            return;
-        }
+        if (_pad_last_batch == false) return;       // If padding is not set, need to continue the file_idx
         _curr_file_idx = 0;
         _read_counter = 0;
     }
