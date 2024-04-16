@@ -50,9 +50,13 @@ THE SOFTWARE.
  * \param [in] cpu_thread_count number of cpu threads
  * \param [in] prefetch_queue_depth The depth of the prefetch queue.
  * \param [in] output_tensor_data_type RocalTensorOutputType: Defines whether the output of rocal tensor is FP32 or FP16.
+ * \param [in] last_batch_policy What to do with the last batch when there are not enough samples in the epoch to fully fill it.
+ * \param [in] last_batch_padded Whether the last batch provided by rocAL is padded with the last sample or it just wraps up.
+                                 In the conjunction with last_batch_policy it tells if the iterator returning last batch with 
+                                 data only partially filled with data from the current epoch is dropping padding samples or samples from the next epoch.
  * \return A \ref RocalContext - The context for the pipeline
  */
-extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
+extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32, RocalLastBatchPolicy last_batch_policy = RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, bool last_batch_padded = false);
 
 /*!
  * \brief  rocalVerify function to verify the graph for all the inputs and outputs

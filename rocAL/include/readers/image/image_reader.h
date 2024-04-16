@@ -80,6 +80,10 @@ struct ReaderConfig {
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
+    void set_last_batch_policy(RocalBatchPolicy last_batch_policy, bool last_batch_padded) {
+        _last_batch_policy = last_batch_policy;
+        _last_batch_padded = last_batch_padded;
+    }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -98,6 +102,7 @@ struct ReaderConfig {
     std::string file_prefix() { return _file_prefix; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     ExternalSourceFileMode mode() { return _file_mode; }
+    std::pair<RocalBatchPolicy, bool> get_last_batch_policy() { return std::pair<RocalBatchPolicy, bool>(_last_batch_policy, _last_batch_padded); }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -116,6 +121,8 @@ struct ReaderConfig {
     std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
+    RocalBatchPolicy _last_batch_policy = RocalBatchPolicy::FILL;
+    bool _last_batch_padded = false;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
@@ -174,4 +181,6 @@ class Reader {
     virtual unsigned count_items() = 0;
 
     virtual ~Reader() = default;
+
+    virtual size_t last_batch_padded_size() { return {}; }
 };

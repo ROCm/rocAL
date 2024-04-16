@@ -27,10 +27,12 @@ THE SOFTWARE.
 #include "pipeline/master_graph.h"
 
 struct Context {
-    explicit Context(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_thread_count, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_type) : affinity(affinity),
-                                                                                                                                                                            _user_batch_size(batch_size) {
+    explicit Context(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_thread_count, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded) : affinity(affinity),
+                                                                                                                                                                                                                                        last_batch_policy(last_batch_policy),
+                                                                                                                                                                                                                                        last_batch_padded(last_batch_padded),
+                                                                                                                                                                                                                                        _user_batch_size(batch_size) {
         LOG("Processing on " + STR(((affinity == RocalAffinity::CPU) ? " CPU" : " GPU")))
-        master_graph = std::make_shared<MasterGraph>(batch_size, affinity, cpu_thread_count, gpu_id, prefetch_queue_depth, output_tensor_type);
+        master_graph = std::make_shared<MasterGraph>(batch_size, affinity, cpu_thread_count, gpu_id, prefetch_queue_depth, output_tensor_type, last_batch_policy, last_batch_padded);
     }
     ~Context() {
         clear_errors();
@@ -38,6 +40,8 @@ struct Context {
     std::shared_ptr<MasterGraph> master_graph;
 
     RocalAffinity affinity;
+    RocalBatchPolicy last_batch_policy;
+    bool last_batch_padded;
     bool no_error() { return error.empty(); }
     const char* error_msg() { return error.c_str(); }
     void capture_error(const std::string& err_msg) { error = err_msg; }

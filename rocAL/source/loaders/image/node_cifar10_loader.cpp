@@ -29,7 +29,7 @@ Cifar10LoaderNode::Cifar10LoaderNode(Tensor *output, void *device_resources) : N
 }
 
 void Cifar10LoaderNode::init(const std::string &source_path, const std::string &json_path, StorageType storage_type,
-                             bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix) {
+                             bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix, RocalBatchPolicy last_batch_policy, bool last_batch_padded) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for Cifar10LoaderNode, cannot initialize")
     _loader_module->set_output(_outputs[0]);
@@ -37,6 +37,7 @@ void Cifar10LoaderNode::init(const std::string &source_path, const std::string &
     auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), loop);
     reader_cfg.set_batch_count(load_batch_count);
     reader_cfg.set_file_prefix(file_prefix);
+    reader_cfg.set_last_batch_policy(last_batch_policy, last_batch_padded);
     // DecoderConfig will be ignored in loader. Just passing it for api match
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::TURBO_JPEG),
                                mem_type, _batch_size);
