@@ -312,7 +312,9 @@ class ROCALAudioIterator(object):
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
         self.batch_count += self.batch_size
-        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle) #Every Time the padded size is going to differ
+        # Every Time the padded size is going to differ
+        self.last_batch_size = self.batch_size - \
+            b.getLastBatchPaddedSize(self.loader._handle)
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
@@ -328,7 +330,6 @@ class ROCALAudioIterator(object):
                 if (max_x1 == 0 or max_y1 == 0):
                     output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
                 else:
-                    print("HERE")
                     output = torch.empty(dimensions[0], max_x1, max_y1, dtype=getattr(torch, torch_dtype))
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
             else:

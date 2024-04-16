@@ -32,7 +32,7 @@ TJDecoder::TJDecoder() {
         THROW("tjDecompress2_partial_scale(): error getting scaling factors");
     for(int i = 0; i < _num_scaling_factors; i++) {
         if(_scaling_factors[i].num < _scaling_factors[i].denom) {
-            INFO(STR(_scaling_factors[i].num) + "/" + STR(_scaling_factors[i].denom));
+            INFO(TOSTR(_scaling_factors[i].num) + "/" + TOSTR(_scaling_factors[i].denom));
         }
     }
 };
