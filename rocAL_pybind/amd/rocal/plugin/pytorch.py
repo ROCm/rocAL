@@ -325,12 +325,19 @@ class ROCALAudioIterator(object):
             max_y1 = np.max(roi[...,self.num_of_rois-1:self.num_of_rois])
             if self.device == "cpu":
                 torch_dtype = self.output_tensor_list[i].dtype()
-                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
+                if (max_x1 == 0 or max_y1 == 0):
+                    output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
+                else:
+                    print("HERE")
+                    output = torch.empty(dimensions[0], max_x1, max_y1, dtype=getattr(torch, torch_dtype))
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
             else:
                 torch_gpu_device = torch.device('cuda', self.device_id)
                 torch_dtype = self.output_tensor_list[i].dtype()
-                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+                if (max_x1 == 0 or max_y1 == 0):
+                    output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+                else:
+                    output = torch.empty(dimensions[0], max_x1, max_y1, dtype=getattr(torch, torch_dtype))
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
 
             if (max_x1 == 0 or max_y1 == 0):
