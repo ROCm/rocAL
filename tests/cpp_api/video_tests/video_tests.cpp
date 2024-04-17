@@ -166,19 +166,19 @@ int main(int argc, const char **argv) {
         if (enable_timestamps)
             enable_timestamps = false;
     } else if (enable_metadata) {
-        std::cout << "\n>>>> META DATA READER\n";
+        std::cout << "\nMETA DATA READER\n";
         rocalCreateVideoLabelReader(handle, source_path, sequence_length, frame_step, frame_stride, file_list_frame_num);
     }
 
     RocalTensor input1;
     switch (reader_case) {
         default: {
-            std::cout << "\n>>>> VIDEO READER\n";
+            std::cout << "\nVIDEO READER\n";
             input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
             break;
         }
         case 2: {
-            std::cout << "\n>>>> VIDEO READER RESIZE\n";
+            std::cout << "\nVIDEO READER RESIZE\n";
             if (resize_width == 0 || resize_height == 0) {
                 std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
                 return -1;
@@ -187,14 +187,14 @@ int main(int argc, const char **argv) {
             break;
         }
         case 3: {
-            std::cout << "\n>>>> SEQUENCE READER\n";
+            std::cout << "\nSEQUENCE READER\n";
             enable_framenumbers = enable_timestamps = 0;
             input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
             break;
         }
     }
     if (enable_sequence_rearrange) {
-        std::cout << "\n>>>> ENABLE SEQUENCE REARRANGE\n";
+        std::cout << "\nENABLE SEQUENCE REARRANGE\n";
         std::vector<unsigned> new_order = {0, 0, 1, 1, 0};  // The integers in new order should range only from 0 to sequence_length - 1
         ouput_frames_per_sequence = new_order.size();
         input1 = rocalSequenceRearrange(handle, input1, new_order, true);
@@ -288,8 +288,8 @@ int main(int argc, const char **argv) {
             char img_name[img_size];
             rocalGetImageName(handle, img_name);
 
-            std::cout << "\nPrinting image names of batch: " << img_name << "\n";
-            std::cout << "\t Printing label_id : ";
+            std::cout << "\nImage names: " << img_name << "\n";
+            std::cout << "Label id: ";
             int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());
             for (unsigned i = 0; i < input_batch_size; i++) {
                 std::cout << label_id[i] << "\t";
@@ -320,7 +320,7 @@ int main(int argc, const char **argv) {
     std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cout << ">>>>> " << counter << " images/frames Processed. Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    std::cout << "Processed " << counter << " images/frames" << std::endl << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     mat_input.release();
     return 0;
