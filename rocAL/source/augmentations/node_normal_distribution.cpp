@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_normal_distribution.h"
+#include "augmentations/node_normal_distribution.h"
 
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
-#include "parameter_factory.h"
+#include "pipeline/exception.h"
+#include "parameters/parameter_factory.h"
 
 NormalDistributionNode::NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

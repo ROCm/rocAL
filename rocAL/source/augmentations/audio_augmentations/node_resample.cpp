@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_resample.h"
+#include "augmentations/audio_augmentations/node_resample.h"
 
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 ResampleNode::ResampleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

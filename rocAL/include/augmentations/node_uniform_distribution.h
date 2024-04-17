@@ -23,9 +23,9 @@ THE SOFTWARE.
 #pragma once
 #include <random>
 
-#include "batch_rng.h"
-#include "graph.h"
-#include "node.h"
+#include "pipeline/batch_rng.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
 
 class UniformDistributionNode : public Node {
    public:

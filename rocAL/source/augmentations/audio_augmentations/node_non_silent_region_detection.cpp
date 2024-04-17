@@ -20,9 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_non_silent_region_detection.h"
+#include "augmentations/audio_augmentations/node_non_silent_region_detection.h"
+
 #include <vx_ext_rpp.h>
-#include "exception.h"
+
+#include "pipeline/exception.h"
 
 NonSilentRegionDetectionNode::NonSilentRegionDetectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 

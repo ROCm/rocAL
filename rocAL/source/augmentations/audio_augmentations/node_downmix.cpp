@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_downmix.h"
+#include "augmentations/audio_augmentations/node_downmix.h"
 
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 DownmixNode::DownmixNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
