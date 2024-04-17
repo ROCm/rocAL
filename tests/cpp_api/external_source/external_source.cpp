@@ -235,7 +235,6 @@ int main(int argc, const char **argv) {
     cv::Mat mat_color;
     const unsigned number_of_cols = 1;  // no augmented case
     int col_counter = 0;
-    printf("Going to process images\n");
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
@@ -288,8 +287,7 @@ int main(int argc, const char **argv) {
             }
         }
         if (index + 1 <= (total_images / input_batch_size)) {
-            std::cerr << "\n************************** Gonna process Batch *************************" << index;
-            std::cerr << "\n Mode ********************* " << mode;
+            std::cerr << "\n Processing Batch: " << index << "\n Mode: " << mode;
             if (mode == 0) {
                 rocalExternalSourceFeedInput(handle, input_images, set_labels, {}, ROI_xywh,
                                              decode_width, decode_height, channels,
@@ -308,7 +306,7 @@ int main(int argc, const char **argv) {
             }
         }
         if (rocalRun(handle) != 0) {
-            std::cerr << "rocalRun(handle) != 0 --- breaking";
+            std::cerr << "rocalRun Failed!";
             break;
         }
 
@@ -393,12 +391,12 @@ int main(int argc, const char **argv) {
                     int *labels_ptr = static_cast<int *>(label_buffer.data());
                     for (size_t i = 0; i < label_buffer.size(); i++) {
                         labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
-                        std::cerr << ">>>>> LABELS : " << labels_ptr[0] << "\t";
+                        std::cerr << "\nLabels[" << i << "]: " << labels_ptr[i] << "\t";
                         labels_ptr++;
                     }
                 }
                 else
-                    std::cerr<<"\n labels are not set";
+                    std::cerr<<"\n Labels are not set";
             } break;
             default: {
                 std::cerr << "Not a valid pipeline type ! Exiting!\n";
@@ -418,8 +416,8 @@ int main(int argc, const char **argv) {
     std::cerr << "Decode   time " << rocal_timing.decode_time << std::endl;
     std::cerr << "Process  time " << rocal_timing.process_time << std::endl;
     std::cerr << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cerr << ">>>>> " << counter
-              << " images/frames Processed. Total Elapsed Time " << dur / 1000000
+    std::cerr << "Processed " << counter
+              << " images/frames" << std::endl << "Total Elapsed Time " << dur / 1000000
               << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     return 0;

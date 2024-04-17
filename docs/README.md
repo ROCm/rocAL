@@ -7,6 +7,7 @@ AMD ROCm Augmentation Library (rocAL) is designed to efficiently do such process
 These pipelines are programmable by the user using both C++ and Python APIs.
 
 ## User Guide Chapters
+
 * [Chapter 1 - Overview](user_guide/ch1.md)
 * [Chapter 2 - Architecture Components](user_guide/ch2.md)
 * [Chapter 3 - Installation](user_guide/ch3.md)
@@ -16,11 +17,11 @@ These pipelines are programmable by the user using both C++ and Python APIs.
 
 ## Key Components of rocAL
 
-*    Full processing pipeline support for data_loading, meta-data loading, augmentations, and data-format conversions for training and inference.
-*    Being able to do processing on CPU or Radeon GPU (with OpenCL or HIP backend)
-*    Ease of integration with framework plugins in Python
-*    Support variety of augmentation operations through AMD’s Radeon Performance Primitives (RPP).
-*    All available public and open-sourced under ROCm.
+* Full processing pipeline support for data_loading, meta-data loading, augmentations, and data-format conversions for training and inference.
+* Being able to do processing on CPU or Radeon GPU (with OpenCL or HIP backend)
+* Ease of integration with framework plugins in Python
+* Support variety of augmentation operations through AMD’s Radeon Performance Primitives (RPP).
+* All available public and open-sourced under ROCm.
 
 ## Prerequisites
 
@@ -32,36 +33,37 @@ Refer [rocAL build instructions](https://github.com/ROCm/rocAL#build-instruction
 
 ## rocAL Python
 
-*   rocAL Python package has been created using Pybind11 which enables data transfer between rocAL C++ API and Python API.
-*   rocal_pybind package has both PyTorch and TensorFlow framework support.
-*   Various reader format support including FileReader, COCOReader, and TFRecordReader.
-*   example folder contains sample implementations for each reader variation as well as sample training script for PyTorch
-*   rocAL is integrated into MLPerf Resnet-50 Pytorch classification example on the ImageNet dataset.
+* rocAL Python package has been created using Pybind11 which enables data transfer between rocAL C++ API and Python API.
+* rocal Python Bindings has both PyTorch and TensorFlow framework support.
+* Various reader format support including FileReader, COCOReader, and TFRecordReader.
+* [examples folder](https://github.com/ROCm/rocAL/docs/exmaples) has sample implementations for PyTorch and Tensorflow training and inference pipeline.
 
 ## rocAL Python API
 
 ### amd.rocal.fn
 
-*  Contains the image augmentations & file read and decode operations which are linked to rocAL C++ API
-*  All ops (listed below) are supported for the single input image and batched inputs.
+* Contains the image augmentations & file read and decode operations which are linked to rocAL C++ API
+* All ops (listed below) are supported for the single input image and batched inputs.
 
-| Image Augmentation |   Reader and Decoder   |    Geometric Ops    |
-| :----------------: | :--------------------: | :-----------------: |
-|     ColorTwist     |      File Reader       | CropMirrorNormalize |
-|     Brightness     |      ImageDecoder      |       Resize        |
-|  Gamma Correction  | ImageDecoderRandomCrop |     ResizeCrop      |
-|        Snow        |       COCOReader       |     WarpAffine      |
-|        Rain        |     TFRecordReader     |       FishEye       |
-|        Blur        |                        |   LensCorrection    |
-|       Jitter       |                        |       Rotate        |
-|        Hue         |                        |                     |
-|     Saturation     |                        |                     |
-|        Fog         |                        |                     |
-|      Contrast      |                        |                     |
-|      Vignette      |                        |                     |
-|      SNPNoise      |                        |                     |
-|      Pixelate      |                        |                     |
-|       Blend        |                        |                     |
+| Image Augmentation |   Reader and Decoder      |        Geometric Ops         |
+| :----------------: | :-----------------------: | :--------------------------: |
+|    Color Twist     |   Image File Reader       |     Crop Mirror Normalize    |
+| Color Temperature  |      Caffe Reader         |          Crop Resize         |
+|     Brightness     |      Caffe2 Reader        |            Resize            |
+|  Gamma Correction  |      CIFAR10 Reader       |          Random Crop         |
+|        Snow        |       COCO Reader         |         Warp Affine          |
+|        Rain        |     TF Record Reader      |           Fish Eye           |
+|        Blur        |   MXNet Record Reader     |        Lens Correction       |
+|       Jitter       |    Video File Reader      |           Rotate             |
+|        Hue         |     Image Decoder         |            Crop              |
+|     Saturation     | Image Decoder Random Crop |            Flip              |
+|        Fog         |      Video Decoder        |    Resize Crop Mirror        |
+|      Contrast      |                           | Resize Crop Mirror Normalize |
+|      Vignette      |                           |                              |
+|     SNP Noise      |                           |                              |
+|      Pixelate      |                           |                              |
+|       Blend        |                           |                              |
+|      Exposure      |                           |                              |
 
 ### amd.rocal.pipeline
 
@@ -72,50 +74,24 @@ Refer [rocAL build instructions](https://github.com/ROCm/rocAL#build-instruction
 
 ### amd.rocal.types
 
-amd.rocal.types are enums exported from C++ API to python. Some examples include CPU, GPU, FLOAT, FLOAT16, RGB, GRAY, etc..
+amd.rocal.types are enums exported from C++ API to python. Some examples include CPU, GPU, FLOAT, FLOAT16, RGB, GRAY, etc.
 
 ### amd.rocal.plugin.pytorch
 
-*  Contains ROCALGenericIterator for Pytorch.
-*  ROCALClassificationIterator class implements iterator for image classification and return images with corresponding labels.
-*  From the above classes, any hybrid iterator pipeline can be created by adding augmentations.
-*  see example [PyTorch Simple Example](./examples). Requires PyTorch.
+* Contains ROCALGenericIterator for Pytorch.
+* ROCALClassificationIterator class implements iterator for image classification and return images with corresponding labels.
+* From the above classes, any hybrid iterator pipeline can be created by adding augmentations.
+* See example [PyTorch Simple Example](./examples/pytorch/). Requires PyTorch.
+
+### amd.rocal.plugin.tf
+
+* Contains ROCALIterator for TensorFlow.
+* Any hybrid iterator pipeline can be created by adding augmentations.
+* See example [Tensorflow Simple Example](./examples/tf/). Requires TensorFlow.
 
 ### installing rocAL python plugin (Python 3.9+)
 
-*  Build and install RPP
-*  Build and install MIVisionX
-*  Build and install [rocAL](https://github.com/ROCm/rocAL/)
+* Build and install RPP
+* Build and install MIVisionX
+* Build and install [rocAL](https://github.com/ROCm/rocAL/)
 
-### Steps to run MLPerf Resnet50 classification training with rocAL on a system with MI50+ and ROCm
-
-* Step 1: Ensure you have downloaded ILSVRC2012_img_val.tar (6.3GB) and ILSVRC2012_img_train.tar (138 GB) files and unzip into train and val folders
-* Step 2: Build [MIVisionX Pytorch docker](../docker/README.md)
-* Step 3: Install rocAL python_pybind plugin as described above
-* Step 4: Clone [MLPerf](https://github.com/rrawther/MLPerf-mGPU) branch and checkout mlperf-v1.1-rocal branch
-
-``` bash
-git clone -b mlperf-v1.1-rocal https://github.com/rrawther/MLPerf-mGPU
-```
-
-* Step 5: Modify RN50_AMP_LARS_8GPUS_NCHW.sh or RN50_AMP_LARS_8GPUS_NHWC.sh to reflect correct path for imagenet directory
-* Step 8: Run RN50_AMP_LARS_8GPUS_NCHC.sh or RN50_AMP_LARS_8GPUS_NHWC.sh
-
-``` bash
-./RN50_AMP_LARS_8GPUS_NCHW.sh 
-(or)
-./RN50_AMP_LARS_8GPUS_NHWC.sh
-```
-
-### MIVisionX Pytorch Docker
-
-* Refer to the [docker](https://github.com/ROCm/MIVisionX#docker) page for prerequisites and information on building the docker
-* Step 1: Run the docker image*
-  
-``` bash
-sudo docker run -it -v <Path-To-Data-HostSystem>:/data -v /<Path-to-GitRepo>:/dockerx -w /dockerx --privileged --device=/dev/kfd --device=/dev/dri --group-add video --shm-size=4g --ipc="host" --network=host <docker-name>
-```
-
-  * Optional: Map localhost directory on the docker image
-    * option to map the localhost directory with imagenet dataset folder to be accessed on the docker image.
-    * usage: -v {LOCAL_HOST_DIRECTORY_PATH}:{DOCKER_DIRECTORY_PATH}
