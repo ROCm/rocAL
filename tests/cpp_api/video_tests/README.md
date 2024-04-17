@@ -1,9 +1,9 @@
 # rocAL Video Unit Tests
+
 This application can be used to verify the functionality of the video API offered by rocAL.
 
-## Build Instructions
+## Pre-requisites
 
-### Pre-requisites
 * Ubuntu Linux, version - `18.04` / `20.04`
 * rocAL library
 * [OpenCV 4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
@@ -11,9 +11,10 @@ This application can be used to verify the functionality of the video API offere
 * ROCm Performance Primitives (RPP)
 
 ### Running the application
+
 Executing the below command will build and run the application for the specified test case.
 
-````
+````bash
 ./testScript.sh <path_to_video/path_to_directory/path_to_text_file> <test-case>
 ````
 
@@ -25,7 +26,7 @@ The sample video files and folder are available in the In the following path : [
 
 The data samples can be downloaded from the MIVisionX-data repository.
 
-```
+```bash
 git clone https://github.com/ROCm/MIVisionX-data.git
 ```
 
@@ -53,7 +54,7 @@ SAVE_FRAMES : Saves the output frames or avi files in the build/output_frames fo
 
 DEVICE : CPU:0/GPU:1 device is supported.
 
-HARDWARE_DECODE_MODE : Uses Hardware decoder if set to true. 
+HARDWARE_DECODE_MODE : Uses Hardware decoder if set to true.
 
 SHUFFLE : Shuffles the sequences if set to true.
 
@@ -83,19 +84,24 @@ ENABLE_SEQUENCE_REARRANGE : If set to true, the frames in each sequence will be 
 
 **Example 1: Video Reader**
 
-> ./testScript.sh <[path/to/test_frame_num.mp4](https://github.com/ROCm/MIVisionX-data/blob/main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.mp4)> 1
+```bash
+./testScript.sh <[path/to/test_frame_num.mp4](https://github.com/ROCm/MIVisionX-data/blob/main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.mp4)> 1
+```
 
 Arguments to be modified in testScript.sh to get the following output:
 
-- BATCH_SIZE=2
-- SEQUENCE_LENGTH= 3
-- STEP=3
-- STRIDE=5
+* BATCH_SIZE=2
+* SEQUENCE_LENGTH= 3
+* STEP=3
+* STRIDE=5
 
 ![video_reader.png](./samples/video_reader.png)
 
 To test with VideoReaderResize pass reader_case as 2:
-> ./testScript.sh <path_to_video_file/folder> 2
+
+```bash
+./testScript.sh <path_to_video_file/folder> 2
+```
 
 Also RESIZE_WIDTH and RESIZE_HEIGHT can be changed in testScript.sh
 
@@ -103,7 +109,9 @@ Also RESIZE_WIDTH and RESIZE_HEIGHT can be changed in testScript.sh
 
 **Example 2: Sequence Reader**
 
-> ./testScript.sh <[path/to/sequence_folder](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data/video_and_sequence_samples/sequence)> 3 
+```bash
+./testScript.sh <[path/to/sequence_folder](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data/video_and_sequence_samples/sequence)> 3 
+```
 
 ![sequence_reader.png](./samples/sequence_reader.png)
 
@@ -117,7 +125,9 @@ The output of Sequence Reader may be different from the Video Reader because the
 
 **Example 3: Sequence Rearrange**
 
-> ./testScript.sh <path/to/test_frame_num.mp4> 1
+```bash
+./testScript.sh <path/to/test_frame_num.mp4> 1
+```
 
 Arguments to be modified in testScript.sh to enable sequence rearrange:
 

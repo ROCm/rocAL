@@ -57,8 +57,8 @@ int main(int argc, const char **argv) {
     bool display = 0;  // Display the images
     // int aug_depth = 1;// how deep is the augmentation tree
     int rgb = 0;            // process gray images
-    int decode_width = 28;  // mnist data_set
-    int decode_height = 28;
+    int decode_width = 640;
+    int decode_height = 480;
     int inputBatchSize = 16;
     bool processing_device = 1;
 
@@ -173,10 +173,8 @@ int main(int argc, const char **argv) {
               (color_format == RocalImageColor::ROCAL_COLOR_RGB_PLANAR))
                  ? 3
                  : 1);
-    printf("After get output dims\n");
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
     const unsigned number_of_cols = 1;  // no augmented case
-    printf("Before memalloc\n");
 
     auto cv_color_format = ((p == 3) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h, w * number_of_cols, cv_color_format);
@@ -190,7 +188,6 @@ int main(int argc, const char **argv) {
 
     int iter_cnt = 0;
     while (!rocalIsEmpty(handle) && (iter_cnt < 100)) {
-        // if ((iter_cnt %16) == 0)
         printf("Processing iter: %d\n", iter_cnt);
         if (rocalRun(handle) != 0) {
             std::cout << "rocalRun Failed" << std::endl;
@@ -266,7 +263,7 @@ int main(int argc, const char **argv) {
     std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cout << ">>>>> " << counter << " images/frames Processed. Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    std::cout << "Processed " << counter << " images/frames" << std::endl << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     mat_input.release();
     mat_output.release();
