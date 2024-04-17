@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_uniform_distribution.h"
+#include "augmentations/node_uniform_distribution.h"
 
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 UniformDistributionNode::UniformDistributionNode(
     const std::vector<Tensor *> &inputs,

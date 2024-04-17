@@ -20,9 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_slice.h"
+#include "augmentations/geometry_augmentations/node_slice.h"
+
 #include <vx_ext_rpp.h>
-#include "exception.h"
+
+#include "pipeline/exception.h"
 
 SliceNode::SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
