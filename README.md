@@ -243,5 +243,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * RapidJSON- [master](https://github.com/Tencent/rapidjson)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* rocAL Setup Script - `V1.1.0`
+* rocAL Setup Script - `V2.0.0`
 * Dependencies for all the above packages
