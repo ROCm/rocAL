@@ -118,3 +118,5 @@ To pass the audio data path, batch size, and run a particular test case use the 
 ```
 python3 audio_unit_test.py --audio_path=<path_to_data> --test_case <case(0-1)> --batch-size <batch_size>
 ```
+**Available Test Cases**
+* Case 0 - Audio Decoder
