@@ -98,7 +98,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: ./audio_tests <audio-dataset-folder> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
+        printf("Usage: ./audio_tests <audio-dataset-folder - required> <test_case> <downmix=0/1> <device-gpu=1/cpu=0> <qa_mode=0/1>\n");
         return -1;
     }
 
@@ -133,8 +133,8 @@ int main(int argc, const char **argv) {
 int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     int input_batch_size = 1;
     bool is_output_audio_decoder = false;
-    std::cout << ">>> test case " << test_case << std::endl;
-    std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
+    std::cout << "test case " << test_case << std::endl;
+    std::cout << "Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
     auto handle = rocalCreate(input_batch_size,
                               gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0,
@@ -164,7 +164,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     switch (test_case) {
         case 0: {
             case_name = "audio_decoder";
-            std::cout << ">>>>>>> Running AUDIO DECODER" << std::endl;
+            std::cout << "Running AUDIO DECODER" << std::endl;
         } break;
         case 1: {
             std::cout << ">>>>>>> Running PREEMPHASIS" << std::endl;
