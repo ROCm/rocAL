@@ -16,7 +16,7 @@ Follow these steps:
 
 1. Import libraries for [rocAL](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L28).
 
-```
+```python
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
@@ -25,7 +25,7 @@ import amd.rocal.types as types
 
 2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a fileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the [pipeline](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L38).
 
-```
+```python
 def trainPipeline(data_path, batch_size, num_classes, one_hot, local_rank, world_size, num_thread, crop, rocal_cpu, fp16):
     pipe = Pipeline(batch_size=batch_size, num_threads=num_thread, device_id=local_rank, seed=local_rank+10, 
                 rocal_cpu=rocal_cpu, tensor_dtype = types.FLOAT16 if fp16 else types.FLOAT, tensor_layout=types.NCHW, 
@@ -55,7 +55,7 @@ def trainPipeline(data_path, batch_size, num_classes, one_hot, local_rank, world
 
 3. Import libraries for PyTorch.
 
-```
+```python
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -63,8 +63,8 @@ import torch.optim as optim
 
 4. Call the training pipeline with rocAL classification data [loader](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L78).
 
-```
-Def get_pytorch_train_loader(self):
+```python
+def get_pytorch_train_loader(self):
         print(“in get_pytorch_train_loader function”)   
         pipe_train = trainPipeline(self.data_path, self.batch_size, self.num_classes, self.one_hot, self.local_rank, 
                                     self.world_size, self.num_thread, self.crop, self.rocal_cpu, self.fp16)
@@ -74,7 +74,7 @@ Def get_pytorch_train_loader(self):
 
 5. Run the [training](https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L179).
 
-```
+```python
 # Training loop
     for epoch in range(10):  # loop over the dataset multiple times
         print(“\n epoch:: “,epoch)
@@ -106,7 +106,7 @@ Follow these steps:
 
 1. Import libraries for [rocAL](https://github.com/ROCm/rocAL/blob/master/docs/examples/tf/pets_training/train.py#L22).
 
-```
+```python
 from amd.rocal.plugin.tf import ROCALIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
@@ -115,7 +115,7 @@ import amd.rocal.types as types
 
 2. See a rocAL pipeline for TensorFlow below. It reads data from the TFRecords using TFRecord Reader and uses fn.decoders.image to decode the raw [images](https://github.com/ROCm/rocAL/blob/master/examples/tf/pets_training/train.py#L128).
 
-```
+```python
 trainPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=1, rocal_cpu=RUN_ON_HOST, tensor_layout = types.NHWC)
     with trainPipe:
         inputs = fn.readers.tfrecord(path=TRAIN_RECORDS_DIR, index_path = "", reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
@@ -142,7 +142,7 @@ trainPipe.build()
 
 3. Import libraries for [TensorFlow](https://github.com/ROCm/rocAL/blob/master/examples/tf/pets_training/train.py#L174).
 
-```
+```python
 import tensorflow.compat.v1 as tf
 tf.compat.v1.disable_v2_behavior()
 import tensorflow_hub as hub
