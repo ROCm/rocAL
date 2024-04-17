@@ -26,7 +26,6 @@
 cmake_minimum_required (VERSION 3.5)
 
 project (dataloader_multithread)
-
 set(CMAKE_CXX_STANDARD 14)
 
 # ROCM Path
@@ -47,41 +46,11 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
-if(NOT DEFINED BACKEND)
-    set(BACKEND "HIP")   # set default backend to HIP
-endif()
-
-if("${BACKEND}" STREQUAL "OPENCL")
-    find_package(OpenCL QUIET)
-    if(OpenCL_FOUND)
-        set(ENABLE_OPENCL 1)
-        set(ENABLE_HIP 0)
-        include_directories($${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
-        target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARIES})
-    else()
-        message("-- ${Yellow}NOTE: OpenCL Not Found -- runVX built for CPU only${ColourReset}")
-    endif()
-elseif ("${BACKEND}" STREQUAL "HIP")
-    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
-    find_package(HIP QUIET)
-    if(HIP_FOUND)
-        message("-- ${White}dataloader_multithread -- Using HIP -- Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER} ${ColourReset})
-        set(ENABLE_HIP 1)
-        set(ENABLE_OPENCL 0)
-        include_directories(${HIP_PATH}/include)
-        link_directories(${HIP_PATH}/lib)
-        message("-- ${Green}rali_dataloader_mt built with HIP Support${ColourReset}")
-    else()
-        message("-- ${Yellow}NOTE: HIP Not Found -- rali_dataloader_mt built for CPU only${ColourReset}")
-    endif()
-else()
-    message("-- ${Yellow}NOTE: GPU Support Not Found or Turned OFF -- rali_dataloader_mt app built for CPU only${ColourReset}")
-endif()
-
 include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
 link_directories    (${ROCM_PATH}/lib)
+file(GLOB My_Source_Files ./*.cpp)
+add_executable(${PROJECT_NAME} ${My_Source_Files})
 
-add_executable(${PROJECT_NAME} ./dataloader_multithread.cpp)
 if(OpenCV_FOUND)
     if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 3 )
         message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
