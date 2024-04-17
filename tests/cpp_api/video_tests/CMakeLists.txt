@@ -29,14 +29,14 @@ project (video_tests)
 
 set(CMAKE_CXX_STANDARD 14)
 
-# ROCm Path
-set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
-
-# avoid setting the default installation path to /usr/local
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "rocAL default installation path" FORCE)
-endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
 
 # Add Default libdir
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
@@ -47,7 +47,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
-include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
+include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
 link_directories(${ROCM_PATH}/lib/)
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
@@ -58,9 +58,9 @@ if(OpenCV_FOUND)
         include_directories(${OpenCV_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
         if(${OpenCV_VERSION_MAJOR} EQUAL 4)
-	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
         else()
-	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
         endif()
     else()
         message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
@@ -71,5 +71,3 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
-
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
