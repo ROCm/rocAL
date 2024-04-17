@@ -15,7 +15,7 @@ if [ -z "$INPUT_PATH" ]
 fi
 
 # Handles relative input path
-if [ ! -d "$INPUT_PATH" & [[ "$INPUT_PATH" != /* ]]
+if [[ ! -d "$INPUT_PATH" ]] & [[ "$INPUT_PATH" != /* ]]
 then
   CWD=$(pwd)
   INPUT_PATH="$CWD/$INPUT_PATH"
