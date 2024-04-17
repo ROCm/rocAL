@@ -12,7 +12,7 @@ rocAL can be currently used to perform the following operations either with rand
 <table>
   <tr>
     <th>Blend</th>
-    <th>Blur (Gaussian 3x3)</th> 
+    <th>Blur (Gaussian 3x3)</th>
     <th>Brightness</th>
     <th>Color Temperature</th>
   </tr>
@@ -24,31 +24,31 @@ rocAL can be currently used to perform the following operations either with rand
   </tr>
   <tr>
     <th>CropResize</th>
-    <th>Exposure Modification</th> 
+    <th>Exposure Modification</th>
     <th>Fisheye Lens</th>
     <th>Flip (Horizontal, Vertical and Both)</th>
   </tr>
   <tr>
     <th>Fog</th>
-    <th>Gamma</th> 
+    <th>Gamma</th>
     <th>Hue</th>
     <th>Jitter</th>
   </tr>
   <tr>
     <th>Lens Correction</th>
-    <th>Pixelization</th> 
+    <th>Pixelization</th>
     <th>Raindrops</th>
     <th>Random Crop</th>
   </tr>
   <tr>
     <th>Resize</th>
-    <th>Resize Crop Mirror</th> 
+    <th>Resize Crop Mirror</th>
     <th>Rotation</th>
     <th>Salt And Pepper Noise</th>
   </tr>
   <tr>
     <th>Saturation</th>
-    <th>Snowflakes</th> 
+    <th>Snowflakes</th>
     <th>Vignette</th>
     <th>Warp Affine</th>
   </tr>
@@ -63,17 +63,17 @@ rocAL can be currently used to perform the following operations either with rand
   + SLES - `15-SP4`
 * [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 * Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=graphics,rocm --no-32`
-*  [RPP](https://github.com/ROCm/rpp)
-*  [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
-*  [Turbo JPEG](https://libjpeg-turbo.org/) - Version 3.0.1 from `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-*  [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
-*  [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
-*  [LMBD Library](http://www.lmdb.tech/doc/)
-*  [RapidJSON](https://github.com/Tencent/rapidjson)
-*  [PyBind11](https://github.com/pybind/pybind11)
-*  [HIP](https://github.com/ROCm/HIP)
-*  OpenMP
-*  C++17
+* [RPP](https://github.com/ROCm/rpp)
+* [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
+* [Turbo JPEG](https://libjpeg-turbo.org/) - Version 3.0.1 from `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
+* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+* [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
+* [LMBD Library](http://www.lmdb.tech/doc/)
+* [RapidJSON](https://github.com/Tencent/rapidjson)
+* [PyBind11](https://github.com/pybind/pybind11)
+* [HIP](https://github.com/ROCm/HIP)
+* OpenMP
+* C++17
 
 ### Prerequisites setup script
 
@@ -99,20 +99,26 @@ The installation process uses the following steps:
 
 ### Package install
 
-Install rocAL runtime, development, and test packages. 
+Install rocAL runtime, development, and test packages.
+
 * Runtime package - `rocal` only provides the dynamic libraries
 * Development package - `rocal-dev`/`rocal-devel` provides the libraries, executables, header files, and samples
 * Test package - `rocal-test` provides ctest to verify installation
 
-##### `Ubuntu`
+#### `Ubuntu`
+
   ```shell
   sudo apt-get install rocal rocal-dev rocal-test
   ```
-##### `CentOS`/`RedHat`
+
+#### `CentOS`/`RedHat`
+
   ```shell
   sudo yum install rocal rocal-devel rocal-test
   ```
-##### `SLES`
+
+#### `SLES`
+
   ```shell
   sudo zypper install rocal rocal-devel rocal-test
   ```
@@ -121,15 +127,16 @@ Install rocAL runtime, development, and test packages.
 > * Package install requires `Turbo JPEG`, `PyBind 11 v2.10.4` and `Protobuf V3.12.4`  manual install
 > * `CentOS`/`RedHat`/`SLES` requires `FFMPEG Dev` package manual install
 
-#### Source install
+### Source install
 
 To build rocAL from source and install, follow the steps below:
-  
+
 * Clone rocAL source code
 
 ```shell
 git clone https://github.com/ROCm/rocAL.git
 ```
+
   **Note:** rocAL has support for two GPU backends: **OPENCL** and **HIP**:
 
 * Instructions for building rocAL with the **HIP** GPU backend (default GPU backend):

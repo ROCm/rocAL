@@ -1,12 +1,12 @@
 # Chapter 1: Overview
 
-## 1.1 Overview 
+## 1.1 Overview
 
 The performance of Deep Learning applications depends upon the efficiency of performance pipelines that can load and preprocess data efficiently to provide a high throughput. The pipelines are typically used to perform tasks such as loading and decoding data, perform a variety of augmentations, perform color-format conversions, etc., before passing the data for training or inference. The Deep Learning frameworks also require the pipelines to support multiple data formats and augmentations to adapt to a variety of datasets and models.
 
 This can be achieved by creating processing pipelines that fully utilize the underlying hardware capabilities.
 
-ROCm™ Augmentation Library (rocAL™) allows the user to create hybrid pipelines to maximize the throughput for Machine Learning applications. It helps to create pipelines that can efficiently process images, videos, and a variety of storage formats. The user can program these pipelines using C or Python API. rocAL significantly accelerates data processing on AMD processors. 
+ROCm™ Augmentation Library (rocAL™) allows the user to create hybrid pipelines to maximize the throughput for Machine Learning applications. It helps to create pipelines that can efficiently process images, videos, and a variety of storage formats. The user can program these pipelines using C or Python API. rocAL significantly accelerates data processing on AMD processors.
 
 To optimize the preprocessing pipeline, rocAL utilizes the following features:
 
@@ -17,7 +17,7 @@ To optimize the preprocessing pipeline, rocAL utilizes the following features:
 
 ![The Role of Pipelines in Deep Learning Applications](../data/ch1_pipelines.png)
 
-Figure 1. 	The Role of Pipelines in Deep Learning Applications
+Figure 1. The Role of Pipelines in Deep Learning Applications
 
 ## 1.2 Key Components
 
@@ -39,7 +39,7 @@ rocAL operators offer the flexibility to run on CPU or GPU for building hybrid p
 
 - Augmentations: These are used to enhance the data set by adding effects to the original images. To use the augmentations, import the instance of amd.rocal.fn. into the Python script. These augmentation APIs further call the RPP kernels underneath (HIP/HOST) depending on the backend used to build RPP and rocAL. 
 
-### Table 1. 	Augmentations Available through rocAL
+### Table 1. Augmentations Available through rocAL
 
 | Color Augmentations | Effects Augmentations | Geometry Augmentations                |
 | ------------------- | --------------------- | ------------------------------------- |
@@ -57,7 +57,7 @@ rocAL operators offer the flexibility to run on CPU or GPU for building hybrid p
 
 - Readers: These are used to read and understand the different types of datasets and their metadata. Some examples of readers are list of files with folders, LMDB, TFRecord, and JSON file for metadata. To use the readers, import the instance of amd.rocal.readers into the Python script.
 
-### Table 2.	Readers Available through rocAL
+### Table 2. Readers Available through rocAL
 
 | Readers                                 | Description                                         |
 | --------------------------------------- | --------------------------------------------------- |
@@ -71,7 +71,7 @@ rocAL operators offer the flexibility to run on CPU or GPU for building hybrid p
 
 - Decoders: These are used to support different input formats of images and videos. Decoders extract data from the datasets that are in compressed formats such as JPEG, MP4, etc. To use the decoders, import the instance of amd.rocal.decoders into the Python script.
 
-### Table 3.	Decoders Available through rocAL
+### Table 3. Decoders Available through rocAL
 
 | Decoders          | Description                            |
 | ----------------- | -------------------------------------- |

@@ -157,8 +157,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int decode_max_width = width;
     int decode_max_height = height;
     int pipeline_type = -1;
-    std::cout << ">>> test case " << test_case << std::endl;
-    std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
+    std::cout << "Test case " << test_case << std::endl;
+    std::cout << "Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
 
     RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24
                                               : RocalImageColor::ROCAL_COLOR_U8;
@@ -201,7 +201,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     switch (reader_type) {
         case 1:  // image_partial decode
         {
-            std::cout << ">>>>>>> Running PARTIAL DECODE" << std::endl;
+            std::cout << "Running PARTIAL DECODE" << std::endl;
             pipeline_type = 1;
             rocalCreateLabelReader(handle, path);
             std::vector<float> area = {0.08, 1};
@@ -210,7 +210,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 2:  // coco detection
         {
-            std::cout << ">>>>>>> Running COCO READER" << std::endl;
+            std::cout << "Running COCO READER" << std::endl;
             pipeline_type = 2;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
@@ -226,7 +226,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 3:  // coco detection partial
         {
-            std::cout << ">>>>>>> Running COCO READER PARTIAL" << std::endl;
+            std::cout << "Running COCO READER PARTIAL" << std::endl;
             pipeline_type = 2;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
@@ -244,7 +244,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 4:  // tf classification
         {
-            std::cout << ">>>>>>> Running TF CLASSIFICATION READER" << std::endl;
+            std::cout << "Running TF CLASSIFICATION READER" << std::endl;
             pipeline_type = 1;
             char key1[25] = "image/encoded";
             char key2[25] = "image/class/label";
@@ -254,7 +254,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 5:  // tf detection
         {
-            std::cout << ">>>>>>> Running TF DETECTION READER" << std::endl;
+            std::cout << "Running TF DETECTION READER" << std::endl;
             pipeline_type = 2;
             char key1[25] = "image/encoded";
             char key2[25] = "image/object/class/label";
@@ -269,35 +269,35 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 6:  // caffe classification
         {
-            std::cout << ">>>>>>> Running CAFFE CLASSIFICATION READER" << std::endl;
+            std::cout << "Running CAFFE CLASSIFICATION READER" << std::endl;
             pipeline_type = 1;
             rocalCreateCaffeLMDBLabelReader(handle, path);
             decoded_output = rocalJpegCaffeLMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 7:  // caffe detection
         {
-            std::cout << ">>>>>>> Running CAFFE DETECTION READER" << std::endl;
+            std::cout << "Running CAFFE DETECTION READER" << std::endl;
             pipeline_type = 2;
             rocalCreateCaffeLMDBReaderDetection(handle, path);
             decoded_output = rocalJpegCaffeLMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 8:  // caffe2 classification
         {
-            std::cout << ">>>>>>> Running CAFFE2 CLASSIFICATION READER" << std::endl;
+            std::cout << "Running CAFFE2 CLASSIFICATION READER" << std::endl;
             pipeline_type = 1;
             rocalCreateCaffe2LMDBLabelReader(handle, path, true);
             decoded_output = rocalJpegCaffe2LMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 9:  // caffe2 detection
         {
-            std::cout << ">>>>>>> Running CAFFE2 DETECTION READER" << std::endl;
+            std::cout << "Running CAFFE2 DETECTION READER" << std::endl;
             pipeline_type = 2;
             rocalCreateCaffe2LMDBReaderDetection(handle, path, true);
             decoded_output = rocalJpegCaffe2LMDBRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 10:  // coco reader keypoints
         {
-            std::cout << ">>>>>>> Running COCO KEYPOINTS READER" << std::endl;
+            std::cout << "Running COCO KEYPOINTS READER" << std::endl;
             pipeline_type = 3;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
@@ -314,13 +314,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 11:  // mxnet reader
         {
-            std::cout << ">>>>>>> Running MXNET READER" << std::endl;
+            std::cout << "Running MXNET READER" << std::endl;
             pipeline_type = 1;
             rocalCreateMXNetReader(handle, path, true);
             decoded_output = rocalMXNetRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         default: {
-            std::cout << ">>>>>>> Running IMAGE READER" << std::endl;
+            std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
             rocalCreateLabelReader(handle, path);
             if (decode_max_height <= 0 || decode_max_width <= 0)
@@ -347,8 +347,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     }
     switch (test_case) {
         case 0: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalResize" << std::endl;
+            std::cout << "Running rocalResize" << std::endl;
             resize_w = 400;
             resize_h = 400;
             std::string interpolation_type_name, scaling_node_name;
@@ -368,273 +367,220 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 output = rocalResize(handle, input, resize_w, resize_h, true, scale_mode, {}, 0, 0, interpolation_type);
         } break;
         case 1: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCropResize" << std::endl;
+            std::cout << "Running rocalCropResize" << std::endl;
             output = rocalCropResize(handle, input, resize_w, resize_h, true);
         } break;
         case 2: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalRotate" << std::endl;
+            std::cout << "Running rocalRotate" << std::endl;
             output = rocalRotate(handle, input, true);
         } break;
         case 3: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalBrightness" << std::endl;
+            std::cout << "Running rocalBrightness" << std::endl;
             output = rocalBrightness(handle, input, true);
         } break;
         case 4: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalGamma" << std::endl;
+            std::cout << "Running rocalGamma" << std::endl;
             output = rocalGamma(handle, input, true);
         } break;
         case 5: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalContrast" << std::endl;
+            std::cout << "Running rocalContrast" << std::endl;
             output = rocalContrast(handle, input, true);
         } break;
         case 6: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalFlip" << std::endl;
+            std::cout << "Running rocalFlip" << std::endl;
             output = rocalFlip(handle, input, true);
         } break;
         case 7: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalBlur" << std::endl;
+            std::cout << "Running rocalBlur" << std::endl;
             output = rocalBlur(handle, input, true);
         } break;
         case 8: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalBlend" << std::endl;
+            std::cout << "Running rocalBlend" << std::endl;
             RocalTensor output_1 = rocalRotate(handle, input, false);
             output = rocalBlend(handle, input, output_1, true);
         } break;
         case 9: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalWarpAffine" << std::endl;
+            std::cout << "Running rocalWarpAffine" << std::endl;
             output = rocalWarpAffine(handle, input, true);
         } break;
         case 10: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalFishEye" << std::endl;
+            std::cout << "Running rocalFishEye" << std::endl;
             output = rocalFishEye(handle, input, true);
         } break;
         case 11: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalVignette" << std::endl;
+            std::cout << "Running rocalVignette" << std::endl;
             output = rocalVignette(handle, input, true);
         } break;
         case 12: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalJitter" << std::endl;
+            std::cout << "Running rocalJitter" << std::endl;
             output = rocalJitter(handle, input, true);
         } break;
         case 13: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalSnPNoise" << std::endl;
+            std::cout << "Running rocalSnPNoise" << std::endl;
             output = rocalSnPNoise(handle, input, true);
         } break;
         case 14: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalSnow" << std::endl;
+            std::cout << "Running rocalSnow" << std::endl;
             output = rocalSnow(handle, input, true);
         } break;
         case 15: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalRain" << std::endl;
+            std::cout << "Running rocalRain" << std::endl;
             output = rocalRain(handle, input, true);
         } break;
         case 16: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalColorTemp" << std::endl;
+            std::cout << "Running rocalColorTemp" << std::endl;
             output = rocalColorTemp(handle, input, true);
         } break;
         case 17: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalFog" << std::endl;
+            std::cout << "Running rocalFog" << std::endl;
             output = rocalFog(handle, input, true);
         } break;
         case 18: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalLensCorrection" << std::endl;
+            std::cout << "Running rocalLensCorrection" << std::endl;
             output = rocalLensCorrection(handle, input, true);
         } break;
         case 19: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalPixelate" << std::endl;
+            std::cout << "Running rocalPixelate" << std::endl;
             output = rocalPixelate(handle, input, true);
         } break;
         case 20: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalExposure" << std::endl;
+            std::cout << "Running rocalExposure" << std::endl;
             output = rocalExposure(handle, input, true);
         } break;
         case 21: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalHue" << std::endl;
+            std::cout << "Running rocalHue" << std::endl;
             output = rocalHue(handle, input, true);
         } break;
         case 22: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalSaturation" << std::endl;
+            std::cout << "Running rocalSaturation" << std::endl;
             output = rocalSaturation(handle, input, true);
         } break;
         case 23: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCopy" << std::endl;
+            std::cout << "Running rocalCopy" << std::endl;
             output = rocalCopy(handle, input, true);
         } break;
         case 24: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalColorTwist" << std::endl;
+            std::cout << "Running rocalColorTwist" << std::endl;
             output = rocalColorTwist(handle, input, true);
         } break;
         case 25: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCropMirrorNormalize" << std::endl;
+            std::cout << "Running rocalCropMirrorNormalize" << std::endl;
             std::vector<float> mean = {128, 128, 128};
             std::vector<float> std_dev = {1.2, 1.2, 1.2};
             output = rocalCropMirrorNormalize(handle, input, 224, 224, 0, 0, mean, std_dev, true, mirror, output_tensor_layout, output_tensor_dtype);
         } break;
         case 26: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCrop" << std::endl;
+            std::cout << "Running rocalCrop" << std::endl;
             output = rocalCrop(handle, input, true);
         } break;
         case 27: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalResizeCropMirror" << std::endl;
+            std::cout << "Running rocalResizeCropMirror" << std::endl;
             output = rocalResizeCropMirror(handle, input, resize_w, resize_h, true);
         } break;
 
         case 30: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCropResizeFixed" << std::endl;
+            std::cout << "Running rocalCropResizeFixed" << std::endl;
             output = rocalCropResizeFixed(handle, input, resize_w, resize_h, true, 0.25, 1.2, 0.6, 0.4);
         } break;
         case 31: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalRotateFixed" << std::endl;
+            std::cout << "Running rocalRotateFixed" << std::endl;
             output = rocalRotateFixed(handle, input, 45, true);
         } break;
         case 32: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalBrightnessFixed" << std::endl;
+            std::cout << "Running rocalBrightnessFixed" << std::endl;
             output = rocalBrightnessFixed(handle, input, 1.90, 20, true);
         } break;
         case 33: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalGammaFixed" << std::endl;
+            std::cout << "Running rocalGammaFixed" << std::endl;
             output = rocalGammaFixed(handle, input, 0.5, true);
         } break;
         case 34: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalContrastFixed" << std::endl;
+            std::cout << "Running rocalContrastFixed" << std::endl;
             output = rocalContrastFixed(handle, input, 30, 80, true);
         } break;
         case 35: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalBlurFixed" << std::endl;
+            std::cout << "Running rocalBlurFixed" << std::endl;
             output = rocalBlurFixed(handle, input, 5, true);
         } break;
         case 36: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalBlendFixed" << std::endl;
+            std::cout << "Running rocalBlendFixed" << std::endl;
             RocalTensor output_1 = rocalRotateFixed(handle, input, 45, false);
             output = rocalBlendFixed(handle, input, output_1, 0.5, true);
         } break;
         case 37: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalWarpAffineFixed" << std::endl;
+            std::cout << "Running rocalWarpAffineFixed" << std::endl;
             output = rocalWarpAffineFixed(handle, input, 1, 1, 0.5, 0.5, 7, 7, true);
         } break;
         case 38: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalVignetteFixed" << std::endl;
+            std::cout << "Running rocalVignetteFixed" << std::endl;
             output = rocalVignetteFixed(handle, input, 50, true);
         } break;
         case 39: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalJitterFixed" << std::endl;
+            std::cout << "Running rocalJitterFixed" << std::endl;
             output = rocalJitterFixed(handle, input, 3, true);
         } break;
         case 40: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalSnPNoiseFixed" << std::endl;
+            std::cout << "Running rocalSnPNoiseFixed" << std::endl;
             output = rocalSnPNoiseFixed(handle, input, 0.2, 0.2, 0.2, 0.5, true, 0);
         } break;
         case 41: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalSnowFixed" << std::endl;
+            std::cout << "Running rocalSnowFixed" << std::endl;
             output = rocalSnowFixed(handle, input, 0.2, true);
         } break;
         case 42: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalRainFixed" << std::endl;
+            std::cout << "Running rocalRainFixed" << std::endl;
             output = rocalRainFixed(handle, input, 0.5, 2, 16, 0.25, true);
         } break;
         case 43: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalColorTempFixed" << std::endl;
+            std::cout << "Running rocalColorTempFixed" << std::endl;
             output = rocalColorTempFixed(handle, input, 70, true);
         } break;
         case 44: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalFogFixed" << std::endl;
+            std::cout << "Running rocalFogFixed" << std::endl;
             output = rocalFogFixed(handle, input, 0.5, true);
         } break;
         case 45: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalLensCorrectionFixed" << std::endl;
+            std::cout << "Running rocalLensCorrectionFixed" << std::endl;
             output = rocalLensCorrectionFixed(handle, input, 2.9, 1.2, true);
         } break;
         case 46: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalExposureFixed" << std::endl;
+            std::cout << "Running rocalExposureFixed" << std::endl;
             output = rocalExposureFixed(handle, input, 1, true);
         } break;
         case 47: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalFlipFixed" << std::endl;
+            std::cout << "Running rocalFlipFixed" << std::endl;
             output = rocalFlipFixed(handle, input, 1, 0, true);
         } break;
         case 48: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalHueFixed" << std::endl;
+            std::cout << "Running rocalHueFixed" << std::endl;
             output = rocalHueFixed(handle, input, 150, true);
         } break;
         case 49: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalSaturationFixed" << std::endl;
+            std::cout << "Running rocalSaturationFixed" << std::endl;
             output = rocalSaturationFixed(handle, input, 0.3, true);
         } break;
         case 50: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalColorTwistFixed" << std::endl;
+            std::cout << "Running rocalColorTwistFixed" << std::endl;
             output = rocalColorTwistFixed(handle, input, 0.2, 10.0, 100.0, 0.25, true);
         } break;
         case 51: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCropFixed" << std::endl;
+            std::cout << "Running rocalCropFixed" << std::endl;
             output = rocalCropFixed(handle, input, 224, 224, 1, true, 0, 0, 0);
         } break;
         case 52: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCropCenterFixed" << std::endl;
+            std::cout << "Running rocalCropCenterFixed" << std::endl;
             output = rocalCropCenterFixed(handle, input, 224, 224, 2, true);
         } break;
         case 53: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalResizeCropMirrorFixed" << std::endl;
+            std::cout << "Running rocalResizeCropMirrorFixed" << std::endl;
             output = rocalResizeCropMirrorFixed(handle, input, 400, 400, true, 200, 200, mirror);
         } break;
         case 54: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalSSDRandomCrop" << std::endl;
+            std::cout << "Running rocalSSDRandomCrop" << std::endl;
             output = rocalSSDRandomCrop(handle, input, true);
         } break;
         case 55: {
-            std::cout << ">>>>>>> Running "
-                      << "rocalCropMirrorNormalizeFixed_center crop" << std::endl;
+            std::cout << "Running rocalCropMirrorNormalizeFixed_center crop" << std::endl;
             std::vector<float> mean = {128, 128, 128};
             std::vector<float> std_dev = {1.2, 1.2, 1.2};
             output = rocalCropMirrorNormalize(handle, input, 224, 224, 0.5, 0.5, mean, std_dev, true, mirror);
@@ -642,8 +588,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 56: {
             std::vector<float> mean = {128, 128, 128};
             std::vector<float> std_dev = {1.2, 1.2, 1.2};
-            std::cout << ">>>>>>> Running "
-                      << " Resize Mirror Normalize " << std::endl;
+            std::cout << "Running  Resize Mirror Normalize " << std::endl;
             output = rocalResizeMirrorNormalize(handle, input, 400, 400, mean, std_dev, true, ROCAL_SCALING_MODE_DEFAULT,
                                                 {}, 0, 0, ROCAL_LINEAR_INTERPOLATION, mirror);
         } break;
@@ -680,7 +625,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int col_counter = 0;
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
-    printf("Going to process images\n");
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
@@ -701,9 +645,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 if (num_of_classes != 0) {
                     rocalGetOneHotImageLabels(handle, label_one_hot_encoded, num_of_classes, RocalOutputMemType::ROCAL_MEMCPY_HOST);
                 }
-                std::cerr << "\nPrinting image names of batch: " << img_name << "\n";
+                std::cerr << "\nImage name:" << img_name << "\n";
                 for (unsigned int i = 0; i < input_batch_size; i++) {
-                    std::cerr << "\t Printing label_id : " << label_id[i] << std::endl;
+                    std::cerr << "Label id: " << label_id[i] << std::endl;
                     if(num_of_classes != 0)
                     {
                         std::cout << "One Hot Encoded labels:"<<"\t";
@@ -725,16 +669,16 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
                 char img_name[img_size];
                 rocalGetImageName(handle, img_name);
-                std::cerr << "\nPrinting image names of batch: " << img_name;
+                std::cerr << "\nImage name:" << img_name;
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
                 for (unsigned i = 0; i < bbox_labels->size(); i++) {
                     int *labels_buffer = reinterpret_cast<int *>(bbox_labels->at(i)->buffer());
                     float *bbox_buffer = reinterpret_cast<float *>(bbox_coords->at(i)->buffer());
-                    std::cerr << "\n>>>>> BBOX LABELS : ";
+                    std::cerr << "\nBBOX Labels : ";
                     for (unsigned j = 0; j < bbox_labels->at(i)->dims().at(0); j++)
                         std::cerr << labels_buffer[j] << " ";
-                    std::cerr << "\n>>>>> BBOX : " << bbox_coords->at(i)->dims().at(0) << " : \n";
+                    std::cerr << "\nBBOX Count: " << bbox_coords->at(i)->dims().at(0) << "\n";
                     for (unsigned j = 0, j4 = 0; j < bbox_coords->at(i)->dims().at(0); j++, j4 = j * 4)
                         std::cerr << bbox_buffer[j4] << " " << bbox_buffer[j4 + 1] << " " << bbox_buffer[j4 + 2] << " " << bbox_buffer[j4 + 3] << "\n";
                 }
@@ -804,7 +748,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     mat_input.release();
     mat_output.release();
