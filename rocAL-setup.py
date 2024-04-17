@@ -127,12 +127,14 @@ linuxSystemInstall = ''
 linuxCMake = 'cmake'
 linuxSystemInstall_check = ''
 linuxFlag = ''
+sudoValidateOption= '-v'
 if "centos" in platfromInfo or "redhat" in platfromInfo or os.path.exists('/usr/bin/yum'):
     linuxSystemInstall = 'yum -y'
     linuxSystemInstall_check = '--nogpgcheck'
     if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
         linuxCMake = 'cmake3'
         ERROR_CHECK(os.system(linuxSystemInstall+' install cmake3'))
+        sudoValidateOption = ''
     if not "centos" in platfromInfo or not "redhat" in platfromInfo:
         platfromInfo = platfromInfo+'-redhat'
 elif "Ubuntu" in platfromInfo or os.path.exists('/usr/bin/apt-get'):
@@ -159,7 +161,7 @@ if userName == 'root':
 
 # Delete previous install
 if os.path.exists(deps_dir) and reinstall == 'yes':
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     ERROR_CHECK(os.system('sudo rm -rf '+deps_dir))
     print("\nrocAL Setup: Removing Previous Install -- "+deps_dir+"\n")
 
@@ -249,7 +251,7 @@ coreRPMPackages = [
 ]
 
 # Re-Install
-ERROR_CHECK(os.system('sudo -v'))
+ERROR_CHECK(os.system('sudo '+sudoValidateOption))
 if os.path.exists(deps_dir):
     print("\nrocAL Setup: Re-Installing Libraries from -- "+deps_dir+"\n")
     # opencv
@@ -271,7 +273,7 @@ else:
     # Create Build folder
     ERROR_CHECK(os.system('(cd '+deps_dir+'; mkdir build )'))
     # install common pre-reqs
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     # common packages
     for i in range(len(commonPackages)):
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -303,7 +305,7 @@ else:
     ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion+'; make -j8 )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-' +
             ProtoBufVersion+'; make check -j8 )'))
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
             '; sudo '+linuxFlag+' make install )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
@@ -312,7 +314,7 @@ else:
     # Install OpenCV -- TBD cleanup
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build; mkdir OpenCV )'))
     # Install pre-reqs
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     if "Ubuntu" in platfromInfo:
         for i in range(len(opencvDebianPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -331,7 +333,7 @@ else:
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; '+linuxCMake +
             ' -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF  -D CMAKE_INSTALL_PREFIX=/usr/local ../../opencv-'+opencvVersion+' )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; make -j$(nproc))'))
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
     
@@ -378,7 +380,7 @@ else:
                     ' install ffmpeg-4'))
 
 
-    ERROR_CHECK(os.system('sudo -v'))
+    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     # rocAL Core Packages
     if "Ubuntu" in platfromInfo:
         for i in range(len(coreDebianPackages)):
