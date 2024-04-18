@@ -69,6 +69,9 @@ class FileSourceReader : public Reader {
 
     size_t last_batch_padded_size() override;
 
+    std::string get_root_folder_path();
+
+    std::vector<std::string> get_file_paths_from_meta_data_reader();
    private:
     //! opens the folder containnig the images
     Reader::Status open_folder();
