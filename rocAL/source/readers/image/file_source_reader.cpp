@@ -44,7 +44,8 @@ unsigned FileSourceReader::count_items() {
     if (_loop)
         return _file_names.size();
 
-    int ret = ((int)_file_names.size() - _read_counter);
+    int size = std::max(_file_names.size(), _batch_count);
+    int ret = (size - _read_counter);
     if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
         ret += _in_batch_read_count;
     } else if (_last_batch_info.first == RocalBatchPolicy::FILL) {
@@ -171,7 +172,6 @@ void FileSourceReader::reset() {
             std::rotate(_file_names.begin(), _file_names.begin() + read_start_index, _file_names.end());
         } else {
             _curr_file_idx = 0;
-            _read_counter = 0;
         }
     } else if (_stick_to_shard == false && _shard_count > 1) {
         // Reset the variables
