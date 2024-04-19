@@ -133,7 +133,10 @@ if "centos" in platfromInfo or "redhat" in platfromInfo or os.path.exists('/usr/
         ERROR_CHECK(os.system(linuxSystemInstall+' install cmake3'))
         sudoValidateOption = ''
     if not "centos" in platfromInfo or not "redhat" in platfromInfo:
-        platfromInfo = platfromInfo+'-redhat'
+        if "8" in platform.version():
+            platfromInfo = platfromInfo+'-redhat-8'
+        if "9" in platform.version():
+            platfromInfo = platfromInfo+'-redhat-9'
 elif "Ubuntu" in platfromInfo or os.path.exists('/usr/bin/apt-get'):
     linuxSystemInstall = 'apt-get -y'
     linuxSystemInstall_check = '--allow-unauthenticated'
@@ -248,17 +251,12 @@ coreRPMPackages = [
     'protobuf-compiler'
 ]
 
-# Re-Install
+# Install
 ERROR_CHECK(os.system('sudo '+sudoValidateOption))
 if os.path.exists(deps_dir):
-    print("\nrocAL Setup: Re-Installing Libraries from -- "+deps_dir+"\n")
-    # opencv
-    if os.path.exists(deps_dir+'/build/OpenCV'):
-        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ' +
-                linuxFlag+' make install -j8)'))
-
-    print("\nrocAL Dependencies Re-Installed with rocAL-setup.py V-"+__version__+"\n")
-
+    print("\nrocAL Setup: Old install found  -- "+deps_dir+"\n")
+    print("\nrocAL Dependencies Previously Installed with rocAL-setup.py\n")
+    print("\nrocAL Setup: Run with --reinstall ON option to reinstalls\n")
 # Clean Install
 else:
     print("\nrocAL Dependencies Installation with rocAL-setup.py V-"+__version__+"\n")
