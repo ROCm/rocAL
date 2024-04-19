@@ -257,6 +257,7 @@ if os.path.exists(deps_dir):
     print("\nrocAL Setup: Old install found  -- "+deps_dir+"\n")
     print("\nrocAL Dependencies Previously Installed with rocAL-setup.py\n")
     print("\nrocAL Setup: Run with --reinstall ON option to reinstalls\n")
+    exit(0)
 # Clean Install
 else:
     print("\nrocAL Dependencies Installation with rocAL-setup.py V-"+__version__+"\n")
@@ -269,7 +270,7 @@ else:
     for i in range(len(commonPackages)):
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ commonPackages[i]))
-    
+
     # ROCm Packages
     ERROR_CHECK(os.system(linuxSystemInstall+' update'))
     if "Ubuntu" in platfromInfo:
@@ -299,7 +300,7 @@ else:
         for i in range(len(opencvRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ opencvRPMPackages[i]))
-    
+
     # Install ffmpeg
     if "Ubuntu" in platfromInfo:
         for i in range(len(ffmpegDebianPackages)):
@@ -342,7 +343,6 @@ else:
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                     ' install ffmpeg-4'))
 
-
     ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     # rocAL Core Packages
     if "Ubuntu" in platfromInfo:
@@ -365,6 +365,10 @@ else:
     ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
             linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j4; sudo make install)'))
 
+    # RapidJSON - Source TBD: Package install of RapidJSON has compile issues
+    os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
+            linuxCMake+' ../; make -j4; sudo make install)')
+
     # OpenCV 4.6.0
     # Get Installation Source
     ERROR_CHECK(os.system(
@@ -377,4 +381,4 @@ else:
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
     
-    print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")
+print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")
