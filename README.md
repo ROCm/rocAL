@@ -238,7 +238,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
-* RapidJSON - `rapidjson-dev` / `rapidjson-devel`
+* RapidJSON - `https://github.com/Tencent/rapidjson`
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
