@@ -180,11 +180,11 @@ git clone https://github.com/ROCm/rocAL.git
 ## Verify installation
 
 * The installer will copy
-  + Executables into `/opt/rocm/bin`
-  + Libraries into `/opt/rocm/lib`
-  + Header files into `/opt/rocm/include/rocal`
-  + Apps, & Samples folder into `/opt/rocm/share/rocal`
-  + Documents folder into `/opt/rocm/share/doc/rocal`
+  * Executables into `/opt/rocm/bin`
+  * Libraries into `/opt/rocm/lib`
+  * Header files into `/opt/rocm/include/rocal`
+  * Apps, & Samples folder into `/opt/rocm/share/rocal`
+  * Documents folder into `/opt/rocm/share/doc/rocal`
 
 ### Verify with rocal-test package
 
@@ -230,10 +230,10 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 ### Tested Configurations
 
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RedHat - `8` / `9`
-  + SLES - `15-SP4`
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RedHat - `8` / `9`
+  * SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-6`
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
