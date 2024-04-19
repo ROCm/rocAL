@@ -196,7 +196,7 @@ CIFAR10DataLoader::load_routine() {
                 _circ_buff.set_crop_image_info(_crop_image_info);
             }
             _file_load_time.end();  // Debug timing
-            _circ_buff.set_data_info(_decoded_data_info);
+            _circ_buff.set_decoded_data_info(_decoded_data_info);
             _circ_buff.push();
             _image_counter += _output_tensor->info().batch_size();
             load_status = LoaderModuleStatus::OK;
@@ -254,7 +254,7 @@ CIFAR10DataLoader::update_output_image() {
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_data_info = _circ_buff.get_data_info();
+    _output_decoded_data_info = _circ_buff.get_decoded_data_info();
     if (_randombboxcrop_meta_data_reader) {
         _output_cropped_image_info = _circ_buff.get_cropped_image_info();
     }

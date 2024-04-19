@@ -267,6 +267,7 @@ class TensorInfo {
     bool is_metadata() const { return _is_metadata; }
     void set_roi_ptr(unsigned* roi_ptr) { _roi.reset_ptr(roi_ptr); }
     void copy_roi(void* roi_buffer) { _roi.copy(roi_buffer); }
+    std::shared_ptr<std::vector<float>> get_sample_rates() const { return _sample_rates; }  //!< The number of samples of audio carried per second
 
    private:
     Type _type = Type::UNKNOWN;                                  //!< tensor type, whether is virtual tensor, created from handle or is a regular tensor
@@ -284,9 +285,11 @@ class TensorInfo {
     uint64_t _data_size = 0;
     std::vector<size_t> _max_shape;  //!< stores the the width and height dimensions in the tensor
     void reset_tensor_roi_buffers();
+    void reallocate_tensor_sample_rate_buffers(); //!< Reallocating the sample_rate buffer
     bool _is_image = false;
     bool _is_metadata = false;
     size_t _channels = 3;  //!< stores the channel dimensions in the tensor
+    std::shared_ptr<std::vector<float>> _sample_rates;  //!< Stores the sample rates for the audio
 };
 
 bool operator==(const TensorInfo& rhs, const TensorInfo& lhs);
@@ -317,6 +320,8 @@ class Tensor : public rocalTensor {
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
+    //! Copying the output buffer with specified max_cols and max_rows values for the 2D buffer of size batch_size
+    unsigned copy_data(void* user_buffer, uint max_rows, uint max_cols); 
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();
@@ -328,6 +333,8 @@ class Tensor : public rocalTensor {
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
     void update_tensor_roi(const std::vector<std::vector<uint32_t>>& shape);
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
+    void reset_audio_sample_rate() { _info.reallocate_tensor_sample_rate_buffers(); }
+    void update_audio_tensor_sample_rate(const std::vector<float>& sample_rate);
     void set_roi(unsigned* roi_ptr) { _info.set_roi_ptr(roi_ptr); }
     void copy_roi(void* roi_buffer) override { _info.copy_roi(roi_buffer); }
     size_t get_roi_dims_size() override { return _info.roi().no_of_dims(); }

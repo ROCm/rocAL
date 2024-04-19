@@ -171,6 +171,10 @@ class Reader {
     //! Returns the name/identifier of the last item opened in this resource
     virtual std::string id() = 0;
     //! Returns the number of items remained in this resource
+
+     //! Returns the path of the last item opened in this resource
+    virtual const std::string file_path() { THROW("File path is not set by the reader") }
+
     virtual unsigned count_items() = 0;
 
     virtual ~Reader() = default;
