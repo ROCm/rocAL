@@ -15,6 +15,7 @@
 ### Optimizations
 
 * Tests
+* Setup Script
 
 ### Changed
 
@@ -22,25 +23,25 @@
 
 ### Fixed
 
-* tests & readme
+* Tests & readme
 
 ### Tested Configurations
 
 * Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
-  * RedHat - `8` / `9`
-  * SLES - `15-SP4`
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7`
+  + RedHat - `8` / `9`
+  + SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-6`
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
-* Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/) - Version 3.0.1
-* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
+* Protobuf - `libprotobuf-dev`/`protobuf-devel`
+* RapidJSON - `rapidjson-dev` / `rapidjson-devel`
+* FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
-* RapidJSON- [master](https://github.com/Tencent/rapidjson)
+* Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* rocAL Setup Script - `V1.1.0`
+* rocAL Setup Script - `V2.0.0`
 * Dependencies for all the above packages
 
 ### Known issues

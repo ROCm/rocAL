@@ -46,8 +46,6 @@ parser.add_argument('--directory', 	type=str, default='~/rocal-deps',
                     help='Setup home directory - optional (default:~/)')
 parser.add_argument('--opencv',    	type=str, default='4.6.0',
                     help='OpenCV Version - optional (default:4.6.0)')
-parser.add_argument('--protobuf',  	type=str, default='3.12.4',
-                    help='ProtoBuf Version - optional (default:3.12.4)')
 parser.add_argument('--pybind11',   type=str, default='v2.10.4',
                     help='PyBind11 Version - optional (default:v2.10.4)')
 parser.add_argument('--backend', 	type=str, default='HIP',
@@ -60,7 +58,6 @@ args = parser.parse_args()
 
 setupDir = args.directory
 opencvVersion = args.opencv
-ProtoBufVersion = args.protobuf
 pybind11Version = args.pybind11
 ROCM_PATH = args.rocm_path
 backend = args.backend.upper()
@@ -226,28 +223,29 @@ ffmpegDebianPackages = [
 ]
 
 coreDebianPackages = [
-    'libgflags-dev',
-    'libgoogle-glog-dev',
+    'nasm',
+    'yasm',
     'liblmdb-dev',
     'rapidjson-dev',
-    'nasm',
-    'yasm'
     'python3-dev',
     'python3-pip',
-    'protobuf-compiler',
-    'libprotoc-dev'
+    'python3-protobuf',
+    'libprotobuf-dev',
+    'libprotoc-dev',
+    'protobuf-compiler'
 ]
 
 coreRPMPackages = [
     'nasm',
     'yasm',
-    'jsoncpp-devel',
     'lmdb-devel',
+    'jsoncpp-devel',
     'rapidjson-devel',
     'python3-devel',
     'python3-pip',
-    'protobuf-devel',
-    'python3-protobuf'
+    'python3-protobuf',
+    'protobuf-devel'
+    'protobuf-compiler'
 ]
 
 # Re-Install
@@ -258,11 +256,6 @@ if os.path.exists(deps_dir):
     if os.path.exists(deps_dir+'/build/OpenCV'):
         ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ' +
                 linuxFlag+' make install -j8)'))
-
-    # ProtoBuf
-    if os.path.exists(deps_dir+'/protobuf-'+ProtoBufVersion):
-        ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
-                '; sudo '+linuxFlag+' make install -j8)'))
 
     print("\nrocAL Dependencies Re-Installed with rocAL-setup.py V-"+__version__+"\n")
 
@@ -283,9 +276,6 @@ else:
     ERROR_CHECK(os.system(
         '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
-    ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; wget https://github.com/protocolbuffers/protobuf/archive/v'+ProtoBufVersion+'.zip )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip v'+ProtoBufVersion+'.zip )'))
     
     # ROCm Packages
     if "Ubuntu" in platfromInfo:
@@ -296,20 +286,6 @@ else:
         for i in range(len(rocmRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ rocmRPMPackages[i]))
-
-    # Install ProtoBuf
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-' +
-            ProtoBufVersion+'; ./autogen.sh )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-' +
-            ProtoBufVersion+'; ./configure )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion+'; make -j8 )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-' +
-            ProtoBufVersion+'; make check -j8 )'))
-    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
-            '; sudo '+linuxFlag+' make install )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
-            '; sudo '+linuxFlag+' ldconfig )'))
 
     # Install OpenCV -- TBD cleanup
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build; mkdir OpenCV )'))
