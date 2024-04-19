@@ -157,7 +157,7 @@ if userName == 'root':
     ERROR_CHECK(os.system(linuxSystemInstall+' install sudo'))
 
 # Delete previous install
-if os.path.exists(deps_dir) and reinstall == 'yes':
+if os.path.exists(deps_dir) and reinstall == 'ON':
     ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     ERROR_CHECK(os.system('sudo rm -rf '+deps_dir))
     print("\nrocAL Setup: Removing Previous Install -- "+deps_dir+"\n")
