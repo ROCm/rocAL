@@ -254,9 +254,9 @@ coreRPMPackages = [
 # Install
 ERROR_CHECK(os.system('sudo '+sudoValidateOption))
 if os.path.exists(deps_dir):
-    print("\nrocAL Setup: Old install found  -- "+deps_dir+"\n")
-    print("\nrocAL Dependencies Previously Installed with rocAL-setup.py\n")
-    print("\nrocAL Setup: Run with --reinstall ON option to reinstalls\n")
+    print("\nrocAL Setup: install found -- "+deps_dir)
+    print("\nrocAL Setup: use option --reinstall ON to reinstall all dependencies")
+    print("\nrocAL Dependencies Previously Installed with rocAL-setup.py")
     exit(0)
 # Clean Install
 else:
