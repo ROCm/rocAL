@@ -272,7 +272,6 @@ else:
                         ' '+linuxSystemInstall_check+' install -y '+ commonPackages[i]))
 
     # ROCm Packages
-    ERROR_CHECK(os.system(linuxSystemInstall+' update'))
     if "Ubuntu" in platfromInfo:
         for i in range(len(rocmDebianPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
