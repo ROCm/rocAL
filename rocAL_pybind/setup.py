@@ -37,14 +37,13 @@ class BinaryDistribution(Distribution):
     def has_ext_modules(self):
         return True
 
-
 setup(
     name='amd-rocal',
-    description='AMD ROCm Augmentation Library',
+    description='AMD ROCm Augmentation Library Python Bindings',
     url='https://github.com/ROCm/rocAL',
     version='2.0.0',
     author='AMD',
-    license='Apache License 2.0',
+    license='MIT',
     packages=find_packages(where='@TARGET_NAME@'),
     package_dir={'amd': '@TARGET_NAME@/amd'},
     include_package_data=True,

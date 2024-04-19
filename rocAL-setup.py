@@ -276,6 +276,7 @@ else:
     ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
     
     # ROCm Packages
+    ERROR_CHECK(os.system(linuxSystemInstall+' update'))
     if "Ubuntu" in platfromInfo:
         for i in range(len(rocmDebianPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
