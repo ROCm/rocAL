@@ -114,7 +114,7 @@ def main():
         print("Need to export ROCAL_DATA_PATH")
         sys.exit()
     if not rocal_cpu:
-        print("The GPU support for Audio is not given yet. running on CPU")
+        print("The GPU support for Audio is not given yet. Running on CPU")
         rocal_cpu = True
     if audio_path == "":
         audio_path = f'{rocal_data_path}/rocal_data/audio/wav/'
@@ -132,14 +132,14 @@ def main():
         if case_name == "audio_decoder":
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
         audio_pipeline.build()
-        audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
+        audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         cnt = 0
         start = timeit.default_timer()
         # Enumerate over the Dataloader
         for e in range(int(args.num_epochs)):
             print("Epoch :: ", e)
             torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-            for i, it in enumerate(audioIteratorPipeline):
+            for i, it in enumerate(audio_loader):
                 for x in range(len(it[0])):
                     for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
                         if args.print_tensor:
