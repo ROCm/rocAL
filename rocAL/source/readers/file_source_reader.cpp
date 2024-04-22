@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include <cstring>
 #include "pipeline/commons.h"
-#include "readers/image/file_source_reader.h"
+#include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
 
 FileSourceReader::FileSourceReader() {
@@ -241,7 +241,7 @@ Reader::Status FileSourceReader::generate_file_names() {
             std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
             filesys::path pathObj(subfolder_path);
             if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
-                // ignore files with non-image extensions
+                // ignore files with unsupported extensions
                 auto file_extension_idx = subfolder_path.find_last_of(".");
                 if (file_extension_idx != std::string::npos) {
                     std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
@@ -359,7 +359,7 @@ Reader::Status FileSourceReader::open_folder() {
             _file_count_all_shards++;
             incremenet_file_id();
         } else {
-            WRN("Skipping file," + std::string(_entity->d_name) + " as it is not present in metadata reader")
+            WRN("Skipping file," + _entity->d_name + " as it is not present in metadata reader")
         }
     }
     if (_file_names.empty())

@@ -147,18 +147,18 @@ Timing AudioLoaderSharded::timing() {
     Timing t;
     long long unsigned max_decode_time = 0;
     long long unsigned max_read_time = 0;
-    long long unsigned swap_handle_time = 0;
+    long long unsigned accumulated_process_time = 0;
     // audio read and decode runs in parallel using multiple loaders, and the observable latency that the AudioLoaderSharded user
     // is experiences on the load_next() call due to read and decode time is the maximum of all
     for (auto& loader : _loaders) {
         auto info = loader->timing();
         max_read_time = (info.read_time > max_read_time) ? info.read_time : max_read_time;
         max_decode_time = (info.decode_time > max_decode_time) ? info.decode_time : max_decode_time;
-        swap_handle_time += info.process_time;
+        accumulated_process_time += info.process_time;
     }
     t.decode_time = max_decode_time;
     t.read_time = max_read_time;
-    t.process_time = swap_handle_time;
+    t.process_time = accumulated_process_time;
     return t;
 }
 #endif

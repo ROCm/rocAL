@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_normalize.h"
+#include "augmentations/effects_augmentations/node_normalize.h"
 
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 NormalizeNode::NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
@@ -54,7 +54,7 @@ void NormalizeNode::create_node() {
     if (!_compute_mean && !_compute_stddev) {
         for (uint i = 0; i < _batch_size; i++) {
             for (int j = 0; j < mean_stddev_array_size; j += _mean.size()) {
-                for (int k = 0; k < _mean.size(); k++) {
+                for (size_t k = 0; k < _mean.size(); k++) {
                     mean_vec[i * mean_stddev_array_size + j + k] = _mean[k];
                     stddev_vec[i * mean_stddev_array_size + j + k] = _std_dev[k];
                 }
