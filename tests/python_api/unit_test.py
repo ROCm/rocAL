@@ -26,7 +26,6 @@ from parse_config import parse_args
 import os
 import sys
 import cv2
-import cupy as cp
 
 INTERPOLATION_TYPES = {
     0: types.NEAREST_NEIGHBOR_INTERPOLATION,
@@ -48,7 +47,11 @@ SCALING_MODES = {
 def draw_patches(img, idx, device, args=None):
     # image is expected as a tensor, bboxes as numpy
     if device == "gpu":
-        img = cp.asnumpy(img)
+        try:
+            import cupy as cp
+            img = cp.asnumpy(img)
+        except ImportError:
+            pass
     if args.fp16:
         img = (img).astype('uint8')
     if not args.color_format:
@@ -66,7 +69,11 @@ def draw_patches(img, idx, device, args=None):
 
 def dump_meta_data(labels, device, args=None):
     if device == "gpu":
-        labels = cp.asnumpy(labels)
+        try:
+            import cupy as cp
+            labels = cp.asnumpy(labels)
+        except ImportError:
+            pass
     labels_list = labels.tolist()
     with open(args.output_file_name, 'w') as file:
         for label in labels_list:
