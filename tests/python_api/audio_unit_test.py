@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from amd.rocal.pipeline import Pipeline
 from amd.rocal.pipeline import pipeline_def
 from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import amd.rocal.fn as fn
@@ -28,6 +27,7 @@ import sys
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+import timeit
 from parse_config import parse_args
 
 np.set_printoptions(threshold=1000, edgeitems=10000)
@@ -49,8 +49,7 @@ def plot_audio_wav(audio_tensor, idx):
 def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
     ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
-    audio_data = audio_tensor.detach().numpy()
-    audio_data = audio_data.flatten()
+    audio_data = audio_tensor.detach().numpy().flatten()
     roi_data = roi_tensor.detach().numpy()
     matched_indices = 0
     for j in range(roi_data[0]):
@@ -128,7 +127,7 @@ def main():
         print("Need to export ROCAL_DATA_PATH")
         sys.exit()
     if not rocal_cpu:
-        print("The GPU support for Audio is not given yet. running on cpu")
+        print("The GPU support for Audio is not given yet. running on CPU")
         rocal_cpu = True
     if audio_path == "":
         audio_path = f'{rocal_data_path}/rocal_data/audio/wav/'
@@ -150,7 +149,6 @@ def main():
         audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         cnt = 0
-        import timeit
         start = timeit.default_timer()
         # Enumerate over the Dataloader
         for e in range(int(args.num_epochs)):
