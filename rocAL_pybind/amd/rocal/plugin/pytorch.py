@@ -221,7 +221,7 @@ class ROCALGenericIterator(object):
 
 
 class ROCALClassificationIterator(ROCALGenericIterator):
-    """!ROCAL iterator for classification tasks for PyTorch. It returns 2 outputs
+    """!rocAL iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensors.
 
     Calling
@@ -237,15 +237,15 @@ class ROCALClassificationIterator(ROCALGenericIterator):
        ROCALGenericIterator(pipelines, ["data", "label"], size)
 
     Please keep in mind that Tensors returned by the iterator are
-    still owned by ROCAL. They are valid till the next iterator call.
+    still owned by rocAL. They are valid till the next iterator call.
     If the content needs to be preserved please copy it to another tensor.
 
     pipelines (list of amd.rocal.pipeline.Pipeline)       List of pipelines to use
     size (int)                                            Number of samples in the epoch (Usually the size of the dataset).
     auto_reset (bool, optional, default = False)          Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
     fill_last_batch (bool, optional, default = True)      Whether to fill the last batch with data up to 'self.batch_size'. The iterator would return the first integer multiple of self._num_gpus * self.batch_size entries which exceeds 'size'. Setting this flag to False will cause the iterator to return exactly 'size' entries.
-    dynamic_shape (bool, optional, default = False)       Whether the shape of the output of the ROCAL pipeline can change during execution. If True, the pytorch tensor will be resized accordingly if the shape of ROCAL returned tensors changes during execution. If False, the iterator will fail in case of change.
-    last_batch_padded (bool, optional, default = False)   Whether the last batch provided by ROCAL is padded with the last sample or it just wraps up. In the conjunction with fill_last_batch it tells if the iterator returning last batch with data only partially filled with data from the current epoch is dropping padding samples or samples from the next epoch. If set to False next epoch will end sooner as data from it was consumed but dropped. If set to True next epoch would be the same length as the first one.
+    dynamic_shape (bool, optional, default = False)       Whether the shape of the output of the rocAL pipeline can change during execution. If True, the pytorch tensor will be resized accordingly if the shape of rocAL returned tensors changes during execution. If False, the iterator will fail in case of change.
+    last_batch_padded (bool, optional, default = False)   Whether the last batch provided by rocAL is padded with the last sample or it just wraps up. In the conjunction with fill_last_batch it tells if the iterator returning last batch with data only partially filled with data from the current epoch is dropping padding samples or samples from the next epoch. If set to False next epoch will end sooner as data from it was consumed but dropped. If set to True next epoch would be the same length as the first one.
 
     Example
     -------
@@ -271,8 +271,8 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 class ROCALAudioIterator(object):
-    """! ROCAL iterator for audio tasks for PyTorch
-    The Tensors that are returned by the iterator will be owned by ROCAL and would be valid until next iteration.
+    """! rocAL iterator for audio tasks for PyTorch
+    The Tensors that are returned by the iterator will be owned by rocAL and would be valid until next iteration.
         @param pipeline            The rocAL pipeline to use for processing data.
         @param tensor_dtype        Data type of the output tensors.
         @param size                Number of samples in the epoch (Usually the size of the dataset).
