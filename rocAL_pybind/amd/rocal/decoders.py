@@ -406,12 +406,12 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
 def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, sample_rate=0.0, seed=1, stick_to_shard=False, shard_size=-1):
     """!Decodes wav audio files.
 
-        @param inputs                   list of input audio.
+        @param inputs                   List of input audio.
         @param file_root                Folder Path to the audio data.
-        @param file_list_path           Text file containing list of files and the labels
+        @param file_list_path           Path to the text file containing list of files and the labels
         @param shard_id                 Shard ID for parallel processing.
         @param num_shards               Total number of shards for parallel processing.
-        @param random_shuffle           Whether to shuffle images randomly.
+        @param random_shuffle           Whether to shuffle audio samples randomly.
         @param downmix                  Converts the audio data to single channel when enabled 
         @param dtype                    Data type of the decoded audio
         @param quality                  Resampling quality
@@ -419,7 +419,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
         @param seed                     Random seed.
         @param stick_to_shard           The reader sticks to the data for it's corresponding shard when enabled
         @param shard_size               Number of files in an epoch
-        @return    Decoded audio.
+        @return                         Decoded audio.
     """
     kwargs_pybind = {
             "source_path": file_root,

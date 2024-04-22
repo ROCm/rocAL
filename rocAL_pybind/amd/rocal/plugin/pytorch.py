@@ -275,9 +275,9 @@ class ROCALAudioIterator(object):
     The Tensors that are returned by the iterator will be owned by ROCAL and would be valid until next iteration.
         @param pipeline            The rocAL pipeline to use for processing data.
         @param tensor_dtype        Data type of the output tensors.
-        @param size                      Number of samples in the epoch (Usually the size of the dataset).
-        @param auto_reset                Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
-        @param device              The device to use for processing
+        @param size                Number of samples in the epoch (Usually the size of the dataset).
+        @param auto_reset          Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
+        @param device              The device to use for processing - CPU / GPU
         @param device_id           The ID of the device to use
     """
     def __init__(self, pipeline, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
@@ -300,20 +300,19 @@ class ROCALAudioIterator(object):
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
-
+        # Output list used to store pipeline outputs - can support multiple augmentation outputs
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
             self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
             self.roi_array = np.zeros(self.batch_size * self.num_roi_dims * 2, dtype=np.int32)
             self.output_tensor_list[i].copy_roi(self.roi_array)
+            torch_dtype = self.output_tensor_list[i].dtype()
             if self.device == "cpu":
-                torch_dtype = self.output_tensor_list[i].dtype()
                 output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
             else:
                 torch_gpu_device = torch.device('cuda', self.device_id)
-                torch_dtype = self.output_tensor_list[i].dtype()
                 output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
 

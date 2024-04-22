@@ -42,7 +42,7 @@ def plot_audio_wav(audio_tensor, idx):
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
     plt.plot(audio_data)
-    plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
+    plt.savefig("output_folder/audio_reader/" + str(idx) + ".png")
     plt.close()
 
 def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
@@ -103,7 +103,7 @@ def main():
 
     if args.display:
         try:
-            path = "OUTPUT_FOLDER/AUDIO_READER"
+            path = "output_folder/audio_reader"
             isExist = os.path.exists(path)
             if not isExist:
                 os.makedirs(path)
