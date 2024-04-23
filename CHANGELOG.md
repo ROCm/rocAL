@@ -13,6 +13,9 @@
 * Packages - dev & tests
 * Support for audio loader and decoder, which uses libsndfile library to decode wav files
 * C++ rocAL audio unit test and python script to run and compare the outputs
+* Python support for audio decoders
+* Pytorch iterator for Audio
+* Python audio unit test, and support to verify outputs
 
 ### Optimizations
 
