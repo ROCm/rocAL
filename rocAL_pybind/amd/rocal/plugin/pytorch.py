@@ -275,8 +275,8 @@ class ROCALAudioIterator(object):
     The Tensors that are returned by the iterator will be owned by ROCAL and would be valid until next iteration.
         @param pipeline            The rocAL pipeline to use for processing data.
         @param tensor_dtype        Data type of the output tensors.
-        @size                      Number of samples in the epoch (Usually the size of the dataset).
-        @auto_reset                Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
+        @param size                      Number of samples in the epoch (Usually the size of the dataset).
+        @param auto_reset                Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
         @param device              The device to use for processing
         @param device_id           The ID of the device to use
     """
