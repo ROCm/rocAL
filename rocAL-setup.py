@@ -247,7 +247,7 @@ coreRPMPackages = [
     'python3-devel',
     'python3-pip',
     'python3-protobuf',
-    'protobuf-devel'
+    'protobuf-devel',
     'protobuf-compiler'
 ]
 
