@@ -221,7 +221,7 @@ class ROCALGenericIterator(object):
 
 
 class ROCALClassificationIterator(ROCALGenericIterator):
-    """!ROCAL iterator for classification tasks for PyTorch. It returns 2 outputs
+    """!rocAL iterator for classification tasks for PyTorch. It returns 2 outputs
     (data and label) in the form of PyTorch's Tensors.
 
     Calling
@@ -237,15 +237,15 @@ class ROCALClassificationIterator(ROCALGenericIterator):
        ROCALGenericIterator(pipelines, ["data", "label"], size)
 
     Please keep in mind that Tensors returned by the iterator are
-    still owned by ROCAL. They are valid till the next iterator call.
+    still owned by rocAL. They are valid till the next iterator call.
     If the content needs to be preserved please copy it to another tensor.
 
     pipelines (list of amd.rocal.pipeline.Pipeline)       List of pipelines to use
     size (int)                                            Number of samples in the epoch (Usually the size of the dataset).
     auto_reset (bool, optional, default = False)          Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
     fill_last_batch (bool, optional, default = True)      Whether to fill the last batch with data up to 'self.batch_size'. The iterator would return the first integer multiple of self._num_gpus * self.batch_size entries which exceeds 'size'. Setting this flag to False will cause the iterator to return exactly 'size' entries.
-    dynamic_shape (bool, optional, default = False)       Whether the shape of the output of the ROCAL pipeline can change during execution. If True, the pytorch tensor will be resized accordingly if the shape of ROCAL returned tensors changes during execution. If False, the iterator will fail in case of change.
-    last_batch_padded (bool, optional, default = False)   Whether the last batch provided by ROCAL is padded with the last sample or it just wraps up. In the conjunction with fill_last_batch it tells if the iterator returning last batch with data only partially filled with data from the current epoch is dropping padding samples or samples from the next epoch. If set to False next epoch will end sooner as data from it was consumed but dropped. If set to True next epoch would be the same length as the first one.
+    dynamic_shape (bool, optional, default = False)       Whether the shape of the output of the rocAL pipeline can change during execution. If True, the pytorch tensor will be resized accordingly if the shape of rocAL returned tensors changes during execution. If False, the iterator will fail in case of change.
+    last_batch_padded (bool, optional, default = False)   Whether the last batch provided by rocAL is padded with the last sample or it just wraps up. In the conjunction with fill_last_batch it tells if the iterator returning last batch with data only partially filled with data from the current epoch is dropping padding samples or samples from the next epoch. If set to False next epoch will end sooner as data from it was consumed but dropped. If set to True next epoch would be the same length as the first one.
 
     Example
     -------
@@ -270,6 +270,68 @@ class ROCALClassificationIterator(ROCALGenericIterator):
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
+class ROCALAudioIterator(object):
+    """! rocAL iterator for audio tasks for PyTorch
+    The Tensors that are returned by the iterator will be owned by rocAL and would be valid until next iteration.
+        @param pipeline            The rocAL pipeline to use for processing data.
+        @param tensor_dtype        Data type of the output tensors.
+        @param size                Number of samples in the epoch (Usually the size of the dataset).
+        @param auto_reset          Whether the iterator resets itself for the next epoch or it requires reset() to be called separately.
+        @param device              The device to use for processing - CPU / GPU
+        @param device_id           The ID of the device to use
+    """
+    def __init__(self, pipeline, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
+        self.loader = pipeline
+        self.device = device
+        self.device_id = device_id
+        self.output = None
+        self.iterator_length = b.getRemainingImages(self.loader._handle) # To change the name of getRemainingImages to getRemainingSamples in upcoming PRs
+        self.max_shape = None
+        self.batch_size = self.loader._batch_size
+        self.output_list = None
+        self.labels_size = self.batch_size
+        self.output_memory_type = self.loader._output_memory_type
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self.loader.rocal_run() != 0:
+            raise StopIteration
+        else:
+            self.output_tensor_list = self.loader.get_output_tensors()
+        # Output list used to store pipeline outputs - can support multiple augmentation outputs
+        self.output_list = []
+        for i in range(len(self.output_tensor_list)):
+            dimensions = self.output_tensor_list[i].dimensions()
+            self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
+            self.roi_array = np.zeros(self.batch_size * self.num_roi_dims * 2, dtype=np.int32)
+            self.output_tensor_list[i].copy_roi(self.roi_array)
+            torch_dtype = self.output_tensor_list[i].dtype()
+            if self.device == "cpu":
+                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
+                self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
+            else:
+                torch_gpu_device = torch.device('cuda', self.device_id)
+                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+                self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+
+            self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
+            self.output_list.append(output)
+
+        return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4])
+
+    def reset(self):
+        b.rocalResetLoaders(self.loader._handle)
+
+    def __iter__(self):
+        return self
+
+    def __len__(self):
+        return self.iterator_length
+
+    def __del__(self):
+        b.rocalRelease(self.loader._handle)
 
 def draw_patches(img, idx, bboxes):
     """!Writes images to disk as a PNG file.
