@@ -44,6 +44,7 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
+find_package(SndFile QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -294,6 +295,15 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with std experimental Filesystem${ColourReset}")
     else()
         message(FATAL_ERROR "No filesystem library found.")
+    endif()
+    # SndFile
+    if(NOT SNDFILE_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
+    else()
+        include_directories(${SNDFILE_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SNDFILE_LIBRARIES})
+        message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include <cstring>
 #include "pipeline/commons.h"
-#include "readers/image/file_source_reader.h"
+#include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
 
 FileSourceReader::FileSourceReader() {
@@ -57,6 +57,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _batch_count = desc.get_batch_size();
     _shuffle = desc.shuffle();
     _loop = desc.loop();
+    _meta_data_reader = desc.meta_data_reader();
     ret = subfolder_reading();
     _last_batch_info = desc.get_last_batch_policy();
     // the following code is required to make every shard the same size:: required for multi-gpu training
@@ -173,13 +174,13 @@ Reader::Status FileSourceReader::subfolder_reading() {
         std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
         filesys::path pathObj(subfolder_path);
         if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
-            // ignore files with non-image extensions
+            // ignore files with unsupported extensions
             auto file_extension_idx = subfolder_path.find_last_of(".");
             if (file_extension_idx != std::string::npos) {
                 std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
                 std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
                                [](unsigned char c) { return std::tolower(c); });
-                if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp"))
+                if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp") && (file_extension != "wav"))
                     continue;
             }
             ret = open_folder();

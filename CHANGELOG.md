@@ -11,10 +11,16 @@
 ### Added
 
 * Packages - dev & tests
+* Support for audio loader and decoder, which uses libsndfile library to decode wav files
+* C++ rocAL audio unit test and python script to run and compare the outputs
+* Python support for audio decoders
+* Pytorch iterator for Audio
+* Python audio unit test, and support to verify outputs
 
 ### Optimizations
 
 * Tests
+* Setup Script
 
 ### Changed
 
@@ -22,7 +28,7 @@
 
 ### Fixed
 
-* tests & readme
+* Tests & readme
 
 ### Tested Configurations
 
@@ -34,13 +40,14 @@
 * ROCm: rocm-core - `5.7.0.50700-6`
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
-* Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/) - Version 3.0.1
-* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
+* Protobuf - `libprotobuf-dev`/`protobuf-devel`
+* RapidJSON - `rapidjson-dev` / `rapidjson-devel`
+* FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
-* RapidJSON- [master](https://github.com/Tencent/rapidjson)
+* Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* rocAL Setup Script - `V1.1.0`
+* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
+* rocAL Setup Script - `V2.0.0`
 * Dependencies for all the above packages
 
 ### Known issues

@@ -6,7 +6,6 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
-import cupy as cp
 
 seed = 1549361629
 image_dir = "../../data/images/AMD-tinyDataSet/"
@@ -26,7 +25,11 @@ def show_images(image_batch, device):
         if device == "cpu":
             plt.imshow(img)
         else:
-            plt.imshow(cp.asnumpy(img))
+            try:
+                import cupy as cp
+                plt.imshow(cp.asnumpy(img))
+            except ImportError:
+                pass
     plt.show()
 
 
