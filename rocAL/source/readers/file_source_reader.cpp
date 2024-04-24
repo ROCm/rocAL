@@ -44,13 +44,7 @@ unsigned FileSourceReader::count_items() {
     if (_loop)
         return _file_names.size();
 
-    int size = std::max(_file_names.size(), _batch_count);
-    int ret = (size - _read_counter);
-    if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
-        ret += _in_batch_read_count;
-    } else if (_last_batch_info.first == RocalBatchPolicy::FILL) {
-        ret += _in_batch_read_count;
-    }
+    int ret = ((int)_file_names.size() - _read_counter);
     return ((ret < 0) ? 0 : ret);
 }
 
@@ -76,22 +70,15 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
 
 void FileSourceReader::incremenet_read_ptr() {
     _read_counter++;
-
-    auto total_file_count = _file_names.size();
-    // For DROP policy, when the pad is set to false the last batch is dropped and idx is advanced by skipping one batch in between
-    if (_last_batch_info.first == RocalBatchPolicy::DROP && _pad_last_batch == false) {
-        if (_read_counter + _batch_count - 1 > total_file_count) {
-            // Skip last batch entirely along with padded data idx
-            _curr_file_idx = (_curr_file_idx + _batch_count + 1) % total_file_count;
-            return;
+    _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+    if (_last_batch_info.first == RocalBatchPolicy::DROP) {
+        if ((_file_names.size() / _batch_count) == _curr_file_idx)  // Check if its last batch
+        {
+            _curr_file_idx += _batch_count;
+            _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
         }
-    } else if (_pad_last_batch == true && _read_counter >= total_file_count) {   // Return last file_idx when pad set to true
-            _curr_file_idx = total_file_count - 1;
-            return;
     }
-    _curr_file_idx = (_curr_file_idx + 1) % total_file_count;
 }
-
 size_t FileSourceReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     incremenet_read_ptr();
@@ -151,25 +138,26 @@ int FileSourceReader::release() {
 void FileSourceReader::reset() {
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
-    if (_shard_count > 1) {
-        // Reset the variables
-        _last_batch_padded_size = _in_batch_read_count = _curr_file_idx = _file_id = _read_counter = 0;
-        _file_names.clear();
-        increment_shard_id();
-        generate_file_names();  // generates the data from next shard in round-robin fashion after completion of an epoch
-        if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
-            // This is to pad within a batch in a shard. Need to change this according to fill / drop or partial.
-            // Adjust last batch only if the last batch padded is true.
-            replicate_last_image_to_fill_last_shard();
-            LOG("FileReader in reset function - Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
-        }
-        if (!_file_names.empty())
-            LOG("FileReader in reset function - Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
-    } else {
-        if (_pad_last_batch == false) return;       // If padding is not set, need to continue the file_idx
-        _curr_file_idx = 0;
-        _read_counter = 0;
-    }
+    _curr_file_idx = 0;
+    // if (_shard_count > 1) {
+    //     // Reset the variables
+    //     _last_batch_padded_size = _in_batch_read_count = _curr_file_idx = _file_id = _read_counter = 0;
+    //     _file_names.clear();
+    //     increment_shard_id();
+    //     generate_file_names();  // generates the data from next shard in round-robin fashion after completion of an epoch
+    //     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
+    //         // This is to pad within a batch in a shard. Need to change this according to fill / drop or partial.
+    //         // Adjust last batch only if the last batch padded is true.
+    //         replicate_last_image_to_fill_last_shard();
+    //         LOG("FileReader in reset function - Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
+    //     }
+    //     if (!_file_names.empty())
+    //         LOG("FileReader in reset function - Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
+    // } else {
+    //     if (_pad_last_batch == false) return;       // If padding is not set, need to continue the file_idx
+    //     _curr_file_idx = 0;
+    //     _read_counter = 0;
+    // }
 }
 
 void FileSourceReader::increment_shard_id() {
@@ -248,10 +236,28 @@ Reader::Status FileSourceReader::subfolder_reading() {
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     return ret;
 }
-void FileSourceReader::replicate_last_image_to_fill_last_shard() {
-    if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
-        _last_batch_padded_size = _batch_count - _in_batch_read_count;
 
+void FileSourceReader::replicate_last_image_to_fill_last_shard() {
+    if (_last_batch_info.first == RocalBatchPolicy::FILL) {
+        if (_last_batch_info.second == true) {
+            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+                _file_names.push_back(_last_file_name);
+        } else {
+            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+                _file_names.push_back(_file_names.at(i));
+        }
+    } else if (_last_batch_info.first == RocalBatchPolicy::DROP) {
+        for (size_t i = 0; i < _in_batch_read_count; i++)
+            _file_names.pop_back();
+    } else if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
+        _last_batch_padded_size = _batch_count - _in_batch_read_count;
+        if (_last_batch_info.second == true) {
+            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+                _file_names.push_back(_last_file_name);
+        } else {
+            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
+                _file_names.push_back(_file_names.at(i));
+        }
     }
 }
 
