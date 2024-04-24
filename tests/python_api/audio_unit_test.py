@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from amd.rocal.pipeline import Pipeline
 from amd.rocal.pipeline import pipeline_def
 from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import amd.rocal.fn as fn
@@ -28,6 +27,7 @@ import sys
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+import timeit
 from parse_config import parse_args
 
 np.set_printoptions(threshold=1000, edgeitems=10000)
@@ -43,14 +43,13 @@ def plot_audio_wav(audio_tensor, idx):
     audio_data = audio_tensor.detach().numpy()
     audio_data = audio_data.flatten()
     plt.plot(audio_data)
-    plt.savefig("OUTPUT_FOLDER/AUDIO_READER/" + str(idx) + ".png")
+    plt.savefig("output_folder/audio_reader/" + str(idx) + ".png")
     plt.close()
 
 def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
     ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
-    audio_data = audio_tensor.detach().numpy()
-    audio_data = audio_data.flatten()
+    audio_data = audio_tensor.detach().numpy().flatten()
     roi_data = roi_tensor.detach().numpy()
     matched_indices = 0
     for j in range(roi_data[0]):
@@ -120,7 +119,7 @@ def main():
 
     if args.display:
         try:
-            path = "OUTPUT_FOLDER/AUDIO_READER"
+            path = "output_folder/audio_reader"
             isExist = os.path.exists(path)
             if not isExist:
                 os.makedirs(path)
@@ -131,7 +130,7 @@ def main():
         print("Need to export ROCAL_DATA_PATH")
         sys.exit()
     if not rocal_cpu:
-        print("The GPU support for Audio is not given yet. running on cpu")
+        print("The GPU support for Audio is not given yet. Running on CPU")
         rocal_cpu = True
     if audio_path == "" and file_list == "":
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
@@ -152,15 +151,14 @@ def main():
         if case_name == "preemphasis_filter":
             audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
-        audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True)
+        audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         cnt = 0
-        import timeit
         start = timeit.default_timer()
         # Enumerate over the Dataloader
         for e in range(int(args.num_epochs)):
             print("Epoch :: ", e)
             torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-            for i, it in enumerate(audioIteratorPipeline):
+            for i, it in enumerate(audio_loader):
                 for x in range(len(it[0])):
                     for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
                         if args.print_tensor:
