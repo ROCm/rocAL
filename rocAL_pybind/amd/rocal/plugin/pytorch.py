@@ -293,7 +293,7 @@ class ROCALAudioIterator(object):
         self.output_memory_type = self.loader._output_memory_type
         self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
-        self.shard_size =  self.loader._shard_size or size
+        self.shard_size =  size
         self.auto_reset = auto_reset
         self.batch_count = 0
 

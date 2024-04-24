@@ -67,7 +67,7 @@ class Pipeline(object):
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None, 
-                 last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+                 last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=False):
         if (rocal_cpu):
             self._handle = b.rocalCreate(
                 batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
