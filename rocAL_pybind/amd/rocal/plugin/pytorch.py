@@ -211,7 +211,7 @@ class ROCALGenericIterator(object):
                 self.labels_tensor = self.labels_tensor.copy_(
                     torch.from_numpy(self.labels)).long()
 
-            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0 : #Check this condition
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size : #Check this condition
                 return [inner_list[0:self.last_batch_size,:] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
             else:
                 return self.output_list, self.labels_tensor

@@ -102,6 +102,7 @@ class FileSourceReader : public Reader {
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::pair<RocalBatchPolicy, bool>  _last_batch_info;
     size_t _last_batch_padded_size = 0;
+    bool _pad_last_batch = false;
     Reader::Status generate_file_names();
     //!<// Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
