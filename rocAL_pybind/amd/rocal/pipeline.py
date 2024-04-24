@@ -125,7 +125,7 @@ class Pipeline(object):
         self._external_source_mode = None
         self._last_batch_policy = last_batch_policy
         self._last_batch_padded = last_batch_padded
-        self._shard_size = -1
+        self._shard_size = None
 
     def build(self):
         """!Build the pipeline using rocalVerify call

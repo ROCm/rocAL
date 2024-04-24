@@ -46,10 +46,11 @@ THE SOFTWARE.
 #ifdef ROCAL_AUDIO
 std::tuple<unsigned, unsigned>
 evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
-                        const std::string& source_path, const std::string& file_list_path) {
+                        const std::string& source_path, const std::string& file_list_path, std::shared_ptr<MetaDataReader> meta_data_reader) {
     AudioSourceEvaluator source_evaluator;
     auto reader_config = ReaderConfig(storage_type, source_path);
     reader_config.set_file_list_path(file_list_path);
+    reader_config.set_meta_data_reader(meta_data_reader);
     if (source_evaluator.Create(reader_config, DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed")
     auto max_samples = source_evaluator.GetMaxSamples();
@@ -2125,7 +2126,7 @@ rocalAudioFileSourceSingleShard(
             THROW("Shard count should be bigger than 0")
         if (shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
-        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path);
+        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
@@ -2181,7 +2182,7 @@ rocalAudioFileSource(
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_AUDIO
-        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path);
+        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};

@@ -175,7 +175,7 @@ Decoder::Status HWJpegDecoder::decode_info(unsigned char *input_buffer, size_t i
     for (int i = 0;; i++) {
         const AVCodecHWConfig *config = avcodec_get_hw_config(_decoder, i);
         if (!config) {
-            WRN("HardwareJpegDecoder::Initialize ERROR: decoder " + STR(_decoder->name) + " doesn't support device_type " + STR(av_hwdevice_get_type_name(hw_type)));
+            WRN("HardwareJpegDecoder::Initialize ERROR: decoder " + STR(_decoder->name) + " doesn't support device_type " + STR(av_hwdevice_get_type_name(_hw_type)));
             return Status::HEADER_DECODE_FAILED;
         }
         if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX && config->device_type == _hw_type) {

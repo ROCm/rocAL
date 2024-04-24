@@ -196,4 +196,8 @@ class Reader {
     virtual ~Reader() = default;
 
     virtual size_t last_batch_padded_size() { return {}; }
+
+    virtual std::string get_root_folder_path() { return {}; }
+
+    virtual std::vector<std::string> get_file_paths_from_meta_data_reader() { return {}; }
 };
