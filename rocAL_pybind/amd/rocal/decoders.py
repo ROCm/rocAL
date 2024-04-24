@@ -415,6 +415,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
             "downmix": downmix,
             "stick_to_shard":stick_to_shard,
             "shard_size":shard_size // num_shards}
-    Pipeline._current_pipeline._shard_size = shard_size // num_shards
+    if (shard_size!= -1):
+        Pipeline._current_pipeline._shard_size = shard_size // num_shards
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
