@@ -2027,7 +2027,7 @@ rocalRawCIFAR10Source(
                                color_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "", StorageType::UNCOMPRESSED_BINARY_DATA, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix, context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded());
+        context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "", StorageType::UNCOMPRESSED_BINARY_DATA, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix);
         context->master_graph->set_loop(loop);
 
         if (is_output) {

@@ -228,9 +228,8 @@ class MasterGraph {
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
-    RocalBatchPolicy _last_batch_policy; // Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values
+    RocalBatchPolicy _last_batch_policy; // Determines the handling of the last batch when the number of files in a shard is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values
     bool _last_batch_padded; // Determines whether the end of the data consists of data from the next shard (False) or is duplicated dummy data (True).
-    size_t _final_batch_padded_size; // Returns the size of the padded data
 };
 
 template <typename T>

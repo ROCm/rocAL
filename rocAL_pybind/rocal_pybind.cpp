@@ -148,8 +148,6 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {1, "float16"},
     {2, "uint8"},
     {3, "int8"},
-    {4, "uint32"},
-    {5, "int32"},
 };
 
 PYBIND11_MODULE(rocal_pybind, m) {
@@ -399,9 +397,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
     py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
-        .value("LAST_BATCH_FILL",ROCAL_LAST_BATCH_FILL)
-        .value("LAST_BATCH_DROP",ROCAL_LAST_BATCH_DROP)
-        .value("LAST_BATCH_PARTIAL",ROCAL_LAST_BATCH_PARTIAL)
+        .value("LAST_BATCH_FILL", ROCAL_LAST_BATCH_FILL)
+        .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
+        .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())

@@ -82,7 +82,7 @@ void FileSourceReader::incremenet_read_ptr() {
 size_t FileSourceReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     incremenet_read_ptr();
-    _last_id = file_path;
+    _last_file_path = _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
     if (std::string::npos != last_slash_idx) {
         _last_id.erase(0, last_slash_idx + 1);
@@ -139,10 +139,6 @@ void FileSourceReader::reset() {
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
     _curr_file_idx = 0;
-}
-
-void FileSourceReader::increment_shard_id() {
-    _shard_id = (_shard_id + 1) % _shard_count;
 }
 
 Reader::Status FileSourceReader::generate_file_names() {
@@ -239,13 +235,6 @@ void FileSourceReader::replicate_last_image_to_fill_last_shard() {
             for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
                 _file_names.push_back(_file_names.at(i));
         }
-    }
-}
-
-void FileSourceReader::replicate_last_batch_to_pad_partial_shard() {
-    if (_file_names.size() >= _batch_count) {
-        for (size_t i = 0; i < _batch_count; i++)
-            _file_names.push_back(_file_names[i - _batch_count]);
     }
 }
 

@@ -186,5 +186,5 @@ class Reader {
 
     virtual ~Reader() = default;
 
-    virtual size_t last_batch_padded_size() { return {}; }
+    virtual size_t last_batch_padded_size() { return 0; }
 };

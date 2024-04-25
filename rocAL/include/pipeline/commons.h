@@ -158,7 +158,7 @@ struct Timing {
 /*! \brief Tensor Last Batch Policies
  These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
         FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
-        DROP - The last batch is dropped if when there are not enough samples from the current epoch.
+        DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
         PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to handled from python end)
  */
 enum RocalBatchPolicy {

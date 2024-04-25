@@ -90,5 +90,6 @@ class ImageLoader : public LoaderModule {
     size_t _max_tensor_width, _max_tensor_height;
     bool _external_source_reader = false;  //!< Set to true if external source reader
     bool _external_input_eos = false;      //!< Set to true for last batch for the sequence
-    RocalBatchPolicy _last_batch_policy;
-    bool last_batch_padded;};
+    RocalBatchPolicy _last_batch_policy;   //!< Last batch policy used for the reader
+    bool _last_batch_padded;                //!< Used to decide whether to pad or wrap the last batch
+};

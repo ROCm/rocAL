@@ -56,6 +56,9 @@ class FileSourceReader : public Reader {
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id; };
 
+    //! Returns the name of the latest file_path opened
+    const std::string file_path() override { return _last_file_path; }
+
     unsigned count_items() override;
 
     ~FileSourceReader() override;
@@ -79,7 +82,7 @@ class FileSourceReader : public Reader {
     FILE *_current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
-    std::string _last_file_name;
+    std::string _last_file_name, _last_file_path;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
@@ -104,6 +107,4 @@ class FileSourceReader : public Reader {
     size_t _last_batch_padded_size = 0;
     bool _pad_last_batch = false;
     Reader::Status generate_file_names();
-    //!<// Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
-    void increment_shard_id();
 };
