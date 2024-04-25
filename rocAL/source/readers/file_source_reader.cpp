@@ -205,7 +205,7 @@ Reader::Status FileSourceReader::subfolder_reading() {
     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
         // This is to pad within a batch in a shard. Need to change this according to fill / drop or partial.
         // Adjust last batch only if the last batch padded is true.
-        replicate_last_image_to_fill_last_shard();
+        fill_last_batch();
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
     }
     if (!_file_names.empty())
@@ -213,8 +213,8 @@ Reader::Status FileSourceReader::subfolder_reading() {
     return ret;
 }
 
-void FileSourceReader::replicate_last_image_to_fill_last_shard() {
-    if (_last_batch_info.first == RocalBatchPolicy::FILL) {
+void FileSourceReader::fill_last_batch() {
+    if (_last_batch_info.first == RocalBatchPolicy::FILL || _last_batch_info.first == RocalBatchPolicy::PARTIAL) {
         if (_last_batch_info.second == true) {
             for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
                 _file_names.push_back(_last_file_name);
@@ -225,15 +225,9 @@ void FileSourceReader::replicate_last_image_to_fill_last_shard() {
     } else if (_last_batch_info.first == RocalBatchPolicy::DROP) {
         for (size_t i = 0; i < _in_batch_read_count; i++)
             _file_names.pop_back();
-    } else if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
+    }
+    if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
         _last_batch_padded_size = _batch_count - _in_batch_read_count;
-        if (_last_batch_info.second == true) {
-            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
-                _file_names.push_back(_last_file_name);
-        } else {
-            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
-                _file_names.push_back(_file_names.at(i));
-        }
     }
 }
 

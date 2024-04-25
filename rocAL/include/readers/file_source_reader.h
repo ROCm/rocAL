@@ -100,7 +100,7 @@ class FileSourceReader : public Reader {
     int release();
     size_t get_file_shard_id();
     void incremenet_file_id() { _file_id++; }
-    void replicate_last_image_to_fill_last_shard();
+    void fill_last_batch();
     void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::pair<RocalBatchPolicy, bool>  _last_batch_info;
