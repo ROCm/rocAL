@@ -21,10 +21,10 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "graph.h"
+#include "pipeline/graph.h"
 #include "image_loader_sharded.h"
-#include "node.h"
-#include "parameter_factory.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
 
 class FusedJpegCropSingleShardNode : public Node {
    public:

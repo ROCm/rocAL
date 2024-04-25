@@ -21,5 +21,5 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "commons.h"
+#include "pipeline/commons.h"
 std::shared_ptr<MetaDataGraph> create_meta_data_graph(const MetaDataConfig& config);

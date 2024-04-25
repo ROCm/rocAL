@@ -27,11 +27,11 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "commons.h"
-#include "image_reader.h"
-#include "external_source.h"
-#include "timing_debug.h"
-#include "filesystem.h"
+#include "pipeline/commons.h"
+#include "readers/image/image_reader.h"
+#include "readers/image/external_source.h"
+#include "pipeline/timing_debug.h"
+#include "pipeline/filesystem.h"
 
 class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
    public:

@@ -58,9 +58,15 @@ if(OpenCV_FOUND)
         include_directories(${OpenCV_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
         if(${OpenCV_VERSION_MAJOR} EQUAL 4)
+<<<<<<< HEAD
 	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
         else()
 	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+=======
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
+        else()
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+>>>>>>> half
         endif()
     else()
         message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
@@ -73,26 +79,3 @@ target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -23,10 +23,10 @@ THE SOFTWARE.
 #pragma once
 #include <map>
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
-#include "timing_debug.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
+#include "pipeline/timing_debug.h"
 
 class COCOMetaDataReaderKeyPoints : public MetaDataReader {
    public:
@@ -55,5 +55,5 @@ class COCOMetaDataReaderKeyPoints : public MetaDataReader {
     std::map<std::string, std::vector<ImgSize>>::iterator itr;
     std::map<int, int> _label_info;
     std::map<int, int>::iterator _it_label;
-    TimingDBG _coco_metadata_read_time;
+    TimingDbg _coco_metadata_read_time;
 };

@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_flip.h"
-#include "exception.h"
+#include "augmentations/geometry_augmentations/node_flip.h"
+#include "pipeline/exception.h"
 
 FlipNode::FlipNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _horizontal(HORIZONTAL_RANGE[0], HORIZONTAL_RANGE[1]),

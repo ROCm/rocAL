@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "text_file_meta_data_reader.h"
+#include "meta_data/text_file_meta_data_reader.h"
 
 #include <string.h>
 
@@ -29,8 +29,8 @@ THE SOFTWARE.
 #include <sstream>
 #include <utility>
 
-#include "commons.h"
-#include "exception.h"
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
 
 void TextFileMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
     _path = cfg.path();

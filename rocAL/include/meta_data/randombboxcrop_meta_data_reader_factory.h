@@ -21,6 +21,6 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "randombboxcrop_meta_data_reader.h"
-#include "randombboxcrop_reader.h"
+#include "meta_data/randombboxcrop_meta_data_reader.h"
+#include "meta_data/randombboxcrop_reader.h"
 std::shared_ptr<RandomBBoxCrop_MetaDataReader> create_meta_data_reader(const RandomBBoxCrop_MetaDataConfig& config, std::shared_ptr<CropCordBatch>&  meta_data_batch);

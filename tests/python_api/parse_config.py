@@ -64,6 +64,13 @@ def parse_args():
                               help='--use_gpu to use gpu')
     common_group.add_argument('--no-rocal-gpu', dest='rocal-gpu', action="store_false",
                               help='--no-rocal-gpu to use cpu backend')
+    
+    common_group.add_argument('--one-hot-encode', action="store_true",
+                              help='--one-hot-encode: to use for one-hot-encoding of labels')
+    common_group.add_argument('--no-one-hot-encode', dest='one-hot-encode', action="store_false",
+                              help='--no-one-hot-encode: to used when we do not want to one hot encode the labels')
+    # case when none of the above is specified
+    parser.set_defaults(one_hot_encode=False)
 
     common_group.add_argument('--NHWC', action='store_true',
                               help='run input pipeline NHWC format')

@@ -20,14 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_resize_mirror_normalize.h"
+#include "augmentations/geometry_augmentations/node_resize_mirror_normalize.h"
 
-#include <graph.h>
+#include "pipeline/graph.h"
 #include <vx_ext_rpp.h>
 
 #include <cmath>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 ResizeMirrorNormalizeNode::ResizeMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs), _mirror(_mirror_range[0], _mirror_range[1]) {}
 

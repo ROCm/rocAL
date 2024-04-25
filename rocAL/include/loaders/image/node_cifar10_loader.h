@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 #include "cifar10_data_loader.h"
-#include "graph.h"
-#include "node.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
 
 class Cifar10LoaderNode : public Node {
    public:

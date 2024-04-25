@@ -21,13 +21,13 @@ THE SOFTWARE.
 */
 #if ENABLE_OPENCL
 
-#include "device_manager.h"
+#include "device/device_manager.h"
 
 #include <vx_ext_amd.h>
 
 #include <iostream>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 DeviceManager::~DeviceManager() {
     if (_resources.cmd_queue != nullptr)

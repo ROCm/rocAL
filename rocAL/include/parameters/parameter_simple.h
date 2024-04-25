@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "parameter.h"
+#include "parameters/parameter.h"
 
 template <typename T>
 class SimpleParameter : public Parameter<T> {
@@ -58,6 +58,7 @@ class SimpleParameter : public Parameter<T> {
 
     void create_array(unsigned array_size) override {
         if (param_values.size() == 0) param_values.resize(array_size);
+        update(_val);
     }
 
     ~SimpleParameter() = default;

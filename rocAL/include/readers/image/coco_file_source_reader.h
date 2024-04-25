@@ -28,10 +28,10 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "meta_data_graph.h"
-#include "meta_data_reader.h"
-#include "image_reader.h"
-#include "timing_debug.h"
+#include "meta_data/meta_data_graph.h"
+#include "meta_data/meta_data_reader.h"
+#include "readers/image/image_reader.h"
+#include "pipeline/timing_debug.h"
 
 class COCOFileSourceReader : public Reader {
    public:

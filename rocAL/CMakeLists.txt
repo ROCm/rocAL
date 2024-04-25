@@ -226,23 +226,8 @@ if(${BUILD_ROCAL})
 
     include_directories(
                 ${CMAKE_CURRENT_BINARY_DIR}
+                include/
                 include/api/
-                include/augmentations/
-                include/augmentations/color_augmentations/
-                include/augmentations/effects_augmentations/
-                include/augmentations/geometry_augmentations/
-                include/decoders/image/
-                include/decoders/video/
-                include/decoders/libjpeg/
-                include/device/
-                include/loaders/
-                include/loaders/image/
-                include/loaders/video/
-                include/meta_data/
-                include/parameters/
-                include/pipeline/
-                include/readers/image/
-                include/readers/video/
     )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
@@ -339,7 +324,7 @@ if(${BUILD_ROCAL})
                 include/api/rocal_api_data_transfer.h
                 include/api/rocal_api_parameters.h
                 include/api/rocal_api_meta_data.h
-		include/api/rocal_api_tensor.h
+                include/api/rocal_api_tensor.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
         )
     endif(BUILD_DEV)

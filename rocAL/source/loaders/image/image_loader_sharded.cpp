@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_loader_sharded.h"
+#include "loaders/image/image_loader_sharded.h"
 
 ImageLoaderSharded::ImageLoaderSharded(void* dev_resources) : _dev_resources(dev_resources) {
     _loader_idx = 0;
@@ -38,11 +38,11 @@ std::vector<std::string> ImageLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info ImageLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+DecodedDataInfo ImageLoaderSharded::get_decode_data_info() {
+    return _loaders[_loader_idx]->get_decode_data_info();
 }
 
-crop_image_info ImageLoaderSharded::get_crop_image_info() {
+CropImageInfo ImageLoaderSharded::get_crop_image_info() {
     return _loaders[_loader_idx]->get_crop_image_info();
 }
 
