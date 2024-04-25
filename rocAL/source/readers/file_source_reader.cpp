@@ -139,25 +139,6 @@ void FileSourceReader::reset() {
     if (_shuffle) std::random_shuffle(_file_names.begin(), _file_names.end());
     _read_counter = 0;
     _curr_file_idx = 0;
-    // if (_shard_count > 1) {
-    //     // Reset the variables
-    //     _last_batch_padded_size = _in_batch_read_count = _curr_file_idx = _file_id = _read_counter = 0;
-    //     _file_names.clear();
-    //     increment_shard_id();
-    //     generate_file_names();  // generates the data from next shard in round-robin fashion after completion of an epoch
-    //     if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
-    //         // This is to pad within a batch in a shard. Need to change this according to fill / drop or partial.
-    //         // Adjust last batch only if the last batch padded is true.
-    //         replicate_last_image_to_fill_last_shard();
-    //         LOG("FileReader in reset function - Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
-    //     }
-    //     if (!_file_names.empty())
-    //         LOG("FileReader in reset function - Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
-    // } else {
-    //     if (_pad_last_batch == false) return;       // If padding is not set, need to continue the file_idx
-    //     _curr_file_idx = 0;
-    //     _read_counter = 0;
-    // }
 }
 
 void FileSourceReader::increment_shard_id() {
