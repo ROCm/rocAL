@@ -59,7 +59,6 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
     _last_batch_info = desc.get_last_batch_policy();
-    _pad_last_batch = _last_batch_info.second; // Currently last_batch_padded and pad_last_batch are same
     ret = subfolder_reading();
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)

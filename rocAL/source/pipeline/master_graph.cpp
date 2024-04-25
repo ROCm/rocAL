@@ -449,7 +449,7 @@ MasterGraph::last_batch_padded() {
     return _last_batch_padded;
 }
 
-uint 
+size_t 
 MasterGraph::last_batch_padded_size() {
     return _loader_module->last_batch_padded_size();
 }

@@ -89,12 +89,12 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
-# Rocal External Source Mode
+#     Rocal External Source Mode
 from rocal_pybind.types import EXTSOURCE_FNAME
 from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
 from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
 
-#    RocalLastBatchPolicy
+#     RocalLastBatchPolicy
 from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
 from rocal_pybind.types import LAST_BATCH_PARTIAL

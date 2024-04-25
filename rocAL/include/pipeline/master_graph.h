@@ -104,7 +104,7 @@ class MasterGraph {
     RocalMemType mem_type();
     RocalBatchPolicy last_batch_policy();
     bool last_batch_padded();
-    uint last_batch_padded_size();
+    size_t last_batch_padded_size();
     void release();
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
