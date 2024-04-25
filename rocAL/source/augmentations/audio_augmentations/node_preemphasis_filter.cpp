@@ -43,7 +43,7 @@ void PreemphasisFilterNode::update_node() {
 }
 
 void PreemphasisFilterNode::init(FloatParam *preemph_coeff, RocalAudioBorderType preemph_border) {
-    if ((preemph_coeff == nullptr))
+    if (preemph_coeff == nullptr)
         ERR("Invalid pre-Emphasis co-efficient passed")
     _preemph_coeff.set_param(core(preemph_coeff));
     _preemph_border = preemph_border;
