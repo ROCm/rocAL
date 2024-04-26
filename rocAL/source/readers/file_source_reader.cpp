@@ -71,10 +71,14 @@ void FileSourceReader::incremenet_read_ptr() {
     _read_counter++;
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
     if (_last_batch_info.first == RocalBatchPolicy::DROP) {
-        if ((_file_names.size() / _batch_count) == _curr_file_idx)  // To check if it the last batch
-        {
-            _curr_file_idx += _batch_count; // This increaments the ptr with batch size - meaning the batch is skipped.
-            _curr_file_idx = (_curr_file_idx + 1) % _file_names.size(); // When the last_batch_pad is true, next iter should start from beginning. This line ensures, pointer from end is brought back to beginning.
+        if (_last_batch_info.second == true) {
+            if ((_file_names.size() / _batch_count) == _curr_file_idx)  // To check if it the last batch
+            {
+                _curr_file_idx += _batch_count; // This increaments the ptr with batch size - meaning the batch is skipped.
+                _curr_file_idx = (_curr_file_idx + 1) % _file_names.size(); // When the last_batch_pad is true, next iter should start from beginning. This line ensures, pointer from end is brought back to beginning.
+            }
+        } else {
+            THROW("Not implemented");
         }
     }
 }
