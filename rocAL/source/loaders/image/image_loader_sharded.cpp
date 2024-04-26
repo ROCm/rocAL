@@ -163,10 +163,14 @@ Timing ImageLoaderSharded::timing() {
 }
 
 size_t ImageLoaderSharded::last_batch_padded_size() {
-    size_t sum = 0;
-    for (auto& loader : _loaders)
-        sum += loader->last_batch_padded_size();
-    return sum;
+    size_t last_batch_padded_size = 0;
+    for (auto& loader : _loaders) {
+        if (last_batch_padded_size == 0)
+            last_batch_padded_size = loader->last_batch_padded_size();
+        if (last_batch_padded_size != loader->last_batch_padded_size())
+            THROW("All loaders must have the same last batch padded size");
+    }
+    return last_batch_padded_size;
 }
 
 void ImageLoaderSharded::feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer, const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) {

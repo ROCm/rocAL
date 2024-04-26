@@ -67,6 +67,7 @@ class FileSourceReader : public Reader {
 
     FileSourceReader();
 
+    //! Returns the number of images in the last batch
     size_t last_batch_padded_size() override;
 
    private:
@@ -103,7 +104,7 @@ class FileSourceReader : public Reader {
     void fill_last_batch();
     void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    std::pair<RocalBatchPolicy, bool>  _last_batch_info;
+    std::pair<RocalBatchPolicy, bool> _last_batch_info;
     size_t _last_batch_padded_size = 0;
     Reader::Status generate_file_names();
 };

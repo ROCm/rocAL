@@ -444,12 +444,11 @@ MasterGraph::last_batch_policy() {
     return _last_batch_policy;
 }
 
-bool
-MasterGraph::last_batch_padded() {
+bool MasterGraph::last_batch_padded() {
     return _last_batch_padded;
 }
 
-size_t 
+size_t
 MasterGraph::last_batch_padded_size() {
     return _loader_module->last_batch_padded_size();
 }
