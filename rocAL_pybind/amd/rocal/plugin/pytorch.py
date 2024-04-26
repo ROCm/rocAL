@@ -185,6 +185,7 @@ class ROCALGenericIterator(object):
             self.labels_padded = self.labels_padded.view(
                 -1, max_rows1, max_cols1)
 
+            # Check if last batch policy is partial and only return the valid images in last batch
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0:
                 if (self.last_batch_size is None):
                     self.last_batch_size = self.batch_size - \
@@ -213,6 +214,7 @@ class ROCALGenericIterator(object):
                 self.labels_tensor = self.labels_tensor.copy_(
                     torch.from_numpy(self.labels)).long()
 
+            # Check if last batch policy is partial and only return the valid images in last batch
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
                 if (self.last_batch_size is None):
                     self.last_batch_size = self.batch_size - \

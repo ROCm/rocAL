@@ -186,5 +186,6 @@ class Reader {
 
     virtual ~Reader() = default;
 
+    //! Returns the number of images in the last batch
     virtual size_t last_batch_padded_size() { return 0; }
 };

@@ -181,6 +181,7 @@ Reader::Status FileSourceReader::generate_file_names() {
     if (_file_names.empty())
         ERR("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
 
+    // the following code is required to make every shard the same size - required for multi-gpu training
     uint images_to_pad_shard = _file_count_all_shards - (ceil(_file_count_all_shards / _shard_count) * _shard_count);
     if (!images_to_pad_shard) {
         for (uint i = 0; i < images_to_pad_shard; i++) {
@@ -219,8 +220,7 @@ void FileSourceReader::fill_last_batch() {
             for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
                 _file_names.push_back(_last_file_name);
         } else {
-            for (size_t i = 0; i < (_batch_count - _in_batch_read_count); i++)
-                _file_names.push_back(_file_names.at(i));
+            THROW("Not implemented");
         }
     } else if (_last_batch_info.first == RocalBatchPolicy::DROP) {
         for (size_t i = 0; i < _in_batch_read_count; i++)
@@ -235,6 +235,7 @@ Reader::Status FileSourceReader::open_folder() {
     if ((_src_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
+    // Sort all the files inside the directory and then process them for sharding
     std::vector<filesys::path> files_in_directory;
     std::copy(filesys::directory_iterator(filesys::path(_folder_path)), filesys::directory_iterator(), std::back_inserter(files_in_directory));
     std::sort(files_in_directory.begin(), files_in_directory.end());
