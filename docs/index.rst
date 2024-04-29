@@ -29,7 +29,7 @@ The rocAL documentation is structured as follows:
 
     * :ref:`install`
 
-  .. grid-item-card:: How-to
+  .. grid-item-card:: How to
 
     * :ref:`overview`
     * :ref:`architecture`
