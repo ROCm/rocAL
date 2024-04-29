@@ -249,7 +249,7 @@ To run the pipeline, see:
 rocAL Data Types
 =========================
 
-All the rocAL data types are defined under `amd.rocal.types <https://github.com/ROCm/rocAL/blob/master/rocAL/rocAL_pybind/amd/rocal/types.py>`_. Import this library in the application to access the various data types such as rocAL status, processing mode, tensor output type, image size evaluation policy, image color, tensor layout, decode device, resize scaling mode, and resize interpolation type. 
+All the rocAL data types are defined under `amd.rocal.types <https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/types.py>`_. Import this library in the application to access the various data types such as rocAL status, processing mode, tensor output type, image size evaluation policy, image color, tensor layout, decode device, resize scaling mode, and resize interpolation type. 
 
 Here are some of the commonly used rocAL data types:
 

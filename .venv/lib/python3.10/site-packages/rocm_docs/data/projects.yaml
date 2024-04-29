@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=./projects.schema.json
+version: 1
+
+# ${version} will be replaced by the version of the (current) project in values
+projects:
+  amdmigraphx: https://rocm.docs.amd.com/projects/AMDMIGraphX/en/${version}
+  amdsmi: https://rocm.docs.amd.com/projects/amdsmi/en/${version}
+  composable_kernel: https://rocm.docs.amd.com/projects/composable_kernel/en/${version}
+  hip: https://rocm.docs.amd.com/projects/HIP/en/${version}
+  hipblas: https://rocm.docs.amd.com/projects/hipBLAS/en/${version}
+  hipblaslt: https://rocm.docs.amd.com/projects/hipBLASLt/en/${version}
+  hipcc: https://rocm.docs.amd.com/projects/HIPCC/en/${version}
+  hipcub: https://rocm.docs.amd.com/projects/hipCUB/en/${version}
+  hipfft: https://rocm.docs.amd.com/projects/hipFFT/en/${version}
+  hipfort: https://rocm.docs.amd.com/projects/hipfort/en/${version}
+  hipify:
+    target: https://rocm.docs.amd.com/projects/HIPIFY/en/${version}
+    development_branch: amd-staging
+  hip-python:
+    target: https://rocm.docs.amd.com/projects/hip-python/en/${version}
+    development_branch: main
+  hiprand: https://rocm.docs.amd.com/projects/hipRAND/en/${version}
+  hipsolver: https://rocm.docs.amd.com/projects/hipSOLVER/en/${version}
+  hipsparse: https://rocm.docs.amd.com/projects/hipSPARSE/en/${version}
+  hipsparselt: https://rocm.docs.amd.com/projects/hipSPARSELt/en/${version}
+  hiptensor: https://rocm.docs.amd.com/projects/hipTensor/en/${version}
+  hip-vs:
+    target: https://rocm.docs.amd.com/projects/hip-vs/en/${version}
+    development_branch: master
+  miopen: https://rocm.docs.amd.com/projects/MIOpen/en/${version}
+  mivisionx: https://rocm.docs.amd.com/projects/MIVisionX/en/${version}
+  python: https://docs.python.org/3/
+  rccl: https://rocm.docs.amd.com/projects/rccl/en/${version}
+  rdc: https://rocm.docs.amd.com/projects/rdc/en/${version}
+  radeon: https://rocm.docs.amd.com/projects/radeon/en/${version}
+  rocal:
+    target: https://rocm.docs.amd.com/projects/rocAL/en/${version}
+    development_branch: master
+  rocalution: https://rocm.docs.amd.com/projects/rocALUTION/en/${version}
+  rocblas: https://rocm.docs.amd.com/projects/rocBLAS/en/${version}
+  rocdbgapi:
+    target: https://rocm.docs.amd.com/projects/ROCdbgapi/en/${version}
+    development_branch: amd-master
+  rocdecode:
+    target: https://rocm.docs.amd.com/projects/rocDecode/en/${version}
+    development_branch: master
+  rocfft: https://rocm.docs.amd.com/projects/rocFFT/en/${version}
+  rocgdb:
+    target: https://rocm.docs.amd.com/projects/ROCgdb/en/${version}
+    development_branch: amd-master
+  rocm: https://rocm.docs.amd.com/en/${version}
+  rocm-docs-core: https://rocm.docs.amd.com/projects/rocm-docs-core/en/${version}
+  rocm-install-on-linux:
+    target: https://rocm.docs.amd.com/projects/install-on-linux/en/${version}
+    development_branch: develop
+  rocm-install-on-windows:
+    target: https://rocm.docs.amd.com/projects/install-on-windows/en/${version}
+    development_branch: develop
+  rocm_smi_lib:
+    target: https://rocm.docs.amd.com/projects/rocm_smi_lib/en/${version}
+    development_branch: master
+  rocmcmakebuildtools: https://rocm.docs.amd.com/projects/ROCmCMakeBuildTools/en/${version}
+  rocmvalidationsuite:
+    target: https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/${version}
+    development_branch: master
+  rocprim: https://rocm.docs.amd.com/projects/rocPRIM/en/${version}
+  rocprofiler:
+    target: https://rocm.docs.amd.com/projects/rocprofiler/en/${version}
+    development_branch: amd-master
+  rocrand: https://rocm.docs.amd.com/projects/rocRAND/en/${version}
+  rocsolver: https://rocm.docs.amd.com/projects/rocSOLVER/en/${version}
+  rocsparse: https://rocm.docs.amd.com/projects/rocSPARSE/en/${version}
+  rocthrust: https://rocm.docs.amd.com/projects/rocThrust/en/${version}
+  roctracer:
+    target: https://rocm.docs.amd.com/projects/roctracer/en/${version}
+    development_branch: amd-master
+  rocwmma: https://rocm.docs.amd.com/projects/rocWMMA/en/${version}
+  rpp: https://rocm.docs.amd.com/projects/rpp/en/${version}
+  rtd: https://docs.readthedocs.io/en/stable/
+  sphinx: https://www.sphinx-doc.org/en/master/
+  transferbench: https://rocm.docs.amd.com/projects/TransferBench/en/${version}

@@ -1,0 +1,2 @@
+[sphinx.html_themes]
+rocm_docs_theme = rocm_docs.theme

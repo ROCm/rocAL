@@ -1,0 +1,9 @@
+{%
+from "flavors/" ~ theme_flavor ~ "/left-side-menu.jinja" import
+    main_doc_link
+with context
+%}
+{% set text, target = main_doc_link %}
+<a class="navbar-brand logo" href="{{ target }}">
+    <p>{{text}}</p>
+</a>

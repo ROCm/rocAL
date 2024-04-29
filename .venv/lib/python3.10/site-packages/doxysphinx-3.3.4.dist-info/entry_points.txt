@@ -1,0 +1,3 @@
+[console_scripts]
+doxysphinx=doxysphinx.cli:cli
+

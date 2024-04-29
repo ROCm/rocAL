@@ -1,0 +1,88 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/RadeonOpenCompute/rocm-docs-core/develop/src/rocm_docs/data/projects.schema.json",
+    "$defs": {
+        "doxygen": {
+            "type": ["object", "string"],
+            "description": "Relative path (from documentation root) to doxygen html folder",
+            "properties": {
+                "html": {
+                    "description": "Relative path (from documentation root) to doxygen html folder",
+                    "type": "string",
+                    "format": "uri-reference"
+                }
+            },
+            "required": ["html"]
+        },
+        "project": {
+            "title": "project",
+            "description": "A single mapping for a project",
+            "type": [
+                "object",
+                "string"
+            ],
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Base URI of the sphinx documentation of the project",
+                    "default": "http://example.com"
+                },
+                "inventory": {
+                    "default": null,
+                    "description": "Location of the inventory file",
+                    "type": [
+                        "array",
+                        "string",
+                        "null"
+                    ],
+                    "uniqueItems": true,
+                    "items": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "development_branch": {
+                    "type": "string",
+                    "description": "Branch name of the \"development\" or \"mainline\" branch where development happens.",
+                    "default": "develop"
+                },
+                "doxygen": {
+                    "$ref": "#/$defs/doxygen"
+                }
+            },
+            "required": [
+                "target"
+            ]
+        }
+    },
+    "title": "External intersphinx mapping",
+    "description": "Intersphinx mappings",
+    "type": "object",
+    "properties": {
+        "version": {
+            "type": "integer",
+            "const": 1
+        },
+        "projects": {
+            "type": "object",
+            "title": "projects",
+            "description": "A mapping of project names to intersphinx targets",
+            "default": {
+                "projectname": "http://example.com"
+            },
+            "propertyNames": {
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_\\-]*$"
+            },
+            "patternProperties": {
+                "^[a-zA-Z][a-zA-Z0-9_\\-]*$": { "$ref":"#/$defs/project" }
+            },
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "version",
+        "projects"
+    ]
+}

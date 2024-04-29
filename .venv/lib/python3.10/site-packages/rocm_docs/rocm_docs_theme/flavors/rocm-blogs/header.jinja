@@ -1,0 +1,19 @@
+{% macro top_level_header(branch, latest_version, release_candidate_version) -%}
+    <a class="klavika-font hover-opacity" href="https://rocm.blogs.amd.com/">ROCm&#8482; Blogs</a>
+{%- endmacro -%}
+
+{% macro version_list() -%}{%- endmacro -%}
+
+{%
+set repo_url = theme_repository_url|replace("-internal", "")
+%}
+{%
+set nav_secondary_items = {
+    "GitHub": repo_url,
+    "Community": "https://github.com/RadeonOpenCompute/ROCm/discussions",
+    "Documentation": "https://rocm.docs.amd.com/en/latest/",
+    "Infinity Hub": "https://www.amd.com/en/developer/resources/infinity-hub.html",
+    "Support": repo_url + "/issues/new/choose",
+    "Feedback": "mailto:rocm-feedback@amd.com"
+}
+%}
