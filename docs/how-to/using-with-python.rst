@@ -94,7 +94,7 @@ Given below is an example of a file reader, which takes a folder of images as in
 Defining the Pipeline
 ------------------------
 
-To define a pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L29`.
+To define a pipeline, see `<https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L29>`__.
 
 .. code-block:: shell
    :caption: Pipeline Class
@@ -189,7 +189,9 @@ To build the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybi
 Running the Pipeline
 -----------------------------
 
-To run the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L168`
+To run/use the pipeline, simply create a data loader using the pipeline and iterate through it to get the next batch of images with labels.
+
+To run the pipeline, see `<https://github.com/ROCm/rocAL/blob/master/tests/python_api/unit_test.py#L168>`__.
 
 .. code-block:: python
    :caption: Run the Pipeline
@@ -217,7 +219,7 @@ Performing Augmentations
 
 rocAL not only reads images from the disk and batches them into tensors, it can also perform various augmentations on those images. 
 
-To read images, decode them, and rotate them in the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L77`
+To read images, decode them, and rotate them in the pipeline, see `<https://github.com/ROCm/rocAL/blob/master/tests/python_api/unit_test.py#L77>`__
 
 .. code-block:: python
    :caption: Perform Augmentations
@@ -265,7 +267,7 @@ Here are some of the commonly used rocAL data types:
    * tensor_dtype = types.FLOAT
    * tensor_dtype = types.FLOAT16
 
-To see the usage of the above-mentioned data types, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L97`
+To see the usage of the above-mentioned data types, see `<https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/pipeline.py#L97>`__.
 
 .. code-block:: python
 
