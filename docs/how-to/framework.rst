@@ -215,8 +215,7 @@ Run MLPerf Resnet50 classification training with rocAL
     * Option to map the localhost directory with imagenet dataset folder to be accessed on the docker image.
     * Usage: ``-v {LOCAL_HOST_DIRECTORY_PATH}:{DOCKER_DIRECTORY_PATH}``
 
-#. Install rocAL ``python_pybind`` plugin as described above
-#. Clone `MLPerf <https://github.com/rrawther/MLPerf-mGPU>`_ repo and checkout ``mlperf-v1.1-rocal`` branch
+#. To see and run a sample training script, refer to `rocAL Imagenet example <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch/imagenet_training>`_.
 
 .. code-block:: shell 
 
