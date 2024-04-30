@@ -328,7 +328,6 @@ class ROCALAudioIterator(object):
                 if (max_x1 == 0 or max_y1 == 0):
                     output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
                 else:
-                    print("HERE")
                     output = torch.empty(dimensions[0], max_x1, max_y1, dtype=getattr(torch, torch_dtype))
                 self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
             else:
