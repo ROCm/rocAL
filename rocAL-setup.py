@@ -381,5 +381,8 @@ else:
     ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
-    
+
+    # Python Wheel
+    ERROR_CHECK(os.system('pip install wheel'))
+
 print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")
