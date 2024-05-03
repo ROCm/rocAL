@@ -47,9 +47,9 @@ unsigned FileSourceReader::count_items() {
     int size = std::max(_file_names.size(), _batch_count);
     int ret = (size - _read_counter);
     if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) {
-        ret += _in_batch_read_count;
+        ret += _batch_count - _in_batch_read_count;
     } else if (_last_batch_info.first == RocalBatchPolicy::FILL) {
-        ret += _in_batch_read_count;
+        ret += _batch_count - _in_batch_read_count;
     }
     return ((ret < 0) ? 0 : ret);
 }
