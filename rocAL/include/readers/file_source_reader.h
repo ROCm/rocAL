@@ -84,7 +84,7 @@ class FileSourceReader : public Reader {
     std::vector<std::string> _file_names;
     unsigned _curr_file_idx;
     FILE *_current_fPtr;
-    unsigned _current_file_size;
+    unsigned _current_file_size, _shard_start_idx;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
     size_t _shard_id = 0;
@@ -95,7 +95,7 @@ class FileSourceReader : public Reader {
     /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
     size_t _batch_count = 1;
     size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
+    size_t _in_batch_read_count = 0, _padded_samples = 0; // Check and remove if _in_batch_read_count is not used.
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
@@ -113,6 +113,10 @@ class FileSourceReader : public Reader {
     bool _stick_to_shard = false;
     bool _pad_last_batch = false;
     Reader::Status generate_file_names();
-    //!<// Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
+    size_t get_start_idx(); // Start Idx of the Shard's Data
+    size_t get_dataset_size(); // DataSet Size
+    size_t shard_size_without_padding(); // Number of files belonging to a shard (without padding)
+    size_t shard_size_with_padding(); // Number of files belonging to a shard (with padding)
+    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
 };
