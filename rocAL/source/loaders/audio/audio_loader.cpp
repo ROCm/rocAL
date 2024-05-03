@@ -26,7 +26,6 @@ THE SOFTWARE.
 #include <chrono>
 #include <thread>
 
-
 #ifdef ROCAL_AUDIO
 
 AudioLoader::AudioLoader(void* dev_resources) : _circ_buff(dev_resources),
@@ -172,7 +171,7 @@ AudioLoader::load_routine() {
                                               _max_decoded_channels);
 
             if (load_status == LoaderModuleStatus::OK) {
-                _circ_buff.set_data_info(_decoded_audio_info);
+                _circ_buff.set_decoded_data_info(_decoded_audio_info);
                 _circ_buff.push();
                 _audio_counter += _output_tensor->info().batch_size();
             }
@@ -232,7 +231,7 @@ AudioLoader::update_output_audio() {
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-    _output_decoded_audio_info = _circ_buff.get_data_info();
+    _output_decoded_audio_info = _circ_buff.get_decoded_data_info();
     _output_names = _output_decoded_audio_info._data_names;
     _output_tensor->update_tensor_roi(_output_decoded_audio_info._original_audio_samples, _output_decoded_audio_info._original_audio_channels);
     _output_tensor->update_audio_tensor_sample_rate(_output_decoded_audio_info._original_audio_sample_rates);

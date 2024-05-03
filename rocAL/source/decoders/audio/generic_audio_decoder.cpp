@@ -61,7 +61,7 @@ AudioDecoder::Status GenericAudioDecoder::Initialize(const char* src_filename) {
     memset(&_sfinfo, 0, sizeof(_sfinfo));
     if (!(_sf_ptr = sf_open(src_filename, SFM_READ, &_sfinfo))) {
         // Open failed so print an error message.
-        WRN("Not able to open input file : " + src_filename)
+        WRN("Not able to open input file : " + STR(src_filename))
         // Print the error message from libsndfile.
         puts(sf_strerror(NULL));
         sf_close(_sf_ptr);

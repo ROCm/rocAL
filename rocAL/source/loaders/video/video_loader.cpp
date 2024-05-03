@@ -175,7 +175,7 @@ VideoLoader::load_routine() {
                                               _output_tensor->info().color_format());
 
             if (load_status == LoaderModuleStatus::OK) {
-                _circ_buff.set_data_info(_decoded_data_info);
+                _circ_buff.set_decoded_data_info(_decoded_data_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }
@@ -233,7 +233,7 @@ VideoLoader::update_output_image() {
     }
     if (_stopped)
         return LoaderModuleStatus::OK;
-    _output_decoded_data_info = _circ_buff.get_data_info();
+    _output_decoded_data_info = _circ_buff.get_decoded_data_info();
     _output_names = _output_decoded_data_info._data_names;
     _output_tensor->update_tensor_roi(_output_decoded_data_info._roi_width, _output_decoded_data_info._roi_height);
     _circ_buff.pop();

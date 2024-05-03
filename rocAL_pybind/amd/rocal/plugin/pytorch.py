@@ -293,7 +293,7 @@ class ROCALAudioIterator(object):
         self.output_memory_type = self.loader._output_memory_type
         self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
-        self.shard_size = self.loader._shard_size or size
+        self.shard_size =  size
         self.auto_reset = auto_reset
         self.batch_count = 0
 
@@ -312,7 +312,9 @@ class ROCALAudioIterator(object):
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
         self.batch_count += self.batch_size
-        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle) #Every Time the padded size is going to differ
+        # Every Time the padded size is going to differ
+        self.last_batch_size = self.batch_size - \
+            b.getLastBatchPaddedSize(self.loader._handle)
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()

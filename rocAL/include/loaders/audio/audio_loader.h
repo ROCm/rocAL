@@ -66,8 +66,8 @@ class AudioLoader : public LoaderModule {
     LoaderModuleStatus load_routine();
     std::shared_ptr<AudioReadAndDecode> _audio_loader;
     Tensor* _output_tensor;
-    std::vector<std::string> _output_names;  //!< audio file name/ids that are stored in the _output_audio
-    MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
+    std::vector<std::string> _output_names; // audio file name/ids that are stored in the _output_audio
+    MetaDataBatch* _meta_data = nullptr;    // The output of the meta_data_graph
     bool _internal_thread_running;
     size_t _output_mem_size, _batch_size, _max_decoded_samples, _max_decoded_channels;
     std::thread _load_thread;
@@ -78,10 +78,10 @@ class AudioLoader : public LoaderModule {
     TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
-    bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/audios/...) and wouldn't stop
-    size_t _prefetch_queue_depth = 0;   // Used for circular buffer's internal buffer
-    size_t _audio_counter = 0;      //!< How many audios have been loaded already
-    size_t _remaining_audio_count;  //!< How many audios are there yet to be loaded
+    bool _loop;                         // If true the reader will wrap around at the end of the media (files/audios/...) and wouldn't stop
+    size_t _prefetch_queue_depth = 0;   // Used for circular buffer's internal buffer allocation
+    size_t _audio_counter = 0;          // How many audios have been loaded already
+    size_t _remaining_audio_count;      // How many audios are there yet to be loaded
     int _device_id;
     RocalBatchPolicy _last_batch_policy;
     bool last_batch_padded;
