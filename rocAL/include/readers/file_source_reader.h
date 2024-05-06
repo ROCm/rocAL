@@ -110,6 +110,8 @@ class FileSourceReader : public Reader {
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::pair<RocalBatchPolicy, bool>  _last_batch_info;
     size_t _last_batch_padded_size = 0;
+    size_t _num_padded_samples_counter = 0;
+    size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;
     bool _pad_last_batch = false;
     Reader::Status generate_file_names();
@@ -119,4 +121,7 @@ class FileSourceReader : public Reader {
     size_t shard_size_with_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
+    std::vector<std::string> _all_shard_file_names_padded;
+    size_t index_to_pad(); // Returns the index to pad in the last batch if pad_last_batch is set to true.
+    size_t samples_to_pad(); // Returns the number of samples padded in each shard - varies for each shard
 };
