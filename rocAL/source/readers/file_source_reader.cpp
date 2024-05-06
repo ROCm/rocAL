@@ -87,17 +87,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
 void FileSourceReader::incremenet_read_ptr() {
     _read_counter++;
     // std::cerr << "\n _read_counter:: " << _read_counter;
-    // For DROP policy, when the pad is set to false the last batch is dropped and idx is advanced by skipping one batch in between
-    // if (_last_batch_info.first == RocalBatchPolicy::DROP && _pad_last_batch == false) {
-    //     if (_read_counter + _batch_count - 1 > shard_size_without_padding()) {
-    //         // Skip last batch entirely along with padded data idx
-    //         if (_stick_to_shard == true) 
-    //             _curr_file_idx = ((_curr_file_idx + _batch_count + 1) % shard_size_without_padding()) + _shard_start_idx;
-    //         else 
-    //             _curr_file_idx = (_curr_file_idx + _batch_count + 1) % _file_names.size();
-    //         return;
-    //     }
-    // } 
+ 
     if(_stick_to_shard == false) {
         _curr_file_idx = _curr_file_idx % _all_shard_file_names_padded.size();
     } else { // stick to shard = true
@@ -365,18 +355,23 @@ Reader::Status FileSourceReader::open_folder() {
             _file_count_all_shards++;
             incremenet_file_id();
 
-            auto dataset_size = _file_count_all_shards;
-            _all_shard_file_names_padded.resize(_file_count_all_shards);
+                auto dataset_size = _file_count_all_shards;
+            // _all_shard_file_names_padded.resize(_file_count_all_shards);
             // Pad the _file_names vector when _pad_last_batch is True
+            _padded_samples = shard_size_with_padding() % _batch_count;
+            _last_batch_padded_size = _batch_count - _padded_samples;
             if (_pad_last_batch == true) {
                 for(uint shard_id = 0; shard_id < _shard_count; shard_id++) {
                     uint start_idx = (dataset_size * shard_id) / _shard_count;
                     uint shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
                     uint shard_size_with_padding = std::ceil(dataset_size * 1.0 / _shard_count);
-                    _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _file_names.begin() + start_idx, _file_names.begin() + shard_size_without_padding);
+                    auto start = _file_names.begin() + start_idx;
+                    auto end = _file_names.begin() + start_idx + shard_size_without_padding ;
+                    if (start != end && start <= _file_names.end() && end <= _file_names.end()) {
+                        _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), start , end);
+                    }
                     _num_padded_samples =  (shard_size_with_padding - shard_size_without_padding) + _batch_count - (shard_size_with_padding % _batch_count);
                     _file_count_all_shards+=_num_padded_samples;
-                    _all_shard_file_names_padded.resize(_file_count_all_shards);
                     _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _num_padded_samples, _all_shard_file_names_padded.back()); 
                 }
             } else {
