@@ -102,6 +102,7 @@ class FileSourceReader : public Reader {
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
     void incremenet_read_ptr();
+    void increment_curr_file_idx();
     int release();
     size_t get_file_shard_id();
     void incremenet_file_id() { _file_id++; }

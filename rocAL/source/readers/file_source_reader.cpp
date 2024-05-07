@@ -68,9 +68,8 @@ unsigned FileSourceReader::count_items() {
         } else if (_last_batch_info.first == RocalBatchPolicy::FILL) {
             ret += _last_batch_padded_size;
         } 
-         else if (_last_batch_info.first == RocalBatchPolicy::DROP && _last_batch_info.second == true) {
-            if (ret <= _batch_count)
-                ret = 0;
+        else if (_last_batch_info.first == RocalBatchPolicy::DROP) {
+            ret -= _batch_count;
         }
     }
     
@@ -104,9 +103,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     return ret;
 }
 
-void FileSourceReader::incremenet_read_ptr() {
-    _read_counter++;
-    // std::cerr << "\n _read_counter:: " << _read_counter;
+void FileSourceReader::increment_curr_file_idx() {
     if(_stick_to_shard == false) {
         _curr_file_idx = _curr_file_idx % _all_shard_file_names_padded.size();
     } else { // stick to shard = true
@@ -116,11 +113,17 @@ void FileSourceReader::incremenet_read_ptr() {
         else
             _curr_file_idx = get_start_idx();
     }
+}
+
+void FileSourceReader::incremenet_read_ptr() {
+    _read_counter++;
+    increment_curr_file_idx();
+
     // std::cerr << " \n \n _curr_file_idx !!! :: "<< _curr_file_idx;
 }
 
 size_t FileSourceReader::open() {
-    std::cerr << "\n _curr_file_idx :: " << _curr_file_idx << "\t " << "_all_shard_file_names_padded[_curr_file_idx] :: " << _all_shard_file_names_padded[_curr_file_idx];
+    // std::cerr << "\n _curr_file_idx :: " << _curr_file_idx << "\t " << "_all_shard_file_names_padded[_curr_file_idx] :: " << _all_shard_file_names_padded[_curr_file_idx];
     auto file_path = _all_shard_file_names_padded[_curr_file_idx];  // Get next file name
     incremenet_read_ptr();
     _last_file_path = _last_id = file_path;
@@ -205,8 +208,11 @@ void FileSourceReader::reset() {
     } else {
         // If padding is not set, need to continue the file_idx
         _read_counter = 0;
-        // if (_pad_last_batch == true && (_last_batch_info.first != RocalBatchPolicy::DROP))
-        //     _curr_file_idx = get_start_idx();
+        if ((_last_batch_info.first == RocalBatchPolicy::DROP) && _shard_size > 0) {
+            for(uint i = 0; i < _batch_count; i++)
+                increment_curr_file_idx();
+        }
+            
     }
 }
 

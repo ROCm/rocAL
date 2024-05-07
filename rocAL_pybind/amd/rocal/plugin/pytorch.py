@@ -281,6 +281,7 @@ class ROCALAudioIterator(object):
         @param device_id           The ID of the device to use
     """
     def __init__(self, pipeline, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
+        print("INIT")
         self.loader = pipeline
         self.device = device
         self.device_id = device_id
@@ -294,6 +295,7 @@ class ROCALAudioIterator(object):
         self.last_batch_padded_size = b.getLastBatchPaddedSize(self.loader._handle)
         self.last_batch_policy = self.loader._last_batch_policy
         self.shard_size =  size
+        print(f' shard_size: {self.shard_size}')
         self.auto_reset = auto_reset
         self.batch_count = 0
 
@@ -301,7 +303,10 @@ class ROCALAudioIterator(object):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocal_run() != 0 and self.shard_size < 0:
+        # print(f' self.loader.rocal_run(): {self.loader.rocal_run()}')
+        rocal_run = self.loader.rocal_run()
+        # print(f' self.loader.rocal_run(): {rocal_run}')
+        if rocal_run != 0:
             if self.auto_reset:
                 self.reset()
             raise StopIteration
@@ -313,8 +318,10 @@ class ROCALAudioIterator(object):
             self.output_tensor_list = self.loader.get_output_tensors()
         self.batch_count += self.batch_size
         # Every Time the padded size is going to differ
-        self.last_batch_size = self.batch_size - \
-            b.getLastBatchPaddedSize(self.loader._handle)
+        # print(f' b.getRemainingImages(self.loader._handle) :: {b.getRemainingImages(self.loader._handle)}')
+        # print("b.getRemainingImages(self.loader._handle)", b.getRemainingImages(self.loader._handle))
+        self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
+        print(f' last_batch_size::  {self.last_batch_size}')
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
