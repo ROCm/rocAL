@@ -6,28 +6,76 @@
 
 [rocAL Documentation](https://github.com/ROCm/rocAL)
 
-## rocAL 1.0.0 (unreleased)
+## rocAL 2.0.0 (unreleased)
 
 ### Added
 
-* 
+* Packages - dev & tests
+* Support for audio loader and decoder, which uses libsndfile library to decode wav files
+* C++ rocAL audio unit test and python script to run and compare the outputs
+* Python support for audio decoders
+* Pytorch iterator for Audio
+* Python audio unit test, and support to verify outputs
 
 ### Optimizations
 
-* 
+* Tests
+* Setup Script
 
 ### Changed
 
-* 
+* Image to tensor updates
 
 ### Fixed
 
-* 
+* Tests & readme
 
 ### Tested Configurations
 
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RedHat - `8` / `9`
+  * SLES - `15-SP4`
+* ROCm: rocm-core - `5.7.0.50700-6`
+* RPP - `rpp` & `rpp-dev`/`rpp-devel`
+* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
+* Protobuf - `libprotobuf-dev`/`protobuf-devel`
+* RapidJSON - `rapidjson-dev` / `rapidjson-devel`
+* FFMPEG - `ffmpeg` dev package
+* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
+* Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
+* PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
+* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
+* rocAL Setup Script - `V2.0.0`
+* Dependencies for all the above packages
+
+### Known issues
+
+* Requires custom deps install
+
+## rocAL 1.0.0
+
+### Added
+
+* rocAL Tests
+
+### Optimizations
+
+* Image augmentations
+
+### Changed
+
+* Deps
+
+### Fixed
+
+* minor issues
+
+### Tested Configurations
+
+* Linux distribution
+  * Ubuntu - `20.04` / `22.04`
 * ROCm: rocm-core - `6.0.60002-1`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
@@ -39,4 +87,4 @@
 
 ### Known issues
 
-* 
+* Requires custom version of libturbo-JPEG

@@ -48,7 +48,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: basic_test <image_dataset_folder> <label_text_file_path> <test_case:0/1> <processing_device=1/cpu=0>  decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts \n";
+        std::cout << "Usage: basic_test <image_dataset_folder - required> <label_text_file_path - required> <test_case:0/1> <processing_device=1/cpu=0>  decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts \n";
         return -1;
     }
     int argIdx = 0;
@@ -133,7 +133,7 @@ int main(int argc, const char **argv) {
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
 
-    const int total_tests = 4;
+    const int total_tests = 2;
     int test_id = -1;
     int ImageNameLen[inputBatchSize];
     int run_len[] = {2 * inputBatchSize, 4 * inputBatchSize, 1 * inputBatchSize, 50 * inputBatchSize};
@@ -142,10 +142,10 @@ int main(int argc, const char **argv) {
     names.resize(inputBatchSize);
 
     while (++test_id < total_tests) {
-        std::cout << "#### Started test id " << test_id << "\n";
+        std::cout << "Start test id " << test_id << "\n";
         std::cout << "Available images = " << rocalGetRemainingImages(handle) << std::endl;
         int process_image_count = ((test_case == 0) ? rocalGetRemainingImages(handle) : run_len[test_id]);
-        std::cout << ">>>>> Going to process " << process_image_count << " images , press a key" << std::endl;
+        std::cout << "Process " << process_image_count << " images" << std::endl;
         if (DISPLAY)
             cv::waitKey(0);
         const unsigned number_of_cols = process_image_count / inputBatchSize;
@@ -178,7 +178,7 @@ int main(int argc, const char **argv) {
             for (int i = 0; i < inputBatchSize; i++) {
                 names[i] = imageNamesStr.substr(pos, ImageNameLen[i]);
                 pos += ImageNameLen[i];
-                std::cout << "name: " << names[i] << " label: " << labels_buffer[i] << " - " << std::endl;
+                std::cout << "name: " << names[i] << " label: " << labels_buffer[i] << std::endl;
             }
             std::cout << std::endl;
 
@@ -200,17 +200,16 @@ int main(int argc, const char **argv) {
                 cv::waitKey(200);
             col_counter = (col_counter + 1) % number_of_cols;
         }
-        std::cout << ">>>>> Done test id " << test_id << " processed " << counter << " images ,press a key \n";
+        std::cout << "Completed test id: " << test_id << " processed " << counter << " images\n";
         if (DISPLAY)
             cv::waitKey(0);
-        std::cout << "#### Going to reset\n";
+        std::cout << "rocAL reset\n";
         rocalResetLoaders(handle);
         mat_input.release();
         mat_output.release();
         mat_color.release();
         if (DISPLAY)
             cvDestroyWindow(win_name);
-        std::cout << "#### Done reset\n";
     }
 
     rocalRelease(handle);
