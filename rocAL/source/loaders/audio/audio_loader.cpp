@@ -200,7 +200,7 @@ AudioLoader::load_routine() {
 }
 
 bool AudioLoader::is_out_of_data() {
-    return (remaining_count() < 0);
+    return (remaining_count() < _batch_size);
 }
 
 size_t AudioLoader::last_batch_padded_size() {
