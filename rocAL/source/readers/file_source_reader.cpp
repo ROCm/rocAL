@@ -104,8 +104,8 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
 }
 
 void FileSourceReader::increment_curr_file_idx() {
-    if(_stick_to_shard == false) {
-        _curr_file_idx = _curr_file_idx % _all_shard_file_names_padded.size();
+    if (_stick_to_shard == false) {
+        _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
     } else { // stick to shard = true
         // pad_last_batch = True and False
         if (_curr_file_idx >=get_start_idx()  && _curr_file_idx < get_start_idx() + shard_size_without_padding() - 1) // element lies within the shard size
@@ -182,29 +182,16 @@ int FileSourceReader::release() {
 void FileSourceReader::reset() {
     if (_shuffle) std::random_shuffle(_all_shard_file_names_padded.begin(), _all_shard_file_names_padded.end());
     // std::cerr << "\n RESET !";
-    if ( _shard_count == 1 && _shard_size > 0) { // Single Shard
-        _read_counter=0;
-        _curr_file_idx =0;
-        int size = _shard_size;
-        int inc = 0;
-        if (size < _batch_count) {
-            inc = _batch_count;
-        } else {
-            if(size % _batch_count)
-                inc = size;
-            else
-                inc = size + (size%_batch_count);
-        }
-            std::rotate(_all_shard_file_names_padded.begin(), _all_shard_file_names_padded.begin() + inc, _all_shard_file_names_padded.end());
-    }
-    else if (_shard_count > 1 && _stick_to_shard == false) { // Multiple Shards
-            increment_shard_id();
+
+    if (_stick_to_shard == false) {
+            increment_shard_id(); // Should work for both single and multiple shards
             _last_batch_padded_size = 0;
-            _file_id = 0;
             _read_counter = 0;
             get_start_idx();
-            if (!_all_shard_file_names_padded.empty())
-                LOG("FileReader in reset - Total of " + TOSTR(_all_shard_file_names_padded.size()) + " images loaded from " + _full_path)
+            if ((_last_batch_info.first == RocalBatchPolicy::DROP) && _shard_size > 0) {
+                for(uint i = 0; i < _batch_count; i++)
+                    increment_curr_file_idx();
+            }
     } else {
         // If padding is not set, need to continue the file_idx
         _read_counter = 0;
