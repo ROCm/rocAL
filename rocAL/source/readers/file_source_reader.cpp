@@ -60,17 +60,9 @@ unsigned FileSourceReader::count_items() {
         auto shard_size_with_padding = _shard_size + (_batch_count - (_shard_size % _batch_count));
         if (_loop) return shard_size_with_padding;
         int size = std::max(shard_size_with_padding, _batch_count);
-        // std::cerr << "\n shard_size_with_padding " << size;
         ret = (size - _read_counter);
-        // std::cerr << "\n (size - _read_counter) " << ret;
-        if (_last_batch_info.first == RocalBatchPolicy::PARTIAL) { // TODO: Combine PARTIAL and FILL to single conditions
-            ret += _last_batch_padded_size;
-        } else if (_last_batch_info.first == RocalBatchPolicy::FILL) {
-            ret += _last_batch_padded_size;
-        } 
-        else if (_last_batch_info.first == RocalBatchPolicy::DROP) {
+        if (_last_batch_info.first == RocalBatchPolicy::DROP) // The shard size is padded at the beginning.
             ret -= _batch_count;
-        }
     }
     
 //   std::cerr << "\n ret value is " << ret;
@@ -104,15 +96,16 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
 }
 
 void FileSourceReader::increment_curr_file_idx() {
-    if (_stick_to_shard == false) {
-        _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
-    } else { // stick to shard = true
-        // pad_last_batch = True and False
-        if (_curr_file_idx >=get_start_idx()  && _curr_file_idx < get_start_idx() + shard_size_without_padding() - 1) // element lies within the shard size
-            _curr_file_idx = (_curr_file_idx + 1);
-        else
-            _curr_file_idx = get_start_idx();
-    }
+  // pad_last_batch = True and False
+  if (_stick_to_shard == false) {
+    _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
+  } else {  // stick to shard = true
+    if (_curr_file_idx >= get_start_idx() &&
+        _curr_file_idx < get_start_idx() + shard_size_without_padding() -1)  // check if element lies within the shard size [begin, last -1]
+      _curr_file_idx = (_curr_file_idx + 1);
+    else
+      _curr_file_idx = get_start_idx();
+  }
 }
 
 void FileSourceReader::incremenet_read_ptr() {
@@ -185,17 +178,14 @@ void FileSourceReader::reset() {
 
     if (_stick_to_shard == false) {
             increment_shard_id(); // Should work for both single and multiple shards
-            _last_batch_padded_size = 0;
             _read_counter = 0;
-            get_start_idx();
             if ((_last_batch_info.first == RocalBatchPolicy::DROP) && _shard_size > 0) {
                 for(uint i = 0; i < _batch_count; i++)
                     increment_curr_file_idx();
             }
     } else {
-        // If padding is not set, need to continue the file_idx
         _read_counter = 0;
-        if ((_last_batch_info.first == RocalBatchPolicy::DROP) && _shard_size > 0) {
+        if ((_last_batch_info.first == RocalBatchPolicy::DROP) && _shard_size > 0) { // DROP policy differs when shard_size is passed
             for(uint i = 0; i < _batch_count; i++)
                 increment_curr_file_idx();
         }
@@ -297,6 +287,7 @@ Reader::Status FileSourceReader::generate_file_names() {
     // _all_shard_file_names_padded.resize(_file_count_all_shards);
     // Pad the _file_names vector when _pad_last_batch is True
     _padded_samples = shard_size_with_padding() % _batch_count;
+    std::cerr << "\n _padded_samples" << _padded_samples;
     _last_batch_padded_size = _batch_count - _padded_samples;
     if (_pad_last_batch == true) {
         for(uint shard_id = 0; shard_id < _shard_count; shard_id++) {
