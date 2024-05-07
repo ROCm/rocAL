@@ -243,5 +243,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* rocAL Setup Script - `V2.0.0`
+* rocAL Setup Script - `V2.0.1`
 * Dependencies for all the above packages
