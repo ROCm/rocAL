@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <cstring>
 #include <algorithm>
 #include "readers/image/cifar10_data_reader.h"
-#include "readers/image/file_source_reader.h"
+#include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
 
 CIFAR10DataReader::CIFAR10DataReader() {

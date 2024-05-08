@@ -23,7 +23,6 @@
 #
 # @brief File containing iterators for generic use case
 
-import cupy as cp
 import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
@@ -49,6 +48,12 @@ class ROCALGenericIterator(object):
         self.multiplier = multiplier
         self.offset = offset
         self.device = device
+        if self.device is "gpu" or "cuda":
+            try:
+                import cupy as cp
+            except ImportError:
+                print('info: Import CuPy failed. Falling back to CPU!')
+                self.device = "cpu"
         self.device_id = device_id
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype

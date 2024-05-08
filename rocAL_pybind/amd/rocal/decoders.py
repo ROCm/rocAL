@@ -402,3 +402,28 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
         image_decoder_slice = b.fusedDecoderCropShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (image_decoder_slice)
+
+def audio(*inputs, file_root='', file_list_path='', shard_id=0, num_shards=1, random_shuffle=False, downmix=False, stick_to_shard=False, shard_size=-1):
+    """!Decodes wav audio files.
+
+        @param inputs                           List of input audio.
+        @param file_root                        Folder Path to the audio data.
+        @param file_list_path (for future use)  Path to the text file containing list of files and the labels
+        @param shard_id                         Shard ID for parallel processing.
+        @param num_shards                       Total number of shards for parallel processing.
+        @param random_shuffle                   Whether to shuffle audio samples randomly.
+        @param downmix                          Converts the audio data to single channel when enabled 
+        @param stick_to_shard                   The reader sticks to the data for it's corresponding shard when enabled
+        @param shard_size                       Provides the number of files in an epoch of a particular shard.
+        @return                                 Decoded audio.
+    """
+    kwargs_pybind = {
+            "source_path": file_root,
+            "shard_id": shard_id,
+            "num_shards": num_shards,
+            "is_output": False,
+            "shuffle": random_shuffle,
+            "loop": False,
+            "downmix": downmix}
+    decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return decoded_audio

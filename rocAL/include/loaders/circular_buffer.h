@@ -37,6 +37,9 @@ struct DecodedDataInfo {
     std::vector<uint32_t> _roi_height;
     std::vector<uint32_t> _original_width;
     std::vector<uint32_t> _original_height;
+    std::vector<uint32_t> _audio_samples; //! Amplitude of an audio signal at a specific point in time
+    std::vector<uint32_t> _audio_channels; //! Number of audio channels in an audio signal
+    std::vector<float> _audio_sample_rates; //! The number of samples of audio carried per second
 };
 
 struct CropImageInfo {
@@ -54,9 +57,9 @@ class CircularBuffer {
     void unblock_writer();  // Unblocks the thread currently waiting on get_write_buffer
     void push();            // The latest write goes through, effectively adds one element to the buffer
     void pop();             // The oldest write will be erased and overwritten in upcoming writes
-    void set_data_info(const DecodedDataInfo& info) { _last_data_info = info; }
+    void set_decoded_data_info(const DecodedDataInfo& info) { _last_data_info = info; }
     void set_crop_image_info(const CropImageInfo& info) { _last_crop_image_info = info; }
-    DecodedDataInfo& get_data_info();
+    DecodedDataInfo& get_decoded_data_info();
     CropImageInfo& get_cropped_image_info();
     bool random_bbox_crop_flag = false;
     void* get_read_buffer_dev();

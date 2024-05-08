@@ -34,8 +34,29 @@ THE SOFTWARE.
 #include "loaders/image/node_fused_jpeg_crop_single_shard.h"
 #include "loaders/image/node_image_loader.h"
 #include "loaders/image/node_image_loader_single_shard.h"
+#ifdef ROCAL_AUDIO
+#include "loaders/audio/audio_source_evaluator.h"
+#include "loaders/audio/node_audio_loader.h"
+#include "loaders/audio/node_audio_loader_single_shard.h"
+#endif
 #include "augmentations/geometry_augmentations/node_resize.h"
 #include "rocal_api.h"
+
+#ifdef ROCAL_AUDIO
+std::tuple<unsigned, unsigned>
+evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
+                        const std::string& source_path, const std::string& file_list_path) {
+    AudioSourceEvaluator source_evaluator;
+    if (source_evaluator.Create(ReaderConfig(storage_type, source_path, file_list_path), DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
+        THROW("Initializing file source input evaluator failed")
+    auto max_samples = source_evaluator.GetMaxSamples();
+    auto max_channels = source_evaluator.GetMaxChannels();
+    if (max_samples == 0 || max_channels == 0)
+        THROW("Cannot find size of the audio files or files cannot be accessed")
+    LOG("Maximum input audio dimension [ " + TOSTR(max_samples) + " x " + TOSTR(max_channels) + " ] for audio's in " + source_path)
+    return std::make_tuple(max_samples, max_channels);
+}
+#endif
 
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
@@ -2071,6 +2092,95 @@ rocalJpegExternalFileSource(
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
 
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalAudioFileSourceSingleShard(
+    RocalContext p_context,
+    const char* source_path,
+    unsigned shard_id,
+    unsigned shard_count,
+    bool is_output,
+    bool shuffle,
+    bool loop,
+    bool downmix) {
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try {
+#ifdef ROCAL_AUDIO
+        if (shard_count < 1)
+            THROW("Shard count should be bigger than 0")
+        if (shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count")
+        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, "");
+        INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
+        auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
+                               context->master_graph->mem_type(),
+                               tensor_data_type);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
+        output->reset_audio_sample_rate();
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->set_loop(loop);
+        if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+#else
+        THROW("Audio decoder is not enabled since sndfile is not present")
+#endif
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalAudioFileSource(
+    RocalContext p_context,
+    const char* source_path,
+    unsigned shard_count,
+    bool is_output,
+    bool shuffle,
+    bool loop,
+    bool downmix) {
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try {
+#ifdef ROCAL_AUDIO
+        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, "");
+        INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
+        RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
+        std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
+        auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
+                               context->master_graph->mem_type(),
+                               tensor_data_type);
+        info.set_max_shape();
+        output = context->master_graph->create_loader_output_tensor(info);
+        output->reset_audio_sample_rate();
+
+        if (shard_count < 1)
+            THROW("internal shard count should be bigger than 0")
+
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->set_loop(loop);
+        if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+#else
+        THROW("Audio decoder is not enabled since sndfile is not present")
+#endif
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';
