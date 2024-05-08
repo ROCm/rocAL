@@ -45,6 +45,7 @@ find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
 find_package(SndFile QUIET)
+find_package(rocDecode QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -287,6 +288,19 @@ if(${BUILD_ROCAL})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FFMPEG_LIBRARIES})
         message("-- ${White}rocAL built with FFmpeg Video Decode Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
+    endif()
+    # rocDecode
+    if(NOT rocDecode_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without rocDecode Video Hardware Decode Functionality${ColourReset}")
+    elseif(HIP_FOUND AND FFMPEG_FOUND)
+        # include_directories(${ROCDECODE_INCLUDE_DIR})
+        include_directories (${rocDecode_INCLUDE_DIRS}
+                             ${ROCM_PATH}/share/rocdecode/utils
+                             ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocDecode_LIBRARIES})
+        message("-- ${White}rocAL built with rocDecode Video Decode Functionality${ColourReset}")
+    else()
+        message("-- ${Yellow}NOTE: rocAL built without rocDecode Video Hardware Decode Functionality as FFmepg not found${ColourReset}")
     endif()
     # Filesystem
     if(STD_FILESYSTEM_PRESENT)
