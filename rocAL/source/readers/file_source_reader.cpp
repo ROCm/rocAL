@@ -171,22 +171,14 @@ int FileSourceReader::release() {
 
 void FileSourceReader::reset() {
     if (_shuffle) std::random_shuffle(_all_shard_file_names_padded.begin(), _all_shard_file_names_padded.end());
-    // std::cerr << "\n RESET !";
 
-    if (_stick_to_shard == false) {
-            increment_shard_id(); // Should work for both single and multiple shards
-            _read_counter = 0;
-            if ((_last_batch_info.first == RocalBatchPolicy::DROP) && _shard_size > 0) {
-                for(uint i = 0; i < _batch_count; i++)
-                    increment_curr_file_idx();
-            }
-    } else {
-        _read_counter = 0;
-        if ((_last_batch_info.first == RocalBatchPolicy::DROP) && _shard_size > 0) { // DROP policy differs when shard_size is passed
-            for(uint i = 0; i < _batch_count; i++)
-                increment_curr_file_idx();
-        }
-            
+    if (_stick_to_shard == false)
+        increment_shard_id(); // Should work for both single and multiple shards
+
+    _read_counter = 0;
+    if (_last_batch_info.first == RocalBatchPolicy::DROP) { // Skipping the dropped batch in next epoch
+        for(uint i = 0; i < _batch_count; i++)
+            increment_curr_file_idx();
     }
 }
 
