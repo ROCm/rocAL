@@ -231,7 +231,7 @@ if(${BUILD_ROCAL})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
-        include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} rocAL_hip)
+        include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} rocAL_hip rocAL_hip/rocvideodecode rocAL_hip/utils)
         add_subdirectory(rocAL_hip)
     endif()
 
@@ -293,10 +293,7 @@ if(${BUILD_ROCAL})
     if(NOT rocDecode_FOUND)
         message("-- ${Yellow}NOTE: rocAL built without rocDecode Video Hardware Decode Functionality${ColourReset}")
     elseif(HIP_FOUND AND FFMPEG_FOUND)
-        # include_directories(${ROCDECODE_INCLUDE_DIR})
-        include_directories (${rocDecode_INCLUDE_DIRS}
-                             ${ROCM_PATH}/share/rocdecode/utils
-                             ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+        include_directories (${rocDecode_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocDecode_LIBRARIES})
         message("-- ${White}rocAL built with rocDecode Video Decode Functionality${ColourReset}")
     else()
