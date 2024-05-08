@@ -321,7 +321,8 @@ class ROCALAudioIterator(object):
         # print(f' b.getRemainingImages(self.loader._handle) :: {b.getRemainingImages(self.loader._handle)}')
         # print("b.getRemainingImages(self.loader._handle)", b.getRemainingImages(self.loader._handle))
         self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
-        print(f' last_batch_size::  {self.last_batch_size}')
+        # print(f' b.getLastBatchPaddedSize(self.loader._handle) : {b.getLastBatchPaddedSize(self.loader._handle)}')
+        # print(f' last_batch_size::  {self.last_batch_size}')
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()

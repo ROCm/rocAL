@@ -288,18 +288,21 @@ Reader::Status FileSourceReader::generate_file_names() {
             uint shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
             // std::cerr << "\n shard_size_without_padding :: "<< shard_size_without_padding;
             uint shard_size_with_padding = std::ceil(dataset_size * 1.0 / _shard_count);
+            // std::cerr << "\n shard_size_with_padding :: "<< shard_size_with_padding;
             // std::cerr << "\n before insert";
             auto start = _file_names.begin() + start_idx;
             auto end = _file_names.begin() + start_idx + shard_size_without_padding ;
+            // std::cerr << "\n end idx" << start_idx + shard_size_without_padding;
             if (start != end && start <= _file_names.end() && end <= _file_names.end()) {
                 // std::cerr << "\n inside if condition";
                 _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), start , end);
             }
             // std::cerr << "\n after insert";
-            _num_padded_samples =  (shard_size_with_padding - shard_size_without_padding) + _batch_count - (shard_size_with_padding % _batch_count);
-            _file_count_all_shards+=_num_padded_samples;
-            // _all_shard_file_names_padded.resize(_file_count_all_shards);
-            _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _num_padded_samples, _all_shard_file_names_padded.back()); 
+            if (shard_size_with_padding % _batch_count) {
+                _num_padded_samples =  (shard_size_with_padding - shard_size_without_padding) + _batch_count - (shard_size_with_padding % _batch_count);
+                _file_count_all_shards+=_num_padded_samples;
+                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _num_padded_samples, _all_shard_file_names_padded.back()); 
+            }
         }
     } else {
         _all_shard_file_names_padded = _file_names;
@@ -387,7 +390,7 @@ size_t FileSourceReader::get_file_shard_id() {
 }
 
 size_t FileSourceReader::last_batch_padded_size() {
-    std::cerr << "Returns _last_batch_padded_size" << _last_batch_padded_size;
+    // std::cerr << "Returns _last_batch_padded_size" << _last_batch_padded_size;
     return _last_batch_padded_size;
 }
 std::string FileSourceReader::get_root_folder_path() {
