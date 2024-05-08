@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "decoders/video/hardware_video_decoder.h"
-
 #include "pipeline/commons.h"
 #include <stdio.h>
 
@@ -128,7 +127,7 @@ VideoDecoder::Status HardWareVideoDecoder::Decode(unsigned char *out_buffer, uns
                     // copy from frame to out_buffer
                     memcpy(out_buffer, sw_frame->data[0], sw_frame->linesize[0] * out_height);
                 }
-                out_buffer = out_buffer + image_size;
+                out_buffer += image_size;
             }
             ++frame_count;
             av_frame_unref(sw_frame);
@@ -149,7 +148,7 @@ VideoDecoder::Status HardWareVideoDecoder::Decode(unsigned char *out_buffer, uns
 }
 
 // Initialize will open a new decoder and initialize the context
-VideoDecoder::Status HardWareVideoDecoder::Initialize(const char *src_filename) {
+VideoDecoder::Status HardWareVideoDecoder::Initialize(const char *src_filename, int device_id) {
     VideoDecoder::Status status = Status::OK;
     int ret;
     AVDictionary *opts = NULL;

@@ -128,7 +128,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
 }
 
 // Initialize will open a new decoder and initialize the context
-VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename) {
+VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, int device_id) {
     VideoDecoder::Status status = Status::OK;
     int ret;
     AVDictionary *opts = NULL;

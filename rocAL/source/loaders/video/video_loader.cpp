@@ -102,6 +102,12 @@ void VideoLoader::set_output(Tensor *output_tensor) {
     _output_mem_size = ((_output_tensor->info().data_size() + 8) & ~7);  // Making output size as a multiple of 8 to support vectorized load and store in RPP
 }
 
+void VideoLoader::set_gpu_device_id(int device_id) {
+    if (device_id < 0)
+        THROW("invalid device_id passed to loader");
+    _device_id = device_id;
+}
+
 void VideoLoader::stop_internal_thread() {
     _internal_thread_running = false;
     _stopped = true;
