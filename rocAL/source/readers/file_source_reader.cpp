@@ -64,9 +64,6 @@ unsigned FileSourceReader::count_items() {
         if (_last_batch_info.first == RocalBatchPolicy::DROP) // The shard size is padded at the beginning.
             ret -= _batch_count;
     }
-    
-//   std::cerr << "\n ret value is " << ret;
-//   std::cerr << "\n _read_counter is " << _read_counter;
   return ((ret < 0) ? 0 : ret);
 }
 
@@ -286,8 +283,11 @@ Reader::Status FileSourceReader::generate_file_names() {
     auto dataset_size = _file_count_all_shards;
     // _all_shard_file_names_padded.resize(_file_count_all_shards);
     // Pad the _file_names vector when _pad_last_batch is True
-    _padded_samples = shard_size_with_padding() % _batch_count;
-    std::cerr << "\n _padded_samples" << _padded_samples;
+    if (_shard_size > 0)
+        _padded_samples = _shard_size % _batch_count;
+    else
+        _padded_samples = shard_size_with_padding() % _batch_count;
+    // std::cerr << "\n _padded_samples" << _padded_samples;
     _last_batch_padded_size = _batch_count - _padded_samples;
     if (_pad_last_batch == true) {
         for(uint shard_id = 0; shard_id < _shard_count; shard_id++) {
@@ -395,6 +395,7 @@ size_t FileSourceReader::get_file_shard_id() {
 }
 
 size_t FileSourceReader::last_batch_padded_size() {
+    std::cerr << "Returns _last_batch_padded_size" << _last_batch_padded_size;
     return _last_batch_padded_size;
 }
 std::string FileSourceReader::get_root_folder_path() {
