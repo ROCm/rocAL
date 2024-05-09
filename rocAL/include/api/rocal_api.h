@@ -56,7 +56,7 @@ THE SOFTWARE.
                                  data only partially filled with data from the current epoch is dropping padding samples or samples from the next epoch.
  * \return A \ref RocalContext - The context for the pipeline
  */
-extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32, RocalLastBatchPolicy last_batch_policy = RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, bool last_batch_padded = true);
+extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32, std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*!
  * \brief  rocalVerify function to verify the graph for all the inputs and outputs

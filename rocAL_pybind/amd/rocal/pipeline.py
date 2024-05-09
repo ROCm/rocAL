@@ -73,10 +73,10 @@ class Pipeline(object):
             last_batch_padded = True
         if (rocal_cpu):
             self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
+                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, (last_batch_policy, last_batch_padded))
         else:
             self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, last_batch_policy, last_batch_padded)
+                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, (last_batch_policy, last_batch_padded))
 
         if (b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")

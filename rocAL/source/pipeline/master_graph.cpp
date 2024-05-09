@@ -93,7 +93,7 @@ MasterGraph::~MasterGraph() {
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, RocalBatchPolicy last_batch_policy, bool last_batch_padded) : _ring_buffer(prefetch_queue_depth),
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, std::pair<RocalBatchPolicy, bool> last_batch_info) : _ring_buffer(prefetch_queue_depth),
                                                                                                                                                                                                                                                  _graph(nullptr),
                                                                                                                                                                                                                                                  _affinity(affinity),
                                                                                                                                                                                                                                                  _cpu_num_threads(cpu_thread_count),
@@ -118,8 +118,7 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 #endif
                                                                                                                                                                                                                                                  _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
                                                                                                                                                                                                                                                  _rb_block_if_full_time("Ring Buffer Block IF Full Time"),
-                                                                                                                                                                                                                                                _last_batch_policy(last_batch_policy),
-                                                                                                                                                                                                                                                _last_batch_padded(last_batch_padded) {
+                                                                                                                                                                                                                                                _last_batch_info(last_batch_info) {
     try {
         vx_status status;
         vxRegisterLogCallback(NULL, log_callback, vx_false_e);
@@ -439,13 +438,9 @@ MasterGraph::mem_type() {
     return _mem_type;
 }
 
-RocalBatchPolicy
-MasterGraph::last_batch_policy() {
-    return _last_batch_policy;
-}
-
-bool MasterGraph::last_batch_padded() {
-    return _last_batch_padded;
+std::pair<RocalBatchPolicy, bool>
+MasterGraph::last_batch_policy_info() {
+    return _last_batch_info;
 }
 
 size_t

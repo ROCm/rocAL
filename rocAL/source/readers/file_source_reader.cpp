@@ -72,6 +72,7 @@ void FileSourceReader::incremenet_read_ptr() {
     _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
     if (_last_batch_info.first == RocalBatchPolicy::DROP) {
         if (_last_batch_info.second == true) {
+            // Check for the last batch and skip it by incrementing with batch_size - hence dropping the last batch
             if ((_file_names.size() / _batch_count) == _curr_file_idx)  // To check if it the last batch
             {
                 _curr_file_idx += _batch_count; // This increaments the ptr with batch size - meaning the batch is skipped.
