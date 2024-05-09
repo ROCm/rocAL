@@ -1137,11 +1137,11 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext context,
                                                        std::vector<float> &window_fn,
                                                        bool center_windows,
                                                        bool reflect_padding,
-                                                       RocalSpectrogramLayout spectrogram_layout,
                                                        int power,
                                                        int nfft,
                                                        int window_length = 512,
                                                        int window_step = 256,
+                                                       RocalTensorLayout output_layout = ROCAL_NFT,
                                                        RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

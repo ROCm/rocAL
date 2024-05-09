@@ -103,10 +103,6 @@ from rocal_pybind.types import ZERO
 from rocal_pybind.types import CLAMP
 from rocal_pybind.types import REFLECT
 
-#     RocalSpectrogramLayout
-from rocal_pybind.types import FT
-from rocal_pybind.types import TF
-
 _known_types = {
 
     OK: ("OK", OK),
@@ -171,8 +167,8 @@ _known_types = {
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
 
-    TF: ("TF", TF),
-    FT: ("FT", FT),
+    NTF: ("NTF", NTF),
+    NFT: ("NFT", NFT),
 }
 
 def data_type_function(dtype):
