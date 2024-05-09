@@ -56,9 +56,9 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
     roi_data = roi_tensor.detach().numpy()
     buffer_size = roi_data[0] * roi_data[1]
     matched_indices = 0
-    for i in range(roi_data[1]):
-        for j in range(roi_data[0]):
-            ref_val = data_array[i * roi_data[0] + j]
+    for i in range(roi_data[0]):
+        for j in range(roi_data[1]):
+            ref_val = data_array[i * roi_data[1] + j]
             out_val = audio_data[i * dimensions[2] + j]
             # ensuring that out_val is not exactly zero while ref_val is non-zero.
             invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
