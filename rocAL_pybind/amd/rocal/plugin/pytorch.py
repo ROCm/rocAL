@@ -303,9 +303,7 @@ class ROCALAudioIterator(object):
         return self.__next__()
 
     def __next__(self):
-        # print(f' self.loader.rocal_run(): {self.loader.rocal_run()}')
         rocal_run = self.loader.rocal_run()
-        # print(f' self.loader.rocal_run(): {rocal_run}')
         if rocal_run != 0:
             if self.auto_reset:
                 self.reset()
@@ -317,12 +315,7 @@ class ROCALAudioIterator(object):
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
         self.batch_count += self.batch_size
-        # Every Time the padded size is going to differ
-        # print(f' b.getRemainingImages(self.loader._handle) :: {b.getRemainingImages(self.loader._handle)}')
-        # print("b.getRemainingImages(self.loader._handle)", b.getRemainingImages(self.loader._handle))
         self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
-        # print(f' b.getLastBatchPaddedSize(self.loader._handle) : {b.getLastBatchPaddedSize(self.loader._handle)}')
-        # print(f' last_batch_size::  {self.last_batch_size}')
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
