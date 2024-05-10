@@ -231,7 +231,7 @@ enum RocalTensorLayout {
     ROCAL_NTF = 6,
     /*! \brief AMD ROCAL_NONE
      */
-    ROCAL_NONE = 4  // Layout for generic tensors (Non-Image or Non-Video)
+    ROCAL_NONE = 7  // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 /*! \brief rocAL Tensor Output Type enum
