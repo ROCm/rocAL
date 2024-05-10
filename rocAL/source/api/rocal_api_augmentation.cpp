@@ -2275,6 +2275,8 @@ rocalToDecibels(
             op_tensor_data_type = RocalTensorDataType::FP32;
         }
         output_info.set_data_type(op_tensor_data_type);
+        if (input->info().layout() == RocalTensorlayout::NFT || input->info().layout() == RocalTensorlayout::NTF) // Layout is changed when input is from spectrogram/mel filter bank
+            output_info.set_tensor_layout(RocalTensorlayout::NHW);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ToDecibelsNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
     } catch (const std::exception& e) {
