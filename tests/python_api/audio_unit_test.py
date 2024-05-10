@@ -255,7 +255,7 @@ def mel_filter_bank_pipeline(path, file_list):
         nfft=512,
         window_length=320,
         window_step=160,
-        rocal_tensor_output_type=types.FLOAT)
+        output_dtype=types.FLOAT)
     return fn.mel_filter_bank(
         spec,
         freq_high=8000,
@@ -279,7 +279,7 @@ def normalize_pipeline(path, file_list):
         nfft=512,
         window_length=320,
         window_step=160,
-        rocal_tensor_output_type=types.FLOAT)
+        output_dtype=types.FLOAT)
     return fn.normalize(
         spec,
         axes=[1])
