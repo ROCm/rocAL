@@ -2556,6 +2556,10 @@ rocalMelFilterBank(
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for To decibels augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
         TensorInfo output_info = input->info();
         std::vector<size_t> max_dims = output_info.max_shape();
         int max_frame = max_dims[1];

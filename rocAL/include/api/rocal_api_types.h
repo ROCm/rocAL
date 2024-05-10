@@ -424,9 +424,18 @@ enum RocalOutOfBoundsPolicy {
     ROCAL_ERROR
 };
 
+/*! \brief rocAL MelScale formula enum
+ * \ingroup group_rocal_types
+ */
 enum RocalMelScaleFormula {
-    SLANEY = 0,  // Follows Slaney’s MATLAB Auditory Modelling Work behavior
-    HTK          // Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+    /*! \brief Slaney
+     * Follows Slaney’s MATLAB Auditory Modelling Work behavior
+     */
+    ROCAL_SLANEY = 0,
+    /*! \brief HTK
+     * Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+     */
+    ROCAL_HTK
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
