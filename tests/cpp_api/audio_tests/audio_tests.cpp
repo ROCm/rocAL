@@ -282,7 +282,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::vector<float> mean;
             std::vector<float> stddev;
             std::vector<float> window_fn;
-            RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, RocalSpectrogramLayout::ROCAL_FT, 2, 512, 320, 160, ROCAL_FP32);
+            RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
             rocalNormalize(handle, spec_output, axes, mean, stddev, true, 1, 0, ROCAL_FP32);
         } break;
         default: {
