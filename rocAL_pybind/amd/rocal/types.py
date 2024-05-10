@@ -112,7 +112,6 @@ from rocal_pybind.types import ERROR
 from rocal_pybind.types import SLANEY
 from rocal_pybind.types import HTK
 
-
 _known_types = {
 
     RUNTIME_ERROR: ("RUNTIME_ERROR", RUNTIME_ERROR),
@@ -181,6 +180,7 @@ _known_types = {
 
     SLANEY: ("SLANEY", SLANEY),
     HTK: ("HTK", HTK),
+
     NTF: ("NTF", NTF),
     NFT: ("NFT", NFT),
 }
