@@ -31,9 +31,14 @@ NormalizeNode::NormalizeNode(const std::vector<Tensor *> &inputs, const std::vec
 void NormalizeNode::create_node() {
     if (_node)
         return;
-
-    _compute_mean = _mean.size() ? 0 : 1;
-    _compute_stddev = _std_dev.size() ? 0 : 1;
+    unsigned char compute_mean_and_stddev = 0;
+    if (!_mean.size() && !_std_dev.size()) {
+        compute_mean_and_stddev = 3;
+    } else if (!_mean.size()) {
+        compute_mean_and_stddev = 1;
+    } else if (!_std_dev.size()) {
+        compute_mean_and_stddev = 2;
+    }
 
     int mean_stddev_array_size = 1;
     auto nDim = _inputs[0]->info().num_of_dims() - 1;
@@ -51,7 +56,7 @@ void NormalizeNode::create_node() {
     mean_vec.resize(_batch_size * mean_stddev_array_size, 0);
     stddev_vec.resize(_batch_size * mean_stddev_array_size, 0);
 
-    if (!_compute_mean && !_compute_stddev) {
+    if (!compute_mean_and_stddev) {
         for (uint i = 0; i < _batch_size; i++) {
             for (int j = 0; j < mean_stddev_array_size; j += _mean.size()) {
                 for (size_t k = 0; k < _mean.size(); k++) {
@@ -72,18 +77,17 @@ void NormalizeNode::create_node() {
     if (status != 0)
         THROW(" vxAddArrayItems failed in the normalize node (vxExtRppNormalize)  node: " + TOSTR(status) + "  " + TOSTR(status))
 
-    vx_scalar axis_mask = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
-    vx_scalar scale = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scale);
-    vx_scalar shift = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_shift);
-    vx_scalar compute_mean = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_compute_mean);
-    vx_scalar compute_stddev = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_compute_stddev);
+    vx_scalar axis_mask_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_axis_mask);
+    vx_scalar scale_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scale);
+    vx_scalar shift_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_shift);
+    vx_scalar compute_mean_and_stddev_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT8, &compute_mean_and_stddev);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    _node = vxExtRppNormalize(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), axis_mask,
-                              _mean_vx_array, _stddev_vx_array, compute_mean, compute_stddev, scale, shift, input_layout_vx, roi_type_vx);
+    _node = vxExtRppNormalize(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _outputs[0]->get_roi_tensor(), axis_mask_vx,
+                              _mean_vx_array, _stddev_vx_array, compute_mean_and_stddev_vx, scale_vx, shift_vx, input_layout_vx, roi_type_vx);
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the normalize (vxExtRppNormalize) node failed: " + TOSTR(status))
 }
