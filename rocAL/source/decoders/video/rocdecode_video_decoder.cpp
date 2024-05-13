@@ -31,7 +31,20 @@ RocDecodeVideoDecoder::RocDecodeVideoDecoder(){};
 int RocDecodeVideoDecoder::seek_frame(unsigned frame_number, uint8_t **video, int* video_bytes) {
     _seek_ctx.seek_frame_ = frame_number;
     _demuxer->Seek(_seek_ctx, video, video_bytes);
+    int64_t dts;
     auto pts = _seek_ctx.out_frame_pts_;
+    if (_seek_ctx.req_frame_dts_ != _seek_ctx.out_frame_dts_) {
+        // Seek upto requested frame is received
+        auto n_frames_returned = _decoder->DecodeFrame(*video, *video_bytes, 0, pts);
+        do {
+            _demuxer->Demux(video, video_bytes, &pts, &dts);
+            auto n_frames_returned = _decoder->DecodeFrame(*video, *video_bytes, 0, pts);
+        } while (dts < _seek_ctx.req_frame_dts_);
+    }
+    // std::cerr << "Frame Number : " << frame_number << "\t";
+    // std::cerr << "Requested Frame dts : " << _seek_ctx.req_frame_dts_ << "\t";
+    // std::cerr << "Out Frame dts : " << _seek_ctx.out_frame_dts_ << "\t";
+    // std::cerr << "DTS at end :: " << dts << "\n";
     return pts;
     // Add support to seek to the exact frame
 }
@@ -58,12 +71,11 @@ VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, un
     bool seek_first_frame = true;
     do {
         if (seek_first_frame) {
-            seek_frame(seek_frame_number, &p_video, &n_video_bytes);    // Seek the first frame in the sequence
+            pts = seek_frame(seek_frame_number, &p_video, &n_video_bytes);    // Seek the first frame in the sequence
             seek_first_frame = false;
         } else {
             _demuxer->Demux(&p_video, &n_video_bytes, &pts);
         }
-
         n_frames_returned = _decoder->DecodeFrame(p_video, n_video_bytes, 0, pts);
         
         // If no frames are returned Demux again, untill the decoder returns valid frames
