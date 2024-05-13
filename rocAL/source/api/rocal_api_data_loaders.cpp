@@ -149,6 +149,19 @@ auto convert_decoder_mode = [](RocalDecodeDevice decode_mode) {
     }
 };
 
+auto convert_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
+    switch (last_batch_policy) {
+        case ROCAL_LAST_BATCH_FILL:
+            return RocalBatchPolicy::FILL;
+        case ROCAL_LAST_BATCH_PARTIAL:
+            return RocalBatchPolicy::PARTIAL;
+        case ROCAL_LAST_BATCH_DROP:
+            return RocalBatchPolicy::DROP;
+        default:
+            THROW("Unsupported decoder mode" + TOSTR(last_batch_policy))
+    }
+};
+
 RocalTensor ROCAL_API_CALL
 rocalJpegFileSourceSingleShard(
     RocalContext p_context,
@@ -2117,7 +2130,9 @@ rocalAudioFileSourceSingleShard(
     bool loop,
     bool downmix,
     bool stick_to_shard,
-    int shard_size) {
+    int shard_size,
+    RocalLastBatchPolicy last_batch_policy,
+    bool pad_last_batch_repeated) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2137,7 +2152,8 @@ rocalAudioFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
+        auto batch_policy = convert_last_batch_policy(last_batch_policy);
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
@@ -2177,7 +2193,9 @@ rocalAudioFileSource(
     bool loop,
     bool downmix,
     bool stick_to_shard,
-    int shard_size) {
+    int shard_size,
+    RocalLastBatchPolicy last_batch_policy,
+    bool pad_last_batch_repeated) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2197,7 +2215,8 @@ rocalAudioFileSource(
             THROW("internal shard count should be bigger than 0")
 
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), context->master_graph->last_batch_policy(), context->master_graph->last_batch_padded(), stick_to_shard, shard_size);
+        auto batch_policy = convert_last_batch_policy(last_batch_policy);
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;

@@ -114,7 +114,7 @@ class FileSourceReader : public Reader {
     size_t _num_padded_samples_counter = 0;
     size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;
-    bool _pad_last_batch = false;
+    bool _pad_last_batch_repeated = false;
     Reader::Status generate_file_names();
     size_t get_start_idx(); // Start Idx of the Shard's Data
     size_t get_dataset_size(); // DataSet Size
