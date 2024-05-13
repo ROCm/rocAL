@@ -2196,11 +2196,11 @@ rocalSpectrogram(
         std::vector<float> &window_fn,
         bool center_windows,
         bool reflect_padding,
-        RocalSpectrogramLayout spectrogram_layout,
         int power,
         int nfft,
         int window_length,
         int window_step,
+        RocalTensorLayout output_layout,
         RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     if ((p_context == nullptr) || (p_input == nullptr)) {
@@ -2217,27 +2217,31 @@ rocalSpectrogram(
         }
         std::vector<size_t> max_dims = input->info().max_shape();
         if (max_dims[1] != 1) THROW("Spectrogram only supports single channel inputs. Please check the input passed.")
-        TensorInfo output_info = input->info();
         int window_offset = (!center_windows) ? window_length :  0;
         int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
         max_frame = std::max(0, max_frame);
         int bins = std::max(0, (nfft / 2) + 1);
-        std::vector<size_t> dims = output_info.dims();
-        if (spectrogram_layout == RocalSpectrogramLayout::ROCAL_TF) {
+        std::vector<size_t> dims = input->info().dims();
+        RocalTensorlayout spectrogram_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (spectrogram_layout == RocalTensorlayout::NTF) {
             dims[1] = max_frame;
             dims[2] = bins;
-        } else {
+        } else if (spectrogram_layout == RocalTensorlayout::NFT) {
             dims[1] = bins;
             dims[2] = max_frame;
+        } else {
+            THROW("Spectrogram supports only NFT / NTF layouts")
         }
-        output_info.set_dims(dims);
-        output_info.set_data_type(op_tensor_data_type);
+        TensorInfo output_info = TensorInfo(std::vector<size_t>(std::move(dims)),
+                                            context->master_graph->mem_type(),
+                                            op_tensor_data_type,
+                                            spectrogram_layout);
         if(power != 1 || power != 2) {
             WRN("rocalSpectrogram power value can be 1 or 2, setting it to default 2")
             power = 2;
         }
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding, spectrogram_layout,
+        context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding,
                                                                                   power, nfft, window_length,
                                                                                   window_step, window_fn);
     } catch(const std::exception& e) {
@@ -2271,6 +2275,8 @@ rocalToDecibels(
             op_tensor_data_type = RocalTensorDataType::FP32;
         }
         output_info.set_data_type(op_tensor_data_type);
+        if (input->info().layout() == RocalTensorlayout::NFT || input->info().layout() == RocalTensorlayout::NTF) // Layout is changed when input is from spectrogram/mel filter bank
+            output_info.set_tensor_layout(RocalTensorlayout::NHW);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ToDecibelsNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
     } catch (const std::exception& e) {
@@ -2552,6 +2558,10 @@ rocalMelFilterBank(
     auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for To decibels augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
         TensorInfo output_info = input->info();
         std::vector<size_t> max_dims = output_info.max_shape();
         int max_frame = max_dims[1];

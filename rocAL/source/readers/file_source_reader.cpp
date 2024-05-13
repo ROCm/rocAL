@@ -80,7 +80,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
     _last_batch_info = desc.get_last_batch_policy();
-    _pad_last_batch = _last_batch_info.second;
+    _pad_last_batch_repeated = _last_batch_info.second;
     _stick_to_shard = desc.get_stick_to_shard();
     _shard_size = desc.get_shard_size();
     ret = subfolder_reading();
@@ -271,14 +271,14 @@ Reader::Status FileSourceReader::generate_file_names() {
         WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
 
     auto dataset_size = _file_count_all_shards;
-    // Pad the _file_names with last element of the shard in the vector when _pad_last_batch is True
+    // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     if (_shard_size > 0)
         _padded_samples = _shard_size % _batch_count;
     else
         _padded_samples = shard_size_with_padding() % _batch_count;
     _last_batch_padded_size = _batch_count - _padded_samples;
 
-    if (_pad_last_batch ==
+    if (_pad_last_batch_repeated ==
         true) { // pad the last sample when the dataset_size is not divisible by
                 // the number of shard's (or) when the shard's size is not
                 // divisible by the batch size making each shard having equal
@@ -344,14 +344,14 @@ Reader::Status FileSourceReader::open_folder() {
         }
 
         auto dataset_size = _file_count_all_shards;
-        // Pad the _file_names with last element of the shard in the vector when _pad_last_batch is True
+        // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
         if (_shard_size > 0)
             _padded_samples = _shard_size % _batch_count;
         else
             _padded_samples = shard_size_with_padding() % _batch_count;
         _last_batch_padded_size = _batch_count - _padded_samples;
 
-        if (_pad_last_batch ==
+        if (_pad_last_batch_repeated ==
             true) { // pad the last sample when the dataset_size is not divisible by
                     // the number of shard's (or) when the shard's size is not
                     // divisible by the batch size making each shard having equal

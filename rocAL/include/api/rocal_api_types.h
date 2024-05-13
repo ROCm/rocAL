@@ -218,6 +218,17 @@ enum RocalTensorLayout {
     /*! \brief AMD ROCAL_NFCHW
      */
     ROCAL_NFCHW = 3,
+    /*! \brief AMD ROCAL_NHW
+     */
+    ROCAL_NHW = 4,
+    /*! \brief AMD ROCAL_NFT
+     * Spectrogram Layout FT
+     */
+    ROCAL_NFT = 5,
+    /*! \brief AMD ROCAL_NTF
+     * Spectrogram Layout TF
+     */
+    ROCAL_NTF = 6,
     /*! \brief AMD ROCAL_NONE
      */
     ROCAL_NONE = 4  // Layout for generic tensors (Non-Image or Non-Video)
@@ -398,18 +409,6 @@ enum RocalAudioBorderType {
     ROCAL_REFLECT = 2
 };
 
-/*! \brief rocAL Spectrogram Layout Type enum
- * \ingroup group_rocal_types
- */
-enum RocalSpectrogramLayout {
-    /*! \brief Frequency Major
-     */
-    ROCAL_FT = 0,
-    /*! \brief Time Major
-     */
-    ROCAL_TF
-};
-
 /*! \brief rocAL Out Of Bounds Policy Type enum
  * \ingroup group_rocal_types
  */
@@ -425,9 +424,18 @@ enum RocalOutOfBoundsPolicy {
     ROCAL_ERROR
 };
 
+/*! \brief rocAL MelScale formula enum
+ * \ingroup group_rocal_types
+ */
 enum RocalMelScaleFormula {
-    SLANEY = 0,  // Follows Slaney’s MATLAB Auditory Modelling Work behavior
-    HTK          // Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+    /*! \brief Slaney
+     * Follows Slaney’s MATLAB Auditory Modelling Work behavior
+     */
+    ROCAL_SLANEY = 0,
+    /*! \brief HTK
+     * Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+     */
+    ROCAL_HTK
 };
 
 /*! \brief Tensor Last Batch Policies
