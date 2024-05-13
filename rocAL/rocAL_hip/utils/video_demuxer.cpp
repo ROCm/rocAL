@@ -45,7 +45,7 @@ VideoDemuxer::~VideoDemuxer() {
     }
 }
 
-bool VideoDemuxer::Demux(uint8_t **video, int *video_size, int64_t *pts) {
+bool VideoDemuxer::Demux(uint8_t **video, int *video_size, int64_t *pts, int64_t *dts) {
     if (!av_fmt_input_ctx_) {
         return false;
     }
@@ -75,6 +75,7 @@ bool VideoDemuxer::Demux(uint8_t **video, int *video_size, int64_t *pts) {
         *video = packet_filtered_->data;
         *video_size = packet_filtered_->size;
         pkt_dts_ = packet_filtered_->dts;
+        if (dts) *dts = pkt_dts_;
         if (pts)
             *pts = (int64_t) (packet_filtered_->pts * default_time_scale_ * time_base_);
     } else {
@@ -251,7 +252,7 @@ bool VideoDemuxer::Seek(VideoSeekContext& seek_ctx, uint8_t** pp_video, int* vid
     }
 
     // Seek for single frame;
-    auto seek_frame = [&](VideoSeekContext const& seek_ctx, int flags) {
+    auto seek_frame = [&](VideoSeekContext& seek_ctx, int flags) {
         bool seek_backward = true;
         int64_t timestamp = 0;
         int ret = 0;
@@ -269,7 +270,7 @@ bool VideoDemuxer::Seek(VideoSeekContext& seek_ctx, uint8_t** pp_video, int* vid
                 std::cerr << "ERROR: Invalid seek mode" << std::endl;
                 ret = -1;
         }
-
+        seek_ctx.req_frame_dts_ = timestamp;
         if (ret < 0) {
             throw std::runtime_error("ERROR: seeking for frame");
         }
@@ -338,6 +339,7 @@ bool VideoDemuxer::Seek(VideoSeekContext& seek_ctx, uint8_t** pp_video, int* vid
         Demux(pp_video, video_size, &pkt_data.pts);
         seek_ctx.num_frames_decoded_ = static_cast<uint64_t>(pkt_data.pts / 1000 * frame_rate_);
         seek_ctx.out_frame_pts_ = pkt_data.pts;
+        seek_ctx.out_frame_dts_ = pkt_dts_;
         seek_ctx.out_frame_duration_ = static_cast<int64_t>(pkt_data.pts / 1000);
     };
 

@@ -106,6 +106,12 @@ public:
     /* Criteria by which we seek. */
     SeekCriteria seek_crit_;
 
+    /* DTS of frame requested. */
+    int64_t req_frame_dts_;
+
+    /* DTS of output frame requested. */
+    int64_t out_frame_dts_;
+
     /* PTS of frame found after seek. */
     int64_t out_frame_pts_;
 
@@ -130,7 +136,7 @@ class VideoDemuxer {
         VideoDemuxer(const char *input_file_path) : VideoDemuxer(CreateFmtContextUtil(input_file_path)) {}
         VideoDemuxer(StreamProvider *stream_provider) : VideoDemuxer(CreateFmtContextUtil(stream_provider)) {av_io_ctx_ = av_fmt_input_ctx_->pb;}
         ~VideoDemuxer();
-        bool Demux(uint8_t **video, int *video_size, int64_t *pts = nullptr);
+        bool Demux(uint8_t **video, int *video_size, int64_t *pts = nullptr, int64_t *dts = nullptr);
         bool Seek(VideoSeekContext& seek_ctx, uint8_t** pp_video, int* video_size);
         const uint32_t GetWidth() const { return width_;}
         const uint32_t GetHeight() const { return height_;}
