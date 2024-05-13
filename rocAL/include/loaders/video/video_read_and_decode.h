@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <map>
 #include <tuple>
 #include "pipeline/commons.h"
-#include "decoders/video/ffmpeg_video_decoder.h"
+#include "decoders/video/video_decoder.h"
 #include "readers/video/video_reader_factory.h"
 #include "pipeline/timing_debug.h"
 #include "loaders/loader_module.h"

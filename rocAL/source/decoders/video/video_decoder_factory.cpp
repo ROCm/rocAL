@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 #include "decoders/video/ffmpeg_video_decoder.h"
 #include "decoders/video/hardware_video_decoder.h"
-#include "decoders/video/video_decoder.h"
+#include "decoders/video/rocdecode_video_decoder.h"
 
 #include "pipeline/commons.h"
 
@@ -34,6 +34,8 @@ std::shared_ptr<VideoDecoder> create_video_decoder(DecoderConfig config) {
             return std::make_shared<FFmpegVideoDecoder>();
         case DecoderType::FFMPEG_HARDWARE_DECODE:
             return std::make_shared<HardWareVideoDecoder>();
+        case DecoderType::ROCDECODE_VIDEO:
+            return std::make_shared<RocDecodeVideoDecoder>();
         default:
             THROW("Unsupported decoder type " + TOSTR(config.type()));
     }
