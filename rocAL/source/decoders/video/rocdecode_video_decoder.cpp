@@ -28,8 +28,12 @@ THE SOFTWARE.
 #ifdef ROCAL_VIDEO && ENABLE_HIP
 RocDecodeVideoDecoder::RocDecodeVideoDecoder(){};
 
-int RocDecodeVideoDecoder::seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) {
-
+int RocDecodeVideoDecoder::seek_frame(unsigned frame_number, uint8_t **video, int* video_bytes) {
+    _seek_ctx.seek_frame_ = frame_number;
+    _demuxer->Seek(_seek_ctx, video, video_bytes);
+    auto pts = _seek_ctx.out_frame_pts_;
+    return pts;
+    // Add support to seek to the exact frame
 }
 
 // int RocDecodeVideoDecoder::hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type, AVBufferRef *hw_device_ctx) {
@@ -48,75 +52,45 @@ VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, un
     Dim resize_dim = {};
     size_t rgb_image_size, resize_image_size;
     OutputFormatEnum e_output_format = rgb;
-    int frames = 0;
-    bool sequence_decoded = true;
+    int frames = 1;
+    bool sequence_decoded = false;
     uint8_t* frame_buffers;
+    bool seek_first_frame = true;
     do {
-        // auto start_time = std::chrono::high_resolution_clock::now();
-        // if (seek_criteria == 1 && first_frame) {
-        //     // use VideoSeekContext class to seek to given frame number
-        //     video_seek_ctx.seek_frame_ = seek_to_frame;
-        //     video_seek_ctx.seek_crit_ = SEEK_CRITERIA_FRAME_NUM;
-        //     video_seek_ctx.seek_mode_ = (seek_mode ? SEEK_MODE_EXACT_FRAME : SEEK_MODE_PREV_KEY_FRAME);
-        //     _demuxer->Seek(video_seek_ctx, &p_video, &n_video_bytes);
-        //     pts = video_seek_ctx.out_frame_pts_;
-        //     std::cout << "info: Number of frames that were decoded during seek - " << video_seek_ctx.num_frames_decoded_ << std::endl;
-        //     first_frame = false;
-        // } else if (seek_criteria == 2 && first_frame) {
-        //     // use VideoSeekContext class to seek to given timestamp
-        //     video_seek_ctx.seek_frame_ = seek_to_frame;
-        //     video_seek_ctx.seek_crit_ = SEEK_CRITERIA_TIME_STAMP;
-        //     video_seek_ctx.seek_mode_ = (seek_mode ? SEEK_MODE_EXACT_FRAME : SEEK_MODE_PREV_KEY_FRAME);
-        //     _demuxer->Seek(video_seek_ctx, &p_video, &n_video_bytes);
-        //     pts = video_seek_ctx.out_frame_pts_;
-        //     std::cout << "info: Duration of frame found after seek - " << video_seek_ctx.out_frame_duration_ << " ms" << std::endl;
-        //     first_frame = false;
-        // } else {
-        //     _demuxer->Demux(&p_video, &n_video_bytes, &pts);
-        // }
-        // std::cerr << "Decoder pts :: " << pts << "\n";
-
-
-        _seek_ctx.seek_frame_ = 0;
-        _seek_ctx.seek_crit_ = SEEK_CRITERIA_FRAME_NUM;
-        _seek_ctx.seek_mode_ = SEEK_MODE_PREV_KEY_FRAME;
-        _demuxer->Seek(_seek_ctx, &p_video, &n_video_bytes);
-        // _demuxer->Demux(&p_video, &n_video_bytes, &pts);
+        if (seek_first_frame) {
+            seek_frame(seek_frame_number, &p_video, &n_video_bytes);    // Seek the first frame in the sequence
+            seek_first_frame = false;
+        } else {
+            _demuxer->Demux(&p_video, &n_video_bytes, &pts);
+        }
 
         n_frames_returned = _decoder->DecodeFrame(p_video, n_video_bytes, 0, pts);
+        
+        // If no frames are returned Demux again, untill the decoder returns valid frames
+        if (!n_frames_returned) {
+            // seek_first_frame = true;
+            continue;
+        }
         if (!n_frame && !_decoder->GetOutputSurfaceInfo(&surf_info)) {
             std::cerr << "Error: Failed to get Output Image Info!" << std::endl;
             break;
         }
-        if (resize_dim.w && resize_dim.h && !resize_surf_info) {    // TO be fixed
+
+        // Resize portion TBA
+        if (resize_dim.w && resize_dim.h && !resize_surf_info) { 
             resize_surf_info = new OutputSurfaceInfo;
             memcpy(resize_surf_info, surf_info, sizeof(OutputSurfaceInfo));
         }
-
-        int last_index = 0;
-        for (int i = 0; i < n_frames_returned; i++, frames++) {
+        
+        // Take the min of sequence length and num frames to avoid out of bounds memory error
+        int required_n_frames = std::min(static_cast<int>(sequence_length), n_frames_returned);
+        for (int i = 0; i < required_n_frames; i++, frames++) {
             if (frames == sequence_length) {
                 sequence_decoded = true;
             }
             p_frame = _decoder->GetFrame(&pts);
-            std::cerr << "Output surface info : " << surf_info->output_surface_size_in_bytes << "\n";
-            // if (frame_buffers == nullptr) {
-            //     // for (int i = 0; i < frame_buffers_size; i++) {
-            //         HIP_API_CALL(hipMalloc(&frame_buffers, surf_info->output_surface_size_in_bytes));
-            //     // }
-            // }
-            // copy the decoded frame into the frame_buffers at current_frame_index
-            // HIP_API_CALL(hipMemcpyDtoDAsync(frame_buffers, p_frame, surf_info->output_surface_size_in_bytes, _decoder->GetStream()));
-            
-            // allocate extra device memories to use double-buffering for keeping two decoded frames
-            // if (frame_buffers[0] == nullptr) {
-            //     for (int i = 0; i < frame_buffers_size; i++) {
-            //         HIP_API_CALL(hipMalloc(&frame_buffers[i], surf_info->output_surface_size_in_bytes));
-            //     }
-            // }
-            std::cerr << "OUT W : " << surf_info->output_width << "\n";
-            std::cerr << "OUT H : " << surf_info->output_height << "\n";
 
+            // TODO - This portion can be moved outside the loop ?
             int rgb_width;
             if (surf_info->bit_depth == 8) {
                 rgb_width = (surf_info->output_width + 1) & ~1; // has to be a multiple of 2 for hip colorconvert kernels
@@ -126,30 +100,20 @@ VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, un
                 rgb_image_size = ((e_output_format == bgr) || (e_output_format == rgb)) ? rgb_width * surf_info->output_height * 3 : ((e_output_format == bgr48) || (e_output_format == rgb48)) ? 
                                                         rgb_width * surf_info->output_height * 6 : rgb_width * surf_info->output_height * 8;
             }
-            // if (p_rgb_dev_mem == nullptr) {
-            //     hip_status = hipMalloc(&p_rgb_dev_mem, rgb_image_size);
-            //     if (hip_status != hipSuccess) {
-            //         std::cerr << "ERROR: hipMalloc failed to allocate the device memory for the output!" << hip_status << std::endl;
-            //         return;
-            //     }
-            // }
+
             _post_process.ColorConvertYUV2RGB(p_frame, surf_info, out_buffer, e_output_format, _decoder->GetStream());
 
             _decoder->ReleaseFrame(pts);
-            std::cerr << "Total size : " << out_stride * out_width << "\n";
             out_buffer += (out_height * 3 * out_width);
         }
-        n_frame += n_frames_returned;
-        if (sequence_decoded) break;
+        n_frame += required_n_frames;
+        if (sequence_decoded) {
+            // sync to finish copy
+            if (hipStreamSynchronize(_decoder->GetStream()) != hipSuccess)
+                THROW("hipStreamSynchronize failed for hipMemcpy ")
+            break;
+        }
     } while (n_video_bytes);
-
-    // if (frame_buffers) {
-    //     auto hip_status = hipFree(frame_buffers);
-    //     frame_buffers = nullptr;
-    //     if (hip_status != hipSuccess) {
-    //         std::cout << "ERROR: hipFree failed! (" << hip_status << ")" << std::endl;
-    //     }   
-    // }
 
     std::cerr << "Total number of frames decoded : " << n_frame << "\n";
     return VideoDecoder::Status::OK;
@@ -163,6 +127,11 @@ VideoDecoder::Status RocDecodeVideoDecoder::Initialize(const char *src_filename)
     std::cerr << "CODEC ID : " << (int)_rocdec_codec_id << "\n";
     _decoder = std::make_unique<RocVideoDecoder>(0, _surface_mem_type, _rocdec_codec_id);  // Exact device ID to be set here
     _stream = _decoder->GetStream();
+
+    // Seek context Init
+    _seek_ctx.seek_frame_ = 0;
+    _seek_ctx.seek_crit_ = SEEK_CRITERIA_FRAME_NUM;
+    _seek_ctx.seek_mode_ = SEEK_MODE_PREV_KEY_FRAME;
     return VideoDecoder::Status::OK;
 
 }

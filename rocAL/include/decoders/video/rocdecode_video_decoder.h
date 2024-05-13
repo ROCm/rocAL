@@ -34,7 +34,8 @@ class RocDecodeVideoDecoder : public VideoDecoder {
     RocDecodeVideoDecoder();
     VideoDecoder::Status Initialize(const char *src_filename) override;
     VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
-    int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override;
+    int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override { };
+    int seek_frame(unsigned frame_number, uint8_t **video, int* video_bytes);
     void release() override;
     ~RocDecodeVideoDecoder() override;
 
