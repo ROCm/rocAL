@@ -49,7 +49,7 @@ class RocDecodeVideoDecoder : public VideoDecoder {
     OutputSurfaceMemoryType _surface_mem_type = OUT_SURFACE_MEM_DEV_INTERNAL;
     hipStream_t _stream;
     VideoPostProcess _post_process;
-
+    std::vector<uint8_t*> _frame_buffers;
 
     // AVFormatContext *_fmt_ctx = NULL;
     // AVCodecContext *_video_dec_ctx = NULL;

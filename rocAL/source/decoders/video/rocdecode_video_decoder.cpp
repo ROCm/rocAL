@@ -33,14 +33,14 @@ int RocDecodeVideoDecoder::seek_frame(unsigned frame_number, uint8_t **video, in
     _demuxer->Seek(_seek_ctx, video, video_bytes);
     int64_t dts;
     auto pts = _seek_ctx.out_frame_pts_;
-    if (_seek_ctx.req_frame_dts_ != _seek_ctx.out_frame_dts_) {
-        // Seek upto requested frame is received
-        auto n_frames_returned = _decoder->DecodeFrame(*video, *video_bytes, 0, pts);
-        do {
-            _demuxer->Demux(video, video_bytes, &pts, &dts);
-            auto n_frames_returned = _decoder->DecodeFrame(*video, *video_bytes, 0, pts);
-        } while (dts < _seek_ctx.req_frame_dts_);
-    }
+    // if (_seek_ctx.req_frame_dts_ != _seek_ctx.out_frame_dts_) {
+    //     // Seek upto requested frame is received
+    //     auto n_frames_returned = _decoder->DecodeFrame(*video, *video_bytes, 0, pts);
+    //     do {
+    //         _demuxer->Demux(video, video_bytes, &pts, &dts);
+    //         auto n_frames_returned = _decoder->DecodeFrame(*video, *video_bytes, 0, pts);
+    //     } while (dts < _seek_ctx.req_frame_dts_);
+    // }
     // std::cerr << "Frame Number : " << frame_number << "\t";
     // std::cerr << "Requested Frame dts : " << _seek_ctx.req_frame_dts_ << "\t";
     // std::cerr << "Out Frame dts : " << _seek_ctx.out_frame_dts_ << "\t";
@@ -87,7 +87,13 @@ VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, un
             std::cerr << "Error: Failed to get Output Image Info!" << std::endl;
             break;
         }
-
+        // Allocate frame buffers
+        if (_frame_buffers.size() == 0) {
+            _frame_buffers.resize(sequence_length);
+            for (int i = 0; i < sequence_length; i++) {
+                HIP_API_CALL(hipMalloc(&_frame_buffers[i], surf_info->output_surface_size_in_bytes));
+            }
+        }
         // Resize portion TBA
         if (resize_dim.w && resize_dim.h && !resize_surf_info) { 
             resize_surf_info = new OutputSurfaceInfo;
@@ -97,10 +103,13 @@ VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, un
         // Take the min of sequence length and num frames to avoid out of bounds memory error
         int required_n_frames = std::min(static_cast<int>(sequence_length), n_frames_returned);
         for (int i = 0; i < required_n_frames; i++, frames++) {
+            std::cerr << "Frame : " << frames << "\n";
             if (frames == sequence_length) {
                 sequence_decoded = true;
             }
             p_frame = _decoder->GetFrame(&pts);
+
+            HIP_API_CALL(hipMemcpyDtoD(_frame_buffers[frames - 1], p_frame, surf_info->output_surface_size_in_bytes));
 
             // TODO - This portion can be moved outside the loop ?
             int rgb_width;
@@ -113,13 +122,14 @@ VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, un
                                                         rgb_width * surf_info->output_height * 6 : rgb_width * surf_info->output_height * 8;
             }
 
-            _post_process.ColorConvertYUV2RGB(p_frame, surf_info, out_buffer, e_output_format, _decoder->GetStream());
+            _post_process.ColorConvertYUV2RGB(_frame_buffers[frames - 1], surf_info, out_buffer, e_output_format, _decoder->GetStream());
 
             _decoder->ReleaseFrame(pts);
             out_buffer += (out_height * 3 * out_width);
         }
         n_frame += required_n_frames;
         if (sequence_decoded) {
+            std::cerr << "Sequence decoded : " << n_frame << "\n";
             // sync to finish copy
             if (hipStreamSynchronize(_decoder->GetStream()) != hipSuccess)
                 THROW("hipStreamSynchronize failed for hipMemcpy ")
@@ -149,6 +159,12 @@ VideoDecoder::Status RocDecodeVideoDecoder::Initialize(const char *src_filename)
 }
 
 void RocDecodeVideoDecoder::release() {
+    if (_frame_buffers.size() != 0) {
+        for (int i = 0; i < _frame_buffers.size(); i++) {
+            if (_frame_buffers[i])
+                HIP_API_CALL(hipFree(_frame_buffers[i]));
+        }
+    }
 }
 
 RocDecodeVideoDecoder::~RocDecodeVideoDecoder() {
