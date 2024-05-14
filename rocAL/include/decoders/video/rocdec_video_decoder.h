@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,12 @@ THE SOFTWARE.
 #pragma once
 
 #include "video_decoder.h"
-#include "roc_video_dec.h"
 #include "video_demuxer.h"
+#include "video_post_process.h"
+#include "rocvideodecode/roc_video_dec.h"
 
 #ifdef ROCAL_VIDEO
+#ifdef ENABLE_HIP
 
 class RocDecVideoDecoder : public VideoDecoder {
     public:
@@ -33,7 +35,7 @@ class RocDecVideoDecoder : public VideoDecoder {
         RocDecVideoDecoder();
         VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) override;
         VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
-        int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override;
+        int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override { return 0; }
         void release() override;
         ~RocDecVideoDecoder() override;
 
@@ -41,7 +43,9 @@ class RocDecVideoDecoder : public VideoDecoder {
         const char *_src_filename = NULL;
         std::shared_ptr<VideoDemuxer> _demuxer;
         std::shared_ptr<RocVideoDecoder> _rocvid_decoder;
-
+        OutputFormatEnum _output_format = bgr; 
         int _codec_width, _codec_height;
 };
+
+#endif
 #endif

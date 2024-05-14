@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,15 @@ THE SOFTWARE.
 #include "decoders/video/rocdec_video_decoder.h"
 
 #ifdef ROCAL_VIDEO
+#if ENABLE_HIP
+
 RocDecVideoDecoder::RocDecVideoDecoder(){};
 
 // Initialize will open a new decoder and initialize the context
 VideoDecoder::Status RocDecVideoDecoder::Initialize(const char *src_filename, int device_id) {
 
     VideoDecoder::Status status = Status::OK;
-    
+    _src_filename = src_filename;
     // create rocDecoder and Demuxer for rocDecode
     OutputSurfaceMemoryType mem_type = OUT_SURFACE_MEM_DEV_INTERNAL;      // set to internal
     _demuxer = std::make_shared<VideoDemuxer>(src_filename);
@@ -70,6 +72,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     uint32_t image_size = out_height * out_stride * sizeof(uint8_t);
     video_seek_ctx.seek_crit_ = SEEK_CRITERIA_FRAME_NUM;
     video_seek_ctx.seek_mode_ = SEEK_MODE_PREV_KEY_FRAME;
+    VideoPostProcess post_process;
     do {
         if (b_seek) {
             video_seek_ctx.seek_frame_ = static_cast<uint64_t>(seek_frame_number);
@@ -91,21 +94,22 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             std::cerr << "Error: Failed to get Output Surface Info!" << std::endl;
             break;
         }
-        for (int i = 0; i < n_frame_returned; i++) {
+        // Take the min of sequence length and num frames to avoid out of bounds memory error
+        int required_n_frames = std::min(static_cast<int>(sequence_length), n_frame_returned);
+        for (int i = 0; i < required_n_frames; i++) {
             uint8_t *pframe = _rocvid_decoder->GetFrame(&pts);
             if (n_frame % stride == 0) {
-                // todo:: access the frame in HIP/GPU memory
-                // do color conversion and scaling following videodecodergb sample
-                // the destination memory should be set to out_buffer pointer (expect to be GPU mem ptr)
+                post_process.ColorConvertYUV2RGB(pframe, surf_info, out_buffer, _output_format, _rocvid_decoder->GetStream());
                 out_buffer += image_size;
             }
+            n_frame ++;
             // release frame
             _rocvid_decoder->ReleaseFrame(pts);
         }
         //auto end_time = std::chrono::high_resolution_clock::now();
         //auto time_per_decode = std::chrono::duration<double, std::milli>(end_time - start_time).count();
         //total_dec_time += time_per_decode;
-        n_frame += n_frame_returned;
+
         if (n_frame >= num_decoded_frames) {
             break;
         }
@@ -114,12 +118,12 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     return status;
 }
 
-
 void RocDecVideoDecoder::release() {
-    // todo:: release resources allocated for this decode instance
 }
 
 RocDecVideoDecoder::~RocDecVideoDecoder() {
     release();
 }
+
+#endif
 #endif
