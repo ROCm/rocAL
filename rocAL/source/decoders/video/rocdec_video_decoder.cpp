@@ -20,15 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "decoders/video/rocdecode_video_decoder.h"
+#include "decoders/video/rocdec_video_decoder.h"
 
 #include "pipeline/commons.h"
 #include <stdio.h>
 
-#ifdef ROCAL_VIDEO && ENABLE_HIP
-RocDecodeVideoDecoder::RocDecodeVideoDecoder(){};
+#ifdef ROCAL_VIDEO
+#ifdef ENABLE_HIP
 
-int RocDecodeVideoDecoder::seek_frame(unsigned frame_number, uint8_t **video, int* video_bytes) {
+RocDecVideoDecoder::RocDecVideoDecoder(){};
+
+int RocDecVideoDecoder::seek_frame(unsigned frame_number, uint8_t **video, int* video_bytes) {
     _seek_ctx.seek_frame_ = frame_number;
     _demuxer->Seek(_seek_ctx, video, video_bytes);
     int64_t dts;
@@ -49,12 +51,12 @@ int RocDecodeVideoDecoder::seek_frame(unsigned frame_number, uint8_t **video, in
     // Add support to seek to the exact frame
 }
 
-// int RocDecodeVideoDecoder::hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type, AVBufferRef *hw_device_ctx) {
+// int RocDecVideoDecoder::hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type, AVBufferRef *hw_device_ctx) {
 
 // }
 
 // Seeks to the frame_number in the video file and decodes each frame in the sequence.
-VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_pix_format) {
+VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_pix_format) {
     
     int n_video_bytes = 0, n_frames_returned = 0, n_frame = 0;
     uint8_t *p_video = nullptr;
@@ -142,7 +144,7 @@ VideoDecoder::Status RocDecodeVideoDecoder::Decode(unsigned char *out_buffer, un
 }
 
 // Initialize will open a new decoder and initialize the context
-VideoDecoder::Status RocDecodeVideoDecoder::Initialize(const char *src_filename) {
+VideoDecoder::Status RocDecVideoDecoder::Initialize(const char *src_filename) {
     _src_filename = src_filename;
     _demuxer = std::make_unique<VideoDemuxer>(src_filename);
     _rocdec_codec_id = AVCodec2RocDecVideoCodec(_demuxer->GetCodecID());
@@ -158,7 +160,7 @@ VideoDecoder::Status RocDecodeVideoDecoder::Initialize(const char *src_filename)
 
 }
 
-void RocDecodeVideoDecoder::release() {
+void RocDecVideoDecoder::release() {
     if (_frame_buffers.size() != 0) {
         for (int i = 0; i < _frame_buffers.size(); i++) {
             if (_frame_buffers[i])
@@ -167,6 +169,7 @@ void RocDecodeVideoDecoder::release() {
     }
 }
 
-RocDecodeVideoDecoder::~RocDecodeVideoDecoder() {
+RocDecVideoDecoder::~RocDecVideoDecoder() {
 }
+#endif
 #endif

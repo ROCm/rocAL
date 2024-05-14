@@ -26,18 +26,19 @@ THE SOFTWARE.
 #include "video_post_process.h"
 #include "rocvideodecode/roc_video_dec.h"
 
-#ifdef ROCAL_VIDEO && ENABLE_HIP
+#ifdef ROCAL_VIDEO
+#ifdef ENABLE_HIP
 
-class RocDecodeVideoDecoder : public VideoDecoder {
+class RocDecVideoDecoder : public VideoDecoder {
    public:
     //! Default constructor
-    RocDecodeVideoDecoder();
+    RocDecVideoDecoder();
     VideoDecoder::Status Initialize(const char *src_filename) override;
     VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
     int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override { };
     int seek_frame(unsigned frame_number, uint8_t **video, int* video_bytes);
     void release() override;
-    ~RocDecodeVideoDecoder() override;
+    ~RocDecVideoDecoder() override;
 
    private:
     const char *_src_filename = NULL;
@@ -62,4 +63,5 @@ class RocDecodeVideoDecoder : public VideoDecoder {
     // AVBufferRef *hw_device_ctx = NULL;
     // int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type, AVBufferRef *hw_device_ctx);
 };
+#endif
 #endif
