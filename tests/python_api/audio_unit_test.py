@@ -61,9 +61,9 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
     roi_data = roi_tensor.detach().numpy()
     buffer_size = roi_data[0] * roi_data[1]
     matched_indices = 0
-    for i in range(roi_data[1]):
-        for j in range(roi_data[0]):
-            ref_val = data_array[i * roi_data[0] + j]
+    for i in range(roi_data[0]):
+        for j in range(roi_data[1]):
+            ref_val = data_array[i * roi_data[1] + j]
             out_val = audio_data[i * dimensions[2] + j]
             # ensuring that out_val is not exactly zero while ref_val is non-zero.
             invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
@@ -121,7 +121,7 @@ def spectrogram_pipeline(path, file_list):
         nfft=512,
         window_length=320,
         window_step=160,
-        rocal_tensor_output_type = types.FLOAT)
+        output_dtype = types.FLOAT)
     return spec
 
 @pipeline_def(seed=seed)
@@ -269,9 +269,9 @@ def main():
         for e in range(int(args.num_epochs)):
             print("Epoch :: ", e)
             torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-            for i, it in enumerate(audioIteratorPipeline):
-                for x in range(len(it[0])):
-                    for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
+            for i, output_list in enumerate(audioIteratorPipeline):
+                for x in range(len(output_list[0])):
+                    for audio_tensor, label, roi in zip(output_list[0][x], output_list[1], output_list[2]):
                         if args.print_tensor:
                             print("label", label)
                             print("Audio", audio_tensor)
