@@ -107,7 +107,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             n_frame++;
             // release frame
             _rocvid_decoder->ReleaseFrame(pts);
-            if (n_frame == sequence_length) {
+            if (n_frame == num_decoded_frames) {
                 sequence_decoded = true;
                 break;
             }
