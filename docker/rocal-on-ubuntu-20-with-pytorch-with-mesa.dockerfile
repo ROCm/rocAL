@@ -51,17 +51,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget libbz2-dev libssl-dev
         cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd ../../ && \
         git clone -b v3.12.4 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
-ENV CUPY_INSTALL_USE_HIP=1
-ENV ROCM_HOME=/opt/rocm
+
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev && \
         git clone https://github.com/Tencent/rapidjson.git && cd rapidjson && mkdir build && cd build && \
         cmake ../ && make -j4 && sudo make install && cd ../../ && \
         pip install pytest==3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
-        cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
-        pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.* git+https://github.com/ROCm/hipify_torch.git && \
-        env CC=$MPI_HOME/bin/mpicc python -m pip install mpi4py && \
-        git clone https://github.com/ROCm/cupy.git && cd cupy && git submodule update --init && \
-        pip install -e . --no-cache-dir -vvvv
+        cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../
 
 # install MIVisionX 
 RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \

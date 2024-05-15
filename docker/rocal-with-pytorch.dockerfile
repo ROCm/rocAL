@@ -44,7 +44,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
         git clone https://github.com/Tencent/rapidjson.git && cd rapidjson && mkdir build && cd build && \
         cmake ../ && make -j4 && sudo make install && cd ../../ && \
         pip install pytest==3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
-        cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
+        cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../
 
 # install MIVisionX 
 RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
