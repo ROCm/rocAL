@@ -43,7 +43,7 @@ class RocDecVideoDecoder : public VideoDecoder {
         const char *_src_filename = NULL;
         std::shared_ptr<VideoDemuxer> _demuxer;
         std::shared_ptr<RocVideoDecoder> _rocvid_decoder;
-        OutputFormatEnum _output_format = bgr; 
+        OutputFormatEnum _output_format = rgb; 
         int _codec_width, _codec_height;
 };
 

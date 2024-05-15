@@ -68,11 +68,13 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     OutputSurfaceInfo *surf_info;
     uint8_t *pvideo = nullptr;
     int num_decoded_frames = sequence_length * stride;
-    bool b_seek = !seek_frame_number;       // only if not first frame 
+    // bool b_seek = !seek_frame_number;
+    bool b_seek = true;       // only if not first frame 
     uint32_t image_size = out_height * out_stride * sizeof(uint8_t);
     video_seek_ctx.seek_crit_ = SEEK_CRITERIA_FRAME_NUM;
     video_seek_ctx.seek_mode_ = SEEK_MODE_PREV_KEY_FRAME;
     VideoPostProcess post_process;
+    bool sequence_decoded = false;
     do {
         if (b_seek) {
             video_seek_ctx.seek_frame_ = static_cast<uint64_t>(seek_frame_number);
@@ -102,15 +104,18 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
                 post_process.ColorConvertYUV2RGB(pframe, surf_info, out_buffer, _output_format, _rocvid_decoder->GetStream());
                 out_buffer += image_size;
             }
-            n_frame ++;
+            n_frame++;
             // release frame
             _rocvid_decoder->ReleaseFrame(pts);
+            if (n_frame == sequence_length) {
+                sequence_decoded = true;
+                break;
+            }
         }
         //auto end_time = std::chrono::high_resolution_clock::now();
         //auto time_per_decode = std::chrono::duration<double, std::milli>(end_time - start_time).count();
         //total_dec_time += time_per_decode;
-
-        if (n_frame >= num_decoded_frames) {
+        if (sequence_decoded) {
             break;
         }
     } while (n_video_bytes);
