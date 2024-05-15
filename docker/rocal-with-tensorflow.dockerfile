@@ -1,4 +1,5 @@
 ARG TENSORFLOW_VERSION=latest
+ARG ROCAL_PYTHON_VERSION_SUGGESTED=3.9
 FROM rocm/tensorflow:${TENSORFLOW_VERSION}
 
 ENV ROCAL_DEPS_ROOT=/rocAL-deps
@@ -10,8 +11,8 @@ RUN apt-get update -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gcc g++ cmake pkg-config git
 
 # install OpenCV
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy \
-        libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev unzip && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev \
+        libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-dev unzip && \
         mkdir OpenCV && cd OpenCV && wget https://github.com/opencv/opencv/archive/4.6.0.zip && unzip 4.6.0.zip && \
         mkdir build && cd build && cmake -DWITH_GTK=ON -DWITH_JPEG=ON -DBUILD_JPEG=ON -DWITH_OPENCL=OFF ../opencv-4.6.0 && make -j8 && sudo make install && sudo ldconfig && cd
 
@@ -30,7 +31,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rocblas rocblas-dev miopen
         unzip half-1.12.0.zip -d half-files && sudo mkdir -p /usr/local/include/half && sudo cp half-files/include/half.hpp /usr/local/include/half && cd
 
 # install rocAL dependency
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget libbz2-dev libssl-dev python-dev python3-dev libgflags-dev libgoogle-glog-dev liblmdb-dev nasm yasm libjsoncpp-dev clang && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget libbz2-dev libssl-dev python3-dev python3-numpy libgflags-dev libgoogle-glog-dev liblmdb-dev nasm yasm libjsoncpp-dev clang && \
         git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../ && \
         make -j4 && sudo make install && cd && \
@@ -59,7 +60,7 @@ WORKDIR $ROCAL_WORKSPACE
 
 # Install rocAL
 RUN git clone -b develop https://github.com/ROCm/rocAL && \
-        mkdir build && cd build && cmake -D PYTHON_VERSION_SUGGESTED=3.9 ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install
+        mkdir build && cd build && cmake -D PYTHON_VERSION_SUGGESTED=${ROCAL_PYTHON_VERSION_SUGGESTED} ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install
 
 WORKDIR /workspace
 
