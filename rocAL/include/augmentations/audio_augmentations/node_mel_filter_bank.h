@@ -38,7 +38,7 @@ class MelFilterBankNode : public Node {
    private:
     float _freq_high = 0;
     float _freq_low = 0;
-    RocalMelScaleFormula _mel_formula = RocalMelScaleFormula::SLANEY;
+    int _mel_formula = 0;
     int _nfilter = 128;
     float _sample_rate = 44100;
     bool _normalize = true;

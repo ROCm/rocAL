@@ -445,8 +445,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("ERROR", ROCAL_ERROR)
         .export_values();
     py::enum_<RocalMelScaleFormula>(types_m, "RocalMelScaleFormula", "Rocal Audio Mel Formula")
-        .value("SLANEY", SLANEY)
-        .value("HTK", HTK)
+        .value("SLANEY", ROCAL_SLANEY)
+        .value("HTK", ROCAL_HTK)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())

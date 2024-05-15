@@ -37,7 +37,6 @@ class NormalizeNode : public Node {
 
    private:
     int _axis_mask = 0;
-    uint _compute_mean, _compute_stddev;
     vx_array _mean_vx_array, _stddev_vx_array;
     std::vector<unsigned> _axes;
     std::vector<float> _mean, _std_dev;
