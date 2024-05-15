@@ -45,6 +45,7 @@ find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
 find_package(SndFile QUIET)
+find_package(rocDecode QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -70,7 +71,6 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         message("-- ${Yellow}NOTE: rocAL library requires HIP for BACKEND=HIP, Not Found ${ColourReset}")
         message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
     endif()
-    find_package(rocDecode QUIET)
 endif()
 
 # OpenCL Backend
@@ -239,12 +239,12 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
-    #rocDecode
-    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocDecode_FOUND)
-        # include_directories(${rocDecode_INCLUDE_DIRS} ${ROCM_PATH}/share/rocdecode/utils ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
-        include_directories(${rocDecode_INCLUDE_DIRS})
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocDecode_LIBRARIES})
-    endif()
+    # #rocDecode
+    # if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocDecode_FOUND)
+    #     # include_directories(${rocDecode_INCLUDE_DIRS} ${ROCM_PATH}/share/rocdecode/utils ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+    #     include_directories(${rocDecode_INCLUDE_DIRS})
+    #     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocDecode_LIBRARIES})
+    # endif()
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
@@ -313,6 +313,16 @@ if(${BUILD_ROCAL})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SNDFILE_LIBRARIES})
         message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
+    endif()
+    # rocDecode
+    if(NOT rocDecode_FOUND)
+        message("-- ${Yellow}NOTE: rocAL built without rocDecode Video Hardware Decode Functionality${ColourReset}")
+    elseif(HIP_FOUND AND FFMPEG_FOUND)
+        include_directories (${rocDecode_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocDecode_LIBRARIES})
+        message("-- ${White}rocAL built with rocDecode Video Decode Functionality${ColourReset}")
+    else()
+        message("-- ${Yellow}NOTE: rocAL built without rocDecode Video Hardware Decode Functionality as FFmepg not found${ColourReset}")
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
