@@ -13,7 +13,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gcc g++ cmake pkg-config g
 
 # install ROCm for rocAL OpenCL/HIP dependencies
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-dev wget sudo keyboard-configuration libstdc++-12-dev &&  \
-        sudo apt-get -y clean && dpkg --add-architecture i386 && \
+        sudo apt-get -y clean && \
         wget ${ROCM_INSTALLER_REPO} && \
         sudo apt-get install -y ./${ROCM_INSTALLER_PACKAGE} && \
         sudo apt-get update -y && \
