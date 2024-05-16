@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
-ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/6.0.2/ubuntu/focal/amdgpu-install_6.0.60002-1_all.deb
-ARG ROCM_INSTALLER_PACKAGE=amdgpu-install_6.0.60002-1_all.deb
+ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/6.1.1/ubuntu/focal/amdgpu-install_6.1.60101-1_all.deb
+ARG ROCM_INSTALLER_PACKAGE=amdgpu-install_6.1.60101-1_all.deb
 
 ENV ROCAL_DEPS_ROOT=/rocAL-deps
 WORKDIR $ROCAL_DEPS_ROOT
@@ -52,6 +52,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
 # install MIVisionX 
 RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
         mkdir build && cd build && cmake -DBACKEND=HIP ../ && make -j8 && make install
+
+# install rocDecode
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rocdecode-dev
 
 ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE

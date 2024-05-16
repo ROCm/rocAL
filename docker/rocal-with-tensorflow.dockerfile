@@ -42,7 +42,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
 
 # install MIVisionX 
 RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
-        mkdir build && cd build && cmake -DBACKEND=HIP ../ && make -j8 && make install && cd 
+        mkdir build && cd build && cmake -DBACKEND=HIP ../ && make -j8 && make install && cd
+
+# install rocDecode
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rocdecode-dev
 
 ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE
