@@ -82,7 +82,7 @@ class MasterGraph {
                         NO_MORE_DATA = 2,
                         NOT_IMPLEMENTED = 3,
                         INVALID_ARGUMENTS };
-    MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, std::pair<RocalBatchPolicy, bool> last_batch_info);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
@@ -102,7 +102,6 @@ class MasterGraph {
     Status run();
     Timing timing();
     RocalMemType mem_type();
-    std::pair<RocalBatchPolicy, bool> last_batch_policy_info();
     size_t last_batch_padded_size();
     void release();
     template <typename T>
@@ -227,7 +226,6 @@ class MasterGraph {
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
-    std::pair<RocalBatchPolicy, bool> _last_batch_info; // Determines the handling of the last batch when the number of files in a shard is not divisible by the batch size and whether the end of the data consists of data from the next shard (False) or is duplicated dummy data (True)
 };
 
 template <typename T>

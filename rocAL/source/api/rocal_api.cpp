@@ -43,8 +43,7 @@ rocalCreate(
     int gpu_id,
     size_t cpu_thread_count,
     size_t prefetch_queue_depth,
-    RocalTensorOutputType output_tensor_data_type,
-    std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
+    RocalTensorOutputType output_tensor_data_type) {
     RocalContext context = nullptr;
     try {
         auto translate_process_mode = [](RocalProcessMode process_mode) {
@@ -69,19 +68,7 @@ rocalCreate(
                     THROW("Unkown Rocal data type")
             }
         };
-        auto translate_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
-            switch (last_batch_policy) {
-                case ROCAL_LAST_BATCH_FILL:
-                    return RocalBatchPolicy::FILL;
-                case ROCAL_LAST_BATCH_DROP:
-                    return RocalBatchPolicy::DROP;
-                case ROCAL_LAST_BATCH_PARTIAL:
-                    return RocalBatchPolicy::PARTIAL;
-                default:
-                    THROW("Unknown Rocal last batch policy type")
-            }
-        };
-        context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type), std::make_pair(translate_last_batch_policy(last_batch_info.first), last_batch_info.second));
+        context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type));
         // Reset seed in case it's being randomized during context creation
     } catch (const std::exception& e) {
         ERR(STR("Failed to init the Rocal context, ") + STR(e.what()))

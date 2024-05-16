@@ -269,7 +269,7 @@ Reader::Status FileSourceReader::open_folder() {
             _file_count_all_shards++;
             incremenet_file_id();
         } else {
-            WRN("Skipping file," + std::string(filename) + " as it is not present in metadata reader")
+            WRN("Skipping file," + filename + " as it is not present in metadata reader")
         }
     }
     if (_file_names.empty())

@@ -68,7 +68,7 @@ def main():
 
     with image_classification_train_pipeline:
         jpegs, _ = fn.readers.file(file_root=data_path)
-        decode = fn.decoders.image(jpegs, output_type=types.RGB,
+        decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
                                          file_root=data_path, shard_id=local_rank, num_shards=world_size, random_shuffle=True)
         res = fn.resize(decode, resize_width=224, resize_height=224,
                         output_layout=types.NCHW, output_dtype=types.UINT8)
