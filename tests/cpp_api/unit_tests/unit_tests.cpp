@@ -217,7 +217,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 exit(0);
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
-            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/instances_train2017.json";
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
             rocalCreateCOCOReader(handle, json_path.c_str(), true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSource(handle, path, json_path.c_str(), color_format, num_threads, false, true, false);
@@ -233,7 +233,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 exit(0);
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
-            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/instances_train2017.json";
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
             rocalCreateCOCOReader(handle, json_path.c_str(), true);
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);

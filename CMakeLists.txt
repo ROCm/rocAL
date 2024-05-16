@@ -53,6 +53,7 @@ option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(BUILD_WITH_AMD_ADVANCE  "Build rocAL with Advanced GPU support" OFF)
 option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
+option(AUDIO_SUPPORT "Build rocAL with Audio features" OFF)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -136,6 +137,9 @@ if(HIP_FOUND)
   if(HIP_VERSION  VERSION_GREATER 5.7.50701)
     set(BUILD_WITH_AMD_ADVANCE ON)
   endif()
+  if(HIP_VERSION VERSION_GREATER 6.2)
+    set(AUDIO_SUPPORT ON)
+  endif()
 endif()
 
 message("-- ${Cyan}rocAL Developer Options${ColourReset}")
@@ -144,6 +148,7 @@ message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU
 message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [rocAL support for advanced GPU(default:OFF)]${ColourReset}")
 message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
+message("-- ${Cyan}     -D AUDIO_SUPPORT=${AUDIO_SUPPORT} [rocAL support for Audio features(default:OFF)]${ColourReset}")
 
 add_subdirectory(rocAL)
 if(BUILD_PYPACKAGE)

@@ -22,6 +22,7 @@ import os
 import sys
 import argparse
 import platform
+import traceback
 if sys.version_info[0] < 3:
     import commands
 else:
@@ -29,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -38,6 +39,7 @@ def ERROR_CHECK(call):
     status = call
     if(status != 0):
         print('ERROR_CHECK failed with status:'+str(status))
+        traceback.print_stack()
         exit(status)
 
 # Arguments
@@ -357,16 +359,16 @@ else:
     ERROR_CHECK(os.system(
         '(cd '+deps_dir+'; git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
-            ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j 4; sudo make install )'))
+            ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
 
     # PyBind11
     ERROR_CHECK(os.system('pip install pytest==7.3.1'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
-            linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j4; sudo make install)'))
+            linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j$(nproc); sudo make install)'))
 
     # RapidJSON - Source TBD: Package install of RapidJSON has compile issues
     os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
-            linuxCMake+' ../; make -j4; sudo make install)')
+            linuxCMake+' ../; make -j$(nproc); sudo make install)')
 
     # OpenCV 4.6.0
     # Get Installation Source
@@ -379,5 +381,8 @@ else:
     ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
-    
+
+    # Python Wheel
+    ERROR_CHECK(os.system('pip install wheel'))
+
 print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")

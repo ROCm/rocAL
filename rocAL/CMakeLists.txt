@@ -299,11 +299,13 @@ if(${BUILD_ROCAL})
     # SndFile
     if(NOT SNDFILE_FOUND)
         message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
-    else()
+    elseif(AUDIO_SUPPORT)
         include_directories(${SNDFILE_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SNDFILE_LIBRARIES})
         message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
+    else()
+        message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

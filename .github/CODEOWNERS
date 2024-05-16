@@ -2,7 +2,9 @@
 docs/* @ROCm/rocm-documentation @kiritigowda @rrawther
 *.md  @ROCm/rocm-documentation @kiritigowda @rrawther
 *.rst  @ROCm/rocm-documentation
+
 # Header directory
 library/include/*  @ROCm/rocm-documentation @kiritigowda @rrawther
+
 # Source code
-@kiritigowda @rrawther
+* @kiritigowda @rrawther
