@@ -16,7 +16,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-
         mkdir build && cd build && cmake -DWITH_GTK=ON -DWITH_JPEG=ON -DBUILD_JPEG=ON -DWITH_OPENCL=OFF ../opencv-4.6.0 && make -j8 && sudo make install && sudo ldconfig && cd
 
 # install FFMPEG
-ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
 
 # install rocAL neural net dependency
