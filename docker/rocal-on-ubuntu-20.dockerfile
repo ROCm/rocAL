@@ -67,5 +67,6 @@ ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE
 
 # Install rocAL
+RUN pip install --upgrade pip
 RUN git clone -b develop https://github.com/ROCm/rocAL && \
         mkdir build && cd build && cmake ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install
