@@ -52,7 +52,7 @@ ENV ROCM_HOME=/opt/rocm
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev && \
         git clone https://github.com/Tencent/rapidjson.git && cd rapidjson && mkdir build && cd build && \
         cmake ../ && make -j4 && sudo make install && cd ../../ && \
-        pip install pytest==3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
+        pip install pytest==7.3.1 && git clone -b v2.10.4 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
         cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
         pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.* git+https://github.com/ROCm/hipify_torch.git && \
         env CC=$MPI_HOME/bin/mpicc python -m pip install mpi4py && \
