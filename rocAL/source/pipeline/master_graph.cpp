@@ -102,20 +102,20 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
                                                                                                                                                                                      _process_time("Process Time", DBG_TIMING),
                                                                                                                                                                                      _bencode_time("BoxEncoder Time", DBG_TIMING),
                                                                                                                                                                                      _user_batch_size(batch_size),
-    #if ENABLE_HIP
+#if ENABLE_HIP
                                                                                                                                                                                      _mem_type((_affinity == RocalAffinity::GPU) ? RocalMemType::HIP : RocalMemType::HOST),
-    #elif ENABLE_OPENCL
+#elif ENABLE_OPENCL
                                                                                                                                                                                      _mem_type((_affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST),
-    #else
+#else
                                                                                                                                                                                      _mem_type(RocalMemType::HOST),
-    #endif
+#endif
                                                                                                                                                                                      _first_run(true),
                                                                                                                                                                                      _processing(false),
                                                                                                                                                                                      _prefetch_queue_depth(prefetch_queue_depth),
                                                                                                                                                                                      _out_data_type(output_tensor_data_type),
-    #if ENABLE_HIP
+#if ENABLE_HIP
                                                                                                                                                                                      _box_encoder_gpu(nullptr),
-    #endif
+#endif
                                                                                                                                                                                      _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
                                                                                                                                                                                      _rb_block_if_full_time("Ring Buffer Block IF Full Time") {
     try {
@@ -437,7 +437,7 @@ MasterGraph::mem_type() {
     return _mem_type;
 }
 
-uint 
+uint
 MasterGraph::last_batch_padded_size() {
     return _loader_module->last_batch_padded_size();
 }
@@ -888,9 +888,6 @@ void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
     try {
         while (_processing) {
-            if (_loader_module->remaining_count() <= (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
-                _final_batch_padded_size = _loader_module->last_batch_padded_size();
-            }
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func

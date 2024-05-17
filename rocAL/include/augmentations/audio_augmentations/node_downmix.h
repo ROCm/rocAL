@@ -23,7 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
-
 class DownmixNode : public Node {
    public:
     DownmixNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);

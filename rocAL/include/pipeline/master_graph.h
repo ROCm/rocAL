@@ -227,7 +227,6 @@ class MasterGraph {
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
-    size_t _final_batch_padded_size; // Returns the size of the padded data
 };
 
 template <typename T>

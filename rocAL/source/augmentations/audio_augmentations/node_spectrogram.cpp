@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #include "augmentations/audio_augmentations/node_spectrogram.h"
+
 #include <vx_ext_rpp.h>
+
 #include "pipeline/exception.h"
 
 SpectrogramNode::SpectrogramNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}

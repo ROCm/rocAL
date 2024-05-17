@@ -834,8 +834,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
  * \param [in] shuffle Boolean variable to shuffle the dataset.
  * \param [in] loop Boolean variable to indefinitely loop through audio.
  * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
- * \param [in] stick_to_shard Determines weather or not the dataset when sharding is done should stick to a single shards dataset or to be considered in a round robin fashion.
- * \param [in] shard_size Provides the data-size of the shard for an iterator.
+ * \param [in] stick_to_shard Determines whether reader should stick to a single shards dataset or it to be used in a round robin fashion.
+ * \param [in] shard_size Provides the size of the shard for an epoch.
  * \param [in] last_batch_policy Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
  * \param [in] pad_last_batch_repeated If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output audio
@@ -864,8 +864,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
  * \param [in] shuffle Boolean variable to shuffle the dataset.
  * \param [in] loop Boolean variable to indefinitely loop through audio.
  * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
- * \param [in] stick_to_shard Determines weather or not the dataset when sharding is done should stick to a single shards dataset or to be considered in a round robin fashion.
- * \param [in] shard_size Provides the data-size of the shard for an iterator.
+ * \param [in] stick_to_shard Determines whether reader should stick to a single shards dataset or it to be used in a round robin fashion.
+ * \param [in] shard_size Provides the size of the shard for an epoch.
  * \param [in] last_batch_policy Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
  * \param [in] pad_last_batch_repeated If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output audio

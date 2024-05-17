@@ -39,7 +39,7 @@ void AudioLoaderNode::Init(unsigned internal_shard_count, unsigned cpu_num_threa
         THROW("Shard count should be greater than or equal to one")
     _loader_module->set_output(_outputs[0]);
     // Set reader and decoder config accordingly for the AudioLoaderNode
-    auto reader_cfg = ReaderConfig(storage_type, source_path, file_list_path, std::map<std::string, std::string>(), shuffle, loop);
+    auto reader_cfg = ReaderConfig(storage_type, source_path, "", std::map<std::string, std::string>(), shuffle, loop);
     reader_cfg.set_shard_count(internal_shard_count);
     reader_cfg.set_batch_count(load_batch_count);
     reader_cfg.set_meta_data_reader(meta_data_reader);

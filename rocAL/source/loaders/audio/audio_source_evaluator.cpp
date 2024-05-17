@@ -48,8 +48,8 @@ AudioSourceEvaluator::Create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 void AudioSourceEvaluator::FindMaxDimension() {
     _reader->reset();
     auto root_folder_path = _reader->get_root_folder_path();
-    auto vec_rel_file_path = _reader->get_file_paths_from_meta_data_reader();
-    for(auto rel_file_path: vec_rel_file_path) {
+    auto relative_file_paths = _reader->get_file_paths_from_meta_data_reader();
+    for(auto rel_file_path: relative_file_paths) {
         std::string file_name = root_folder_path + "/" + rel_file_path;
             if (_decoder->Initialize(file_name.c_str()) != AudioDecoder::Status::OK) {
                 WRN("Could not initialize audio decoder for file : " + _reader->id())

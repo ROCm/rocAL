@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #include "augmentations/geometry_augmentations/node_slice.h"
+
 #include <vx_ext_rpp.h>
+
 #include "pipeline/exception.h"
 
 SliceNode::SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
