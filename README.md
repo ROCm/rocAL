@@ -117,11 +117,11 @@ rocAL can be currently used to perform the following operations either with rand
 
 * [PyBind11](https://github.com/pybind/pybind11)
   * Source: `https://github.com/pybind/pybind11`
-  * Tag: [v2.10.4](https://github.com/pybind/pybind11/releases/tag/v2.10.4)
+  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
 
 * [Turbo JPEG](https://libjpeg-turbo.org/) 
   * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-  * Tag: [3.0.1](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.1) 
+  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
 
 * [RapidJSON](https://github.com/Tencent/rapidjson)
   * Source: `https://github.com/Tencent/rapidjson.git`
@@ -316,8 +316,8 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * rocDecode - `rocdecode` & `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
-* Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
-* PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
+* Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
+* PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * rocAL Setup Script - `V2.1.0`

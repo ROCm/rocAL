@@ -48,8 +48,8 @@ parser.add_argument('--directory', 	type=str, default='~/rocal-deps',
                     help='Setup home directory - optional (default:~/)')
 parser.add_argument('--opencv',    	type=str, default='4.6.0',
                     help='OpenCV Version - optional (default:4.6.0)')
-parser.add_argument('--pybind11',   type=str, default='v2.10.4',
-                    help='PyBind11 Version - optional (default:v2.10.4)')
+parser.add_argument('--pybind11',   type=str, default='v2.11.1',
+                    help='PyBind11 Version - optional (default:v2.11.1)')
 parser.add_argument('--backend', 	type=str, default='HIP',
                     help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/OCL/HIP]')
 parser.add_argument('--rocm_path', 	type=str, default='/opt/rocm',
@@ -298,9 +298,9 @@ else:
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ coreRPMPackages[i]))
 
-    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.1
+    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
     ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
+        '(cd '+deps_dir+'; git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
             ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
 
