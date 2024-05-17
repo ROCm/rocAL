@@ -66,6 +66,10 @@ from rocal_pybind.types import NHW
 #     RocalSpectrogramLayout
 from rocal_pybind.types import NFT
 from rocal_pybind.types import NTF
+from rocal_pybind.types import NHW
+#     RocalSpectrogramLayout
+from rocal_pybind.types import NFT
+from rocal_pybind.types import NTF
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -102,7 +106,6 @@ from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
 from rocal_pybind.types import ZERO
 from rocal_pybind.types import CLAMP
 from rocal_pybind.types import REFLECT
-
 
 _known_types = {
 
