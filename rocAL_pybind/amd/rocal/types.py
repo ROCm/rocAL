@@ -62,6 +62,10 @@ from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
+from rocal_pybind.types import NHW
+#     RocalSpectrogramLayout
+from rocal_pybind.types import NFT
+from rocal_pybind.types import NTF
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -99,10 +103,6 @@ from rocal_pybind.types import ZERO
 from rocal_pybind.types import CLAMP
 from rocal_pybind.types import REFLECT
 
-#     RocalSpectrogramLayout
-from rocal_pybind.types import FT
-from rocal_pybind.types import TF
-
 _known_types = {
 
     OK: ("OK", OK),
@@ -131,6 +131,7 @@ _known_types = {
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
+    NHW: ("NHW", NHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -166,8 +167,8 @@ _known_types = {
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
 
-    TF: ("TF", TF),
-    FT: ("FT", FT),
+    NTF: ("NTF", NTF),
+    NFT: ("NFT", NFT),
 }
 
 def data_type_function(dtype):

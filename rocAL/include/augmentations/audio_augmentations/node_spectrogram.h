@@ -40,7 +40,7 @@ class SpectrogramNode : public Node {
    public:
     SpectrogramNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SpectrogramNode() = delete;
-    void init(bool is_center_windows, bool is_reflect_padding, RocalSpectrogramLayout spectrogram_layout, int power, int nfft,
+    void init(bool is_center_windows, bool is_reflect_padding, int power, int nfft,
               int window_length, int window_step, std::vector<float> &window_fn);
 
    protected:
@@ -49,7 +49,6 @@ class SpectrogramNode : public Node {
 
    private:
     std::vector<float> _window_fn;
-    RocalSpectrogramLayout _spectrogram_layout = RocalSpectrogramLayout::ROCAL_FT;
     int _power = 2;
     int _nfft = 2048;
     int _window_length = 512;

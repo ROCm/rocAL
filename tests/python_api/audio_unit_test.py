@@ -116,7 +116,7 @@ def spectrogram_pipeline(path, file_list):
         nfft=512,
         window_length=320,
         window_step=160,
-        rocal_tensor_output_type = types.FLOAT)
+        output_dtype = types.FLOAT)
     return spec
 
 def main():
