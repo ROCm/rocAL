@@ -85,6 +85,11 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install mivisionx-dev
   ```
 
+* [rocDecode](https://github.com/ROCm/rocDecode)
+  ```shell
+  sudo apt install rocdecode-dev
+  ```
+
 * [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
   ```shell
   sudo apt install half
@@ -308,6 +313,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * ROCm: rocm-core - `6.1.0.60100-64`
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
+* rocDecode - `rocdecode` & `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
 * Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
