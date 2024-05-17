@@ -27,8 +27,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rpp-dev wget libbz2-dev li
         git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../ && \
         make -j4 && sudo make install && cd ../../ && \
-        git clone https://github.com/ROCm/rpp.git && cd rpp && mkdir build && cd build && \
-        cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd ../../ && \
         git clone -b v3.21.9 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd ../
 
