@@ -16,6 +16,7 @@
 * Python support for audio decoders
 * Pytorch iterator for Audio
 * Python audio unit test, and support to verify outputs
+* rocDecode for HW decode
 
 ### Optimizations
 
@@ -25,6 +26,7 @@
 ### Changed
 
 * Image to tensor updates
+* ROCm install - use case graphics removed
 
 ### Fixed
 
@@ -47,7 +49,7 @@
 * Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* rocAL Setup Script - `V2.0.1`
+* rocAL Setup Script - `V2.1.0`
 * Dependencies for all the above packages
 
 ### Known issues

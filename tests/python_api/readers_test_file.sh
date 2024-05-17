@@ -137,11 +137,11 @@ fi
 if [[ coco_reader -eq 1 ]]; then
 
     # Mention dataset_path
-    data_dir=$ROCAL_DATA_PATH/rocal_data/coco/coco_10_img/val_10images_2017/
+    data_dir=$ROCAL_DATA_PATH/rocal_data/coco/coco_10_img/images/
 
 
     # Mention json path
-    json_path=$ROCAL_DATA_PATH/rocal_data/coco/coco_10_img/annotations/instances_val2017.json
+    json_path=$ROCAL_DATA_PATH/rocal_data/coco/coco_10_img/annotations/coco_data.json
 
     # coco_reader.py
     # By default : cpu backend, NCHW format , fp32

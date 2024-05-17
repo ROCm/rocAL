@@ -437,6 +437,11 @@ MasterGraph::mem_type() {
     return _mem_type;
 }
 
+size_t
+MasterGraph::last_batch_padded_size() {
+    return _loader_module->last_batch_padded_size();
+}
+
 Timing
 MasterGraph::timing() {
     Timing t = _loader_module->timing();
