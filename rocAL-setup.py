@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.0.1"
+__version__ = "2.1.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -183,7 +183,9 @@ rocmDebianPackages = [
     'rpp',
     'rpp-dev',
     'mivisionx',
-    'mivisionx-dev'
+    'mivisionx-dev',
+    'rocdecode',
+    'rocdecode-dev'
 ]
 
 rocmRPMPackages = [
@@ -191,7 +193,9 @@ rocmRPMPackages = [
     'rpp',
     'rpp-devel',
     'mivisionx',
-    'mivisionx-devel'
+    'mivisionx-devel',
+    'rocdecode',
+    'rocdecode-devel'
 ]
 
 opencvDebianPackages = [
