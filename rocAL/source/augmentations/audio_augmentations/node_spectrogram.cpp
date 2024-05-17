@@ -39,7 +39,8 @@ void SpectrogramNode::create_node() {
         THROW(" vxAddArrayItems failed in the spectrogram node (vxRppSpectrogram)  node: " + TOSTR(status) + "  " + TOSTR(status))
     vx_scalar center_windows_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_is_center_windows);
     vx_scalar reflect_padding_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_BOOL, &_is_reflect_padding);
-    vx_scalar spectrogram_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_spectrogram_layout);
+    int output_layout = static_cast<int>(_outputs[0]->info().layout());
+    vx_scalar spectrogram_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar power_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_power);
     vx_scalar nfft_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_nfft);
     vx_scalar window_length_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_window_length);
@@ -53,11 +54,10 @@ void SpectrogramNode::create_node() {
 
 void SpectrogramNode::update_node() {}
 
-void SpectrogramNode::init(bool is_center_windows, bool is_reflect_padding, RocalSpectrogramLayout spectrogram_layout,
-                           int power, int nfft, int window_length, int window_step, std::vector<float> &window_fn) {
+void SpectrogramNode::init(bool is_center_windows, bool is_reflect_padding, int power, int nfft,
+                           int window_length, int window_step, std::vector<float> &window_fn) {
     _is_center_windows = is_center_windows;
     _is_reflect_padding = is_reflect_padding;
-    _spectrogram_layout = spectrogram_layout;
     _power = power;
     _nfft = nfft;
     _window_length = window_length;
