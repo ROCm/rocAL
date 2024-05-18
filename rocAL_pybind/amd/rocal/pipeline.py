@@ -122,6 +122,7 @@ class Pipeline(object):
         self._is_external_source_operator = False
         self._external_source = None
         self._external_source_mode = None
+        self._last_batch_policy = None
 
     def build(self):
         """!Build the pipeline using rocalVerify call
@@ -251,6 +252,9 @@ class Pipeline(object):
 
     def get_output_tensors(self):
         return b.getOutputTensors(self._handle)
+    
+    def get_last_batch_padded_size(self):
+        return b.getLastBatchPaddedSize(self._handle)
 
     def run(self):
         """
