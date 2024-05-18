@@ -106,9 +106,9 @@ def parse_args():
     python_unit_test.add_argument('--scaling-mode', '-sm', type=int, default=0,
                                   help='scaling mode type used for resize')
 
-    # rocAL_api_audio_unittest.py related options
+    # audio_unittests.py related options
     audio_unit_test = parser.add_argument_group(
-        'python-unittest', 'python-unittest-related options')
+        'audio-python-unittest', 'audio-python-unittest-related options')
     audio_unit_test.add_argument('--audio_path', type=str, default="",
                                   help='audio files path')
     audio_unit_test.add_argument('--file_list_path', type=str, default="",
