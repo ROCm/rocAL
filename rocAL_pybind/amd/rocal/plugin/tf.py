@@ -23,10 +23,14 @@
 # @brief File containing iterators to be used with TF trainings
 
 import numpy as np
-import cupy as cp
 import ctypes
 import rocal_pybind as b
 import amd.rocal.types as types
+try:
+    import cupy as cp
+    CUPY_FOUND=True
+except ImportError:
+    CUPY_FOUND=False
 
 
 class ROCALGenericImageIterator(object):
@@ -92,6 +96,10 @@ class ROCALGenericIteratorDetection(object):
         self.multiplier = multiplier or [1.0, 1.0, 1.0]
         self.offset = offset or [0.0, 0.0, 0.0]
         self.device = device
+        if self.device is "gpu" or "cuda":
+            if not CUPY_FOUND:
+                print('info: Import CuPy failed. Falling back to CPU!')
+                self.device = "cpu"
         self.device_id = device_id
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype

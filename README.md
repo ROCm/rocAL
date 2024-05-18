@@ -62,7 +62,7 @@ rocAL can be currently used to perform the following operations either with rand
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 * [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
-* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=graphics,rocm --no-32`
+* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 * [RPP](https://github.com/ROCm/rpp)
 * [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
 * [Turbo JPEG](https://libjpeg-turbo.org/) - Version 3.0.1 from `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
@@ -94,7 +94,7 @@ python rocAL-setup.py --directory [setup directory - optional (default:~/)]
 The installation process uses the following steps:
 
 * [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
-* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=graphics,rocm --no-32`
+* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 * Use either [Package install](#package-install) or [Source install](#source-install) as described below.
 
 ### Package install
@@ -160,7 +160,8 @@ git clone https://github.com/ROCm/rocAL.git
 > * `sudo` required for pybind installation
 
 >[!IMPORTANT]
-> Use `-D PYTHON_VERSION_SUGGESTED=3.x` with `cmake` for using a specific Python3 version if required.
+> * Use `-D PYTHON_VERSION_SUGGESTED=3.x` with `cmake` for using a specific Python3 version if required.
+> * Use `-D AUDIO_SUPPORT=ON` to enable Audio features, Audio support will be enabled by default with ROCm versions > 6.2
 
   + run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
   ```shell
@@ -243,5 +244,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* rocAL Setup Script - `V2.0.0`
+* rocAL Setup Script - `V2.1.0`
 * Dependencies for all the above packages

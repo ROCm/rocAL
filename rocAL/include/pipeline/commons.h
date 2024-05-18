@@ -154,3 +154,15 @@ struct Timing {
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
 };
+
+/*! \brief Tensor Last Batch Policies
+ These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
+        FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
+        DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
+        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, and padding the remaining samples with either last image or wrapping up the dataset - the padded images are removed in the python end
+ */
+enum RocalBatchPolicy {
+    FILL = 0,
+    DROP,
+    PARTIAL
+};

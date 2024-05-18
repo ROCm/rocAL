@@ -69,6 +69,8 @@ class ROCALGenericIterator(object):
             self.num_batches = None
         if self.loader._name is None:
             self.loader._name = self.loader._reader
+        self.last_batch_policy = self.loader._last_batch_policy
+        self.last_batch_size = None
 
     def next(self):
         return self.__next__()
@@ -183,7 +185,14 @@ class ROCALGenericIterator(object):
             self.labels_padded = self.labels_padded.view(
                 -1, max_rows1, max_cols1)
 
-            return self.output_list, self.bb_padded, self.labels_padded
+            # Check if last batch policy is partial and only return the valid images in last batch
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0:
+                if (self.last_batch_size is None):
+                    self.last_batch_size = self.batch_size - \
+                        b.getLastBatchPaddedSize(self.loader._handle)
+                return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.bb_padded[0:self.last_batch_size], self.labels_padded[0:self.last_batch_size]
+            else:
+                return self.output_list, self.bb_padded, self.labels_padded
 
         elif self.loader._is_external_source_operator:
             self.labels = self.loader.get_image_labels()
@@ -205,7 +214,14 @@ class ROCALGenericIterator(object):
                 self.labels_tensor = self.labels_tensor.copy_(
                     torch.from_numpy(self.labels)).long()
 
-            return self.output_list, self.labels_tensor
+            # Check if last batch policy is partial and only return the valid images in last batch
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
+                if (self.last_batch_size is None):
+                    self.last_batch_size = self.batch_size - \
+                        b.getLastBatchPaddedSize(self.loader._handle)
+                return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
+            else:
+                return self.output_list, self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)

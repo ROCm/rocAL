@@ -1063,7 +1063,7 @@ def external_source(source, device=None, color_format=types.RGB, random_shuffle=
     @param device (string, optional, default = None)                     Parameter unused for augmentation
     @color_format (type, optional, default = RGB)                        Tensor color format for the reader. Default is RGB format.
     @random_shuffle (bool, optional, default= False)                     Data would be randomly shuffled if set to True.
-    @mode (type, optional, default = EXTSOURCE_FNAME)                    The Default mode would be External Source File Name. The External Source Mode can be FineName, Raw Compressed, Raw Uncompressed.
+    @mode (type, optional, default = EXTSOURCE_FNAME)                    The Default mode would be External Source File Name. The External Source Mode can be FileName, Raw Compressed, Raw Uncompressed.
     @max_width (int, optional, default = 2000)                           The Max Width to which the source images would be decoded to.
     @max_height (int, optional, default = 2000)                          The Max Height to which the source images would be decoded to.
     """

@@ -65,6 +65,7 @@ class LoaderModule {
     virtual void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                                      const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height,
                                      unsigned int channels, ExternalSourceFileMode mode, bool eos) = 0;
+    virtual size_t last_batch_padded_size() { return 0; }
    protected:
     DecodedDataInfo _decoded_data_info, _output_decoded_data_info;  // Stores the decoded data info
 };
