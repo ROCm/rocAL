@@ -21,7 +21,7 @@ Prerequisites
   - SLES 15-SP4
 
 * `ROCm supported hardware <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
-* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
+* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 * `RPP <https://github.com/ROCm/rpp>`_
 * `AMD OpenVX™ <https://github.com/ROCm/MIVisionX/tree/master/amd_openvx>`_ and AMD OpenVX™ Extensions: ``VX_RPP`` and ``AMD Media`` - MIVisionX Components
 * `Turbo JPEG <https://libjpeg-turbo.org/>`_ - Version 3.0.1 from ``https://github.com/libjpeg-turbo/libjpeg-turbo.git``
@@ -40,7 +40,7 @@ Installation instructions
 The installation process uses the following steps: 
 
 * `ROCm supported hardware install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
-* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
+* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 * Use either :ref:`package-install` or :ref:`source-install` as described below.
 
 .. _package-install:
@@ -121,7 +121,7 @@ Prerequisites:
     - SLES 15-SP4
 
   * `ROCm supported hardware <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
-  * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
+  * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 
 Using ``rocAL-setup.py`` script:
 
