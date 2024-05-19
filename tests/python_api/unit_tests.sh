@@ -9,9 +9,9 @@ fi
 
 # Path to inputs and outputs available in MIVisionX-data
 one_hot_data_path=${ROCAL_DATA_PATH}/rocal_data/images_jpg/labels_folder/
-image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/train_10images_2017/
-coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/train_10images_2017/
-coco_json_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/annotations/instances_train2017.json
+image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
+coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
+coco_json_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/annotations/coco_data.json
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/
 tf_detection_path=${ROCAL_DATA_PATH}/rocal_data/tf/detection/
 caffe_classification_path=${ROCAL_DATA_PATH}/rocal_data/caffe/classification/
@@ -25,8 +25,8 @@ golden_output_path=${ROCAL_DATA_PATH}/rocal_data/GoldenOutputsTensor/
 display=0
 batch_size=2
 device=0
-width=640 
-height=480
+width=416 
+height=416
 device_name="host"
 rgb_name=("gray" "rgb")
 rgb=1
