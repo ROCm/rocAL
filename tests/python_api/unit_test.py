@@ -26,7 +26,6 @@ from parse_config import parse_args
 import os
 import sys
 import cv2
-import cupy as cp
 
 INTERPOLATION_TYPES = {
     0: types.NEAREST_NEIGHBOR_INTERPOLATION,
@@ -48,7 +47,11 @@ SCALING_MODES = {
 def draw_patches(img, idx, device, args=None):
     # image is expected as a tensor, bboxes as numpy
     if device == "gpu":
-        img = cp.asnumpy(img)
+        try:
+            import cupy as cp
+            img = cp.asnumpy(img)
+        except ImportError:
+            pass
     if args.fp16:
         img = (img).astype('uint8')
     if not args.color_format:
@@ -66,7 +69,11 @@ def draw_patches(img, idx, device, args=None):
 
 def dump_meta_data(labels, device, args=None):
     if device == "gpu":
-        labels = cp.asnumpy(labels)
+        try:
+            import cupy as cp
+            labels = cp.asnumpy(labels)
+        except ImportError:
+            pass
     labels_list = labels.tolist()
     with open(args.output_file_name, 'w') as file:
         for label in labels_list:
@@ -278,7 +285,7 @@ def main():
             resize_w = 400
             resize_h = 400
             if (scaling_mode == types.SCALING_MODE_STRETCH):
-                resize_h = 480
+                resize_h = 416
             output = fn.resize(images,
                                resize_width=resize_w,
                                resize_height=resize_h,
@@ -289,8 +296,8 @@ def main():
         elif augmentation_name == "rotate":
             output = fn.rotate(images,
                                angle=45.0,
-                               dest_width=640,
-                               dest_height=480,
+                               dest_width=416,
+                               dest_height=416,
                                output_layout=tensor_layout,
                                output_dtype=tensor_dtype,
                                interpolation_type=interpolation_type)
@@ -321,7 +328,7 @@ def main():
                              output_layout=tensor_layout,
                              output_dtype=tensor_dtype)
         elif augmentation_name == "warp_affine":
-            output = fn.warp_affine(images, dest_height=480, dest_width=640, matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
+            output = fn.warp_affine(images, dest_height=416, dest_width=416, matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
                                     output_layout=tensor_layout, output_dtype=tensor_dtype, interpolation_type=types.LINEAR_INTERPOLATION)
         elif augmentation_name == "fish_eye":
             output = fn.fish_eye(images,
@@ -410,7 +417,7 @@ def main():
             resize_w = 400
             resize_h = 400
             if (scaling_mode == types.SCALING_MODE_STRETCH):
-                resize_h = 480
+                resize_h = 416
             output = fn.resize_mirror_normalize(images,
                                                 resize_width=resize_w,
                                                 resize_height=resize_h,
@@ -454,8 +461,8 @@ def main():
         elif augmentation_name == "blend":
             output1 = fn.rotate(images,
                                 angle=45.0,
-                                dest_width=640,
-                                dest_height=480,
+                                dest_width=416,
+                                dest_height=416,
                                 output_layout=tensor_layout,
                                 output_dtype=tensor_dtype)
             output = fn.blend(images,
@@ -465,8 +472,8 @@ def main():
                               output_dtype=tensor_dtype)
         elif augmentation_name == "resize_crop":
             output = fn.resize_crop(images,
-                                    resize_width=640,
-                                    resize_height=480,
+                                    resize_width=416,
+                                    resize_height=416,
                                     crop_area_factor=0.25,
                                     crop_aspect_ratio=1.2,
                                     x_drift=0.6,

@@ -51,8 +51,8 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
-option(BUILD_WITH_AMD_ADVANCE  "Build rocAL with Advanced GPU support" OFF)
 option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
+option(AUDIO_SUPPORT "Build rocAL with Audio features" OFF)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -133,8 +133,8 @@ endif()
 
 if(HIP_FOUND)
   message("-- ${BoldBlue}ROCm Version -- ${HIP_VERSION}${ColourReset}")
-  if(HIP_VERSION  VERSION_GREATER 5.7.50701)
-    set(BUILD_WITH_AMD_ADVANCE ON)
+  if(HIP_VERSION VERSION_GREATER 6.2)
+    set(AUDIO_SUPPORT ON)
   endif()
 endif()
 
@@ -142,8 +142,8 @@ message("-- ${Cyan}rocAL Developer Options${ColourReset}")
 message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [rocAL support for advanced GPU(default:OFF)]${ColourReset}")
 message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
+message("-- ${Cyan}     -D AUDIO_SUPPORT=${AUDIO_SUPPORT} [rocAL support for Audio features(default:OFF)]${ColourReset}")
 
 add_subdirectory(rocAL)
 if(BUILD_PYPACKAGE)
@@ -209,6 +209,16 @@ set(ROCAL_RPM_PACKAGE_LIST     "rpp, mivisionx")
 # Set the dev dependent packages
 set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev")
 set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel")
+
+# Add rocDecode Deps - Exclude centos-7
+file(READ "/etc/os-release" OS_RELEASE)
+string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
+if(NOT CENTOS_7_FOUND)
+  set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
+  set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
+  set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
+  set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
+endif()
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
 execute_process(

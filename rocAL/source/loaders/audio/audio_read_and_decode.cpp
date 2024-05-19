@@ -126,9 +126,9 @@ AudioReadAndDecode::Load(float *audio_buffer,
         }
         for (size_t i = 0; i < _batch_size; i++) {
             audio_info._data_names[i] = _audio_meta_info[i].file_name;
-            audio_info._original_audio_samples[i] = _audio_meta_info[i].samples;
-            audio_info._original_audio_channels[i] = _audio_meta_info[i].channels;
-            audio_info._original_audio_sample_rates[i] = _audio_meta_info[i].sample_rate;
+            audio_info._audio_samples[i] = _audio_meta_info[i].samples;
+            audio_info._audio_channels[i] = _audio_meta_info[i].channels;
+            audio_info._audio_sample_rates[i] = _audio_meta_info[i].sample_rate;
         }
     }
     _decode_time.end();  // Debug timing
