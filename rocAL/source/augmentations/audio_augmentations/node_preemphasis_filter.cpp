@@ -20,10 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "augmentations/audio_augmentations/node_preemphasis_filter.h"
-
 #include <vx_ext_rpp.h>
-
+#include "augmentations/audio_augmentations/node_preemphasis_filter.h"
 #include "pipeline/exception.h"
 
 PreemphasisFilterNode::PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
@@ -33,8 +31,8 @@ void PreemphasisFilterNode::create_node() {
     if (_node)
         return;
     _preemph_coeff.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    vx_scalar border_type = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_preemph_border);
-    _node = vxExtRppPreemphasisFilter(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _preemph_coeff.default_array(), border_type);
+    vx_scalar border_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_preemph_border);
+    _node = vxExtRppPreemphasisFilter(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _preemph_coeff.default_array(), border_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the vxExtRppPreemphasisFilter node failed: " + TOSTR(status))
@@ -45,6 +43,8 @@ void PreemphasisFilterNode::update_node() {
 }
 
 void PreemphasisFilterNode::init(FloatParam *preemph_coeff, RocalAudioBorderType preemph_border) {
+    if (preemph_coeff == nullptr)
+        ERR("Invalid pre-Emphasis co-efficient passed")
     _preemph_coeff.set_param(core(preemph_coeff));
     _preemph_border = preemph_border;
 }

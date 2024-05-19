@@ -147,6 +147,11 @@ void ImageReadAndDecode::set_batch_random_bbox_crop_coords(std::vector<std::vect
     _crop_coords_batch = crop_coords;
 }
 
+size_t
+ImageReadAndDecode::last_batch_padded_size() {
+    return _reader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
 ImageReadAndDecode::load(unsigned char *buff,
                          std::vector<std::string> &names,
