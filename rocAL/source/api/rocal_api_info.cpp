@@ -177,4 +177,3 @@ rocalGetLastBatchPaddedSize(RocalContext p_context) {
     }
     return count;
 }
-

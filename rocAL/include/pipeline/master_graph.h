@@ -102,7 +102,7 @@ class MasterGraph {
     Status run();
     Timing timing();
     RocalMemType mem_type();
-    uint last_batch_padded_size();
+    size_t last_batch_padded_size();
     void release();
     vx_context get_vx_context() { return _context; }
     template <typename T>

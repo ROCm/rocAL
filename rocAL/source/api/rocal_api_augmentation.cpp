@@ -2559,7 +2559,7 @@ rocalMelFilterBank(
     try {
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for To decibels augmentation.")
+            WRN("Only FP32 dtype is supported for MelFilterBank augmentation.")
             op_tensor_data_type = RocalTensorDataType::FP32;
         }
         TensorInfo output_info = input->info();

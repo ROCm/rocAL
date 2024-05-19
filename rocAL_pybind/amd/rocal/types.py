@@ -112,7 +112,7 @@ from rocal_pybind.types import ERROR
 from rocal_pybind.types import SLANEY
 from rocal_pybind.types import HTK
 
-#    RocalLastBatchPolicy
+#     RocalLastBatchPolicy
 from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
 from rocal_pybind.types import LAST_BATCH_PARTIAL
@@ -179,6 +179,9 @@ _known_types = {
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
 
+    NTF: ("NTF", NTF),
+    NFT: ("NFT", NFT),
+
     PAD: ("PAD", PAD),
     TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
     ERROR: ("ERROR", ERROR),
@@ -189,9 +192,6 @@ _known_types = {
     LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
     LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
     LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
-
-    NTF: ("NTF", NTF),
-    NFT: ("NFT", NFT),
 }
 
 def data_type_function(dtype):

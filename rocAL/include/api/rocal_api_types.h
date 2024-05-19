@@ -231,7 +231,7 @@ enum RocalTensorLayout {
     ROCAL_NTF = 6,
     /*! \brief AMD ROCAL_NONE
      */
-    ROCAL_NONE = 4  // Layout for generic tensors (Non-Image or Non-Video)
+    ROCAL_NONE = 7  // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 /*! \brief rocAL Tensor Output Type enum
@@ -440,14 +440,16 @@ enum RocalMelScaleFormula {
 
 /*! \brief Tensor Last Batch Policies
  *  \ingroup group_rocal_types
- The last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
-        FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
-        DROP - The last batch is dropped if when there are not enough samples from the current epoch.
-        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to handled from python end)
  */
 enum RocalLastBatchPolicy {
+    /*! \brief ROCAL_LAST_BATCH_FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
+     */
     ROCAL_LAST_BATCH_FILL = 0,
+    /*! \brief ROCAL_LAST_BATCH_DROP - The last batch is dropped if there are not enough samples from the current epoch.
+     */
     ROCAL_LAST_BATCH_DROP = 1,
+    /*! \brief ROCAL_LAST_BATCH_PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled from python end)
+     */
     ROCAL_LAST_BATCH_PARTIAL = 2
 };
 
