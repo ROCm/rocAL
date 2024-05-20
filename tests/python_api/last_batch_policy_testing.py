@@ -142,7 +142,6 @@ def main():
         case_name = test_case_augmentation_map.get(case)
         if case_name == "last_batch_policy_FILL_last_batch_padded_True":
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
-                                                    # last_batch_policy=types.LAST_BATCH_DROP, last_batch_padded=True) # TODO: rename last_batch_padded to pad_last_batch_repeated
             audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True, size = 10)
         output_tensor_list = audio_pipeline.get_output_tensors()

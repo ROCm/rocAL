@@ -31,7 +31,7 @@ from amd.rocal.pipeline import Pipeline
 def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
           output_type=types.RGB, decoder_type=types.DECODER_TJPEG, device=None,
           decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000,
-          last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=True):
     """!Decodes images using different readers and decoders.
 
         @param inputs                   list of input images.
@@ -53,9 +53,9 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if last_batch_padded is False:
-        print("last_batch_padded = False is not implemented in rocAL. Setting last_batch_padded to True")
-        last_batch_padded = True
+    if pad_last_batch_repeated is False:
+        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+        pad_last_batch_repeated = True
     if (device == "gpu"):
         decoder_type = types.DECODER_HW_JEPG
     else:
@@ -74,7 +74,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         decoded_image = b.cocoImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -92,7 +92,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         decoded_image = b.tfImageDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -109,7 +109,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         decoded_image = b.caffe2ImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -126,7 +126,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         decoded_image = b.caffeImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -143,7 +143,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         decoded_image = b.mxnetDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -160,7 +160,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         decoded_image = b.imageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -168,7 +168,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
 
 
 def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False, output_type=types.RGB, max_decoded_width=1000, max_decoded_height=1000,
-              last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+              last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=True):
     """!Decodes raw images for TF reader and decoder.
 
         @param inputs                  list of input images.
@@ -183,9 +183,9 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if last_batch_padded is False:
-        print("last_batch_padded = False is not implemented in rocAL. Setting last_batch_padded to True")
-        last_batch_padded = True
+    if pad_last_batch_repeated is False:
+        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+        pad_last_batch_repeated = True
 
     if (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
         kwargs_pybind = {
@@ -198,7 +198,7 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
             "loop": False,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         decoded_image = b.tfImageDecoderRaw(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
         return (decoded_image)
@@ -208,7 +208,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
                       random_shuffle=False, num_attempts=10, output_type=types.RGB, random_area=[0.08, 1.0],
                       random_aspect_ratio=[0.8, 1.25], decode_size_policy=types.USER_GIVEN_SIZE_ORIG,
                       max_decoded_width=1000, max_decoded_height=1000, decoder_type=types.DECODER_TJPEG,
-                      last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+                      last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=True):
     """!Applies random cropping to images using different readers and decoders.
 
         @param inputs                  list of input images.
@@ -232,9 +232,9 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if last_batch_padded is False:
-        print("last_batch_padded = False is not implemented in rocAL. Setting last_batch_padded to True")
-        last_batch_padded = True
+    if pad_last_batch_repeated is False:
+        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+        pad_last_batch_repeated = True
     # Internally calls the C++ Partial decoder's
     if (reader == 'COCOReader'):
         kwargs_pybind = {
@@ -252,7 +252,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         crop_output_image = b.cocoImageDecoderSliceShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
@@ -269,7 +269,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         crop_output_image = b.tfImageDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
@@ -287,7 +287,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         crop_output_image = b.caffeImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
@@ -305,7 +305,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         crop_output_image = b.caffe2ImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
@@ -323,7 +323,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         crop_output_image = b.fusedDecoderCropShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -332,7 +332,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
 
 def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
                 random_aspect_ratio=[0.75, 1.33333], random_area=[0.08, 1.0], num_attempts=100, output_type=types.RGB,
-                decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+                decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=True):
     """!Slices images randomly using different readers and decoders.
 
         @param inputs                 list of input images.
@@ -354,9 +354,9 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if last_batch_padded is False:
-        print("last_batch_padded = False is not implemented in rocAL. Setting last_batch_padded to True")
-        last_batch_padded = True
+    if pad_last_batch_repeated is False:
+        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+        pad_last_batch_repeated = True
     # Reader -> Randon BBox Crop -> ImageDecoderSlice
     # Random crop parameters taken from pytorch's RandomResizedCrop default function arguments
     # TODO:To pass the crop co-ordinates from random_bbox_crop to image_slice
@@ -379,7 +379,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         image_decoder_slice = b.cocoImageDecoderSliceShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
@@ -397,7 +397,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         image_decoder_slice = b.caffeImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
@@ -415,7 +415,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         image_decoder_slice = b.caffe2ImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
@@ -433,7 +433,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "last_batch_info": (last_batch_policy, last_batch_padded)}
+            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
         image_decoder_slice = b.fusedDecoderCropShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (image_decoder_slice)
@@ -454,7 +454,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
         @param seed                     Random seed.
         @param stick_to_shard           The reader sticks to the data for it's corresponding shard when enabled
         @param shard_size               Number of files in an epoch
-        @param last_batch_policy        Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
+        @param last_batch_policy        Determines the handling of the last batch when the shard size is not divisible by the batch size. Check types.py enum for possible values.
         @param pad_last_batch_repeated  If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
         @return                         Decoded audio.
     """

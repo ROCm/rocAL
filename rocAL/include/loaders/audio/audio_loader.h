@@ -83,7 +83,5 @@ class AudioLoader : public LoaderModule {
     size_t _audio_counter = 0;          // How many audios have been loaded already
     size_t _remaining_audio_count;      // How many audios are there yet to be loaded
     int _device_id;
-    // RocalBatchPolicy _last_batch_policy;
-    // bool last_batch_padded;
 };
 #endif

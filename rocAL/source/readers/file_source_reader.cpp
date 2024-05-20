@@ -372,7 +372,7 @@ std::string FileSourceReader::get_root_folder_path() {
 std::vector<std::string> FileSourceReader::get_file_paths_from_meta_data_reader() {   if (_meta_data_reader) {
         return _meta_data_reader->get_file_path_content();
     } else {
-        std::clog << "\n Meta Data Reader is not initialized!";
+        std::cout << "\n Meta Data Reader is not initialized!";
         return {};
     }
 }

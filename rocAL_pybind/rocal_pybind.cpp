@@ -482,7 +482,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("getTimingInfo", &rocalGetTimingInfo);
     m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
     m.def("cocoReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
-    m.def("getRemainingImages", &rocalGetRemainingImages, py::return_value_policy::reference);
     m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
     // rocal_api_meta_data.h
     m.def("randomBBoxCrop", &rocalRandomBBoxCrop);

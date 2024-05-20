@@ -158,7 +158,7 @@ auto convert_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
         case ROCAL_LAST_BATCH_DROP:
             return RocalBatchPolicy::DROP;
         default:
-            THROW("Unsupported decoder mode" + TOSTR(last_batch_policy))
+            THROW("Unsupported Last Batch Policy Mode" + TOSTR(last_batch_policy))
     }
 };
 

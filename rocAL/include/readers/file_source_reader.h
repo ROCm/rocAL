@@ -110,7 +110,7 @@ class FileSourceReader : public Reader {
     void fill_last_batch();
     void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    //! Pair containing the last batch policy and last_batch_padded values for deciding what to do with last batch
+    //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
     std::pair<RocalBatchPolicy, bool>  _last_batch_info;
     size_t _last_batch_padded_size = 0;
     size_t _num_padded_samples_counter = 0;
