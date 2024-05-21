@@ -66,6 +66,11 @@ unsigned COCOFileSourceReader::count_items() {
     }
     return ((ret < 0) ? 0 : ret);
 }
+
+size_t COCOFileSourceReader::last_batch_padded_size() {
+    return _last_batch_padded_size;
+}
+
 Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _file_id = 0;
