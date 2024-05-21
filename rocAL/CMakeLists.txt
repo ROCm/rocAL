@@ -228,7 +228,11 @@ if(${BUILD_ROCAL})
     )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
-
+    #rocDecode
+    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocDecode_FOUND)
+        include_directories(${rocDecode_INCLUDE_DIRS} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocDecode_LIBRARIES})
+    endif()
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} rocAL_hip)
@@ -239,13 +243,8 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
-    #rocDecode
-    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocDecode_FOUND)
-        include_directories(${rocDecode_INCLUDE_DIRS} ${ROCM_PATH}/share/rocdecode/utils ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocDecode_LIBRARIES})
-    endif()
 
-    file(GLOB_RECURSE SOURCES "source/*.cpp")
+    file(GLOB_RECURSE SOURCES "source/*.cpp" ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/*.cpp)
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
                                 ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} 
                                 ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
@@ -256,6 +255,9 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=1)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
+        if(rocDecode_FOUND)
+            include_directories(${ROCM_PATH}/share/rocdecode/utils)
+        endif()
         message("-- ${White}rocAL built with HIP Backend${ColourReset}")
     elseif("${BACKEND}" STREQUAL "OPENCL" AND OPENCL_FOUND)
         include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)

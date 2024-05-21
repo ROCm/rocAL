@@ -25,6 +25,7 @@ list(APPEND rocAL_HIP_SOURCES
     rocal_hip_kernels.cpp
     box_encoder_hip.cpp
 )
+file (GLOB rocDecode_HIP_SOURCES ${ROCM_PATH}/share/rocdecode/utils/*.cpp )
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
 
@@ -33,7 +34,7 @@ set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
 set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_CXX_FLAGS}")
 
-add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES})
+add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_HIP_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
 target_link_libraries(${PROJECT_NAME} hip::device)
