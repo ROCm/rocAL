@@ -132,7 +132,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
-    std::string file_list_path = "";  // User can modify this with the file list path if required
+    std::string file_list_path;  // User can modify this with the file list path if required
     if (qa_mode) {                    // setting the default file list path from ROCAL_DATA_PATH
         file_list_path = std::string(std::getenv("ROCAL_DATA_PATH")) + "rocal_data/audio/wav_file_list.txt";
     }
