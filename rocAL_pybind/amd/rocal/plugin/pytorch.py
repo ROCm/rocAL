@@ -216,9 +216,7 @@ class ROCALGenericIterator(object):
 
             # Check if last batch policy is partial and only return the valid images in last batch
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
-                if (self.last_batch_size is None):
-                    self.last_batch_size = self.batch_size - \
-                        b.getLastBatchPaddedSize(self.loader._handle)
+                self.last_batch_size = self.batch_size - b.getLastBatchPaddedSize(self.loader._handle)
                 return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
             else:
                 return self.output_list, self.labels_tensor
