@@ -127,7 +127,7 @@ struct ReaderConfig {
     std::string _file_list_path = "";  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
-    bool _stick_to_shard = false;
+    bool _stick_to_shard = true;
     signed _shard_size = -1;
     std::pair<RocalBatchPolicy, bool> _last_batch_info = {RocalBatchPolicy::FILL, true};
 #ifdef ROCAL_VIDEO
