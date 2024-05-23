@@ -124,7 +124,7 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     } else {
         // shuffle dataset if set
         if (ret == Reader::Status::OK && _shuffle)
-            std::random_shuffle(_all_shard_file_names_padded.begin(), _all_shard_file_names_padded.end());
+            std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(), _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
     }
     return ret;
 }
@@ -247,7 +247,8 @@ void COCOFileSourceReader::reset() {
         _all_shard_file_names_padded = _sorted_file_names;
         if (_shuffle) shuffle_with_aspect_ratios();
     } else if (_shuffle) {
-        std::random_shuffle(_all_shard_file_names_padded.begin(), _all_shard_file_names_padded.end());
+        std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
+                            _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
     }
 
     if (_stick_to_shard == false)
@@ -380,6 +381,10 @@ std::vector<std::string> COCOFileSourceReader::get_file_paths_from_meta_data_rea
         std::clog << "\n Meta Data Reader is not initialized!";
         return {};
     }
+}
+
+size_t COCOFileSourceReader::last_batch_padded_size() {
+    return _last_batch_padded_size;
 }
 
 size_t COCOFileSourceReader::get_start_idx() {
