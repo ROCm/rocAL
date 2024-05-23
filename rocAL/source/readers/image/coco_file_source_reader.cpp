@@ -405,3 +405,7 @@ size_t COCOFileSourceReader::shard_size_without_padding() {
 size_t COCOFileSourceReader::shard_size_with_padding() {
   return std::ceil(get_dataset_size() * 1.0 / _shard_count);
 }
+
+void COCOFileSourceReader::increment_shard_id() {
+    _shard_id = (_shard_id + 1) % _shard_count;
+}
