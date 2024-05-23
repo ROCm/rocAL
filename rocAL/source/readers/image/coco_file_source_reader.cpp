@@ -229,8 +229,8 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
     auto mid = std::upper_bound(_aspect_ratios.begin(), _aspect_ratios.end(), 1.0f) - _aspect_ratios.begin();
     // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
-    std::random_shuffle(_all_shard_file_names_padded.begin(), _all_shard_file_names_padded.begin() + mid);
-    std::random_shuffle(_all_shard_file_names_padded.begin() + mid, _all_shard_file_names_padded.end());
+    std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(), _all_shard_file_names_padded.begin() + get_start_idx() + mid);
+    std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx() + mid, _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
     std::vector<std::string> shuffled_filenames;
     int split_count = _all_shard_file_names_padded.size() / _batch_count;  // Number of batches for this shard
     std::vector<int> indexes(split_count);
@@ -238,11 +238,14 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     // Shuffle the index vector and use the index to fetch batch size elements for decoding
     std::random_shuffle(indexes.begin(), indexes.end());
     for (auto const idx : indexes)
-        shuffled_filenames.insert(shuffled_filenames.end(), _all_shard_file_names_padded.begin() + idx * _batch_count, _all_shard_file_names_padded.begin() + idx * _batch_count + _batch_count);
+        shuffled_filenames.insert(shuffled_filenames.end(), _all_shard_file_names_padded.begin() + get_start_idx() + idx * _batch_count, _all_shard_file_names_padded.begin() + get_start_idx() + idx * _batch_count + _batch_count);
     _all_shard_file_names_padded = shuffled_filenames;
 }
 
 void COCOFileSourceReader::reset() {
+
+    if (_stick_to_shard == false)
+        increment_shard_id(); // Should work for both single and multiple shards
 
     if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
         _all_shard_file_names_padded = _sorted_file_names;
@@ -251,9 +254,6 @@ void COCOFileSourceReader::reset() {
         std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
                             _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
     }
-
-    if (_stick_to_shard == false)
-        increment_shard_id(); // Should work for both single and multiple shards
 
     _read_counter = 0;
 
@@ -292,7 +292,6 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
                 WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
         }
     }
-
     if (!_file_names.empty())
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
