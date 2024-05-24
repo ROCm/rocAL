@@ -72,7 +72,7 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     _file_id = 0;
     _folder_path = desc.path();
     _json_path = desc.json_path();
-    _file_list_path = desc.file_list_path();
+    // _file_list_path = desc.file_list_path();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
@@ -329,10 +329,8 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
         _all_shard_file_names_padded = _file_names;
     }
 
-    if(_file_list_path.empty()) {
-        std::sort(_all_shard_file_names_padded.begin(), _all_shard_file_names_padded.end());
-        _last_file_name = _all_shard_file_names_padded[_all_shard_file_names_padded.size() - 1];
-    }
+    _last_file_name = _all_shard_file_names_padded[_all_shard_file_names_padded.size() - 1];
+
 
     return ret;
 }
