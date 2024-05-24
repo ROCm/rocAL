@@ -232,7 +232,7 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(), _all_shard_file_names_padded.begin() + get_start_idx() + mid);
     std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx() + mid, _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
     std::vector<std::string> shuffled_filenames;
-    int split_count = (_all_shard_file_names_padded.size() /_num_shards) / _batch_count;  // Number of batches for this shard
+    int split_count = (_all_shard_file_names_padded.size() /_shard_count) / _batch_count;  // Number of batches for this shard
     std::vector<int> indexes(split_count);
     std::iota(indexes.begin(), indexes.end(), 0);
     // Shuffle the index vector and use the index to fetch batch size elements for decoding
