@@ -92,9 +92,11 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
         std::cout<<"Metadata reader not initialized for COCO file source\n";
 
     ret = subfolder_reading();
+    std::cerr << "\n Initialize";
      _curr_file_idx = get_start_idx(); // shard's start_idx would vary for every shard in the vector
 
     if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
+        std::cerr << "\n Initialize - ASG";
         // calculate the aspect ratio for each file and create a pair of <filename, aspect_ratio>
         std::vector<std::pair<std::string, float>> file_aspect_ratio_pair(_all_shard_file_names_padded.size());
         for (size_t i = 0; i < _all_shard_file_names_padded.size(); i++) {
@@ -122,6 +124,7 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
         if (ret == Reader::Status::OK && _shuffle) {
             shuffle_with_aspect_ratios();
         }
+        std::cerr << "\n Initialize - ASG exits";
     } else {
         // shuffle dataset if set
         if (ret == Reader::Status::OK && _shuffle)
@@ -226,6 +229,7 @@ int COCOFileSourceReader::release() {
 }
 
 void COCOFileSourceReader::shuffle_with_aspect_ratios() {
+    std::cerr << "\n Shuffling with aspect ratios";
     // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
     auto mid = std::upper_bound(_aspect_ratios.begin() + get_start_idx(), _aspect_ratios.begin() + get_start_idx() + shard_size_without_padding(), 1.0f) - _aspect_ratios.begin() + get_start_idx();
     // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
@@ -240,6 +244,7 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     for (auto const idx : indexes)
         shuffled_filenames.insert(shuffled_filenames.end(), _all_shard_file_names_padded.begin() + get_start_idx() + idx * _batch_count, _all_shard_file_names_padded.begin() + get_start_idx() + idx * _batch_count + _batch_count);
     _all_shard_file_names_padded = shuffled_filenames;
+    std::cerr << "\n Shuffling with aspect ratios is done";
 }
 
 void COCOFileSourceReader::reset() {
@@ -331,7 +336,7 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
 
     _last_file_name = _all_shard_file_names_padded[_all_shard_file_names_padded.size() - 1];
 
-
+    std::cerr << "\n Sub folder reading is done";
     return ret;
 }
 
