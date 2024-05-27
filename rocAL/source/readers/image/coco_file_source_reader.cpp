@@ -248,7 +248,7 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
         _all_shard_file_names_padded.insert(_all_shard_file_names_padded.begin() + get_start_idx() + i, ele);
         i++;
     }
-    _all_shard_file_names_padded = shuffled_filenames;
+    // _all_shard_file_names_padded = shuffled_filenames;
     std::cerr << "\n Shuffling with aspect ratios is done";
 }
 
