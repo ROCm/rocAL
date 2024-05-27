@@ -362,6 +362,7 @@ Reader::Status COCOFileSourceReader::open_folder() {
 
     if (_file_names.empty())
         WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
+    std::sort(_file_names.begin(), _file_names.end());
 
     closedir(_src_dir);
     return Reader::Status::OK;
