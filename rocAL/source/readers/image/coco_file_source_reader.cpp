@@ -231,9 +231,9 @@ int COCOFileSourceReader::release() {
 void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     std::cerr << "\n Shuffling with aspect ratios";
     // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
-    // auto mid = std::upper_bound(_aspect_ratios.begin() + get_start_idx(), _aspect_ratios.begin() + get_start_idx() + shard_size_without_padding(), 1.0f) - _aspect_ratios.begin() + get_start_idx();
+    auto mid = std::upper_bound(_aspect_ratios.begin() + get_start_idx(), _aspect_ratios.begin() + get_start_idx() + shard_size_without_padding(), 1.0f) - _aspect_ratios.begin() + get_start_idx();
     // // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
-    // std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(), _all_shard_file_names_padded.begin() + get_start_idx() + mid);
+    std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(), _all_shard_file_names_padded.begin() + get_start_idx() + mid);
     // std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx() + mid, _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
     // std::vector<std::string> shuffled_filenames;
     // int split_count = (_all_shard_file_names_padded.size() /_shard_count) / _batch_count;  // Number of batches for this shard
