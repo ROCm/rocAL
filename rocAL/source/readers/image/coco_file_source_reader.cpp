@@ -244,12 +244,13 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     std::cerr << "\n Shuffling with aspect ratios - indexs logic 1";
     for (auto const idx : indexes)
         shuffled_filenames.insert(shuffled_filenames.end(), _all_shard_file_names_padded.begin() + get_start_idx() + idx * _batch_count, _all_shard_file_names_padded.begin() + get_start_idx() + idx * _batch_count + _batch_count);
-    uint i = 0;
-    std::cerr << "\n Shuffling with aspect ratios - indexs logic 2";
-    for (auto &ele: shuffled_filenames) {
-        _all_shard_file_names_padded.insert(_all_shard_file_names_padded.begin() + get_start_idx() + i, ele);
-        i++;
-    }
+    // uint i = 0;
+    // std::cerr << "\n Shuffling with aspect ratios - indexs logic 2";
+    // for (auto &ele: shuffled_filenames) {
+    //     _all_shard_file_names_padded.insert(_all_shard_file_names_padded.begin() + get_start_idx() + i, ele);
+    //     i++;
+    // }
+    std::copy(_all_shard_file_names_padded.begin() + get_start_idx(), _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding(), std::back_inserter(shuffled_filenames));
     std::cerr << "\n Shuffling with aspect ratios - indexs logic 3";
     // _all_shard_file_names_padded = shuffled_filenames;
     std::cerr << "\n Shuffling with aspect ratios is done";
