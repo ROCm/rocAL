@@ -26,13 +26,59 @@ THE SOFTWARE.
 #ifdef ROCAL_VIDEO
 #if ENABLE_HIP
 
+typedef enum ReconfigFlushMode_enum {
+    RECONFIG_FLUSH_MODE_NONE = 0,               /**<  Just flush to get the frame count */
+    RECONFIG_FLUSH_MODE_DUMP_TO_FILE = 1,       /**<  The remaining frames will be dumped to file in this mode */
+    RECONFIG_FLUSH_MODE_CALCULATE_MD5 = 2,      /**<  Calculate the MD5 of the flushed frames */
+} ReconfigFlushMode;
+
+// this struct is used by videodecode and videodecodeMultiFiles to dump last frames to file
+typedef struct ReconfigDumpFileStruct_t {
+    bool b_dump_frames_to_file;
+    std::string output_file_name;
+} ReconfigDumpFileStruct;
+
 RocDecVideoDecoder::RocDecVideoDecoder(){};
+
+// callback function to flush last frames and save it to file when reconfigure happens
+int ReconfigureFlushCallback(void *p_viddec_obj, uint32_t flush_mode, void *p_user_struct) {
+    int n_frames_flushed = 0;
+    if ((p_viddec_obj == nullptr) ||  (p_user_struct == nullptr)) return n_frames_flushed;
+
+    RocVideoDecoder *viddec = static_cast<RocVideoDecoder *> (p_viddec_obj);
+    OutputSurfaceInfo *surf_info;
+    if (!viddec->GetOutputSurfaceInfo(&surf_info)) {
+        std::cerr << "Error: Failed to get Output Surface Info!" << std::endl;
+        return n_frames_flushed;
+    }
+
+    uint8_t *pframe = nullptr;
+    int64_t pts;
+    while ((pframe = viddec->GetFrame(&pts))) {
+        if (flush_mode != RECONFIG_FLUSH_MODE_NONE) {
+            if (flush_mode == ReconfigFlushMode::RECONFIG_FLUSH_MODE_DUMP_TO_FILE) {
+                ReconfigDumpFileStruct *p_dump_file_struct = static_cast<ReconfigDumpFileStruct *>(p_user_struct);
+                if (p_dump_file_struct->b_dump_frames_to_file) {
+                    viddec->SaveFrameToFile(p_dump_file_struct->output_file_name, pframe, surf_info);
+                }
+            } else if (flush_mode == ReconfigFlushMode::RECONFIG_FLUSH_MODE_CALCULATE_MD5) {
+                viddec->UpdateMd5ForFrame(pframe, surf_info);
+            }
+        }
+        // release and flush frame
+        viddec->ReleaseFrame(pts, true);
+        n_frames_flushed ++;
+    }
+
+    return n_frames_flushed;
+}
 
 // Initialize will open a new decoder and initialize the context
 VideoDecoder::Status RocDecVideoDecoder::Initialize(const char *src_filename, int device_id) {
 
     VideoDecoder::Status status = Status::OK;
     _src_filename = src_filename;
+    _device_id = device_id;
     // create rocDecoder and Demuxer for rocDecode
     OutputSurfaceMemoryType mem_type = OUT_SURFACE_MEM_DEV_INTERNAL;      // set to internal
     _demuxer = std::make_shared<VideoDemuxer>(src_filename);
@@ -54,6 +100,18 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     
     VideoDecoder::Status status = Status::OK;
     VideoSeekContext video_seek_ctx;
+
+    // rocDecVideoCodec rocdec_codec_id = AVCodec2RocDecVideoCodec(_demuxer->GetCodecID());
+    // OutputSurfaceMemoryType mem_type = OUT_SURFACE_MEM_DEV_INTERNAL;      // set to internal
+    // _rocvid_decoder = std::make_shared<RocVideoDecoder>(_device_id, mem_type, rocdec_codec_id, 0, nullptr, 0);
+
+    // std::string device_name, gcn_arch_name;
+    // int pci_bus_id, pci_domain_id, pci_device_id;
+    // _rocvid_decoder->GetDeviceinfo(device_name, gcn_arch_name, pci_bus_id, pci_domain_id, pci_device_id);
+    // std::cout << "info: Using GPU device " << _device_id << " - " << device_name << "[" << gcn_arch_name << "] on PCI bus " <<
+    // std::setfill('0') << std::setw(2) << std::right << std::hex << pci_bus_id << ":" << std::setfill('0') << std::setw(2) <<
+    // std::right << std::hex << pci_domain_id << "." << pci_device_id << std::dec << std::endl;
+
     if (!_demuxer || !_rocvid_decoder || !out_buffer) {
         ERR("RocDecVideoDecoder::Decoder is not initialized");
         return Status::FAILED;        
@@ -77,7 +135,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     bool sequence_decoded = false;
     do {
         if (b_seek) {
-            video_seek_ctx.seek_frame_ = static_cast<uint64_t>(seek_frame_number);
+            video_seek_ctx.seek_frame_ = static_cast<uint64_t>(0);
             video_seek_ctx.seek_crit_ = SEEK_CRITERIA_FRAME_NUM;
             video_seek_ctx.seek_mode_ = SEEK_MODE_PREV_KEY_FRAME;
             _demuxer->Seek(video_seek_ctx, &pvideo, &n_video_bytes);
@@ -119,6 +177,13 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             break;
         }
     } while (n_video_bytes);
+
+    // Reconfig the decoder
+    ReconfigDumpFileStruct reconfig_user_struct = { 0 };
+    _reconfig_params.p_fn_reconfigure_flush = ReconfigureFlushCallback;
+    _reconfig_params.reconfig_flush_mode = RECONFIG_FLUSH_MODE_NONE;
+    _reconfig_params.p_reconfig_user_struct = &reconfig_user_struct;
+    _rocvid_decoder->SetReconfigParams(&_reconfig_params);
 
     return status;
 }

@@ -45,6 +45,9 @@ class RocDecVideoDecoder : public VideoDecoder {
         std::shared_ptr<RocVideoDecoder> _rocvid_decoder;
         OutputFormatEnum _output_format = rgb; 
         int _codec_width, _codec_height;
+        ReconfigParams _reconfig_params = { 0 };
+        bool _first_run = true;
+        int _device_id;
 };
 
 #endif
