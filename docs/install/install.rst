@@ -18,21 +18,44 @@ Prerequisites
   - Ubuntu 20.04 or 22.04
   - CentOS 7
   - RedHat 8 or 9
-  - SLES 15-SP4
+  - SLES 15-SP5
 
-* `ROCm supported hardware <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
-* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
-* `RPP <https://github.com/ROCm/rpp>`_
-* `AMD OpenVX™ <https://github.com/ROCm/MIVisionX/tree/master/amd_openvx>`_ and AMD OpenVX™ Extensions: ``VX_RPP`` and ``AMD Media`` - MIVisionX Components
-* `Turbo JPEG <https://libjpeg-turbo.org/>`_ - Version 3.0.1 from ``https://github.com/libjpeg-turbo/libjpeg-turbo.git``
-* `Half-precision floating-point <https://half.sourceforge.net>`_ library - Version 1.12.0 or higher
-* `Google Protobuf <https://developers.google.com/protocol-buffers>`_ - Version 3.12.4 or higher
-* `LMBD Library <http://www.lmdb.tech/doc/>`_
-* `RapidJSON <https://github.com/Tencent/rapidjson>`_
-* `PyBind11 <https://github.com/pybind/pybind11>`_
-* `HIP <https://github.com/ROCm/HIP>`_
-* OpenMP
-* C++17
+* ROCm-supported hardware
+
+* Install ROCm `6.1.0` or later with amdgpu-install: Required usecase - rocm
+
+* HIP
+
+* RPP
+
+* MIVisionX
+
+* rocDecode
+
+* Half-precision floating-point library - Version `1.12.0` or higher
+
+* Google Protobuf
+
+* LMBD Library
+
+* Python3 and Python3 PIP
+
+* Python Wheel
+
+* PyBind11
+
+* Turbo JPEG
+
+* RapidJSON
+
+* **Optional**: FFMPEG
+
+* **Optional**: OpenCV
+
+IMPORTANT
+* Compiler features required
+  * OpenMP
+  * C++17
 
 Installation instructions
 ================================
@@ -40,7 +63,7 @@ Installation instructions
 The installation process uses the following steps: 
 
 * `ROCm supported hardware install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
-* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
+* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 * Use either :ref:`package-install` or :ref:`source-install` as described below.
 
 .. _package-install:
@@ -118,10 +141,10 @@ Prerequisites:
     - Ubuntu 20.04 or 22.04
     - CentOS 7
     - RedHat 8 or 9
-    - SLES 15-SP4
+    - SLES 15-SP5
 
   * `ROCm supported hardware <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
-  * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
+  * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 
 Using ``rocAL-setup.py`` script:
 
@@ -129,7 +152,6 @@ Using ``rocAL-setup.py`` script:
 
   python rocAL-setup.py       --directory [setup directory - optional (default:~/)]
                               --opencv    [OpenCV Version - optional (default:4.6.0)]
-                              --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
                               --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
                               --reinstall [Remove previous setup and reinstall (default:OFF)[options:ON/OFF]]
                               --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
