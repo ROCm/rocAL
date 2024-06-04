@@ -20,23 +20,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "cifar10_meta_data_reader.h"
+#include "meta_data/cifar10_meta_data_reader.h"
 
 #include <string.h>
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <iostream>
-#include <utility>
-
-#include "commons.h"
-#include "exception.h"
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
+#include "pipeline/filesystem.h"
 
 using namespace std;
 
-namespace filesys = boost::filesystem;
-
-Cifar10MetaDataReader::Cifar10MetaDataReader() {
+Cifar10MetaDataReader::Cifar10MetaDataReader()
+{
     _src_dir = nullptr;
     _entity = nullptr;
     _sub_dir = nullptr;

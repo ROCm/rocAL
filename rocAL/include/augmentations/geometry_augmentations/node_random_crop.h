@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node_crop.h"
-#include "parameter_crop_factory.h"
-#include "parameter_factory.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_crop_factory.h"
+#include "parameters/parameter_factory.h"
 
 class RandomCropNode : public CropNode {
    public:

@@ -28,14 +28,14 @@ THE SOFTWARE.
 #include <cstring>
 #include <map>
 #include <tuple>
-#include <boost/filesystem.hpp>
-#include "commons.h"
-#include "ffmpeg_video_decoder.h"
-#include "video_reader_factory.h"
-#include "timing_debug.h"
-#include "loader_module.h"
-#include "video_properties.h"
-#include "video_reader.h"
+#include "pipeline/commons.h"
+#include "decoders/video/ffmpeg_video_decoder.h"
+#include "readers/video/video_reader_factory.h"
+#include "pipeline/timing_debug.h"
+#include "loaders/loader_module.h"
+#include "readers/video/video_properties.h"
+#include "readers/video/video_reader.h"
+#include "pipeline/filesystem.h"
 
 #ifdef ROCAL_VIDEO
 extern "C" {
@@ -99,7 +99,7 @@ class VideoReadAndDecode {
     std::vector<size_t> _sequence_start_frame_num;
     std::vector<std::string> _sequence_video_path;
     std::vector<int> _sequence_video_idx;
-    TimingDBG _file_load_time, _decode_time;
+    TimingDbg _file_load_time, _decode_time;
     size_t _batch_size;
     size_t _sequence_length;
     size_t _stride;

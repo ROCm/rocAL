@@ -23,7 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include <dirent.h>
 
-#include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -34,9 +33,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 #endif
-#include "commons.h"
-
-namespace filesys = boost::filesystem;
+#include "pipeline/commons.h"
 
 #ifdef ROCAL_VIDEO
 typedef struct VideoProperties {

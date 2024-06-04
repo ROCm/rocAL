@@ -20,19 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "coco_file_source_reader.h"
+#include "readers/image/coco_file_source_reader.h"
+#include "meta_data/meta_data_reader_factory.h"
+#include "meta_data/meta_data_graph_factory.h"
+#include "pipeline/filesystem.h"
 
-#include <commons.h>
-
-#include <algorithm>
-#include <boost/filesystem.hpp>
-#include <cassert>
-
-#include "coco_meta_data_reader.h"
-#include "meta_data_graph_factory.h"
-#include "meta_data_reader_factory.h"
-
-namespace filesys = boost::filesystem;
 #define USE_STDIO_FILE 0
 
 COCOFileSourceReader::COCOFileSourceReader() {

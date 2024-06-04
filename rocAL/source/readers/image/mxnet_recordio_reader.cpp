@@ -20,21 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "mxnet_recordio_reader.h"
+#include "readers/image/mxnet_recordio_reader.h"
 
-#include <commons.h>
+#include "pipeline/commons.h"
 #include <memory.h>
 #include <stdint.h>
-
-#include <algorithm>
-#include <boost/filesystem.hpp>
-#include <cassert>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-
-namespace filesys = boost::filesystem;
+#include "readers/image/mxnet_recordio_reader.h"
+#include "pipeline/filesystem.h"
 
 using namespace std;
 

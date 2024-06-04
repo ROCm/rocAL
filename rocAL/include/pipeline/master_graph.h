@@ -26,26 +26,30 @@ THE SOFTWARE.
 #include <memory>
 #include <variant>
 
-#include "graph.h"
-#include "meta_data_graph.h"
-#include "meta_data_reader.h"
-#include "node.h"
-#include "node_cifar10_loader.h"
-#include "node_fused_jpeg_crop.h"
-#include "node_fused_jpeg_crop_single_shard.h"
-#include "node_image_loader.h"
-#include "node_image_loader_single_shard.h"
-#include "node_video_loader.h"
-#include "node_video_loader_single_shard.h"
-#include "node_numpy_loader.h"
-#include "node_numpy_loader_single_shard.h"
-#include "ring_buffer.h"
-#include "timing_debug.h"
+#include "pipeline/graph.h"
+#include "meta_data/meta_data_graph.h"
+#include "meta_data/meta_data_reader.h"
+#include "pipeline/node.h"
+#include "loaders/image/node_cifar10_loader.h"
+#include "loaders/image/node_fused_jpeg_crop.h"
+#include "loaders/image/node_fused_jpeg_crop_single_shard.h"
+#include "loaders/image/node_image_loader.h"
+#include "loaders/image/node_image_loader_single_shard.h"
+#include "loaders/video/node_video_loader.h"
+#include "loaders/video/node_video_loader_single_shard.h"
+#include "loaders/image/node_numpy_loader.h"
+#include "loaders/image/node_numpy_loader_single_shard.h"
+#ifdef ROCAL_AUDIO
+#include "loaders/audio/node_audio_loader.h"
+#include "loaders/audio/node_audio_loader_single_shard.h"
+#endif
+#include "pipeline/ring_buffer.h"
+#include "pipeline/timing_debug.h"
 #if ENABLE_HIP
 #include "box_encoder_hip.h"
-#include "device_manager_hip.h"
+#include "device/device_manager_hip.h"
 #endif
-#include "randombboxcrop_meta_data_reader.h"
+#include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
@@ -100,6 +104,7 @@ class MasterGraph {
     Status run();
     Timing timing();
     RocalMemType mem_type();
+    size_t last_batch_padded_size();
     void release();
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
@@ -117,7 +122,7 @@ class MasterGraph {
     std::vector<rocalTensorList *> create_cifar10_label_reader(const char *source_path, const char *file_prefix);
     std::vector<rocalTensorList *> create_mxnet_label_reader(const char *source_path, bool is_output);
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
-    void box_iou_matcher(std::vector<float> &anchors, float criteria, float high_threshold, float low_threshold, bool allow_low_quality_matches);
+    void box_iou_matcher(std::vector<float> &anchors, float high_threshold, float low_threshold, bool allow_low_quality_matches);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
     const std::pair<ImageNameBatch, pMetaDataBatch> &meta_data();
     TensorList *labels_meta_data();
@@ -136,6 +141,10 @@ class MasterGraph {
     void set_sequence_reader_output() { _is_sequence_reader_output = true; }
     void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
     std::vector<rocalTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
+    void feed_external_input(const std::vector<std::string>& input_images_names, bool labels, const std::vector<unsigned char *>& input_buffer,
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode,
+                             RocalTensorlayout layout, bool eos);
+    void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
 #if ENABLE_OPENCL
     cl_command_queue get_ocl_cmd_q() { return _device.resources()->cmd_queue; }
@@ -181,7 +190,7 @@ class MasterGraph {
     size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
     const int _gpu_id;                                                            //!< Defines the device id used for processing
     pLoaderModule _loader_module;                                                 //!< Keeps the loader module used to feed the input the tensors of the graph
-    TimingDBG _convert_time, _process_time, _bencode_time;
+    TimingDbg _convert_time, _process_time, _bencode_time;
     const size_t _user_batch_size;                                                //!< Batch size provided by the user
     vx_context _context;
     const RocalMemType _mem_type;                                                 //!< Is set according to the _affinity, if GPU, is set to CL, otherwise host
@@ -210,15 +219,15 @@ class MasterGraph {
     bool _offset;                                                                 // Returns normalized offsets ((encoded_bboxes*scale - anchors*scale) - mean) / stds in EncodedBBoxes that use std and the mean and scale arguments if offset="True"
     std::vector<float> _means, _stds;                                             //_means:  [x y w h] mean values for normalization _stds: [x y w h] standard deviations for offset normalization.
     bool _augmentation_metanode = false;
+    bool _external_source_eos = false;     // If last batch, _external_source_eos will true
+    bool _external_source_reader = false;  // Set to true if external source reader on
     // box IoU matcher variables
     bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
-    float _high_threshold = 0.5f;                                                 // Max IoU threshold
-    float _low_threshold = 0.4f;                                                  // Min IoU threshold
-    bool _allow_low_quality_matches = true;                                       // Set to true to include low quality matches in matched idx generation
+    BoxIouMatcherInfo _iou_matcher_info;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
-    TimingDBG _rb_block_if_empty_time, _rb_block_if_full_time;
+    TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
 };
 
 template <typename T>
@@ -349,6 +358,7 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
     return node;
 }
 
+#ifdef ROCAL_VIDEO
 /*
  * Explicit specialization for VideoLoaderNode
  */
@@ -387,6 +397,7 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
 
     return node;
 }
+#endif
 
 template <>
 inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
@@ -423,3 +434,42 @@ inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const s
 
     return node;
 }
+
+#ifdef ROCAL_AUDIO
+/*
+ * Explicit specialization for AudioLoaderNode
+ */
+template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<AudioLoaderNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<AudioLoaderNode>(outputs[0], nullptr);
+#endif
+    _loader_module = node->GetLoaderModule();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+
+template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], nullptr);
+#endif
+    _loader_module = node->GetLoaderModule();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
+
+    return node;
+}
+#endif

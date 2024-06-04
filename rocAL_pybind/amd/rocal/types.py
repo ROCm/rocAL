@@ -62,8 +62,6 @@ from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
-from rocal_pybind.types import NDHWC
-from rocal_pybind.types import NCDHW
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -90,6 +88,16 @@ from rocal_pybind.types import CUBIC_INTERPOLATION
 from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
+
+#     Rocal External Source Mode
+from rocal_pybind.types import EXTSOURCE_FNAME
+from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
+from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
+
+#     RocalLastBatchPolicy
+from rocal_pybind.types import LAST_BATCH_FILL
+from rocal_pybind.types import LAST_BATCH_DROP
+from rocal_pybind.types import LAST_BATCH_PARTIAL
 
 _known_types = {
 
@@ -119,8 +127,6 @@ _known_types = {
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
-    NDHWC: ("NDHWC", NDHWC),
-    NCDHW: ("NCDHW", NCDHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -148,8 +154,14 @@ _known_types = {
     SCALING_MODE_NOT_LARGER: ("SCALING_MODE_NOT_LARGER", SCALING_MODE_NOT_LARGER),
     SCALING_MODE_MIN_MAX: ("SCALING_MODE_MIN_MAX", SCALING_MODE_MIN_MAX),
 
-}
+    EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
+    EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
+    EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
 
+    LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
+    LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
+    LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
+}
 
 def data_type_function(dtype):
     """!Converts a given data type identifier to its corresponding known type.

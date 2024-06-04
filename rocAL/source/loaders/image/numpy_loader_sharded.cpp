@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "numpy_loader_sharded.h"
+#include "loaders/image/numpy_loader_sharded.h"
 
 NumpyLoaderSharded::NumpyLoaderSharded(void* dev_resources) : _dev_resources(dev_resources) {
     _loader_idx = 0;
@@ -38,11 +38,11 @@ std::vector<std::string> NumpyLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info NumpyLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+DecodedDataInfo NumpyLoaderSharded::get_decode_data_info() {
+    return _loaders[_loader_idx]->get_decode_data_info();
 }
 
-crop_image_info NumpyLoaderSharded::get_crop_image_info() {
+CropImageInfo NumpyLoaderSharded::get_crop_image_info() {
     return _loaders[_loader_idx]->get_crop_image_info();
 }
 
@@ -152,12 +152,12 @@ Timing NumpyLoaderSharded::timing() {
     // is experiences on the load_next() call due to read and decode time is the maximum of all
     for (auto& loader : _loaders) {
         auto info = loader->timing();
-        max_read_time = (info.image_read_time > max_read_time) ? info.image_read_time : max_read_time;
-        max_decode_time = (info.image_decode_time > max_decode_time) ? info.image_decode_time : max_decode_time;
-        swap_handle_time += info.image_process_time;
+        max_read_time = (info.read_time > max_read_time) ? info.read_time : max_read_time;
+        max_decode_time = (info.decode_time > max_decode_time) ? info.decode_time : max_decode_time;
+        swap_handle_time += info.process_time;
     }
-    t.image_decode_time = max_decode_time;
-    t.image_read_time = max_read_time;
-    t.image_process_time = swap_handle_time;
+    t.decode_time = max_decode_time;
+    t.read_time = max_read_time;
+    t.process_time = swap_handle_time;
     return t;
 }

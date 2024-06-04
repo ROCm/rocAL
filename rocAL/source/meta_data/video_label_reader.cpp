@@ -20,21 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_label_reader.h"
+#include "meta_data/video_label_reader.h"
 
 #include <string.h>
 
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <iostream>
-#include <utility>
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
+#include "pipeline/filesystem.h"
 
-#include "commons.h"
-#include "exception.h"
 
 using namespace std;
-
-namespace filesys = boost::filesystem;
 
 #ifdef ROCAL_VIDEO
 VideoLabelReader::VideoLabelReader() {

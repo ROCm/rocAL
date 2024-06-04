@@ -30,8 +30,9 @@ THE SOFTWARE.
 #pragma once
 #include <vector>
 
-#include "exception.h"
-#include "log.h"
+#include "pipeline/exception.h"
+#include "pipeline/log.h"
+#include "pipeline/filesystem.h"
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f
@@ -45,8 +46,6 @@ enum class RocalTensorlayout {
     NCHW,
     NFHWC,
     NFCHW,
-    NDHWC,
-    NCDHW,
     NONE
 };
 
@@ -106,15 +105,6 @@ enum class RocalROIType {
     XYWH
 };
 
-/*! \brief Tensor 3D ROI type
- *
- * currently supports following formats
- */
-enum class Rocal3DROIType {
-    LTFRBB = 0,
-    XYZWHD
-};
-
 /*! \brief Tensor ROI in LTRB format
  *
  */
@@ -149,18 +139,30 @@ typedef struct {
 
 struct Timing {
     // The following timings are accumulated timing not just the most recent activity
-    long long unsigned image_read_time = 0;
-    long long unsigned image_decode_time = 0;
+    long long unsigned read_time = 0;
+    long long unsigned decode_time = 0;
     long long unsigned to_device_xfer_time = 0;
     long long unsigned from_device_xfer_time = 0;
     long long unsigned copy_to_output = 0;
-    long long unsigned image_process_time = 0;
+    long long unsigned process_time = 0;
     long long unsigned bb_process_time = 0;
     long long unsigned mask_process_time = 0;
     long long unsigned label_load_time = 0;
     long long unsigned bb_load_time = 0;
     long long unsigned mask_load_time = 0;
-    long long unsigned video_read_time = 0;
-    long long unsigned video_decode_time = 0;
-    long long unsigned video_process_time = 0;
+    long long unsigned video_read_time= 0;
+    long long unsigned video_decode_time= 0;
+    long long unsigned video_process_time= 0;
+};
+
+/*! \brief Tensor Last Batch Policies
+ These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
+        FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
+        DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
+        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, and padding the remaining samples with either last image or wrapping up the dataset - the padded images are removed in the python end
+ */
+enum RocalBatchPolicy {
+    FILL = 0,
+    DROP,
+    PARTIAL
 };

@@ -45,6 +45,7 @@ THE SOFTWARE.
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSource(RocalContext context,
@@ -55,7 +56,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSource(RocalContext context,
                                                           bool shuffle = false,
                                                           bool loop = false,
                                                           RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                          unsigned max_width = 0, unsigned max_height = 0, RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                          unsigned max_width = 0, unsigned max_height = 0, RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG, std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
  * \ingroup group_rocal_data_loaders
@@ -71,6 +72,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSource(RocalContext context,
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
+
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSourceSingleShard(RocalContext context,
@@ -82,7 +85,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSourceSingleShard(RocalContex
                                                                      bool shuffle = false,
                                                                      bool loop = false,
                                                                      RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                                     unsigned max_width = 0, unsigned max_height = 0, RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                     unsigned max_width = 0, unsigned max_height = 0, RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                     std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.
  * \ingroup group_rocal_data_loaders
@@ -96,6 +100,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSourceSingleShard(RocalContex
  * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor.
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReader(RocalContext context,
@@ -107,7 +112,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReader(RocalContext context,
                                                           bool shuffle = false,
                                                           bool loop = false,
                                                           unsigned step = 0,
-                                                          unsigned stride = 0);
+                                                          unsigned stride = 0,
+                                                          std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams. It accepts external sharding information to load a singe shard only.
  * \ingroup group_rocal_data_loaders
@@ -122,6 +128,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReader(RocalContext context,
  * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReaderSingleShard(RocalContext context,
@@ -134,7 +141,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReaderSingleShard(RocalContex
                                                                      bool shuffle = false,
                                                                      bool loop = false,
                                                                      unsigned step = 0,
-                                                                     unsigned stride = 0);
+                                                                     unsigned stride = 0,
+                                                                     std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief JPEG image reader and decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -148,6 +156,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReaderSingleShard(RocalContex
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSource(RocalContext context,
@@ -160,7 +169,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSource(RocalContext conte
                                                               bool loop = false,
                                                               RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                               unsigned max_width = 0, unsigned max_height = 0,
-                                                              RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                              RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                              std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -176,6 +186,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSource(RocalContext conte
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContext p_context,
@@ -190,7 +201,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContex
                                                                      bool shuffle = false,
                                                                      bool loop = false,
                                                                      RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                                     unsigned max_width = 0, unsigned max_height = 0);
+                                                                     unsigned max_width = 0, unsigned max_height = 0,
+                                                                     std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -206,6 +218,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContex
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] area_factor Determines how much area to be cropped. Ranges from from 0.08 - 1.
  * \param [in] aspect_ratio Determines the aspect ration of crop. Ranges from 0.75 to 1.33.
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(RocalContext p_context,
@@ -221,7 +234,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(
                                                                                 bool shuffle = false,
                                                                                 bool loop = false,
                                                                                 RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                                                unsigned max_width = 0, unsigned max_height = 0);
+                                                                                unsigned max_width = 0, unsigned max_height = 0,
+                                                                                std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -236,6 +250,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourceSingleShard(RocalContext context,
@@ -249,7 +264,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourceSingleShard(RocalCo
                                                                          bool loop = false,
                                                                          RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                          unsigned max_width = 0, unsigned max_height = 0,
-                                                                         RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                         RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                         std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder for Caffe LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe LMDB Records. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -263,6 +279,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourceSingleShard(RocalCo
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSource(RocalContext context,
@@ -274,7 +291,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSource(RocalContex
                                                                      bool loop = false,
                                                                      RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                      unsigned max_width = 0, unsigned max_height = 0,
-                                                                     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                     std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder for Caffe LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe2 LMDB Records. It has internal sharding capability to load/decode in parallel is user wants.
  * \ingroup group_rocal_data_loaders
@@ -290,6 +308,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSource(RocalContex
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourceSingleShard(RocalContext p_context,
@@ -302,7 +321,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourceSingleShard(
                                                                                 bool loop = false,
                                                                                 RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                 unsigned max_width = 0, unsigned max_height = 0,
-                                                                                RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                                RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                                std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder for Caffe2 LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe2 LMDB Records. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -317,6 +337,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourceSingleShard(
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSource(RocalContext context,
@@ -328,7 +349,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSource(RocalConte
                                                                       bool loop = false,
                                                                       RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                       unsigned max_width = 0, unsigned max_height = 0,
-                                                                      RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                      RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                      std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder for Caffe2 LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored on the Caffe2 LMDB Records. It accepts external sharding information to load a singe shard. only
  * \ingroup group_rocal_data_loaders
@@ -344,6 +366,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSource(RocalConte
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourceSingleShard(RocalContext p_context,
@@ -356,7 +379,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourceSingleShard
                                                                                  bool loop = false,
                                                                                  RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                  unsigned max_width = 0, unsigned max_height = 0,
-                                                                                 RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                                 RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                                 std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder for MXNet records. It allocates the resources and objects required to read and decode Jpeg images stored in MXNet Records. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -371,6 +395,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourceSingleShard
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSource(RocalContext context,
@@ -382,7 +407,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSource(RocalContext contex
                                                              bool loop = false,
                                                              RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                              unsigned max_width = 0, unsigned max_height = 0,
-                                                             RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                             RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                             std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and decoder for MXNet records. It allocates the resources and objects required to read and decode Jpeg images stored on the MXNet records. It accepts external sharding information to load a singe shard. only
  * \ingroup group_rocal_data_loaders
@@ -398,6 +424,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSource(RocalContext contex
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSourceSingleShard(RocalContext p_context,
@@ -410,7 +437,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSourceSingleShard(RocalCon
                                                                         bool loop = false,
                                                                         RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                         unsigned max_width = 0, unsigned max_height = 0,
-                                                                        RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                        RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                        std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored and Crops t
  * \ingroup group_rocal_data_loaders
@@ -427,6 +455,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSourceSingleShard(RocalCon
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
@@ -440,7 +469,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
                                                          bool shuffle = false,
                                                          bool loop = false,
                                                          RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                         unsigned max_width = 0, unsigned max_height = 0);
+                                                         unsigned max_width = 0, unsigned max_height = 0,
+                                                         std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
  * \ingroup group_rocal_data_loaders
@@ -456,6 +486,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext context,
@@ -470,7 +501,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext
                                                                     bool shuffle = false,
                                                                     bool loop = false,
                                                                     RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                                    unsigned max_width = 0, unsigned max_height = 0);
+                                                                    unsigned max_width = 0, unsigned max_height = 0,
+                                                                    std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates TensorFlow records JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -485,6 +517,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output image
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSource(RocalContext context,
@@ -498,7 +531,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSource(RocalContext conte
                                                               bool loop = false,
                                                               RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                               unsigned max_width = 0, unsigned max_height = 0,
-                                                              RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                              RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                              std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates TensorFlow records JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
  * \ingroup group_rocal_data_loaders
@@ -514,6 +548,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSource(RocalContext conte
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalContext context,
@@ -526,7 +561,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalCo
                                                                          bool loop = false,
                                                                          RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                          unsigned max_width = 0, unsigned max_height = 0,
-                                                                         RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                         RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                         std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates Raw image loader. It allocates the resources and objects required to load images stored on the file systems.
  * \ingroup group_rocal_data_loaders
@@ -538,6 +574,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalCo
  * \param [in] loop: repeat data loading
  * \param [in] out_width The output_width of raw image
  * \param [in] out_height The output height of raw image
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_context,
@@ -549,7 +586,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_cont
                                                              bool shuffle = false,
                                                              bool loop = false,
                                                              unsigned out_width = 0, unsigned out_height = 0,
-                                                             const char* record_name_prefix = "");
+                                                             const char* record_name_prefix = "",
+                                                             std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates Raw image loader. It allocates the resources and objects required to load images stored on the file systems.
  * \ingroup group_rocal_data_loaders
@@ -563,6 +601,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_cont
  * \param [in] out_width The output_width of raw image
  * \param [in] out_height The output height of raw image
  * \param [in] record_name_prefix : if nonempty reader will only read records with certain prefix
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalContext p_context,
@@ -574,7 +613,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
                                                                         bool shuffle = false,
                                                                         bool loop = false,
                                                                         unsigned out_width = 0, unsigned out_height = 0,
-                                                                        const char* record_name_prefix = "");
+                                                                        const char* record_name_prefix = "",
+                                                                        std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.
  * \ingroup group_rocal_data_loaders
@@ -637,6 +677,7 @@ extern "C"  RocalTensor  rocalNumpyFileSourceSingleShard(
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
@@ -650,7 +691,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                            bool loop = false,
                                                            unsigned step = 0,
                                                            unsigned stride = 0,
-                                                           bool file_list_frame_num = true);
+                                                           bool file_list_frame_num = true,
+                                                           std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems. It accepts external sharding information to load a singe shard only.
  * \ingroup group_rocal_data_loaders
@@ -667,6 +709,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalContext context,
@@ -681,7 +724,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
                                                                       bool loop = false,
                                                                       unsigned step = 0,
                                                                       unsigned stride = 0,
-                                                                      bool file_list_frame_num = true);
+                                                                      bool file_list_frame_num = true,
+                                                                      std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems. Resizes the decoded frames to the dest width and height.
  * \ingroup group_rocal_data_loaders
@@ -699,6 +743,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
@@ -719,7 +764,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
                                                            std::vector<unsigned> max_size = {},
                                                            unsigned resize_shorter = 0,
                                                            unsigned resize_longer = 0,
-                                                           RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
+                                                           RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
+                                                           std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems. Resizes the decoded frames to the dest width and height. It accepts external sharding information to load a singe shard only.
  * \ingroup group_rocal_data_loaders
@@ -738,6 +784,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalContext context,
@@ -759,7 +806,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalConte
                                                                       std::vector<unsigned> max_size = {},
                                                                       unsigned resize_shorter = 0,
                                                                       unsigned resize_longer = 0,
-                                                                      RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
+                                                                      RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
+                                                                      std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates CIFAR10 raw data reader and loader. It allocates the resources and objects required to read raw data stored on the file systems.
  * \ingroup group_rocal_data_loaders
@@ -770,6 +818,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalConte
  * \param [in] out_width output width
  * \param [in] out_height output_height
  * \param [in] filename_prefix if set loader will only load files with the given prefix name
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext context,
@@ -802,6 +851,7 @@ extern "C" RocalStatus ROCAL_API_CALL rocalResetLoaders(RocalContext context);
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourcePartialSingleShard(RocalContext p_context,
@@ -816,7 +866,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourcePartialSingl
                                                                                        bool shuffle = false,
                                                                                        bool loop = false,
                                                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                                                       unsigned max_width = 0, unsigned max_height = 0);
+                                                                                       unsigned max_width = 0, unsigned max_height = 0,
+                                                                                       std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates JPEG image reader and partial decoder for Caffe2 LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe22 LMDB Records. It has internal sharding capability to load/decode in parallel is user wants.
  * \ingroup group_rocal_data_loaders
@@ -831,6 +882,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourcePartialSingl
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(RocalContext p_context,
@@ -845,6 +897,72 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSing
                                                                                         bool shuffle = false,
                                                                                         bool loop = false,
                                                                                         RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
-                                                                                        unsigned max_width = 0, unsigned max_height = 0);
+                                                                                        unsigned max_width = 0, unsigned max_height = 0,
+                                                                                        std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
+/*! \brief Creates JPEG external source image reader.
+ * \ingroup group_rocal_data_loaders
+ * \param [in] rocal_context Rocal context
+ * \param [in] rocal_color_format The color format the images will be decoded to.
+ * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
+ * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
+ * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
+ * \param [in] decode_size_policy is the RocalImageSizeEvaluationPolicy for decoding
+ * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
+ * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
+ * \param [in] external_source_mode Determines the mode of the source passed from the user - file_names / uncompressed data / compressed data
+ * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
+ * \return Reference to the output tensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p_context,
+                                                                  RocalImageColor rocal_color_format,
+                                                                  bool is_output = false,
+                                                                  bool shuffle = false,
+                                                                  bool loop = false,
+                                                                  RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
+                                                                  unsigned max_width = 0, unsigned max_height = 0,
+                                                                  RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                  RocalExternalSourceMode external_source_mode = RocalExternalSourceMode::ROCAL_EXTSOURCE_FNAME,
+                                                                  std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
+
+/*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel if user wants.
+ * If the files are not in standard audio compression formats they will be ignored, Currently wav format is supported
+ * \param [in] context Rocal context
+ * \param [in] source_path A NULL terminated char string pointing to the location of files on the disk
+ * \param [in] shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
+ * \param [in] is_output Boolean variable to enable the audio to be part of the output.
+ * \param [in] shuffle Boolean variable to shuffle the dataset.
+ * \param [in] loop Boolean variable to indefinitely loop through audio.
+ * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
+ * \return Reference to the output audio
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
+                                                           const char* source_path,
+                                                           unsigned shard_count,
+                                                           bool is_output,
+                                                           bool shuffle = false,
+                                                           bool loop = false,
+                                                           bool downmix = false);
+
+/*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
+ * If the files are not in standard audio compression formats they will be ignored.
+ * \param [in] context Rocal context
+ * \param [in] source_path A NULL terminated char string pointing to the location of files on the disk
+ * \param [in] shard_id Shard id for this loader
+ * \param [in] shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
+ * \param [in] is_output Boolean variable to enable the audio to be part of the output.
+ * \param [in] shuffle Boolean variable to shuffle the dataset.
+ * \param [in] loop Boolean variable to indefinitely loop through audio.
+ * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
+ * \return Reference to the output audio
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
+                                                                      const char* source_path,
+                                                                      unsigned shard_id,
+                                                                      unsigned shard_count,
+                                                                      bool is_output,
+                                                                      bool shuffle = false,
+                                                                      bool loop = false,
+                                                                      bool downmix = false);
 
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H

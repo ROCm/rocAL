@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "commons.h"
-#include "context.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
 #include "rocal_api.h"
 #if ENABLE_OPENCL
 #include "CL/cl.h"
@@ -77,6 +77,34 @@ void
         auto tensor = static_cast<Tensor*>(it);
         context->master_graph->set_output(tensor);
     }
+}
+
+RocalStatus ROCAL_API_CALL
+rocalExternalSourceFeedInput(
+    RocalContext p_context,
+    const std::vector<std::string>& input_images_names,
+    bool is_labels,
+    const std::vector<unsigned char*>& input_buffer,
+    const std::vector<ROIxywh>& roi_xywh,
+    unsigned int max_width,
+    unsigned int max_height,
+    unsigned int channels,
+    RocalExternalSourceMode mode,
+    RocalTensorLayout layout,
+    bool eos) {
+    auto context = static_cast<Context*>(p_context);
+    try {
+        ExternalSourceFileMode external_file_mode = static_cast<ExternalSourceFileMode>(mode);
+        RocalTensorlayout format = static_cast<RocalTensorlayout>(layout);
+        context->master_graph->feed_external_input(input_images_names, is_labels, input_buffer,
+                                                   roi_xywh, max_width, max_height, channels,
+                                                   external_file_mode, format, eos);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+        return ROCAL_RUNTIME_ERROR;
+    }
+    return ROCAL_OK;
 }
 
 RocalTensorList ROCAL_API_CALL

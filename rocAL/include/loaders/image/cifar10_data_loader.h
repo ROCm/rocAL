@@ -23,10 +23,10 @@ THE SOFTWARE.
 #pragma once
 #include <vector>
 
-#include "cifar10_data_reader.h"
-#include "image_loader.h"
-#include "reader_factory.h"
-#include "timing_debug.h"
+#include "readers/image/cifar10_data_reader.h"
+#include "loaders/image/image_loader.h"
+#include "readers/image/reader_factory.h"
+#include "pipeline/timing_debug.h"
 
 class CIFAR10DataLoader : public LoaderModule {
    public:
@@ -40,13 +40,15 @@ class CIFAR10DataLoader : public LoaderModule {
     void reset() override;
     void start_loading() override;
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
-    crop_image_info get_crop_image_info() override;
+    DecodedDataInfo get_decode_data_info() override;
+    CropImageInfo get_crop_image_info() override;
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     std::vector<std::vector<float>> &get_batch_random_bbox_crop_coords();
     void set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> batch_crop_coords);
+    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {}
 
    private:
     void increment_loader_idx();
@@ -57,8 +59,6 @@ class CIFAR10DataLoader : public LoaderModule {
     LoaderModuleStatus load_routine();
     std::shared_ptr<Reader> _reader;
     void *_dev_resources;
-    decoded_image_info _raw_img_info;  // image info to store the names. In this case the ID of image is stored in _roi_width field
-    decoded_image_info _output_decoded_img_info;
     bool _initialized = false;
     RocalMemType _mem_type;
     size_t _output_mem_size;
@@ -71,7 +71,7 @@ class CIFAR10DataLoader : public LoaderModule {
     std::vector<std::string> _output_names;
     CircularBuffer _circ_buff;
     size_t _prefetch_queue_depth;
-    TimingDBG _file_load_time, _swap_handle_time;
+    TimingDbg _file_load_time, _swap_handle_time;
     size_t _loader_idx;
     size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();
@@ -83,6 +83,6 @@ class CIFAR10DataLoader : public LoaderModule {
     Tensor *_output_tensor;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     std::vector<std::vector<float>> _bbox_coords, _crop_coords_batch;
-    crop_image_info _crop_image_info;
-    crop_image_info _output_cropped_image_info;
+    CropImageInfo _crop_image_info;
+    CropImageInfo _output_cropped_image_info;
 };

@@ -20,15 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "cifar10_data_reader.h"
-
-#include <commons.h>
-#include <file_source_reader.h>
-
-#include <boost/filesystem.hpp>
 #include <cassert>
-
-namespace filesys = boost::filesystem;
+#include "pipeline/commons.h"
+#include <cstring>
+#include <algorithm>
+#include "readers/image/cifar10_data_reader.h"
+#include "readers/file_source_reader.h"
+#include "pipeline/filesystem.h"
 
 CIFAR10DataReader::CIFAR10DataReader() {
     _src_dir = nullptr;

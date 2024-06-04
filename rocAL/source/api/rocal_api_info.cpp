@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "commons.h"
-#include "context.h"
+#include "pipeline/commons.h"
+#include "pipeline/context.h"
 #include "rocal_api.h"
 
 size_t ROCAL_API_CALL rocalGetImageWidth(RocalTensor p_image) {
@@ -108,10 +108,7 @@ TimingInfo
     auto context = static_cast<Context *>(p_context);
     auto info = context->timing();
     // INFO("bbencode time "+ TOSTR(info.bb_process_time)); //to display time taken for bbox encoder
-    // if (context->master_graph->is_video_loader()) // TO BE FIXED
-    //     return {info.video_read_time, info.video_decode_time, info.video_process_time, info.copy_to_output}; // TODO - Add unified timers for all decoders
-    // else
-    return {info.image_read_time, info.image_decode_time, info.image_process_time, info.copy_to_output};
+    return {info.read_time, info.decode_time, info.process_time, info.copy_to_output};
 }
 
 RocalMetaData
@@ -165,4 +162,17 @@ size_t ROCAL_API_CALL rocalIsEmpty(RocalContext p_context) {
         ERR(e.what());
     }
     return ret;
+}
+
+size_t ROCAL_API_CALL
+rocalGetLastBatchPaddedSize(RocalContext p_context) {
+    auto context = static_cast<Context *>(p_context);
+    size_t count = 0;
+    try {
+        count = context->master_graph->last_batch_padded_size();
+    } catch (const std::exception &e) {
+        context->capture_error(e.what());
+        ERR(e.what());
+    }
+    return count;
 }

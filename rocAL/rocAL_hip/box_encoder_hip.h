@@ -22,10 +22,10 @@ THE SOFTWARE.
 #pragma once
 #include <vector>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include "meta_data.h"
+#include "meta_data/meta_data.h"
 
 // assume total number of boxes per batch for device memory allocation
 #define MAX_NUM_BOXES_TOTAL 4096

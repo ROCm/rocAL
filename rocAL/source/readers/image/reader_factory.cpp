@@ -20,20 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "reader_factory.h"
+#include "readers/image/reader_factory.h"
 
 #include <memory>
 #include <stdexcept>
 
-#include "caffe2_lmdb_record_reader.h"
-#include "caffe_lmdb_record_reader.h"
-#include "cifar10_data_reader.h"
-#include "coco_file_source_reader.h"
-#include "file_source_reader.h"
-#include "mxnet_recordio_reader.h"
-#include "numpy_data_reader.h"
-#include "sequence_file_source_reader.h"
-#include "tf_record_reader.h"
+#include "readers/file_source_reader.h"
+#include "readers/image/caffe2_lmdb_record_reader.h"
+#include "readers/image/caffe_lmdb_record_reader.h"
+#include "readers/image/cifar10_data_reader.h"
+#include "readers/image/coco_file_source_reader.h"
+#include "readers/image/external_source_reader.h"
+#include "readers/image/mxnet_recordio_reader.h"
+#include "readers/video/sequence_file_source_reader.h"
+#include "readers/image/tf_record_reader.h"
+#include "readers/image/numpy_data_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch (config.type()) {
@@ -83,6 +84,12 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             auto ret = std::make_shared<MXNetRecordIOReader>();
             if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("MXNetRecordIOReader cannot access the storage");
+            return ret;
+        } break;
+        case StorageType::EXTERNAL_FILE_SOURCE: {
+            auto ret = std::make_shared<ExternalSourceReader>();
+            if (ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("ExternalSourceReader cannot access the storage");
             return ret;
         } break;
         case StorageType::NUMPY_DATA: {

@@ -20,21 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "tf_record_reader.h"
-
-#include <commons.h>
-#include <stdint.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <cassert>
-#include <fstream>
+#include "readers/image/tf_record_reader.h"
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-
-namespace filesys = boost::filesystem;
 
 TFRecordReader::TFRecordReader() {
     _src_dir = nullptr;

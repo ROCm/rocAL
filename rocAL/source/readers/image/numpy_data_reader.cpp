@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,17 +20,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "numpy_data_reader.h"
+#include "readers/image/numpy_data_reader.h"
 
-#include <commons.h>
+#include "pipeline/commons.h"
+#include "pipeline/filesystem.h"
 
 #include <algorithm>
 #include <numeric>
 #include <random>
-#include <boost/filesystem.hpp>
 #include <cassert>
-
-namespace filesys = boost::filesystem;
 
 NumpyDataReader::NumpyDataReader() : _shuffle_time("shuffle_time", DBG_TIMING) {
     _src_dir = nullptr;
@@ -91,7 +89,8 @@ void NumpyDataReader::incremenet_read_ptr() {
 }
 
 size_t NumpyDataReader::open() {
-    auto file_path = _file_names[_curr_file_idx];  // Get next file name
+    auto file_path = _file_names[_curr_file_idx];  // Get current file name
+    _curr_file_header = _file_headers[_curr_file_idx]; // Get current file header
     incremenet_read_ptr();
     _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -99,10 +98,10 @@ size_t NumpyDataReader::open() {
         _last_id.erase(0, last_slash_idx + 1);
     }
 
-    auto ret = GetFromCache(file_path, _file_headers[_curr_file_idx]);
+    auto ret = GetFromCache(file_path, _curr_file_header);
     if (!ret) {
-        ParseHeader(_file_headers[_curr_file_idx], file_path);
-        UpdateCache(file_path, _file_headers[_curr_file_idx]);
+        ParseHeader(_curr_file_header, file_path);
+        UpdateCache(file_path, _curr_file_header);
     } else {
         _current_fPtr = std::fopen(file_path.c_str(), "rb");
         if (_current_fPtr == nullptr)
@@ -110,7 +109,7 @@ size_t NumpyDataReader::open() {
     }
     fseek(_current_fPtr, 0, SEEK_SET);  // Take the file pointer back to the start
 
-    return _file_headers[_curr_file_idx].nbytes();
+    return _curr_file_header.nbytes();
 }
 
 bool NumpyDataReader::GetFromCache(const std::string& file_name, NumpyHeaderData& header) {
@@ -323,10 +322,10 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     // Requested read size bigger than the file size? just read as many bytes as the file size
     read_size = (read_size > _current_file_size) ? _current_file_size : read_size;
 
-    if (std::fseek(_current_fPtr, _file_headers[_curr_file_idx]._data_offset, SEEK_SET))
+    if (std::fseek(_current_fPtr, _curr_file_header._data_offset, SEEK_SET))
         THROW("Seek operation failed: " + std::strerror(errno));
 
-    auto shape = _file_headers[_curr_file_idx].shape();
+    auto shape = _curr_file_header.shape();
     auto num_dims = max_shape.size();
     std::vector<unsigned> strides(num_dims + 1);
     strides[num_dims] = 1;
@@ -335,21 +334,21 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     }
 
     size_t actual_read_size = 0;
-    if (_file_headers[_curr_file_idx].type() == RocalTensorDataType::UINT8)
+    if (_curr_file_header.type() == RocalTensorDataType::UINT8)
         actual_read_size = ParseNumpyData<u_int8_t>((u_int8_t*)buf, strides, shape);
-    if (_file_headers[_curr_file_idx].type() == RocalTensorDataType::UINT32)
+    if (_curr_file_header.type() == RocalTensorDataType::UINT32)
         actual_read_size = ParseNumpyData<u_int32_t>((u_int32_t*)buf, strides, shape);
-    if (_file_headers[_curr_file_idx].type() == RocalTensorDataType::INT8)
+    if (_curr_file_header.type() == RocalTensorDataType::INT8)
         actual_read_size = ParseNumpyData<int8_t>((int8_t*)buf, strides, shape);
-    if (_file_headers[_curr_file_idx].type() == RocalTensorDataType::INT32)
+    if (_curr_file_header.type() == RocalTensorDataType::INT32)
         actual_read_size = ParseNumpyData<int32_t>((int32_t*)buf, strides, shape);
-    if (_file_headers[_curr_file_idx].type() == RocalTensorDataType::FP16)
+    if (_curr_file_header.type() == RocalTensorDataType::FP16)
 #if defined(AMD_FP16_SUPPORT)
         actual_read_size = ParseNumpyData<half>((half*)buf, strides, shape);
 #else
         THROW("FLOAT16 type tensor not supported")
 #endif
-    if (_file_headers[_curr_file_idx].type() == RocalTensorDataType::FP32)
+    if (_curr_file_header.type() == RocalTensorDataType::FP32)
         actual_read_size = ParseNumpyData<float>((float*)buf, strides, shape);
 
     return actual_read_size;
@@ -371,7 +370,7 @@ size_t NumpyDataReader::ParseNumpyData(T* buf, std::vector<unsigned> strides, st
 }
 
 const NumpyHeaderData NumpyDataReader::get_numpy_header_data() {
-    return _file_headers[_curr_file_idx];
+    return _curr_file_header;
 }
 
 size_t NumpyDataReader::read_data(unsigned char* buf, size_t read_size) {
@@ -381,10 +380,10 @@ size_t NumpyDataReader::read_data(unsigned char* buf, size_t read_size) {
     // Requested read size bigger than the file size? just read as many bytes as the file size
     read_size = (read_size > _current_file_size) ? _current_file_size : read_size;
 
-    if (std::fseek(_current_fPtr, _file_headers[_curr_file_idx]._data_offset, SEEK_SET))
+    if (std::fseek(_current_fPtr, _curr_file_header._data_offset, SEEK_SET))
         THROW("Seek operation failed: " + std::strerror(errno));
 
-    size_t actual_read_size = std::fread(buf, 1, _file_headers[_curr_file_idx].nbytes(), _current_fPtr);
+    size_t actual_read_size = std::fread(buf, 1, _curr_file_header.nbytes(), _current_fPtr);
     return actual_read_size;
 }
 
@@ -430,6 +429,8 @@ Reader::Status NumpyDataReader::subfolder_reading() {
                         continue;
                     else
                         _file_names.push_back(file_path);
+                    _in_batch_read_count++;
+                    _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
                 }
             }
         }
@@ -493,8 +494,13 @@ Reader::Status NumpyDataReader::open_folder() {
     if ((_src_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
-    while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
+    // Sort all the files inside the directory and then process them for sharding
+    std::vector<filesys::path> files_in_directory;
+    std::copy(filesys::directory_iterator(filesys::path(_folder_path)), filesys::directory_iterator(), std::back_inserter(files_in_directory));
+    std::sort(files_in_directory.begin(), files_in_directory.end());
+    for (const std::string file_path : files_in_directory) {
+        std::string filename = file_path.substr(file_path.find_last_of("/\\") + 1);
+        if (!filesys::is_regular_file(filesys::path(file_path)))
             continue;
 
         if (get_file_shard_id() != _shard_id) {
@@ -504,9 +510,6 @@ Reader::Status NumpyDataReader::open_folder() {
         }
         _in_batch_read_count++;
         _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
-        std::string file_path = _folder_path;
-        file_path.append("/");
-        file_path.append(_entity->d_name);
         _last_file_name = file_path;
         _file_names.push_back(file_path);
         _file_count_all_shards++;

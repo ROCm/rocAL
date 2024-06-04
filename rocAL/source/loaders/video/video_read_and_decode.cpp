@@ -20,11 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_read_and_decode.h"
-
-#include "video_decoder_factory.h"
-
-namespace filesys = boost::filesystem;
+#include "loaders/video/video_read_and_decode.h"
+#include "decoders/video/video_decoder_factory.h"
 
 #ifdef ROCAL_VIDEO
 std::tuple<VideoDecoder::ColorFormat, unsigned, AVPixelFormat>
@@ -47,8 +44,8 @@ video_interpret_color_format(RocalColorFormat color_format) {
 Timing
 VideoReadAndDecode::timing() {
     Timing t;
-    t.video_decode_time = _decode_time.get_timing();
-    t.video_read_time = _file_load_time.get_timing();
+    t.decode_time = _decode_time.get_timing();
+    t.read_time = _file_load_time.get_timing();
     return t;
 }
 

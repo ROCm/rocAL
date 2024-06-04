@@ -27,8 +27,8 @@ THE SOFTWARE.
 
 #include <cstring>
 
-#include "commons.h"
-#include "image.h"
+#include "pipeline/commons.h"
+#include "pipeline/image.h"
 
 vx_enum vx_image_mem_type(RocalMemType mem) {
     switch (mem) {

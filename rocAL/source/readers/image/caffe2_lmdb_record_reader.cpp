@@ -20,21 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "caffe2_lmdb_record_reader.h"
-
-#include <commons.h>
-#include <stdint.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <cassert>
-#include <fstream>
+#include "readers/image/caffe2_lmdb_record_reader.h"
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 using namespace std;
-namespace filesys = boost::filesystem;
 
 Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
     _src_dir = nullptr;

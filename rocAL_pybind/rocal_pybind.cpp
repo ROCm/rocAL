@@ -96,13 +96,51 @@ py::object wrapper_copy_to_tensor(RocalContext context, py::object p,
     return py::cast<py::none>(Py_None);
 }
 
+py::object wrapperRocalExternalSourceFeedInput(
+    RocalContext context, std::vector<std::string> input_images_names,
+    py::array &labels, py::list arrays,
+    std::vector<ROIxywh> roi_xywh,
+    unsigned int max_width, unsigned int max_height, unsigned int channels,
+    RocalExternalSourceMode mode, RocalTensorLayout layout, bool eos) {
+    std::vector<unsigned char *> uchar_arrays;
+    if (input_images_names.size() == 0) {  // Used for mode 1 and mode 2 for passing decoded buffers
+        size_t numArrays = py::len(arrays);
+        for (size_t i = 0; i < numArrays; i++) {
+            py::array_t<unsigned char> arr(arrays[i]);
+            py::buffer_info buf = arr.request();
+            uchar_arrays.push_back(static_cast<unsigned char *>(buf.ptr));
+        }
+    }
+    bool enable_labels = true;
+    if (labels.is_none()) {
+        enable_labels = false;
+    }
+    int status = rocalExternalSourceFeedInput(context, input_images_names, enable_labels, uchar_arrays, roi_xywh, max_width, max_height, channels, mode, layout, eos);
+
+    // Update labels in the tensorList
+    if (enable_labels) {
+        auto labels_tensor_list = rocalGetImageLabels(context);
+        int *labels_ptr = static_cast<int *>(labels.request().ptr);
+        for (size_t i = 0; i < labels.size(); i++) {
+            labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
+            labels_ptr++;
+        }
+    }
+    return py::cast<py::none>(Py_None);
+}
+
+    py::object wrapper_one_hot_label_copy(RocalContext context, size_t array_ptr, unsigned num_of_classes, RocalOutputMemType dest_mem_type) {
+        void* ptr = reinterpret_cast<void*>(array_ptr);
+        // call pure C++ function
+        rocalGetOneHotImageLabels(context, ptr, num_of_classes, dest_mem_type);
+        return py::cast<py::none>(Py_None);
+    }
+
 std::unordered_map<int, std::string> rocalToPybindLayout = {
     {0, "NHWC"},
     {1, "NCHW"},
     {2, "NFHWC"},
-    {3, "NFCHW"},
-    {4, "NDHWC"},
-    {5, "NCDHW"},
+    {3, "NFCHW"}
 };
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
@@ -114,15 +152,9 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
 
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
+    // Bind the C++ structure
     // rocal_api.h
-    m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
-          py::return_value_policy::reference,
-          py::arg("batch_size"),
-          py::arg("affinity"),
-          py::arg("gpu_id") = 0,
-          py::arg("cpu_thread_count") = 1,
-          py::arg("prefetch_queue_depth") = 3,
-          py::arg("output_data_type") = 0);
+    m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it", py::return_value_policy::reference);
     m.def("rocalVerify", &rocalVerify);
     m.def("rocalRun", &rocalRun, py::return_value_policy::reference);
     m.def("rocalRelease", &rocalRelease, py::return_value_policy::reference);
@@ -347,8 +379,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
         .value("NFCHW", ROCAL_NFCHW)
-        .value("NDHWC", ROCAL_NDHWC)
-        .value("NCDHW", ROCAL_NCDHW)
         .export_values();
     py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
         .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -361,6 +391,22 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
         .export_values();
+    py::enum_<RocalExternalSourceMode>(types_m, "RocalExternalSourceMode", "Rocal Extrernal Source Mode")
+        .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
+        .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
+        .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
+        .export_values();
+    py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
+        .value("LAST_BATCH_FILL", ROCAL_LAST_BATCH_FILL)
+        .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
+        .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
+        .export_values();
+    py::class_<ROIxywh>(m, "ROIxywh")
+        .def(py::init<>())
+        .def_readwrite("x", &ROIxywh::x)
+        .def_readwrite("y", &ROIxywh::y)
+        .def_readwrite("w", &ROIxywh::w)
+        .def_readwrite("h", &ROIxywh::h);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
@@ -385,6 +431,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("getTimingInfo", &rocalGetTimingInfo);
     m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
     m.def("cocoReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
+    m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
     // rocal_api_meta_data.h
     m.def("randomBBoxCrop", &rocalRandomBBoxCrop);
     m.def("boxEncoder", &rocalBoxEncoder);
@@ -542,6 +589,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
             {sizeof(float)}));
         return std::make_pair(labels_array, bboxes_array);
     });
+    m.def("getOneHotEncodedLabels", &wrapper_one_hot_label_copy, py::return_value_policy::reference);
     // rocal_api_data_loaders.h
     m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
@@ -585,6 +633,14 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
           py::return_value_policy::reference);
+    m.def("externalFileSource", &rocalJpegExternalFileSource,
+          py::return_value_policy::reference);
+    m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
+          py::return_value_policy::reference);
+    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
+    m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
     m.def("numpyReaderSource", &rocalNumpyFileSource, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
     m.def("numpyReaderSourceShard", &rocalNumpyFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",

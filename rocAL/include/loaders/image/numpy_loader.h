@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,8 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
-#include "circular_buffer.h"
-#include "commons.h"
+#include "loaders/circular_buffer.h"
+#include "pipeline/commons.h"
 #include "image_read_and_decode.h"
 //
 // NumpyLoader runs an internal thread for loading an decoding of numpy arrays asynchronously
@@ -48,10 +48,13 @@ class NumpyLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
-    crop_image_info get_crop_image_info() override;
+    DecodedDataInfo get_decode_data_info() override;
+    CropImageInfo get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
+    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {};
+    size_t last_batch_padded_size() override { return 0; };
 
    private:
     bool is_out_of_data();
@@ -71,12 +74,12 @@ class NumpyLoader : public LoaderModule {
     size_t _image_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_image_info _decoded_img_info;
-    crop_image_info _crop_image_info;
-    decoded_image_info _output_decoded_img_info;
-    crop_image_info _output_cropped_img_info;
+    DecodedDataInfo _decoded_data_info;
+    CropImageInfo _crop_image_info;
+    DecodedDataInfo _output_decoded_data_info;
+    CropImageInfo _output_cropped_img_info;
     CircularBuffer _circ_buff;
-    TimingDBG _file_load_time, _swap_handle_time;
+    TimingDbg _file_load_time, _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop

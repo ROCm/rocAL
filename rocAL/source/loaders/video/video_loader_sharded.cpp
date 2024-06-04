@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_loader_sharded.h"
+#include "loaders/video/video_loader_sharded.h"
 #ifdef ROCAL_VIDEO
 
 VideoLoaderSharded::VideoLoaderSharded(void *dev_resources) : _dev_resources(dev_resources) {
@@ -39,8 +39,8 @@ std::vector<std::string> VideoLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info VideoLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+DecodedDataInfo VideoLoaderSharded::get_decode_data_info() {
+    return _loaders[_loader_idx]->get_decode_data_info();
 }
 
 VideoLoaderSharded::~VideoLoaderSharded() {
@@ -157,13 +157,13 @@ Timing VideoLoaderSharded::timing() {
     // is experiences on the load_next() call due to read and decode time is the maximum of all
     for (auto &loader : _loaders) {
         auto info = loader->timing();
-        max_read_time = (info.video_read_time > max_read_time) ? info.video_read_time : max_read_time;
-        max_decode_time = (info.video_decode_time > max_decode_time) ? info.video_decode_time : max_decode_time;
-        swap_handle_time += info.video_process_time;
+        max_read_time = (info.read_time > max_read_time) ? info.read_time : max_read_time;
+        max_decode_time = (info.decode_time > max_decode_time) ? info.decode_time : max_decode_time;
+        swap_handle_time += info.process_time;
     }
-    t.video_decode_time = max_decode_time;
-    t.video_read_time = max_read_time;
-    t.video_process_time = swap_handle_time;
+    t.decode_time = max_decode_time;
+    t.read_time = max_read_time;
+    t.process_time = swap_handle_time;
     return t;
 }
 #endif

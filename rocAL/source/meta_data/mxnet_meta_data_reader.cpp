@@ -20,17 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "mxnet_meta_data_reader.h"
+#include "meta_data/mxnet_meta_data_reader.h"
 
 #include <memory.h>
 #include <stdint.h>
+#include "pipeline/filesystem.h"
 
-#include <algorithm>
-#include <boost/filesystem.hpp>
-#include <iostream>
-#include <utility>
-
-namespace filesys = boost::filesystem;
 using namespace std;
 
 void MXNetMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {

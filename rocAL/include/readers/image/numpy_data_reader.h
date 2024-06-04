@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,10 +26,11 @@ THE SOFTWARE.
 #include <memory>
 #include <string>
 #include <vector>
+#include <mutex>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 #include "image_reader.h"
-#include "timing_debug.h"
+#include "pipeline/timing_debug.h"
 
 class NumpyDataReader : public Reader {
    public:
@@ -82,6 +83,7 @@ class NumpyDataReader : public Reader {
     unsigned _curr_file_idx;
     FILE* _current_fPtr;
     unsigned _current_file_size;
+    NumpyHeaderData _curr_file_header;
     std::string _last_id;
     std::string _last_file_name;
     size_t _shard_id = 0;
@@ -123,5 +125,5 @@ class NumpyDataReader : public Reader {
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    TimingDBG _shuffle_time;
+    TimingDbg _shuffle_time;
 };

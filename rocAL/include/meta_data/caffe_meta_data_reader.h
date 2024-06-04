@@ -27,10 +27,10 @@ THE SOFTWARE.
 #include <map>
 
 #include "caffe_protos.pb.h"
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
-#include "image_reader.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
+#include "readers/image/image_reader.h"
 
 class CaffeMetaDataReader : public MetaDataReader {
    public:

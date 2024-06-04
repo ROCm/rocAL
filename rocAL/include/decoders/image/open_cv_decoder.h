@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "decoder.h"
+#include "decoders/image/decoder.h"
 #if ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
 

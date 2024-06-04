@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
 class LensCorrectionNode : public Node {
    public:

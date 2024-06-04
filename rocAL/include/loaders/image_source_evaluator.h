@@ -25,9 +25,9 @@ THE SOFTWARE.
 #include <memory>
 
 #include "loader_module.h"
-#include "reader_factory.h"
-#include "timing_debug.h"
-#include "turbo_jpeg_decoder.h"
+#include "readers/image/reader_factory.h"
+#include "pipeline/timing_debug.h"
+#include "decoders/image/turbo_jpeg_decoder.h"
 enum class ImageSourceEvaluatorStatus {
     OK = 0,
     UNSUPPORTED_DECODER_TYPE,

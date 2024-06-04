@@ -23,13 +23,13 @@ THE SOFTWARE.
 #pragma once
 #include <memory>
 
-#include "image_reader.h"
+#include "readers/image/image_reader.h"
 #include "circular_buffer.h"
-#include "commons.h"
-#include "decoder.h"
-#include "meta_data_graph.h"
-#include "meta_data_reader.h"
-#include "tensor.h"
+#include "pipeline/commons.h"
+#include "decoders/image/decoder.h"
+#include "meta_data/meta_data_graph.h"
+#include "meta_data/meta_data_reader.h"
+#include "pipeline/tensor.h"
 
 enum class LoaderModuleStatus {
     OK = 0,
@@ -53,14 +53,21 @@ class LoaderModule {
     virtual Timing timing() = 0;                    // Returns timing info
     virtual std::vector<std::string> get_id() = 0;  // returns the id of the last batch of images/frames loaded
     virtual void start_loading() = 0;               // starts internal loading thread
-    virtual decoded_image_info get_decode_image_info() = 0;
-    virtual crop_image_info get_crop_image_info() = 0;
+    virtual DecodedDataInfo get_decode_data_info() = 0;
+    virtual CropImageInfo get_crop_image_info() { return {}; }
     virtual void set_prefetch_queue_depth(size_t prefetch_queue_depth) = 0;
     // introduce meta data reader
-    virtual void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) = 0;
+    virtual void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) { THROW("set_random_bbox_data_reader is not compatible with this implementation") }
     virtual void shut_down() = 0;
     virtual std::vector<size_t> get_sequence_start_frame_number() { return {}; }
     virtual std::vector<std::vector<float>> get_sequence_frame_timestamps() { return {}; }
+    // External Source reader
+    virtual void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
+                                     const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height,
+                                     unsigned int channels, ExternalSourceFileMode mode, bool eos) = 0;
+    virtual size_t last_batch_padded_size() { return 0; }
+   protected:
+    DecodedDataInfo _decoded_data_info, _output_decoded_data_info;  // Stores the decoded data info
 };
 
 using pLoaderModule = std::shared_ptr<LoaderModule>;

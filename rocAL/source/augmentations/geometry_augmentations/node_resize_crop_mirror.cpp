@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include <graph.h>
-#include "node_resize_crop_mirror.h"
-#include "exception.h"
+#include "pipeline/graph.h"
+#include "augmentations/geometry_augmentations/node_resize_crop_mirror.h"
+#include "pipeline/exception.h"
 
 ResizeCropMirrorNode::ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs),
                                                                                                                         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1]) {

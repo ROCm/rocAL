@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "bounding_box_graph.h"
+#include "meta_data/bounding_box_graph.h"
 
 void BoundingBoxGraph::process(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) {
     size_t num_meta_nodes = _meta_nodes.size();
@@ -31,7 +31,7 @@ void BoundingBoxGraph::process(pMetaDataBatch input_meta_data, pMetaDataBatch ou
 }
 
 // This function is used to rescale the metadata values w.r.t the decoded image sizes
-void BoundingBoxGraph::update_meta_data(pMetaDataBatch input_meta_data, decoded_image_info decode_image_info) {
+void BoundingBoxGraph::update_meta_data(pMetaDataBatch input_meta_data, DecodedDataInfo decode_image_info) {
     std::vector<uint32_t> original_height = decode_image_info._original_height;
     std::vector<uint32_t> original_width = decode_image_info._original_width;
     std::vector<uint32_t> roi_width = decode_image_info._roi_width;
@@ -68,7 +68,7 @@ inline float ssd_BBoxIntersectionOverUnion(const BoundingBoxCord &box1, const fl
     return (float)(intersection_area / (box1_area + box2_area - intersection_area));
 }
 
-void BoundingBoxGraph::update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, decoded_image_info decode_image_info, crop_image_info crop_image_info) {
+void BoundingBoxGraph::update_random_bbox_meta_data(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data, DecodedDataInfo decode_image_info, CropImageInfo crop_image_info) {
     std::vector<uint32_t> original_height = decode_image_info._original_height;
     std::vector<uint32_t> original_width = decode_image_info._original_width;
     std::vector<uint32_t> roi_width = decode_image_info._roi_width;
@@ -218,12 +218,10 @@ void BoundingBoxGraph::update_box_encoder_meta_data(std::vector<float> *anchors,
     }
 }
 
-void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, int *matches_idx_buffer,
-                                              pMetaDataBatch full_batch_meta_data, float criteria, float high_threshold,
-                                              float low_threshold, bool allow_low_quality_matches) {
+void BoundingBoxGraph::update_box_iou_matcher(BoxIouMatcherInfo &iou_matcher_info, int *matches_idx_buffer, pMetaDataBatch full_batch_meta_data) {
     auto bb_coords_batch = full_batch_meta_data->get_bb_cords_batch();
-    unsigned anchors_size = anchors->size() / 4;  // divide the anchors_size by 4 to get the total number of anchors
-    BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(anchors->data());
+    unsigned anchors_size = iou_matcher_info.anchors->size() / 4;  // divide the anchors_size by 4 to get the total number of anchors
+    BoundingBoxCord *bbox_anchors = reinterpret_cast<BoundingBoxCord *>(iou_matcher_info.anchors->data());
 
     std::vector<int *> matches(full_batch_meta_data->size());
     for (int i = 0; i < full_batch_meta_data->size(); i++) {
@@ -255,12 +253,12 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, int *
                 }
 
                 // Find row maximum in (bb_count x anchors_size) IoU values calculated
-                if (allow_low_quality_matches) {
+                if (iou_matcher_info.allow_low_quality_matches) {
                     if (iou_val > best_bbox_iou) best_bbox_iou = iou_val;
                 }
             }
 
-            if (allow_low_quality_matches) {
+            if (iou_matcher_info.allow_low_quality_matches) {
                 for (unsigned int anchor_idx = 0; anchor_idx < anchors_size; anchor_idx++) {  // if the element is found
                     if (fabs(bbox_iou[anchor_idx] - best_bbox_iou) < 1e-6)                    // Compare the IOU values and check if they are equal with a tolerance of 1e-6
                         low_quality_preds[anchor_idx] = anchor_idx;
@@ -270,10 +268,10 @@ void BoundingBoxGraph::update_box_iou_matcher(std::vector<float> *anchors, int *
 
         // Update matched indices based on thresholds and low quality matches
         for (uint pred_idx = 0; pred_idx < anchors_size; pred_idx++) {
-            if (!(allow_low_quality_matches && low_quality_preds[pred_idx] != -1)) {
-                if (matched_vals[pred_idx] < low_threshold) {
+            if (!(iou_matcher_info.allow_low_quality_matches && low_quality_preds[pred_idx] != -1)) {
+                if (matched_vals[pred_idx] < iou_matcher_info.low_threshold) {
                     matches[i][pred_idx] = -1;
-                } else if ((matched_vals[pred_idx] < high_threshold)) {
+                } else if ((matched_vals[pred_idx] < iou_matcher_info.high_threshold)) {
                     matches[i][pred_idx] = -2;
                 }
             }

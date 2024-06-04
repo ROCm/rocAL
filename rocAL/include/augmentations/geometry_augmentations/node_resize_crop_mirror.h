@@ -21,10 +21,10 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node_crop.h"
-#include "parameter_crop_factory.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_crop_factory.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 #include "rocal_api_types.h"
 
 class ResizeCropMirrorNode : public CropNode {
