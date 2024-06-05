@@ -154,9 +154,10 @@ For your convenience, we provide the setup script,[rocAL-setup.py](https://githu
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --opencv    [OpenCV Version - optional (default:4.6.0)]
                       --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
-                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
                       --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
+                      --ffmpeg    [FFMPEG Installation - optional (default:OFF)[options:ON/OFF]]
+                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 
 ## Installation instructions
@@ -320,5 +321,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* rocAL Setup Script - `V2.1.0`
+* rocAL Setup Script - `V2.2.0`
 * Dependencies for all the above packages
