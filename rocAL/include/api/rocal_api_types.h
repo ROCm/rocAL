@@ -218,9 +218,20 @@ enum RocalTensorLayout {
     /*! \brief AMD ROCAL_NFCHW
      */
     ROCAL_NFCHW = 3,
+    /*! \brief AMD ROCAL_NHW
+     */
+    ROCAL_NHW = 4,
+    /*! \brief AMD ROCAL_NFT
+     * Spectrogram Layout FT
+     */
+    ROCAL_NFT = 5,
+    /*! \brief AMD ROCAL_NTF
+     * Spectrogram Layout TF
+     */
+    ROCAL_NTF = 6,
     /*! \brief AMD ROCAL_NONE
      */
-    ROCAL_NONE = 4  // Layout for generic tensors (Non-Image or Non-Video)
+    ROCAL_NONE = 7  // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 /*! \brief rocAL Tensor Output Type enum
@@ -238,7 +249,13 @@ enum RocalTensorOutputType {
     ROCAL_UINT8 = 2,
     /*! \brief AMD ROCAL_INT8
      */
-    ROCAL_INT8 = 3
+    ROCAL_INT8 = 3,
+    /*! \brief AMD ROCAL_UINT32
+     */
+    ROCAL_UINT32 = 4,
+    /*! \brief AMD ROCAL_INT32
+     */
+    ROCAL_INT32 = 5
 };
 
 /*! \brief rocAL Decoder Type enum
@@ -375,6 +392,50 @@ enum RocalExternalSourceMode {
     /*! \brief uncompressed raw buffer passed as input
      */
     ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
+};
+
+/*! \brief rocAL Audio Border Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalAudioBorderType {
+    /*! \brief AMD ROCAL_ZERO
+     */
+    ROCAL_ZERO = 0,
+    /*! \brief AMD ROCAL_CLAMP
+     */
+    ROCAL_CLAMP = 1,
+    /*! \brief AMD ROCAL_REFLECT
+     */
+    ROCAL_REFLECT = 2
+};
+
+/*! \brief rocAL Out Of Bounds Policy Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalOutOfBoundsPolicy {
+    /*! \brief Pad
+     */
+    ROCAL_PAD = 0,
+    /*! \brief Trimtoshape
+     */
+    ROCAL_TRIMTOSHAPE,
+    /*! \brief Error
+     */
+    ROCAL_ERROR
+};
+
+/*! \brief rocAL MelScale formula enum
+ * \ingroup group_rocal_types
+ */
+enum RocalMelScaleFormula {
+    /*! \brief Slaney
+     * Follows Slaney’s MATLAB Auditory Modelling Work behavior
+     */
+    ROCAL_SLANEY = 0,
+    /*! \brief HTK
+     * Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+     */
+    ROCAL_HTK
 };
 
 /*! \brief Tensor Last Batch Policies

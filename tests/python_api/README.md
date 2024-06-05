@@ -140,3 +140,14 @@ python3 audio_unit_test.py --audio_path=<path_to_data> --test_case <case(0-1)> -
 
 **Available Test Cases**
 * Case 0 - Audio Decoder
+* Case 1 - PreEmphasis Filter
+* Case 2 - Spectrogram
+* Case 3 - Downmix
+* Case 4 - ToDecibels
+* Case 5 - Resample
+* Case 6 - TensorAddTensor
+* Case 7 - TensorMulScalar
+* Case 8 - NonSilentRegionDetection
+* Case 9 - Slice
+* Case 10 - MelFilterBank
+* Case 11 - Normalize

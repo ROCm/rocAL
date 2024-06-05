@@ -17,6 +17,18 @@
 * Pytorch iterator for Audio
 * Python audio unit test, and support to verify outputs
 * rocDecode for HW decode
+* Support for Audio augmentation - PreEmphasis filter
+* Support for reading from file lists in file reader
+* Support for Audio augmentation - Spectrogram
+* Support for Audio augmentation - ToDecibels
+* Support for downmixing audio channels during decoding
+* Support for Audio augmentation - Resample
+* Support for TensorTensorAdd and TensorScalarMultiply operations
+* Support for Uniform and Normal distribution nodes
+* Support for Audio augmentation - NonSilentRegionDetection 
+* Support for generic augmentation - Slice 
+* Support for generic augmentation - Normalize
+* Support for Audio augmentation - MelFilterBank
 
 ### Optimizations
 
