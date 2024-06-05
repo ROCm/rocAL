@@ -112,7 +112,7 @@ rocAL can be currently used to perform the following operations either with rand
 
 * Python Wheel
   ```shell
-  pip install wheel
+  pip3 install wheel
   ```
 
 * [PyBind11](https://github.com/pybind/pybind11)
@@ -136,7 +136,6 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   sudo apt install libopencv-dev
   ```
-
 
 > [!IMPORTANT] 
 > * Compiler features required
@@ -197,7 +196,7 @@ Install rocAL runtime, development, and test packages.
   ```
 
 >[!NOTE]
-> * Package install requires `TurboJPEG`, `PyBind 11` and `Protobuf`  manual install
+> * Package install requires `TurboJPEG` and `RapidJSON`  manual install
 > * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 
 ### Source install
@@ -272,7 +271,14 @@ mkdir rocAL-test && cd rocAL-test
 cmake /opt/rocm/share/rocal/test/
 ctest -VV
 ```
-
+>[!NOTE]
+> * Make sure all rocAL required libraries are in your PATH
+> * `RHEL`/`SLES` - Export FFMPEG libraries into your PATH 
+>     + `export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64/:/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH`
+> ```shell
+> export PATH=$PATH:/opt/rocm/bin
+> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
+> ```
 ## Documentation
 
 Run the steps below to build documentation locally.
