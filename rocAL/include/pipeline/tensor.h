@@ -178,7 +178,7 @@ class TensorInfo {
                 _max_shape[1] = _dims.at(3);
                 _channels = _dims.at(2);
             }
-        } else {
+        } else {                                                             // For other tensors
             if (!_max_shape.size()) _max_shape.resize(_num_of_dims - 1, 0);  // Since 2 values will be stored in the vector
             _max_shape.assign(_dims.begin() + 1, _dims.end());
         }

@@ -54,7 +54,7 @@ class NumpyLoader : public LoaderModule {
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {};
-    size_t last_batch_padded_size() override { return 0; };
+    size_t last_batch_padded_size() override;
 
    private:
     bool is_out_of_data();
@@ -89,4 +89,6 @@ class NumpyLoader : public LoaderModule {
     bool _decoder_keep_original = false;
     int _device_id;
     std::vector<std::vector<unsigned>> _tensor_roi;
+    RocalBatchPolicy _last_batch_policy;   //!< Last batch policy used for the reader
+    bool _last_batch_padded;                //!< Used to decide whether to pad or wrap the last batch
 };

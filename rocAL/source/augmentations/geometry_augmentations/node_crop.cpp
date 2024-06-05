@@ -102,8 +102,8 @@ void CropNode::create_crop_tensor() {
     vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
     std::vector<size_t> _crop_tensor_dims = {_batch_size, 4};
-    if (_inputs[0]->info().layout() == RocalTensorlayout::NFCHW || _inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
-        _crop_tensor_dims = {_inputs[0]->info().dims()[0] * _inputs[0]->info().dims()[1], 4};  // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
+    if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW || _inputs[0]->info().layout() == RocalTensorlayout::NFHWC)
+        _crop_tensor_dims = {_inputs[0]->info().dims()[0] * _inputs[0]->info().dims()[1], 4}; // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
     stride[0] = sizeof(vx_uint32);
     stride[1] = stride[0] * _crop_tensor_dims[0];
     vx_enum mem_type = VX_MEMORY_TYPE_HOST;
@@ -111,8 +111,8 @@ void CropNode::create_crop_tensor() {
         mem_type = VX_MEMORY_TYPE_HIP;
     allocate_host_or_pinned_mem(&_crop_coordinates, stride[1] * 4, _inputs[0]->info().mem_type());
 
-    _crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()), num_of_dims, _crop_tensor_dims.data(), VX_TYPE_UINT32, 0,
-                                            stride, reinterpret_cast<void *>(_crop_coordinates), mem_type);
+    _crop_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference) _graph->get()), num_of_dims, _crop_tensor_dims.data(), VX_TYPE_UINT32, 0, 
+                                                                  stride, reinterpret_cast<void *>(_crop_coordinates), mem_type);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_crop_tensor)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(_crop_tensor: failed " + TOSTR(status))

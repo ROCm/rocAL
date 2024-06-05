@@ -41,7 +41,7 @@ def main():
 
     pipeline.build()
     
-    numpyIteratorPipeline = ROCALNumpyIterator(pipeline, tensor_dtype=types.UINT8)
+    numpyIteratorPipeline = ROCALNumpyIterator(pipeline, return_max_roi=True)
     print(len(numpyIteratorPipeline))
     for epoch in range(1):
         print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)

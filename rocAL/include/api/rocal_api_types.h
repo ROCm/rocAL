@@ -316,7 +316,8 @@ enum RocalResizeScalingMode {
 /*! \brief rocAL Resize Interpolation Type enum
  * \ingroup group_rocal_types
  */
-enum RocalResizeInterpolationType {
+enum RocalResizeInterpolationType
+{
     /*! \brief AMD ROCAL_NEAREST_NEIGHBOR_INTERPOLATION
      */
     ROCAL_NEAREST_NEIGHBOR_INTERPOLATION = 0,

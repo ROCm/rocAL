@@ -161,3 +161,14 @@ Timing NumpyLoaderSharded::timing() {
     t.process_time = swap_handle_time;
     return t;
 }
+
+size_t NumpyLoaderSharded::last_batch_padded_size() {
+    size_t last_batch_padded_size = 0;
+    for (auto& loader : _loaders) {
+        if (last_batch_padded_size == 0)
+            last_batch_padded_size = loader->last_batch_padded_size();
+        if (last_batch_padded_size != loader->last_batch_padded_size())
+            THROW("All loaders must have the same last batch padded size");
+    }
+    return last_batch_padded_size;
+}

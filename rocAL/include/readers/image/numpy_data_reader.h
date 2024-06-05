@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <mutex>
 
 #include "pipeline/commons.h"
-#include "image_reader.h"
+#include "readers/image/image_reader.h"
 #include "pipeline/timing_debug.h"
 
 class NumpyDataReader : public Reader {
@@ -61,6 +61,9 @@ class NumpyDataReader : public Reader {
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id; };
 
+    //! Returns the name of the latest file_path opened
+    const std::string file_path() override { return _last_file_path; }
+
     unsigned count_items() override;
 
     ~NumpyDataReader() override;
@@ -68,6 +71,9 @@ class NumpyDataReader : public Reader {
     int close() override;
 
     NumpyDataReader();
+
+    //! Returns the number of images in the last batch
+    size_t last_batch_padded_size() override;
 
    private:
     //! opens the folder containnig the images
@@ -78,14 +84,12 @@ class NumpyDataReader : public Reader {
     DIR* _sub_dir;
     struct dirent* _entity;
     std::vector<std::string> _file_names;
-    std::vector<std::string> _files;
-    std::vector<NumpyHeaderData> _file_headers;
     unsigned _curr_file_idx;
     FILE* _current_fPtr;
     unsigned _current_file_size;
     NumpyHeaderData _curr_file_header;
     std::string _last_id;
-    std::string _last_file_name;
+    std::string _last_file_name, _last_file_path;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
@@ -97,7 +101,6 @@ class NumpyDataReader : public Reader {
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
-    unsigned _seed = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
     std::mutex _cache_mutex_;
@@ -123,7 +126,11 @@ class NumpyDataReader : public Reader {
     int release();
     size_t get_file_shard_id();
     void incremenet_file_id() { _file_id++; }
-    void replicate_last_image_to_fill_last_shard();
+    void fill_last_batch();
     void replicate_last_batch_to_pad_partial_shard();
-    TimingDbg _shuffle_time;
+    std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
+    //! Pair containing the last batch policy and last_batch_padded values for deciding what to do with last batch
+    std::pair<RocalBatchPolicy, bool> _last_batch_info;
+    size_t _last_batch_padded_size = 0;
+    Reader::Status generate_file_names();
 };

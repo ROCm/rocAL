@@ -220,6 +220,11 @@ NumpyLoader::load_routine() {
 bool NumpyLoader::is_out_of_data() {
     return (remaining_count() < _batch_size);
 }
+
+size_t NumpyLoader::last_batch_padded_size() {
+    return _reader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
 NumpyLoader::update_output_image() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;

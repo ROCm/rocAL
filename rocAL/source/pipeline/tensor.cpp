@@ -110,7 +110,7 @@ void TensorInfo::reset_tensor_roi_buffers() {
     unsigned *roi_buf;
     auto roi_no_of_dims = _is_image ? 2 : (_num_of_dims - 1);
     auto roi_size = (_layout == RocalTensorlayout::NFCHW || _layout == RocalTensorlayout::NFHWC) ? _dims[0] * _dims[1] : _batch_size;  // For Sequences pre allocating the ROI to N * F to replicate in OpenVX extensions
-    allocate_host_or_pinned_mem((void **)&roi_buf, roi_size * roi_no_of_dims * 2 * sizeof(unsigned), _mem_type);
+    allocate_host_or_pinned_mem((void **)&roi_buf, roi_size * roi_no_of_dims * 2 * sizeof(unsigned), _mem_type);                       // 2 denotes, one coordinate each for begin and end
     _roi.set_ptr(roi_buf, _mem_type, roi_size, roi_no_of_dims);
     if (_is_image) {
         Roi2DCords *roi = _roi.get_2D_roi();

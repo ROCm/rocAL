@@ -882,7 +882,7 @@ MasterGraph::get_output_tensors() {
         _output_tensor_list[i]->set_roi(roi_ptr[i]);
     }
     return &_output_tensor_list;
-    }
+}
 
 void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
