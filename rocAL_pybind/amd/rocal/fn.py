@@ -1056,7 +1056,17 @@ def box_iou_matcher(*inputs, anchors, high_threshold=0.5,
     return (box_iou_matcher, [])
 
 
-def external_source(*inputs, source, device=None, color_format=types.RGB, random_shuffle=False, mode=types.EXTSOURCE_FNAME, max_width=2000, max_height=2000):
+def external_source(source, device=None, color_format=types.RGB, random_shuffle=False, mode=types.EXTSOURCE_FNAME, max_width=2000, max_height=2000):
+    """
+    External Source Reader - User can pass a iterator or callable source.
+    @param source (iterator or callable)                                 The source iterator or callable object.
+    @param device (string, optional, default = None)                     Parameter unused for augmentation
+    @color_format (type, optional, default = RGB)                        Tensor color format for the reader. Default is RGB format.
+    @random_shuffle (bool, optional, default= False)                     Data would be randomly shuffled if set to True.
+    @mode (type, optional, default = EXTSOURCE_FNAME)                    The Default mode would be External Source File Name. The External Source Mode can be FileName, Raw Compressed, Raw Uncompressed.
+    @max_width (int, optional, default = 2000)                           The Max Width to which the source images would be decoded to.
+    @max_height (int, optional, default = 2000)                          The Max Height to which the source images would be decoded to.
+    """
     # pybind call arguments
     Pipeline._current_pipeline._is_external_source_operator = True
     Pipeline._current_pipeline._external_source = iter(source)
@@ -1068,3 +1078,27 @@ def external_source(*inputs, source, device=None, color_format=types.RGB, random
     external_source_operator = b.externalFileSource(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (external_source_operator, [])  # Labels is Empty
+
+def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, output_dtype=types.FLOAT):
+    """
+    Applies preemphasis filter to the input data.
+    This filter, in simple form, can be expressed by the formula:
+    Y[t] = X[t] - coeff * X[t-1]    if t > 1
+    Y[t] = X[t] - coeff * X_border  if t == 0
+    with X and Y being the input and output signal, respectively.
+    The value of X_border depends on the border argument:
+    X_border = 0                    if border_type == 'zero'
+    X_border = X[0]                 if border_type == 'clamp'
+    X_border = X[1]                 if border_type == 'reflect'
+
+    @param inputs (list)                                                 The input sample to which preEmphasisFilter is applied.
+    @param border                                                        The border value policy. The possible values are "CLAMP", "ZERO", "REFLECT"
+    @param preemph_coeff (float , optional, default = 0.97)              The preEmphasisFilter co-efficient.
+    @output_dtype (type, optional, default = types.FLOAT)                Tensor dtype for the augmentation output. Default is types.FLOAT.
+    """
+    preemph_coeff_float_param = b.createFloatParameter(preemph_coeff)
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False,
+                    "preemph_coeff": preemph_coeff_float_param, "preemph_border_type": border,
+                    "output_dtype" :output_dtype}
+    preemphasis_output = b.preEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return (preemphasis_output)

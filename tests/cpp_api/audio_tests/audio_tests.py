@@ -25,7 +25,8 @@ import shutil
 import argparse
 
 test_case_augmentation_map = {
-    0: "audio_decoder"
+    0: "audio_decoder",
+    1: "preemphasis_filter"
 }
 
 def run_unit_test(src_path, qa_mode, gpu, downmix, build_folder_path, case_list):

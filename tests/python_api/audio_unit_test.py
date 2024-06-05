@@ -35,6 +35,7 @@ seed = random.SystemRandom().randint(0, 2**32 - 1)
 
 test_case_augmentation_map = {
     0: "audio_decoder",
+    1: "preemphasis_filter"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -79,6 +80,18 @@ def audio_decoder_pipeline(path):
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
+
+@pipeline_def(seed=seed)
+def pre_emphasis_filter_pipeline(path):
+    audio, labels = fn.readers.file(file_root=path)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return fn.preemphasis_filter(decoded_audio)
 
 def main():
     args = parse_args()
@@ -131,6 +144,8 @@ def main():
         case_name = test_case_augmentation_map.get(case)
         if case_name == "audio_decoder":
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
+        if case_name == "preemphasis_filter":
+            audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
         audio_pipeline.build()
         audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         cnt = 0

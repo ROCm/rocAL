@@ -17,6 +17,7 @@
 * Pytorch iterator for Audio
 * Python audio unit test, and support to verify outputs
 * rocDecode for HW decode
+* Support for Audio augmentation - PreEmphasis filter
 
 ### Optimizations
 

@@ -149,6 +149,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             case_name = "audio_decoder";
             std::cout << "Running AUDIO DECODER" << std::endl;
         } break;
+        case 1: {
+            std::cout << "Running PREEMPHASIS" << std::endl;
+            case_name = "preemphasis_filter";
+            RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
+            RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP;
+            RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
+            rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
+
+        } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";
             return -1;
