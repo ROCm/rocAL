@@ -140,4 +140,5 @@ class TFRecordReader : public Reader {
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
     std::vector<std::string> _all_shard_file_names_padded;
+    std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
 };
