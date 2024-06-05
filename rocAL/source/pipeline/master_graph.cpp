@@ -1156,6 +1156,41 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
     return _metadata_output_tensor_list;
 }
 
+std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(const char *source_path, const char* index_path, std::vector<std::string> extensions , MetaDataReaderType reader_type, unsigned missing_component_behaviour) {
+    if (_meta_data_reader)
+        THROW("A metadata reader has already been created")
+    if (_augmented_meta_data)
+        THROW("Metadata can only have a single output")
+
+    generate_index = index_path.size() == 0;
+    if (generate_index) {
+        WARNING("Index file is not provided, it may take some time to infer it from the tar file");
+    }
+
+    if (extensions == "cls") // Add more extension cases as next step, add the right MetaDataType
+    {
+        MetaDataConfig config(MetaDataType::Label, reader_type, source_path);
+        MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), 0, 0, 0, index_path, missing_component_behaviour);
+        _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
+        _meta_data_reader->read_all(source_path);
+
+        std::vector<size_t> dims = {1};
+        auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default labels Info
+        default_labels_info.set_metadata();
+        _meta_data_buffer_size.emplace_back(_user_batch_size * sizeof(vx_int32));
+
+        for (unsigned i = 0; i < _user_batch_size; i++) {
+            auto info = default_labels_info;
+            _labels_tensor_list.push_back(new Tensor(info));
+        }
+        _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
+        _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+    }
+    // Add remaining cases later
+
+    return _metadata_output_tensor_list;
+}
+
 std::vector<rocalTensorList *> MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
