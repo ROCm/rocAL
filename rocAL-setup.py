@@ -327,8 +327,7 @@ else:
 
     #pip3 packages
     for i in range(len(pip3Packages)):
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                    ' '+linuxSystemInstall_check+' install -y '+ pip3Packages[i]))
+        ERROR_CHECK(os.system('sudo pip3 install '+ pip3Packages[i]))
 
     # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
     ERROR_CHECK(os.system(
