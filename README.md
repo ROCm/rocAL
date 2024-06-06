@@ -60,20 +60,90 @@ rocAL can be currently used to perform the following operations either with rand
   + Ubuntu - `20.04` / `22.04`
   + CentOS - `7`
   + RedHat - `8` / `9`
-  + SLES - `15-SP4`
-* [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
-* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
-* [RPP](https://github.com/ROCm/rpp)
-* [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media` - MIVisionX Components
-* [Turbo JPEG](https://libjpeg-turbo.org/) - Version 3.0.1 from `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
-* [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
-* [LMBD Library](http://www.lmdb.tech/doc/)
-* [RapidJSON](https://github.com/Tencent/rapidjson)
-* [PyBind11](https://github.com/pybind/pybind11)
+  + SLES - `15-SP5`
+
+* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+> [!IMPORTANT] 
+> `gfx908` or higher GPU required
+
+* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): Required usecase - rocm
+> [!IMPORTANT]
+> `sudo amdgpu-install --usecase=rocm`
+
 * [HIP](https://github.com/ROCm/HIP)
-* OpenMP
-* C++17
+  ```shell
+  sudo apt install rocm-hip-runtime-dev
+  ```
+
+* [RPP](https://github.com/ROCm/rpp)
+  ```shell
+  sudo apt install rpp-dev
+  ```
+
+* MIVisionX Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
+  ```shell
+  sudo apt install mivisionx-dev
+  ```
+
+* [rocDecode](https://github.com/ROCm/rocDecode)
+  ```shell
+  sudo apt install rocdecode-dev
+  ```
+
+* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+  ```shell
+  sudo apt install half
+  ```
+
+* [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
+  ```shell
+  sudo apt install libprotobuf-dev
+  ```
+
+* [LMBD Library](http://www.lmdb.tech/doc/)
+  ```shell
+  sudo apt install liblmdb-dev
+  ```
+
+* Python3 and Python3 PIP
+  ```shell
+  sudo apt install python3-dev python3-pip
+  ```
+
+* Python Wheel
+  ```shell
+  pip3 install wheel
+  ```
+
+* [PyBind11](https://github.com/pybind/pybind11)
+  * Source: `https://github.com/pybind/pybind11`
+  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
+
+* [Turbo JPEG](https://libjpeg-turbo.org/) 
+  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
+  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
+
+* [RapidJSON](https://github.com/Tencent/rapidjson)
+  * Source: `https://github.com/Tencent/rapidjson.git`
+  * Tag: `master`
+
+* **Optional**: FFMPEG
+  ```shell
+  sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+  ```
+
+* **Optional**: OpenCV
+  ```shell
+  sudo apt install libopencv-dev
+  ```
+
+> [!IMPORTANT] 
+> * Compiler features required
+>   * OpenMP
+>   * C++17
+
+>[!NOTE]
+> * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
 
 ### Prerequisites setup script
 
@@ -82,20 +152,22 @@ For your convenience, we provide the setup script,[rocAL-setup.py](https://githu
 ```shell
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --opencv    [OpenCV Version - optional (default:4.6.0)]
-                      --protobuf  [ProtoBuf Version - optional (default:3.12.4)]
                       --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
-                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
                       --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
+                      --ffmpeg    [FFMPEG Installation - optional (default:OFF)[options:ON/OFF]]
+                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 
 ## Installation instructions
 
 The installation process uses the following steps:
 
-* [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
-* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
-* Use either [Package install](#package-install) or [Source install](#source-install) as described below.
+* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
+
+* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
+
+* Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
 
 ### Package install
 
@@ -124,8 +196,8 @@ Install rocAL runtime, development, and test packages.
   ```
 
 >[!NOTE]
-> * Package install requires `Turbo JPEG`, `PyBind 11 v2.10.4` and `Protobuf V3.12.4`  manual install
-> * `CentOS`/`RedHat`/`SLES` requires `FFMPEG Dev` package manual install
+> * Package install requires `TurboJPEG` and `RapidJSON`  manual install
+> * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 
 ### Source install
 
@@ -138,6 +210,8 @@ git clone https://github.com/ROCm/rocAL.git
 ```
 
   **Note:** rocAL has support for two GPU backends: **OPENCL** and **HIP**:
+
+#### HIP Backend
 
 * Instructions for building rocAL with the **HIP** GPU backend (default GPU backend):
   + run the setup script to install all the dependencies required by the **HIP** GPU backend:
@@ -171,6 +245,7 @@ git clone https://github.com/ROCm/rocAL.git
 >[!NOTE]
 > To run tests with verbose option, use `make test ARGS="-VV"`.
 
+#### OpenCL Backend
 * Instructions for building rocAL with [**OPENCL** GPU backend](https://github.com/ROCm/rocAL/wiki/OpenCL-Backend)
 
 >[!NOTE]
@@ -196,7 +271,14 @@ mkdir rocAL-test && cd rocAL-test
 cmake /opt/rocm/share/rocal/test/
 ctest -VV
 ```
-
+>[!NOTE]
+> * Make sure all rocAL required libraries are in your PATH
+> * `RHEL`/`SLES` - Export FFMPEG libraries into your PATH 
+>     + `export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64/:/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH`
+> ```shell
+> export PATH=$PATH:/opt/rocm/bin
+> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
+> ```
 ## Documentation
 
 Run the steps below to build documentation locally.
@@ -234,15 +316,16 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   * Ubuntu - `20.04` / `22.04`
   * CentOS - `7`
   * RedHat - `8` / `9`
-  * SLES - `15-SP4`
-* ROCm: rocm-core - `5.7.0.50700-6`
+  * SLES - `15-SP5`
+* ROCm: rocm-core - `6.1.0.60100-64`
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
+* rocDecode - `rocdecode` & `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
+* Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
+* PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* Turbo JPEG - [Version 3.0.1](https://libjpeg-turbo.org/)
-* PyBind11 - [v2.10.4](https://github.com/pybind/pybind11)
-* rocAL Setup Script - `V2.1.0`
+* rocAL Setup Script - `V2.2.0`
 * Dependencies for all the above packages
