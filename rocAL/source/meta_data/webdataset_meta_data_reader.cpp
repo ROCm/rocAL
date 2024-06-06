@@ -102,10 +102,19 @@ void WebDataSetMetaDataReader::lookup(const std::vector<std::string>& image_name
     }
 }
 
-void WebDataSetMetaDataReader::parse_tar_files()
+void WebDataSetMetaDataReader::parse_tar_files() {
+    
+}
 
 void WebDataSetMetaDataReader::read_all(const std::string& _path) {
-    std::string _folder_path = _path; // path to 'n' tar files
+
+    std::string _folder_path;
+    if (_index_paths.size() == 0)
+        _folder_path = _paths;
+    else
+        _folder_path = _index_paths;
+
+    // std::string _folder_path = _path; // path to 'n' tar files / index files
 
     if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
         THROW("ERROR: Failed opening the directory at " + _folder_path);
@@ -119,7 +128,14 @@ void WebDataSetMetaDataReader::read_all(const std::string& _path) {
         entry_name_list.push_back(entry_name);
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
+
+    if (_index_paths.size() == 0)
+        parse_tar_files(entry_name_list);
+    else
+        parse_index_files(entry_name_list);
+
     closedir(_sub_dir);
+
     // uint label_counter = 0;
     // for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
     //     std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];

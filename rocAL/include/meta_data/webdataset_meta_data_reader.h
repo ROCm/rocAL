@@ -56,4 +56,6 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     struct dirent* _entity;
     std::vector<std::string> _file_names;
     std::vector<std::string> _subfolder_file_names;
+    void parse_tar_files(std::string paths_to_tar_files);
+    void parse_index_files(std::string paths_to_index_files);
 };
