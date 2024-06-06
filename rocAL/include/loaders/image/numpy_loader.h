@@ -26,9 +26,9 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
+#include "image_read_and_decode.h"
 #include "loaders/circular_buffer.h"
 #include "pipeline/commons.h"
-#include "image_read_and_decode.h"
 //
 // NumpyLoader runs an internal thread for loading an decoding of numpy arrays asynchronously
 // it uses a circular buffer to store decoded numpy arrays for the user
@@ -89,6 +89,6 @@ class NumpyLoader : public LoaderModule {
     bool _decoder_keep_original = false;
     int _device_id;
     std::vector<std::vector<unsigned>> _tensor_roi;
-    RocalBatchPolicy _last_batch_policy;   //!< Last batch policy used for the reader
-    bool _last_batch_padded;                //!< Used to decide whether to pad or wrap the last batch
+    RocalBatchPolicy _last_batch_policy;  //!< Last batch policy used for the reader
+    bool _last_batch_padded;              //!< Used to decide whether to pad or wrap the last batch
 };

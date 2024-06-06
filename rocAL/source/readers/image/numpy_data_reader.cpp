@@ -20,12 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "readers/image/numpy_data_reader.h"
+
 #include <algorithm>
 #include <cassert>
 #include <numeric>
 #include <random>
+
 #include "pipeline/commons.h"
-#include "readers/image/numpy_data_reader.h"
 #include "pipeline/filesystem.h"
 
 NumpyDataReader::NumpyDataReader() {
@@ -42,7 +44,7 @@ NumpyDataReader::NumpyDataReader() {
 }
 
 unsigned NumpyDataReader::count_items() {
-    int ret;
+    int ret = 0;
     if (_shard_size == -1) {
         if (_loop) return shard_size_with_padding();
         int size = std::max(shard_size_with_padding(), _batch_count);
@@ -50,9 +52,9 @@ unsigned NumpyDataReader::count_items() {
         if (_last_batch_info.first == RocalBatchPolicy::PARTIAL || _last_batch_info.first == RocalBatchPolicy::FILL) {
             ret += _last_batch_padded_size;
         } else if (_last_batch_info.first == RocalBatchPolicy::DROP &&
-                   _last_batch_info.second == true) { // When pad_last_batch_repeated is False - Enough
-                                                      // number of samples would not be present in the last batch - hence
-                                                      // dropped by condition handled in the loader
+                   _last_batch_info.second == true) {  // When pad_last_batch_repeated is False - Enough
+                                                       // number of samples would not be present in the last batch - hence
+                                                       // dropped by condition handled in the loader
             ret -= _batch_count;
         }
     } else if (_shard_size > 0) {
@@ -62,7 +64,7 @@ unsigned NumpyDataReader::count_items() {
             return shard_size_with_padding;
         int size = std::max(shard_size_with_padding, _batch_count);
         ret = (size - _read_counter);
-        if (_last_batch_info.first == RocalBatchPolicy::DROP) // The shard size is padded at the beginning of the condition, hence dropping the last batch
+        if (_last_batch_info.first == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
             ret -= _batch_count;
     }
     return ((ret < 0) ? 0 : ret);
@@ -83,7 +85,7 @@ Reader::Status NumpyDataReader::initialize(ReaderConfig desc) {
     _stick_to_shard = desc.get_stick_to_shard();
     _shard_size = desc.get_shard_size();
     ret = subfolder_reading();
-    _curr_file_idx = get_start_idx(); // shard's start_idx would vary for every shard in the vector
+    _curr_file_idx = get_start_idx();  // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
@@ -98,7 +100,7 @@ void NumpyDataReader::increment_curr_file_idx() {
         _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
     } else {
         if (_curr_file_idx >= get_start_idx() &&
-            _curr_file_idx < get_start_idx() + shard_size_without_padding() - 1) // checking if current-element lies within the shard size [begin_idx, last_idx -1]
+            _curr_file_idx < get_start_idx() + shard_size_without_padding() - 1)  // checking if current-element lies within the shard size [begin_idx, last_idx -1]
             _curr_file_idx = (_curr_file_idx + 1);
         else
             _curr_file_idx = get_start_idx();
@@ -430,11 +432,11 @@ void NumpyDataReader::reset() {
                             _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
 
     if (_stick_to_shard == false)
-        increment_shard_id(); // Should work for both single and multiple shards
+        increment_shard_id();  // Should work for both single and multiple shards
 
     _read_counter = 0;
 
-    if (_last_batch_info.first == RocalBatchPolicy::DROP) { // Skipping the dropped batch in next epoch
+    if (_last_batch_info.first == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
         for (uint i = 0; i < _batch_count; i++)
             increment_curr_file_idx();
     }
@@ -491,13 +493,14 @@ Reader::Status NumpyDataReader::generate_file_names() {
         _padded_samples = _shard_size % _batch_count;
     else
         _padded_samples = shard_size_with_padding() % _batch_count;
-    _last_batch_padded_size = _batch_count - _padded_samples;
+    if (_padded_samples > 0)
+        _last_batch_padded_size = _batch_count - _padded_samples;
 
     if (_pad_last_batch_repeated ==
-        true) { // pad the last sample when the dataset_size is not divisible by
-                // the number of shard's (or) when the shard's size is not
-                // divisible by the batch size making each shard having equal
-                // number of samples
+        true) {  // pad the last sample when the dataset_size is not divisible by
+                 // the number of shard's (or) when the shard's size is not
+                 // divisible by the batch size making each shard having equal
+                 // number of samples
         for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
             uint start_idx = (dataset_size * shard_id) / _shard_count;
             uint shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
@@ -529,7 +532,6 @@ Reader::Status NumpyDataReader::subfolder_reading() {
         LOG("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + STR(_folder_path))
     return ret;
 }
-
 
 Reader::Status NumpyDataReader::open_folder() {
     if ((_src_dir = opendir(_folder_path.c_str())) == nullptr)
@@ -581,7 +583,8 @@ std::string NumpyDataReader::get_root_folder_path() {
     return _folder_path;
 }
 
-std::vector<std::string> NumpyDataReader::get_file_paths_from_meta_data_reader() {   if (_meta_data_reader) {
+std::vector<std::string> NumpyDataReader::get_file_paths_from_meta_data_reader() {
+    if (_meta_data_reader) {
         return _meta_data_reader->get_file_path_content();
     } else {
         std::clog << "\n Meta Data Reader is not initialized!";
@@ -598,11 +601,10 @@ size_t NumpyDataReader::get_dataset_size() {
     return _file_count_all_shards;
 }
 
-
 size_t NumpyDataReader::shard_size_without_padding() {
     return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - floor(_shard_id * get_dataset_size() / _shard_count);
 }
 
 size_t NumpyDataReader::shard_size_with_padding() {
-  return std::ceil(get_dataset_size() * 1.0 / _shard_count);
+    return std::ceil(get_dataset_size() * 1.0 / _shard_count);
 }

@@ -24,13 +24,13 @@ THE SOFTWARE.
 #include <dirent.h>
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "pipeline/commons.h"
-#include "readers/image/image_reader.h"
 #include "pipeline/timing_debug.h"
+#include "readers/image/image_reader.h"
 
 class NumpyDataReader : public Reader {
    public:
@@ -75,9 +75,9 @@ class NumpyDataReader : public Reader {
     //! Returns the number of images in the last batch
     size_t last_batch_padded_size() override;
 
-    std::string get_root_folder_path(); // Returns the root folder path
+    std::string get_root_folder_path();  // Returns the root folder path
 
-    std::vector<std::string> get_file_paths_from_meta_data_reader(); // Returns the relative file path from the meta-data reader
+    std::vector<std::string> get_file_paths_from_meta_data_reader();  // Returns the relative file path from the meta-data reader
 
    private:
     //! opens the folder containnig the images
@@ -127,7 +127,7 @@ class NumpyDataReader : public Reader {
     template <typename T>
     size_t ParseNumpyData(T* buf, std::vector<unsigned> strides, std::vector<unsigned> shapes, unsigned dim = 0);
     bool GetFromCache(const std::string& file_name, NumpyHeaderData& target);
-    void UpdateCache(const std::string& file_name, const NumpyHeaderData& value);   
+    void UpdateCache(const std::string& file_name, const NumpyHeaderData& value);
     void incremenet_read_ptr();
     void increment_curr_file_idx();
     int release();
@@ -143,11 +143,11 @@ class NumpyDataReader : public Reader {
     size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
-    Reader::Status generate_file_names(); // Function that would generate _file_names containing all the samples in the dataset
-    size_t get_start_idx(); // Start Idx of the Shard's Data
-    size_t get_dataset_size(); // DataSet Size
-    size_t shard_size_without_padding(); // Number of files belonging to a shard (without padding)
-    size_t shard_size_with_padding(); // Number of files belonging to a shard (with padding)
+    Reader::Status generate_file_names();  // Function that would generate _file_names containing all the samples in the dataset
+    size_t get_start_idx();                // Start Idx of the Shard's Data
+    size_t get_dataset_size();             // DataSet Size
+    size_t shard_size_without_padding();   // Number of files belonging to a shard (without padding)
+    size_t shard_size_with_padding();      // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
     std::vector<std::string> _all_shard_file_names_padded;

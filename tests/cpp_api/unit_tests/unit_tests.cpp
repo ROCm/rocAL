@@ -323,7 +323,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         {
             std::cout << ">>>>>>> Running Numpy reader" << std::endl;
             pipeline_type = 4;
-            decoded_output = rocalNumpyFileSource(handle, path, num_threads, false, false, false, ROCAL_USE_MAX_SIZE);
+            decoded_output = rocalNumpyFileSource(handle, path, num_threads, false, false, false);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
@@ -731,7 +731,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                             out_f_buffer = (float *)output_tensor_list->at(idx)->buffer();
 
                         out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->data_size() / 4);
-                        // convert_float_to_uchar_buffer(out_f_buffer, out_buffer, output_tensor_list->at(idx)->data_size() / 4);
                     } else if (output_tensor_list->at(idx)->data_type() == RocalTensorOutputType::ROCAL_FP16) {
                         half *out_f16_buffer;
                         std::cout << "Creating float16 buffer of ";
@@ -745,7 +744,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                             out_f16_buffer = (half *)output_tensor_list->at(idx)->buffer();
 
                         out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->data_size() / 2);
-                        // convert_float_to_uchar_buffer(out_f16_buffer, out_buffer, output_tensor_list->at(idx)->data_size() / 2);
                     } else {
                         std::cout << "Creating uchar buffer of ";
                         for (auto x : output_tensor_list->at(idx)->shape())
@@ -758,7 +756,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                             out_buffer = (unsigned char *)(output_tensor_list->at(idx)->buffer());
                     }
                 }
-                std::cout << "Copied numpy data to buffers\n";
+                std::cout << "Copied numpy data to output buffers\n";
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";

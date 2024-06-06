@@ -4,25 +4,26 @@ from __future__ import print_function
 import random
 
 from amd.rocal.pipeline import Pipeline
-from amd.rocal.plugin.pytorch import ROCALNumpyIterator
+from amd.rocal.plugin.generic import ROCALNumpyIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 import sys
 import os
 
+
 def main():
-    if  len(sys.argv) < 3:
-        print ('Please pass numpy_folder cpu/gpu batch_size')
+    if len(sys.argv) < 3:
+        print('Please pass numpy_folder cpu/gpu batch_size')
         exit(0)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/NUMPY_READER/"
+        path = "OUTPUT_IMAGES_PYTHON/NEW_API/NUMPY_READER/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
     except OSError as error:
         print(error)
     data_path = sys.argv[1]
-    if(sys.argv[2] == "cpu"):
+    if (sys.argv[2] == "cpu"):
         rocal_cpu = True
     else:
         rocal_cpu = False
@@ -40,7 +41,7 @@ def main():
         pipeline.set_outputs(numpy_reader_output)
 
     pipeline.build()
-    
+
     numpyIteratorPipeline = ROCALNumpyIterator(pipeline, return_max_roi=True)
     print(len(numpyIteratorPipeline))
     for epoch in range(1):
@@ -50,6 +51,7 @@ def main():
             print("************************************** i *************************************",i)
         numpyIteratorPipeline.reset()
     print("*********************************************************************")
+
 
 if __name__ == '__main__':
     main()

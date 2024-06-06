@@ -95,8 +95,7 @@ evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
 
 std::vector<size_t>
 evaluate_numpy_data_set(StorageType storage_type,
-                        DecoderType decoder_type, const std::string &source_path)
-{
+                        DecoderType decoder_type, const std::string& source_path) {
     ImageSourceEvaluator source_evaluator;
     source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
     auto reader_cfg = ReaderConfig(storage_type, source_path);

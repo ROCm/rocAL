@@ -627,14 +627,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
  * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
-extern "C"  RocalTensor  ROCAL_API_CALL rocalNumpyFileSource(
-                 RocalContext p_context,
-                 const char* source_path,
-                 unsigned internal_shard_count,
-                 bool is_output = false,
-                 bool shuffle = false,
-                 bool loop = false,
-                 std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
+extern "C" RocalTensor ROCAL_API_CALL rocalNumpyFileSource(RocalContext p_context,
+                                                           const char* source_path,
+                                                           unsigned internal_shard_count,
+                                                           bool is_output = false,
+                                                           bool shuffle = false,
+                                                           bool loop = false,
+                                                           std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.
  * \ingroup group_rocal_data_loaders
@@ -648,15 +647,14 @@ extern "C"  RocalTensor  ROCAL_API_CALL rocalNumpyFileSource(
  * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
-extern "C"  RocalTensor  rocalNumpyFileSourceSingleShard(
-                 RocalContext p_context,
-                 const char* source_path,
-                 bool is_output = false,
-                 bool shuffle = false,
-                 bool loop = false,
-                 unsigned shard_id = 0,
-                 unsigned shard_count = 1,
-                 std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
+extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext p_context,
+                                                       const char* source_path,
+                                                       bool is_output = false,
+                                                       bool shuffle = false,
+                                                       bool loop = false,
+                                                       unsigned shard_id = 0,
+                                                       unsigned shard_count = 1,
+                                                       std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 /*!
  * \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.

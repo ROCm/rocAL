@@ -149,7 +149,7 @@ struct ImageRecordIOHeader {
 };
 
 struct NumpyHeaderData {
-    public:
+   public:
     std::vector<unsigned> _shape;
     RocalTensorDataType _type_info;
     bool _fortran_order = false;
@@ -159,7 +159,7 @@ struct NumpyHeaderData {
 
     size_t size() const {
         size_t num_elements = 1;
-        for (const auto& dim: _shape)
+        for (const auto &dim : _shape)
             num_elements *= dim;
         return num_elements;
     };

@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "numpy_loader_sharded.h"
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
-#include "numpy_loader_sharded.h"
 
 class NumpyLoaderSingleShardNode : public Node {
    public:
@@ -43,8 +43,8 @@ class NumpyLoaderSingleShardNode : public Node {
     std::shared_ptr<LoaderModule> get_loader_module();
 
    protected:
-    void create_node() override{};
-    void update_node() override{};
+    void create_node() override {};
+    void update_node() override {};
 
    private:
     std::shared_ptr<NumpyLoader> _loader_module = nullptr;

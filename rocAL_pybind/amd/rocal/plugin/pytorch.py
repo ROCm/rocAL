@@ -63,7 +63,8 @@ class ROCALNumpyIterator(object):
                     self.max_roi_size = np.zeros(self.num_dims, dtype=np.uint32)
                     for j in range(self.batch_size):
                         index = j * self.num_dims * 2
-                        roi_size = self.roi_array[index + self.num_dims : index + self.num_dims * 2] - self.roi_array[index : index + self.num_dims]
+                        roi_size = self.roi_array[index + self.num_dims: index +
+                                                  self.num_dims * 2] - self.roi_array[index: index + self.num_dims]
                         self.max_roi_size = np.maximum(roi_size, self.max_roi_size)
                 if self.device == "cpu":
                     torch_dtype = self.output_tensor_list[i].dtype()
@@ -85,14 +86,16 @@ class ROCALNumpyIterator(object):
                     self.max_roi_size = np.zeros(self.num_dims, dtype=np.uint32)
                     for j in range(self.batch_size):
                         index = j * self.num_dims * 2
-                        roi_size = self.roi_array[index + self.num_dims : index + self.num_dims * 2] - self.roi_array[index : index + self.num_dims]
+                        roi_size = self.roi_array[index + self.num_dims: index +
+                                                  self.num_dims * 2] - self.roi_array[index: index + self.num_dims]
                         self.max_roi_size = np.maximum(roi_size, self.max_roi_size)
                 self.output_tensor_list[i].copy_data(ctypes.c_void_p(
                     self.output_list[i].data_ptr()), self.output_memory_type)
         if self.return_max_roi:
             roi_output_list = []
             for i in range(len(self.output_list)):
-                roi_output_list.append(self.output_list[i][:, :self.max_roi_size[0], :self.max_roi_size[1], :self.max_roi_size[2], :self.max_roi_size[3]])
+                roi_output_list.append(
+                    self.output_list[i][:, :self.max_roi_size[0], :self.max_roi_size[1], :self.max_roi_size[2], :self.max_roi_size[3]])
             # Check if last batch policy is partial and only return the valid images in last batch
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) <= 0:
                 if (self.last_batch_size is None):
