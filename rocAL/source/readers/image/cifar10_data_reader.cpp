@@ -299,6 +299,10 @@ Reader::Status CIFAR10DataReader::open_folder() {
     return Reader::Status::OK;
 }
 
+size_t CIFAR10DataReader::last_batch_padded_size() {
+    return _last_batch_padded_size;
+}
+
 size_t CIFAR10DataReader::get_start_idx() {
     _shard_start_idx = (get_dataset_size() * _shard_id) / _shard_count;
     return _shard_start_idx;

@@ -319,6 +319,10 @@ void MXNetRecordIOReader::read_image(unsigned char *buff, int64_t seek_position,
     delete[] _data;
 }
 
+size_t MXNetRecordIOReader::last_batch_padded_size() {
+    return _last_batch_padded_size;
+}
+
 size_t MXNetRecordIOReader::get_start_idx() {
     _shard_start_idx = (get_dataset_size() * _shard_id) / _shard_count;
     return _shard_start_idx;

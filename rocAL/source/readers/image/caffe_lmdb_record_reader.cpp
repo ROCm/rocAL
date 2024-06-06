@@ -341,6 +341,10 @@ void CaffeLMDBRecordReader::read_image(unsigned char *buff, std::string file_nam
     _read_mdb_cursor = nullptr;
 }
 
+size_t CaffeLMDBRecordReader::last_batch_padded_size() {
+    return _last_batch_padded_size;
+}
+
 size_t CaffeLMDBRecordReader::get_start_idx() {
     _shard_start_idx = (get_dataset_size() * _shard_id) / _shard_count;
     return _shard_start_idx;
