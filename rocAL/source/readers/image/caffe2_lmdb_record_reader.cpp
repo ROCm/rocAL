@@ -160,10 +160,6 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
     if (Caffe2_LMDB_reader() != Reader::Status::OK)
         WRN("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Caffe2LMDBRecordReader cannot access the storage at " + _folder_path);
 
-    if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
-        replicate_last_image_to_fill_last_shard();
-        LOG("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
-    }
     if (!_file_names.empty())
         LOG("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     
