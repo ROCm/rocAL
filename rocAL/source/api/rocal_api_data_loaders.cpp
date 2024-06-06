@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <assert.h>
+#include <unordered_map>
 #ifdef ROCAL_VIDEO
 #include "loaders/video/node_video_loader.h"
 #include "loaders/video/node_video_loader_single_shard.h"
@@ -48,10 +49,11 @@ THE SOFTWARE.
 #ifdef ROCAL_AUDIO
 std::tuple<unsigned, unsigned>
 evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
-                        const std::string& source_path, const std::string& file_list_path) {
+                        const std::string& source_path, const std::string& file_list_path, std::shared_ptr<MetaDataReader> meta_data_reader) {
     AudioSourceEvaluator source_evaluator;
     auto reader_config = ReaderConfig(storage_type, source_path);
     reader_config.set_file_list_path(file_list_path);
+    reader_config.set_meta_data_reader(meta_data_reader);
     if (source_evaluator.Create(reader_config, DecoderConfig(decoder_type)) != AudioSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed")
     auto max_samples = source_evaluator.GetMaxSamples();
@@ -92,25 +94,11 @@ evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
 };
 
 std::vector<size_t>
-evaluate_numpy_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
+evaluate_numpy_data_set(StorageType storage_type,
                         DecoderType decoder_type, const std::string &source_path)
 {
-    auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy)
-    {
-        switch(decode_size_policy)
-        {
-            case ROCAL_USE_MAX_SIZE:
-            case ROCAL_USE_MAX_SIZE_RESTRICTED:
-                return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
-            case ROCAL_USE_MOST_FREQUENT_SIZE:
-                return MaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE;
-            default:
-                return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
-        }
-    };
-
     ImageSourceEvaluator source_evaluator;
-    source_evaluator.set_size_evaluation_policy(translate_image_size_policy(decode_size_policy));
+    source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
     auto reader_cfg = ReaderConfig(storage_type, source_path);
     if (source_evaluator.create(reader_cfg) != ImageSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed ")
@@ -1739,11 +1727,11 @@ rocalNumpyFileSource(
     bool is_output,
     bool shuffle,
     bool loop,
-    RocalImageSizeEvaluationPolicy decode_size_policy) {
+    std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
-        auto max_dimensions = evaluate_numpy_data_set(decode_size_policy, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
+        auto max_dimensions = evaluate_numpy_data_set(StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
                                                       source_path);
 
         RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
@@ -1772,7 +1760,9 @@ rocalNumpyFileSource(
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
+        std::pair<RocalBatchPolicy, bool> policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
+        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), policy_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1794,9 +1784,9 @@ rocalNumpyFileSourceSingleShard(
     bool is_output,
     bool shuffle,
     bool loop,
-    RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned shard_id,
-    unsigned shard_count) {
+    unsigned shard_count,
+    std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1806,7 +1796,7 @@ rocalNumpyFileSourceSingleShard(
         if (shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
 
-        auto max_dimensions = evaluate_numpy_data_set(decode_size_policy, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
+        auto max_dimensions = evaluate_numpy_data_set(StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
                                                       source_path);
 
         RocalTensorlayout tensor_format = RocalTensorlayout::NONE;
@@ -1835,7 +1825,9 @@ rocalNumpyFileSourceSingleShard(
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
+        std::pair<RocalBatchPolicy, bool> policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
+        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), policy_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -2349,7 +2341,10 @@ rocalAudioFileSourceSingleShard(
     bool is_output,
     bool shuffle,
     bool loop,
-    bool downmix) {
+    bool downmix,
+    bool stick_to_shard,
+    int shard_size,
+    std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2358,7 +2353,7 @@ rocalAudioFileSourceSingleShard(
             THROW("Shard count should be bigger than 0")
         if (shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
-        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path);
+        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
@@ -2369,7 +2364,9 @@ rocalAudioFileSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
+        std::pair<RocalBatchPolicy, bool> policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), policy_info, stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
@@ -2407,12 +2404,15 @@ rocalAudioFileSource(
     bool is_output,
     bool shuffle,
     bool loop,
-    bool downmix) {
+    bool downmix,
+    bool stick_to_shard,
+    int shard_size,
+    std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_AUDIO
-        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path);
+        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
@@ -2425,9 +2425,10 @@ rocalAudioFileSource(
 
         if (shard_count < 1)
             THROW("internal shard count should be bigger than 0")
-
+        auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
+        std::pair<RocalBatchPolicy, bool> policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), policy_info, stick_to_shard, shard_size);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;

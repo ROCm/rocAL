@@ -68,6 +68,8 @@ class CaffeLMDBRecordReader : public Reader {
 
     CaffeLMDBRecordReader();
 
+    size_t last_batch_padded_size() override; // The size of the number of samples padded in the last batch
+
    private:
     //! opens the folder containnig the images
     Reader::Status folder_reading();
@@ -80,7 +82,7 @@ class CaffeLMDBRecordReader : public Reader {
     unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
-    std::string _last_file_name;
+    std::string _last_file_name, _absolute_file_path;
     unsigned int _last_file_size;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
@@ -114,5 +116,23 @@ class CaffeLMDBRecordReader : public Reader {
     int _open_env = 1;
     int rc;
     void open_env_for_read_image();
+    void increment_curr_file_idx();
+    unsigned _shard_start_idx;
+    signed _shard_size = -1;
+    size_t _padded_samples = 0;
+    size_t _last_batch_padded_size = 0;
+    std::pair<RocalBatchPolicy, bool>  _last_batch_info;
+    size_t _num_padded_samples_counter = 0;
+    size_t _num_padded_samples = 0;
+    bool _stick_to_shard = false;
+    bool _pad_last_batch_repeated = false;
+    Reader::Status generate_file_names(); // Function that would generate _file_names containing all the samples in the dataset
+    size_t get_start_idx(); // Start Idx of the Shard's Data
+    size_t get_dataset_size(); // DataSet Size
+    size_t shard_size_without_padding(); // Number of files belonging to a shard (without padding)
+    size_t shard_size_with_padding(); // Number of files belonging to a shard (with padding)
+    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
+    void increment_shard_id();
+    std::vector<std::string> _all_shard_file_names_padded;
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
 };

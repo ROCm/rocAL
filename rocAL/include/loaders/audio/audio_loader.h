@@ -56,6 +56,7 @@ class AudioLoader : public LoaderModule {
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels,
                              ExternalSourceFileMode mode, bool eos) override { THROW("external source feed is not supported in audio loader") }
+    size_t last_batch_padded_size() override;
 
    private:
     bool is_out_of_data();
@@ -82,5 +83,7 @@ class AudioLoader : public LoaderModule {
     size_t _audio_counter = 0;          // How many audios have been loaded already
     size_t _remaining_audio_count;      // How many audios are there yet to be loaded
     int _device_id;
+    // RocalBatchPolicy _last_batch_policy;
+    // bool last_batch_padded;
 };
 #endif
