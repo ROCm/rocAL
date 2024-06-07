@@ -64,6 +64,8 @@ class CIFAR10DataReader : public Reader {
 
     unsigned get_file_index() { return _last_file_idx; }
 
+    size_t last_batch_padded_size() override; // The size of the number of samples padded in the last batch
+
    private:
     //! opens the folder containing the images
     Reader::Status open_folder();
@@ -72,9 +74,9 @@ class CIFAR10DataReader : public Reader {
     DIR *_src_dir;
     DIR *_sub_dir;
     struct dirent *_entity;
-    std::vector<std::string> _file_names;
-    std::vector<unsigned> _file_offsets;
-    std::vector<unsigned> _file_idx;
+    std::vector<std::string> _file_names, _all_shard_file_names_padded;
+    std::vector<unsigned> _file_offsets, _all_shard_file_offsets;
+    std::vector<unsigned> _file_idx, _all_shard_file_idxs;
     unsigned _curr_file_idx;
     FILE *_current_fPtr;
     unsigned _current_file_size;
@@ -91,11 +93,27 @@ class CIFAR10DataReader : public Reader {
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
     /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
     size_t _batch_count = 1;
-    size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
     bool _loop;
     int _read_counter = 0;
     void incremenet_read_ptr();
     int release();
-    void incremenet_file_id() { _file_id++; }
+    void increment_curr_file_idx();
+    unsigned _shard_start_idx;
+    signed _shard_size = -1;
+    size_t _shard_id = 0;
+    size_t _shard_count = 1;  // equivalent of batch size
+    //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
+    size_t _file_count_all_shards;
+    size_t _padded_samples = 0;
+    std::pair<RocalBatchPolicy, bool> _last_batch_info;
+    size_t _last_batch_padded_size = 0;
+    size_t _num_padded_samples = 0;
+    bool _stick_to_shard = false;
+    bool _pad_last_batch_repeated = false;
+    size_t get_start_idx(); // Start Idx of the Shard's Data
+    size_t get_dataset_size(); // DataSet Size
+    size_t shard_size_without_padding(); // Number of files belonging to a shard (without padding)
+    size_t shard_size_with_padding(); // Number of files belonging to a shard (with padding)
+    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
+    void increment_shard_id();
 };
