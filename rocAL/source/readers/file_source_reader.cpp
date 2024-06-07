@@ -42,7 +42,7 @@ FileSourceReader::FileSourceReader() {
 }
 
 unsigned FileSourceReader::count_items() {
-    int ret;
+    int ret = 0; // Default initialization
     if (_shard_size == -1) {
         if (_loop) return shard_size_with_padding();
         int size = std::max(shard_size_with_padding(), _batch_count);
