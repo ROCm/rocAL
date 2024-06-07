@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include "pipeline/commons.h"
 #include <memory.h>
+#include <math.h>
 #include <stdint.h>
 #include "readers/image/mxnet_recordio_reader.h"
 #include "pipeline/filesystem.h"
@@ -37,48 +38,76 @@ MXNetRecordIOReader::MXNetRecordIOReader() {
     _current_file_size = 0;
     _loop = false;
     _shuffle = false;
-    _file_id = 0;
     _file_count_all_shards = 0;
 }
 
 unsigned MXNetRecordIOReader::count_items() {
-    if (_loop)
-        return _file_names.size();
-
-    int ret = ((int)_file_names.size() - _read_counter);
+    int ret = 0; // Default initialization
+    if (_shard_size == -1) {
+        if (_loop) return shard_size_with_padding();
+        int size = std::max(shard_size_with_padding(), _batch_count);
+        ret = (size - _read_counter);
+        if (_last_batch_info.first == RocalBatchPolicy::PARTIAL || _last_batch_info.first == RocalBatchPolicy::FILL) {
+            ret += _last_batch_padded_size;
+        } else if (_last_batch_info.first == RocalBatchPolicy::DROP &&
+                   _last_batch_info.second == true) { // When pad_last_batch_repeated is False - Enough
+                                                      // number of samples would not be present in the last batch - hence
+                                                      // dropped by condition handled in the loader
+            ret -= _batch_count;
+        }
+    } else if (_shard_size > 0) {
+        auto shard_size_with_padding =
+            _shard_size + (_batch_count - (_shard_size % _batch_count));
+        if (_loop)
+            return shard_size_with_padding;
+        int size = std::max(shard_size_with_padding, _batch_count);
+        ret = (size - _read_counter);
+        if (_last_batch_info.first == RocalBatchPolicy::DROP) // The shard size is padded at the beginning of the condition, hence dropping the last batch
+            ret -= _batch_count;
+    }
     return ((ret < 0) ? 0 : ret);
 }
 
 Reader::Status MXNetRecordIOReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
-    _file_id = 0;
     _path = desc.path();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
     _loop = desc.loop();
     _shuffle = desc.shuffle();
+    _pad_last_batch_repeated = _last_batch_info.second;
+    _stick_to_shard = desc.get_stick_to_shard();
+    _shard_size = desc.get_shard_size();
     ret = record_reading();
-    // the following code is required to make every shard the same size:: required for multi-gpu training
-    if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size() / _batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count - 1) / _shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count - 1) / _batch_count;
-        if (_num_batches < max_batches_per_shard) {
-            replicate_last_batch_to_pad_partial_shard();
-        }
-    }
+    _curr_file_idx = get_start_idx(); // shard's start_idx would vary for every shard in the vector
+
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_file_names.begin(), _file_names.end());
+        std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
+                            _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
 
     return ret;
 }
 
+void MXNetRecordIOReader::increment_curr_file_idx() {
+    // Should work for both pad_last_batch = True (or) False
+    if (_stick_to_shard == false) {
+        _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
+    } else {
+        if (_curr_file_idx >= get_start_idx() &&
+            _curr_file_idx < get_start_idx() + shard_size_without_padding() - 1) // checking if current-element lies within the shard size [begin_idx, last_idx -1]
+            _curr_file_idx = (_curr_file_idx + 1);
+        else
+            _curr_file_idx = get_start_idx();
+    }
+}
+
 void MXNetRecordIOReader::incremenet_read_ptr() {
     _read_counter++;
-    _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+    increment_curr_file_idx();
 }
+
 size_t MXNetRecordIOReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     _last_id = file_path;
@@ -118,31 +147,44 @@ Reader::Status MXNetRecordIOReader::record_reading() {
     if (MXNet_reader() != Reader::Status::OK)
         WRN("MXNetRecordIOReader ShardID [" + TOSTR(_shard_id) + "] MXNetRecordIOReader cannot access the storage at " + _path);
 
-    if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
-        replicate_last_image_to_fill_last_shard();
-        LOG("MXNetRecordIOReader ShardID [" << TOSTR(_shard_id) << "] Replicated " << _path + _last_file_name << " " << TOSTR((_batch_count - _in_batch_read_count)) << " times to fill the last batch")
-    }
     if (!_file_names.empty())
         LOG("MXNetRecordIOReader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _path)
-    return ret;
-}
+    
+        auto dataset_size = _file_count_all_shards;
+    // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
+    if (_shard_size > 0)
+        _padded_samples = _shard_size % _batch_count;
+    else
+        _padded_samples = shard_size_with_padding() % _batch_count;
+    if (_padded_samples != 0)
+        _last_batch_padded_size = _batch_count - _padded_samples;
 
-void MXNetRecordIOReader::replicate_last_image_to_fill_last_shard() {
-    for (size_t i = _in_batch_read_count; i < _batch_count; i++) {
-        _file_names.push_back(_last_file_name);
-        _record_properties.insert(pair<std::string, std::tuple<unsigned int, int64_t, int64_t>>(_last_file_name, std::make_tuple(_last_file_size, _last_seek_pos, _last_data_size)));
-    }
-}
-
-void MXNetRecordIOReader::replicate_last_batch_to_pad_partial_shard() {
-    if (_file_names.size() >= _batch_count) {
-        for (size_t i = 0; i < _batch_count; i++) {
-            _file_names.push_back(_file_names[i - _batch_count]);
-            auto it = _record_properties.find(_file_names[i - _batch_count]);
-            std::tie(_current_file_size, _seek_pos, _data_size_to_read) = it->second;
-            _record_properties.insert(pair<std::string, std::tuple<unsigned int, int64_t, int64_t>>(_file_names[i - _batch_count], std::make_tuple(_current_file_size, _seek_pos, _data_size_to_read)));
+    if (_pad_last_batch_repeated ==
+        true) { // pad the last sample when the dataset_size is not divisible by
+                // the number of shard's (or) when the shard's size is not
+                // divisible by the batch size making each shard having equal
+                // number of samples
+        for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
+            uint start_idx = (dataset_size * shard_id) / _shard_count;
+            uint shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
+            uint shard_size_with_padding = std::ceil(dataset_size * 1.0 / _shard_count);
+            auto start = _file_names.begin() + start_idx;
+            auto end = _file_names.begin() + start_idx + shard_size_without_padding;
+            if (start != end && start <= _file_names.end() &&
+                end <= _file_names.end()) {
+                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), start, end);
+            }
+            if (shard_size_with_padding % _batch_count) {
+                _num_padded_samples = (shard_size_with_padding - shard_size_without_padding) + _batch_count - (shard_size_with_padding % _batch_count);
+                _file_count_all_shards += _num_padded_samples;
+                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _num_padded_samples, _all_shard_file_names_padded.back());
+            }
         }
+    } else {
+        _all_shard_file_names_padded = _file_names;
     }
+    _last_file_name = _all_shard_file_names_padded[_all_shard_file_names_padded.size() - 1];
+    return ret;
 }
 
 Reader::Status MXNetRecordIOReader::MXNet_reader() {
@@ -193,12 +235,6 @@ Reader::Status MXNetRecordIOReader::MXNet_reader() {
     return Reader::Status::OK;
 }
 
-size_t MXNetRecordIOReader::get_file_shard_id() {
-    if (_batch_count == 0 || _shard_count == 0)
-        THROW("Shard (Batch) size cannot be set to 0")
-    return _file_id % _shard_count;
-}
-
 void MXNetRecordIOReader::read_image_names() {
     for (int current_index = 0; current_index < (int)_indices.size(); current_index++) {
         uint32_t _magic, _length_flag;
@@ -230,18 +266,9 @@ void MXNetRecordIOReader::read_image_names() {
         int64_t image_size = (_clength - sizeof(ImageRecordIOHeader)) - (_hdr.flag * sizeof(float));
         delete[] _data;
 
-        if (get_file_shard_id() != _shard_id) {
-            incremenet_file_id();
-            _file_count_all_shards++;
-            continue;
-        }
-        _in_batch_read_count++;
-        _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
-
         _file_names.push_back(_image_key.c_str());
         _last_file_name = _image_key.c_str();
 
-        incremenet_file_id();
         _file_count_all_shards++;
 
         _last_file_size = image_size;
@@ -279,4 +306,26 @@ void MXNetRecordIOReader::read_image(unsigned char *buff, int64_t seek_position,
     else
         THROW("\nMultiple record reading has not supported");
     delete[] _data;
+}
+
+size_t MXNetRecordIOReader::last_batch_padded_size() {
+    return _last_batch_padded_size;
+}
+
+size_t MXNetRecordIOReader::get_start_idx() {
+    _shard_start_idx = (get_dataset_size() * _shard_id) / _shard_count;
+    return _shard_start_idx;
+}
+
+size_t MXNetRecordIOReader::get_dataset_size() {
+    return _file_count_all_shards;
+}
+
+
+size_t MXNetRecordIOReader::shard_size_without_padding() {
+    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - floor(_shard_id * get_dataset_size() / _shard_count);
+}
+
+size_t MXNetRecordIOReader::shard_size_with_padding() {
+  return std::ceil(get_dataset_size() * 1.0 / _shard_count);
 }
