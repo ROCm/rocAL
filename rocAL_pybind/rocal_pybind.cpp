@@ -396,6 +396,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
         .export_values();
+    py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+        .value("ZERO", ROCAL_ZERO)
+        .value("CLAMP", ROCAL_CLAMP)
+        .value("REFLECT", ROCAL_REFLECT)
+        .export_values();
     py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
         .value("LAST_BATCH_FILL", ROCAL_LAST_BATCH_FILL)
         .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
@@ -715,6 +720,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("colorTemp", &rocalColorTemp,
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
+          py::return_value_policy::reference);
+    m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
           py::return_value_policy::reference);
 }
 }  // namespace rocal

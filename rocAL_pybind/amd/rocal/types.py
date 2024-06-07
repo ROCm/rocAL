@@ -94,6 +94,11 @@ from rocal_pybind.types import EXTSOURCE_FNAME
 from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
 from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
 
+#     RocalAudioBorderType
+from rocal_pybind.types import ZERO
+from rocal_pybind.types import CLAMP
+from rocal_pybind.types import REFLECT
+
 #     RocalLastBatchPolicy
 from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
@@ -157,6 +162,10 @@ _known_types = {
     EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
     EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
     EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
+
+    ZERO: ("ZERO", ZERO),
+    CLAMP: ("CLAMP", CLAMP),
+    REFLECT: ("REFLECT", REFLECT),
 
     LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
     LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),

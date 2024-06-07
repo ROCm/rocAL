@@ -140,3 +140,4 @@ python3 audio_unit_test.py --audio_path=<path_to_data> --test_case <case(0-1)> -
 
 **Available Test Cases**
 * Case 0 - Audio Decoder
+* Case 1 - PreEmphasis Filter
