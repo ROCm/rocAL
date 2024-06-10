@@ -44,19 +44,18 @@ NumpyDataReader::NumpyDataReader() {
 }
 
 unsigned NumpyDataReader::count_items() {
-    int ret = 0;
+    int ret;
     if (_shard_size == -1) {
-        if (_loop) return shard_size_with_padding();
-        int size = std::max(shard_size_with_padding(), _batch_count);
+        size_t actual_shard_size_with_padding;
+        if(_pad_last_batch_repeated == false)
+            actual_shard_size_with_padding = shard_size_with_padding() + (_batch_count - (shard_size_with_padding() % _batch_count));
+        else
+            actual_shard_size_with_padding = shard_size_with_padding();
+        if (_loop) return actual_shard_size_with_padding;
+        int size = std::max(actual_shard_size_with_padding, _batch_count);
         ret = (size - _read_counter);
-        if (_last_batch_info.first == RocalBatchPolicy::PARTIAL || _last_batch_info.first == RocalBatchPolicy::FILL) {
-            ret += _last_batch_padded_size;
-        } else if (_last_batch_info.first == RocalBatchPolicy::DROP &&
-                   _last_batch_info.second == true) {  // When pad_last_batch_repeated is False - Enough
-                                                       // number of samples would not be present in the last batch - hence
-                                                       // dropped by condition handled in the loader
+        if (_last_batch_info.first == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
             ret -= _batch_count;
-        }
     } else if (_shard_size > 0) {
         auto shard_size_with_padding =
             _shard_size + (_batch_count - (_shard_size % _batch_count));
