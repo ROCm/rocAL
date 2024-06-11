@@ -75,6 +75,7 @@ class FileSourceReader : public Reader {
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;
+    std::string _file_list_path;
     DIR *_src_dir;
     DIR *_sub_dir;
     struct dirent *_entity;

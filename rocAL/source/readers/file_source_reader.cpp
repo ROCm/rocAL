@@ -52,6 +52,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
+    _file_list_path = desc.file_list_path();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
@@ -161,25 +162,62 @@ Reader::Status FileSourceReader::generate_file_names() {
     std::sort(entry_name_list.begin(), entry_name_list.end());
 
     auto ret = Reader::Status::OK;
-    for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
-        std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
-        filesys::path pathObj(subfolder_path);
-        if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
-            // ignore files with unsupported extensions
-            auto file_extension_idx = subfolder_path.find_last_of(".");
-            if (file_extension_idx != std::string::npos) {
-                std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
-                std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
-                               [](unsigned char c) { return std::tolower(c); });
-                if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp") && (file_extension != "wav"))
-                    continue;
+    if (!_file_list_path.empty()) {  // Reads the file paths from the file list and adds to file_names vector for decoding
+        std::ifstream fp(_file_list_path);
+        if (fp.is_open()) {
+            while (fp) {
+                std::string file_label_path;
+                std::getline(fp, file_label_path);
+                std::istringstream ss(file_label_path);
+                std::string file_path;
+                std::getline(ss, file_path, ' ');
+                if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
+                    if (!filesys::exists(_folder_path))
+                        THROW("File list contains relative paths but root path doesn't exists");
+                    file_path = _folder_path + "/" + file_path;
+                }
+                std::string file_name = file_path.substr(file_path.find_last_of("/\\") + 1);
+
+                if (!_meta_data_reader || _meta_data_reader->exists(file_name)) {  // Check if the file is present in metadata reader and add to file names list, to avoid issues while lookup
+                    if (filesys::is_regular_file(file_path)) {
+                        if (get_file_shard_id() != _shard_id) {
+                            _file_count_all_shards++;
+                            incremenet_file_id();
+                            continue;
+                        }
+                        _in_batch_read_count++;
+                        _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
+                        _last_file_name = file_path;
+                        _file_names.push_back(file_path);
+                        _file_count_all_shards++;
+                        incremenet_file_id();
+                    }
+                } else {
+                    WRN("Skipping file," + std::string(file_path) + " as it is not present in metadata reader")
+                }
             }
-            ret = open_folder();
-            break;  // assume directory has only files.
-        } else if (filesys::exists(pathObj) && filesys::is_directory(pathObj)) {
-            _folder_path = subfolder_path;
-            if (open_folder() != Reader::Status::OK)
-                WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
+        }
+    } else {
+        for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
+            std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
+            filesys::path pathObj(subfolder_path);
+            if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
+                // ignore files with unsupported extensions
+                auto file_extension_idx = subfolder_path.find_last_of(".");
+                if (file_extension_idx != std::string::npos) {
+                    std::string file_extension = subfolder_path.substr(file_extension_idx + 1);
+                    std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
+                                   [](unsigned char c) { return std::tolower(c); });
+                    if ((file_extension != "jpg") && (file_extension != "jpeg") && (file_extension != "png") && (file_extension != "ppm") && (file_extension != "bmp") && (file_extension != "pgm") && (file_extension != "tif") && (file_extension != "tiff") && (file_extension != "webp") && (file_extension != "wav"))
+                        continue;
+                }
+                ret = open_folder();
+                break;  // assume directory has only files.
+            } else if (filesys::exists(pathObj) && filesys::is_directory(pathObj)) {
+                _folder_path = subfolder_path;
+                if (open_folder() != Reader::Status::OK)
+                    WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
+            }
         }
     }
 

@@ -335,6 +335,8 @@ class ROCALAudioIterator(object):
             self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
             self.output_list.append(output)
 
+        self.labels = self.loader.get_image_labels()
+        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
         return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size,4)[...,2:4])
 
     def reset(self):

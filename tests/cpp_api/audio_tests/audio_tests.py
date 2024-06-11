@@ -72,7 +72,7 @@ def main():
         sys.exit()
 
     sys.dont_write_bytecode = True
-    input_file_path = rocal_data_path + "/rocal_data/audio/wav"
+    input_file_path = rocal_data_path + "/rocal_data/audio"
     build_folder_path = os.getcwd()
 
     args = audio_test_suite_parser_and_validator()

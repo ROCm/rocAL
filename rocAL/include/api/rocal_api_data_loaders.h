@@ -882,7 +882,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
 /*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel if user wants.
  * If the files are not in standard audio compression formats they will be ignored, Currently wav format is supported
  * \param [in] context Rocal context
- * \param [in] source_path A NULL terminated char string pointing to the location of files on the disk
+ * \param [in] source_path A NULL terminated char string pointing to the location on the disk
+ * \param [in] source_file_list_path A char string pointing to the file list location on the disk
  * \param [in] shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
  * \param [in] is_output Boolean variable to enable the audio to be part of the output.
  * \param [in] shuffle Boolean variable to shuffle the dataset.
@@ -892,6 +893,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                            const char* source_path,
+                                                           const char* source_file_list_path,
                                                            unsigned shard_count,
                                                            bool is_output,
                                                            bool shuffle = false,
@@ -901,7 +903,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
 /*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
  * If the files are not in standard audio compression formats they will be ignored.
  * \param [in] context Rocal context
- * \param [in] source_path A NULL terminated char string pointing to the location of files on the disk
+ * \param [in] source_path A NULL terminated char string pointing to the location on the disk
+ * \param [in] source_file_list_path A char string pointing to the file list location on the disk
  * \param [in] shard_id Shard id for this loader
  * \param [in] shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
  * \param [in] is_output Boolean variable to enable the audio to be part of the output.
@@ -912,6 +915,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
                                                                       const char* source_path,
+                                                                      const char* source_file_list_path,
                                                                       unsigned shard_id,
                                                                       unsigned shard_count,
                                                                       bool is_output,

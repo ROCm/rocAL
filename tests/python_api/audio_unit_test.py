@@ -71,22 +71,24 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
         test_results[case_name] = "FAILED"
 
 @pipeline_def(seed=seed)
-def audio_decoder_pipeline(path):
-    audio, labels = fn.readers.file(file_root=path)
+def audio_decoder_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     return fn.decoders.audio(
         audio,
         file_root=path,
+        file_list_path=file_list,
         downmix=False,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
 
 @pipeline_def(seed=seed)
-def pre_emphasis_filter_pipeline(path):
-    audio, labels = fn.readers.file(file_root=path)
+def pre_emphasis_filter_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
         audio,
         file_root=path,
+        file_list_path=file_list,
         downmix=False,
         shard_id=0,
         num_shards=1,
@@ -97,6 +99,7 @@ def main():
     args = parse_args()
 
     audio_path = args.audio_path
+    file_list = args.file_list_path
     rocal_cpu = False if args.rocal_gpu else True
     batch_size = args.batch_size
     test_case = args.test_case
@@ -129,8 +132,9 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. Running on CPU")
         rocal_cpu = True
-    if audio_path == "":
-        audio_path = f'{rocal_data_path}/rocal_data/audio/wav/'
+    if audio_path == "" and file_list == "":
+        audio_path = f'{rocal_data_path}/rocal_data/audio/'
+        file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
@@ -143,9 +147,9 @@ def main():
     for case in case_list:
         case_name = test_case_augmentation_map.get(case)
         if case_name == "audio_decoder":
-            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "preemphasis_filter":
-            audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
+            audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         cnt = 0

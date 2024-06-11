@@ -454,6 +454,7 @@ def audio(*inputs, file_root='', file_list_path='', shard_id=0, num_shards=1, ra
     """
     kwargs_pybind = {
             "source_path": file_root,
+            "source_file_list_path": file_list_path,
             "shard_id": shard_id,
             "num_shards": num_shards,
             "is_output": False,

@@ -18,6 +18,7 @@
 * Python audio unit test, and support to verify outputs
 * rocDecode for HW decode
 * Support for Audio augmentation - PreEmphasis filter
+* Support for reading from file lists in file reader
 
 ### Optimizations
 
