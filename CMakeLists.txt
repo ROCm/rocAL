@@ -197,8 +197,8 @@ endif()
 set(ROCAL_DEBIAN_PACKAGE_LIST  "rpp, mivisionx")
 set(ROCAL_RPM_PACKAGE_LIST     "rpp, mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel")
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
 
 # Add rocDecode Deps - Exclude centos-7
 file(READ "/etc/os-release" OS_RELEASE)

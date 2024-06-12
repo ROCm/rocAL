@@ -112,7 +112,7 @@ rocAL can be currently used to perform the following operations either with rand
 
 * Python Wheel
   ```shell
-  pip install wheel
+  pip3 install wheel
   ```
 
 * [PyBind11](https://github.com/pybind/pybind11)
@@ -137,7 +137,6 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install libopencv-dev
   ```
 
-
 > [!IMPORTANT] 
 > * Compiler features required
 >   * OpenMP
@@ -154,9 +153,10 @@ For your convenience, we provide the setup script,[rocAL-setup.py](https://githu
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --opencv    [OpenCV Version - optional (default:4.6.0)]
                       --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
-                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
                       --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
+                      --ffmpeg    [FFMPEG Installation - optional (default:OFF)[options:ON/OFF]]
+                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 
 ## Installation instructions
@@ -196,7 +196,7 @@ Install rocAL runtime, development, and test packages.
   ```
 
 >[!NOTE]
-> * Package install requires `TurboJPEG`, `PyBind 11` and `Protobuf`  manual install
+> * Package install requires `TurboJPEG` and `RapidJSON`  manual install
 > * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 
 ### Source install
@@ -271,7 +271,14 @@ mkdir rocAL-test && cd rocAL-test
 cmake /opt/rocm/share/rocal/test/
 ctest -VV
 ```
-
+>[!NOTE]
+> * Make sure all rocAL required libraries are in your PATH
+> * `RHEL`/`SLES` - Export FFMPEG libraries into your PATH 
+>     + `export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64/:/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH`
+> ```shell
+> export PATH=$PATH:/opt/rocm/bin
+> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
+> ```
 ## Documentation
 
 Run the steps below to build documentation locally.
@@ -320,5 +327,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* rocAL Setup Script - `V2.1.0`
+* rocAL Setup Script - `V2.2.0`
 * Dependencies for all the above packages
