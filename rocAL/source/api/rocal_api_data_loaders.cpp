@@ -2258,11 +2258,11 @@ rocalAudioFileSource(
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
 
-        if (internal_shard_count < 1)
+        if (shard_count < 1)
             THROW("internal shard count should be bigger than 0")
 
-        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(internal_shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(internal_shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader());
         context->master_graph->set_loop(loop);
         if (is_output) {
             auto actual_output = context->master_graph->create_tensor(info, is_output);

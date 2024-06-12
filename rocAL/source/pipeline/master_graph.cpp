@@ -1131,7 +1131,7 @@ std::vector<rocalTensorList *> MasterGraph::create_tf_record_meta_data_reader(co
     return _metadata_output_tensor_list;
 }
 
-std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type, const char *file_list_path) {
+std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *source_path, MetaDataReaderType reader_type) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
@@ -1140,7 +1140,7 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
         THROW("Source path needs to be provided")
     MetaDataConfig config(MetaDataType::Label, reader_type, source_path);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
-    _meta_data_reader->read_all(root_path);
+    _meta_data_reader->read_all(source_path);
 
     std::vector<size_t> dims = {1};
     auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default labels Info
