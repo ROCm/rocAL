@@ -28,7 +28,9 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "meta_data/meta_data.h"
 #include "meta_data/meta_data_reader.h"
-
+#include "readers/image/image_reader.h"
+#include <unordered_set>
+#include <set>
 class WebDataSetMetaDataReader : public MetaDataReader {
    public:
     void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
@@ -55,7 +57,16 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     DIR *_src_dir, *_sub_dir;
     struct dirent* _entity;
     std::vector<std::string> _file_names;
+    std::vector<std::set<std::string>> _exts;
     std::vector<std::string> _subfolder_file_names;
-    void parse_tar_files(std::string paths_to_tar_files);
-    void parse_index_files(std::string paths_to_index_files);
+    void parse_tar_files(std::vector<SampleDescription>& samples_container,
+                                              std::vector<ComponentDescription>& components_container,
+                                              const std::string& tar_file_name);
+    void parse_index_files(std::vector<SampleDescription>& samples_container,
+                                              std::vector<ComponentDescription>& components_container,
+                                              const std::string& paths_to_index_files);
+    // void parse_index_files(std::string paths_to_index_files);
+    const std::string kCurrentIndexVersion = "v1.2";  // NOLINT
+    const std::unordered_set<std::string> kSupportedIndexVersions = {"v1.1", kCurrentIndexVersion};
+    std::tuple<std::string, std::string> split_name(const std::string& file_path) ;
 };

@@ -138,6 +138,43 @@ struct ImageRecordIOHeader {
 };
 
 
+template <typename T>
+class VectorView {
+    private:
+    std::vector<T>* _data = nullptr;
+    
+    public:
+    size_t start = 0;
+    size_t num = 0;
+    VectorView() = default;
+
+    explicit inline VectorView(std::vector<T>& data, size_t start_idx = 0, size_t count = 0)
+        : _data(&data), start(start_idx), num(count) {}
+
+    inline T* begin() {
+        return _data->data() + start;
+    }
+
+    inline T* end() {
+        return begin() + num;
+    }
+};
+
+struct ComponentDescription {
+    std::string filename, ext;
+    size_t size = 0;
+    int64_t offset = 0;
+    VectorView<size_t> outputs;
+    ComponentDescription() = default;
+};
+
+struct SampleDescription {
+    VectorView<ComponentDescription> components;
+    VectorView<size_t> empty_outputs;
+    size_t wds_shard_index;
+    int64_t line_number;
+};
+
 class Reader {
    public:
     enum class Status {

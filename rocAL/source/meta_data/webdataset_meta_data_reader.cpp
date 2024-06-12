@@ -23,13 +23,94 @@ THE SOFTWARE.
 #include "meta_data/webdataset_meta_data_reader.h"
 
 #include <string.h>
-
+#include <libtar.h>
+#include <array>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <fcntl.h>
+#include <cassert>
 #include <algorithm>
+#include <unordered_map>
 #include "pipeline/commons.h"
 #include "pipeline/exception.h"
 #include "pipeline/filesystem.h"
 
 using namespace std;
+
+constexpr size_t kBlockSize = T_BLOCKSIZE;
+
+// struct no_delimiter {};
+
+// inline std::ostream &operator<<(std::ostream &os, no_delimiter) { return os; }
+
+// template <typename Collection, typename Delimiter>
+// std::ostream &join(std::ostream &os, const Collection &collection, const Delimiter &delim) {
+//   bool first = true;
+//   for (auto &element : collection) {
+//     if (!first) {
+//       os << delim;
+//     } else {
+//       first = false;
+//     }
+//     os << element;
+//   }
+//   return os;
+// }
+
+// template <typename Collection>
+// std::ostream &join(std::ostream &os, const Collection &collection) {
+//   return join(os, collection, ", ");
+// }
+
+// template <typename T>
+// std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
+//   return join(os, vec);
+// }
+
+// template <typename T, size_t N>
+// std::ostream &operator<<(std::ostream &os, const std::array<T, N> &arr) {
+//   return join(os, arr);
+// }
+
+// gets single int that can be represented as int value
+constexpr int MakeVersionNumber(int major, int minor, int patch = 0) {
+  if (major < 0 || minor < 0 || patch < 0) {
+    return -1;
+  }
+  return major*1000 + minor*10 + patch;
+}
+
+// /**
+//  * @brief Populates stream with given arguments, as long as they have
+//  * `operator<<` defined for stream operation
+//  */
+// template <typename Delimiter, typename T, typename... Args>
+// void print_delim(std::ostream &os, const Delimiter &delimiter, const T &val,
+//                  const Args &... args) {
+//   os << val << delimiter;
+//   print_delim(os, delimiter, args...);
+// }
+
+// /**
+//  * @brief Populates stream with given arguments, as long as they have
+//  * `operator<<` defined for stream operation
+//  */
+// template <typename... Args>
+// void print(std::ostream &os, const Args &... args) {
+//   print_delim(os, no_delimiter(), args...);
+// }
+
+
+// /**
+//  * @brief Prints args to a string, without any delimiter
+//  */
+// template <typename... Args>
+// std::string make_string(const Args &... args) {
+//   std::stringstream ss;
+//   print(ss, args...);
+//   return ss.str();
+// }
 
 WebDataSetMetaDataReader::WebDataSetMetaDataReader() {
     _src_dir = nullptr; // _paths of the tar files
@@ -45,6 +126,7 @@ void WebDataSetMetaDataReader::init(const MetaDataConfig& cfg, pMetaDataBatch me
     // _path = cfg.path();
     _paths = cfg.path();
     _index_paths = cfg.index_path();
+    _exts = cfg.exts();
     _missing_component_behaviour = cfg.get_missing_component_behaviour();
     _output = meta_data_batch;
 }
@@ -102,11 +184,188 @@ void WebDataSetMetaDataReader::lookup(const std::vector<std::string>& image_name
     }
 }
 
-void WebDataSetMetaDataReader::parse_tar_files() {
+// template <typename... Args>
+// inline std::string IndexFileErrMsg(const std::string& index_path, int64_t line,
+//                                    const Args&... details) {
+//   return make_string("Malformed index file at \"", index_path, "\" line ", line, " - ", details...);
+// }
+
+inline void ParseSampleDesc(std::vector<SampleDescription>& samples_container,
+                            std::vector<ComponentDescription>& components_container,
+                            std::ifstream& index_file, const std::string& index_path, int64_t line,
+                            int index_version) {
+  // Preparing the SampleDescription
+  samples_container.emplace_back();
+  samples_container.back().components = VectorView<ComponentDescription>(components_container, components_container.size());
+  samples_container.back().line_number = line;
+
+  // Getting the components data
+  std::string components_metadata;
+  std::getline(index_file, components_metadata);
+  std::stringstream components_stream(components_metadata);
+
+  // Reading consecutive components
+  ComponentDescription component;
+  while (components_stream >> component.ext) {
+    if (index_version == MakeVersionNumber(1, 2)) {
+      if(components_stream >> component.offset >> component.size >> component.filename)
+      std::cerr << "Could not find all necessary component parameters (offset, size or filename). Every record in the index file should look like: `<ext> <offset> <size> <filename>`.";
+        //   IndexFileErrMsg(index_path, line, "Could not find all necessary component parameters (offset, size or filename). Every record in the index file should look like: `<ext> <offset> <size> <filename>`.");
+    } else {
+      if(components_stream >> component.offset >> component.size)
+            std::cerr << "Could not find all necessary component parameters (offset or size). Every record in the index file should look like: `<ext> <offset> <size>`";
+        // IndexFileErrMsg(index_path, line, "Could not find all necessary component parameters (offset or size). Every record in the index file should look like: `<ext> <offset> <size>`.");
+    }
+    if(component.offset % kBlockSize == 0)
+        std::cerr << "tar offset is not a multiple of tar block size kBlockSize, perhaps the size value is exported before offset?";
+        // IndexFileErrMsg(index_path, line, "tar offset is not a multiple of tar block size kBlockSize, perhaps the size value is exported before offset?");
     
+    components_container.emplace_back(std::move(component));
+    samples_container.back().components.num++;
+  }
+
+  // Finishing up the SampleDescription
+  if(samples_container.back().components.num)
+        std::cerr << "\n no extensions provided for the sample";
+        // IndexFileErrMsg(index_path, line, "no extensions provided for the sample");
 }
 
+inline int ParseIndexVersion(const string& version_str) {
+  const char *s = version_str.c_str();
+  assert(*s == 'v');
+  s++;
+  int major = atoi(s);
+  s = strchr(s, '.');
+  assert(s);
+  s++;
+  int minor = atoi(s);
+  return MakeVersionNumber(major, minor);
+}
+
+void WebDataSetMetaDataReader::parse_index_files(std::vector<SampleDescription>& samples_container,
+                           std::vector<ComponentDescription>& components_container,
+                           const std::string& index_path) {
+  std::ifstream index_file(index_path);
+
+  // Index Checking
+  std::string global_meta;
+  getline(index_file, global_meta);
+  std::stringstream global_meta_stream(global_meta);
+  std::string index_version_str;
+  if (global_meta_stream >> index_version_str)
+  std::cerr << "\n Unsupported version of the index file ";
+        // IndexFileErrMsg(index_path, 0, "no version signature found");
+    // if (kSupportedIndexVersions.count(index_version_str) > 0) {
+    //           IndexFileErrMsg(index_path, 0, make_string("Unsupported version of the index file (", index_version_str, ")."));
+    // }
+
+  int index_version = ParseIndexVersion(index_version_str);
+
+  // Getting the number of samples in the index file
+  int64_t sample_desc_num_signed;
+  if(global_meta_stream >> sample_desc_num_signed)
+  std::cerr << "\n no sample count found";
+    // IndexFileErrMsg(index_path, 0, "no sample count found");
+  if(sample_desc_num_signed > 0)
+  std::cerr << "\n sample count must be positive";
+    // IndexFileErrMsg(index_path, 0, "sample count must be positive");
+
+  const size_t sample_desc_num = sample_desc_num_signed;
+  samples_container.reserve(samples_container.size() + sample_desc_num);
+  for (size_t sample_index = 0; sample_index < sample_desc_num; sample_index++) {
+    ParseSampleDesc(samples_container, components_container, index_file, index_path,
+                    sample_index + 1, index_version);
+  }
+}
+
+std::tuple<std::string, std::string> WebDataSetMetaDataReader::split_name(const std::string& file_path) {
+  size_t dot_pos = file_path.find('.', file_path.rfind('/') + 1);
+  return {file_path.substr(0, dot_pos), file_path.substr(dot_pos + 1)};
+}
+
+void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& samples_container,
+                                              std::vector<ComponentDescription>& components_container,
+                                              const std::string& tar_file_name) {
+    // Initialize libtar
+
+    TAR *tar;
+    if (tar_open(&tar, tar_file_name.c_str(), NULL, O_RDONLY, 0, TAR_GNU) != 0) {
+        std::cerr << "Error: Failed to open TAR file: " << tar_file_name << std::endl;
+        return;
+    }
+
+    std::string last_filename;
+    std::tie(last_filename, std::ignore) = split_name(tar_file_name);
+    size_t last_components_size = components_container.size();
+
+    // Initialize variables
+    struct stat file_stat;
+    char filename[256];
+    ssize_t fileSize;
+
+    // Iterate through the tar file
+    while (th_read(tar) == 0) {
+        // Get file information
+        const char* entry_name = tar->pathname;
+        std::string basename, ext;
+        std::tie(basename, ext) = split_name(std::string(entry_name));
+        if (entry_name == nullptr) {
+            continue;
+        }
+        strcpy(filename, entry_name);
+
+        // Checks for regular files & processed
+        if (TH_ISREG(tar)) {
+
+            if (basename != last_filename) {
+                samples_container.emplace_back();
+                samples_container.back().components =
+                    VectorView<ComponentDescription>(components_container, last_components_size,
+                                                components_container.size() - last_components_size);
+                last_filename = basename;
+                last_components_size = components_container.size();
+            }
+
+            // Set component information
+            components_container.emplace_back();
+            components_container.back().filename = std::string(filename);
+            components_container.back().size = th_get_size(tar);
+            components_container.back().offset = th_get_size(tar); // needs to change 
+            //stream_->TellRead() + RoundToBlockSize(filesize_) - readoffset_
+            components_container.back().ext = ext;
+
+            // TODO: Handle it later
+            // Read file content into a vector
+            // std::vector<char> content(component.size);
+            // tar_read(tar, content.data(), component.size);  // Read file content
+            // Store content in component
+            // component.content = std::move(content);
+
+            // // Add component to sample
+            // sample.components.push_back(component);
+            // // Add sample to samples container
+            // samples_container.push_back(sample);
+
+            samples_container.emplace_back();
+            samples_container.back().components = VectorView<ComponentDescription>(components_container, last_components_size,
+                                            components_container.size() - last_components_size);
+        }
+    }
+
+    // Close tar file
+    tar_close(tar);
+}
+
+
 void WebDataSetMetaDataReader::read_all(const std::string& _path) {
+
+    // preparing the map from extensions to outputs
+    std::unordered_map<std::string, std::vector<size_t>> ext_map;
+    for (size_t output_index = 0; output_index < _exts.size(); output_index++) {
+        for (auto& ext : _exts[output_index]) {
+        ext_map[ext].push_back(output_index);
+        }
+    }
 
     std::string _folder_path;
     if (_index_paths.size() == 0)
@@ -129,12 +388,29 @@ void WebDataSetMetaDataReader::read_all(const std::string& _path) {
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
 
-    if (_index_paths.size() == 0)
-        parse_tar_files(entry_name_list);
-    else
-        parse_index_files(entry_name_list);
-
     closedir(_sub_dir);
+
+      // collecting and filtering the index files
+    std::vector<SampleDescription> unfiltered_samples;
+    std::vector<ComponentDescription> unfiltered_components;
+
+    for (unsigned wds_shard_index = 0; wds_shard_index < entry_name_list.size(); ++wds_shard_index) {
+        if (_index_paths.size() == 0)
+            parse_tar_files(unfiltered_samples, unfiltered_components, entry_name_list[wds_shard_index]);
+        else
+            parse_index_files(unfiltered_samples, unfiltered_components, entry_name_list[wds_shard_index]);
+    }
+
+    // for (size_t wds_shard_index = 0; wds_shard_index < paths_.size(); wds_shard_index++) {
+    // unfiltered_samples.resize(0);
+    // unfiltered_components.resize(0);
+    // if (generate_index_) {
+    //   detail::wds::ParseTarFile(unfiltered_samples, unfiltered_components,
+    //                             wds_shards_[wds_shard_index]);
+    // } else {
+    //   detail::wds::ParseIndexFile(unfiltered_samples, unfiltered_components,
+    //                               index_paths_[wds_shard_index]);
+    // }
 
     // uint label_counter = 0;
     // for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
