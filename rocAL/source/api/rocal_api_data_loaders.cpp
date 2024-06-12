@@ -2238,7 +2238,7 @@ rocalAudioFileSource(
     RocalContext p_context,
     const char* source_path,
     const char* source_file_list_path,
-    unsigned internal_shard_count,
+    unsigned shard_count,
     bool is_output,
     bool shuffle,
     bool loop,

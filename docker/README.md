@@ -5,7 +5,7 @@ Docker is a set of platform as a service (PaaS) products that use OS-level virtu
 ## Build - dockerfiles
 
 ```shell
-sudo docker build --build-arg {ARG_NAME}={ARG_VALUE} -f {DOCKER_FILE_NAME}.dockerfile -t {DOCKER_IMAGE_NAME} .
+sudo docker build --build-arg {ARG_1_NAME}={ARG_1_VALUE} [--build-arg {ARG_2_NAME}={ARG_2_VALUE}] -f {DOCKER_FILE_NAME}.dockerfile -t {DOCKER_IMAGE_NAME} .
 ```
 
 ## ARG options
