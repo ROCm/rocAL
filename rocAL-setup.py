@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -46,10 +46,12 @@ def ERROR_CHECK(call):
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', 	type=str, default='~/rocal-deps',
                     help='Setup home directory - optional (default:~/)')
+parser.add_argument('--ffmpeg',    	type=str, default='OFF',
+                    help='FFMPEG Installation - optional (default:OFF) [options:ON/OFF]')
 parser.add_argument('--opencv',    	type=str, default='4.6.0',
                     help='OpenCV Version - optional (default:4.6.0)')
-parser.add_argument('--pybind11',   type=str, default='v2.10.4',
-                    help='PyBind11 Version - optional (default:v2.10.4)')
+parser.add_argument('--pybind11',   type=str, default='v2.11.1',
+                    help='PyBind11 Version - optional (default:v2.11.1)')
 parser.add_argument('--backend', 	type=str, default='HIP',
                     help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/OCL/HIP]')
 parser.add_argument('--rocm_path', 	type=str, default='/opt/rocm',
@@ -62,6 +64,7 @@ setupDir = args.directory
 opencvVersion = args.opencv
 pybind11Version = args.pybind11
 ROCM_PATH = args.rocm_path
+ffmpegInstall = args.ffmpeg.upper()
 backend = args.backend.upper()
 reinstall = args.reinstall.upper()
 
@@ -71,6 +74,11 @@ if "ROCM_PATH" in os.environ:
 print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
 
 # check developer inputs
+if ffmpegInstall not in ('OFF', 'ON'):
+    print(
+        "ERROR: FFMPEG Install Option Not Supported - [Supported Options: OFF or ON]\n")
+    parser.print_help()
+    exit()
 if reinstall not in ('OFF', 'ON'):
     print(
         "ERROR: Re-Install Option Not Supported - [Supported Options: OFF or ON]\n")
@@ -121,37 +129,51 @@ else:
 deps_dir = os.path.expanduser(setupDir_deps)
 deps_dir = os.path.abspath(deps_dir)
 
+# check os version
+os_info_data = 'NOT Supported'
+if os.path.exists('/etc/os-release'):
+    with open('/etc/os-release', 'r') as os_file:
+        os_info_data = os_file.read().replace('\n', ' ')
+        os_info_data = os_info_data.replace('"', '')
+
 # setup for Linux
 linuxSystemInstall = ''
 linuxCMake = 'cmake'
 linuxSystemInstall_check = ''
 linuxFlag = ''
 sudoValidateOption= '-v'
-if "centos" in platfromInfo or "redhat" in platfromInfo or os.path.exists('/usr/bin/yum'):
+if "centos" in os_info_data or "redhat" in os_info_data or os.path.exists('/usr/bin/yum'):
     linuxSystemInstall = 'yum -y'
     linuxSystemInstall_check = '--nogpgcheck'
-    if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
+    if "VERSION_ID=7" in os_info_data:
         linuxCMake = 'cmake3'
-        ERROR_CHECK(os.system(linuxSystemInstall+' install cmake3'))
-        sudoValidateOption = ''
-    if not "centos" in platfromInfo or not "redhat" in platfromInfo:
-        if "8" in platform.version():
-            platfromInfo = platfromInfo+'-redhat-8'
-        if "9" in platform.version():
-            platfromInfo = platfromInfo+'-redhat-9'
-elif "Ubuntu" in platfromInfo or os.path.exists('/usr/bin/apt-get'):
+        sudoValidateOption= ''
+        platfromInfo = platfromInfo+'-redhat-7'
+    elif "VERSION_ID=8" in os_info_data:
+        platfromInfo = platfromInfo+'-redhat-8'
+    elif "VERSION_ID=9" in os_info_data:
+        platfromInfo = platfromInfo+'-redhat-9'
+    else:
+        platfromInfo = platfromInfo+'-redhat-centos-undefined-version'
+elif "Ubuntu" in os_info_data or os.path.exists('/usr/bin/apt-get'):
     linuxSystemInstall = 'apt-get -y'
     linuxSystemInstall_check = '--allow-unauthenticated'
     linuxFlag = '-S'
-    if not "Ubuntu" in platfromInfo:
-        platfromInfo = platfromInfo+'-Ubuntu'
-elif os.path.exists('/usr/bin/zypper'):
+    if "VERSION_ID=20" in os_info_data:
+        platfromInfo = platfromInfo+'-Ubuntu-20'
+    elif "VERSION_ID=22" in os_info_data:
+        platfromInfo = platfromInfo+'-Ubuntu-22'
+    elif "VERSION_ID=24" in os_info_data:
+        platfromInfo = platfromInfo+'-Ubuntu-24'
+    else:
+        platfromInfo = platfromInfo+'-Ubuntu-undefined-version'
+elif "SLES" in os_info_data or os.path.exists('/usr/bin/zypper'):
     linuxSystemInstall = 'zypper -n'
     linuxSystemInstall_check = '--no-gpg-checks'
     platfromInfo = platfromInfo+'-SLES'
 else:
     print("\nrocAL Setup on "+platfromInfo+" is unsupported\n")
-    print("\nrocAL Setup Supported on: Ubuntu 20/22, CentOS 7, RedHat 8/9, & SLES 15-SP4\n")
+    print("\nrocAL Setup Supported on: Ubuntu 20/22, RedHat 8/9, & SLES 15\n")
     exit()
 
 # rocAL Setup
@@ -257,6 +279,11 @@ coreRPMPackages = [
     'protobuf-compiler'
 ]
 
+pip3Packages = [
+    'pytest==7.0.0',
+    'wheel==0.37.0'
+]
+
 # Install
 ERROR_CHECK(os.system('sudo '+sudoValidateOption))
 if os.path.exists(deps_dir):
@@ -270,8 +297,8 @@ else:
     ERROR_CHECK(os.system('mkdir '+deps_dir))
     # Create Build folder
     ERROR_CHECK(os.system('(cd '+deps_dir+'; mkdir build )'))
-    # install common pre-reqs
-    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
+    # update
+    ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' update'))
     # common packages
     for i in range(len(commonPackages)):
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
@@ -286,6 +313,80 @@ else:
         for i in range(len(rocmRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ rocmRPMPackages[i]))
+
+    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
+    # rocAL Core Packages
+    if "Ubuntu" in platfromInfo:
+        for i in range(len(coreDebianPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ coreDebianPackages[i]))
+    else:
+        for i in range(len(coreRPMPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ coreRPMPackages[i]))
+
+    #pip3 packages
+    for i in range(len(pip3Packages)):
+        ERROR_CHECK(os.system('sudo pip3 install '+ pip3Packages[i]))
+
+    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
+    ERROR_CHECK(os.system(
+        '(cd '+deps_dir+'; git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
+    ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
+            ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
+
+    # PyBind11
+    ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
+            linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j$(nproc); sudo make install)'))
+
+    # RapidJSON - Source TBD: Package install of RapidJSON has compile issues
+    os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
+            linuxCMake+' ../; make -j$(nproc); sudo make install)')
+
+# Optional Deps
+
+    # Install ffmpeg
+    if ffmpegInstall == 'ON':
+        if "Ubuntu" in platfromInfo:
+            for i in range(len(ffmpegDebianPackages)):
+                ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                                ' '+linuxSystemInstall_check+' install -y '+ ffmpegDebianPackages[i]))
+
+        elif "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install epel-release'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' localinstall --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install ffmpeg ffmpeg-devel'))
+        elif "centos-8" in platfromInfo or "redhat-8" in platfromInfo:
+            # el8 x86_64 packages
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-8.noarch.rpm https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-8.noarch.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/SDL2-2.0.10-2.el8.x86_64.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install ffmpeg ffmpeg-devel'))
+        elif "centos-9" in platfromInfo or "redhat-9" in platfromInfo:
+            # el8 x86_64 packages
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                ' install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                ' install https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                ' install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                ' install https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                ' install ffmpeg ffmpeg-free-devel'))
+        elif "SLES" in platfromInfo:
+            # FFMPEG-4 packages
+            ERROR_CHECK(os.system(
+                    'sudo zypper ar -cfp 90 \'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Leap_$releasever/Essentials\' packman-essentials'))
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                    ' install ffmpeg-4'))
 
     # Install OpenCV -- TBD cleanup
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build; mkdir OpenCV )'))
@@ -305,75 +406,6 @@ else:
         for i in range(len(opencvRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ opencvRPMPackages[i]))
-
-    # Install ffmpeg
-    if "Ubuntu" in platfromInfo:
-        for i in range(len(ffmpegDebianPackages)):
-            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                                ' '+linuxSystemInstall_check+' install -y '+ ffmpegDebianPackages[i]))
-
-    elif "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install epel-release'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' localinstall --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install ffmpeg ffmpeg-devel'))
-    elif "centos-8" in platfromInfo or "redhat-8" in platfromInfo:
-        # el8 x86_64 packages
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-8.noarch.rpm https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-8.noarch.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/SDL2-2.0.10-2.el8.x86_64.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install ffmpeg ffmpeg-devel'))
-    elif "centos-9" in platfromInfo or "redhat-9" in platfromInfo:
-        # el8 x86_64 packages
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-$(rpm -E %rhel).noarch.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install ffmpeg ffmpeg-free-devel'))
-    elif "SLES" in platfromInfo:
-        # FFMPEG-4 packages
-        ERROR_CHECK(os.system(
-                    'sudo zypper ar -cfp 90 \'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Leap_$releasever/Essentials\' packman-essentials'))
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                    ' install ffmpeg-4'))
-
-    ERROR_CHECK(os.system('sudo '+sudoValidateOption))
-    # rocAL Core Packages
-    if "Ubuntu" in platfromInfo:
-        for i in range(len(coreDebianPackages)):
-            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                        ' '+linuxSystemInstall_check+' install -y '+ coreDebianPackages[i]))
-    else:
-        for i in range(len(coreRPMPackages)):
-            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                        ' '+linuxSystemInstall_check+' install -y '+ coreRPMPackages[i]))
-
-    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.1
-    ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
-            ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
-
-    # PyBind11
-    ERROR_CHECK(os.system('pip install pytest==7.3.1'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
-            linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j$(nproc); sudo make install)'))
-
-    # RapidJSON - Source TBD: Package install of RapidJSON has compile issues
-    os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
-            linuxCMake+' ../; make -j$(nproc); sudo make install)')
-
     # OpenCV 4.6.0
     # Get Installation Source
     ERROR_CHECK(os.system(
@@ -385,8 +417,5 @@ else:
     ERROR_CHECK(os.system('sudo '+sudoValidateOption))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
-
-    # Python Wheel
-    ERROR_CHECK(os.system('pip install wheel'))
 
 print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")

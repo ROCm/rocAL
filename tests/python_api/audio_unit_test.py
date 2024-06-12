@@ -104,7 +104,6 @@ def audio_decoder_pipeline(path, file_list, downmix=False):
         downmix=downmix,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
 
 @pipeline_def(seed=seed)
 def pre_emphasis_filter_pipeline(path, file_list):
@@ -179,8 +178,6 @@ def non_silent_region_and_slice(path, file_list):
         file_list_path=file_list,
         downmix=False,
         shard_id=0,
-        num_shards=1,
-        stick_to_shard=False)
     begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
     trim_silence = fn.slice(
         decoded_audio,
@@ -235,6 +232,19 @@ def tensor_mul_scalar_pipeline(path, file_list):
         num_shards=1,
         stick_to_shard=False)
     return decoded_audio * 1.15
+
+@pipeline_def(seed=seed)
+def pre_emphasis_filter_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return fn.preemphasis_filter(decoded_audio)
 
 def main():
     args = parse_args()

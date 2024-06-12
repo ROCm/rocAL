@@ -1136,15 +1136,9 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
-    if (strlen(source_path) == 0 && strlen(file_list_path) == 0)
-        THROW("Either source path or file list path needs to be provided")
-    const char *root_path;
-    if (strlen(file_list_path) == 0) {
-        root_path = source_path;
-    } else {
-        root_path = file_list_path;
-    }
-    MetaDataConfig config(MetaDataType::Label, reader_type, root_path);
+    if (strlen(source_path) == 0)
+        THROW("Source path needs to be provided")
+    MetaDataConfig config(MetaDataType::Label, reader_type, source_path);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(root_path);
 
