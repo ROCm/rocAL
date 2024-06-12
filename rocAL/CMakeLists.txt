@@ -45,6 +45,14 @@ find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
 find_package(SndFile QUIET)
+# find rocJPEG
+find_library(ROCJPEG_LIBRARY NAMES rocjpeg HINTS {ROCM_PATH}/lib)
+find_path(ROCJPEG_INCLUDE_DIR NAMES rocjpeg.h PATHS /opt/rocm/include/rocjpeg {ROCM_PATH}/include/rocjpeg)
+
+if(ROCJPEG_LIBRARY AND ROCJPEG_INCLUDE_DIR)
+    set(ROCJPEG_FOUND TRUE)
+    message("-- ${White}Using rocJPEG -- \n\tLibraries:${ROCJPEG_LIBRARY} \n\tIncludes:${ROCJPEG_INCLUDE_DIR}${ColourReset}")
+endif()
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -303,6 +311,20 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     else()
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
+    endif()
+
+    # rocJPEG
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCJPEG_FOUND)
+        # HIP
+        include_directories (${ROCJPEG_INCLUDE_DIR})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCJPEG_LIBRARY})
+    else()
+        if (NOT HIP_FOUND)
+            message(FATAL_ERROR "-- ERROR!: HIP Not Found! - please install ROCm and HIP!")
+        endif()
+        if (NOT ROCJPEG_FOUND)
+            message(FATAL_ERROR "-- ERROR!: rocJPEG Not Found! - please install rocJPEG!")
+        endif()
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

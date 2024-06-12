@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "decoders/image/hw_jpeg_decoder.h"
 #include "decoders/image/open_cv_decoder.h"
 #include "decoders/image/turbo_jpeg_decoder.h"
+#include "decoders/image/rocjpeg_decoder.h"
 
 #include "pipeline/commons.h"
 
@@ -48,6 +49,9 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
             return std::make_shared<HWJpegDecoder>();
             break;
 #endif
+        case DecoderType::ROCJPEG_DEC:
+            return std::make_shared<RocJpegDecoder>();
+            break;
         default:
             THROW("Unsupported decoder type " + TOSTR(config.type()));
     }
