@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "readers/image/mxnet_recordio_reader.h"
 #include "readers/video/sequence_file_source_reader.h"
 #include "readers/image/tf_record_reader.h"
+#include "readers/webdataset_source_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch (config.type()) {
