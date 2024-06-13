@@ -48,6 +48,7 @@ enum class StorageType {
     MXNET_RECORDIO = 7,
     VIDEO_FILE_SYSTEM = 8,
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
+    WEBDATASET_RECORDS = 10, // tar files - webdataset format
 };
 
 enum class ExternalSourceFileMode {

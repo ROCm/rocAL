@@ -325,7 +325,8 @@ void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& s
                 last_filename = basename;
                 last_components_size = components_container.size();
             }
-
+            if (ext == "cls")
+                add(basename, 1);
             off_t file_offset = offset;
 
             // Set component information

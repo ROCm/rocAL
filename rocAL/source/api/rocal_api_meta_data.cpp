@@ -502,6 +502,22 @@ void
                                            allow_low_quality_matches);
 }
 
+RocalMetaData
+    ROCAL_API_CALL
+    rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, bool is_output) {
+    // TODO: Missing component behaviour is to be handled (Error Handling) - passed as 0
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalCreateWebDatasetReader")
+    auto context = static_cast<Context*>(p_context);
+    for (const auto& ext_set : extensions) {
+        for(const auto& ext : ext_set) {
+            std::cerr << "ext" << ext;
+            if (ext == "cls") // Add more extension cases as next step, add the right MetaDataType
+                return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, 0);
+        }
+    }
+}
+
 RocalTensorList
     ROCAL_API_CALL
     rocalGetMatchedIndices(RocalContext p_context) {

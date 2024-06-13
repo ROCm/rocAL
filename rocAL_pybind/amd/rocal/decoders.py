@@ -462,3 +462,25 @@ def audio(*inputs, file_root='', file_list_path='', shard_id=0, num_shards=1, ra
             "downmix": downmix}
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
+
+
+def webdataset(*inputs, file_root='', file_list_path='', shard_id=0, num_shards=1, random_shuffle=False, stick_to_shard=False, shard_size=-1,
+          color_format=types.RGB, decoder_type=types.DECODER_TJPEG,
+          decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+    """!TODO: Later
+    """
+    kwargs_pybind = {
+        "source_path": file_root,
+        "color_format": color_format,
+        "shard_id": shard_id,
+        "num_shards": num_shards,
+        'is_output': False,
+        "shuffle": random_shuffle,
+        "loop": False,
+        "decode_size_policy": decode_size_policy,
+        "max_width": max_decoded_width,
+        "max_height": max_decoded_height,
+        "dec_type": decoder_type,
+        "last_batch_info": (last_batch_policy, last_batch_padded)} # currently not implemented this
+    decoded_audio = b.webdatasetDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return decoded_audio

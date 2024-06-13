@@ -425,6 +425,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection, py::return_value_policy::reference);
     m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection, py::return_value_policy::reference);
     m.def("mxnetReader", &rocalCreateMXNetReader, py::return_value_policy::reference);
+    m.def("webDatasetReader", &rocalCreateWebDatasetReader, py::return_value_policy::reference);
     m.def("isEmpty", &rocalIsEmpty);
     m.def("getStatus", rocalGetStatus);
     m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
@@ -637,7 +638,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
-    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+    m.def("webdatasetDecoderSingleShard", &rocALWebDatasetDecoderSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);

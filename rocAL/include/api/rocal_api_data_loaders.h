@@ -918,5 +918,19 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       bool shuffle = false,
                                                                       bool loop = false,
                                                                       bool downmix = false);
+// TODO: Add comments later & code clean up later
+extern "C" RocalTensor ROCAL_API_CALL rocALWebDatasetDecoderSingleShard(RocalContext p_context,
+                                                                        const char* source_path,
+                                                                        RocalImageColor rocal_color_format,
+                                                                        unsigned shard_id,
+                                                                        unsigned shard_count,
+                                                                        bool is_output,
+                                                                        bool shuffle,
+                                                                        bool loop,
+                                                                        RocalImageSizeEvaluationPolicy decode_size_policy,
+                                                                        unsigned max_width,
+                                                                        unsigned max_height,
+                                                                        RocalDecoderType dec_type,
+                                                                        std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, true});
 
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H
