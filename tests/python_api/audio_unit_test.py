@@ -155,7 +155,7 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. Running on CPU")
         rocal_cpu = True
-    if audio_path == "" and file_list == "":
+    if not audio_path and not file_list:
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
     else:
