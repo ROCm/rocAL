@@ -302,7 +302,7 @@ void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& s
     struct stat file_stat;
     char filename[256];
     ssize_t fileSize;
-
+    off_t offset = 0;
     // Iterate through the tar file
     while (th_read(tar) == 0) {
         // Get file information
@@ -326,13 +326,18 @@ void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& s
                 last_components_size = components_container.size();
             }
 
+            off_t file_offset = offset;
+
             // Set component information
             components_container.emplace_back();
             components_container.back().filename = std::string(filename);
             components_container.back().size = th_get_size(tar);
-            components_container.back().offset = th_get_size(tar); // needs to change 
+            components_container.back().offset = file_offset; // needs to change 
             //stream_->TellRead() + RoundToBlockSize(filesize_) - readoffset_
             components_container.back().ext = ext;
+
+            // Update overall offset
+            offset += th_get_size(tar) + file_offset;
 
             // TODO: Handle it later
             // Read file content into a vector

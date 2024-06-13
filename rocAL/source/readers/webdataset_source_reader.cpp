@@ -1,4 +1,4 @@
-uu
+
 /*
 Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -39,7 +39,6 @@ WebDatasetSourceReader::WebDatasetSourceReader() {
     _shuffle = false;
     _file_id = 0;
     _last_rec = false;
-    _record_name_prefix = "";
     _file_count_all_shards = 0;
 }
 
@@ -62,7 +61,6 @@ Reader::Status WebDatasetSourceReader::initialize(ReaderConfig desc) {
     _batch_count = desc.get_batch_size();
     _loop = desc.loop();
     _shuffle = desc.shuffle();
-    _record_name_prefix = desc.file_prefix();
     _encoded_key = _feature_key_map.at("image/encoded");
     _filename_key = _feature_key_map.at("image/filename");
     ret = folder_reading();
@@ -88,7 +86,7 @@ size_t WebDatasetSourceReader::open() {
 }
 
 size_t WebDatasetSourceReader::read_data(unsigned char *buf, size_t read_size) {
-    auto ret = read_image(buf, _file_names[_curr_file_idx], _file_size[_file_names[_curr_file_idx]], _file_offset_file_names[_curr_file_idx]);
+    auto ret = read_image(buf, _file_names[_curr_file_idx], _file_size[_file_names[_curr_file_idx]], _file_offset[_file_names[_curr_file_idx]]);
     if (ret != Reader::Status::OK)
         THROW("WebDatasetSourceReader: Error in reading tar records of the web  dataset reader");
     incremenet_read_ptr();
@@ -144,9 +142,11 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
 
 Reader::Status WebDatasetSourceReader::webdataset_record_reader() {
     // Open the webdataset file
+    auto ret = Reader::Status::OK;
+
     std::string tar_file_path = _folder_path;
     TAR* tar;
-    tar_open(&tar, tar_filename, NULL, O_RDONLY, 0, 0);
+    tar_open(&tar, tar_file_path.c_str(), NULL, O_RDONLY, 0, 0);
 
     int result;
     off_t offset = 0; // Initialize offset
@@ -163,18 +163,17 @@ Reader::Status WebDatasetSourceReader::webdataset_record_reader() {
         size_t total_read = 0;
         while (total_read < size) {
             size_t bytes_to_read = std::min<size_t>(BLOCKSIZE, size - total_read);
-            ssize_t bytes_read = tar_read(tar, buffer + total_read, bytes_to_read);
+            ssize_t bytes_read = tar_block_read(tar, buffer);
             if (bytes_read < 0) {
                 std::cerr << "Error reading file from tar - Webdataset Reader: " << strerror(errno) << std::endl;
                 delete[] buffer;
                 tar_close(tar);
-                return Reader::Status::ERROR; // Return error status
             }
             total_read += bytes_read;
         }
         
         // Calculate offset
-        off_t file_offset = th_get_offset(tar);
+        off_t file_offset = offset;
 
         // Update file path and size
         std::string file_path = _folder_path;
@@ -183,16 +182,16 @@ Reader::Status WebDatasetSourceReader::webdataset_record_reader() {
         _file_names.push_back(file_path);
         _file_size.insert(std::pair<std::string, unsigned int>(file_path, size));
         _file_tar_mapping.insert(std::pair<std::string, std::string>(file_path, _folder_path));
-        _file_offset.insert(std::pair<std::string, unsigned int>(file_path, file_offset));
+        _file_offset.insert(std::pair<std::string, off_t>(file_path, file_offset));
 
         // Update overall offset
-        offset += th_get_size(tar) + th_get_offset(tar);
+        offset += size + file_offset;
     }
 
     // Close the tar file
     tar_close(tar);
 
-    return Reader::Status::OK; // Return OK status
+    return ret; // Return OK status
 }
 
 
@@ -202,45 +201,49 @@ size_t WebDatasetSourceReader::get_file_shard_id() {
     return _file_id % _shard_count;
 }
 
-// Reader::Status WebDatasetSourceReader::read_image_names(std::ifstream &file_contents, uint file_size) {
-//     auto ret = Reader::Status::OK;
-//     while (!_last_rec) {
-
-//     return ret;
-// }
-
 Reader::Status WebDatasetSourceReader::read_image(unsigned char *buff, std::string file_name, uint file_size, uint offset) {
     auto ret = Reader::Status::OK;
     TAR* tar;
-    // Extract tar name from the file name
-    auto tar_file_name  = _file_tar_mapping[file_name];
-    tar_open(&tar, tar_file_name, NULL, O_RDONLY, 0, 0);
+    // Open the tar file
+    auto tar_file_path  = _file_tar_mapping[file_name];
+
+    tar_open(&tar, tar_file_path.c_str(), NULL, O_RDONLY, 0, 0);
     if (!tar) {
-        std::cerr << "Failed to open tar file: " << tar_file_name << std::endl;
-        return false;
+        std::cerr << "Failed to open tar file: " << tar_file_path << std::endl;
     }
 
-    // Seek to the specified offset within the tar file
-    if (tar_seek(tar, offset, SEEK_SET) == -1) {
-        std::cerr << "Failed to seek to offset: " << offset << std::endl;
-        tar_close(tar);
-        return false;
-    }
+    // Iterate through the tar file entries
+    while (th_read(tar) == 0) {
+        // Get the file name of the current entry
+        char* current_file_name = th_get_pathname(tar);
+        // Check if it matches the desired file name
+        if (current_file_name && file_name == current_file_name) {
+            // Found the desired file entry, seek to the specified offset within the file
+            if (lseek(tar_fd(tar), offset, SEEK_SET) == -1) {
+                std::cerr << "Failed to seek to offset: " << offset << std::endl;
+                tar_close(tar);
+            }
 
-    // Read the specified number of bytes
-    size_t total_read = 0;
-    while (total_read < size) {
-        size_t bytes_to_read = std::min<size_t>(BLOCKSIZE, size - total_read);
-        ssize_t bytes_read = tar_read(tar, buff + total_read, bytes_to_read);
-        if (bytes_read < 0) {
-            std::cerr << "Error reading file from tar: " << strerror(errno) << std::endl;
+            // Read the specified number of bytes into the buffer
+            size_t bytes_read = 0;
+            while (bytes_read < file_size) {
+                ssize_t bytes = tar_block_read(tar, buff + bytes_read);
+                if (bytes < 0) {
+                    std::cerr << "Error reading file from tar: " << strerror(errno) << std::endl;
+                    tar_close(tar);
+                }
+                bytes_read += bytes;
+            }
+
+            // Close the tar file and return success
             tar_close(tar);
-            return false;
+            return ret;
         }
-        total_read += bytes_read;
     }
 
     // Close the tar file
     tar_close(tar);
+
+    // If the loop exits without finding the file, return false
     return ret;
 }

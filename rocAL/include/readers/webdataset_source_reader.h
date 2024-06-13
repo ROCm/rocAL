@@ -22,6 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 #include <dirent.h>
+#include <libtar.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <algorithm>
 #include <iterator>
@@ -29,8 +32,8 @@ THE SOFTWARE.
 #include <memory>
 #include <string>
 #include <vector>
-#include <libtar.h>
 
+#include "meta_data/webdataset_meta_data_reader.h"
 #include "readers/image/image_reader.h"
 #include "pipeline/timing_debug.h"
 
@@ -79,7 +82,8 @@ class WebDatasetSourceReader : public Reader {
     DIR *_sub_dir;
     struct dirent *_entity;
     std::vector<std::string> _file_names;
-    std::map<std::string, unsigned int> _file_size;
+    std::map<std::string, std::string> _file_tar_mapping;
+    std::map<std::string, unsigned int> _file_size, _file_offset;
     unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
@@ -104,7 +108,7 @@ class WebDatasetSourceReader : public Reader {
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
-    Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size);
+    Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size, uint offset);
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map<std::string, uint> _image_record_starting;
 };
