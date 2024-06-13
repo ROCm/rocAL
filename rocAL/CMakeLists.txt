@@ -306,7 +306,7 @@ if(${BUILD_ROCAL})
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
     endif()
     # LibTar
-    if(NOT libtar_FOUND)
+    if(NOT LIBTAR_FOUND)
         message("-- ${White}NOTE: rocAL built without LibTar - WebDataset Functionalities will not be supported${ColourReset}")
     else()
         include_directories(${libtar_INCLUDE_DIRS})

@@ -44,25 +44,25 @@ find_library(libtar_LIBRARIES
 mark_as_advanced(libtar_LIBRARIES)
 
 if(libtar_LIBRARIES AND libtar_INCLUDE_DIRS)
-    message("-- ${Yellow}NOTE: rocAL built WITH LibTar - WebDataset Functionalities will not be supported${ColourReset}")
-    set(libtar_FOUND TRUE)
+    message("-- ${Yellow}NOTE: rocAL built WITH LibTar - WebDataset Functionalities will be supported${ColourReset}")
+    set(LIBTAR_FOUND TRUE)
 else()
     message("---not found!!!!!!!!!!!!!!!!!!!!!!${ColourReset}")
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(libtar
-    FOUND_VAR  libtar_FOUND 
+find_package_handle_standard_args(LibTar
+    FOUND_VAR  LIBTAR_FOUND 
     REQUIRED_VARS
         libtar_LIBRARIES
         libtar_INCLUDE_DIRS
 )
 
-set(libtar_FOUND ${libtar_FOUND} CACHE INTERNAL "")
+set(LIBTAR_FOUND ${LIBTAR_FOUND} CACHE INTERNAL "")
 set(libtar_LIBRARIES ${libtar_LIBRARIES} CACHE INTERNAL "")
 set(libtar_INCLUDE_DIRS ${libtar_INCLUDE_DIRS} CACHE INTERNAL "")
 
-if(libtar_FOUND)
+if(LIBTAR_FOUND)
     message("-- ${Blue}Using Libtar -- \n\tLibraries:${libtar_LIBRARIES} \n\tIncludes:${libtar_INCLUDE_DIRS}${ColourReset}")   
 else()
     message( "-- ${Yellow}NOTE: FindLibTar failed to find -- LibTar${ColourReset}" )
