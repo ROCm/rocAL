@@ -21,6 +21,7 @@
 from amd.rocal.pipeline import pipeline_def
 from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import amd.rocal.fn as fn
+import amd.rocal.types as types
 import random
 import os
 import sys
@@ -35,7 +36,8 @@ seed = random.SystemRandom().randint(0, 2**32 - 1)
 
 test_case_augmentation_map = {
     0: "audio_decoder",
-    1: "preemphasis_filter"
+    1: "preemphasis_filter",
+    2: "spectrogram",
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -46,24 +48,26 @@ def plot_audio_wav(audio_tensor, idx):
     plt.savefig("output_folder/audio_reader/" + str(idx) + ".png")
     plt.close()
 
-def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name):
+def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name, dimensions):
     ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor.detach().numpy().flatten()
     roi_data = roi_tensor.detach().numpy()
+    buffer_size = roi_data[0] * roi_data[1]
     matched_indices = 0
-    for j in range(roi_data[0]):
-        ref_val = data_array[j]
-        out_val = audio_data[j]
-        # ensuring that out_val is not exactly zero while ref_val is non-zero.
-        invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
-        #comparing the absolute difference between the output value (out_val) and the reference value (ref_val) with a tolerance threshold of 1e-20.
-        if not invalid_comparison and np.abs(out_val - ref_val) < 1e-20:
-            matched_indices += 1
+    for i in range(roi_data[0]):
+        for j in range(roi_data[1]):
+            ref_val = data_array[i * roi_data[1] + j]
+            out_val = audio_data[i * dimensions[2] + j]
+            # ensuring that out_val is not exactly zero while ref_val is non-zero.
+            invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
+            #comparing the absolute difference between the output value (out_val) and the reference value (ref_val) with a tolerance threshold of 1e-20.
+            if not invalid_comparison and abs(out_val - ref_val) < 1e-20:
+                matched_indices += 1
 
     # Print results
     print(f"Results for {case_name}:")
-    if matched_indices == roi_data[0] and matched_indices != 0:
+    if matched_indices == buffer_size and matched_indices != 0:
         print("PASSED!")
         test_results[case_name] = "PASSED"
     else:
@@ -71,32 +75,54 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
         test_results[case_name] = "FAILED"
 
 @pipeline_def(seed=seed)
-def audio_decoder_pipeline(path):
-    audio, labels = fn.readers.file(file_root=path)
+def audio_decoder_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     return fn.decoders.audio(
         audio,
         file_root=path,
+        file_list_path=file_list,
         downmix=False,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
 
 @pipeline_def(seed=seed)
-def pre_emphasis_filter_pipeline(path):
-    audio, labels = fn.readers.file(file_root=path)
+def pre_emphasis_filter_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
         audio,
         file_root=path,
+        file_list_path=file_list,
         downmix=False,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
     return fn.preemphasis_filter(decoded_audio)
 
+@pipeline_def(seed=seed)
+def spectrogram_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    spec = fn.spectrogram(
+        decoded_audio,
+        nfft=512,
+        window_length=320,
+        window_step=160,
+        output_dtype = types.FLOAT)
+    return spec
+
 def main():
     args = parse_args()
 
     audio_path = args.audio_path
+    file_list = args.file_list_path
     rocal_cpu = False if args.rocal_gpu else True
     batch_size = args.batch_size
     test_case = args.test_case
@@ -129,8 +155,9 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. Running on CPU")
         rocal_cpu = True
-    if audio_path == "":
-        audio_path = f'{rocal_data_path}/rocal_data/audio/wav/'
+    if not audio_path and not file_list:
+        audio_path = f'{rocal_data_path}/rocal_data/audio/'
+        file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
@@ -143,11 +170,15 @@ def main():
     for case in case_list:
         case_name = test_case_augmentation_map.get(case)
         if case_name == "audio_decoder":
-            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "preemphasis_filter":
-            audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path)
+            audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "spectrogram":
+            audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
+        output_tensor_list = audio_pipeline.get_output_tensors()
+        dimensions = output_tensor_list[0].dimensions()
         cnt = 0
         start = timeit.default_timer()
         # Enumerate over the Dataloader
@@ -165,7 +196,7 @@ def main():
                             plot_audio_wav(audio_tensor, cnt)
                         cnt+=1
             if qa_mode :
-                verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name)
+                verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name, dimensions)
             print("EPOCH DONE", e)
         
         stop = timeit.default_timer()
