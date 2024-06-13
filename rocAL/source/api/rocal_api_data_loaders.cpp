@@ -2212,8 +2212,8 @@ rocalAudioFileSourceSingleShard(
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
         auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
                                context->master_graph->mem_type(),
-                               tensor_data_type);
-        info.set_max_shape();
+                               tensor_data_type,
+                               RocalTensorlayout::NHW);
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
@@ -2253,8 +2253,8 @@ rocalAudioFileSource(
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
         auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
                                context->master_graph->mem_type(),
-                               tensor_data_type);
-        info.set_max_shape();
+                               tensor_data_type,
+                               RocalTensorlayout::NHW);
         output = context->master_graph->create_loader_output_tensor(info);
         output->reset_audio_sample_rate();
 

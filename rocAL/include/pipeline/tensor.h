@@ -129,7 +129,7 @@ class TensorInfo {
                RocalTensorDataType data_type);
     TensorInfo(std::vector<size_t> dims, RocalMemType mem_type,
                RocalTensorDataType data_type, RocalTensorlayout layout,
-               RocalColorFormat color_format);
+               RocalColorFormat color_format = RocalColorFormat::U8);
 
     // Setting properties required for Image / Video
     void set_roi_type(RocalROIType roi_type) { _roi_type = roi_type; }
@@ -160,23 +160,28 @@ class TensorInfo {
         if (_is_metadata) return;  // For metadata tensors max shape is not required
         if (_layout != RocalTensorlayout::NONE) {
             if (!_max_shape.size()) _max_shape.resize(2);  // Since 2 values will be stored in the vector
-            _is_image = true;
-            if (_layout == RocalTensorlayout::NHWC) {
-                _max_shape[0] = _dims.at(2);
-                _max_shape[1] = _dims.at(1);
-                _channels = _dims.at(3);
-            } else if (_layout == RocalTensorlayout::NCHW) {
-                _max_shape[0] = _dims.at(3);
+            if (_layout == RocalTensorlayout::NHW || _layout == RocalTensorlayout::NFT || _layout == RocalTensorlayout::NTF) {   // For Audio/2D layouts
+                _max_shape[0] = _dims.at(1);
                 _max_shape[1] = _dims.at(2);
-                _channels = _dims.at(1);
-            } else if (_layout == RocalTensorlayout::NFHWC) {
-                _max_shape[0] = _dims.at(3);
-                _max_shape[1] = _dims.at(2);
-                _channels = _dims.at(4);
-            } else if (_layout == RocalTensorlayout::NFCHW) {
-                _max_shape[0] = _dims.at(4);
-                _max_shape[1] = _dims.at(3);
-                _channels = _dims.at(2);
+            } else {            // For Image layouts
+                _is_image = true;
+                if (_layout == RocalTensorlayout::NHWC) {
+                    _max_shape[0] = _dims.at(2);
+                    _max_shape[1] = _dims.at(1);
+                    _channels = _dims.at(3);
+                } else if (_layout == RocalTensorlayout::NCHW) {
+                    _max_shape[0] = _dims.at(3);
+                    _max_shape[1] = _dims.at(2);
+                    _channels = _dims.at(1);
+                } else if (_layout == RocalTensorlayout::NFHWC) {
+                    _max_shape[0] = _dims.at(3);
+                    _max_shape[1] = _dims.at(2);
+                    _channels = _dims.at(4);
+                } else if (_layout == RocalTensorlayout::NFCHW) {
+                    _max_shape[0] = _dims.at(4);
+                    _max_shape[1] = _dims.at(3);
+                    _channels = _dims.at(2);
+                }
             }
         } else {                                                             // For other tensors
             if (!_max_shape.size()) _max_shape.resize(_num_of_dims - 1, 0);  // Since 2 values will be stored in the vector

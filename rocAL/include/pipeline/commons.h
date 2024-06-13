@@ -46,6 +46,9 @@ enum class RocalTensorlayout {
     NCHW,
     NFHWC,
     NFCHW,
+    NHW,
+    NFT,
+    NTF,
     NONE
 };
 
