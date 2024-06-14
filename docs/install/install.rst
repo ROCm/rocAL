@@ -36,7 +36,7 @@ Prerequisites
 
 * Google Protobuf
 
-* LMBD Library
+* LMDB Library
 
 * Python3 and Python3 PIP
 
@@ -75,7 +75,7 @@ Install rocAL runtime, development, and test packages.
 
 * Runtime package - ``rocal`` only provides the dynamic libraries
 * Development package - ``rocal-dev`` / ``rocal-devel`` provides the libraries, executables, header files, Python bindings, and samples
-* Test package - ``rocal-test`` provides ctest to verify installation
+* Test package - ``rocal-test`` provides ``ctest`` to verify installation
 
 On Ubuntu
 ^^^^^^^^^^^^^^^
@@ -102,7 +102,7 @@ On SLES
 
 
 .. note::
-    * Package install requires ``Turbo JPEG``, ``PyBind 11 v2.10.4`` and ``Protobuf V3.12.4`` manual install
+    * Package installation requires ``Turbo JPEG``, ``PyBind 11 v2.10.4`` and ``Protobuf V3.12.4`` manual install
     * ``CentOS`` / ``RedHat`` / ``SLES`` requires ``FFMPEG Dev`` package manual install
 
 .. _source-install:

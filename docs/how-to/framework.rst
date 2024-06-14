@@ -195,7 +195,7 @@ Follow these steps:
 
 .. __resnet50:
 
-Run Resnet50 classification training with rocAL
+Run ResNet50 classification training with rocAL
 =======================================================
 
 #. Ensure you have downloaded ``ILSVRC2012_img_val.tar`` (6.3GB) and ``ILSVRC2012_img_train.tar`` (138 GB) files and unzip into ``train`` and ``val`` folders
