@@ -38,7 +38,7 @@ Follow these steps:
     import amd.rocal.types as types
 
 
-2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a fileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the `pipeline <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L38>`_.
+2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a FileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the `pipeline <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L38>`_.
 
 .. code-block:: python
    :caption: Pipeline for PyTorch

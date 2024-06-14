@@ -21,7 +21,9 @@ NCHW
 Nvidia's
 NVIDIA's
 parallelizing
-pybind11
+Pixelization
+Prefetching
+pybind
 PyTorch
 RapidJSON
 RedHat

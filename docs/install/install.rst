@@ -42,7 +42,7 @@ Prerequisites
 
 * Python Wheel
 
-* PyBind11
+* pybind11
 
 * Turbo JPEG
 

@@ -43,7 +43,7 @@ rocAL Python API
 ``amd.rocal.plugin.pytorch``
 -----------------------------
 
-*  Contains ``ROCALGenericIterator`` for Pytorch.
+*  Contains ``ROCALGenericIterator`` for PyTorch.
 *  ``ROCALClassificationIterator`` class implements iterator for image classification and return images with corresponding labels.
 *  From the above classes, any hybrid iterator pipeline can be created by adding augmentations.
 *  See `PyTorch Simple Example <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch>`_. Requires PyTorch.
