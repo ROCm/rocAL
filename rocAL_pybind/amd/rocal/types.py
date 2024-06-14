@@ -66,10 +66,6 @@ from rocal_pybind.types import NHW
 #     RocalSpectrogramLayout
 from rocal_pybind.types import NFT
 from rocal_pybind.types import NTF
-from rocal_pybind.types import NHW
-#     RocalSpectrogramLayout
-from rocal_pybind.types import NFT
-from rocal_pybind.types import NTF
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
