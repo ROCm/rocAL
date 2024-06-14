@@ -96,21 +96,21 @@ void ImageSourceEvaluator::find_max_numpy_dimensions() {
         _reader->close();
 
         if (_max_numpy_dims.size() == 0) {
-            _max_numpy_dims.resize(numpy_header._shape.size());
-            _numpy_dtype = numpy_header._type_info;
+            _max_numpy_dims.resize(numpy_header.array_shape.size());
+            _numpy_dtype = numpy_header.type_info;
         }
 
-        if (_max_numpy_dims.size() != numpy_header._shape.size()) {
+        if (_max_numpy_dims.size() != numpy_header.array_shape.size()) {
             THROW("All numpy arrays must have the same number of dimensions")
         }
 
-        if (_numpy_dtype != numpy_header._type_info) {
+        if (_numpy_dtype != numpy_header.type_info) {
             THROW("All numpy arrays must have the same data type")
         }
 
         for (uint i = 0; i < _max_numpy_dims.size(); i++) {
-            if (numpy_header._shape[i] > _max_numpy_dims[i]) {
-                _max_numpy_dims[i] = numpy_header._shape[i];
+            if (numpy_header.array_shape[i] > _max_numpy_dims[i]) {
+                _max_numpy_dims[i] = numpy_header.array_shape[i];
             }
         }
     }

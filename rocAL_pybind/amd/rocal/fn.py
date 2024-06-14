@@ -1202,3 +1202,13 @@ def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_
                      "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "output_datatype": output_datatype}
     mel_filter_bank_output = b.melFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return mel_filter_bank_output
+
+def set_layout(*inputs, output_layout=types.NHWC):
+    '''
+    Sets the tensor layout for the given input tensor
+    '''
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "output_layout": output_layout}
+    new_output = b.setLayout(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (new_output)

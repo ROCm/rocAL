@@ -647,7 +647,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNumpyFileSource(RocalContext p_contex
  * \param [in] last_batch_info Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values & If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
  * \return Reference to the output tensor
  */
-extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext p_context,
+extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext context,
                                                        const char* source_path,
                                                        bool is_output = false,
                                                        bool shuffle = false,
@@ -974,5 +974,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       bool stick_to_shard = false,
                                                                       int shard_size = -1,
                                                                       std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, false});
+
+extern "C" RocalTensor ROCAL_API_CALL rocalSetLayout(RocalContext context, RocalTensor input,
+                                                     RocalTensorLayout output_layout = ROCAL_NONE);
 
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H

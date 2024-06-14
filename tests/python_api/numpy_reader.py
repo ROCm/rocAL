@@ -15,13 +15,6 @@ def main():
     if len(sys.argv) < 3:
         print('Please pass numpy_folder cpu/gpu batch_size')
         exit(0)
-    try:
-        path = "OUTPUT_IMAGES_PYTHON/NEW_API/NUMPY_READER/"
-        isExist = os.path.exists(path)
-        if not isExist:
-            os.makedirs(path)
-    except OSError as error:
-        print(error)
     data_path = sys.argv[1]
     if (sys.argv[2] == "cpu"):
         rocal_cpu = True

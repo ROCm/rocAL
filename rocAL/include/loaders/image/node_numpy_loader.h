@@ -44,7 +44,7 @@ class NumpyLoaderNode : public Node {
     /// \param mem_type Memory type, host or device
     /// \param last_batch_policy Determines the handling of the last batch when the shard size is not divisible by the batch size.
     void init(unsigned internal_shard_count, const std::string &source_path, StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
-              size_t load_batch_count, RocalMemType mem_type, std::pair<RocalBatchPolicy, bool> last_batch_info = {RocalBatchPolicy::FILL, true}, bool decoder_keep_orig = false, const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(), const char *prefix = "", unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0);
+              size_t load_batch_count, RocalMemType mem_type, std::pair<RocalBatchPolicy, bool> last_batch_info = {RocalBatchPolicy::FILL, true});
 
     std::shared_ptr<LoaderModule> get_loader_module();
 

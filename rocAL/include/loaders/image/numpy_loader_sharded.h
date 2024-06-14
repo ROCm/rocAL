@@ -35,18 +35,18 @@ class NumpyLoaderSharded : public LoaderModule {
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
     void set_output(Tensor *output_image) override;
-    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override;
     void reset() override;
     void start_loading() override;
     std::vector<std::string> get_id() override;
     DecodedDataInfo get_decode_data_info() override;
-    CropImageInfo get_crop_image_info() override;
     Timing timing() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     void feed_external_input(const std::vector<std::string> &input_images_names, const std::vector<unsigned char *> &input_buffer,
-                             const std::vector<ROIxywh> &roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {};
+                             const std::vector<ROIxywh> &roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {
+        THROW("external source reader is not supported for numpy loader")
+    };
     size_t last_batch_padded_size() override;
 
    private:
@@ -58,7 +58,5 @@ class NumpyLoaderSharded : public LoaderModule {
     size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();
     size_t _prefetch_queue_depth;
-
     Tensor *_output_tensor;
-    std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
 };

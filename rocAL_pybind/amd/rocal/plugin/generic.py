@@ -68,7 +68,7 @@ class ROCALNumpyIterator(object):
                     self.roi_array = np.zeros(self.batch_size * self.num_dims * 2, dtype=np.uint32)
                     self.output_tensor_list[i].copy_roi(self.roi_array)
                     self.max_roi_size = np.zeros(self.num_dims, dtype=np.uint32)
-                    for j in range(self.batch_size):
+                    for j in range(self.batch_size):  # Calculating the max ROI for a batch
                         index = j * self.num_dims * 2
                         roi_size = self.roi_array[index + self.num_dims: index +
                                                   self.num_dims * 2] - self.roi_array[index: index + self.num_dims]

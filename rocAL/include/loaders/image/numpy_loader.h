@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "image_read_and_decode.h"
 #include "loaders/circular_buffer.h"
 #include "pipeline/commons.h"
-//
+
 // NumpyLoader runs an internal thread for loading an decoding of numpy arrays asynchronously
 // it uses a circular buffer to store decoded numpy arrays for the user
 class NumpyLoader : public LoaderModule {
@@ -39,7 +39,6 @@ class NumpyLoader : public LoaderModule {
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
     void set_output(Tensor* output_image) override;
-    void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override;
     size_t remaining_count() override;  // returns number of remaining items to be loaded
     void reset() override;              // Resets the loader to load from the beginning of the media
     Timing timing() override;
@@ -49,11 +48,12 @@ class NumpyLoader : public LoaderModule {
     void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
     DecodedDataInfo get_decode_data_info() override;
-    CropImageInfo get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
-                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {};
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {
+        THROW("external source reader is not supported for numpy loader")
+    };
     size_t last_batch_padded_size() override;
 
    private:
@@ -63,21 +63,17 @@ class NumpyLoader : public LoaderModule {
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
     std::shared_ptr<Reader> _reader;
-    std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     Tensor* _output_tensor;
     std::vector<std::string> _output_names;  //!< image name/ids that are stores in the _output_image
     size_t _output_mem_size;
     MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
-    std::vector<std::vector<float>> _bbox_coords;
     bool _internal_thread_running;
     size_t _batch_size;
     size_t _image_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
     DecodedDataInfo _decoded_data_info;
-    CropImageInfo _crop_image_info;
     DecodedDataInfo _output_decoded_data_info;
-    CropImageInfo _output_cropped_img_info;
     CircularBuffer _circ_buff;
     TimingDbg _file_load_time, _swap_handle_time;
     bool _is_initialized;
@@ -86,9 +82,6 @@ class NumpyLoader : public LoaderModule {
     size_t _prefetch_queue_depth;   // Used for circular buffer's internal buffer
     size_t _image_counter = 0;      //!< How many images have been loaded already
     size_t _remaining_image_count;  //!< How many images are there yet to be loaded
-    bool _decoder_keep_original = false;
     int _device_id;
     std::vector<std::vector<unsigned>> _tensor_roi;
-    RocalBatchPolicy _last_batch_policy;  //!< Last batch policy used for the reader
-    bool _last_batch_padded;              //!< Used to decide whether to pad or wrap the last batch
 };

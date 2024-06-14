@@ -42,10 +42,6 @@ DecodedDataInfo NumpyLoaderSharded::get_decode_data_info() {
     return _loaders[_loader_idx]->get_decode_data_info();
 }
 
-CropImageInfo NumpyLoaderSharded::get_crop_image_info() {
-    return _loaders[_loader_idx]->get_crop_image_info();
-}
-
 NumpyLoaderSharded::~NumpyLoaderSharded() {
     _loaders.clear();
 }
@@ -71,6 +67,7 @@ LoaderModuleStatus NumpyLoaderSharded::load_next() {
 
     return ret;
 }
+
 void NumpyLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type,
                                     unsigned batch_size, bool keep_orig_size) {
     if (_initialized)
@@ -85,7 +82,6 @@ void NumpyLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decod
     // Initialize loader modules
     for (size_t idx = 0; idx < _shard_count; idx++) {
         _loaders[idx]->set_output(_output_tensor);
-        _loaders[idx]->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
         _loaders[idx]->set_gpu_device_id(idx);
         reader_cfg.set_shard_count(_shard_count);
         reader_cfg.set_shard_id(idx);
@@ -93,6 +89,7 @@ void NumpyLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decod
     }
     _initialized = true;
 }
+
 void NumpyLoaderSharded::start_loading() {
     for (unsigned i = 0; i < _loaders.size(); i++) {
         _loaders[i]->start_loading();
@@ -122,10 +119,6 @@ void NumpyLoaderSharded::shut_down() {
 
 void NumpyLoaderSharded::set_output(Tensor* output_tensor) {
     _output_tensor = output_tensor;
-}
-
-void NumpyLoaderSharded::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) {
-    _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
 }
 
 size_t NumpyLoaderSharded::remaining_count() {
@@ -165,7 +158,7 @@ Timing NumpyLoaderSharded::timing() {
 size_t NumpyLoaderSharded::last_batch_padded_size() {
     size_t last_batch_padded_size = 0;
     for (auto& loader : _loaders) {
-        if (last_batch_padded_size == 0)
+        if (!last_batch_padded_size)
             last_batch_padded_size = loader->last_batch_padded_size();
         if (last_batch_padded_size != loader->last_batch_padded_size())
             THROW("All loaders must have the same last batch padded size");
