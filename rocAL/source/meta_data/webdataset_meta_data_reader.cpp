@@ -29,16 +29,18 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 #include <fcntl.h>
+#include <cerrno>
+#include <cstring>
 #include <cassert>
 #include <algorithm>
 #include <unordered_map>
 #include "pipeline/commons.h"
 #include "pipeline/exception.h"
-#include "pipeline/filesystem.h"
+
 
 using namespace std;
 
-constexpr size_t kBlockSize = T_BLOCKSIZE;
+// constexpr size_t kBlockSize = T_BLOCKSIZE;
 
 // struct no_delimiter {};
 
@@ -125,6 +127,7 @@ WebDataSetMetaDataReader::WebDataSetMetaDataReader() {
 void WebDataSetMetaDataReader::init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) {
     // _path = cfg.path();
     _paths = cfg.path();
+    _wds_shards.reserve(_paths.size());
     _index_paths = cfg.index_path();
     _exts = cfg.exts();
     _missing_component_behaviour = cfg.get_missing_component_behaviour();
@@ -285,81 +288,75 @@ std::tuple<std::string, std::string> WebDataSetMetaDataReader::split_name(const 
 
 void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& samples_container,
                                               std::vector<ComponentDescription>& components_container,
-                                              const std::string& tar_file_name) {
-    // Initialize libtar
-
-    TAR *tar;
-    if (tar_open(&tar, tar_file_name.c_str(), NULL, O_RDONLY, 0, TAR_GNU) != 0) {
-        std::cerr << "Error: Failed to open TAR file: " << tar_file_name << std::endl;
-        return;
-    }
+                                              std::unique_ptr<StdFileStream>& tar_file) {
+    int64_t initial_file_pos = tar_file->TellRead();
+    std::cerr << "\n initial_file_pos" << initial_file_pos;
+    TarArchive tar_archive(std::move(tar_file));
 
     std::string last_filename;
-    std::tie(last_filename, std::ignore) = split_name(tar_file_name);
-    size_t last_components_size = components_container.size();
-
-    // Initialize variables
-    struct stat file_stat;
-    char filename[256];
-    ssize_t fileSize;
-    off_t offset = 0;
-    // Iterate through the tar file
-    while (th_read(tar) == 0) {
-        // Get file information
-        const char* entry_name = tar->pathname;
-        std::string basename, ext;
-        std::tie(basename, ext) = split_name(std::string(entry_name));
-        if (entry_name == nullptr) {
-            continue;
-        }
-        strcpy(filename, entry_name);
-
-        // Checks for regular files & processed
-        if (TH_ISREG(tar)) {
-
-            if (basename != last_filename) {
-                samples_container.emplace_back();
-                samples_container.back().components =
-                    VectorView<ComponentDescription>(components_container, last_components_size,
-                                                components_container.size() - last_components_size);
-                last_filename = basename;
-                last_components_size = components_container.size();
-            }
-            if (ext == "cls")
-                add(basename, 1);
-            off_t file_offset = offset;
-
-            // Set component information
-            components_container.emplace_back();
-            components_container.back().filename = std::string(filename);
-            components_container.back().size = th_get_size(tar);
-            components_container.back().offset = file_offset; // needs to change 
-            //stream_->TellRead() + RoundToBlockSize(filesize_) - readoffset_
-            components_container.back().ext = ext;
-
-            // Update overall offset
-            offset += th_get_size(tar) + file_offset;
-
-            // TODO: Handle it later
-            // Read file content into a vector
-            // std::vector<char> content(component.size);
-            // tar_read(tar, content.data(), component.size);  // Read file content
-            // Store content in component
-            // component.content = std::move(content);
-
-            // // Add component to sample
-            // sample.components.push_back(component);
-            // // Add sample to samples container
-            // samples_container.push_back(sample);
-
-            samples_container.emplace_back();
-            samples_container.back().components = VectorView<ComponentDescription>(components_container, last_components_size,
-                                            components_container.size() - last_components_size);
+    for (; !tar_archive.EndOfArchive(); tar_archive.NextFile()) {
+        if (tar_archive.GetFileType() == TarArchive::ENTRY_FILE) {
+        std::tie(last_filename, std::ignore) = split_name(tar_archive.GetFileName());
+        break;
         }
     }
+    size_t last_components_size = components_container.size();
+    for (; !tar_archive.EndOfArchive(); tar_archive.NextFile()) {
+        if (tar_archive.GetFileType() != TarArchive::ENTRY_FILE) {
+        continue;
+        }
 
-    // Close tar file
-    tar_close(tar);
+    std::string basename, ext;
+    std::cerr << "\n tar_archive.GetFileName(): " << tar_archive.GetFileName();
+    std::tie(basename, ext) = split_name(tar_archive.GetFileName());
+    std::cerr << "\n basename: " << basename;
+    std::cerr << "\n ext: " <<ext;
+    if (basename.empty()) {
+      continue;
+    }
+
+    if (basename != last_filename) {
+      samples_container.emplace_back();
+      samples_container.back().components = VectorView<ComponentDescription>(components_container, last_components_size, components_container.size() - last_components_size);
+      last_filename = basename;
+      last_components_size = components_container.size();
+    }
+
+    components_container.emplace_back();
+    components_container.back().size = tar_archive.GetFileSize();
+    components_container.back().offset = tar_archive.TellArchive() + tar_archive.HeaderSize();
+    components_container.back().ext = std::move(ext);
+    components_container.back().filename = tar_archive.GetFileName();
+
+  }
+    samples_container.emplace_back();
+    samples_container.back().components = VectorView<ComponentDescription>(components_container, last_components_size, components_container.size() - last_components_size);
+
+    tar_file = tar_archive.Release();
+
+}
+
+void WebDataSetMetaDataReader::read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream) {
+    std::cerr << "\n READ SAMPLE CALLED" << component.ext;
+    if (component.ext == "cls") {
+        std::cerr << "\n compoenent class";
+        current_tar_file_stream->SeekRead(component.offset);
+        // Prepare to read ASCII data
+        std::vector<char> cls_data(component.size);
+        current_tar_file_stream->Read(cls_data.data(), component.size);
+        add(component.filename, cls_data[0]); // Check if ASCII values need to stored in the map_contents
+        // Print the ASCII values - comment out for now
+        // std::cout << "Content of .cls file (ASCII): ";
+        // std::cout << "[";
+        // for (size_t i = 0; i < cls_data.size(); ++i) {
+        // std::cout << "[" << (cls_data[i]) << "]";
+        //     std::cout << "[" << static_cast<int>(cls_data[i]) << "]";
+        //     if (i < cls_data.size() - 1) {
+        //         std::cout << " ";
+        //     }
+        // }
+        // std::cout << "]" << std::endl;
+    } // Labels Parsed
 }
 
 
@@ -394,6 +391,12 @@ void WebDataSetMetaDataReader::read_all(const std::string& _path) {
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
 
+    _wds_shards.reserve(entry_name_list.size());
+    // Create n such std-streams for n paths
+     for (auto& path : entry_name_list)
+        _wds_shards.emplace_back(StdFileStream::Open(_folder_path + path));
+
+
     closedir(_sub_dir);
 
       // collecting and filtering the index files
@@ -401,22 +404,22 @@ void WebDataSetMetaDataReader::read_all(const std::string& _path) {
     std::vector<ComponentDescription> unfiltered_components;
 
     for (unsigned wds_shard_index = 0; wds_shard_index < entry_name_list.size(); ++wds_shard_index) {
+        unfiltered_samples.resize(0);
+        unfiltered_components.resize(0);
         if (_index_paths.size() == 0)
-            parse_tar_files(unfiltered_samples, unfiltered_components, entry_name_list[wds_shard_index]);
+            parse_tar_files(unfiltered_samples, unfiltered_components, _wds_shards[wds_shard_index]);
         else
-            parse_index_files(unfiltered_samples, unfiltered_components, entry_name_list[wds_shard_index]);
+            parse_index_files(unfiltered_samples, unfiltered_components, _folder_path + entry_name_list[wds_shard_index]);
+
+        // After parsing add the contents to the map
+        for (auto& sample : unfiltered_samples) {
+            for (auto& component : sample.components) {
+                read_sample_and_add_to_map(component, _wds_shards[wds_shard_index]);
+            }
+        }
     }
 
-    // for (size_t wds_shard_index = 0; wds_shard_index < paths_.size(); wds_shard_index++) {
-    // unfiltered_samples.resize(0);
-    // unfiltered_components.resize(0);
-    // if (generate_index_) {
-    //   detail::wds::ParseTarFile(unfiltered_samples, unfiltered_components,
-    //                             wds_shards_[wds_shard_index]);
-    // } else {
-    //   detail::wds::ParseIndexFile(unfiltered_samples, unfiltered_components,
-    //                               index_paths_[wds_shard_index]);
-    // }
+
 
     // uint label_counter = 0;
     // for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
