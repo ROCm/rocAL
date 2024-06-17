@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include "readers/webdataset_source_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
+    std::cerr << "\n The config type" <<  (int)config.type();
     switch (config.type()) {
         case StorageType ::FILE_SYSTEM: {
             auto ret = std::make_shared<FileSourceReader>();

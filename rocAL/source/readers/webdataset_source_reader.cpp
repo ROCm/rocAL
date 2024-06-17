@@ -51,6 +51,7 @@ unsigned WebDatasetSourceReader::count_items() {
 }
 
 Reader::Status WebDatasetSourceReader::initialize(ReaderConfig desc) {
+    std::cerr << "\n WebDatasetSourceReader::initialize";
     auto ret = Reader::Status::OK;
     _file_id = 0;
     _folder_path = desc.path();
@@ -60,6 +61,7 @@ Reader::Status WebDatasetSourceReader::initialize(ReaderConfig desc) {
     _shard_count = desc.get_shard_count();
     _batch_count = desc.get_batch_size();
     _loop = desc.loop();
+    _meta_data_reader = desc.meta_data_reader();
     _shuffle = desc.shuffle();
     _encoded_key = _feature_key_map.at("image/encoded");
     _filename_key = _feature_key_map.at("image/filename");
@@ -114,7 +116,7 @@ void WebDatasetSourceReader::reset() {
 
 Reader::Status WebDatasetSourceReader::folder_reading() {
     if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
-        THROW("FileReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
+        THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
     std::vector<std::string> entry_name_list;
     std::string _full_path = _folder_path;
@@ -130,11 +132,11 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
         std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
         _folder_path = subfolder_path;
         if (webdataset_record_reader() != Reader::Status::OK)
-            WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
+            WRN("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
     }
 
     if (!_file_names.empty())
-        LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
+        LOG("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
     return ret;
 }

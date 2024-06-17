@@ -108,6 +108,7 @@ class WebDatasetSourceReader : public Reader {
     void incremenet_file_id() { _file_id++; }
     void replicate_last_image_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
+    std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size, uint offset);
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map<std::string, uint> _image_record_starting;
