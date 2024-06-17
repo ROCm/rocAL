@@ -2271,8 +2271,7 @@ rocalToDecibels(
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for To decibels augmentation.")
-            op_tensor_data_type = RocalTensorDataType::FP32;
+            THROW("Only FP32 dtype is supported for To decibels augmentation.")
         }
         output_info.set_data_type(op_tensor_data_type);
         if (input->info().layout() == RocalTensorlayout::NFT || input->info().layout() == RocalTensorlayout::NTF) // Layout is changed when input is from spectrogram/mel filter bank
