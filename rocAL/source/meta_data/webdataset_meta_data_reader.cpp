@@ -328,7 +328,12 @@ void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& s
     components_container.back().size = tar_archive.GetFileSize();
     components_container.back().offset = tar_archive.TellArchive() + tar_archive.HeaderSize();
     components_container.back().ext = std::move(ext);
-    components_container.back().filename = basename;
+    auto _last_id = basename;
+    auto last_slash_idx = _last_id.find_last_of("\\/");
+    if (std::string::npos != last_slash_idx) {
+        _last_id.erase(0, last_slash_idx + 1);
+    }
+    components_container.back().filename = _last_id;
 
   }
     samples_container.emplace_back();
