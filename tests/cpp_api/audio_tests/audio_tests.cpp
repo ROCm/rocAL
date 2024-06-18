@@ -126,8 +126,7 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
         }
     }
 
-    std::cout << std::endl
-              << "Results for Test case: " << std::endl;
+    std::cout << std::endl << "Results for Test case: " << std::endl;
     if ((matched_indices == buffer_size) && matched_indices != 0) {
         pass_status = true;
     }
@@ -192,7 +191,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         file_list_path = std::string(std::getenv("ROCAL_DATA_PATH")) + "rocal_data/audio/wav_file_list.txt";
     }
 
-    std::cout << ">>>>>>> Running LABEL READER" << std::endl;
+    std::cout << "Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path, file_list_path.c_str());
 
     is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
@@ -202,7 +201,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
-    std::string case_name = "";
+    std::string case_name;
     switch (test_case) {
         case 0: {
             case_name = "audio_decoder";
@@ -218,7 +217,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
 
         } break;
         case 2: {
-            std::cout << ">>>>>>> Running SPECTROGRAM" << std::endl;
+            std::cout << "Running SPECTROGRAM" << std::endl;
             case_name = "spectrogram";
             std::vector<float> window_fn;
             rocalSpectrogram(handle, decoded_output, true, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
@@ -324,7 +323,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
 
     if (qa_mode) {
         std::cout << "\n *****************************Verifying Audio output**********************************\n";
-        if (test_case != 8 && verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size)) {
+        if (verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size)) {
             std::cout << "PASSED!\n\n";
         }
         else if (test_case == 8 && verify_non_silent_region_output(nsr_begin, nsr_length, case_name)) {
@@ -342,7 +341,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     return 0;
 }

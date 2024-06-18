@@ -104,6 +104,7 @@ def audio_decoder_pipeline(path, file_list, downmix=False):
         downmix=downmix,
         shard_id=0,
         num_shards=1,
+        stick_to_shard=False)
 
 @pipeline_def(seed=seed)
 def pre_emphasis_filter_pipeline(path, file_list):
@@ -178,6 +179,8 @@ def non_silent_region_and_slice(path, file_list):
         file_list_path=file_list,
         downmix=False,
         shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
     begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
     trim_silence = fn.slice(
         decoded_audio,
@@ -246,6 +249,25 @@ def pre_emphasis_filter_pipeline(path, file_list):
         stick_to_shard=False)
     return fn.preemphasis_filter(decoded_audio)
 
+@pipeline_def(seed=seed)
+def spectrogram_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    spec = fn.spectrogram(
+        decoded_audio,
+        nfft=512,
+        window_length=320,
+        window_step=160,
+        output_dtype = types.FLOAT)
+    return spec
+
 def main():
     args = parse_args()
 
@@ -283,7 +305,7 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. Running on CPU")
         rocal_cpu = True
-    if audio_path == "" and file_list == "":
+    if not audio_path and not file_list:
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
         downmix_audio_path = f'{rocal_data_path}/rocal_data/multi_channel_wav/'
