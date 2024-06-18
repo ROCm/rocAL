@@ -62,6 +62,10 @@ from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
+from rocal_pybind.types import NHW
+#     RocalSpectrogramLayout
+from rocal_pybind.types import NFT
+from rocal_pybind.types import NTF
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -89,10 +93,20 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
-# Rocal External Source Mode
+#     Rocal External Source Mode
 from rocal_pybind.types import EXTSOURCE_FNAME
 from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
 from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
+
+#     RocalAudioBorderType
+from rocal_pybind.types import ZERO
+from rocal_pybind.types import CLAMP
+from rocal_pybind.types import REFLECT
+
+#     RocalLastBatchPolicy
+from rocal_pybind.types import LAST_BATCH_FILL
+from rocal_pybind.types import LAST_BATCH_DROP
+from rocal_pybind.types import LAST_BATCH_PARTIAL
 
 _known_types = {
 
@@ -122,6 +136,7 @@ _known_types = {
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
+    NHW: ("NHW", NHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -152,6 +167,17 @@ _known_types = {
     EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
     EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
     EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
+
+    ZERO: ("ZERO", ZERO),
+    CLAMP: ("CLAMP", CLAMP),
+    REFLECT: ("REFLECT", REFLECT),
+
+    NTF: ("NTF", NTF),
+    NFT: ("NFT", NFT),
+
+    LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
+    LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
+    LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
 }
 
 def data_type_function(dtype):

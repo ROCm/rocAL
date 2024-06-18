@@ -80,6 +80,9 @@ struct ReaderConfig {
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
+    void set_last_batch_policy(std::pair<RocalBatchPolicy, bool> last_batch_info) {
+        _last_batch_info = last_batch_info;
+    }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -96,8 +99,11 @@ struct ReaderConfig {
     std::map<std::string, std::string> feature_key_map() { return _feature_key_map; }
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
+    void set_file_list_path(const std::string &file_list_path) { _file_list_path = file_list_path; }
+    std::string file_list_path() { return _file_list_path; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     ExternalSourceFileMode mode() { return _file_mode; }
+    std::pair<RocalBatchPolicy, bool> get_last_batch_policy() { return _last_batch_info; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -113,9 +119,11 @@ struct ReaderConfig {
     size_t _sequence_frame_stride = 1;
     bool _shuffle = false;
     bool _loop = false;
-    std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_prefix;  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_list_path;  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
+    std::pair<RocalBatchPolicy, bool> _last_batch_info = {RocalBatchPolicy::FILL, true};
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
@@ -178,4 +186,7 @@ class Reader {
     virtual unsigned count_items() = 0;
 
     virtual ~Reader() = default;
+
+    //! Returns the number of images in the last batch
+    virtual size_t last_batch_padded_size() { return 0; }
 };

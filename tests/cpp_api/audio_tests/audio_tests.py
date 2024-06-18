@@ -25,7 +25,9 @@ import shutil
 import argparse
 
 test_case_augmentation_map = {
-    0: "audio_decoder"
+    0: "audio_decoder",
+    1: "preemphasis_filter",
+    2: "spectrogram"
 }
 
 def run_unit_test(src_path, qa_mode, gpu, downmix, build_folder_path, case_list):
@@ -36,7 +38,11 @@ def run_unit_test(src_path, qa_mode, gpu, downmix, build_folder_path, case_list)
     for case in case_list:
         print("\n\n")
         result = subprocess.run([build_folder_path + "/build/audio_tests", src_path, str(case), str(gpu), str(downmix), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
-        decoded_stdout = result.stdout.decode()
+        try:
+            decoded_stdout = result.stdout.decode('utf-8')
+        except UnicodeDecodeError as e:
+            # Handle the error by replacing or ignoring problematic characters
+            decoded_stdout = result.stdout.decode('utf-8', errors='replace')
 
         # check the QA status of the test case
         if "PASSED" in decoded_stdout:
@@ -45,7 +51,7 @@ def run_unit_test(src_path, qa_mode, gpu, downmix, build_folder_path, case_list)
         else:
             num_failed += 1
             failed_cases.append(test_case_augmentation_map[case])
-        print(result.stdout.decode())
+        print(decoded_stdout)
 
     if qa_mode:
         print("Number of PASSED:", num_passed)
@@ -71,7 +77,7 @@ def main():
         sys.exit()
 
     sys.dont_write_bytecode = True
-    input_file_path = rocal_data_path + "/rocal_data/audio/wav"
+    input_file_path = rocal_data_path + "/rocal_data/audio"
     build_folder_path = os.getcwd()
 
     args = audio_test_suite_parser_and_validator()

@@ -69,15 +69,20 @@ void TextFileMetaDataReader::lookup(const std::vector<std::string> &image_names)
 void TextFileMetaDataReader::read_all(const std::string &path) {
     std::ifstream text_file(path.c_str());
     if (text_file.good()) {
-        //_text_file.open(path.c_str(), std::ifstream::in);
         std::string line;
         while (std::getline(text_file, line)) {
             std::istringstream line_ss(line);
             int label;
-            std::string image_name;
-            if (!(line_ss >> image_name >> label))
+            std::string file_name;
+            if (!(line_ss >> file_name >> label))
                 continue;
-            add(image_name, label);
+            // process pair (file_name, label)
+            auto last_id = file_name;
+            auto last_slash_idx = last_id.find_last_of("\\/");
+            if (std::string::npos != last_slash_idx) {
+                last_id.erase(0, last_slash_idx + 1);
+            }
+            add(last_id, label);
         }
     } else {
         THROW("Can't open the metadata file at " + path)

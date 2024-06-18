@@ -46,6 +46,7 @@ void AudioLoaderSingleShardNode::Init(unsigned shard_id, unsigned shard_count, u
     reader_cfg.set_batch_count(load_batch_count);
     reader_cfg.set_meta_data_reader(meta_data_reader);
     reader_cfg.set_cpu_num_threads(cpu_num_threads);
+    reader_cfg.set_file_list_path(file_list_path);
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }

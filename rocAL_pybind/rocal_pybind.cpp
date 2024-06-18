@@ -141,6 +141,9 @@ std::unordered_map<int, std::string> rocalToPybindLayout = {
     {1, "NCHW"},
     {2, "NFHWC"},
     {3, "NFCHW"},
+    {4, "NHW"},
+    {5, "NFT"},
+    {6, "NTF"}
 };
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
@@ -154,14 +157,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
     // Bind the C++ structure
     // rocal_api.h
-    m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it",
-          py::return_value_policy::reference,
-          py::arg("batch_size"),
-          py::arg("affinity"),
-          py::arg("gpu_id") = 0,
-          py::arg("cpu_thread_count") = 1,
-          py::arg("prefetch_queue_depth") = 3,
-          py::arg("output_data_type") = 0);
+    m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it", py::return_value_policy::reference);
     m.def("rocalVerify", &rocalVerify);
     m.def("rocalRun", &rocalRun, py::return_value_policy::reference);
     m.def("rocalRelease", &rocalRelease, py::return_value_policy::reference);
@@ -386,6 +382,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
         .value("NFCHW", ROCAL_NFCHW)
+        .value("NHW", ROCAL_NHW)
+        .value("NFT", ROCAL_NFT)
+        .value("NTF", ROCAL_NTF)
         .export_values();
     py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
         .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -402,6 +401,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
         .value("EXTSOURCE_RAW_COMPRESSED", ROCAL_EXTSOURCE_RAW_COMPRESSED)
         .value("EXTSOURCE_RAW_UNCOMPRESSED", ROCAL_EXTSOURCE_RAW_UNCOMPRESSED)
+        .export_values();
+    py::enum_<RocalAudioBorderType>(types_m,"RocalAudioBorderType", "Rocal Audio Border Type")
+        .value("ZERO", ROCAL_ZERO)
+        .value("CLAMP", ROCAL_CLAMP)
+        .value("REFLECT", ROCAL_REFLECT)
+        .export_values();
+    py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
+        .value("LAST_BATCH_FILL", ROCAL_LAST_BATCH_FILL)
+        .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
+        .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
@@ -433,6 +442,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("getTimingInfo", &rocalGetTimingInfo);
     m.def("labelReader", &rocalCreateLabelReader, py::return_value_policy::reference);
     m.def("cocoReader", &rocalCreateCOCOReader, py::return_value_policy::reference);
+    m.def("getLastBatchPaddedSize", &rocalGetLastBatchPaddedSize, py::return_value_policy::reference);
     // rocal_api_meta_data.h
     m.def("randomBBoxCrop", &rocalRandomBBoxCrop);
     m.def("boxEncoder", &rocalBoxEncoder);
@@ -716,6 +726,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("colorTemp", &rocalColorTemp,
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
+          py::return_value_policy::reference);
+    m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
+            py::return_value_policy::reference);
+    m.def("spectrogram", &rocalSpectrogram,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

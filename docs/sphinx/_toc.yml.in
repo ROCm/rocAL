@@ -7,7 +7,7 @@ subtrees:
   - file: install/install.rst
     title: Installation
   - file: how-to/index.rst
-    title: How To
+    title: How to
     subtrees:
     - entries:
       - file: how-to/overview.rst

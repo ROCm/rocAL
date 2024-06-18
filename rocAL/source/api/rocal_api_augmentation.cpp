@@ -2155,3 +2155,98 @@ rocalNop(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalPreEmphasisFilter(RocalContext p_context,
+                       RocalTensor p_input,
+                       bool is_output,
+                       RocalFloatParam p_preemph_coeff,
+                       RocalAudioBorderType preemph_border_type,
+                       RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto preemph_coeff = static_cast<FloatParam*>(p_preemph_coeff);
+    try {
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_datatype != RocalTensorDataType::FP32) {
+            WRN("Only FP32 dtype is supported for PreEmphasis filter augmentation.")
+            op_tensor_datatype = RocalTensorDataType::FP32;
+        }
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalSpectrogram(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        std::vector<float> &window_fn,
+        bool center_windows,
+        bool reflect_padding,
+        int power,
+        int nfft,
+        int window_length,
+        int window_step,
+        RocalTensorLayout output_layout,
+        RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            WRN("Only FP32 data-type is supported for Spectrogram augmentation.")
+            op_tensor_data_type = RocalTensorDataType::FP32;
+        }
+        std::vector<size_t> max_dims = input->info().max_shape();
+        if (max_dims[1] != 1) THROW("Spectrogram only supports single channel inputs. Please check the input passed.")
+        int window_offset = (!center_windows) ? window_length :  0;
+        int max_frame = (((max_dims[0] - window_offset) / window_step) + 1);
+        max_frame = std::max(0, max_frame);
+        int bins = std::max(0, (nfft / 2) + 1);
+        std::vector<size_t> dims = input->info().dims();
+        RocalTensorlayout spectrogram_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (spectrogram_layout == RocalTensorlayout::NTF) {
+            dims[1] = max_frame;
+            dims[2] = bins;
+        } else if (spectrogram_layout == RocalTensorlayout::NFT) {
+            dims[1] = bins;
+            dims[2] = max_frame;
+        } else {
+            THROW("Spectrogram supports only NFT / NTF layouts")
+        }
+        TensorInfo output_info = TensorInfo(std::vector<size_t>(std::move(dims)),
+                                            context->master_graph->mem_type(),
+                                            op_tensor_data_type,
+                                            spectrogram_layout);
+        if(power != 1 || power != 2) {
+            WRN("rocalSpectrogram power value can be 1 or 2, setting it to default 2")
+            power = 2;
+        }
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SpectrogramNode>({input}, {output})->init(center_windows, reflect_padding,
+                                                                                  power, nfft, window_length,
+                                                                                  window_step, window_fn);
+    } catch(const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
