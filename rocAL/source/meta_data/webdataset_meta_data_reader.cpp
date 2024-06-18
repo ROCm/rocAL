@@ -328,7 +328,7 @@ void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& s
     components_container.back().size = tar_archive.GetFileSize();
     components_container.back().offset = tar_archive.TellArchive() + tar_archive.HeaderSize();
     components_container.back().ext = std::move(ext);
-    components_container.back().filename = tar_archive.GetFileName();
+    components_container.back().filename = basename;
 
   }
     samples_container.emplace_back();

@@ -10,19 +10,31 @@ np.set_printoptions(threshold=1000, edgeitems=10000)
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-import math
-# import rocal_pybind.tensor
 import sys
-import cv2
 import matplotlib.pyplot as plt
 import os
+
+def draw_patches(img, idx, device, dtype, layout):
+    # image is expected as a tensor, bboxes as numpy
+    import cv2
+    if device == "cpu":
+        image = img.detach().numpy()
+    else:
+        image = img.cpu().numpy()
+    if dtype == types.FLOAT16:
+        image = (image).astype('uint8')
+    if layout == types.NCHW:
+        image = image.transpose([1, 2, 0])
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    image = cv2.UMat(image).get()
+    cv2.imwrite("output_folder/webdataset_reader/" + str(idx)+"_"+"train"+".png", image)
 
 def main():
     if  len(sys.argv) < 3:
         print ('Please pass tar_file index_file cpu/gpu batch_size')
         exit(0)
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/FILE_READER/" + "audio"
+        path= "output_folder/webdataset_reader/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -84,6 +96,9 @@ def main():
             for img, label in zip(it[0],it[1]):
                 print("label", label)
                 print("img",img)
+                draw_patches(img, cnt, "cpu", tensor_dtype, tensor_format)
+                cnt = cnt + 1
         print("EPOCH DONE", e)
+
 if __name__ == '__main__':
     main()
