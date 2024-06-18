@@ -170,6 +170,8 @@ void WebDataSetMetaDataReader::release(std::string image_name) {
 
 // Has to be handled for the detection case depending on the extension
 void WebDataSetMetaDataReader::lookup(const std::vector<std::string>& image_names) {
+    std::cerr << "\n Printing map contents";
+    print_map_contents();
     if (image_names.empty()) {
         WRN("No image names passed")
         return;

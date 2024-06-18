@@ -75,6 +75,7 @@ class WebDatasetSourceReader : public Reader {
     Reader::Status folder_reading();
     std::string _folder_path;
     std::string _path;
+    std::string _paths, _index_paths;
     std::map<std::string, std::string> _feature_key_map;
     std::string _encoded_key;
     std::string _filename_key;
@@ -82,7 +83,7 @@ class WebDatasetSourceReader : public Reader {
     DIR *_sub_dir;
     struct dirent *_entity;
     std::vector<std::string> _file_names;
-    std::map<std::string, std::string> _file_tar_mapping;
+    std::map<std::string, unsigned int> _file_wds_shard_idx_mapping;
     std::map<std::string, unsigned int> _file_size, _file_offset;
     unsigned _curr_file_idx;
     unsigned _current_file_size;
@@ -104,12 +105,13 @@ class WebDatasetSourceReader : public Reader {
     size_t _file_count_all_shards;
     void incremenet_read_ptr();
     int release();
-    size_t get_file_shard_id();
     void incremenet_file_id() { _file_id++; }
-    void replicate_last_image_to_fill_last_shard();
-    void replicate_last_batch_to_pad_partial_shard();
+    void parse_tar_files(std::vector<SampleDescription>& samples_container,
+                                              std::vector<ComponentDescription>& components_container,
+                                              std::unique_ptr<StdFileStream>& tar_file);
+    Reader::Status webdataset_record_reader_from_components(ComponentDescription component, unsigned wds_shard_index);
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size, uint offset);
-    Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
-    std::map<std::string, uint> _image_record_starting;
+    std::vector<std::unique_ptr<StdFileStream>> _wds_shards;
+    std::tuple<std::string, std::string> split_name(const std::string& file_path);
+    Reader::Status read_web_dataset_at_offset(unsigned char *buff, std::string file_name, uint file_size, uint offset, uint wds_shard_index);
 };

@@ -167,6 +167,7 @@ ImageReadAndDecode::load(unsigned char *buff,
         THROW("Zero image dimension is not valid")
     if (!buff)
         THROW("Null pointer passed as output buffer")
+    std::cerr << "\n _reader->count_items() :: " << _reader->count_items();
     if (_reader->count_items() < _batch_size)
         return LoaderModuleStatus::NO_MORE_DATA_TO_READ;
     // load images/frames from the disk and push them as a large image onto the buff
@@ -180,6 +181,7 @@ ImageReadAndDecode::load(unsigned char *buff,
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing
+    std::cerr << "\n loading starts";
     if (_decoder_config._type == DecoderType::SKIP_DECODE) {
         while ((file_counter != _batch_size) && _reader->count_items() > 0) {
             auto read_ptr = buff + image_size * file_counter;
@@ -250,8 +252,11 @@ ImageReadAndDecode::load(unsigned char *buff,
         }
         // return LoaderModuleStatus::OK;
     } else {
+        std::cerr << "\n Last condition";
+        std::cerr << "\n _reader->count_items():: " << _reader->count_items();
         while ((file_counter != _batch_size) && _reader->count_items() > 0) {
             size_t fsize = _reader->open();
+            std::cerr << "\n The fsize :: " << fsize;
             if (fsize == 0) {
                 WRN("Opened file " + _reader->id() + " of size 0");
                 continue;
