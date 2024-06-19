@@ -26,11 +26,17 @@ import numpy as np
 import ctypes
 import rocal_pybind as b
 import amd.rocal.types as types
+import array
 try:
     import cupy as cp
     CUPY_FOUND=True
 except ImportError:
     CUPY_FOUND=False
+try:
+    import dlpack as dlpack
+    DLPACK_FOUND=True
+except ImportError:
+    DLPACK_FOUND=False
 
 
 class ROCALGenericImageIterator(object):
@@ -97,7 +103,7 @@ class ROCALGenericIteratorDetection(object):
         self.offset = offset or [0.0, 0.0, 0.0]
         self.device = device
         if self.device is "gpu" or "cuda":
-            if not CUPY_FOUND:
+            if not CUPY_FOUND and not DLPACK_FOUND:
                 print('info: Import CuPy failed. Falling back to CPU!')
                 self.device = "cpu"
         self.device_id = device_id
@@ -120,7 +126,6 @@ class ROCALGenericIteratorDetection(object):
             print("Transfer time ::", timing_info.transfer_time)
             raise StopIteration
         self.output_tensor_list = self.loader.get_output_tensors()
-
         if self.output_list is None:
             # Output list used to store pipeline outputs - can support multiple augmentation outputs
             self.output_list = []
@@ -131,8 +136,14 @@ class ROCALGenericIteratorDetection(object):
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output = cp.empty(self.dimensions, dtype=self.dtype)
-                    self.output_tensor_list[i].copy_data(self.output.data.ptr)
+                    if DLPACK_FOUND:
+                        print("self.dimensions -- ", self.dimensions)
+                        self.output = np.empty(self.dimensions, dtype=self.dtype)
+                        self.output = self.output.__dlpack__()
+                        self.output_tensor_list[i].copy_data(self.output, self.loader._output_memory_type)
+                    elif CUPY_FOUND:
+                        self.output = cp.empty(self.dimensions, dtype=self.dtype)
+                        self.output_tensor_list[i].copy_data(self.output.data.ptr)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
@@ -196,13 +207,21 @@ class ROCALGenericIteratorDetection(object):
                     self.labels = np.reshape(
                         self.labels, (-1, self.bs, self.loader._num_classes))
                 else:
-                    self.labels = cp.zeros(
-                        (self.bs) * (self.loader._num_classes), dtype="int32")
-                    self.loader.get_one_hot_encoded_labels(
-                        self.labels.data.ptr, self.loader._output_memory_type)
-                    self.labels = cp.reshape(
-                        self.labels, (-1, self.bs, self.loader._num_classes))
-                    
+                    # TODO: check how to reshape labels from dlpack
+                    if DLPACK_FOUND:
+                        self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
+                        self.labels_dlpack = self.labels.__dlpack__()
+                        self.loader.get_one_hot_encoded_labels(self.labels_dlpack.data.ptr, self.loader._output_memory_type)
+                        self.labels = np.from_dlpack(self.labels_dlpack)
+                        self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
+                        self.labels = self.labels.__dlpack__()
+                    elif CUPY_FOUND:
+                        self.labels = cp.zeros(
+                            (self.bs) * (self.loader._num_classes), dtype="int32")
+                        self.loader.get_one_hot_encoded_labels(
+                            self.labels.data.ptr, self.loader._output_memory_type)
+                        self.labels = cp.reshape(
+                            self.labels, (-1, self.bs, self.loader._num_classes))
             else:
                 self.labels = self.loader.get_image_labels()
 
