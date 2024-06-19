@@ -57,3 +57,4 @@ THE SOFTWARE.
 #include "augmentations/node_sequence_rearrange.h"
 #include "augmentations/audio_augmentations/node_preemphasis_filter.h"
 #include "augmentations/audio_augmentations/node_spectrogram.h"
+#include "augmentations/audio_augmentations/node_to_decibels.h"

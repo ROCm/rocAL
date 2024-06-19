@@ -38,6 +38,8 @@ test_case_augmentation_map = {
     0: "audio_decoder",
     1: "preemphasis_filter",
     2: "spectrogram",
+    3: "downmix",
+    4: "to_decibels"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -75,13 +77,13 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
         test_results[case_name] = "FAILED"
 
 @pipeline_def(seed=seed)
-def audio_decoder_pipeline(path, file_list):
+def audio_decoder_pipeline(path, file_list, downmix=False):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     return fn.decoders.audio(
         audio,
         file_root=path,
         file_list_path=file_list,
-        downmix=False,
+        downmix=downmix,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
@@ -117,6 +119,24 @@ def spectrogram_pipeline(path, file_list):
         window_step=160,
         output_dtype = types.FLOAT)
     return spec
+
+@pipeline_def(seed=seed)
+def to_decibels_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return fn.to_decibels(
+            decoded_audio,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            output_dtype=types.FLOAT)
 
 def main():
     args = parse_args()
@@ -158,6 +178,7 @@ def main():
     if not audio_path and not file_list:
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
+        downmix_audio_path = f'{rocal_data_path}/rocal_data/multi_channel_wav/'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
@@ -175,6 +196,11 @@ def main():
             audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "spectrogram":
             audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "downmix":
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu,
+                                                    path=downmix_audio_path if qa_mode else audio_path, file_list="" if qa_mode else file_list, downmix=True)
+        if case_name == "to_decibels":
+            audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         output_tensor_list = audio_pipeline.get_output_tensors()
@@ -185,9 +211,9 @@ def main():
         for e in range(int(args.num_epochs)):
             print("Epoch :: ", e)
             torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-            for i, it in enumerate(audio_loader):
-                for x in range(len(it[0])):
-                    for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
+            for i, output_list in enumerate(audio_loader):
+                for x in range(len(output_list[0])):
+                    for audio_tensor, label, roi in zip(output_list[0][x], output_list[1], output_list[2]):
                         if args.print_tensor:
                             print("label", label)
                             print("Audio", audio_tensor)

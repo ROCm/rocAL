@@ -731,5 +731,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
             py::return_value_policy::reference);
     m.def("spectrogram", &rocalSpectrogram,
           py::return_value_policy::reference);
+    m.def("toDecibels", &rocalToDecibels,
+          py::return_value_policy::reference);
 }
 }  // namespace rocal

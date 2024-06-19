@@ -135,10 +135,12 @@ python3 audio_unit_test.py
 To pass the audio data path, batch size, and run a particular test case use the following command
 
 ```bash
-python3 audio_unit_test.py --audio_path=<path_to_data> --test_case <case(0-2)> --batch-size <batch_size>
+python3 audio_unit_test.py --audio_path=<path_to_data> --test_case <case(0-4)> --batch-size <batch_size>
 ```
 
 **Available Test Cases**
 * Case 0 - Audio Decoder
 * Case 1 - PreEmphasis Filter
 * Case 2 - Spectrogram
+* Case 3 - Downmix
+* Case 4 - ToDecibels

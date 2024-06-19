@@ -27,17 +27,24 @@ import argparse
 test_case_augmentation_map = {
     0: "audio_decoder",
     1: "preemphasis_filter",
-    2: "spectrogram"
+    2: "spectrogram",
+    3: "downmix",
+    4: "to_decibels"
 }
 
-def run_unit_test(src_path, qa_mode, gpu, downmix, build_folder_path, case_list):
+def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list):
     passed_cases = []
     failed_cases = []
     num_passed = 0
     num_failed = 0
     for case in case_list:
+        if case == 3:
+            src_path = rocal_data_path + "/rocal_data/multi_channel_wav"
+            downmix = 1
+        else:
+            src_path = rocal_data_path + "/rocal_data/audio"
         print("\n\n")
-        result = subprocess.run([build_folder_path + "/build/audio_tests", src_path, str(case), str(gpu), str(downmix), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
+        result = subprocess.run([build_folder_path + "/build/audio_tests", src_path, str(case), str(downmix), str(gpu), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
         try:
             decoded_stdout = result.stdout.decode('utf-8')
         except UnicodeDecodeError as e:
@@ -77,7 +84,6 @@ def main():
         sys.exit()
 
     sys.dont_write_bytecode = True
-    input_file_path = rocal_data_path + "/rocal_data/audio"
     build_folder_path = os.getcwd()
 
     args = audio_test_suite_parser_and_validator()
@@ -105,7 +111,7 @@ def main():
     subprocess.run(["cmake", script_path], cwd=".")   # nosec
     subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-    run_unit_test(input_file_path, qa_mode, gpu, downmix, build_folder_path, case_list)
+    run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list)
 
 if __name__ == "__main__":
     main()

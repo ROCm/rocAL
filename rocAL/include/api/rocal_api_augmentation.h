@@ -1144,4 +1144,23 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSpectrogram(RocalContext context,
                                                        RocalTensorLayout output_layout = ROCAL_NFT,
                                                        RocalTensorOutputType output_datatype = ROCAL_FP32);
 
+/*! \brief A
+ * \ingroup group_rocal_augmentations
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param[in] cutoff_db minimum or cut-off ratio in dB
+ * \param[in] multiplier factor by which the logarithm is multiplied
+ * \param[in] reference_magnitude Reference magnitude which if not provided uses maximum value of input as reference
+ * \param [in] rocal_tensor_output_type the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalToDecibels(RocalContext p_context,
+                                                      RocalTensor p_input,
+                                                      bool is_output,
+                                                      float cutoff_db,
+                                                      float multiplier,
+                                                      float reference_magnitude,
+                                                      RocalTensorOutputType rocal_tensor_output_type);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

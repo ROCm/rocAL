@@ -40,3 +40,5 @@ python3 audio_tests.py --gpu <0/1> --downmix <True/False> --test_case <case_numb
 * Case 0 - Audio Decoder
 * Case 1 - PreEmphasis Filter
 * Case 2 - Spectrogram
+* Case 3 - Downmix
+* Case 4 - ToDecibels

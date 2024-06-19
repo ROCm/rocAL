@@ -20,6 +20,8 @@
 * Support for Audio augmentation - PreEmphasis filter
 * Support for reading from file lists in file reader
 * Support for Audio augmentation - Spectrogram
+* Support for Audio augmentation - ToDecibels
+* Support for downmixing audio channels during decoding
 
 ### Optimizations
 

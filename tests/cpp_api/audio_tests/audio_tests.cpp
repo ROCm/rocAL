@@ -143,16 +143,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
-    std::string file_list_path;  // User can modify this with the file list path if required
-    if (qa_mode) {                    // setting the default file list path from ROCAL_DATA_PATH
+    std::string file_list_path = "";  // User can modify this with the file list path if required
+    if (qa_mode && test_case != 3) {  // setting the default file list path from ROCAL_DATA_PATH
         file_list_path = std::string(std::getenv("ROCAL_DATA_PATH")) + "rocal_data/audio/wav_file_list.txt";
     }
 
     std::cout << "Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path, file_list_path.c_str());
 
-    if (test_case == 0)
-        is_output_audio_decoder = true;
+    is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
     RocalTensor decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path.c_str(), 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
@@ -180,6 +179,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::vector<float> window_fn;
             rocalSpectrogram(handle, decoded_output, true, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
 
+        } break;
+        case 3: {
+            case_name = "downmix";
+            std::cout << "Running AUDIO DECODER + DOWNMIX" << std::endl;
+        } break;
+        case 4: {
+            std::cout << "Running TO DECIBELS" << std::endl;
+            case_name = "to_decibels";
+            rocalToDecibels(handle, decoded_output, true, std::log(1e-20), std::log(10), 1.0f, ROCAL_FP32);
         } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";

@@ -2250,3 +2250,37 @@ rocalSpectrogram(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalToDecibels(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    float cutoff_db,
+    float multiplier,
+    float reference_magnitude,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            THROW("Only FP32 dtype is supported for To decibels augmentation.")
+        }
+        output_info.set_data_type(op_tensor_data_type);
+        if (input->info().layout() == RocalTensorlayout::NFT || input->info().layout() == RocalTensorlayout::NTF) // Layout is changed when input is from spectrogram/mel filter bank
+            output_info.set_tensor_layout(RocalTensorlayout::NHW);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<ToDecibelsNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
