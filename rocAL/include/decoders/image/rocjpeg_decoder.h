@@ -37,8 +37,13 @@ class RocJpegDecoder : public Decoder {
      \param height pointer to the user's buffer to write the height of the compressed image to
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
-    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
+    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override {}
 
+    Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer,
+                                     std::vector<size_t> &input_size,
+                                     std::vector<size_t> &width,
+                                     std::vector<size_t> &height,
+                                     int *color_comps) override;
     //! Decodes the actual image data
     /*!
       \param input_buffer  User provided buffer containig the encoded image
@@ -53,10 +58,18 @@ class RocJpegDecoder : public Decoder {
                            size_t max_decoded_width, size_t max_decoded_height,
                            size_t original_image_width, size_t original_image_height,
                            size_t &actual_decoded_width, size_t &actual_decoded_height,
-                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override;
+                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override {}
+
+
+    Decoder::Status decode_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<unsigned char *> &output_buffer,
+                                         size_t max_decoded_width, size_t max_decoded_height,
+                                         std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
+                                         std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height,
+                                         Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) override;
 
     ~RocJpegDecoder() override;
-    void initialize(int device_id) override;
+    void initialize(int device_id) override {}
+    void initialize_batch(int device_id, unsigned batch_size) override;
     bool is_partial_decoder() override { return _is_partial_decoder; }
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
@@ -67,5 +80,6 @@ class RocJpegDecoder : public Decoder {
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;
     RocJpegHandle _rocjpeg_handle;
-    RocJpegStreamHandle _rocjpeg_stream;
+    std::vector<RocJpegStreamHandle> _rocjpeg_streams;
+    unsigned _batch_size;
 };

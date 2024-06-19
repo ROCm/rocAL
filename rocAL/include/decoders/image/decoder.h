@@ -90,6 +90,11 @@ class Decoder {
                                int *width,
                                int *height,
                                int *color_comps) = 0;
+    virtual Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer,
+                                     std::vector<size_t> &input_size,
+                                     std::vector<size_t> &width,
+                                     std::vector<size_t> &height,
+                                     int *color_comps) {}
 
     // TODO: Extend the decode API if needed, color format and order can be passed to the function
     //! Decodes the actual image data
@@ -107,8 +112,15 @@ class Decoder {
                                    size_t &actual_decoded_width, size_t &actual_decoded_height,
                                    Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) = 0;
 
+    virtual Decoder::Status decode_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<unsigned char *> &output_buffer,
+                                         size_t max_decoded_width, size_t max_decoded_height,
+                                         std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
+                                         std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height,
+                                         Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) {}
+
     virtual ~Decoder() = default;
     virtual void initialize(int device_id) = 0;
+    virtual void initialize_batch(int device_id, unsigned batch_size) {}
     virtual bool is_partial_decoder() = 0;
     virtual void set_bbox_coords(std::vector<float> bbox_coords) = 0;
     virtual std::vector<float> get_bbox_coords() = 0;
