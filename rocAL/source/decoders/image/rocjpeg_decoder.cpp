@@ -169,7 +169,7 @@ void GetChromaSubsamplingStr(RocJpegChromaSubsampling subsampling, std::string &
     }
 }
 
-void RocJpegDecoder::initialize(int device_id, int num_threads) {
+void RocJpegDecoder::initialize(int device_id) {
     int num_devices;
     hipDeviceProp_t hip_dev_prop;
     CHECK_HIP(hipGetDeviceCount(&num_devices));
@@ -189,39 +189,20 @@ void RocJpegDecoder::initialize(int device_id, int num_threads) {
     std::right << std::hex << hip_dev_prop.pciDomainID << "." << hip_dev_prop.pciDeviceID << std::dec << std::endl;
 
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
-    std::cerr << "Num threads : " << num_threads << "\n";
     // Create stream and handle
-    for (int i = 0; i < num_threads; i++) {
-        RocJpegStreamHandle rocjpeg_stream;
-        RocJpegHandle rocjpeg_handle;
-        CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &rocjpeg_handle));
-        _rocjpeg_handles.push_back(std::move(rocjpeg_handle));
-        CHECK_ROCJPEG(rocJpegStreamCreate(&rocjpeg_stream));
-        _rocjpeg_streams.push_back(std::move(rocjpeg_stream));
-        std::cerr << "Num threads push --- " << i << "\n";
-    }
+    CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
+    CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_stream));
 }
 
-Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps, int thread_id) {
-    // TODO : Use the most recent TurboJpeg API tjDecompressHeader3 which returns the color components
-    // if (tjDecompressHeader2(m_jpegDecompressor,
-    //                         input_buffer,
-    //                         input_size,
-    //                         width,
-    //                         height,
-    //                         color_comps) != 0) {
-    //     WRN("Jpeg header decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
-    //     return Status::HEADER_DECODE_FAILED;
-    // }
-
+Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
     uint32_t heights[4] = {};
 
-    CHECK_ROCJPEG(rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[thread_id]));
+    CHECK_ROCJPEG(rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_stream));
     std::cerr << "Stream parse is done.............\n";
-    CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handles[thread_id], _rocjpeg_streams[thread_id], &num_components, &subsampling, widths, heights));
+    CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_stream, &num_components, &subsampling, widths, heights));
     std::cerr << "Get Image Info ----------.............\n";
     *width = widths[0];
     *height = heights[0];
@@ -233,7 +214,7 @@ Decoder::Status RocJpegDecoder::decode(unsigned char *input_buffer, size_t input
                                            size_t max_decoded_width, size_t max_decoded_height,
                                            size_t original_image_width, size_t original_image_height,
                                            size_t &actual_decoded_width, size_t &actual_decoded_height,
-                                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original_size, int thread_id) {
+                                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original_size) {
 
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
@@ -268,8 +249,8 @@ Decoder::Status RocJpegDecoder::decode(unsigned char *input_buffer, size_t input
     //     ShowHelpAndExit(argv[i], num_threads != nullptr);
     // }
 
-    CHECK_ROCJPEG(rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[thread_id]));
-    CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handles[thread_id], _rocjpeg_streams[thread_id], &num_components, &subsampling, widths, heights));
+    CHECK_ROCJPEG(rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_stream));
+    CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_stream, &num_components, &subsampling, widths, heights));
 
     std::string chroma_sub_sampling = "";
     GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
@@ -303,7 +284,7 @@ Decoder::Status RocJpegDecoder::decode(unsigned char *input_buffer, size_t input
 
     std::cout << "Decoding started, please wait! ... " << std::endl;
     // auto start_time = std::chrono::high_resolution_clock::now();
-    CHECK_ROCJPEG(rocJpegDecode(_rocjpeg_handles[thread_id], _rocjpeg_streams[thread_id], &decode_params, &output_image));
+    CHECK_ROCJPEG(rocJpegDecode(_rocjpeg_handle, _rocjpeg_stream, &decode_params, &output_image));
     // auto end_time = std::chrono::high_resolution_clock::now();
     // double time_per_image_in_milli_sec = std::chrono::duration<double, std::milli>(end_time - start_time).count();
     // double image_size_in_mpixels = (static_cast<double>(widths[0]) * static_cast<double>(heights[0]) / 1000000);
@@ -313,6 +294,8 @@ Decoder::Status RocJpegDecoder::decode(unsigned char *input_buffer, size_t input
     uint32_t channel1_size = output_image.pitch[1] * heights[1];
     uint32_t channel2_size = output_image.pitch[2] * heights[2];
     CHECK_HIP(hipMemcpyDtoD((void *)output_buffer, output_image.channel[0], output_image.pitch[0] * heights[0]));
+    actual_decoded_width = widths[0];
+    actual_decoded_height = heights[0];
     return Status::OK;
 }
 
