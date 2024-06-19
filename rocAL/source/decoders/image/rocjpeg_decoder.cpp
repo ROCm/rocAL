@@ -258,11 +258,12 @@ Decoder::Status RocJpegDecoder::decode(unsigned char *input_buffer, size_t input
         return Status::UNSUPPORTED;
     }
 
-    if (GetChannelPitchAndSizes(decode_params.output_format, subsampling, widths, heights, num_channels, output_image, channel_sizes)) {
+    uint32_t max_widths[] = {max_decoded_width, 0, 0, 0};
+    uint32_t max_heights[] = {max_decoded_height, 0, 0, 0};
+    if (GetChannelPitchAndSizes(decode_params.output_format, subsampling, max_widths, max_heights, num_channels, output_image, channel_sizes)) {
         std::cerr << "ERROR: Failed to get the channel pitch and sizes" << std::endl;
         return Status::HEADER_DECODE_FAILED;
     }
-
 
     std::cout << "Decoding started, please wait! ... " << std::endl;
     output_image.channel[0] = static_cast<uint8_t *>(output_buffer);    // For RGB
