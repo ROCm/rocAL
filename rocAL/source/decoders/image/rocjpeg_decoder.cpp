@@ -201,12 +201,9 @@ Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t 
     uint32_t heights[4] = {};
 
     CHECK_ROCJPEG(rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_stream));
-    std::cerr << "Stream parse is done.............\n";
     CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_stream, &num_components, &subsampling, widths, heights));
-    std::cerr << "Get Image Info ----------.............\n";
     *width = widths[0];
     *height = heights[0];
-    std::cerr << "WIDTH : " << widths[0] << " HEIGHT : " << heights[0] << "\n";
     return Status::OK;
 }
 
@@ -266,34 +263,10 @@ Decoder::Status RocJpegDecoder::decode(unsigned char *input_buffer, size_t input
         return Status::HEADER_DECODE_FAILED;
     }
 
-    // allocate memory for each channel and reuse them if the sizes remain unchanged for a new image.
-    // for (int i = 0; i < num_channels; i++) {
-    //     std::cerr << "Num channels : " << num_channels << " Channels size : " << channel_sizes[i] << "\n";
-    //     output_image.channel[i] = output_buffer;
-    //     output_buffer += channel_sizes[i];
-    // }
-
-    // allocate memory for each channel
-    for (int i = 0; i < num_channels; i++) {
-        if (output_image.channel[i] != nullptr) {
-            CHECK_HIP(hipFree((void*)output_image.channel[i]));
-            output_image.channel[i] = nullptr;
-        }
-        CHECK_HIP(hipMalloc(&output_image.channel[i], channel_sizes[i]));
-    }
 
     std::cout << "Decoding started, please wait! ... " << std::endl;
-    // auto start_time = std::chrono::high_resolution_clock::now();
+    output_image.channel[0] = static_cast<uint8_t *>(output_buffer);    // For RGB
     CHECK_ROCJPEG(rocJpegDecode(_rocjpeg_handle, _rocjpeg_stream, &decode_params, &output_image));
-    // auto end_time = std::chrono::high_resolution_clock::now();
-    // double time_per_image_in_milli_sec = std::chrono::duration<double, std::milli>(end_time - start_time).count();
-    // double image_size_in_mpixels = (static_cast<double>(widths[0]) * static_cast<double>(heights[0]) / 1000000);
-    // image_count++;
-
-    uint32_t channel0_size = output_image.pitch[0] * heights[0];
-    uint32_t channel1_size = output_image.pitch[1] * heights[1];
-    uint32_t channel2_size = output_image.pitch[2] * heights[2];
-    CHECK_HIP(hipMemcpyDtoD((void *)output_buffer, output_image.channel[0], output_image.pitch[0] * heights[0]));
     actual_decoded_width = widths[0];
     actual_decoded_height = heights[0];
     return Status::OK;
