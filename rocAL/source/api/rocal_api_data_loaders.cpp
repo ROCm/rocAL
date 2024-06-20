@@ -2224,7 +2224,6 @@ rocalAudioFileSourceSingleShard(
             TensorInfo output_info = info;
             std::vector<size_t> output_dims = {context->user_batch_size(), info.dims()[1], 1};
             output_info.set_dims(output_dims);
-
             auto downmixed_output = context->master_graph->create_tensor(output_info, false);
             std::shared_ptr<DownmixNode> downmix_node = context->master_graph->add_node<DownmixNode>({output}, {downmixed_output});
 
