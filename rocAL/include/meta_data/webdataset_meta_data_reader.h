@@ -54,10 +54,12 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
     std::string _path;
     std::string _paths, _index_paths;
+    std::vector<std::string> index_name_list;
     unsigned _missing_component_behaviour;
     pMetaDataBatch _output;
     DIR *_src_dir, *_sub_dir;
     struct dirent* _entity;
+    int _file_name_count = 0;
     std::vector<std::string> _file_names;
     std::vector<std::set<std::string>> _exts;
     std::vector<std::string> _subfolder_file_names;
@@ -67,9 +69,12 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     void parse_index_files(std::vector<SampleDescription>& samples_container,
                                               std::vector<ComponentDescription>& components_container,
                                               const std::string& paths_to_index_files);
+    void ParseSampleDesc(std::vector<SampleDescription>& samples_container,
+                            std::vector<ComponentDescription>& components_container,
+                            std::ifstream& index_file, const std::string& index_path, int64_t line,
+                            int index_version);
     void read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream);
     const std::string kCurrentIndexVersion = "v1.2";  // NOLINT
     std::vector<std::unique_ptr<StdFileStream>> _wds_shards;
     const std::unordered_set<std::string> kSupportedIndexVersions = {"v1.1", kCurrentIndexVersion};
-    std::tuple<std::string, std::string> split_name(const std::string& file_path) ;
 };

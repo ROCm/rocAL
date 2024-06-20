@@ -90,8 +90,10 @@ class WebDatasetSourceReader : public Reader {
     std::string _last_id;
     std::string _last_file_name;
     unsigned int _last_file_size;
+    std::vector<std::string> index_name_list;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
+    int _file_name_count = 0;
     bool _last_rec;
     //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
@@ -109,9 +111,15 @@ class WebDatasetSourceReader : public Reader {
     void parse_tar_files(std::vector<SampleDescription>& samples_container,
                                               std::vector<ComponentDescription>& components_container,
                                               std::unique_ptr<StdFileStream>& tar_file);
+    void parse_index_files(std::vector<SampleDescription>& samples_container,
+                                                    std::vector<ComponentDescription>& components_container,
+                                                    const std::string& index_path);
+    void ParseSampleDesc(std::vector<SampleDescription>& samples_container,
+                        std::vector<ComponentDescription>& components_container,
+                        std::ifstream& index_file, const std::string& index_path, int64_t line,
+                        int index_version);
     Reader::Status webdataset_record_reader_from_components(ComponentDescription component, unsigned wds_shard_index);
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::vector<std::unique_ptr<StdFileStream>> _wds_shards;
-    std::tuple<std::string, std::string> split_name(const std::string& file_path);
     Reader::Status read_web_dataset_at_offset(unsigned char *buff, std::string file_name, uint file_size, uint offset, uint wds_shard_index);
 };

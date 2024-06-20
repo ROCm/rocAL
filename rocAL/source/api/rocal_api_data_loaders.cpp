@@ -2316,6 +2316,7 @@ RocalTensor ROCAL_API_CALL
 rocALWebDatasetDecoderSingleShard(
     RocalContext p_context,
     const char* source_path,
+    const char* index_path,
     RocalImageColor rocal_color_format,
     unsigned shard_id,
     unsigned shard_count,
@@ -2362,7 +2363,8 @@ rocALWebDatasetDecoderSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
         std::pair<RocalBatchPolicy, bool> policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::WEBDATASET_RECORDS, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, policy_info);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::WEBDATASET_RECORDS, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, policy_info, 
+                                                                                        std::map<std::string, std::string>(), 0, 0, 0, ExternalSourceFileMode::NONE, index_path);
         context->master_graph->set_loop(loop);
 
         if (is_output) {

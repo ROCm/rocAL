@@ -61,13 +61,14 @@ enum class ExternalSourceFileMode {
 struct ReaderConfig {
     explicit ReaderConfig(StorageType type, std::string path = "", std::string json_path = "",
                           const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(),
-                          bool shuffle = false, bool loop = false) : _type(type), _path(path), _json_path(json_path), _feature_key_map(feature_key_map), _shuffle(shuffle), _loop(loop) {}
+                          bool shuffle = false, bool loop = false, std::string index_path = "") : _type(type), _path(path), _json_path(json_path), _feature_key_map(feature_key_map), _shuffle(shuffle), _loop(loop), _index_path(index_path) {}
     virtual StorageType type() { return _type; };
     void set_path(const std::string &path) { _path = path; }
     void set_shard_id(size_t shard_id) { _shard_id = shard_id; }
     void set_shard_count(size_t shard_count) { _shard_count = shard_count; }
     void set_cpu_num_threads(size_t cpu_num_threads) { _cpu_num_threads = cpu_num_threads; }
     void set_json_path(const std::string &json_path) { _json_path = json_path; }
+    void set_index_path(const std::string &index_path) { _index_path = index_path; }
     /// \param read_batch_count Tells the reader it needs to read the images in multiples of load_batch_count. If available images not divisible to load_batch_count,
     /// the reader will repeat images to make available images an even multiple of this load_batch_count
     void set_batch_count(size_t read_batch_count) { _batch_count = read_batch_count; }
@@ -97,6 +98,7 @@ struct ReaderConfig {
     VideoProperties get_video_properties() { return _video_prop; }
 #endif
     std::string json_path() { return _json_path; }
+    std::string index_path() { return _index_path; }
     std::map<std::string, std::string> feature_key_map() { return _feature_key_map; }
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
@@ -108,6 +110,7 @@ struct ReaderConfig {
     StorageType _type = StorageType::FILE_SYSTEM;
     std::string _path = "";
     std::string _json_path = "";
+    std::string _index_path = "";
     std::map<std::string, std::string> _feature_key_map;
     size_t _shard_count = 1;
     size_t _shard_id = 0;

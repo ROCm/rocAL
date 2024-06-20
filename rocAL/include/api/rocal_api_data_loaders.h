@@ -921,6 +921,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
 // TODO: Add comments later & code clean up later
 extern "C" RocalTensor ROCAL_API_CALL rocALWebDatasetDecoderSingleShard(RocalContext p_context,
                                                                         const char* source_path,
+                                                                        const char* index_path,
                                                                         RocalImageColor rocal_color_format,
                                                                         unsigned shard_id,
                                                                         unsigned shard_count,

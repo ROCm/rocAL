@@ -62,9 +62,9 @@ def main():
     webdataset_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu, tensor_dtype = types.UINT8, )
     with webdataset_pipeline:
         img_raw = fn.readers.webdataset(
-        path=wds_data, ext=[{'jpg', 'cls'}],
+        path=wds_data, ext=[{'jpg', 'cls'}], index_paths = index_file,
         )
-        img = fn.decoders.webdataset(img_raw, file_root=wds_data, color_format=color_format,max_decoded_width=500, max_decoded_height=500)
+        img = fn.decoders.webdataset(img_raw, file_root=wds_data, index_path = index_file, color_format=color_format,max_decoded_width=500, max_decoded_height=500)
         # resized = fn.resize(img, resize_shorter=256.0)
         # resize_w = 400
         # resize_h = 400
