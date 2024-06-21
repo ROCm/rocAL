@@ -73,7 +73,8 @@ class WebDataSetMetaDataReader : public MetaDataReader {
                             std::vector<ComponentDescription>& components_container,
                             std::ifstream& index_file, const std::string& index_path, int64_t line,
                             int index_version);
-    void read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream);
+    void read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream, AsciiValues ascii_values);
+    void add(std::string image_name, AsciiValues ascii_value);
     const std::string kCurrentIndexVersion = "v1.2";  // NOLINT
     std::vector<std::unique_ptr<StdFileStream>> _wds_shards;
     const std::unordered_set<std::string> kSupportedIndexVersions = {"v1.1", kCurrentIndexVersion};

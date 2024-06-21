@@ -287,6 +287,16 @@ RocalTensorList
     return context->master_graph->bbox_meta_data();
 }
 
+RocalMetaData
+    ROCAL_API_CALL
+    rocalGetAsciiDatas(RocalContext p_context) {
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalGetAsciiDatas")
+    auto context = static_cast<Context*>(p_context);
+    return context->master_graph->ascii_values_meta_data();
+}
+
+
 unsigned
     ROCAL_API_CALL
     rocalGetMaskCount(RocalContext p_context, int* buf) {
@@ -509,13 +519,15 @@ RocalMetaData
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateWebDatasetReader")
     auto context = static_cast<Context*>(p_context);
-    for (const auto& ext_set : extensions) {
-        for(const auto& ext : ext_set) {
-            std::cerr << "ext" << ext;
-            if (ext == "cls") // Add more extension cases as next step, add the right MetaDataType
-                return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, 0);
-        }
-    }
+    // for (const auto& ext_set : extensions) {
+    //     for(const auto& ext : ext_set) {
+    //         std::cerr << "ext" << ext;
+    //         if (ext == "cls") // Add more extension cases as next step, add the right MetaDataType
+            auto output = context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, 0);
+            std::cerr << "\n Meta Data Reader Creation successful!";
+            return output;
+        // }
+    // }
 }
 
 RocalTensorList

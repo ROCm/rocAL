@@ -55,6 +55,7 @@ THE SOFTWARE.
 #define MAX_SSD_ANCHORS 8732          // Num of bbox achors used in SSD training
 #define MAX_MASK_BUFFER 10000
 #define MAX_RETINANET_ANCHORS 120087  // Num of bbox achors used in Retinanet training
+#define MAX_ASCII_BUFFER 10000
 
 #if ENABLE_SIMD
 #if _WIN32
@@ -126,6 +127,8 @@ class MasterGraph {
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
     const std::pair<ImageNameBatch, pMetaDataBatch> &meta_data();
     TensorList *labels_meta_data();
+    // TensorList *ascii_values_meta_data();
+    std::vector<rocalTensorList*> ascii_values_meta_data();
     TensorList *bbox_meta_data();
     TensorList *mask_meta_data();
     TensorList *matched_index_meta_data();
@@ -176,9 +179,11 @@ class MasterGraph {
     // Output tensorList for metadata
     std::vector<rocalTensorList *> _metadata_output_tensor_list;
     TensorList _labels_tensor_list;
+    std::vector<TensorList> _ascii_tensor_list;
     TensorList _bbox_tensor_list;
     TensorList _mask_tensor_list;
     TensorList _matches_tensor_list;
+    uint _ext_count = 0;
     std::vector<size_t> _meta_data_buffer_size;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU

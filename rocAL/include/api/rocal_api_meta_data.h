@@ -318,4 +318,6 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_
 //TODO: Add the comments later
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, bool is_output);
 
+RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
+
 #endif  // MIVISIONX_ROCAL_API_META_DATA_H

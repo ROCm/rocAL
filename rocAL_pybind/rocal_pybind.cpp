@@ -521,6 +521,31 @@ PYBIND11_MODULE(rocal_pybind, m) {
         }
         return boxes_list;
     });
+    m.def("getAsciiDatas", [](RocalContext context) {
+        std::vector<rocalTensorList* > ascii_sample_contents = rocalGetAsciiDatas(context);
+        py::list ext_componenet_list;
+        std::cerr << "\n ascii_sample_contents.size()" << ascii_sample_contents.size();
+        for(uint ext = 0; ext < ascii_sample_contents.size(); ext++) {
+            rocalTensorList *ext_ascii_values_batch = ascii_sample_contents[ext];
+            std::cerr << "\n ext_ascii_values_batch size" << ext_ascii_values_batch->size();
+            py::list component_list;
+            py::array_t<uint8_t> components_array;
+            for (int i = 0; i < ext_ascii_values_batch->size(); i++) {
+                std::cerr << "\n ext_ascii_values_batch->at(i)->dims().at(0)" << ext_ascii_values_batch->at(i)->dims().at(0);
+                // uint8_t *components_buffer = static_cast<uint8_t *>(ext_ascii_values_batch->at(i)->buffer());
+                components_array = py::array(py::buffer_info(
+                                            static_cast<uint8_t *>(ext_ascii_values_batch->at(i)->buffer()),
+                                            sizeof(uint8_t),
+                                            py::format_descriptor<uint8_t>::format(),
+                                            1,
+                                            {ext_ascii_values_batch->at(i)->dims().at(0)},
+                                            {sizeof(uint8_t)}));
+                component_list.append(components_array);
+            }
+            ext_componenet_list.append(component_list);
+        }
+        return ext_componenet_list;
+    });
     m.def("getMaskCount", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.mutable_data();
         unsigned count = rocalGetMaskCount(context, buf);  // total number of polygons in complete batch

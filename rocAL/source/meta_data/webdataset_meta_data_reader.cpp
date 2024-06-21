@@ -145,19 +145,33 @@ inline std::tuple<std::string, std::string> split_name(const std::string& file_p
 }
 
 // For classification purpose - add another fuction for detecion
-void WebDataSetMetaDataReader::add(std::string image_name, int label) {
-    pMetaData info = std::make_shared<Label>(label);
+void WebDataSetMetaDataReader::add(std::string image_name, AsciiValues ascii_value) {
+    pMetaDataAscii info = std::make_shared<AsciiValue>(ascii_value);
     if (exists(image_name)) {
-        WRN("Entity with the same name exists")
+        auto it = _map_content.find(image_name);
+        it->second->get_ascii_values().insert(it->second->get_ascii_values().end(), ascii_value.begin(), ascii_value.end());
         return;
     }
-    _map_content.insert(pair<std::string, std::shared_ptr<Label>>(image_name, info));
+    _map_content.insert(pair<std::string, std::shared_ptr<AsciiValue>>(image_name, info));
 }
 
 void WebDataSetMetaDataReader::print_map_contents() {
     std::cerr << "\nMap contents: \n";
+    AsciiValues samples_ascii;
+    AsciiComponent ascii_component;
     for (auto& elem : _map_content) {
-        std::cerr << "Name :\t " << elem.first << "\t LABEL:  " << elem.second->get_labels()[0] << std::endl;
+        std::cerr << "Name :\t " << elem.first;
+        samples_ascii = elem.second->get_ascii_values();
+        for (const auto& sample : samples_ascii) {
+                std::cerr << "\n Number of Samples:" << sample.size();
+            for (const auto& component_ascii: sample) {
+            //     // Print elements of each ascii numeric value in the component
+                std::cout << "[ ";
+            //     for (const auto& num : component_ascii)
+                std::cout << component_ascii << " ";
+                std::cout << " ]" << std::endl;  // Move to the next line after printing inner vector
+            }
+        }
     }
 }
 
@@ -175,9 +189,9 @@ void WebDataSetMetaDataReader::release(std::string image_name) {
 
 // Has to be handled for the detection case depending on the extension
 void WebDataSetMetaDataReader::lookup(const std::vector<std::string>& image_names) {
-    std::cerr << "\n Printing map contents";
+    std::cerr << "\n Printing map contents in lookup";
     print_map_contents();
-    std::cerr << "\n Map contents printed";
+    std::cerr << "\n Map contents printed in lookup";
     if (image_names.empty()) {
         WRN("No image names passed")
         return;
@@ -191,7 +205,7 @@ void WebDataSetMetaDataReader::lookup(const std::vector<std::string>& image_name
         auto it = _map_content.find(image_name);
         if (_map_content.end() == it)
             THROW("ERROR: Given name not present in the map" + image_name)
-        _output->get_labels_batch()[i] = it->second->get_labels();
+        _output->get_ascii_values_batch()[i] = it->second->get_ascii_values();
     }
 }
 
@@ -351,29 +365,41 @@ void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& s
 
 }
 
-void WebDataSetMetaDataReader::read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream) {
+void WebDataSetMetaDataReader::read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream, AsciiValues ascii_values) {
     std::cerr << "\n READ SAMPLE CALLED" << component.ext;
     if (component.ext == "cls") {
         std::cerr << "\n compoenent class";
         current_tar_file_stream->SeekRead(component.offset);
         // Prepare to read ASCII data
-        std::vector<char> cls_data(component.size);
+        std::vector<uint8_t> cls_data(component.size);
         current_tar_file_stream->Read(cls_data.data(), component.size);
         std::cerr << "\n add compoenent file name:: " << component.filename;
-        add(component.filename, cls_data[0]); // Check if ASCII values need to stored in the map_contents
+        // add(component.filename, cls_data[0]); // Check if ASCII values need to stored in the map_contents
         // Print the ASCII values - comment out for now
-        std::cout << "Content of .cls file (ASCII): ";
-        std::cout << "[";
+        AsciiComponent ascii_component;
+        // std::cout << "Content of .cls file (ASCII): ";
+        // std::cout << "[";
         for (size_t i = 0; i < cls_data.size(); ++i) {
-        std::cout << "[" << (cls_data[i]) << "]";
-            std::cout << "[" << static_cast<int>(cls_data[i]) << "]";
+            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+        // std::cout << "[" << (cls_data[i]) << "]";
+            // std::cout << "[" << static_cast<int>(cls_data[i]) << "]";
             if (i < cls_data.size() - 1) {
                 std::cout << " ";
             }
         }
-        std::cout << "]" << std::endl;
-        std::cerr << "\nprint_map_contents";
-        print_map_contents();
+        ascii_values.push_back(ascii_component);
+        // std::cout << "]" << std::endl;
+        // std::cerr << "\n PRINTING CONTENTS OF ASCII VALUES";
+        // for (const auto& innerVec : ascii_values) {
+        // // Print elements of the inner vector
+        //     for (int num : innerVec) {
+        //         std::cout << num << " ";
+        //     }
+        //     std::cout << std::endl;  // Move to the next line after printing inner vector
+        //     }
+        add(component.filename, ascii_values);
+        // std::cerr << "\nprint_map_contents";
+        // print_map_contents();
     } // Labels Parsed
 }
 
@@ -468,10 +494,14 @@ void WebDataSetMetaDataReader::read_all(const std::string& _path) {
 
         // After parsing add the contents to the map
         for (auto& sample : unfiltered_samples) {
+            AsciiValues ascii_values;
             for (auto& component : sample.components) {
-                read_sample_and_add_to_map(component, _wds_shards[wds_shard_index]);
+                read_sample_and_add_to_map(component, _wds_shards[wds_shard_index], ascii_values);
             }
+            ascii_values.clear();
         }
+        std::cerr << "\n Print Map contents after filling the complete map:";
+        print_map_contents();
     }
 
 }

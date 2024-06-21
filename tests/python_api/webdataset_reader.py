@@ -98,14 +98,17 @@ def main():
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
         for i , it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
-            print(it[1])
+            # print("The iterator contents are:", it)
+            # print(it[1])
             for x in range(len(it[0])):
+                print("((((((((((((((((((((((((((((((((( it [0] )))))))))))))))))))))))))))))))))")
                 for img, label in zip(it[0][x], it[1]):
-                    print("label", label)
-                    print("label shape",label.shape)
+                    # print("img data", img)
+                    print("label ascii data", label)
+                    # print("label shape",label.shape)
                     draw_patches(img, cnt, "cpu", types.UINT8, tensor_format, color_format=color_format)
                     cnt = cnt + 1
-            break
+            # break
                 
         print("EPOCH DONE", e)
 
