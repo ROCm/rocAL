@@ -82,4 +82,12 @@ class RocJpegDecoder : public Decoder {
     RocJpegHandle _rocjpeg_handle;
     std::vector<RocJpegStreamHandle> _rocjpeg_streams;
     unsigned _batch_size;
+    void * _rocjpeg_image_buff = nullptr;
+    unsigned _rocjpeg_image_buff_size = 0;
+    size_t *_dev_src_width = nullptr;
+    size_t *_dev_src_height = nullptr;
+    size_t *_dev_dst_width = nullptr, *_dev_dst_height = nullptr;
+#if ENABLE_HIP
+    hipStream_t _hip_stream;
+#endif
 };

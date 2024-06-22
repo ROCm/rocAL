@@ -61,3 +61,18 @@ int HipExecCopyInt8ToNCHW(
     unsigned int fp16,
     const unsigned max_roi_height = 0,
     const unsigned max_roi_width = 0);
+
+void HipExecResizeTensor(
+    hipStream_t stream,
+    void *srcPtr,
+    void *dstPtr,
+    unsigned batchSize,
+    size_t *srcWidth,
+    size_t *srcHeight,
+    size_t *dstWidth,
+    size_t *dstHeight,
+    unsigned channels,
+    const size_t maxSrcWidth,
+    const size_t maxSrcHeight,
+    const size_t maxDstWidth,
+    const size_t maxDstHeight);

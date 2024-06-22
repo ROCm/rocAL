@@ -24,11 +24,12 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include <stdio.h>
 #include <string.h>
-#include "hip/hip_runtime_api.h"
-#include "hip/hip_runtime.h"
 #include "decoders/image/rocjpeg_decoder.h"
 
 #if ENABLE_HIP
+#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#include "rocal_hip_kernels.h"
 
 #define CHECK_HIP(call) {                                             \
     hipError_t hip_status = (call);                                   \
@@ -196,7 +197,18 @@ void RocJpegDecoder::initialize_batch(int device_id, unsigned batch_size) {
         CHECK_ROCJPEG(rocJpegStreamCreate(&rocjpeg_stream));
         _rocjpeg_streams.push_back(rocjpeg_stream);
     }
+
+    hipError_t err = hipStreamCreate(&_hip_stream);
+    if (err != hipSuccess) {
+        THROW("init_hip::hipStreamCreate failed " + TOSTR(err))
+    }
     _batch_size = batch_size;
+
+    // Allocate mem for width and height arrays for src and dst
+    if (!_dev_src_width) CHECK_HIP(hipMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
+    if (!_dev_src_height) CHECK_HIP(hipMalloc((void **)&_dev_src_height, _batch_size * sizeof(size_t)));
+    if (!_dev_dst_width) CHECK_HIP(hipMalloc((void **)&_dev_dst_width, _batch_size * sizeof(size_t)));
+    if (!_dev_dst_height) CHECK_HIP(hipMalloc((void **)&_dev_dst_height, _batch_size * sizeof(size_t)));
 }
 
 Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<size_t> &width, std::vector<size_t> &height, int *color_comps) {
@@ -204,13 +216,15 @@ Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsign
     uint8_t num_components;
     uint32_t widths[4] = {};
     uint32_t heights[4] = {};
-
+    unsigned max_buffer_size = 0;
     for (int i = 0; i < _batch_size; i++) {
         CHECK_ROCJPEG(rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer[i].data()), input_size[i], _rocjpeg_streams[i]));
         CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[i], &num_components, &subsampling, widths, heights));
         width[i] = widths[0];
         height[i] = heights[0];
+        max_buffer_size += (widths[0] * heights[0] * 3);
     }
+    _rocjpeg_image_buff_size = max_buffer_size;
     return Status::OK;
 }
 
@@ -257,7 +271,17 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
 
     uint32_t max_widths[] = {max_decoded_width, 0, 0, 0};
     uint32_t max_heights[] = {max_decoded_height, 0, 0, 0};
-
+    unsigned prev_image_buff_size = _rocjpeg_image_buff_size;
+    unsigned max_dst_img_size = max_decoded_width * max_decoded_height * 3;  // TODO - To change 
+    _rocjpeg_image_buff_size = std::max(prev_image_buff_size, max_dst_img_size * _batch_size);
+    // Allocate memory for the itermediate decoded output
+    if (!_rocjpeg_image_buff) {
+        CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
+    } else if (_rocjpeg_image_buff_size < prev_image_buff_size) {
+        CHECK_HIP(hipFree((void *)_rocjpeg_image_buff));
+        CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
+    }
+    auto img_buff = _rocjpeg_image_buff;
     for (int i = 0; i < _batch_size; i++) {
         CHECK_ROCJPEG(rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer[i].data()), input_size[i], _rocjpeg_streams[i]));
         CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[i], &num_components, &subsampling, widths, heights));
@@ -276,15 +300,32 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
         }
 
         std::cout << "Decoding started, please wait! ... " << std::endl;
-        output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);    // For RGB
+        output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
+        img_buff += max_dst_img_size;
         actual_decoded_width[i] = widths[0];
         actual_decoded_height[i] = heights[0];
     }
 
+    // Copy width and height args to HIP memory
+    CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, actual_decoded_width.data(), _batch_size * sizeof(size_t)));
+    CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, actual_decoded_height.data(), _batch_size * sizeof(size_t)));
+    CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_width, actual_decoded_width.data(), _batch_size * sizeof(size_t)));
+    CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_height, actual_decoded_height.data(), _batch_size * sizeof(size_t)));
+
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, &decode_params, output_images.data()));
+
+    HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0], 
+                        _batch_size, _dev_src_width, _dev_src_height, 
+                       _dev_dst_width, _dev_dst_height, 3,
+                        max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
+
     return Status::OK;
 }
 
 RocJpegDecoder::~RocJpegDecoder() {
+    if (_dev_src_width) CHECK_HIP(hipFree(_dev_src_width));
+    if (_dev_src_height) CHECK_HIP(hipFree(_dev_src_height));
+    if (_dev_dst_width) CHECK_HIP(hipFree(_dev_dst_width));
+    if (_dev_dst_height) CHECK_HIP(hipFree(_dev_dst_height));
 }
 #endif
