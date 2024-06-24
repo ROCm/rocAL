@@ -1173,11 +1173,12 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(const char 
     size_t total_extensions = 0;
 
     // Iterate over each set and sum up the sizes
-    for (const auto& s : extensions) {
-        total_extensions +=1;
+    for (const auto& ext_set : extensions) {
+        for(const auto& ext : ext_set)
+            total_extensions +=1;
     }
     std::cerr << "\n total_extensions::" << total_extensions;
-    _ascii_tensor_list.resize(total_extensions);
+    _ascii_tensor_list.resize(total_extensions - 1);
 // for (const auto& ext_set : extensions) {
 //     for(const auto& ext : ext_set) {
 //         if (ext == "cls") // Add more extension cases as next step
@@ -1189,13 +1190,16 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(const char 
             _meta_data_reader->read_all(source_path);
             std::cerr << " \n In the cls extension 1";
             std::vector<size_t> dims;
-            dims = {MAX_ASCII_BUFFER, 1};
-            auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::UINT8);  // Create default ascii values Info
-            default_ascii_values_info.set_metadata();
-            _meta_data_buffer_size.emplace_back(_user_batch_size * default_ascii_values_info.data_size());
+            
             std::cerr << " \n In the cls extension 2";
             for (uint _ext_count= 0; _ext_count <  _ascii_tensor_list.size(); _ext_count++) {
                 for (unsigned i = 0; i < _user_batch_size; i++) {
+
+                    dims = {MAX_ASCII_BUFFER, 1};
+                    auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::UINT8);  // Create default ascii values Info
+                    default_ascii_values_info.set_metadata();
+                    _meta_data_buffer_size.emplace_back(_user_batch_size * default_ascii_values_info.data_size());
+
                     auto info = default_ascii_values_info;
                     std::cerr << " \n In the cls extension 2.5";
                     std::cerr << "\n _ascii_tensor_list.size()" << _ascii_tensor_list.size();
@@ -1205,7 +1209,6 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(const char 
                     std::cerr << " \n In the cls extension 2.8";
                 }
                 std::cerr << " \n In the cls extension 3";
-                _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
                 _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[_ext_count]);
                 // _ext_count++;
                 std::cerr << " \n In the cls extension 4";
@@ -1214,6 +1217,8 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(const char 
         std::cerr << " \n In the cls extension 5";
     // }
 // }
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
+
     std::cerr << "\n Creation sucessful";
     return _metadata_output_tensor_list;
 }
@@ -1483,7 +1488,7 @@ MasterGraph::ascii_values_meta_data() {
         auto meta_data_buffers = (uint8_t*)_ring_buffer.get_meta_read_buffers()[ext];  // Get ASCII buffer from ring buffer
         auto ascii_values = _ring_buffer.get_meta_data().second->get_ascii_values_batch();
         for (unsigned i = 0; i < _ascii_tensor_list[ext].size(); i++) {
-                    std::cerr << "\n ascii_values[i].size():: " << ascii_values[i][0].size();
+                    std::cerr << "\n ascii_values[i].size():: " << ascii_values[i][ext].size();
 
             _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext].size(), 1});
             _ascii_tensor_list[ext][i]->set_mem_handle((void *)meta_data_buffers);

@@ -349,29 +349,37 @@ class AsciiValueBatch : public MetaDataBatch {
     void copy_data(std::vector<void*> buffer) override {
         if (buffer.size() < 1)
             THROW("The buffers are insufficient")  // TODO -change
-        auto ascii_values_buffer = (uint8_t*)buffer[0];
         std::cerr << "\n copy_data():  _ascii_values.size() :: " << _ascii_values.size(); // BS
-        std::cerr << "\n copy_data():  _ascii_values.size() :: " << _ascii_values[5].size(); // Num of com - 0 indicates the com number
+        std::cerr << "\n copy_data():  _ascii_values.size() :: " << _ascii_values[4].size(); // Num of com - 0 indicates the com number
         std::cerr << "\n copy_data():  _ascii_values.size() :: " << _ascii_values[0][0].size(); // com size
+
         // component loop
         for (unsigned component = 0; component < _ascii_values[0].size(); component++) {
-        std::cerr << "\n component loop:: " << component;
-            for (unsigned i = 0; i < _ascii_values.size(); i++) { // BatchSize
+            std::cerr << "\n component loop:: " << component;
+                auto ascii_values_buffer = (uint8_t*)buffer[component];
+
+            for (unsigned i = 0; i < _ascii_values.size(); i++) { // BatchSize Loop
                 AsciiValues sample = _ascii_values[i]; // bs number of samples
                 auto num_of_components = sample.size();
                 memcpy(ascii_values_buffer, sample[component].data(), sample[component].size() * sizeof(uint8_t)); // size of component 1
                 ascii_values_buffer += sample[component].size();
                 std::cerr << "\n sample[component].size():: " << sample[component].size();
+                for (uint i = 0; i < sample[component].size(); i++)
+                    std::cout << "\t" << sample[component][i];
             }
         }
         }
 
     std::vector<size_t>& get_buffer_size() override {
         _buffer_size.clear();
-        size_t size = 0;
-        for (auto ascii_value : _ascii_values)
-            size += ascii_value.size();
-        _buffer_size.emplace_back(size * sizeof(uint8_t));
+        for (unsigned component = 0; component < _ascii_values[0].size(); component++) {
+            size_t size = 0;
+            for (unsigned i = 0; i < _ascii_values.size(); i++) { // BatchSize Loop
+                AsciiValues sample = _ascii_values[i]; // bs number of samples
+                size += sample[component].size();
+            }
+            _buffer_size.emplace_back(size * sizeof(uint8_t));
+        }
         return _buffer_size;
     }
     std::vector<AsciiValues>& get_ascii_values_batch() { return _ascii_values; }

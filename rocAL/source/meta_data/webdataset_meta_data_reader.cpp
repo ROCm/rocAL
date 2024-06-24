@@ -163,13 +163,11 @@ void WebDataSetMetaDataReader::print_map_contents() {
         std::cerr << "Name :\t " << elem.first;
         samples_ascii = elem.second->get_ascii_values();
         for (const auto& sample : samples_ascii) {
-                std::cerr << "\n Number of Samples:" << sample.size();
+            std::cerr << "\n Number of Samples:" << sample.size();
+            std::cerr << "\n Printing x samples" << sample.size();
             for (const auto& component_ascii: sample) {
-            //     // Print elements of each ascii numeric value in the component
-                std::cout << "[ ";
-            //     for (const auto& num : component_ascii)
-                std::cout << component_ascii << " ";
-                std::cout << " ]" << std::endl;  // Move to the next line after printing inner vector
+                std::cout << "[" << static_cast<int>(component_ascii) << "]";
+            std::cout << " ]" << std::endl;  // Move to the next line after printing inner vector
             }
         }
     }
@@ -189,9 +187,9 @@ void WebDataSetMetaDataReader::release(std::string image_name) {
 
 // Has to be handled for the detection case depending on the extension
 void WebDataSetMetaDataReader::lookup(const std::vector<std::string>& image_names) {
-    std::cerr << "\n Printing map contents in lookup";
-    print_map_contents();
-    std::cerr << "\n Map contents printed in lookup";
+    // std::cerr << "\n Printing map contents in lookup";
+    // print_map_contents();
+    // std::cerr << "\n Map contents printed in lookup";
     if (image_names.empty()) {
         WRN("No image names passed")
         return;
@@ -367,7 +365,7 @@ void WebDataSetMetaDataReader::parse_tar_files(std::vector<SampleDescription>& s
 
 void WebDataSetMetaDataReader::read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream, AsciiValues ascii_values) {
     std::cerr << "\n READ SAMPLE CALLED" << component.ext;
-    if (component.ext == "cls") {
+    if (component.ext != "jpg") {
         std::cerr << "\n compoenent class";
         current_tar_file_stream->SeekRead(component.offset);
         // Prepare to read ASCII data
@@ -382,7 +380,7 @@ void WebDataSetMetaDataReader::read_sample_and_add_to_map(ComponentDescription c
         for (size_t i = 0; i < cls_data.size(); ++i) {
             ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
         // std::cout << "[" << (cls_data[i]) << "]";
-            // std::cout << "[" << static_cast<int>(cls_data[i]) << "]";
+            std::cout << "[" << static_cast<int>(cls_data[i]) << "]";
             if (i < cls_data.size() - 1) {
                 std::cout << " ";
             }
@@ -400,6 +398,8 @@ void WebDataSetMetaDataReader::read_sample_and_add_to_map(ComponentDescription c
         add(component.filename, ascii_values);
         // std::cerr << "\nprint_map_contents";
         // print_map_contents();
+        // if (component.ext == "txt")
+        //     std::exit(0);
     } // Labels Parsed
 }
 
@@ -500,8 +500,8 @@ void WebDataSetMetaDataReader::read_all(const std::string& _path) {
             }
             ascii_values.clear();
         }
-        std::cerr << "\n Print Map contents after filling the complete map:";
-        print_map_contents();
+        // std::cerr << "\n Print Map contents after filling the complete map:";
+        // print_map_contents();
     }
 
 }
