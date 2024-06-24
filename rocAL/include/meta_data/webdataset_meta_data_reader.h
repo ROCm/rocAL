@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,30 +25,33 @@ THE SOFTWARE.
 
 #include <map>
 
-#include "pipeline/commons.h"
 #include "meta_data/meta_data.h"
 #include "meta_data/meta_data_reader.h"
-#include "readers/image/image_reader.h"
+#include "pipeline/commons.h"
 #include "pipeline/filesystem.h"
-#include <unordered_set>
-#include <set>
+#include "readers/image/image_reader.h"
 #include "tar_utils.h"
+#include <set>
+#include <unordered_set>
 class WebDataSetMetaDataReader : public MetaDataReader {
-   public:
-    void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
-    void lookup(const std::vector<std::string>& image_names) override;
-    void read_all(const std::string& path) override;
+  public:
+    void init(const MetaDataConfig &cfg,
+              pMetaDataBatch meta_data_batch) override;
+    void lookup(const std::vector<std::string> &image_names) override;
+    void read_all(const std::string &path) override;
     void release(std::string image_name);
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
-
+    const std::map<std::string, std::shared_ptr<MetaData>> &
+    get_map_content() override {
+        return _map_content;
+    }
     WebDataSetMetaDataReader();
 
-   private:
-    void read_files(const std::string& _path);
-    bool exists(const std::string& image_name) override;
+  private:
+    void read_files(const std::string &_path);
+    bool exists(const std::string &image_name) override;
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
@@ -58,24 +61,26 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     unsigned _missing_component_behaviour;
     pMetaDataBatch _output;
     DIR *_src_dir, *_sub_dir;
-    struct dirent* _entity;
+    struct dirent *_entity;
     int _file_name_count = 0;
     std::vector<std::string> _file_names;
     std::vector<std::set<std::string>> _exts;
     std::vector<std::string> _subfolder_file_names;
-    void parse_tar_files(std::vector<SampleDescription>& samples_container,
-                                              std::vector<ComponentDescription>& components_container,
-                                              std::unique_ptr<StdFileStream>& tar_file);
-    void parse_index_files(std::vector<SampleDescription>& samples_container,
-                                              std::vector<ComponentDescription>& components_container,
-                                              const std::string& paths_to_index_files);
-    void ParseSampleDesc(std::vector<SampleDescription>& samples_container,
-                            std::vector<ComponentDescription>& components_container,
-                            std::ifstream& index_file, const std::string& index_path, int64_t line,
-                            int index_version);
-    void read_sample_and_add_to_map(ComponentDescription component, std::unique_ptr<StdFileStream>& current_tar_file_stream, AsciiValues ascii_values);
+    void parse_tar_files(std::vector<SampleDescription> &samples_container,
+                    std::vector<ComponentDescription> &components_container,
+                    std::unique_ptr<StdFileStream> &tar_file);
+    void parse_index_files(std::vector<SampleDescription> &samples_container,
+                      std::vector<ComponentDescription> &components_container,
+                      const std::string &paths_to_index_files);
+    void parse_sample_description(
+        std::vector<SampleDescription> &samples_container,
+        std::vector<ComponentDescription> &components_container,
+        std::ifstream &index_file, const std::string &index_path, int64_t line,
+        int index_version);
+    void read_sample_and_add_to_map(
+        ComponentDescription component,
+        std::unique_ptr<StdFileStream> &current_tar_file_stream,
+        AsciiValues ascii_values);
     void add(std::string image_name, AsciiValues ascii_value);
-    const std::string kCurrentIndexVersion = "v1.2";  // NOLINT
     std::vector<std::unique_ptr<StdFileStream>> _wds_shards;
-    const std::unordered_set<std::string> kSupportedIndexVersions = {"v1.1", kCurrentIndexVersion};
 };

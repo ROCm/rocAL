@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 #include <dirent.h>
+#include <fcntl.h>
 #include <libtar.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include <algorithm>
 #include <iterator>
@@ -34,12 +34,13 @@ THE SOFTWARE.
 #include <vector>
 
 #include "meta_data/webdataset_meta_data_reader.h"
-#include "readers/image/image_reader.h"
 #include "pipeline/timing_debug.h"
+#include "readers/image/image_reader.h"
 
 class WebDatasetSourceReader : public Reader {
-   public:
-    //! Reads the TFRecord File, and loads the image ids and other necessary info
+  public:
+    //! Reads the TFRecord File, and loads the image ids and other necessary
+    //! info
     /*!
      \param desc  User provided descriptor containing the files' path.
     */
@@ -69,7 +70,7 @@ class WebDatasetSourceReader : public Reader {
 
     WebDatasetSourceReader();
 
-   private:
+  private:
     //! opens the folder containnig the images
     Reader::Status webdataset_record_reader();
     Reader::Status folder_reading();
@@ -92,12 +93,15 @@ class WebDatasetSourceReader : public Reader {
     unsigned int _last_file_size;
     std::vector<std::string> index_name_list;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
+    size_t _shard_count = 1; // equivalent of batch size
     int _file_name_count = 0;
     bool _last_rec;
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
+    //!< _batch_count Defines the quantum count of the images to be read. It's
+    //!< usually equal to the user's batch size.
+    /// The loader will repeat images if necessary to be able to have images
+    /// available in multiples of the load_batch_count, for instance if there
+    /// are 10 images in the dataset and _batch_count is 3, the loader repeats 2
+    /// images as if there are 12 images available.
     size_t _batch_count = 1;
     size_t _file_id = 0;
     size_t _in_batch_read_count = 0;
@@ -108,18 +112,20 @@ class WebDatasetSourceReader : public Reader {
     void incremenet_read_ptr();
     int release();
     void incremenet_file_id() { _file_id++; }
-    void parse_tar_files(std::vector<SampleDescription>& samples_container,
-                                              std::vector<ComponentDescription>& components_container,
-                                              std::unique_ptr<StdFileStream>& tar_file);
-    void parse_index_files(std::vector<SampleDescription>& samples_container,
-                                                    std::vector<ComponentDescription>& components_container,
-                                                    const std::string& index_path);
-    void ParseSampleDesc(std::vector<SampleDescription>& samples_container,
-                        std::vector<ComponentDescription>& components_container,
-                        std::ifstream& index_file, const std::string& index_path, int64_t line,
-                        int index_version);
+    void parse_tar_files(std::vector<SampleDescription> &samples_container, std::vector<ComponentDescription> &components_container, std::unique_ptr<StdFileStream> &tar_file);
+    void parse_index_files(std::vector<SampleDescription> &samples_container,
+                      std::vector<ComponentDescription> &components_container,
+                      const std::string &index_path);
+    void parse_sample_description(
+        std::vector<SampleDescription> &samples_container,
+        std::vector<ComponentDescription> &components_container,
+        std::ifstream &index_file, const std::string &index_path, int64_t line,
+        int index_version);
     Reader::Status webdataset_record_reader_from_components(ComponentDescription component, unsigned wds_shard_index);
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     std::vector<std::unique_ptr<StdFileStream>> _wds_shards;
-    Reader::Status read_web_dataset_at_offset(unsigned char *buff, std::string file_name, uint file_size, uint offset, uint wds_shard_index);
+    Reader::Status read_web_dataset_at_offset(unsigned char *buff,
+                                              std::string file_name,
+                                              uint file_size, uint offset,
+                                              uint wds_shard_index);
 };
