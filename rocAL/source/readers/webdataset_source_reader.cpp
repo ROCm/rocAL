@@ -210,25 +210,25 @@ void WebDatasetSourceReader::parse_index_files(std::vector<SampleDescription>& s
 
 void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& samples_container,
                                               std::vector<ComponentDescription>& components_container,
-                                              std::unique_ptr<StdFileStream>& tar_file) {
-    int64_t initial_file_pos = tar_file->TellRead();
+                                              std::unique_ptr<FileIOStream>& tar_file) {
+    int64_t initial_file_pos = tar_file->get_current_read_position();
     TarArchive tar_archive(std::move(tar_file));
 
     std::string last_filename;
-    for (; !tar_archive.EndOfArchive(); tar_archive.NextFile()) {
-        if (tar_archive.GetFileType() == TarArchive::ENTRY_FILE) {
-        std::tie(last_filename, std::ignore) = split_name(tar_archive.GetFileName());
+    for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
+        if (tar_archive.get_current_file_type() == TarArchive::ENTRY_FILE) {
+        std::tie(last_filename, std::ignore) = split_name(tar_archive.get_current_file_name());
         break;
         }
     }
     size_t last_components_size = components_container.size();
-    for (; !tar_archive.EndOfArchive(); tar_archive.NextFile()) {
-        if (tar_archive.GetFileType() != TarArchive::ENTRY_FILE) {
+    for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
+        if (tar_archive.get_current_file_type() != TarArchive::ENTRY_FILE) {
         continue;
         }
 
     std::string basename, ext;
-    std::tie(basename, ext) = split_name(tar_archive.GetFileName());
+    std::tie(basename, ext) = split_name(tar_archive.get_current_file_name());
     if (basename.empty()) {
       continue;
     }
@@ -241,8 +241,8 @@ void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& sam
     }
 
     components_container.emplace_back();
-    components_container.back().size = tar_archive.GetFileSize();
-    components_container.back().offset = tar_archive.TellArchive() + tar_archive.HeaderSize();
+    components_container.back().size = tar_archive.get_current_file_size();
+    components_container.back().offset = tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
     components_container.back().ext = std::move(ext);
     auto _last_id = basename;
     auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -255,7 +255,7 @@ void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& sam
     samples_container.emplace_back();
     samples_container.back().components = VectorView<ComponentDescription>(components_container, last_components_size, components_container.size() - last_components_size);
 
-    tar_file = tar_archive.Release();
+    tar_file = tar_archive.release_file_stream();
 
 }
 
@@ -278,7 +278,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
         for (auto& path : entry_name_list)
-            _wds_shards.emplace_back(StdFileStream::Open(_path + path));
+            _wds_shards.emplace_back(FileIOStream::open(_path + path));
     }
     else {
             _folder_path = _index_paths;
@@ -306,7 +306,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
             _wds_shards.reserve(entry_name_list.size());
             // Create n such std-streams for n paths
             for (auto& path : entry_name_list)
-                _wds_shards.emplace_back(StdFileStream::Open(_path + path));
+                _wds_shards.emplace_back(FileIOStream::open(_path + path));
     }
 
 
@@ -355,7 +355,7 @@ Reader::Status WebDatasetSourceReader::webdataset_record_reader_from_components(
 Reader::Status WebDatasetSourceReader::read_web_dataset_at_offset(unsigned char *buff, std::string file_name, uint file_size, uint offset, uint wds_shard_index) {
     auto ret = Reader::Status::OK;
     auto& current_tar_file_stream = _wds_shards[wds_shard_index];
-    current_tar_file_stream->SeekRead(offset);
-    current_tar_file_stream->Read(buff, file_size);
+    current_tar_file_stream->set_read_position(offset);
+    current_tar_file_stream->read_into_buffer(buff, file_size);
     return ret;
 }

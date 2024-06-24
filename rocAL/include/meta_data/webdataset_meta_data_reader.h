@@ -68,7 +68,7 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     std::vector<std::string> _subfolder_file_names;
     void parse_tar_files(std::vector<SampleDescription> &samples_container,
                     std::vector<ComponentDescription> &components_container,
-                    std::unique_ptr<StdFileStream> &tar_file);
+                    std::unique_ptr<FileIOStream> &tar_file);
     void parse_index_files(std::vector<SampleDescription> &samples_container,
                       std::vector<ComponentDescription> &components_container,
                       const std::string &paths_to_index_files);
@@ -79,8 +79,8 @@ class WebDataSetMetaDataReader : public MetaDataReader {
         int index_version);
     void read_sample_and_add_to_map(
         ComponentDescription component,
-        std::unique_ptr<StdFileStream> &current_tar_file_stream,
+        std::unique_ptr<FileIOStream> &current_tar_file_stream,
         AsciiValues ascii_values);
     void add(std::string image_name, AsciiValues ascii_value);
-    std::vector<std::unique_ptr<StdFileStream>> _wds_shards;
+    std::vector<std::unique_ptr<FileIOStream>> _wds_shards;
 };

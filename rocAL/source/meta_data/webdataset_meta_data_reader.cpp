@@ -225,26 +225,26 @@ void WebDataSetMetaDataReader::parse_index_files(
 void WebDataSetMetaDataReader::parse_tar_files(
     std::vector<SampleDescription> &samples_container,
     std::vector<ComponentDescription> &components_container,
-    std::unique_ptr<StdFileStream> &tar_file) {
-    int64_t initial_file_pos = tar_file->TellRead();
+    std::unique_ptr<FileIOStream> &tar_file) {
+    int64_t initial_file_pos = tar_file->get_current_read_position();
     TarArchive tar_archive(std::move(tar_file));
 
     std::string last_filename;
-    for (; !tar_archive.EndOfArchive(); tar_archive.NextFile()) {
-        if (tar_archive.GetFileType() == TarArchive::ENTRY_FILE) {
+    for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
+        if (tar_archive.get_current_file_type() == TarArchive::ENTRY_FILE) {
             std::tie(last_filename, std::ignore) =
-                split_name(tar_archive.GetFileName());
+                split_name(tar_archive.get_current_file_name());
             break;
         }
     }
     size_t last_components_size = components_container.size();
-    for (; !tar_archive.EndOfArchive(); tar_archive.NextFile()) {
-        if (tar_archive.GetFileType() != TarArchive::ENTRY_FILE) {
+    for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
+        if (tar_archive.get_current_file_type() != TarArchive::ENTRY_FILE) {
             continue;
         }
 
         std::string basename, ext;
-        std::tie(basename, ext) = split_name(tar_archive.GetFileName());
+        std::tie(basename, ext) = split_name(tar_archive.get_current_file_name());
         if (basename.empty()) {
             continue;
         }
@@ -260,9 +260,9 @@ void WebDataSetMetaDataReader::parse_tar_files(
         }
 
         components_container.emplace_back();
-        components_container.back().size = tar_archive.GetFileSize();
+        components_container.back().size = tar_archive.get_current_file_size();
         components_container.back().offset =
-            tar_archive.TellArchive() + tar_archive.HeaderSize();
+            tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
         components_container.back().ext = std::move(ext);
         auto _last_id = basename;
         auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -276,17 +276,17 @@ void WebDataSetMetaDataReader::parse_tar_files(
         components_container, last_components_size,
         components_container.size() - last_components_size);
 
-    tar_file = tar_archive.Release();
+    tar_file = tar_archive.release_file_stream();
 }
 
 void WebDataSetMetaDataReader::read_sample_and_add_to_map(
     ComponentDescription component,
-    std::unique_ptr<StdFileStream> &current_tar_file_stream,
+    std::unique_ptr<FileIOStream> &current_tar_file_stream,
     AsciiValues ascii_values) {
     if (component.ext != "jpg") { // Add more components as we encounter
-        current_tar_file_stream->SeekRead(component.offset);
+        current_tar_file_stream->set_read_position(component.offset);
         std::vector<uint8_t> cls_data(component.size);
-        current_tar_file_stream->Read(cls_data.data(), component.size);
+        current_tar_file_stream->read_into_buffer(cls_data.data(), component.size);
         AsciiComponent ascii_component;
         for (size_t i = 0; i < cls_data.size(); ++i)
             ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
@@ -315,7 +315,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
         for (auto &path : entry_name_list)
-            _wds_shards.emplace_back(StdFileStream::Open(_path + path));
+            _wds_shards.emplace_back(FileIOStream::open(_path + path));
     } else {
         _folder_path = _index_paths;
         if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
@@ -344,7 +344,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
         std::sort(entry_name_list.begin(), entry_name_list.end());
         _wds_shards.reserve(entry_name_list.size());
         for (auto &path : entry_name_list)
-            _wds_shards.emplace_back(StdFileStream::Open(_path + path));
+            _wds_shards.emplace_back(FileIOStream::open(_path + path));
     }
     closedir(_sub_dir);
 

@@ -2,20 +2,20 @@
 #include <string>
 #include <memory>
 
-class StdFileStream {
+class FileIOStream {
     public:
-        static std::unique_ptr<StdFileStream> Open(const std::string &uri);
-        void Close();
-        size_t Read(void * buffer, size_t n_bytes);
+        static std::unique_ptr<FileIOStream> open(const std::string &path);
+        void close_stream();
+        size_t read_into_buffer(void * buffer, size_t read_n_bytes);
         const std::string& path() const { return _path; }
-        size_t Size() const;
-        ptrdiff_t TellRead() const;
-        void SeekRead(ptrdiff_t pos, int whence = SEEK_SET);
-        ~StdFileStream();
-        StdFileStream(const std::string &path);
+        size_t get_size() const;
+        ptrdiff_t get_current_read_position() const;
+        void set_read_position(ptrdiff_t pos, int whence = SEEK_SET);
+        ~FileIOStream();
+        FileIOStream(const std::string &path);
 
     private:
-        FILE * fp_;
+        FILE * _file_pointer;
         std::string _path;
 };
 
