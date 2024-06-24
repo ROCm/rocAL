@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "pipeline/filesystem.h"
 #include "readers/image/image_reader.h"
-#include "tar_utils.h"
+#include "tar_helper_functions.h"
 #include <set>
 #include <unordered_set>
 class WebDataSetMetaDataReader : public MetaDataReader {

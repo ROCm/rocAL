@@ -1156,70 +1156,49 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
     return _metadata_output_tensor_list;
 }
 
-std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(const char *source_path, const char* index_path, std::vector<std::set<std::string>> extensions , MetaDataReaderType reader_type, unsigned missing_component_behaviour) {
+std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(
+    const char *source_path, const char *index_path,
+    std::vector<std::set<std::string>> extensions,
+    MetaDataReaderType reader_type, unsigned missing_component_behaviour) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
 
-    // auto generate_index = false;
-    // if(index_path[0] == '\0')
     bool generate_index = (index_path[0] == '\0') ? true : false;
-    if (generate_index) {
-        std::cout << "Index file is not provided, it may take some time to infer it from the tar file";;
-    }
+    if (generate_index)
+        std::cout << "Index file is not provided, it may take some time to infer it from the tar file";
 
-// Calculate total number of strings
     size_t total_extensions = 0;
 
     // Iterate over each set and sum up the sizes
-    for (const auto& ext_set : extensions) {
-        for(const auto& ext : ext_set)
-            total_extensions +=1;
+    for (const auto &ext_set : extensions) {
+        for (const auto &ext : ext_set)
+            total_extensions += 1;
     }
-    std::cerr << "\n total_extensions::" << total_extensions;
     _ascii_tensor_list.resize(total_extensions - 1);
-// for (const auto& ext_set : extensions) {
-//     for(const auto& ext : ext_set) {
-//         if (ext == "cls") // Add more extension cases as next step
-//         {
-            std::cerr << " \n In the cls extension";
-            // MetaDataConfig config(MetaDataType::Label, reader_type, source_path);
-            MetaDataConfig config(MetaDataType::AsciiValue, reader_type, source_path, std::map<std::string, std::string>(), std::string(), 0, 0, 0, index_path, missing_component_behaviour, extensions);
-            _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
-            _meta_data_reader->read_all(source_path);
-            std::cerr << " \n In the cls extension 1";
+    MetaDataConfig config(MetaDataType::AsciiValue, reader_type, source_path,
+                          std::map<std::string, std::string>(), std::string(),
+                          0, 0, 0, index_path, missing_component_behaviour,
+                          extensions);
+    _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
+    _meta_data_reader->read_all(source_path);
+    for (uint _ext_count = 0; _ext_count < _ascii_tensor_list.size(); _ext_count++) {
+        for (unsigned i = 0; i < _user_batch_size; i++) {
             std::vector<size_t> dims;
-            
-            std::cerr << " \n In the cls extension 2";
-            for (uint _ext_count= 0; _ext_count <  _ascii_tensor_list.size(); _ext_count++) {
-                for (unsigned i = 0; i < _user_batch_size; i++) {
+            dims = {MAX_ASCII_BUFFER, 1};
+            auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type,RocalTensorDataType::UINT8); // Create default ascii values Info
+            default_ascii_values_info.set_metadata();
+            _meta_data_buffer_size.emplace_back(_user_batch_size * default_ascii_values_info.data_size());
+            auto info = default_ascii_values_info;
+            auto tensor = new Tensor(info);
+            _ascii_tensor_list[_ext_count].push_back(tensor);
+        }
+        _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[_ext_count]);
+    }
 
-                    dims = {MAX_ASCII_BUFFER, 1};
-                    auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::UINT8);  // Create default ascii values Info
-                    default_ascii_values_info.set_metadata();
-                    _meta_data_buffer_size.emplace_back(_user_batch_size * default_ascii_values_info.data_size());
-
-                    auto info = default_ascii_values_info;
-                    std::cerr << " \n In the cls extension 2.5";
-                    std::cerr << "\n _ascii_tensor_list.size()" << _ascii_tensor_list.size();
-                    auto tensor = new Tensor(info);
-                    _ascii_tensor_list[_ext_count].push_back(tensor);
-
-                    std::cerr << " \n In the cls extension 2.8";
-                }
-                std::cerr << " \n In the cls extension 3";
-                _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[_ext_count]);
-                // _ext_count++;
-                std::cerr << " \n In the cls extension 4";
-            }
-        // }
-        std::cerr << " \n In the cls extension 5";
-    // }
-// }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
-    std::cerr << "\n Creation sucessful";
     return _metadata_output_tensor_list;
 }
 
@@ -1471,13 +1450,11 @@ TensorList *MasterGraph::labels_meta_data() {
     return &_labels_tensor_list;
 }
 
-std::vector<rocalTensorList *> 
-MasterGraph::ascii_values_meta_data() {
+std::vector<rocalTensorList *> MasterGraph::ascii_values_meta_data() {
     if (_external_source_reader) {
         std::vector<rocalTensorList *> result;
-        for (auto& element : _ascii_tensor_list) {
+        for (auto &element : _ascii_tensor_list)
             result.push_back(&element);
-        }
         return result;
     }
     if (_ring_buffer.level() == 0)
@@ -1485,11 +1462,9 @@ MasterGraph::ascii_values_meta_data() {
     std::vector<rocalTensorList *> webdataset_output_tensor_list;
 
     for (uint ext = 0; ext < _ascii_tensor_list.size(); ext++) {
-        auto meta_data_buffers = (uint8_t*)_ring_buffer.get_meta_read_buffers()[ext];  // Get ASCII buffer from ring buffer
+        auto meta_data_buffers = (uint8_t *)_ring_buffer.get_meta_read_buffers()[ext]; // Get ASCII buffer from ring buffer
         auto ascii_values = _ring_buffer.get_meta_data().second->get_ascii_values_batch();
         for (unsigned i = 0; i < _ascii_tensor_list[ext].size(); i++) {
-                    std::cerr << "\n ascii_values[i].size():: " << ascii_values[i][ext].size();
-
             _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext].size(), 1});
             _ascii_tensor_list[ext][i]->set_mem_handle((void *)meta_data_buffers);
             meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();

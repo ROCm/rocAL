@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 #include "pipeline/exception.h"
-#include "file_stream.h"
+#include "file_io_stream.h"
 #include "pipeline/commons.h"
 
 std::unique_ptr<FileIOStream> FileIOStream::open(const std::string& path) {
