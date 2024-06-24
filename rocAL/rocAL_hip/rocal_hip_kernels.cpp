@@ -468,7 +468,9 @@ __global__ void resize_bilinear_pkd_hip_tensor(T *srcPtr,
                                            size_t *srcWidth,
                                            size_t *srcHeight,
                                            size_t *dstWidth,
-                                           size_t *dstHeight) {
+                                           size_t *dstHeight,
+                                           size_t *srcHeightStride,
+                                           size_t *srcImgOffset) {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
@@ -482,7 +484,7 @@ __global__ void resize_bilinear_pkd_hip_tensor(T *srcPtr,
         return;
     }
 
-    uint srcIdx = (id_z * srcStridesNH.x);
+    uint srcIdx = srcImgOffset[id_z];
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     int4 srcRoi_i4;
@@ -495,7 +497,7 @@ __global__ void resize_bilinear_pkd_hip_tensor(T *srcPtr,
     resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
 
     d_float24 dst_f24;
-    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24, false);
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcHeightStride[id_z], &locSrc_f16, &srcRoi_i4, &dst_f24, false);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -508,6 +510,8 @@ void HipExecResizeTensor(
                               size_t *srcHeight,
                               size_t *dstWidth,
                               size_t *dstHeight,
+                              size_t *srcHeightStride,
+                              size_t *srcImgOffset,
                               unsigned channels,
                               const size_t maxSrcWidth,
                               const size_t maxSrcHeight,
@@ -528,6 +532,8 @@ void HipExecResizeTensor(
                         srcWidth,
                         srcHeight,
                         dstWidth,
-                        dstHeight);
+                        dstHeight,
+                        srcHeightStride,
+                        srcImgOffset);
 
 }
