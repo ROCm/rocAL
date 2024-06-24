@@ -25,6 +25,11 @@ THE SOFTWARE.
 #include "rocjpeg.h"
 #include "decoders/image/rocjpeg_decoder.h"
 
+struct ScalingFactor {
+  unsigned num;
+  unsigned denom;
+};
+
 class RocJpegDecoder : public Decoder {
    public:
     //! Default constructor
@@ -90,4 +95,24 @@ class RocJpegDecoder : public Decoder {
 #if ENABLE_HIP
     hipStream_t _hip_stream;
 #endif
+
+    unsigned _num_scaling_factors = 16;
+    ScalingFactor _scaling_factors[16] = {
+      { 2, 1 },
+      { 15, 8 },
+      { 7, 4 },
+      { 13, 8 },
+      { 3, 2 },
+      { 11, 8 },
+      { 5, 4 },
+      { 9, 8 },
+      { 1, 1 },
+      { 7, 8 },
+      { 3, 4 },
+      { 5, 8 },
+      { 1, 2 },
+      { 3, 8 },
+      { 1, 4 },
+      { 1, 8 }
+    };
 };

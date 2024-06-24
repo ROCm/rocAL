@@ -302,13 +302,23 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
         std::cout << "Decoding started, please wait! ... " << std::endl;
         output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
         img_buff += max_dst_img_size;
-        actual_decoded_width[i] = widths[0];
-        actual_decoded_height[i] = heights[0];
+
+        uint scaledw = original_image_width[i], scaledh = original_image_height[i];
+        if (original_image_width[i] > max_decoded_width || original_image_height[i] > max_decoded_height) {
+            for (int j=0; j < _num_scaling_factors; j++) {
+                scaledw = (((original_image_width[i]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
+                scaledh = (((original_image_height[i]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
+                if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
+                    break;
+            }
+        }
+        actual_decoded_width[i] = scaledw;
+        actual_decoded_height[i] = scaledh;
     }
 
     // Copy width and height args to HIP memory
-    CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, actual_decoded_width.data(), _batch_size * sizeof(size_t)));
-    CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, actual_decoded_height.data(), _batch_size * sizeof(size_t)));
+    CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, original_image_width.data(), _batch_size * sizeof(size_t)));
+    CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, original_image_height.data(), _batch_size * sizeof(size_t)));
     CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_width, actual_decoded_width.data(), _batch_size * sizeof(size_t)));
     CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_height, actual_decoded_height.data(), _batch_size * sizeof(size_t)));
 
