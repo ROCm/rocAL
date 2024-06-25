@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import os
 import cv2
 
-def draw_patches(img, idx, device, dtype, layout, color_format=types.RGB):
+def draw_patches(img, idx, device, dtype, color_format=types.RGB):
     import cv2
     if device == "cpu":
         img = img.detach().numpy()
@@ -58,12 +58,10 @@ def main():
     with webdataset_pipeline:
         img_raw = fn.readers.webdataset(
         path=wds_data, ext=[{'jpg', 'json', 'txt'}], 
-        index_paths = index_file,
-        )
+        index_paths = index_file)
         img = fn.decoders.webdataset(img_raw, file_root=wds_data, 
                                      index_path = index_file, 
                                      color_format=color_format,max_decoded_width=500, max_decoded_height=500)
-        tensor_format = types.NHWC
         tensor_dtype = types.UINT8
 
         webdataset_pipeline.set_outputs(img)
@@ -73,14 +71,14 @@ def main():
     for e in range(1):
         print("Epoch :: ", e)
         torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-        for i , it in enumerate(audioIteratorPipeline):
+        for i, it in enumerate(audioIteratorPipeline):
             print("************************************** i *************************************",i)
+            print("length of image data: ", len(it[0]))
             for x in range(len(it[0])):
-                print("((((((((((((((((((((((((((((((((( it [0] )))))))))))))))))))))))))))))))))")
                 for img, label in zip(it[0][x], it[1]):
                     print("img data", img)
                     print("label ascii data", label)
-                    draw_patches(img, cnt, "cpu", tensor_dtype, tensor_format, color_format=color_format)
+                    draw_patches(img, cnt, "cpu", tensor_dtype, color_format=color_format)
                     cnt = cnt + 1
             break
                 

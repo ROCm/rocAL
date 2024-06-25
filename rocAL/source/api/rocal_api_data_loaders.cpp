@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
 #include "loaders/image_source_evaluator.h"
+#include "loaders/web_dataset_evaluator.h"
 #include "loaders/image/node_cifar10_loader.h"
 #include "augmentations/node_copy.h"
 #include "loaders/image/node_fused_jpeg_crop.h"
@@ -44,22 +45,24 @@ THE SOFTWARE.
 
 std::tuple<unsigned, unsigned>
 evaluate_web_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
-                        DecoderType decoder_type, const std::string& source_path, const std::string& json_path) {
+                        DecoderType decoder_type, const std::string& source_path, const std::string& index_path) {
+
     auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy) {
         switch (decode_size_policy) {
             case ROCAL_USE_MAX_SIZE:
             case ROCAL_USE_MAX_SIZE_RESTRICTED:
-                return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
+                return WebDataSetMaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
             case ROCAL_USE_MOST_FREQUENT_SIZE:
-                return MaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE;
+                return WebDataSetMaxSizeEvaluationPolicy::MOST_FREQUENT_SIZE;
             default:
-                return MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
+                return WebDataSetMaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE;
         }
     };
 
-    ImageSourceEvaluator source_evaluator;
+    WebDataSetSourceEvaluator source_evaluator;
     source_evaluator.set_size_evaluation_policy(translate_image_size_policy(decode_size_policy));
-    if (source_evaluator.create(ReaderConfig(storage_type, source_path, json_path), DecoderConfig(decoder_type)) != ImageSourceEvaluatorStatus::OK)
+    if (source_evaluator.create(ReaderConfig(storage_type, source_path, "", std::map<std::string, std::string>(),
+                          false, false, index_path), DecoderConfig(decoder_type)) != WebDataSetSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed ")
 
     auto max_width = source_evaluator.max_width();
@@ -2348,9 +2351,7 @@ rocALWebDatasetDecoderSingleShard(
         } else {
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
-        std::cerr << "\n use_input_dimension :: " << use_input_dimension;
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::WEBDATASET_RECORDS, DecoderType::TURBO_JPEG, source_path, "");
-        std::cerr << "\n width ::" << width << "\t height:: " << height;
+        auto [width, height] = evaluate_web_data_set(decode_size_policy, StorageType::WEBDATASET_RECORDS, DecoderType::TURBO_JPEG, source_path, index_path);
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
 
