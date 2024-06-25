@@ -290,7 +290,7 @@ coreRPMPackages = [
     #'rapidjson-devel',
     'python3-devel',
     'python3-pip',
-    str(libPythonProto)
+    str(libPythonProto),
     'protobuf-devel',
     'protobuf-compiler'
 ]
