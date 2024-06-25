@@ -490,8 +490,8 @@ __global__ void resize_bilinear_pkd_hip_tensor(T *srcPtr,
     int4 srcRoi_i4;
     srcRoi_i4.x = 0;
     srcRoi_i4.y = 0;
-    srcRoi_i4.z = srcWidth[id_z];
-    srcRoi_i4.w = srcHeight[id_z];
+    srcRoi_i4.z = srcWidth[id_z] - 1;
+    srcRoi_i4.w = srcHeight[id_z] - 1;
 
     d_float16 locSrc_f16;
     resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
@@ -500,6 +500,117 @@ __global__ void resize_bilinear_pkd_hip_tensor(T *srcPtr,
     rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcHeightStride[id_z], &locSrc_f16, &srcRoi_i4, &dst_f24, false);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
+// **********************************************************************
+
+__device__ void resize_roi_generic_srcloc_and_weight_hip_compute(int roiLoc, int dstLocation, float scale, int limit, int *srcLoc, float *weight, float offset, int srcStride)
+{
+    float srcLocationRaw = ((float) dstLocation) * scale + offset + (float)roiLoc;
+    int srcLocationRounded = (int)ceilf(srcLocationRaw);
+    *weight = srcLocationRounded - srcLocationRaw;
+    *srcLoc = ((srcLocationRounded > limit) ? limit : srcLocationRounded) * srcStride;
+}
+
+__device__ __forceinline__ void rpp_hip_compute_triangular_coefficient(float weight, float *coeff)
+{
+    *coeff = 1 - fabsf(weight);
+    *coeff = *coeff < 0 ? 0 : *coeff;
+}
+
+__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, uchar* dst)
+{
+    pixel = fmax(fminf(pixel, 255), 0);
+    *dst = (uchar)pixel;
+}
+
+__device__ void rpp_hip_compute_interpolation_scale_and_radius(float *scale, float *radius, float scaleRatio)
+{
+    if(scaleRatio > 1.0f)
+    {
+        *radius = scaleRatio;
+        *scale = (1 / scaleRatio);
+    } else {
+        *radius = 1.0f;
+        *scale = 1.0f;
+    }
+}
+
+template <typename T>
+__global__ void resize_generic_pkd_hip_tensor(T *srcPtr,
+                                          uint2 srcStridesNH,
+                                          T *dstPtr,
+                                          uint2 dstStridesNH,
+                                          size_t *srcWidth,
+                                          size_t *srcHeight,
+                                          size_t *dstWidth,
+                                          size_t *dstHeight,
+                                          size_t *srcHeightStride,
+                                          size_t *srcImgOffset)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint2 dstDimsWH;
+    dstDimsWH.x = dstWidth[id_z];
+    dstDimsWH.y = dstHeight[id_z];
+
+    if ((id_y > dstDimsWH.y) || (id_x > dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint2 srcDimsWH;
+    srcDimsWH.x = srcWidth[id_z];
+    srcDimsWH.y = srcHeight[id_z];
+
+    int widthLimit = (srcWidth[id_z] - 1) * 3;
+    int heightLimit = (srcHeight[id_z] - 1);
+    float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
+    float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
+    float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
+
+    rpp_hip_compute_interpolation_scale_and_radius(&wScale, &wRadius, wRatio);
+    rpp_hip_compute_interpolation_scale_and_radius(&hScale, &hRadius, hRatio);
+    float wOffset = (wRatio - 1) * 0.5f - wRadius;
+    float hOffset = (hRatio - 1) * 0.5f - hRadius;
+    int wKernelSize = ceilf(wRadius * 2);
+    int hKernelSize = ceilf(hRadius * 2);
+
+    float rowWeight, colWeight, rowCoeff, colCoeff;
+    int srcLocationRowFloor, srcLocationColumnFloor;
+    resize_roi_generic_srcloc_and_weight_hip_compute(0, id_x, wRatio, widthLimit, &srcLocationColumnFloor, &colWeight, wOffset, 3);
+    resize_roi_generic_srcloc_and_weight_hip_compute(0, id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeight, hOffset, 1);
+
+    T *srcPtrTemp = srcPtr + srcImgOffset[id_z];
+    float3 outPixel_f3 = (float3)0.0f;
+    float rowCoeffSum = 0.0f, colCoeffSum = 0.0f;
+    for(int j = 0; j < hKernelSize; j++)
+    {
+        int rowIndex = fminf(fmaxf((int)(srcLocationRowFloor + j), 0), heightLimit);
+        T *srcRowPtrsForInterp = srcPtrTemp + rowIndex * srcHeightStride[id_z];
+        rpp_hip_compute_triangular_coefficient((rowWeight - hRadius + j) * hScale , &rowCoeff);
+        rowCoeffSum += rowCoeff;
+
+        colCoeffSum = 0;
+        for(int k = 0; k < wKernelSize; k++)
+        {
+            int colIndex = fminf(fmaxf((int)(srcLocationColumnFloor + (k * 3)), 0), widthLimit);
+            rpp_hip_compute_triangular_coefficient((colWeight - wRadius + k) * wScale , &colCoeff);
+            colCoeffSum += colCoeff;
+            float3 coeff_f3 = (float3)(colCoeff * rowCoeff);
+            outPixel_f3 += (make_float3(srcRowPtrsForInterp[colIndex], srcRowPtrsForInterp[colIndex + 1], srcRowPtrsForInterp[colIndex + 2]) * coeff_f3);
+        }
+    }
+    rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
+    colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
+    outPixel_f3 *= (float3)(1 / (rowCoeffSum * colCoeffSum));
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
+    rpp_hip_pixel_check_and_store(outPixel_f3.y, &dstPtr[dstIdx + 1]);
+    rpp_hip_pixel_check_and_store(outPixel_f3.z, &dstPtr[dstIdx + 2]);
+}
+
+// **********************************************************************
 
 void HipExecResizeTensor(
                               hipStream_t stream,
@@ -520,7 +631,31 @@ void HipExecResizeTensor(
     unsigned globalThreads_x = (maxDstWidth + 7) >> 3;
     unsigned globalThreads_y = maxDstHeight;
     unsigned globalThreads_z = batchSize;
-    hipLaunchKernelGGL(resize_bilinear_pkd_hip_tensor,
+
+    for (int i = 0; i < batchSize; i++) {
+        std::cerr << srcWidth[i] << " " << srcHeight[i] << " " << dstWidth[i] << " " << dstHeight[i] << "\n\n";
+    }
+
+    std::cerr << "Dst :: " << maxDstWidth * maxDstHeight * channels << " &  " << maxDstWidth * channels << "\n";
+    printf("SRC : %p, DST : %p, %p %p %p %p\n", srcPtr, dstPtr, srcWidth, srcHeight, dstWidth, dstHeight);
+    // hipLaunchKernelGGL(resize_bilinear_pkd_hip_tensor,
+    //                     dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+    //                     dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+    //                     0,
+    //                     stream,
+    //                     static_cast<unsigned char *>(srcPtr),
+    //                     make_uint2(maxSrcWidth * maxSrcHeight * channels, maxSrcWidth * channels),
+    //                     static_cast<unsigned char *>(dstPtr),
+    //                     make_uint2(maxDstWidth * maxDstHeight * channels, maxDstWidth * channels),
+    //                     srcWidth,
+    //                     srcHeight,
+    //                     dstWidth,
+    //                     dstHeight,
+    //                     srcHeightStride,
+    //                     srcImgOffset);
+
+    globalThreads_x = maxDstWidth;
+    hipLaunchKernelGGL(resize_generic_pkd_hip_tensor,
                         dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                         dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                         0,
@@ -535,5 +670,4 @@ void HipExecResizeTensor(
                         dstHeight,
                         srcHeightStride,
                         srcImgOffset);
-
 }
