@@ -305,7 +305,7 @@ ERROR_CHECK(os.system(sudoValidate))
 if os.path.exists(deps_dir):
     print("\nrocAL Setup: install found -- "+deps_dir)
     print("\nrocAL Setup: use option --reinstall ON to reinstall all dependencies")
-    print("\nrocAL Dependencies Previously Installed with rocAL-setup.py")
+    print("\nrocAL Dependencies Installed with rocAL-setup.py on "+platfromInfo+"\n")
     exit(0)
 # Clean Install
 else:
@@ -447,4 +447,4 @@ else:
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
 
-print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")
+print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+" on "+platfromInfo+"\n")
