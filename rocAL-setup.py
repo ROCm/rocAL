@@ -319,6 +319,9 @@ else:
     for i in range(len(commonPackages)):
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ commonPackages[i]))
+    if "redhat-7" in platfromInfo:
+        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install cmake3'))
 
     # ROCm Packages
     if "Ubuntu" in platfromInfo:
