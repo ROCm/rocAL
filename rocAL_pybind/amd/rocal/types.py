@@ -181,12 +181,12 @@ _known_types = {
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
 
-    NTF: ("NTF", NTF),
-    NFT: ("NFT", NFT),
-
     PAD: ("PAD", PAD),
     TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
     ERROR: ("ERROR", ERROR),
+
+    NTF: ("NTF", NTF),
+    NFT: ("NFT", NFT),
 
     SLANEY: ("SLANEY", SLANEY),
     HTK: ("HTK", HTK),
