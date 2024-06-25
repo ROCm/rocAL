@@ -30,6 +30,7 @@
 
 * Tests
 * Setup Script
+* CentOS 7 support
 
 ### Changed
 
@@ -58,7 +59,7 @@
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* rocAL Setup Script - `V2.2.0`
+* rocAL Setup Script - `V2.3.0`
 * Dependencies for all the above packages
 
 ### Known issues
