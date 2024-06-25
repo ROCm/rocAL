@@ -128,22 +128,22 @@ void WebDatasetSourceReader::reset() {
     _curr_file_idx = 0;
 }
 
-void WebDatasetSourceReader::parse_sample_description(std::vector<SampleDescription>& samples_container,
-                            std::vector<ComponentDescription>& components_container,
-                            std::ifstream& index_file, const std::string& index_path, int64_t line,
+void WebDatasetSourceReader::parse_sample_description(std::vector<SampleDescription>& samples_vector,
+                            std::vector<ComponentDescription>& components_vector,
+                            std::ifstream& index_file_stream, const std::string& index_path, int64_t line,
                             int index_version) {
-  samples_container.emplace_back();
-  samples_container.back().components = VectorView<ComponentDescription>(components_container, components_container.size());
-  samples_container.back().line_number = line;
+  samples_vector.emplace_back();
+  samples_vector.back().components = VectorView<ComponentDescription>(components_vector, components_vector.size());
+  samples_vector.back().line_number = line;
 
-  std::string components_metadata;
-  std::getline(index_file, components_metadata);
-  std::stringstream components_stream(components_metadata);
+  std::string components_data;
+  std::getline(index_file_stream, components_data);
+  std::stringstream components_string_stream(components_data);
 
   ComponentDescription component;
-  while (components_stream >> component.ext) {
+  while (components_string_stream >> component.ext) {
     if (index_version == create_version_number(1, 2)) {
-      if(!(components_stream >> component.offset >> component.size >> component.filename))
+      if(!(components_string_stream >> component.offset >> component.size >> component.filename))
             THROW("Could not find all necessary component parameters (offset, size or filename). Every record in the index file should look like: `<ext> <offset> <size> <filename>`.");
         std::string basename, ext;
         std::tie(basename, ext) = split_name(component.filename);
@@ -153,7 +153,7 @@ void WebDatasetSourceReader::parse_sample_description(std::vector<SampleDescript
             _last_id.erase(0, last_slash_idx + 1);
         }
     } else {
-      if(!(components_stream >> component.offset >> component.size))
+      if(!(components_string_stream >> component.offset >> component.size))
             THROW("Could not find all necessary component parameters (offset or size). Every record in the index file should look like: `<ext> <offset> <size>`");
     }
     if(component.offset % kBlockSize == 0)
@@ -161,55 +161,54 @@ void WebDatasetSourceReader::parse_sample_description(std::vector<SampleDescript
     if (component.filename.empty()) // Use line number as file number
         component.filename = std::to_string(line);
 
-    components_container.emplace_back(std::move(component));
-    samples_container.back().components.num++;
+    components_vector.emplace_back(std::move(component));
+    samples_vector.back().components.num++;
   }
 
-  if(samples_container.back().components.num)
+  if(samples_vector.back().components.num)
         THROW("no extensions provided for the sample");
 }
 
-inline int parse_index_version(const string& version_str) {
-  const char *s = version_str.c_str();
-  assert(*s == 'v');
-  s++;
-  int major = atoi(s);
-  s = strchr(s, '.');
-  assert(s);
-  s++;
-  int minor = atoi(s);
+inline int parse_index_version(const string& idx_version_in_str) {
+  const char *c_string_ptr = idx_version_in_str.c_str();
+  assert(*c_string_ptr == 'v');
+  c_string_ptr++;
+  auto major = atoi(c_string_ptr);
+  c_string_ptr = strchr(c_string_ptr, '.');
+  assert(c_string_ptr);
+  c_string_ptr++;
+  auto minor = atoi(c_string_ptr);
   return create_version_number(major, minor);
 }
 
 void WebDatasetSourceReader::parse_index_files(std::vector<SampleDescription>& samples_container,
                            std::vector<ComponentDescription>& components_container,
                            const std::string& index_path) {
-  std::ifstream index_file(index_path);
-  std::string global_meta;
-  getline(index_file, global_meta);
-  std::stringstream global_meta_stream(global_meta);
-  std::string index_version_str;
-  if (!(global_meta_stream >> index_version_str))
-    THROW("Unsupported version of the index file ");
+  std::ifstream index_file_stream(index_path);
+  std::string meta_data;
+  getline(index_file_stream, meta_data);
+  std::stringstream meta_data_stream(meta_data);
+  std::string idx_version_in_string;
+  if (!(meta_data_stream >> idx_version_in_string))
+    THROW("Unsupported Index file version ");
 
-  int index_version = parse_index_version(index_version_str);
+  int index_version_in_int = parse_index_version(idx_version_in_string);
 
-  // Getting the number of samples in the index file
-  int64_t sample_desc_num_signed;
-  if(!(global_meta_stream >> sample_desc_num_signed))
+  int64_t sample_desc_number;
+  if(!(meta_data_stream >> sample_desc_number))
     THROW("no sample count found");
-  if(!(sample_desc_num_signed > 0))
+  if(!(sample_desc_number > 0))
     THROW("sample count must be positive");
 
-  const size_t sample_desc_num = sample_desc_num_signed;
+  const size_t sample_desc_num = sample_desc_number;
   samples_container.reserve(samples_container.size() + sample_desc_num);
   for (size_t sample_index = 0; sample_index < sample_desc_num; sample_index++) {
-    parse_sample_description(samples_container, components_container, index_file, index_path, sample_index + 1, index_version);
+    parse_sample_description(samples_container, components_container, index_file_stream, index_path, sample_index + 1, index_version_in_int);
   }
 }
 
-void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& samples_container,
-                                              std::vector<ComponentDescription>& components_container,
+void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& samples_vector,
+                                              std::vector<ComponentDescription>& components_vector,
                                               std::unique_ptr<FileIOStream>& tar_file) {
     TarArchive tar_archive(std::move(tar_file));
 
@@ -220,7 +219,7 @@ void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& sam
         break;
         }
     }
-    size_t last_components_size = components_container.size();
+    size_t last_components_size = components_vector.size();
     for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
         if (tar_archive.get_current_file_type() != TarArchive::ENTRY_FILE) {
         continue;
@@ -233,26 +232,26 @@ void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& sam
     }
 
     if (basename != last_filename) {
-      samples_container.emplace_back();
-      samples_container.back().components = VectorView<ComponentDescription>(components_container, last_components_size, components_container.size() - last_components_size);
+      samples_vector.emplace_back();
+      samples_vector.back().components = VectorView<ComponentDescription>(components_vector, last_components_size, components_vector.size() - last_components_size);
       last_filename = basename;
-      last_components_size = components_container.size();
+      last_components_size = components_vector.size();
     }
 
-    components_container.emplace_back();
-    components_container.back().size = tar_archive.get_current_file_size();
-    components_container.back().offset = tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
-    components_container.back().ext = std::move(ext);
+    components_vector.emplace_back();
+    components_vector.back().size = tar_archive.get_current_file_size();
+    components_vector.back().offset = tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
+    components_vector.back().ext = std::move(ext);
     auto _last_id = basename;
     auto last_slash_idx = _last_id.find_last_of("\\/");
     if (std::string::npos != last_slash_idx) {
         _last_id.erase(0, last_slash_idx + 1);
     }
-    components_container.back().filename = _last_id;
+    components_vector.back().filename = _last_id;
 
   }
-    samples_container.emplace_back();
-    samples_container.back().components = VectorView<ComponentDescription>(components_container, last_components_size, components_container.size() - last_components_size);
+    samples_vector.emplace_back();
+    samples_vector.back().components = VectorView<ComponentDescription>(components_vector, last_components_size, components_vector.size() - last_components_size);
 
     tar_file = tar_archive.release_file_stream();
 
