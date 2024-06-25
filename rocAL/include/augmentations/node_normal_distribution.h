@@ -23,7 +23,7 @@ THE SOFTWARE.
 #pragma once
 #include <random>
 
-#include "pipeline/batch_rng.h"
+#include "pipeline/commons.h"
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
 

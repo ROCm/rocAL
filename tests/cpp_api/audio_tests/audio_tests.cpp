@@ -225,15 +225,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         } break;
         case 3: {
             case_name = "downmix";
-            std::cout << ">>>>>>> Running AUDIO DECODER + DOWNMIX" << std::endl;
+            std::cout << "Running AUDIO DECODER + DOWNMIX" << std::endl;
         } break;
         case 4: {
-            std::cout << ">>>>>>> Running TO DECIBELS" << std::endl;
+            std::cout << "Running TO DECIBELS" << std::endl;
             case_name = "to_decibels";
             rocalToDecibels(handle, decoded_output, true, std::log(1e-20), std::log(10), 1.0f, ROCAL_FP32);
         } break;
         case 5: {
-            std::cout << ">>>>>>> Running RESAMPLE" << std::endl;
+            std::cout << "Running RESAMPLE" << std::endl;
             case_name = "resample";
             float resample = 16000.00;
             std::vector<float> range = {1.15, 1.15};
@@ -242,24 +242,24 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             rocalResample(handle, decoded_output, resampled_rate, true, 1.15 * 255840, 50.0, ROCAL_FP32);
         } break;
         case 6: {
-            std::cout << ">>>>>>> Running TENSOR ADD TENSOR" << std::endl;
+            std::cout << "Running TENSOR ADD TENSOR" << std::endl;
             case_name = "tensor_add_tensor";
             std::vector<float> range = {1.15, 1.15};
             RocalTensor uniform_distribution_sample = rocalUniformDistribution(handle, decoded_output, false, range);
             rocalTensorAddTensor(handle, decoded_output, uniform_distribution_sample, true, ROCAL_FP32);
         } break;
         case 7: {
-            std::cout << ">>>>>>> Running TENSOR MUL SCALAR" << std::endl;
+            std::cout << "Running TENSOR MUL SCALAR" << std::endl;
             case_name = "tensor_mul_scalar";
             rocalTensorMulScalar(handle, decoded_output, true, 1.15, ROCAL_FP32);
         } break;
         case 8: {
-            std::cout << ">>>>>>> Running NON SILENT REGION " << std::endl;
+            std::cout << "Running NON SILENT REGION " << std::endl;
             case_name = "non_silent_region";
             rocalNonSilentRegionDetection(handle, decoded_output, true, -60, 0.0, 8192, 2048);
         } break;
         case 9: {
-            std::cout << ">>>>>>> Running SLICE " << std::endl;
+            std::cout << "Running SLICE " << std::endl;
             case_name = "slice";
             std::vector<float> fill_values = {0.0};
             std::vector<unsigned> axes = {0};

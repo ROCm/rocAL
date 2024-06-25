@@ -157,39 +157,6 @@ def to_decibels_pipeline(path, file_list):
             output_dtype=types.FLOAT)
 
 @pipeline_def(seed=seed)
-def non_silent_region(path, file_list):
-    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
-    decoded_audio = fn.decoders.audio(
-        audio,
-        file_root=path,
-        file_list_path=file_list,
-        downmix=False,
-        shard_id=0,
-        num_shards=1,
-        stick_to_shard=False)
-    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
-    return begin, length
-
-@pipeline_def(seed=seed)
-def non_silent_region_and_slice(path, file_list):
-    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
-    decoded_audio = fn.decoders.audio(
-        audio,
-        file_root=path,
-        file_list_path=file_list,
-        downmix=False,
-        shard_id=0,
-        num_shards=1,
-        stick_to_shard=False)
-    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
-    trim_silence = fn.slice(
-        decoded_audio,
-        anchor=[begin],
-        shape=[length],
-        rocal_tensor_output_type = types.FLOAT)
-    return trim_silence
-
-@pipeline_def(seed=seed)
 def resample_pipeline(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
@@ -237,7 +204,7 @@ def tensor_mul_scalar_pipeline(path, file_list):
     return decoded_audio * 1.15
 
 @pipeline_def(seed=seed)
-def pre_emphasis_filter_pipeline(path, file_list):
+def non_silent_region(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
         audio,
@@ -247,10 +214,11 @@ def pre_emphasis_filter_pipeline(path, file_list):
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
-    return fn.preemphasis_filter(decoded_audio)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    return begin, length
 
 @pipeline_def(seed=seed)
-def spectrogram_pipeline(path, file_list):
+def non_silent_region_and_slice(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
         audio,
@@ -260,13 +228,13 @@ def spectrogram_pipeline(path, file_list):
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
-    spec = fn.spectrogram(
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    trim_silence = fn.slice(
         decoded_audio,
-        nfft=512,
-        window_length=320,
-        window_step=160,
-        output_dtype = types.FLOAT)
-    return spec
+        anchor=[begin],
+        shape=[length],
+        rocal_tensor_output_type = types.FLOAT)
+    return trim_silence
 
 def main():
     args = parse_args()

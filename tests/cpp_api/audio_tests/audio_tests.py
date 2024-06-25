@@ -89,7 +89,6 @@ def main():
         sys.exit()
 
     sys.dont_write_bytecode = True
-
     build_folder_path = os.getcwd()
 
     args = audio_test_suite_parser_and_validator()
