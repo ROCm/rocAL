@@ -354,7 +354,6 @@ class AsciiValueBatch : public MetaDataBatch {
             auto ascii_values_buffer = (uint8_t*)buffer[component];
             for (unsigned i = 0; i < _ascii_values.size(); i++) {
                 AsciiValues sample = _ascii_values[i];
-                auto num_of_components = sample.size();
                 memcpy(ascii_values_buffer, sample[component].data(), sample[component].size() * sizeof(uint8_t));
                 ascii_values_buffer += sample[component].size();
             }
@@ -373,7 +372,7 @@ class AsciiValueBatch : public MetaDataBatch {
         }
         return _buffer_size;
     }
-    std::vector<AsciiValues>& get_ascii_values_batch() { return _ascii_values; }
+    std::vector<AsciiValues>& get_ascii_values_batch() override { return _ascii_values; }
 
     // Not implemented
     std::vector<Labels>& get_labels_batch() override { THROW("Not Implemented") }

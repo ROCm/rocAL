@@ -49,10 +49,8 @@ struct MetaDataConfig {
    private:
     MetaDataType _type;
     MetaDataReaderType _reader_type;
-    std::string _path, _index_path;
-    unsigned _missing_component_behaviour;
+    std::string _path;
     std::map<std::string, std::string> _feature_key_map;
-    std::vector<std::set<std::string>>_exts;
     std::string _file_prefix;  // if we want to read only filenames with prefix (needed for cifar10 meta data)
     unsigned _sequence_length;
     unsigned _frame_step;
@@ -61,6 +59,9 @@ struct MetaDataConfig {
     unsigned _out_img_height;
     bool _avoid_class_remapping;
     bool _aspect_ratio_grouping;
+    std::string _index_path;
+    unsigned _missing_component_behaviour;
+    std::vector<std::set<std::string>>_exts;
 
    public:
     MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1, const std::string index_path = std::string(), const unsigned& missing_component_behaviour = 0, const std::vector<std::set<std::string>> &exts  = std::vector<std::set<std::string>>())

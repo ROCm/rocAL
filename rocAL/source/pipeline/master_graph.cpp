@@ -1169,14 +1169,7 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(
     if (generate_index)
         std::cout << "Index file is not provided, it may take some time to infer it from the tar file";
 
-    size_t total_extensions = 0;
-
-    // Iterate over each set and sum up the sizes
-    for (const auto &ext_set : extensions) {
-        for (const auto &ext : ext_set)
-            total_extensions += 1;
-    }
-    _ascii_tensor_list.resize(total_extensions - 1);
+    _ascii_tensor_list.resize(extensions[0].size() - 1);
     MetaDataConfig config(MetaDataType::AsciiValue, reader_type, source_path,
                           std::map<std::string, std::string>(), std::string(),
                           0, 0, 0, index_path, missing_component_behaviour,

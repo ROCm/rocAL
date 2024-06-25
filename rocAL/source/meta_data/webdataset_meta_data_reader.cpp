@@ -226,7 +226,6 @@ void WebDataSetMetaDataReader::parse_tar_files(
     std::vector<SampleDescription> &samples_container,
     std::vector<ComponentDescription> &components_container,
     std::unique_ptr<FileIOStream> &tar_file) {
-    int64_t initial_file_pos = tar_file->get_current_read_position();
     TarArchive tar_archive(std::move(tar_file));
 
     std::string last_filename;

@@ -110,7 +110,6 @@ struct ReaderConfig {
     StorageType _type = StorageType::FILE_SYSTEM;
     std::string _path = "";
     std::string _json_path = "";
-    std::string _index_path = "";
     std::map<std::string, std::string> _feature_key_map;
     size_t _shard_count = 1;
     size_t _shard_id = 0;
@@ -128,6 +127,8 @@ struct ReaderConfig {
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
+    std::string _index_path = "";
+
 };
 
 // MXNet image recordio struct - used to read the contents from the MXNet recordIO files.
