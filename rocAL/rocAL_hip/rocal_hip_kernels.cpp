@@ -610,6 +610,87 @@ __global__ void resize_generic_pkd_hip_tensor(T *srcPtr,
     rpp_hip_pixel_check_and_store(outPixel_f3.z, &dstPtr[dstIdx + 2]);
 }
 
+template <typename T>
+__global__ void resize_generic_pln1_hip_tensor(T *srcPtr,
+                                           uint3 srcStridesNCH,
+                                           T *dstPtr,
+                                           uint3 dstStridesNCH,
+                                           size_t *srcWidth,
+                                           size_t *srcHeight,
+                                           size_t *dstWidth,
+                                           size_t *dstHeight,
+                                           size_t *srcHeightStride,
+                                           size_t *srcImgOffset)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint2 dstDimsWH;
+    dstDimsWH.x = dstWidth[id_z];
+    dstDimsWH.y = dstHeight[id_z];
+
+    if ((id_y > dstDimsWH.y) || (id_x > dstDimsWH.x))
+    {
+        return;
+    }
+
+    int4 srcRoi_i4;
+    srcRoi_i4.x = 0;
+    srcRoi_i4.y = 0;
+    srcRoi_i4.z = srcWidth[id_z] - 1;
+    srcRoi_i4.w = srcHeight[id_z] - 1;
+
+    uint2 srcDimsWH;
+    srcDimsWH.x = srcWidth[id_z];
+    srcDimsWH.y = srcHeight[id_z];
+
+    int widthLimit = srcRoi_i4.z;
+    int heightLimit = srcRoi_i4.w;
+    float wRatio = (float)srcDimsWH.x / (float)dstDimsWH.x;
+    float hRatio = (float)srcDimsWH.y / (float)dstDimsWH.y;
+    float hScale = 1.0f, wScale = 1.0f, hRadius = 1.0f, wRadius = 1.0f;
+
+    rpp_hip_compute_interpolation_scale_and_radius(&wScale, &wRadius, wRatio);
+    rpp_hip_compute_interpolation_scale_and_radius(&hScale, &hRadius, hRatio);
+    float wOffset = (wRatio - 1) * 0.5f - wRadius;
+    float hOffset = (hRatio - 1) * 0.5f - hRadius;
+    int wKernelSize = ceilf(wRadius * 2);
+    int hKernelSize = ceilf(hRadius * 2);
+
+    float rowWeight, colWeight, rowCoeff, colCoeff;
+    int srcLocationRowFloor, srcLocationColumnFloor;
+    resize_roi_generic_srcloc_and_weight_hip_compute(srcRoi_i4.x, id_x, wRatio, widthLimit, &srcLocationColumnFloor, &colWeight, wOffset, 1);
+    resize_roi_generic_srcloc_and_weight_hip_compute(srcRoi_i4.y, id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeight, hOffset, 1);
+
+    T *srcPtrTemp = srcPtr + srcImgOffset[id_z];
+    float outPixel = 0.0f;
+    float rowCoeffSum = 0.0f, colCoeffSum = 0.0f, invCoeffSum = 0.0f;
+    for(int j = 0; j < hKernelSize; j++)
+    {
+        int rowIndex = fminf(fmaxf((int)(srcLocationRowFloor + j), 0), heightLimit);
+        T *srcRowPtrsForInterp = srcPtrTemp + rowIndex * srcHeightStride[id_z];
+        rpp_hip_compute_triangular_coefficient((rowWeight - hRadius + j) * hScale , &rowCoeff);
+        rowCoeffSum += rowCoeff;
+
+        colCoeffSum = 0;
+        for(int k = 0; k < wKernelSize; k++)
+        {
+            int colIndex = fminf(fmaxf((int)(srcLocationColumnFloor + k), 0), widthLimit);
+            rpp_hip_compute_triangular_coefficient((colWeight - wRadius + k) * wScale , &colCoeff);
+            colCoeffSum += colCoeff;
+            float coeff = colCoeff * rowCoeff;
+            outPixel += (float) srcRowPtrsForInterp[colIndex] * coeff;
+        }
+    }
+    rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
+    colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
+    invCoeffSum = 1 / (rowCoeffSum * colCoeffSum);
+    outPixel *= invCoeffSum;
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    rpp_hip_pixel_check_and_store(outPixel, &dstPtr[dstIdx]);
+}
+
 // **********************************************************************
 
 void HipExecResizeTensor(
@@ -655,19 +736,38 @@ void HipExecResizeTensor(
     //                     srcImgOffset);
 
     globalThreads_x = maxDstWidth;
-    hipLaunchKernelGGL(resize_generic_pkd_hip_tensor,
-                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                        0,
-                        stream,
-                        static_cast<unsigned char *>(srcPtr),
-                        make_uint2(maxSrcWidth * maxSrcHeight * channels, maxSrcWidth * channels),
-                        static_cast<unsigned char *>(dstPtr),
-                        make_uint2(maxDstWidth * maxDstHeight * channels, maxDstWidth * channels),
-                        srcWidth,
-                        srcHeight,
-                        dstWidth,
-                        dstHeight,
-                        srcHeightStride,
-                        srcImgOffset);
+    if (channels == 3) {    // For RGB images
+        hipLaunchKernelGGL(resize_generic_pkd_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                            0,
+                            stream,
+                            static_cast<unsigned char *>(srcPtr),
+                            make_uint2(maxSrcWidth * maxSrcHeight * channels, maxSrcWidth * channels),
+                            static_cast<unsigned char *>(dstPtr),
+                            make_uint2(maxDstWidth * maxDstHeight * channels, maxDstWidth * channels),
+                            srcWidth,
+                            srcHeight,
+                            dstWidth,
+                            dstHeight,
+                            srcHeightStride,
+                            srcImgOffset);     
+    } else if (channels == 1) {
+        hipLaunchKernelGGL(resize_generic_pln1_hip_tensor,
+                    dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                    0,
+                    stream,
+                    static_cast<unsigned char *>(srcPtr),
+                    make_uint3(maxSrcWidth * maxSrcHeight * channels, maxSrcWidth * maxSrcHeight, maxSrcWidth),
+                    static_cast<unsigned char *>(dstPtr),
+                    make_uint3(maxDstWidth * maxDstHeight * channels, maxSrcWidth * maxSrcHeight, maxDstWidth),
+                    srcWidth,
+                    srcHeight,
+                    dstWidth,
+                    dstHeight,
+                    srcHeightStride,
+                    srcImgOffset);  
+    }
+
 }
