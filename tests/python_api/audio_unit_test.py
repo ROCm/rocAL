@@ -38,6 +38,11 @@ test_case_augmentation_map = {
     0: "audio_decoder",
     1: "preemphasis_filter",
     2: "spectrogram",
+    3: "downmix",
+    4: "to_decibels",
+    5: "resample",
+    6: "tensor_add_tensor",
+    7: "tensor_mul_scalar"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -75,13 +80,13 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
         test_results[case_name] = "FAILED"
 
 @pipeline_def(seed=seed)
-def audio_decoder_pipeline(path, file_list):
+def audio_decoder_pipeline(path, file_list, downmix=False):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     return fn.decoders.audio(
         audio,
         file_root=path,
         file_list_path=file_list,
-        downmix=False,
+        downmix=downmix,
         shard_id=0,
         num_shards=1,
         stick_to_shard=False)
@@ -117,6 +122,71 @@ def spectrogram_pipeline(path, file_list):
         window_step=160,
         output_dtype = types.FLOAT)
     return spec
+
+@pipeline_def(seed=seed)
+def to_decibels_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return fn.to_decibels(
+            decoded_audio,
+            multiplier=np.log(10),
+            reference=1.0,
+            cutoff_db=np.log(1e-20),
+            output_dtype=types.FLOAT)
+
+@pipeline_def(seed=seed)
+def resample_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=True,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    input_sample_rate = 16000.00
+    uniform_distribution_resample = fn.random.uniform(decoded_audio, range=[1.15, 1.15])
+    resampled_rate = uniform_distribution_resample * input_sample_rate
+    return fn.resample(
+        decoded_audio,
+        resample_rate=resampled_rate,
+        resample_hint=1.15 * 255840,
+        output_datatype=types.FLOAT)
+
+@pipeline_def(seed=seed)
+def tensor_add_tensor_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    uniform_distribution_sample = fn.random.uniform(decoded_audio, range=[1.15, 1.15])
+    return decoded_audio + uniform_distribution_sample
+
+@pipeline_def(seed=seed)
+def tensor_mul_scalar_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=True,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    return decoded_audio * 1.15
 
 def main():
     args = parse_args()
@@ -158,6 +228,7 @@ def main():
     if not audio_path and not file_list:
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
+        downmix_audio_path = f'{rocal_data_path}/rocal_data/multi_channel_wav/'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
@@ -175,6 +246,17 @@ def main():
             audio_pipeline = pre_emphasis_filter_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "spectrogram":
             audio_pipeline = spectrogram_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "downmix":
+            audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu,
+                                                    path=downmix_audio_path if qa_mode else audio_path, file_list="" if qa_mode else file_list, downmix=True)
+        if case_name == "to_decibels":
+            audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "resample":
+            audio_pipeline = resample_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "tensor_add_tensor":
+            audio_pipeline = tensor_add_tensor_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "tensor_mul_scalar":
+            audio_pipeline = tensor_mul_scalar_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         output_tensor_list = audio_pipeline.get_output_tensors()
@@ -185,9 +267,9 @@ def main():
         for e in range(int(args.num_epochs)):
             print("Epoch :: ", e)
             torch.set_printoptions(threshold=5000, profile="full", edgeitems=100)
-            for i, it in enumerate(audio_loader):
-                for x in range(len(it[0])):
-                    for audio_tensor, label, roi in zip(it[0][x], it[1], it[2]):
+            for i, output_list in enumerate(audio_loader):
+                for x in range(len(output_list[0])):
+                    for audio_tensor, label, roi in zip(output_list[0][x], output_list[1], output_list[2]):
                         if args.print_tensor:
                             print("label", label)
                             print("Audio", audio_tensor)
