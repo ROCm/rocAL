@@ -246,15 +246,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 )code")
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
-                void* ptr;
-                std::cout <<" i am here at object\n";
-                if (PyCapsule_CheckExact(p.ptr())) {
-                    ptr = PyCapsule_GetPointer(p.ptr(), PyCapsule_GetName(p.ptr()));
-                } else {
-                    ptr = ctypes_void_ptr(p);
-                }
-                //auto ptr = ctypes_void_ptr(p);
-                std::cout <<" got capsule ptr - " << ptr << " " << external_mem_type;
+                auto ptr = ctypes_void_ptr(p);
                 output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
             },
             R"code(
@@ -262,7 +254,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 )code")
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::array array) {
-                std::cout <<" i am here at py::array\n";
                 auto buf = array.request();
                 output_tensor.copy_data(static_cast<void *>(buf.ptr), RocalOutputMemType::ROCAL_MEMCPY_HOST);
             },

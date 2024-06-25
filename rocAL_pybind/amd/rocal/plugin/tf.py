@@ -104,7 +104,7 @@ class ROCALGenericIteratorDetection(object):
         self.device = device
         if self.device is "gpu" or "cuda":
             if not CUPY_FOUND and not DLPACK_FOUND:
-                print('info: Import CuPy failed. Falling back to CPU!')
+                print('info: Import CuPy and DLPack failed. Falling back to CPU!')
                 self.device = "cpu"
         self.device_id = device_id
         self.reverse_channels = reverse_channels
@@ -137,10 +137,8 @@ class ROCALGenericIteratorDetection(object):
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
                     if DLPACK_FOUND:
-                        print("self.dimensions -- ", self.dimensions)
                         self.output = np.empty(self.dimensions, dtype=self.dtype)
-                        self.output = self.output.__dlpack__()
-                        self.output_tensor_list[i].copy_data(self.output, self.loader._output_memory_type)
+                        self.output_tensor_list[i].copy_data(np.from_dlpack(self.output))
                     elif CUPY_FOUND:
                         self.output = cp.empty(self.dimensions, dtype=self.dtype)
                         self.output_tensor_list[i].copy_data(self.output.data.ptr)
@@ -150,8 +148,11 @@ class ROCALGenericIteratorDetection(object):
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
-                    self.output_tensor_list[i].copy_data(
-                        self.output_list[i].data.ptr)
+                    if DLPACK_FOUND:
+                        self.output_tensor_list[i].copy_data(np.from_dlpack(self.output_list[i]))
+                    elif CUPY_FOUND:
+                        self.output_tensor_list[i].copy_data(
+                            self.output_list[i].data.ptr)
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
