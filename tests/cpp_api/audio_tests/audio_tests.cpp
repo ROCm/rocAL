@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "rocal_api.h"
 
@@ -188,6 +189,27 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << "Running TO DECIBELS" << std::endl;
             case_name = "to_decibels";
             rocalToDecibels(handle, decoded_output, true, std::log(1e-20), std::log(10), 1.0f, ROCAL_FP32);
+        } break;
+        case 5: {
+            std::cout << "Running RESAMPLE" << std::endl;
+            case_name = "resample";
+            float resample = 16000.00;
+            std::vector<float> range = {1.15, 1.15};
+            RocalTensor uniform_distribution_resample = rocalUniformDistribution(handle, decoded_output, false, range);
+            RocalTensor resampled_rate = rocalTensorMulScalar(handle, uniform_distribution_resample, false, resample, ROCAL_FP32);
+            rocalResample(handle, decoded_output, resampled_rate, true, 1.15 * 255840, 50.0, ROCAL_FP32);
+        } break;
+        case 6: {
+            std::cout << "Running TENSOR ADD TENSOR" << std::endl;
+            case_name = "tensor_add_tensor";
+            std::vector<float> range = {1.15, 1.15};
+            RocalTensor uniform_distribution_sample = rocalUniformDistribution(handle, decoded_output, false, range);
+            rocalTensorAddTensor(handle, decoded_output, uniform_distribution_sample, true, ROCAL_FP32);
+        } break;
+        case 7: {
+            std::cout << "Running TENSOR MUL SCALAR" << std::endl;
+            case_name = "tensor_mul_scalar";
+            rocalTensorMulScalar(handle, decoded_output, true, 1.15, ROCAL_FP32);
         } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";

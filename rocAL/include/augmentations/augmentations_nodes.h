@@ -58,3 +58,8 @@ THE SOFTWARE.
 #include "augmentations/audio_augmentations/node_preemphasis_filter.h"
 #include "augmentations/audio_augmentations/node_spectrogram.h"
 #include "augmentations/audio_augmentations/node_to_decibels.h"
+#include "augmentations/audio_augmentations/node_resample.h"
+#include "augmentations/node_uniform_distribution.h"
+#include "augmentations/node_normal_distribution.h"
+#include "augmentations/arithmetic_augmentations/node_tensor_mul_scalar.h"
+#include "augmentations/arithmetic_augmentations/node_tensor_add_tensor.h"

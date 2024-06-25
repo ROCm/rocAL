@@ -169,6 +169,29 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("transfer_time", &TimingInfo::transfer_time);
     py::class_<rocalTensor>(m, "rocalTensor")
         .def(
+            "__add__",
+            [](rocalTensor *output_tensor, rocalTensor *output_tensor1) {
+                py::object fn_module = py::module::import("amd.rocal.fn");
+                auto fn_call = fn_module.attr("tensor_add_tensor_float")(output_tensor, output_tensor1).cast<RocalTensor>();
+                return fn_call;
+            },
+            R"code(
+                Adds a node for arithmetic operation
+                )code",
+            py::return_value_policy::reference)
+        .def(
+            "__mul__",
+            [](rocalTensor *output_tensor, float scalar) {
+                py::object fn_module = py::module::import("amd.rocal.fn");
+                auto fn_call = fn_module.attr("tensor_mul_scalar_float")(output_tensor, "scalar"_a = scalar).cast<RocalTensor>();
+                return fn_call;
+            },
+            R"code(
+                Returns a tensor
+                Adds a node for arithmetic operation
+                )code",
+            py::return_value_policy::reference)
+        .def(
             "max_shape",
             [](rocalTensor &output_tensor) {
                 return output_tensor.shape();
@@ -732,6 +755,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("spectrogram", &rocalSpectrogram,
           py::return_value_policy::reference);
     m.def("toDecibels", &rocalToDecibels,
+          py::return_value_policy::reference);
+    m.def("resample", &rocalResample,
+          py::return_value_policy::reference);
+    m.def("normalDistribution", &rocalNormalDistribution,
+          py::return_value_policy::reference);
+    m.def("uniformDistribution", &rocalUniformDistribution,
+          py::return_value_policy::reference);
+    m.def("tensorMulScalar", &rocalTensorMulScalar,
+          py::return_value_policy::reference);
+    m.def("tensorAddTensor", &rocalTensorAddTensor,
           py::return_value_policy::reference);
 }
 }  // namespace rocal
