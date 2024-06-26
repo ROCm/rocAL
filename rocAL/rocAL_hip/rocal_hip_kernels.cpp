@@ -554,7 +554,7 @@ __global__ void resize_generic_pkd_hip_tensor(T *srcPtr,
     dstDimsWH.x = dstWidth[id_z];
     dstDimsWH.y = dstHeight[id_z];
 
-    if ((id_y > dstDimsWH.y) || (id_x > dstDimsWH.x))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -630,7 +630,7 @@ __global__ void resize_generic_pln1_hip_tensor(T *srcPtr,
     dstDimsWH.x = dstWidth[id_z];
     dstDimsWH.y = dstHeight[id_z];
 
-    if ((id_y > dstDimsWH.y) || (id_x > dstDimsWH.x))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }

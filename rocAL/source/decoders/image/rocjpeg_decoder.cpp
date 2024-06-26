@@ -225,7 +225,7 @@ Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsign
         CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[i], &num_components, &subsampling, widths, heights));
         width[i] = widths[0];
         height[i] = heights[0];
-        max_buffer_size += (widths[0] * heights[0]);
+        max_buffer_size += (((widths[0] + 8) &~ 7) * ((heights[0] + 8) &~ 7));
     }
     _rocjpeg_image_buff_size = max_buffer_size;
     return Status::OK;
@@ -263,12 +263,12 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
     // Allocate memory for the itermediate decoded output
     _rocjpeg_image_buff_size *= num_channels;
     if (!_rocjpeg_image_buff) {
-        CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, (_rocjpeg_image_buff_size + 256) & ~255));
-        _prev_image_buff_size = (_rocjpeg_image_buff_size + 256) & ~255;
+        CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
+        _prev_image_buff_size = _rocjpeg_image_buff_size;
     } else if (_rocjpeg_image_buff_size > _prev_image_buff_size) {
         CHECK_HIP(hipFree((void *)_rocjpeg_image_buff));
-        CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, (_rocjpeg_image_buff_size + 256) & ~255));
-        _prev_image_buff_size = (_rocjpeg_image_buff_size + 256) & ~255;
+        CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
+        _prev_image_buff_size = _rocjpeg_image_buff_size;
     }
 
     auto img_buff = _rocjpeg_image_buff;
@@ -287,8 +287,9 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
             std::cerr << "The chroma sub-sampling is not supported by VCN Hardware" << std::endl;
             return Status::UNSUPPORTED;
         }
-
-        if (GetChannelPitchAndSizes(decode_params.output_format, subsampling, widths, heights, channels_size, output_images[i], channel_sizes)) {
+        uint32_t max_widths[4] = {(widths[0] + 8) &~ 7, 0, 0, 0};
+        uint32_t max_heights[4] = {(heights[0] + 8) &~ 7, 0, 0, 0};
+        if (GetChannelPitchAndSizes(decode_params.output_format, subsampling, max_widths, max_heights, channels_size, output_images[i], channel_sizes)) {
             std::cerr << "ERROR: Failed to get the channel pitch and sizes" << std::endl;
             return Status::HEADER_DECODE_FAILED;
         }
@@ -296,9 +297,9 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
         std::cout << "Decoding started, please wait! ... "<<  num_channels<< std::endl;
         output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
         src_img_offset[i] = src_offset;
-        src_offset += (widths[0] * heights[0] * num_channels);
-        img_buff += (widths[0] * heights[0] * num_channels);
-        src_hstride[i] = widths[0] * num_channels;
+        src_offset += (max_widths[0] * max_heights[0] * num_channels);
+        img_buff += (max_widths[0] * max_heights[0] * num_channels);
+        src_hstride[i] = max_widths[0] * num_channels;
 
         uint scaledw = original_image_width[i], scaledh = original_image_height[i];
         if (original_image_width[i] > max_decoded_width || original_image_height[i] > max_decoded_height) {
@@ -312,7 +313,6 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
         actual_decoded_width[i] = scaledw;
         actual_decoded_height[i] = scaledh;
     }
-
     // Copy width and height args to HIP memory
     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, original_image_width.data(), _batch_size * sizeof(size_t)));
     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, original_image_height.data(), _batch_size * sizeof(size_t)));
