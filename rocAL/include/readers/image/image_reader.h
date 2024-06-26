@@ -163,6 +163,14 @@ class VectorView {
     inline T* end() {
         return begin() + num;
     }
+
+    // Operator[] overload to access elements within the view
+    T& operator[](size_t index) {
+        if (index >= num) {
+            throw std::out_of_range("Index out of range in VectorView");
+        }
+        return (*_data)[start + index];
+    }
 };
 
 struct ComponentDescription {

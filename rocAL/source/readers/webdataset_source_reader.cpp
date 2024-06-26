@@ -287,9 +287,9 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
                 std::string entry_name(_entity->d_name);
                 if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
                     continue;
-                index_name_list.push_back(entry_name);
+                _index_name_list.push_back(entry_name);
             }
-            std::sort(index_name_list.begin(), index_name_list.end());
+            std::sort(_index_name_list.begin(), _index_name_list.end());
             // tar file path
             if ((_sub_dir = opendir(_path.c_str())) == nullptr)
                 THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _path);
@@ -318,7 +318,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
             if (_index_paths.size() == 0)
                 parse_tar_files(unfiltered_samples, unfiltered_components, _wds_shards[wds_shard_index]);
             else
-                parse_index_files(unfiltered_samples, unfiltered_components, _folder_path + index_name_list[wds_shard_index]);
+                parse_index_files(unfiltered_samples, unfiltered_components, _folder_path + _index_name_list[wds_shard_index]);
 
             // After parsing add the contents to the map
             for (auto& sample : unfiltered_samples) {

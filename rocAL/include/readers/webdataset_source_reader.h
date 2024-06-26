@@ -91,7 +91,7 @@ class WebDatasetSourceReader : public Reader {
     std::string _last_id;
     std::string _last_file_name;
     unsigned int _last_file_size;
-    std::vector<std::string> index_name_list;
+    std::vector<std::string> _index_name_list;
     size_t _shard_id = 0;
     size_t _shard_count = 1; // equivalent of batch size
     int _file_name_count = 0;

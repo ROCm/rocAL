@@ -50,21 +50,21 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     WebDataSetMetaDataReader();
 
   private:
-    void read_files(const std::string &_path);
     bool exists(const std::string &image_name) override;
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
     std::string _path;
     std::string _paths, _index_paths;
-    std::vector<std::string> index_name_list;
+    std::vector<std::string> _index_name_list;
     unsigned _missing_component_behaviour;
     pMetaDataBatch _output;
     DIR *_src_dir, *_sub_dir;
     struct dirent *_entity;
     int _file_name_count = 0;
     std::vector<std::string> _file_names;
-    std::vector<std::set<std::string>> _exts;
+    std::vector<std::set<std::string>> _exts, _meta_data_exts;
+    std::unordered_map<std::string, uint> _ext_map;
     std::vector<std::string> _subfolder_file_names;
     void parse_tar_files(std::vector<SampleDescription> &samples_container,
                     std::vector<ComponentDescription> &components_container,

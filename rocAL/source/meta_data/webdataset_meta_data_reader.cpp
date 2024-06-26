@@ -54,11 +54,17 @@ WebDataSetMetaDataReader::WebDataSetMetaDataReader() {
 
 void WebDataSetMetaDataReader::init(const MetaDataConfig &cfg,
                                     pMetaDataBatch meta_data_batch) {
-    // _path = cfg.path();
     _paths = cfg.path();
     _wds_shards.reserve(_paths.size());
     _index_paths = cfg.index_path();
     _exts = cfg.exts();
+    std::string elementToRemove = "jpg";
+    for (auto& ext_set : _exts) {
+        auto it = ext_set.find(elementToRemove);
+        if (it != ext_set.end()) {
+            ext_set.erase(it);
+        }
+    }
     _missing_component_behaviour = cfg.get_missing_component_behaviour();
     _output = meta_data_batch;
 }
@@ -286,16 +292,35 @@ void WebDataSetMetaDataReader::read_sample_and_add_to_map(
         current_tar_file_stream->set_read_position(component.offset);
         std::vector<uint8_t> cls_data(component.size);
         current_tar_file_stream->read_into_buffer(cls_data.data(), component.size);
-        AsciiComponent ascii_component;
-        for (size_t i = 0; i < cls_data.size(); ++i)
+        AsciiComponent ascii_component = {};
+        for (size_t i = 0; i < cls_data.size(); ++i) {
             ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
-        ascii_values.push_back(ascii_component);
-        add(component.filename, ascii_values);
+            // std::cerr << "\t " << static_cast<uint8_t>(cls_data[i]);
+        }
+        // std::cerr << "\n _ext_map[component.ext]:: " << _ext_map[component.ext] << "\n component.ext: " << component.ext << "\n ascii_values.size" << ascii_values.size() << "\n component.filename :: " << component.filename;; 
+        ascii_values.at(_ext_map[component.ext]) = ascii_component;
+        // std::cerr << ;
+        std::cerr << "\n ascii_component.size():: " << ascii_component.size() << "\n ascii_values.at(_ext_map[component.ext]).size() :: " << ascii_values.at(_ext_map[component.ext]).size();
     }
+    // print_map_contents();
 }
 
 void WebDataSetMetaDataReader::read_all(const std::string &_path) {
 
+    // preparing the map from extensions to outputs
+    // std::unordered_map<std::string, std::vector<size_t>> _ext_map;
+    uint ext_idx = 0;
+    for (size_t output_index = 0; output_index < _exts.size(); output_index++) {
+        for (auto& ext : _exts[output_index]) {
+            std::cerr << "\n ext:: " << ext;
+            _ext_map[ext] = ext_idx;
+            ext_idx++;
+            std::cerr << "\n output_index:: " << output_index;
+        }
+    }
+    std::cerr << "\n _ext_map size" << _ext_map.size() << "\n _ext_map[ext]" << _ext_map["json"]  ;
+
+    // std::exit(0);
     std::string _folder_path;
     std::string _full_path;
     std::vector<std::string> entry_name_list;
@@ -326,9 +351,9 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
             std::string entry_name(_entity->d_name);
             if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
                 continue;
-            index_name_list.push_back(entry_name);
+            _index_name_list.push_back(entry_name);
         }
-        std::sort(index_name_list.begin(), index_name_list.end());
+        std::sort(_index_name_list.begin(), _index_name_list.end());
         if ((_sub_dir = opendir(_path.c_str())) == nullptr)
             THROW("WebDatasetSourceReader :: ERROR: Failed opening the "
                   "directory at " +
@@ -359,49 +384,75 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                             _wds_shards[wds_shard_index]);
         else
             parse_index_files(unfiltered_samples, unfiltered_components,
-                              _folder_path + index_name_list[wds_shard_index]);
+                              _folder_path + _index_name_list[wds_shard_index]);
 
         // After parsing add the contents to the map
         for (auto &sample : unfiltered_samples) {
-            AsciiValues ascii_values;
-            for (auto &component : sample.components)
-                read_sample_and_add_to_map(
-                    component, _wds_shards[wds_shard_index], ascii_values);
-            ascii_values.clear();
+
+            if (_missing_component_behaviour == 1) { // empty_outputs
+                AsciiValues ascii_values;
+                ascii_values.resize(_ext_map.size());
+                std::string  last_file_name;
+                for (auto &component : sample.components) {
+                    if (component.ext != "jpg") { // Add more components as we encounter
+                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                        std::vector<uint8_t> cls_data(component.size);
+                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        AsciiComponent ascii_component = {};
+                        for (size_t i = 0; i < cls_data.size(); ++i)
+                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                        ascii_values.at(_ext_map[component.ext]) = ascii_component;
+                        last_file_name = component.filename;
+                    }
+                }
+                    // read_sample_and_add_to_map(component, _wds_shards[wds_shard_index], ascii_values);
+                add(last_file_name, ascii_values);
+                ascii_values.clear();
+            } else if (_missing_component_behaviour == 0) { // skipping
+                AsciiValues ascii_values;
+                std::string  last_file_name;
+                for (auto &component : sample.components) {
+                    if (component.ext != "jpg") { // Add more components as we encounter
+                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                        std::vector<uint8_t> cls_data(component.size);
+                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        AsciiComponent ascii_component = {};
+                        for (size_t i = 0; i < cls_data.size(); ++i)
+                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                        ascii_values.push_back(ascii_component);
+                        last_file_name = component.filename;
+                    }
+                }
+                    // read_sample_and_add_to_map(component, _wds_shards[wds_shard_index], ascii_values);
+                add(last_file_name, ascii_values);
+                ascii_values.clear();
+            }  else if (_missing_component_behaviour == 2) { // error
+                AsciiValues ascii_values;
+                ascii_values.resize(_ext_map.size());
+                std::string  last_file_name;
+                for (auto &component : sample.components) {
+                    if (component.ext != "jpg") { // Add more components as we encounter
+                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                        std::vector<uint8_t> cls_data(component.size);
+                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        AsciiComponent ascii_component = {};
+                        for (size_t i = 0; i < cls_data.size(); ++i)
+                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                        ascii_values.at(_ext_map[component.ext]) = ascii_component;
+                        last_file_name = component.filename;
+                    }
+                }
+                    // read_sample_and_add_to_map(component, _wds_shards[wds_shard_index], ascii_values);
+                add(last_file_name, ascii_values);
+                for (auto& ascii_component: ascii_values) {
+                        if(ascii_component.size() == 0) {
+                            THROW("Missing components in the sample");
+                        }
+                }
+                ascii_values.clear();
+            }
         }
     }
 }
 
-void WebDataSetMetaDataReader::read_files(const std::string &_path) {
-    if ((_src_dir = opendir(_path.c_str())) == nullptr)
-        THROW("ERROR: Failed opening the directory at " + _path);
 
-    while ((_entity = readdir(_src_dir)) != nullptr) {
-        if (_entity->d_type != DT_REG)
-            continue;
-
-        std::string file_path = _path;
-        file_path.append("/");
-        std::string filename(_entity->d_name);
-        auto file_extension_idx = filename.find_last_of(".");
-        if (file_extension_idx != std::string::npos) {
-            std::string file_extension =
-                filename.substr(file_extension_idx + 1);
-            std::transform(file_extension.begin(), file_extension.end(),
-                           file_extension.begin(),
-                           [](unsigned char c) { return std::tolower(c); });
-            if ((file_extension != "jpg") && (file_extension != "jpeg") &&
-                (file_extension != "png") && (file_extension != "ppm") &&
-                (file_extension != "bmp") && (file_extension != "pgm") &&
-                (file_extension != "tif") && (file_extension != "tiff") &&
-                (file_extension != "webp") && (file_extension != "wav"))
-                continue;
-        }
-        file_path.append(_entity->d_name);
-        _file_names.push_back(file_path);
-        _subfolder_file_names.push_back(_entity->d_name);
-    }
-    if (_file_names.empty())
-        WRN("LabelReader: Could not find any file in " + _path)
-    closedir(_src_dir);
-}

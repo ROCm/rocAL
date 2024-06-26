@@ -57,10 +57,10 @@ def main():
     webdataset_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu, tensor_dtype = types.UINT8, )
     with webdataset_pipeline:
         img_raw = fn.readers.webdataset(
-        path=wds_data, ext=[{'jpg', 'json', 'txt'}], 
-        index_paths = index_file)
+        path=wds_data, ext=[{'jpg', 'cls'}], 
+        index_paths = "")
         img = fn.decoders.webdataset(img_raw, file_root=wds_data, 
-                                     index_path = index_file, 
+                                     index_path = "", 
                                      color_format=color_format,max_decoded_width=500, max_decoded_height=500)
         tensor_dtype = types.UINT8
 
