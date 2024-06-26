@@ -59,7 +59,7 @@ void WebDataSetMetaDataReader::init(const MetaDataConfig &cfg,
     _index_paths = cfg.index_path();
     _exts = cfg.exts();
     std::string elementToRemove = "jpg";
-    for (auto& ext_set : _exts) {
+    for (auto &ext_set : _exts) {
         auto it = ext_set.find(elementToRemove);
         if (it != ext_set.end()) {
             ext_set.erase(it);
@@ -223,8 +223,7 @@ void WebDataSetMetaDataReader::parse_index_files(
     samples_container.reserve(samples_container.size() + sample_desc_num);
     for (size_t sample_index = 0; sample_index < sample_desc_num;
          sample_index++) {
-        parse_sample_description(samples_container, components_container, index_file,
-                        index_path, sample_index + 1, index_version);
+        parse_sample_description(samples_container, components_container, index_file, index_path, sample_index + 1, index_version);
     }
 }
 
@@ -235,7 +234,8 @@ void WebDataSetMetaDataReader::parse_tar_files(
     TarArchive tar_archive(std::move(tar_file));
 
     std::string last_filename;
-    for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
+    for (; !tar_archive.at_end_of_archive();
+         tar_archive.advance_to_next_file_in_tar()) {
         if (tar_archive.get_current_file_type() == TarArchive::ENTRY_FILE) {
             std::tie(last_filename, std::ignore) =
                 split_name(tar_archive.get_current_file_name());
@@ -243,7 +243,8 @@ void WebDataSetMetaDataReader::parse_tar_files(
         }
     }
     size_t last_components_size = components_container.size();
-    for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
+    for (; !tar_archive.at_end_of_archive();
+         tar_archive.advance_to_next_file_in_tar()) {
         if (tar_archive.get_current_file_type() != TarArchive::ENTRY_FILE) {
             continue;
         }
@@ -266,8 +267,7 @@ void WebDataSetMetaDataReader::parse_tar_files(
 
         components_container.emplace_back();
         components_container.back().size = tar_archive.get_current_file_size();
-        components_container.back().offset =
-            tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
+        components_container.back().offset = tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
         components_container.back().ext = std::move(ext);
         auto _last_id = basename;
         auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -284,43 +284,16 @@ void WebDataSetMetaDataReader::parse_tar_files(
     tar_file = tar_archive.release_file_stream();
 }
 
-void WebDataSetMetaDataReader::read_sample_and_add_to_map(
-    ComponentDescription component,
-    std::unique_ptr<FileIOStream> &current_tar_file_stream,
-    AsciiValues ascii_values) {
-    if (component.ext != "jpg") { // Add more components as we encounter
-        current_tar_file_stream->set_read_position(component.offset);
-        std::vector<uint8_t> cls_data(component.size);
-        current_tar_file_stream->read_into_buffer(cls_data.data(), component.size);
-        AsciiComponent ascii_component = {};
-        for (size_t i = 0; i < cls_data.size(); ++i) {
-            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
-            // std::cerr << "\t " << static_cast<uint8_t>(cls_data[i]);
-        }
-        // std::cerr << "\n _ext_map[component.ext]:: " << _ext_map[component.ext] << "\n component.ext: " << component.ext << "\n ascii_values.size" << ascii_values.size() << "\n component.filename :: " << component.filename;; 
-        ascii_values.at(_ext_map[component.ext]) = ascii_component;
-        // std::cerr << ;
-        std::cerr << "\n ascii_component.size():: " << ascii_component.size() << "\n ascii_values.at(_ext_map[component.ext]).size() :: " << ascii_values.at(_ext_map[component.ext]).size();
-    }
-    // print_map_contents();
-}
-
 void WebDataSetMetaDataReader::read_all(const std::string &_path) {
 
-    // preparing the map from extensions to outputs
-    // std::unordered_map<std::string, std::vector<size_t>> _ext_map;
     uint ext_idx = 0;
     for (size_t output_index = 0; output_index < _exts.size(); output_index++) {
-        for (auto& ext : _exts[output_index]) {
-            std::cerr << "\n ext:: " << ext;
+        for (auto &ext : _exts[output_index]) {
             _ext_map[ext] = ext_idx;
             ext_idx++;
-            std::cerr << "\n output_index:: " << output_index;
         }
     }
-    std::cerr << "\n _ext_map size" << _ext_map.size() << "\n _ext_map[ext]" << _ext_map["json"]  ;
 
-    // std::exit(0);
     std::string _folder_path;
     std::string _full_path;
     std::vector<std::string> entry_name_list;
@@ -388,71 +361,23 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
 
         // After parsing add the contents to the map
         for (auto &sample : unfiltered_samples) {
-
-            if (_missing_component_behaviour == 1) { // empty_outputs
-                AsciiValues ascii_values;
-                ascii_values.resize(_ext_map.size());
-                std::string  last_file_name;
-                for (auto &component : sample.components) {
-                    if (component.ext != "jpg") { // Add more components as we encounter
-                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
-                        std::vector<uint8_t> cls_data(component.size);
-                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
-                        AsciiComponent ascii_component = {};
-                        for (size_t i = 0; i < cls_data.size(); ++i)
-                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
-                        ascii_values.at(_ext_map[component.ext]) = ascii_component;
-                        last_file_name = component.filename;
-                    }
+            AsciiValues ascii_values;
+            ascii_values.resize(_ext_map.size());
+            std::string last_file_name;
+            for (auto &component : sample.components) {
+                if (component.ext != "jpg") { // Add more components as we encounter
+                    _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                    std::vector<uint8_t> cls_data(component.size);
+                    _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                    AsciiComponent ascii_component = {};
+                    for (size_t i = 0; i < cls_data.size(); ++i)
+                        ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                    ascii_values.at(_ext_map[component.ext]) = ascii_component;
+                    last_file_name = component.filename;
                 }
-                    // read_sample_and_add_to_map(component, _wds_shards[wds_shard_index], ascii_values);
-                add(last_file_name, ascii_values);
-                ascii_values.clear();
-            } else if (_missing_component_behaviour == 0) { // skipping
-                AsciiValues ascii_values;
-                std::string  last_file_name;
-                for (auto &component : sample.components) {
-                    if (component.ext != "jpg") { // Add more components as we encounter
-                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
-                        std::vector<uint8_t> cls_data(component.size);
-                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
-                        AsciiComponent ascii_component = {};
-                        for (size_t i = 0; i < cls_data.size(); ++i)
-                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
-                        ascii_values.push_back(ascii_component);
-                        last_file_name = component.filename;
-                    }
-                }
-                    // read_sample_and_add_to_map(component, _wds_shards[wds_shard_index], ascii_values);
-                add(last_file_name, ascii_values);
-                ascii_values.clear();
-            }  else if (_missing_component_behaviour == 2) { // error
-                AsciiValues ascii_values;
-                ascii_values.resize(_ext_map.size());
-                std::string  last_file_name;
-                for (auto &component : sample.components) {
-                    if (component.ext != "jpg") { // Add more components as we encounter
-                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
-                        std::vector<uint8_t> cls_data(component.size);
-                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
-                        AsciiComponent ascii_component = {};
-                        for (size_t i = 0; i < cls_data.size(); ++i)
-                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
-                        ascii_values.at(_ext_map[component.ext]) = ascii_component;
-                        last_file_name = component.filename;
-                    }
-                }
-                    // read_sample_and_add_to_map(component, _wds_shards[wds_shard_index], ascii_values);
-                add(last_file_name, ascii_values);
-                for (auto& ascii_component: ascii_values) {
-                        if(ascii_component.size() == 0) {
-                            THROW("Missing components in the sample");
-                        }
-                }
-                ascii_values.clear();
             }
+            add(last_file_name, ascii_values);
+            ascii_values.clear();
         }
     }
 }
-
-
