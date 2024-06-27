@@ -284,7 +284,7 @@ libProtoCompiler = "protobuf-compiler"
 if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
     libPythonProto = "protobuf-python"
 if "SLES" in os_info_data:
-    libProtoCompiler = "protobuf-c"
+    libProtoCompiler = "libprotobuf-c-devel"
 coreRPMPackages = [
     'nasm',
     'yasm',

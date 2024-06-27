@@ -327,5 +327,6 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* rocAL Setup Script - `V2.3.0`
+* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
+* rocAL Setup Script - `V2.4.0`
 * Dependencies for all the above packages
