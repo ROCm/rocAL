@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.3.0"
+__version__ = "2.4.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -280,8 +280,11 @@ coreDebianPackages = [
 ]
 
 libPythonProto = "python3-protobuf"
+libProtoCompiler = "protobuf-compiler"
 if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
     libPythonProto = "protobuf-python"
+if "SLES" in os_info_data:
+    libProtoCompiler = "protobuf-c"
 coreRPMPackages = [
     'nasm',
     'yasm',
@@ -292,7 +295,7 @@ coreRPMPackages = [
     'python3-pip',
     str(libPythonProto),
     'protobuf-devel',
-    'protobuf-compiler'
+    str(libProtoCompiler)
 ]
 
 pip3Packages = [
