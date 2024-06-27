@@ -107,6 +107,7 @@ class ROCALGenericIteratorDetection(object):
         self.output_list = self.dimensions = self.dtype = None
         if self.loader._name is None:
             self.loader._name = self.loader._reader
+        self.iterator_length = b.getRemainingImages(self.loader._handle)
 
     def next(self):
         return self.__next__()
@@ -217,6 +218,8 @@ class ROCALGenericIteratorDetection(object):
     def __del__(self):
         b.rocalRelease(self.loader._handle)
 
+    def __len__(self):
+        return self.iterator_length
 
 class ROCALIterator(ROCALGenericIteratorDetection):
     """!ROCAL iterator for detection and classification tasks for TF reader. It returns 2 or 3 outputs
