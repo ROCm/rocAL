@@ -254,7 +254,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
                     ptr = ctypes_void_ptr(p);
                 }
                 //auto ptr = ctypes_void_ptr(p);
-                std::cout <<" got capsule ptr - " << ptr << " " << external_mem_type;
+                std::cout <<" got capsule ptr - " << ptr << " " << external_mem_type << std::endl;
                 output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
             },
             R"code(
