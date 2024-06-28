@@ -31,6 +31,7 @@
 * Tests
 * Setup Script
 * CentOS 7 support
+* SLES 15 SP5 support
 
 ### Changed
 
@@ -48,18 +49,18 @@
   * CentOS - `7`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `5.7.0.50700-6`
+* ROCm: rocm-core - `6.1.0.60100-64`
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * rocDecode - `rocdecode` & `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
-* RapidJSON - `rapidjson-dev` / `rapidjson-devel`
+* RapidJSON - `https://github.com/Tencent/rapidjson`
 * Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
-* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
 * FFMPEG - `ffmpeg` dev package
-* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* rocAL Setup Script - `V2.3.0`
+* OpenCV - `libopencv` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
+* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
+* rocAL Setup Script - `V2.4.0`
 * Dependencies for all the above packages
 
 ### Known issues
