@@ -299,7 +299,7 @@ debianOptionalPackages = [
 
 slesOptionalPackages = [
     'ffmpeg-devel',
-    'opencv-devel'
+    'opencv-dev'
 ]
 
 # Install
