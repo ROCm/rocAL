@@ -1151,3 +1151,31 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, output_datatype=types.FLOAT):
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "scalar": scalar, "output_datatype": output_datatype}
     tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
+
+def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_interval = 8192, window_length = 2048):
+    """
+    Performs leading and trailing silence detection in an audio buffer.
+    @param cutoff_db (float)                                      The threshold, in dB, below which the signal is considered silent.
+    @param reference_power (float)                                The reference power that is utilized to convert the signal to dB.
+    @param reset_interval (int)                                   The number of samples after which the moving mean average is recalculated aiming to avoid loss of precision.
+    @param window_length (int)                                    Size of the sliding window used in calculating the short-term power of the signal.
+    """
+    kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
+                     "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
+    non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return non_silent_region_output
+
+def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
+    """
+    The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
+    @param anchor (int or 1D RocalTensor of ints)                                      The absolute starting co-ordinate points of the slice.
+    @param shape (int or 1D RocalTensor of ints)                                       The absolute co-ordinate for the dimensions of the slice.
+    @param fill_values (float or list of float)                                        Determines the padding values and is only relevant if out_of_bounds_policy is “pad” policy.
+    @param out_of_bounds_policy ("error", "pad", "trim_to_shape")                      Determines the policy when slicing the out of bounds area of the input.
+    @param rocal_tensor_output_type (float)                                            Output DataType of the Tensor
+    """
+
+    kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values,
+                     "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
+    slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return slice_output

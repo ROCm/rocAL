@@ -1237,4 +1237,44 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_contex
                                                            bool is_output,
                                                            RocalTensorOutputType output_datatype = ROCAL_FP32);
 
+/*! \brief Performs silence detection in the input audio tensor
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] cutoff_db threshold(dB) below which the signal is considered silent
+ * \param [in] reference_power reference power that is used to convert the signal to dB
+ * \param [in] reset_interval number of samples after which the moving mean average is recalculated to avoid loss of precision
+ * \param [in] window_length size of the sliding window used to calculate of the short-term power of the signal
+ * \return std::pair<RocalTensor, RocalTensor>
+ */
+extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegionDetection(RocalContext context,
+                                                                                   RocalTensor input,
+                                                                                   bool is_output,
+                                                                                   float cutoff_db,
+                                                                                   float reference_power,
+                                                                                   int reset_interval,
+                                                                                   int window_length);
+
+/*! \brief Extracts the sub-tensor from a given input tensor
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] anchor anchor values used for specifying the starting indices of slice
+ * \param [in] shape shape values used for specifying the length of slice
+ * \param [in] fill_values fill values based on out of Bound policy
+ * \param [in] policy
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
+                                                 RocalTensor input,
+                                                 bool is_output,
+                                                 RocalTensor anchor,
+                                                 RocalTensor shape,
+                                                 std::vector<float> fill_values,
+                                                 RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
+                                                 RocalTensorOutputType output_datatype = ROCAL_FP32);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

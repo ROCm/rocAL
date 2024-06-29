@@ -45,3 +45,5 @@ python3 audio_tests.py --gpu <0/1> --downmix <True/False> --test_case <case_numb
 * Case 5 - Resample
 * Case 6 - TensorAddTensor
 * Case 7 - TensorMulScalar
+* Case 8 - NonSilentRegionDetection
+* Case 9 - Slice
