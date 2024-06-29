@@ -42,7 +42,9 @@ test_case_augmentation_map = {
     4: "to_decibels",
     5: "resample",
     6: "tensor_add_tensor",
-    7: "tensor_mul_scalar"
+    7: "tensor_mul_scalar",
+    8: "non_silent_region",
+    9: "slice"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -53,10 +55,23 @@ def plot_audio_wav(audio_tensor, idx):
     plt.savefig("output_folder/audio_reader/" + str(idx) + ".png")
     plt.close()
 
+def verify_non_silent_region_output(output_list, rocal_data_path, test_results, case_name):
+    ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
+    data_array = np.fromfile(ref_path, dtype=np.int32)
+    begin_nsr = output_list[0].detach().numpy()
+    length_nsr = output_list[1].detach().numpy()
+
+    if begin_nsr[0] == data_array[0] and length_nsr == data_array[1]:
+        print("PASSED!")
+        test_results[case_name] = "PASSED"
+    else:
+        print("FAILED!")
+        test_results[case_name] = "FAILED"
+
 def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name, dimensions):
     ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
-    audio_data = audio_tensor.detach().numpy().flatten()
+    audio_data = audio_tensor[0].detach().numpy().flatten()
     roi_data = roi_tensor.detach().numpy()
     buffer_size = roi_data[0] * roi_data[1]
     matched_indices = 0
@@ -188,6 +203,39 @@ def tensor_mul_scalar_pipeline(path, file_list):
         stick_to_shard=False)
     return decoded_audio * 1.15
 
+@pipeline_def(seed=seed)
+def non_silent_region(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    return begin, length
+
+@pipeline_def(seed=seed)
+def non_silent_region_and_slice(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    trim_silence = fn.slice(
+        decoded_audio,
+        anchor=[begin],
+        shape=[length],
+        rocal_tensor_output_type = types.FLOAT)
+    return trim_silence
+
 def main():
     args = parse_args()
 
@@ -251,6 +299,10 @@ def main():
                                                     path=downmix_audio_path if qa_mode else audio_path, file_list="" if qa_mode else file_list, downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "slice":
+            audio_pipeline = non_silent_region_and_slice(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "non_silent_region":
+            audio_pipeline = non_silent_region(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "resample":
             audio_pipeline = resample_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "tensor_add_tensor":
@@ -278,9 +330,12 @@ def main():
                             plot_audio_wav(audio_tensor, cnt)
                         cnt+=1
             if qa_mode :
-                verify_output(audio_tensor, rocal_data_path, roi, test_results, case_name, dimensions)
+                if case_name == "non_silent_region":
+                    verify_non_silent_region_output(output_list[0], rocal_data_path, test_results, case_name)
+                else:
+                    verify_output(output_list[0], rocal_data_path, roi, test_results, case_name, dimensions)
             print("EPOCH DONE", e)
-        
+
         stop = timeit.default_timer()
         print('\nTime: ', stop - start)
 

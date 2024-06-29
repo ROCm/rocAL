@@ -25,6 +25,8 @@
 * Support for Audio augmentation - Resample
 * Support for TensorTensorAdd and TensorScalarMultiply operations
 * Support for Uniform and Normal distribution nodes
+* Support for Audio augmentation - NonSilentRegionDetection 
+* Support for generic augmentation - Slice 
 
 ### Optimizations
 

@@ -32,7 +32,9 @@ test_case_augmentation_map = {
     4: "to_decibels",
     5: "resample",
     6: "tensor_add_tensor",
-    7: "tensor_mul_scalar"
+    7: "tensor_mul_scalar",
+    8: "non_silent_region",
+    9: "slice"
 }
 
 def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, case_list):
