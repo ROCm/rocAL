@@ -103,6 +103,11 @@ from rocal_pybind.types import ZERO
 from rocal_pybind.types import CLAMP
 from rocal_pybind.types import REFLECT
 
+#     RocalOutOfBoundsPolicy
+from rocal_pybind.types import PAD
+from rocal_pybind.types import TRIMTOSHAPE
+from rocal_pybind.types import ERROR
+
 #     RocalLastBatchPolicy
 from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
@@ -171,6 +176,10 @@ _known_types = {
     ZERO: ("ZERO", ZERO),
     CLAMP: ("CLAMP", CLAMP),
     REFLECT: ("REFLECT", REFLECT),
+
+    PAD: ("PAD", PAD),
+    TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
+    ERROR: ("ERROR", ERROR),
 
     NTF: ("NTF", NTF),
     NFT: ("NFT", NFT),

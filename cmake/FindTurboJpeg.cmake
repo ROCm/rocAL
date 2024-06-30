@@ -34,8 +34,8 @@ find_path(TurboJpeg_INCLUDE_DIRS
     HINTS
     $ENV{TURBO_JPEG_PATH}/include
     PATHS
-    ${TURBO_JPEG_PATH}/include
     /usr/include
+    ${TURBO_JPEG_PATH}/include
     /opt/libjpeg-turbo/include
 )
 mark_as_advanced(TurboJpeg_INCLUDE_DIRS)
@@ -46,9 +46,9 @@ find_library(TurboJpeg_LIBRARIES
     $ENV{TURBO_JPEG_PATH}/lib
     $ENV{TURBO_JPEG_PATH}/lib64
     PATHS
+    /usr/lib
     ${TURBO_JPEG_PATH}/lib
     ${TURBO_JPEG_PATH}/lib64
-    /usr/lib
     /opt/libjpeg-turbo/lib
 )
 mark_as_advanced(TurboJpeg_LIBRARIES)
@@ -59,8 +59,8 @@ find_path(LIBJPEG_INCLUDE_DIR
     HINTS
     $ENV{TURBO_JPEG_PATH}/include
     PATHS
-    ${TURBO_JPEG_PATH}/include
     /usr/include
+    ${TURBO_JPEG_PATH}/include
     /opt/libjpeg-turbo/include
 )
 mark_as_advanced(LIBJPEG_INCLUDE_DIR)
@@ -71,9 +71,9 @@ find_library(LIBJPEG_LIBRARIES
     $ENV{TURBO_JPEG_PATH}/lib
     $ENV{TURBO_JPEG_PATH}/lib64
     PATHS
+    /usr/lib
     ${TURBO_JPEG_PATH}/lib
     ${TURBO_JPEG_PATH}/lib64
-    /usr/lib
     /opt/libjpeg-turbo/lib
 )
 mark_as_advanced(LIBJPEG_LIBRARIES)

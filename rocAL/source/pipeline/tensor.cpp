@@ -77,6 +77,8 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }

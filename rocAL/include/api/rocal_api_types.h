@@ -409,6 +409,21 @@ enum RocalAudioBorderType {
     ROCAL_REFLECT = 2
 };
 
+/*! \brief rocAL Out Of Bounds Policy Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalOutOfBoundsPolicy {
+    /*! \brief Pad
+     */
+    ROCAL_PAD = 0,
+    /*! \brief Trimtoshape
+     */
+    ROCAL_TRIMTOSHAPE,
+    /*! \brief Error
+     */
+    ROCAL_ERROR
+};
+
 /*! \brief Tensor Last Batch Policies
  *  \ingroup group_rocal_types
  */
