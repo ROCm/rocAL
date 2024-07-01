@@ -10,8 +10,8 @@ Using rocAL with Python API
 
 rocAL uses simple Python operators to provide high performance and flexibility by utilizing the underlying hardware capabilities in a very efficient manner. 
 
-*   rocAL Python package has been created using Pybind11 which enables data transfer between rocAL C++ API and Python API
-*   Module imports are made similar to other data loaders like NVidia's DALI
+*   rocAL Python package has been created using pybind11 which enables data transfer between rocAL C++ API and Python API
+*   Module imports are made similar to other data loaders like NVIDIA's DALI
 *   ``rocal_pybind`` package has both PyTorch and TensorFlow framework support as described in :ref:`framework`
 *   Various reader format support including ``FileReader``, ``COCOReader``, and ``TFRecordReader``
 *   Example folder contains sample implementations for each reader variation as well as sample training script for PyTorch
@@ -43,7 +43,7 @@ rocAL Python API
 ``amd.rocal.plugin.pytorch``
 -----------------------------
 
-*  Contains ``ROCALGenericIterator`` for Pytorch.
+*  Contains ``ROCALGenericIterator`` for PyTorch.
 *  ``ROCALClassificationIterator`` class implements iterator for image classification and return images with corresponding labels.
 *  From the above classes, any hybrid iterator pipeline can be created by adding augmentations.
 *  See `PyTorch Simple Example <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch>`_. Requires PyTorch.
@@ -52,7 +52,7 @@ rocAL Python API
 Creating a Basic Pipeline
 ============================
 
-The rocAL pipeline is a Python script that defines a data loader, augmentation graph, and instructions to build and execute it. The most significant part of data processing with rocAL is pipeline creation. A pipeline is composed of multiple operations connected in an ordered graph that is encapsulated in an object of amd.rocal.pipeline. amd.rocal.pipeline is a single library that can be integrated to build preprocessing pipelines for both training and inference applications. 
+The rocAL pipeline is a Python script that defines a data loader, augmentation graph, and instructions to build and execute it. The most significant part of data processing with rocAL is pipeline creation. A pipeline is composed of multiple operations connected in an ordered graph that is encapsulated in an object of ``amd.rocal.pipeline``. ``amd.rocal.pipeline`` is a single library that can be integrated to build preprocessing pipelines for both training and inference applications. 
 
 To import a rocAL pipeline using the library, use:
 
@@ -75,7 +75,7 @@ Instantiating the pipeline class
 
 A pipeline is defined by instantiating a pipeline object and adding rocAL operators into the pipeline. 
 
-Given below is an example of a file reader, which takes a folder of images as input and decodes the images followed by a resize augmentation. The pipeline runs on the CPU if rocal_cpu is True, or else it runs on the device with the specified device_id.
+Given below is an example of a file reader, which takes a folder of images as input and decodes the images followed by a resize augmentation. The pipeline runs on the CPU if ``rocal_cpu`` is True, or else it runs on the device with the specified ``device_id``.
 
 .. code-block:: python
    :caption: Create Pipeline Instance
@@ -131,7 +131,7 @@ To define a pipeline, see `<https://github.com/ROCm/rocAL/blob/master/rocAL_pybi
         overlapping CPU and GPU computation, typically resulting
         in faster execution speed, but larger memory consumption.
     `prefetch_queue_depth` : int or {"cpu_size": int, "gpu_size": int}, optional, default = 2
-        Depth of the executor pipeline. Deeper pipeline makes ROCAL
+        Depth of the executor pipeline. Deeper pipeline makes rocAL
         more resistant to uneven execution time of each batch, but it
         also consumes more memory for internal buffers.
         Specifying a dict:
@@ -160,7 +160,7 @@ To define a pipeline, see `<https://github.com/ROCm/rocAL/blob/master/rocAL_pybi
         This parameter is currently unused (and behavior of
         unrestricted number of streams is assumed).
     `default_cuda_stream_priority` : int, optional, default = 0
-        HIP stream priority used by ROCAL. 
+        HIP stream priority used by rocAL. 
 
 
 Following are the important functions available in the Pipeline class, which is an instance of ``amd.rocal.pipeline``:

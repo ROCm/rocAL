@@ -34,7 +34,7 @@ Key Components
 - Multiple framework support and portable on PyTorch, TensorFlow, and MXNet
 - Flexible graphs to help the user create custom pipelines
 - Multicore host and multi-gpu execution for the graph
-- Support for various augmentations such as fish-eye, water, gitter, non-linear blend, etc., using the AMD ROCm Performance Primitive (RPP) library
+- Support for various augmentations such as fish-eye, water, glitter, non-linear blend, etc., using the :doc:`ROCm Performance Primitive (RPP) library <rpp:index>`
 - Support for classification, object detection, segmentation, and keypoint data pipelines
 
 Third-party Integration
@@ -109,4 +109,4 @@ Decoders                Description
 ======================  ========================================
 
 To see examples demonstrating the usage of decoders and readers, see 
-`rocAL Python Examples <https://github.com/ROCm/rocAL/tree/master/rocAL/docs/examples>`_.
+:ref:`examples`.

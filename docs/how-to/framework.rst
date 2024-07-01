@@ -38,7 +38,7 @@ Follow these steps:
     import amd.rocal.types as types
 
 
-2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a fileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the `pipeline <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L38>`_.
+2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a FileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the `pipeline <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L38>`_.
 
 .. code-block:: python
    :caption: Pipeline for PyTorch
@@ -195,7 +195,7 @@ Follow these steps:
 
 .. __resnet50:
 
-Run Resnet50 classification training with rocAL
+Run ResNet50 classification training with rocAL
 =======================================================
 
 #. Ensure you have downloaded ``ILSVRC2012_img_val.tar`` (6.3GB) and ``ILSVRC2012_img_train.tar`` (138 GB) files and unzip into ``train`` and ``val`` folders

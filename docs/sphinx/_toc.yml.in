@@ -16,7 +16,7 @@ subtrees:
       - file: how-to/using-with-python.rst
       - file: how-to/framework.rst
   - file: doxygen/html/modules
-    title: rocAL API Reference
+    title: Reference
     subtrees:
     - entries:
       - file: doxygen/html/group__group__rocal
@@ -30,5 +30,5 @@ subtrees:
       - file: doxygen/html/files
         title: rocAL Header files
   - file: examples.rst
-    title: Examples
+    title: Tutorials
   - file: license.rst
