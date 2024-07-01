@@ -28,6 +28,7 @@ THE SOFTWARE.
  */
 
 #pragma once
+#include <random>
 #include <vector>
 
 #include "pipeline/exception.h"
@@ -168,4 +169,38 @@ enum RocalBatchPolicy {
     FILL = 0,
     DROP,
     PARTIAL
+};
+
+template <typename RNG = std::mt19937>
+class BatchRNG {
+   public:
+    /**
+     * @brief Used to keep batch of RNGs
+     *
+     * @param seed Used to generate seed_seq to initialize batch of RNGs
+     * @param batch_size How many RNGs to store
+     * @param state_size How many seed are used to initialize one RNG. Used to
+     * lower probablity of collisions between seeds used to initialize RNGs in
+     * different operators.
+     */
+    BatchRNG(int64_t seed = 1, int batch_size = 1, int state_size = 4)
+        : _seed(seed) {
+        std::seed_seq seq{_seed};
+        std::vector<uint32_t> seeds(batch_size * state_size);
+        seq.generate(seeds.begin(), seeds.end());
+        _rngs.reserve(batch_size);
+        for (int i = 0; i < batch_size * state_size; i += state_size) {
+            std::seed_seq s(seeds.begin() + i, seeds.begin() + i + state_size);
+            _rngs.emplace_back(s);
+        }
+    }
+
+    /**
+     * Returns engine corresponding to given sample ID
+     */
+    RNG &operator[](int sample) noexcept { return _rngs[sample]; }
+
+   private:
+    int64_t _seed;
+    std::vector<RNG> _rngs;
 };

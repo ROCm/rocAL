@@ -123,8 +123,8 @@ struct ReaderConfig {
     size_t _sequence_frame_stride = 1;
     bool _shuffle = false;
     bool _loop = false;
-    std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
-    std::string _file_list_path = "";  //!< to read only files present in the file list
+    std::string _file_prefix;  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_list_path;  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
     bool _stick_to_shard = false;
