@@ -24,7 +24,7 @@ def draw_patches(img, idx, device, dtype, color_format=types.RGB):
         img = img.cpu().numpy()
     if dtype == types.FLOAT16:
         img = (img).astype('uint8')
-    print("img shapeeeeee", img.shape)
+    print("img shape", img.shape)
 
     if color_format == types.RGB:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -65,29 +65,10 @@ def main():
         path=wds_data, ext=[{'jpg', 'cls'}],
         )
         img = fn.decoders.webdataset(img_raw, file_root=wds_data, color_format=color_format,max_decoded_width=500, max_decoded_height=500)
-        # resized = fn.resize(img, resize_shorter=256.0)
-        # resize_w = 400
-        # resize_h = 400
-        # scaling_mode = types.SCALING_MODE_STRETCH
-        # interpolation_type = types.LINEAR_INTERPOLATION
-        # if (scaling_mode == types.SCALING_MODE_STRETCH):
-        #     resize_h = 416
-        # resized = fn.resize(img,
-        #                        resize_width=resize_w,
-        #                        resize_height=resize_h,
-        #                        scaling_mode=scaling_mode,
-        #                        interpolation_type=interpolation_type)
+
         tensor_format = types.NHWC
         tensor_dtype = types.FLOAT
-        # output = fn.crop_mirror_normalize(resized,
-        #                                       crop=(224, 224),
-        #                                       crop_pos_x=0.0,
-        #                                       crop_pos_y=0.0,
-        #                                       mean=[0, 0, 0],
-        #                                       std=[1, 1, 1],
-        #                                       mirror=0,
-        #                                       output_layout=tensor_format,
-        #                                       output_dtype=tensor_dtype)
+
 
         webdataset_pipeline.set_outputs(img)
     webdataset_pipeline.build()
@@ -109,7 +90,7 @@ def main():
 
         audioIteratorPipeline.reset()
                 
-        print("EPOCH DONE", e)
+        print("EPOCH DONE")
 
 if __name__ == '__main__':
     main()
