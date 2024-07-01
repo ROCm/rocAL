@@ -42,7 +42,7 @@ FileSourceReader::FileSourceReader() {
 }
 
 unsigned FileSourceReader::count_items() {
-    int ret;
+    int ret = 0;
     if (_shard_size == -1) { // When shard_size is set to -1, The shard_size variable is not used
         if (_loop) return larget_shard_size_without_padding(); // Return the size of the largest shard amongst all the shard's size
         int size = std::max(larget_shard_size_without_padding(), _batch_count);
