@@ -34,7 +34,6 @@ RECORDS_DIR = 'tf_pets_records/'
 NUM_CLASSES = 37
 LEARNING_RATE = 0.005
 TRAIN_BATCH_SIZE = 8
-DATASET_DOWNLOAD_AND_PREPROCESS = False
 RUN_ON_HOST = True
 
 ############################### CHANGE THESE GLOBAL VARIABLES APPROPRIATELY ###############################
@@ -45,28 +44,13 @@ RUN_ON_HOST = True
 TRAIN_RECORDS_DIR = RECORDS_DIR + 'train/'
 VAL_RECORDS_DIR = RECORDS_DIR + 'val/'
 
-
-def download_images():
-    global TRAIN_RECORDS_DIR
-    global VAL_RECORDS_DIR
-    os.system("./download_and_preprocess_dataset.sh")
-    TRAIN_RECORDS_DIR = "./tf_pets_records/train/"
-    VAL_RECORDS_DIR = "./tf_pets_records/val/"
-
-
 def main():
 
     global NUM_CLASSES
     global LEARNING_RATE
-    global NUM_TRAIN_STEPS
     global TRAIN_BATCH_SIZE
-    global EVAL_EVERY
-    global DATASET_DOWNLOAD_AND_PREPROCESS
     global TRAIN_RECORDS_DIR
     global VAL_RECORDS_DIR
-
-    if DATASET_DOWNLOAD_AND_PREPROCESS == True:
-        download_images()
 
     print("\n-----------------------------------------------------------------------------------------")
     print('TF records (train) are located in %s' % TRAIN_RECORDS_DIR)
@@ -102,7 +86,7 @@ def main():
     trainPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=8, rocal_cpu=RUN_ON_HOST,
                          tensor_layout=types.NHWC, mean=[0, 0, 0], std=[255, 255, 255], tensor_dtype=types.FLOAT)
     with trainPipe:
-        inputs = fn.readers.tfrecord(path='tf_pets_records/train/', reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
+        inputs = fn.readers.tfrecord(path=TRAIN_RECORDS_DIR, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
                                      features={
                                          'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
                                          'image/class/label': tf.io.FixedLenFeature([1], tf.int64, -1),
@@ -128,7 +112,7 @@ def main():
     valPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=8,
                        rocal_cpu=RUN_ON_HOST, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT)
     with valPipe:
-        inputs = fn.readers.tfrecord(path='tf_pets_records/val/', reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
+        inputs = fn.readers.tfrecord(path=VAL_RECORDS_DIR, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
                                      features={
                                          'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
                                          'image/class/label': tf.io.FixedLenFeature([1], tf.int64, -1),
@@ -181,7 +165,6 @@ def main():
         trainIterator.reset()
         accuracy_metric.reset_states()
         pbar = tf.keras.utils.Progbar(target=val_batches, stateful_metrics=[])
-        print('\n')
         step = 0
         for ([val_image_ndArray], val_label_ndArray) in valIterator:
             val_label_ndArray = val_label_ndArray - 1
@@ -192,7 +175,6 @@ def main():
             pbar.update(step, values=results.items(), finalize=False)
         pbar.update(step, values=results.items(), finalize=True)
         valIterator.reset()
-        print('\n')
         epoch += 1
 
 
