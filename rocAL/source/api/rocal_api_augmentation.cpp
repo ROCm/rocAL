@@ -2505,3 +2505,71 @@ rocalSlice(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalNormalize(RocalContext p_context, RocalTensor p_input, std::vector<unsigned>& axes,
+               std::vector<float>& mean, std::vector<float>& std_dev, bool is_output,
+               float scale, float shift,
+               RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        std::shared_ptr<NormalizeNode> normalize_node = context->master_graph->add_node<NormalizeNode>({input}, {output});
+        normalize_node->init(axes, mean, std_dev, scale, shift);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalMelFilterBank(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    float freq_high,
+    float freq_low,
+    RocalMelScaleFormula mel_formula,
+    int nfilter,
+    bool normalize,
+    float sample_rate,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
+        if (op_tensor_data_type != RocalTensorDataType::FP32) {
+            THROW("Only FP32 dtype is supported for MelFilterBank augmentation.")
+        }
+        TensorInfo output_info = input->info();
+        std::vector<size_t> max_dims = output_info.max_shape();
+        int max_frame = max_dims[1];
+        max_frame = std::max(0, max_frame);
+        std::vector<size_t> dims = output_info.dims();
+        dims[1] = nfilter;
+        dims[2] = max_frame;
+        output_info.set_dims(dims);
+        output_info.set_data_type(op_tensor_data_type);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, mel_formula, nfilter, normalize, sample_rate);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}

@@ -44,7 +44,9 @@ test_case_augmentation_map = {
     6: "tensor_add_tensor",
     7: "tensor_mul_scalar",
     8: "non_silent_region",
-    9: "slice"
+    9: "slice",
+    10: "mel_filter_bank",
+    11: "normalize"
 }
 
 def plot_audio_wav(audio_tensor, idx):
@@ -236,6 +238,51 @@ def non_silent_region_and_slice(path, file_list):
         rocal_tensor_output_type = types.FLOAT)
     return trim_silence
 
+@pipeline_def(seed=seed)
+def mel_filter_bank_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    spec = fn.spectrogram(
+        decoded_audio,
+        nfft=512,
+        window_length=320,
+        window_step=160,
+        output_dtype=types.FLOAT)
+    return fn.mel_filter_bank(
+        spec,
+        freq_high=8000,
+        freq_low=0.0,
+        nfilter=80,
+        sample_rate=16000)
+
+@pipeline_def(seed=seed)
+def normalize_pipeline(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False)
+    spec = fn.spectrogram(
+        decoded_audio,
+        nfft=512,
+        window_length=320,
+        window_step=160,
+        output_dtype=types.FLOAT)
+    return fn.normalize(
+        spec,
+        axes=[1])
+
 def main():
     args = parse_args()
 
@@ -309,6 +356,10 @@ def main():
             audio_pipeline = tensor_add_tensor_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "tensor_mul_scalar":
             audio_pipeline = tensor_mul_scalar_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "mel_filter_bank":
+            audio_pipeline = mel_filter_bank_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "normalize":
+            audio_pipeline = normalize_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         audio_pipeline.build()
         audio_loader = ROCALAudioIterator(audio_pipeline, auto_reset=True)
         output_tensor_list = audio_pipeline.get_output_tensors()

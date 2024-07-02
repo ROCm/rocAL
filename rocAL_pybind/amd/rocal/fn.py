@@ -1179,3 +1179,26 @@ def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_
                      "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
     slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return slice_output
+
+def normalize(*inputs, axes=[], mean=[], stddev=[], scale=1.0, shift=0.0, output_datatype=types.FLOAT):
+    '''
+    Normalizes the input by removing the mean and dividing by the standard deviation.
+    The mean and standard deviation can be calculated internally for the specified subset of axes or can be externally provided as the mean and stddev arguments.
+    The normalization is done following the formula:
+    out = scale * (in - mean) / stddev + shift
+    The formula assumes that out and in are equally shaped tensors, but mean and stddev might be either tensors of same shape, scalars, or a mix of these.
+    '''
+    kwargs_pybind = {"input_tensor": inputs[0], "axes": axes, "mean": mean, "stddev": stddev, "is_output": False,
+                     "scale": scale, "shift": shift, "output_datatype": output_datatype}
+    normalize_output = b.normalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return normalize_output
+
+def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, output_datatype = types.FLOAT):
+    '''
+    Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters.
+    The frequency ('f') dimension is selected from the input layout. In case of no layout, “f”, “ft”, or “*ft” is assumed, depending on the number of dimensions.
+    '''
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "freq_high": freq_high, "freq_low": freq_low, "mel_formula": mel_formula,
+                     "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "output_datatype": output_datatype}
+    mel_filter_bank_output = b.melFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return mel_filter_bank_output

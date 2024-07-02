@@ -437,6 +437,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("TRIMTOSHAPE", ROCAL_TRIMTOSHAPE)
         .value("ERROR", ROCAL_ERROR)
         .export_values();
+    py::enum_<RocalMelScaleFormula>(types_m, "RocalMelScaleFormula", "Rocal Audio Mel Formula")
+        .value("SLANEY", ROCAL_SLANEY)
+        .value("HTK", ROCAL_HTK)
+        .export_values();
     py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
         .value("LAST_BATCH_FILL", ROCAL_LAST_BATCH_FILL)
         .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
@@ -776,6 +780,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection,
           py::return_value_policy::reference);
     m.def("slice", &rocalSlice,
+          py::return_value_policy::reference);
+    m.def("normalize", &rocalNormalize,
+          py::return_value_policy::reference);
+    m.def("melFilterBank", &rocalMelFilterBank,
           py::return_value_policy::reference);
 }
 }  // namespace rocal
