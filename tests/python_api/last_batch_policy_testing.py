@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from amd.rocal.pipeline import Pipeline
 from amd.rocal.pipeline import pipeline_def
 from amd.rocal.plugin.pytorch import ROCALAudioIterator
 import amd.rocal.fn as fn
@@ -128,7 +127,6 @@ def main():
     if audio_path == "" and file_list == "":
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
-        downmix_audio_path = f'{rocal_data_path}/rocal_data/multi_channel_wav/'
     else:
         print("QA mode is disabled for custom audio data")
         qa_mode = 0
@@ -137,14 +135,12 @@ def main():
         batch_size = 1
 
     print("*********************************************************************")
-    test_results = {}
     for case in case_list:
         case_name = test_case_augmentation_map.get(case)
         if case_name == "last_batch_policy_FILL_last_batch_padded_True":
             audio_pipeline = audio_decoder_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
             audio_pipeline.build()
         audioIteratorPipeline = ROCALAudioIterator(audio_pipeline, auto_reset=True, size = 10)
-        output_tensor_list = audio_pipeline.get_output_tensors()
         cnt = 0
         import timeit
         start = timeit.default_timer()
@@ -167,9 +163,6 @@ def main():
 
         stop = timeit.default_timer()
         print('\nTime: ', stop - start)
-
-
-
 
 if __name__ == "__main__":
     main()
