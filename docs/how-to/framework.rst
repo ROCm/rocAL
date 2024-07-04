@@ -75,9 +75,9 @@ Follow these steps:
 .. code-block:: python
    :caption: Import libraries for PyTorch
 
-    import torch.nn as nn
-    import torch.nn.functional as F
-    import torch.optim as optim
+   import torch.nn as nn
+   import torch.nn.functional as F
+   import torch.optim as optim
 
 
 4. Call the training pipeline with rocAL classification data `loader <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/test_training.py#L78>`_.
@@ -85,12 +85,12 @@ Follow these steps:
 .. code-block:: python
    :caption: Call the training pipeline
 
-    Def get_pytorch_train_loader(self):
-            print(“in get_pytorch_train_loader function”)   
-            pipe_train = trainPipeline(self.data_path, self.batch_size, self.num_classes, self.one_hot, self.local_rank, 
-                                        self.world_size, self.num_thread, self.crop, self.rocal_cpu, self.fp16)
-            pipe_train.build()
-            train_loader = ROCALClassificationIterator(pipe_train, device=”cpu” if self.rocal_cpu else “cuda”, device_id = self.local_rank)
+   Def get_pytorch_train_loader(self):
+           print(“in get_pytorch_train_loader function”)   
+           pipe_train = trainPipeline(self.data_path, self.batch_size, self.num_classes, self.one_hot, self.local_rank, 
+                                       self.world_size, self.num_thread, self.crop, self.rocal_cpu, self.fp16)
+           pipe_train.build()
+           train_loader = ROCALClassificationIterator(pipe_train, device=”cpu” if self.rocal_cpu else “cuda”, device_id = self.local_rank)
 
 
 5. Run the `training script <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/test_training.py#L179>`_.
@@ -130,7 +130,7 @@ Create Data-loading Pipeline
 
 Follow these steps:
 
-1. Import libraries for `rocAL_pybind <https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/tf_petsTrainingExample/train_withROCAL_withTFRecordReader.py#L22>`_.
+1. Import libraries for `rocAL_pybind <https://github.com/ROCm/rocAL/blob/master/docs/examples/tf/pets_training/train.py#L22>`_.
 
 .. code-block:: python
    :caption: Import libraries
@@ -141,7 +141,7 @@ Follow these steps:
     import amd.rocal.types as types
 
 
-2. See a rocAL pipeline for TensorFlow below. It reads data from the TFRecords using TFRecord Reader and uses ``fn.decoders.image`` to decode the raw `images <https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/tf_petsTrainingExample/train_withROCAL_withTFRecordReader.py#L128>`_.
+2. See a rocAL pipeline for TensorFlow below. It reads data from the TFRecords using TFRecord Reader and uses ``fn.decoders.image`` to decode the raw `images <https://github.com/ROCm/rocAL/blob/master/docs/examples/tf/pets_training/train.py#L128>`_.
 
 .. code-block:: python
    :caption: Pipeline for TensorFlow
@@ -170,7 +170,7 @@ Follow these steps:
     trainPipe.build()
 
 
-3. Import libraries for `TensorFlow <https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/tf_petsTrainingExample/train_withROCAL_withTFRecordReader.py#L174>`_.
+3. Import libraries for `TensorFlow <https://github.com/ROCm/rocAL/blob/master/docs/examples/tf/pets_training/train.py#L174>`_.
 
 .. code-block:: python
    :caption: Import libraries for TensorFlow
@@ -193,8 +193,7 @@ Follow these steps:
 
 4. To see and run a sample training script, refer to `rocAL TensorFlow example <https://github.com/ROCm/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample>`_.
 
-
-.. _ml-perf:
+.. __resnet50:
 
 Run MLPerf Resnet50 classification training with rocAL
 =======================================================
@@ -216,8 +215,7 @@ Run MLPerf Resnet50 classification training with rocAL
     * Option to map the localhost directory with imagenet dataset folder to be accessed on the docker image.
     * Usage: ``-v {LOCAL_HOST_DIRECTORY_PATH}:{DOCKER_DIRECTORY_PATH}``
 
-#. Install rocAL ``python_pybind`` plugin as described above
-#. Clone `MLPerf <https://github.com/rrawther/MLPerf-mGPU>`_ repo and checkout ``mlperf-v1.1-rocal`` branch
+#. To see and run a sample training script, refer to `rocAL Imagenet example <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch/imagenet_training>`_.
 
 .. code-block:: shell 
 
