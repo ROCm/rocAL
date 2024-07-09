@@ -431,11 +431,11 @@ enum RocalMelScaleFormula {
     /*! \brief Slaney
      * Follows Slaney’s MATLAB Auditory Modelling Work behavior
      */
-    ROCAL_SLANEY = 0,
+    ROCAL_MELSCALE_SLANEY = 0,
     /*! \brief HTK
      * Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
      */
-    ROCAL_HTK
+    ROCAL_MELSCALE_HTK
 };
 
 /*! \brief Tensor Last Batch Policy Type enum

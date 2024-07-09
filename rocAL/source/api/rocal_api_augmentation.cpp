@@ -2558,8 +2558,7 @@ rocalMelFilterBank(
         }
         TensorInfo output_info = input->info();
         std::vector<size_t> max_dims = output_info.max_shape();
-        int max_frame = max_dims[1];
-        max_frame = std::max(0, max_frame);
+        int max_frame = std::max(0ul, max_dims[1]);
         std::vector<size_t> dims = output_info.dims();
         dims[1] = nfilter;
         dims[2] = max_frame;

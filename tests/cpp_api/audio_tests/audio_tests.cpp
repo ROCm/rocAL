@@ -260,10 +260,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             case_name = "mel_filter_bank";
             std::vector<float> window_fn;
             RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
-            rocalMelFilterBank(handle, spec_output, true, 8000, 0.0, RocalMelScaleFormula::ROCAL_SLANEY, 80, true, 16000, ROCAL_FP32);
+            rocalMelFilterBank(handle, spec_output, true, 8000, 0.0, RocalMelScaleFormula::ROCAL_MELSCALE_SLANEY, 80, true, 16000, ROCAL_FP32);
         } break;
-        case 11:
-        {
+        case 11: {
             std::cout << "Running NORMALIZE " << std::endl;
             case_name = "normalize";
             std::vector<unsigned> axes = {1};

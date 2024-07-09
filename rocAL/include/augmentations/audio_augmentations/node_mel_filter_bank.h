@@ -27,19 +27,19 @@ THE SOFTWARE.
 
 class MelFilterBankNode : public Node {
    public:
-    MelFilterBankNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    MelFilterBankNode() = delete;
-    void init(float freq_high, float freq_low, RocalMelScaleFormula mel_formula, int nfilter, bool normalize, float sample_rate);
+     MelFilterBankNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+     MelFilterBankNode() = delete;
+     void init(float freq_high, float freq_low, RocalMelScaleFormula mel_formula, int nfilter, bool normalize, float sample_rate);
 
    protected:
-    void create_node() override;
-    void update_node() override;
+     void create_node() override;
+     void update_node() override;
 
    private:
-    float _freq_high = 0;
-    float _freq_low = 0;
-    int _mel_formula = 0;
-    int _nfilter = 128;
-    float _sample_rate = 44100;
-    bool _normalize = true;
+     float _freq_high = 0;
+     float _freq_low = 0;
+     int _mel_formula = 0;
+     int _nfilter = 128;
+     float _sample_rate = 44100;
+     bool _normalize = true;
 };

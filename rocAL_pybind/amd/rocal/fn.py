@@ -1193,7 +1193,7 @@ def normalize(*inputs, axes=[], mean=[], stddev=[], scale=1.0, shift=0.0, output
     normalize_output = b.normalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return normalize_output
 
-def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, output_datatype = types.FLOAT):
+def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.MELSCALE_SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, output_datatype = types.FLOAT):
     '''
     Converts a spectrogram to a mel spectrogram by applying a bank of triangular filters.
     The frequency ('f') dimension is selected from the input layout. In case of no layout, “f”, “ft”, or “*ft” is assumed, depending on the number of dimensions.
