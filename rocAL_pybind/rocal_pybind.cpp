@@ -438,8 +438,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("ERROR", ROCAL_ERROR)
         .export_values();
     py::enum_<RocalMelScaleFormula>(types_m, "RocalMelScaleFormula", "Rocal Audio Mel Formula")
-        .value("SLANEY", ROCAL_SLANEY)
-        .value("HTK", ROCAL_HTK)
+        .value("MELSCALE_SLANEY", ROCAL_MELSCALE_SLANEY)
+        .value("MELSCALE_HTK", ROCAL_MELSCALE_HTK)
         .export_values();
     py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
         .value("LAST_BATCH_FILL", ROCAL_LAST_BATCH_FILL)
