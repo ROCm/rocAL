@@ -361,23 +361,56 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
 
         // After parsing add the contents to the map
         for (auto &sample : unfiltered_samples) {
-            AsciiValues ascii_values;
-            ascii_values.resize(_ext_map.size());
-            std::string last_file_name;
-            for (auto &component : sample.components) {
-                if (component.ext != "jpg") { // Add more components as we encounter
-                    _wds_shards[wds_shard_index]->set_read_position(component.offset);
-                    std::vector<uint8_t> cls_data(component.size);
-                    _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
-                    AsciiComponent ascii_component = {};
-                    for (size_t i = 0; i < cls_data.size(); ++i)
-                        ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
-                    ascii_values.at(_ext_map[component.ext]) = ascii_component;
-                    last_file_name = component.filename;
+            if (_missing_component_behaviour == 1) { // empty_outputs
+                AsciiValues ascii_values;
+                ascii_values.resize(_ext_map.size());
+                std::string  last_file_name;
+                for (auto &component : sample.components) {
+                    if (component.ext != "jpg") { // Add more components as we encounter
+                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                        std::vector<uint8_t> cls_data(component.size);
+                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        AsciiComponent ascii_component = {};
+                        for (size_t i = 0; i < cls_data.size(); ++i)
+                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                        ascii_values.at(_ext_map[component.ext]) = ascii_component;
+                        last_file_name = component.filename;
+                    }
                 }
+                add(last_file_name, ascii_values);
+                ascii_values.clear();
+            }  else {
+                auto skip_sample = false;
+                AsciiValues ascii_values;
+                ascii_values.resize(_ext_map.size());
+                std::string  last_file_name;
+                for (auto &component : sample.components) {
+                    if (component.ext != "jpg") { // Add more components as we encounter
+                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                        std::vector<uint8_t> cls_data(component.size);
+                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        AsciiComponent ascii_component = {};
+                        for (size_t i = 0; i < cls_data.size(); ++i)
+                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                        ascii_values.at(_ext_map[component.ext]) = ascii_component;
+                        last_file_name = component.filename;
+                    }
+                }
+                for (auto& ascii_component: ascii_values) {
+                        if(ascii_component.size() == 0) {
+                           if (_missing_component_behaviour == 0) { // skipping sample
+                                WRN("WARNING: Skipping the sample with missing components.");
+                                skip_sample = true;
+                           }
+                            else if (_missing_component_behaviour == 2) { // throw error
+                                THROW("ERROR: Missing components in the sample. Please check the sample components");
+                        }
+                }
+                ascii_values.clear();
             }
-            add(last_file_name, ascii_values);
-            ascii_values.clear();
+            if (skip_sample = false)
+                add(last_file_name, ascii_values);
         }
+    }
     }
 }

@@ -524,11 +524,12 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("getAsciiDatas", [](RocalContext context) {
         std::vector<rocalTensorList* > ascii_sample_contents = rocalGetAsciiDatas(context);
         py::list ext_componenet_list;
-        for(uint ext = 0; ext < ascii_sample_contents.size(); ext++) {
+        for(uint ext = 0; ext < ascii_sample_contents.size(); ext++) { // Number of components
             rocalTensorList *ext_ascii_values_batch = ascii_sample_contents[ext];
             py::list component_list;
             py::array_t<uint8_t> components_array;
             for (int i = 0; i < ext_ascii_values_batch->size(); i++) {
+                if (ext_ascii_values_batch->at(i)->buffer() !=  nullptr) {
                 components_array = py::array(py::buffer_info(
                                              static_cast<uint8_t *>(ext_ascii_values_batch->at(i)->buffer()),
                                              sizeof(uint8_t),
@@ -536,6 +537,17 @@ PYBIND11_MODULE(rocal_pybind, m) {
                                              1,
                                              {ext_ascii_values_batch->at(i)->dims().at(0)},
                                              {sizeof(uint8_t)}));
+                } else {
+                        // Specify the shape of the empty array
+                        std::vector<size_t> shape = {0};  // Empty array with 0 elements
+
+                        // Create an empty NumPy array of type uint8_t (unsigned byte)
+                        py::array_t<uint8_t> empty_array(shape);
+                        components_array = empty_array;
+                        // Access the underlying data pointer (optional)
+                        // uint8_t* data_ptr = static_cast<uint8_t*>(empty_array.request().ptr);
+                }
+
                 component_list.append(components_array);
             }
             ext_componenet_list.append(component_list);
