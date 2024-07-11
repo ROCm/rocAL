@@ -151,10 +151,8 @@ For your convenience, we provide the setup script,[rocAL-setup.py](https://githu
 
 ```shell
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
-                      --opencv    [OpenCV Version - optional (default:4.6.0)]
-                      --pybind11  [PyBind11 Version - optional (default:v2.10.4)]
-                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
+                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
                       --ffmpeg    [FFMPEG Installation - optional (default:OFF)[options:ON/OFF]]
                       --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
@@ -326,6 +324,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
 * FFMPEG - `ffmpeg` dev package
-* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* rocAL Setup Script - `V2.3.0`
+* OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
+* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
+* rocAL Setup Script - `V2.4.0`
 * Dependencies for all the above packages
