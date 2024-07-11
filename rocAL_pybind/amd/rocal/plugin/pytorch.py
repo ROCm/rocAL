@@ -321,11 +321,7 @@ class ROCALAudioIterator(object):
 
     def __next__(self):
         rocal_run = self.loader.rocal_run()
-        if rocal_run != 0:
-            if self.auto_reset:
-                self.reset()
-            raise StopIteration
-        elif self.shard_size > 0 and self.batch_count >= self.shard_size:
+        if (rocal_run != 0 or self.shard_size > 0 and self.batch_count >= self.shard_size):
             if self.auto_reset:
                 self.reset()
             raise StopIteration
