@@ -59,9 +59,6 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
     else:
         decoder_type = types.DECODER_TJPEG
     if (reader == 'COCOReader'):
-        if pad_last_batch_repeated is False:
-            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": file_root,
             "json_path": annotations_file,
@@ -80,9 +77,6 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
-        if pad_last_batch_repeated is False:
-            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -101,9 +95,6 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
-        if pad_last_batch_repeated is False:
-            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -121,9 +112,6 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif reader == "CaffeReader" or reader == "CaffeReaderDetection":
-        if pad_last_batch_repeated is False:
-            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -141,9 +129,6 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif reader == "MXNETReader":
-    if pad_last_batch_repeated is False:
-        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-        pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -196,9 +181,6 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if pad_last_batch_repeated is False:
-        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-        pad_last_batch_repeated = True
 
     if (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
         kwargs_pybind = {
@@ -245,9 +227,6 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if pad_last_batch_repeated is False:
-        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-        pad_last_batch_repeated = True
     # Internally calls the C++ Partial decoder's
     if (reader == 'COCOReader'):
         kwargs_pybind = {
@@ -367,9 +346,6 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if pad_last_batch_repeated is False:
-        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-        pad_last_batch_repeated = True
     # Reader -> Randon BBox Crop -> ImageDecoderSlice
     # Random crop parameters taken from pytorch's RandomResizedCrop default function arguments
     # TODO:To pass the crop co-ordinates from random_bbox_crop to image_slice
