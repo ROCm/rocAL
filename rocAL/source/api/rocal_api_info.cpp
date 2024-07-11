@@ -164,7 +164,7 @@ size_t ROCAL_API_CALL rocalIsEmpty(RocalContext p_context) {
     return ret;
 }
 
-size_t  ROCAL_API_CALL
+size_t ROCAL_API_CALL
 rocalGetLastBatchPaddedSize(RocalContext p_context) {
     auto context = static_cast<Context *>(p_context);
     size_t count = 0;

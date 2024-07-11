@@ -371,7 +371,6 @@ rocalSequenceReaderSingleShard(
     unsigned step,
     unsigned stride,
     std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
-
     Tensor* output = nullptr;
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
@@ -415,8 +414,7 @@ rocalSequenceReaderSingleShard(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
         std::pair<RocalBatchPolicy, bool> last_batch_policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::SEQUENCE_FILE_SYSTEM, DecoderType::TURBO_JPEG, shuffle, loop, context->master_graph->sequence_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, last_batch_policy_info,
-                                                                                        std::map<std::string, std::string>(), sequence_length, step, stride);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::SEQUENCE_FILE_SYSTEM, DecoderType::TURBO_JPEG, shuffle, loop, context->master_graph->sequence_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, last_batch_policy_info, std::map<std::string, std::string>(), sequence_length, step, stride);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -2169,12 +2167,10 @@ rocalJpegExternalFileSource(
                                color_format);
         output = context->master_graph->create_loader_output_tensor(info);
         context->master_graph->set_external_source_reader_flag();
-        
+
         unsigned shard_count = 1;  // Hardcoding the shard count to 1 for now.
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(shard_count, cpu_num_threads, "", "", std::map<std::string, std::string>(), StorageType::EXTERNAL_FILE_SOURCE,
-                                                                             decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(),
-                                                                             decoder_keep_original, last_batch_policy_info, "", 0, 0, 0, ExternalSourceFileMode(external_source_mode));
+        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(shard_count, cpu_num_threads, "", "", std::map<std::string, std::string>(), StorageType::EXTERNAL_FILE_SOURCE, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, last_batch_policy_info, "", 0, 0, 0, ExternalSourceFileMode(external_source_mode));
         context->master_graph->set_loop(loop);
 
         if (is_output) {
