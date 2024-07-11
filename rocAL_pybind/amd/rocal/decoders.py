@@ -53,14 +53,15 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    if pad_last_batch_repeated is False:
-        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
-        pad_last_batch_repeated = True
+
     if (device == "gpu"):
         decoder_type = types.DECODER_HW_JEPG
     else:
         decoder_type = types.DECODER_TJPEG
     if (reader == 'COCOReader'):
+        if pad_last_batch_repeated is False:
+            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": file_root,
             "json_path": annotations_file,
@@ -79,6 +80,9 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
+        if pad_last_batch_repeated is False:
+            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -97,6 +101,9 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
+        if pad_last_batch_repeated is False:
+            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -114,6 +121,9 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif reader == "CaffeReader" or reader == "CaffeReaderDetection":
+        if pad_last_batch_repeated is False:
+            print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+            pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -131,6 +141,9 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif reader == "MXNETReader":
+    if pad_last_batch_repeated is False:
+        print("pad_last_batch_repeated = False is not implemented in rocAL. Setting pad_last_batch_repeated to True")
+        pad_last_batch_repeated = True
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,

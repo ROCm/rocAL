@@ -90,22 +90,23 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _curr_file_idx = get_start_idx();  // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
-                            _all_shard_file_names_padded.begin() + get_start_idx() + actual_shard_size_without_padding());
+        std::random_shuffle(_all_shard_file_names_padded.begin() + _curr_file_idx,
+                            _all_shard_file_names_padded.begin() + _curr_file_idx + actual_shard_size_without_padding());
 
     return ret;
 }
 
 void FileSourceReader::increment_curr_file_idx() {
     // The condition satisfies for both pad_last_batch = True (or) False
+    auto start_idx_of_shard = get_start_idx();
     if (_stick_to_shard == false) {  // The elements of each shard rotate in a round-robin fashion once the elements in particular shard is exhausted
         _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
-    } else {  // Stick to only elemts from the current shard
-        if (_curr_file_idx >= get_start_idx() &&
-            _curr_file_idx < get_start_idx() + actual_shard_size_without_padding() - 1)  // checking if current-element lies within the shard size [begin_idx, last_idx -1]
+    } else {  // Stick to only elements from the current shard
+        if (_curr_file_idx >= start_idx_of_shard &&
+            _curr_file_idx < start_idx_of_shard + actual_shard_size_without_padding() - 1)  // checking if current-element lies within the shard size [begin_idx, last_idx -1]
             _curr_file_idx = (_curr_file_idx + 1);
         else
-            _curr_file_idx = get_start_idx();
+            _curr_file_idx = start_idx_of_shard;
     }
 }
 

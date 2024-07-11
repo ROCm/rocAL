@@ -456,6 +456,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
+        .def_readwrite("x", &ROIxywh::x)
+        .def_readwrite("y", &ROIxywh::y)
         .def_readwrite("w", &ROIxywh::w)
         .def_readwrite("h", &ROIxywh::h);
     // rocal_api_info.h

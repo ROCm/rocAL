@@ -448,7 +448,7 @@ enum RocalLastBatchPolicy {
     /*! \brief ROCAL_LAST_BATCH_DROP - The last batch is dropped if there are not enough samples from the current epoch.
      */
     ROCAL_LAST_BATCH_DROP = 1,
-    /*! \brief ROCAL_LAST_BATCH_PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the pytorch iterator)
+    /*! \brief ROCAL_LAST_BATCH_PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the python iterator)
      */
     ROCAL_LAST_BATCH_PARTIAL = 2
 };
