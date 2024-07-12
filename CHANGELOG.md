@@ -27,6 +27,8 @@
 * Support for Uniform and Normal distribution nodes
 * Support for Audio augmentation - NonSilentRegionDetection 
 * Support for generic augmentation - Slice 
+* Support for generic augmentation - Normalize
+* Support for Audio augmentation - MelFilterBank
 
 ### Optimizations
 
