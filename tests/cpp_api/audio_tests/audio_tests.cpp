@@ -255,6 +255,23 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             auto nsr_output = rocalNonSilentRegionDetection(handle, decoded_output, false, -60.0, 0.0, 8192, 2048);
             rocalSlice(handle, decoded_output, true, nsr_output.first, nsr_output.second, fill_values, ROCAL_ERROR, ROCAL_FP32);
         } break;
+        case 10: {
+            std::cout << "Running MEL FILTER BANK " << std::endl;
+            case_name = "mel_filter_bank";
+            std::vector<float> window_fn;
+            RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
+            rocalMelFilterBank(handle, spec_output, true, 8000, 0.0, RocalMelScaleFormula::ROCAL_MELSCALE_SLANEY, 80, true, 16000, ROCAL_FP32);
+        } break;
+        case 11: {
+            std::cout << "Running NORMALIZE " << std::endl;
+            case_name = "normalize";
+            std::vector<unsigned> axes = {1};
+            std::vector<float> mean;
+            std::vector<float> stddev;
+            std::vector<float> window_fn;
+            RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
+            rocalNormalize(handle, spec_output, axes, mean, stddev, true, 1, 0, ROCAL_FP32);
+        } break;
         default: {
             std::cout << "Not a valid test case ! Exiting!\n";
             return -1;
@@ -315,7 +332,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
             exit(0);
         }
-        if (verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path)) {
+        if (test_case != 8 && verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path)) {
             std::cout << "PASSED!\n\n";
         } else if (test_case == 8 && verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path)) {
             std::cout << "PASSED!\n\n";
