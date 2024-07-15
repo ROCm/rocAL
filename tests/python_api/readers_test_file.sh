@@ -99,7 +99,7 @@ coco_reader=0
 caffe_reader=0
 caffe2_reader=0
 tf_classification_reader=1
-tf_detection_reader=1
+tf_detection_reader=0
 video_pipeline=0
 ####################################################################################################################################
 

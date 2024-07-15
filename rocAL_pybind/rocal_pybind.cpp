@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
+#include <dlpack/dlpack.h>
 #include "rocal_api_types.h"
 #include "rocal_api.h"
 #include "rocal_api_tensor.h"
@@ -246,17 +247,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 )code")
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
-                void* ptr;
                 std::cout <<" i am here at object\n";
                 if (PyCapsule_CheckExact(p.ptr())) {
-                    ptr = PyCapsule_GetPointer(p.ptr(), PyCapsule_GetName(p.ptr()));
+                    auto ptr = PyCapsule_GetPointer(p.ptr(), PyCapsule_GetName(p.ptr()));
+                    output_tensor.copy_data(static_cast<void *>(ptr), RocalOutputMemType::ROCAL_MEMCPY_GPU);
                 } else {
-                    ptr = ctypes_void_ptr(p);
-                }
-                //auto ptr = ctypes_void_ptr(p);
-                std::cout <<" got capsule ptr - " << ptr << " " << external_mem_type << std::endl;
-                output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
+                    auto ptr = ctypes_void_ptr(p);
+                    output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
+                }   
             },
+            py::return_value_policy::reference,
             R"code(
                 Copies the ring buffer data to python buffer pointers.
                 )code")
@@ -313,7 +313,43 @@ PYBIND11_MODULE(rocal_pybind, m) {
             R"code(
                 Returns a rocal tensor at given position `idx` in the rocalTensorlist.
                 )code",
-            py::keep_alive<0, 1>());
+            py::keep_alive<0, 1>())
+        //dlpack
+        .def(
+            "move_to_host", [](rocalTensor &output_tensor) {
+                return output_tensor.MoveToHost();
+            }, R"code(Move the tensor and its data to the host.)code")
+        .def(
+            "move_to_device", [](rocalTensor &output_tensor) {
+                    return output_tensor.MoveToDevice();
+                }, R"code(Move the tensor and its data to the device.)code")
+        .def(
+            "d_type", [](rocalTensor &output_tensor) {
+                return output_tensor.Dtype();
+            }, R"code(Returns the data type of the tensor.)code")
+        /*
+        .def("data", &rocalTensor::GetData<uint8_t>,
+             "Returns the data stored inside the tensor.")
+        .def("data", &rocalTensor::GetData<int8_t>,
+             "Returns the data stored inside the tensor.")
+        .def("data", &rocalTensor::GetData<uint32_t>,
+             "Returns the data stored inside the tensor.")
+        .def("data", &rocalTensor::GetData<int32_t>,
+             "Returns the data stored inside the tensor.")
+        .def("data", &rocalTensor::GetData<float32_t>,
+             "Returns the data stored inside the tensor.")
+        */
+        .def(
+            "__dlpack__", [](rocalTensor &output_tensor) {
+                void* output_ptr = output_tensor.Dlpack();
+                return output_ptr;
+            },
+            R"code(Export the tensor as capsule that contains a DLPackManagedTensor.)code")
+        .def("__dlpack_device__", [](rocalTensor &output_tensor) {
+                std::array<int,2> dlpack_device = output_tensor.DlpackDevice();
+                return dlpack_device;
+            },
+            R"code(Generate a tuple containing device info of the tensor.)code");
     py::class_<rocalTensorList>(m, "rocalTensorList")
         .def(
             "__getitem__",
@@ -775,6 +811,22 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("tensorMulScalar", &rocalTensorMulScalar,
           py::return_value_policy::reference);
     m.def("tensorAddTensor", &rocalTensorAddTensor,
-          py::return_value_policy::reference);
+          py::return_value_policy::reference);    
+    m.def("fromDlpack", [](py::object src, RocalTensorLayout elayout) {
+            RocalTensor output_tensor;
+            if (PyCapsule_CheckExact(src.ptr())) {
+                auto ptr = PyCapsule_GetPointer(src.ptr(), PyCapsule_GetName(src.ptr()));
+                output_tensor = FromDlpack(static_cast<void *>(ptr), elayout);
+            } else {
+                auto ptr = ctypes_void_ptr(src);
+                output_tensor = FromDlpack(static_cast<void *>(ptr), elayout);
+            }
+            return output_tensor;
+        }, "tensor"_a, "layout"_a,
+             R"code(Wrap an existing object into a Rocal Tensor.)code");
+    m.def("copy_from", [](const RocalTensor &src) {
+                return CopyFrom(src);
+            }, "src"_a,
+             R"code(Copy data from another tensor.)code");
 }
 }  // namespace rocal

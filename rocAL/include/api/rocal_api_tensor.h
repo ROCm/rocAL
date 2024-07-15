@@ -54,6 +54,14 @@ class rocalTensor {
     virtual std::vector<size_t> shape() = 0;
     virtual void set_dims(std::vector<size_t> dims) = 0;
     virtual void set_mem_handle(void* buffer) = 0;
+    // dlpack functions
+    virtual void* Dlpack() const;
+    virtual std::array<int, 2> DlpackDevice() const;
+    //template <typename T>
+    //virtual std::vector<T> GetData();
+    virtual const RocalTensorOutputType Dtype() const;
+    virtual void MoveToHost();
+    virtual void MoveToDevice();  
 };
 
 /*!
@@ -69,5 +77,9 @@ class rocalTensorList {
 typedef rocalTensor* RocalTensor;
 typedef rocalTensorList* RocalTensorList;
 typedef std::vector<rocalTensorList*> RocalMetaData;
+
+
+RocalTensor FromDlpack(void* src, RocalTensorLayout elayout);
+void CopyFrom(const RocalTensor &src);
 
 #endif  // MIVISIONX_ROCAL_API_TENSOR_H

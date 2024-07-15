@@ -104,7 +104,7 @@ class ROCALGenericIteratorDetection(object):
         self.device = device
         if self.device is "gpu" or "cuda":
             if not CUPY_FOUND and not DLPACK_FOUND:
-                print('info: Import CuPy failed. Falling back to CPU!')
+                print('info: Import CuPy and DLPack failed. Falling back to CPU!')
                 self.device = "cpu"
         self.device_id = device_id
         self.reverse_channels = reverse_channels
