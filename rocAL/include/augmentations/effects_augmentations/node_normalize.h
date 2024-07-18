@@ -27,19 +27,25 @@ THE SOFTWARE.
 
 class NormalizeNode : public Node {
    public:
-    NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    NormalizeNode() = delete;
-    void init(std::vector<unsigned> &axes, std::vector<float> &mean, std::vector<float> &std_dev, float scale, float shift);
+     NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+     NormalizeNode() = delete;
+     void init(std::vector<unsigned> &axes, std::vector<float> &mean, std::vector<float> &std_dev, float scale, float shift);
 
    protected:
-    void create_node() override;
-    void update_node() override{};
+     void create_node() override;
+     void update_node() override {};
 
    private:
-    int _axis_mask = 0;
-    vx_array _mean_vx_array, _stddev_vx_array;
-    std::vector<unsigned> _axes;
-    std::vector<float> _mean, _std_dev;
-    float _scale, _shift;
-    std::vector<std::vector<uint32_t>> _normalize_roi;
+     int _axis_mask = 0;
+     vx_array _mean_vx_array, _stddev_vx_array;
+     std::vector<unsigned> _axes;
+     std::vector<float> _mean, _std_dev;
+     float _scale, _shift;
+     std::vector<std::vector<uint32_t>> _normalize_roi;
+     enum NormalizeModes {
+         DO_NOT_COMPUTE = 0,      // Mean and Stddev values are passed from user
+         COMPUTE_MEAN = 1,        // Compute mean from specified axes of input
+         COMPUTE_STDDEV = 2,      // Compute stddev from specified axes of input
+         COMPUTE_MEAN_STDDEV = 3  // Compute both mean and stddev from specified axes of input
+     };
 };

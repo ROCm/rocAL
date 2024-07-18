@@ -36,16 +36,10 @@ THE SOFTWARE.
 
 using namespace std::chrono;
 
-bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name) {
+bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name, std::string rocal_data_path) {
     bool pass_status = false;
     // read data from golden outputs
-    const char *rocal_data_path = std::getenv("ROCAL_DATA_PATH");
-    if (strcmp(rocal_data_path, "") == 0) {
-        std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
-        exit(0);
-    }
-
-    std::string ref_file_path = std::string(rocal_data_path) + "GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
+    std::string ref_file_path = rocal_data_path + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
@@ -72,22 +66,16 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
 
     fin.close();
 
-    if((nsr_begin[0] == ref_output[0]) && (nsr_length[0] == ref_output[1]))
+    if ((nsr_begin[0] == ref_output[0]) && (nsr_length[0] == ref_output[1]))
         pass_status = true;
 
     return pass_status;
 }
 
-bool verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size) {
+bool verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size, std::string rocal_data_path) {
     bool pass_status = false;
     // read data from golden outputs
-    const char *rocal_data_path = std::getenv("ROCAL_DATA_PATH");
-    if (strcmp(rocal_data_path, "") == 0) {
-        std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
-        exit(0);
-    }
-
-    std::string ref_file_path = std::string(rocal_data_path) + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
+    std::string ref_file_path = rocal_data_path + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
@@ -126,8 +114,7 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
         }
     }
 
-    std::cout << std::endl
-              << "Results for Test case: " << std::endl;
+    std::cout << std::endl << "Results for Test case: " << std::endl;
     if ((matched_indices == buffer_size) && matched_indices != 0) {
         pass_status = true;
     }
@@ -187,12 +174,13 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
-    std::string file_list_path = "";  // User can modify this with the file list path if required
+    std::string file_list_path;  // User can modify this with the file list path if required
+    std::string rocal_data_path = std::getenv("ROCAL_DATA_PATH");
     if (qa_mode && test_case != 3) {  // setting the default file list path from ROCAL_DATA_PATH
-        file_list_path = std::string(std::getenv("ROCAL_DATA_PATH")) + "rocal_data/audio/wav_file_list.txt";
+        file_list_path = rocal_data_path + "rocal_data/audio/wav_file_list.txt";
     }
 
-    std::cout << ">>>>>>> Running LABEL READER" << std::endl;
+    std::cout << "Running LABEL READER" << std::endl;
     rocalCreateLabelReader(handle, path, file_list_path.c_str());
 
     is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
@@ -202,7 +190,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         return -1;
     }
 
-    std::string case_name = "";
+    std::string case_name;
     switch (test_case) {
         case 0: {
             case_name = "audio_decoder";
@@ -218,7 +206,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
 
         } break;
         case 2: {
-            std::cout << ">>>>>>> Running SPECTROGRAM" << std::endl;
+            std::cout << "Running SPECTROGRAM" << std::endl;
             case_name = "spectrogram";
             std::vector<float> window_fn;
             rocalSpectrogram(handle, decoded_output, true, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
@@ -226,15 +214,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         } break;
         case 3: {
             case_name = "downmix";
-            std::cout << ">>>>>>> Running AUDIO DECODER + DOWNMIX" << std::endl;
+            std::cout << "Running AUDIO DECODER + DOWNMIX" << std::endl;
         } break;
         case 4: {
-            std::cout << ">>>>>>> Running TO DECIBELS" << std::endl;
+            std::cout << "Running TO DECIBELS" << std::endl;
             case_name = "to_decibels";
             rocalToDecibels(handle, decoded_output, true, std::log(1e-20), std::log(10), 1.0f, ROCAL_FP32);
         } break;
         case 5: {
-            std::cout << ">>>>>>> Running RESAMPLE" << std::endl;
+            std::cout << "Running RESAMPLE" << std::endl;
             case_name = "resample";
             float resample = 16000.00;
             std::vector<float> range = {1.15, 1.15};
@@ -243,24 +231,24 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             rocalResample(handle, decoded_output, resampled_rate, true, 1.15 * 255840, 50.0, ROCAL_FP32);
         } break;
         case 6: {
-            std::cout << ">>>>>>> Running TENSOR ADD TENSOR" << std::endl;
+            std::cout << "Running TENSOR ADD TENSOR" << std::endl;
             case_name = "tensor_add_tensor";
             std::vector<float> range = {1.15, 1.15};
             RocalTensor uniform_distribution_sample = rocalUniformDistribution(handle, decoded_output, false, range);
             rocalTensorAddTensor(handle, decoded_output, uniform_distribution_sample, true, ROCAL_FP32);
         } break;
         case 7: {
-            std::cout << ">>>>>>> Running TENSOR MUL SCALAR" << std::endl;
+            std::cout << "Running TENSOR MUL SCALAR" << std::endl;
             case_name = "tensor_mul_scalar";
             rocalTensorMulScalar(handle, decoded_output, true, 1.15, ROCAL_FP32);
         } break;
         case 8: {
-            std::cout << ">>>>>>> Running NON SILENT REGION " << std::endl;
+            std::cout << "Running NON SILENT REGION " << std::endl;
             case_name = "non_silent_region";
             rocalNonSilentRegionDetection(handle, decoded_output, true, -60, 0.0, 8192, 2048);
         } break;
         case 9: {
-            std::cout << ">>>>>>> Running SLICE " << std::endl;
+            std::cout << "Running SLICE " << std::endl;
             case_name = "slice";
             std::vector<float> fill_values = {0.0};
             std::vector<unsigned> axes = {0};
@@ -268,15 +256,14 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             rocalSlice(handle, decoded_output, true, nsr_output.first, nsr_output.second, fill_values, ROCAL_ERROR, ROCAL_FP32);
         } break;
         case 10: {
-            std::cout << ">>>>>>> Running MEL FILTER BANK " << std::endl;
+            std::cout << "Running MEL FILTER BANK " << std::endl;
             case_name = "mel_filter_bank";
             std::vector<float> window_fn;
             RocalTensor spec_output = rocalSpectrogram(handle, decoded_output, false, window_fn, true, true, 2, 512, 320, 160, ROCAL_NFT, ROCAL_FP32);
-            rocalMelFilterBank(handle, spec_output, true, 8000, 0.0, RocalMelScaleFormula::ROCAL_SLANEY, 80, true, 16000, ROCAL_FP32);
+            rocalMelFilterBank(handle, spec_output, true, 8000, 0.0, RocalMelScaleFormula::ROCAL_MELSCALE_SLANEY, 80, true, 16000, ROCAL_FP32);
         } break;
-        case 11:
-        {
-            std::cout << ">>>>>>> Running Normalize " << std::endl;
+        case 11: {
+            std::cout << "Running NORMALIZE " << std::endl;
             case_name = "normalize";
             std::vector<unsigned> axes = {1};
             std::vector<float> mean;
@@ -323,11 +310,10 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
         std::cout << "Audio file : " << audio_file_name << "\n";
         std::cout << "Label : " << *label_id << "\n";
-        if(test_case == 8){
+        if (test_case == 8) {  // Non silent region detection outputs
             nsr_begin = static_cast<int *>(output_tensor_list->at(0)->buffer());
             nsr_length = static_cast<int *>(output_tensor_list->at(1)->buffer());
-        }
-        else{
+        } else {
             for (uint idx = 0; idx < output_tensor_list->size(); idx++) {
                 buffer = static_cast<float *>(output_tensor_list->at(idx)->buffer());
                 output_tensor_list->at(idx)->copy_roi(roi.data());
@@ -342,13 +328,15 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
 
     if (qa_mode) {
         std::cout << "\n *****************************Verifying Audio output**********************************\n";
-        if (test_case != 8 && verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size)) {
-            std::cout << "PASSED!\n\n";
+        if (rocal_data_path.empty()) {
+            std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+            exit(0);
         }
-        else if (test_case == 8 && verify_non_silent_region_output(nsr_begin, nsr_length, case_name)) {
+        if (test_case != 8 && verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path)) {
             std::cout << "PASSED!\n\n";
-        }
-        else {
+        } else if (test_case == 8 && verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path)) {
+            std::cout << "PASSED!\n\n";
+        } else {
             std::cout << "FAILED!\n\n";
         }
     }
@@ -360,7 +348,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << "Decode   time " << rocal_timing.decode_time << std::endl;
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
-    std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
     return 0;
 }

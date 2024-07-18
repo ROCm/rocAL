@@ -58,7 +58,7 @@ RocalMetaData
     if (strlen(file_list_path) == 0)
         return context->master_graph->create_label_reader(source_path, MetaDataReaderType::FOLDER_BASED_LABEL_READER);
     else
-        return context->master_graph->create_label_reader(source_path, MetaDataReaderType::TEXT_FILE_META_DATA_READER, file_list_path);
+        return context->master_graph->create_label_reader(file_list_path, MetaDataReaderType::TEXT_FILE_META_DATA_READER);
 }
 
 RocalMetaData

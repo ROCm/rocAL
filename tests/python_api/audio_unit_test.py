@@ -163,41 +163,6 @@ def to_decibels_pipeline(path, file_list):
             output_dtype=types.FLOAT)
 
 @pipeline_def(seed=seed)
-def non_silent_region(path, file_list):
-    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
-    decoded_audio = fn.decoders.audio(
-        audio,
-        file_root=path,
-        file_list_path=file_list,
-        downmix=False,
-        shard_id=0,
-        num_shards=1,
-        stick_to_shard=False,
-        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
-    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
-    return begin, length
-
-@pipeline_def(seed=seed)
-def non_silent_region_and_slice(path, file_list):
-    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
-    decoded_audio = fn.decoders.audio(
-        audio,
-        file_root=path,
-        file_list_path=file_list,
-        downmix=False,
-        shard_id=0,
-        num_shards=1,
-        stick_to_shard=False,
-        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
-    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
-    trim_silence = fn.slice(
-        decoded_audio,
-        anchor=[begin],
-        shape=[length],
-        rocal_tensor_output_type = types.FLOAT)
-    return trim_silence
-
-@pipeline_def(seed=seed)
 def resample_pipeline(path, file_list):
     audio, labels = fn.readers.file(file_root=path, file_list=file_list)
     decoded_audio = fn.decoders.audio(
@@ -246,6 +211,41 @@ def tensor_mul_scalar_pipeline(path, file_list):
         stick_to_shard=False,
         last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     return decoded_audio * 1.15
+
+@pipeline_def(seed=seed)
+def non_silent_region(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    return begin, length
+
+@pipeline_def(seed=seed)
+def non_silent_region_and_slice(path, file_list):
+    audio, labels = fn.readers.file(file_root=path, file_list=file_list)
+    decoded_audio = fn.decoders.audio(
+        audio,
+        file_root=path,
+        file_list_path=file_list,
+        downmix=False,
+        shard_id=0,
+        num_shards=1,
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
+    begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
+    trim_silence = fn.slice(
+        decoded_audio,
+        anchor=[begin],
+        shape=[length],
+        rocal_tensor_output_type = types.FLOAT)
+    return trim_silence
 
 @pipeline_def(seed=seed)
 def mel_filter_bank_pipeline(path, file_list):
@@ -331,7 +331,7 @@ def main():
     if not rocal_cpu:
         print("The GPU support for Audio is not given yet. Running on CPU")
         rocal_cpu = True
-    if audio_path == "" and file_list == "":
+    if not audio_path and not file_list:
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
         downmix_audio_path = f'{rocal_data_path}/rocal_data/multi_channel_wav/'
@@ -357,16 +357,16 @@ def main():
                                                     path=downmix_audio_path if qa_mode else audio_path, file_list="" if qa_mode else file_list, downmix=True)
         if case_name == "to_decibels":
             audio_pipeline = to_decibels_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "slice":
+            audio_pipeline = non_silent_region_and_slice(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
+        if case_name == "non_silent_region":
+            audio_pipeline = non_silent_region(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "resample":
             audio_pipeline = resample_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "tensor_add_tensor":
             audio_pipeline = tensor_add_tensor_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "tensor_mul_scalar":
             audio_pipeline = tensor_mul_scalar_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
-        if case_name == "slice":
-            audio_pipeline = non_silent_region_and_slice(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
-        if case_name == "non_silent_region":
-            audio_pipeline = non_silent_region(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "mel_filter_bank":
             audio_pipeline = mel_filter_bank_pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, rocal_cpu=rocal_cpu, path=audio_path, file_list=file_list)
         if case_name == "normalize":

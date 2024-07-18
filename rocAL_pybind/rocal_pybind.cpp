@@ -271,9 +271,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 Copies the ring buffer data to cupy arrays.
                 )code")
         .def(
-            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_x1, uint max_y1) {
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint max_rows, uint max_cols) {
                 auto ptr = ctypes_void_ptr(p);
-                output_tensor.copy_data(static_cast<void *>(ptr), max_x1, max_y1);
+                output_tensor.copy_data(static_cast<void *>(ptr), max_rows, max_cols);
             },
             R"code(
                 Copies the ring buffer data to python buffer pointers given a ROI with dimensions in x and y direction.
@@ -446,8 +446,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("ERROR", ROCAL_ERROR)
         .export_values();
     py::enum_<RocalMelScaleFormula>(types_m, "RocalMelScaleFormula", "Rocal Audio Mel Formula")
-        .value("SLANEY", ROCAL_SLANEY)
-        .value("HTK", ROCAL_HTK)
+        .value("MELSCALE_SLANEY", ROCAL_MELSCALE_SLANEY)
+        .value("MELSCALE_HTK", ROCAL_MELSCALE_HTK)
         .export_values();
     py::enum_<RocalLastBatchPolicy>(types_m, "RocalLastBatchPolicy", "Rocal Last Batch Policy")
         .value("LAST_BATCH_FILL", ROCAL_LAST_BATCH_FILL)
@@ -456,6 +456,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
+        .def_readwrite("x", &ROIxywh::x)
+        .def_readwrite("y", &ROIxywh::y)
         .def_readwrite("w", &ROIxywh::w)
         .def_readwrite("h", &ROIxywh::h);
     // rocal_api_info.h
