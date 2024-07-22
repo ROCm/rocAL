@@ -341,3 +341,7 @@ size_t MXNetRecordIOReader::actual_shard_size_without_padding() {
 size_t MXNetRecordIOReader::largest_shard_size_without_padding() {
   return std::ceil(get_dataset_size() * 1.0 / _shard_count);
 }
+
+void MXNetRecordIOReader::increment_shard_id() {
+    _shard_id = (_shard_id + 1) % _shard_count;
+}
