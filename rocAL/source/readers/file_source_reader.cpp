@@ -59,11 +59,11 @@ unsigned FileSourceReader::count_items() {
             ret -= _batch_count;
         }
     } else if (_shard_size > 0) {
-        auto largest_shard_size_with_padding =
+        auto larget_shard_size_with_padding =
             _shard_size + (_batch_count - (_shard_size % _batch_count));  // The shard size used here is padded
         if (_loop)
-            return largest_shard_size_with_padding;
-        int size = std::max(largest_shard_size_with_padding, _batch_count);
+            return larget_shard_size_with_padding;
+        int size = std::max(larget_shard_size_with_padding, _batch_count);
         ret = (size - _read_counter);
         if (_last_batch_info.first == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
             ret -= _batch_count;
