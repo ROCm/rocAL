@@ -125,8 +125,8 @@ class CaffeLMDBRecordReader : public Reader {
     Reader::Status generate_file_names(); // Function that would generate _file_names containing all the samples in the dataset
     size_t get_start_idx(); // Start Idx of the Shard's Data
     size_t get_dataset_size(); // DataSet Size
-    size_t shard_size_without_padding(); // Number of files belonging to a shard (without padding)
-    size_t shard_size_with_padding(); // Number of files belonging to a shard (with padding)
+    size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
+    size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
     std::vector<std::string> _all_shard_file_names_padded;
