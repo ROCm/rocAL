@@ -125,5 +125,4 @@ class FileSourceReader : public Reader {
     size_t largest_shard_size_without_padding();  // The size of the shard having largest files (without padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
-    std::vector<std::string> _all_shard_file_names_padded;
 };
