@@ -29,7 +29,6 @@ THE SOFTWARE.
 
 #include <cstring>
 #include <stdexcept>
-
 #include "pipeline/commons.h"
 #include "pipeline/tensor.h"
 

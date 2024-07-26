@@ -364,15 +364,6 @@ class Tensor : public rocalTensor {
         return (_info.mem_type() == RocalMemType::HOST ? ROCAL_CPU : ROCAL_GPU);
     }
 
-    // dlpack functions
-    void* Dlpack() const;
-    std::array<int, 2> DlpackDevice() const;
-    //template <typename T>
-    //virtual std::vector<T> GetData();
-    const RocalTensorOutputType Dtype() const;
-    void MoveToHost();
-    void MoveToDevice();
-
    private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;     //!< Pointer to the tensor's internal buffer (opencl or host)
