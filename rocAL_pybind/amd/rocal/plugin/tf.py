@@ -27,17 +27,7 @@ import ctypes
 import rocal_pybind as b
 import amd.rocal.types as types
 import array
-try:
-    import cupy as cp
-    CUPY_FOUND=True
-except ImportError:
-    CUPY_FOUND=False
-try:
-    import dlpack as dlpack
-    DLPACK_FOUND=True
-except ImportError:
-    DLPACK_FOUND=False
-
+import dlpack as dlpack
 
 class ROCALGenericImageIterator(object):
     """!Generic iterator for rocAL pipelines that process images
@@ -102,10 +92,6 @@ class ROCALGenericIteratorDetection(object):
         self.multiplier = multiplier or [1.0, 1.0, 1.0]
         self.offset = offset or [0.0, 0.0, 0.0]
         self.device = device
-        if self.device is "gpu" or "cuda":
-            if not CUPY_FOUND and not DLPACK_FOUND:
-                print('info: Import CuPy and DLPack failed. Falling back to CPU!')
-                self.device = "cpu"
         self.device_id = device_id
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
@@ -132,14 +118,10 @@ class ROCALGenericIteratorDetection(object):
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    if DLPACK_FOUND:
-                        print("self.dimensions -- ", self.dimensions)
-                        self.output = np.empty(self.dimensions, dtype=self.dtype)
-                        self.output = self.output.__dlpack__()
-                        self.output_tensor_list[i].copy_data(self.output, self.loader._output_memory_type)
-                    elif CUPY_FOUND:
-                        self.output = cp.empty(self.dimensions, dtype=self.dtype)
-                        self.output_tensor_list[i].copy_data(self.output.data.ptr)
+                    print("in dlpack __next__")
+                    self.output = np.empty(self.dimensions, dtype=self.dtype)
+                    self.output = self.output.__dlpack__()
+                    self.output_tensor_list[i].copy_data(self.output, self.loader._output_memory_type)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
@@ -147,7 +129,7 @@ class ROCALGenericIteratorDetection(object):
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
                     self.output_tensor_list[i].copy_data(
-                        self.output_list[i].data.ptr)
+                        self.output_list[i], self.loader._output_memory_type)
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
@@ -204,20 +186,12 @@ class ROCALGenericIteratorDetection(object):
                         self.labels, (-1, self.bs, self.loader._num_classes))
                 else:
                     # TODO: check how to reshape labels from dlpack
-                    if DLPACK_FOUND:
-                        self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
-                        self.labels_dlpack = self.labels.__dlpack__()
-                        self.loader.get_one_hot_encoded_labels(self.labels_dlpack.data.ptr, self.loader._output_memory_type)
-                        self.labels = np.from_dlpack(self.labels_dlpack)
-                        self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
-                        self.labels = self.labels.__dlpack__()
-                    elif CUPY_FOUND:
-                        self.labels = cp.zeros(
-                            (self.bs) * (self.loader._num_classes), dtype="int32")
-                        self.loader.get_one_hot_encoded_labels(
-                            self.labels.data.ptr, self.loader._output_memory_type)
-                        self.labels = cp.reshape(
-                            self.labels, (-1, self.bs, self.loader._num_classes))
+                    self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
+                    self.labels = self.labels.__dlpack__()
+                    self.loader.get_one_hot_encoded_labels(self.labels, self.loader._output_memory_type)
+                    # copy back to cpu - gives back rocalTensor & copy to numpy
+                    self.labels.copy_data(self.labels.fromDlpack(), self.loader._output_memory_type)
+                    self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))          
             else:
                 self.labels = self.loader.get_image_labels()
 

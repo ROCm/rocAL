@@ -146,12 +146,12 @@ static RocalOutputMemType get_data_location(const DLDeviceType &devType) {
     }
 }
 
-static DLDevice generate_dl_device(const rocalTensor &rocal_tensor) {
+static DLDevice generate_dl_device(rocalTensor &rocal_tensor) {
     DLDevice dev;
 
     dev.device_id = 0;
 
-    switch (rocal_tensor.info()._mem_type) {
+    switch (rocal_tensor.mem_type()) {
         case RocalOutputMemType::ROCAL_MEMCPY_GPU:
             dev.device_type = kDLROCM;
             break;
@@ -163,13 +163,13 @@ static DLDevice generate_dl_device(const rocalTensor &rocal_tensor) {
     return dev;
 }
 
-py::tuple dlpack_device() {
-    DLDevice dev = generate_dl_device(*this->tensor);
+py::tuple dlpack_device(rocalTensor &rocal_tensor) {
+    DLDevice dev = generate_dl_device(rocal_tensor);
     return py::make_tuple(py::int_(static_cast<int>(dev.device_type)),
                           py::int_(static_cast<int>(dev.device_id)));
 }
 
-py::capsule dlpack() {
+py::capsule dlpack(py::object stream, rocalTensor &rocal_tensor) {
     DLManagedTensor *dmtensor = new DLManagedTensor;
     dmtensor->deleter = [](DLManagedTensor *self) {
         delete[] self->dl_tensor.shape;
@@ -178,38 +178,38 @@ py::capsule dlpack() {
     };
 
     try {
-        const RocalTensor &rocal_tensor = *this->rocalTensor;
-        Tensor &tensor = reinterpret_cast<Tensor*>(rocal_tensor);
         DLTensor &dtensor = dmtensor->dl_tensor;
 
-        dtensor.device = generate_dl_device(tensor);
+        dtensor.device = generate_dl_device(rocal_tensor);
 
         // Set up ndim
-        dtensor.ndim = tensor._info.num_of_dims();
+        dtensor.ndim = rocal_tensor.num_of_dims();
 
         // Set up data
-        dtensor.data = tensor._mem_handle;
+        dtensor.data = rocal_tensor.buffer();
         dtensor.byte_offset = 0;
 
         // Set up shape
         dtensor.shape = new int64_t[dtensor.ndim];
+        std::vector<size_t> rocal_shape = rocal_tensor.shape();
         for (int32_t i = 0; i < dtensor.ndim; ++i) {
-            dtensor.shape[i] = static_cast<int64_t>(tensor._info._max_shape[i]);
+            dtensor.shape[i] = static_cast<int64_t>(rocal_shape[i]);
         }
 
         // Set up dtype
-        dtensor.dtype = get_dl_data_type(tensor._info._data_type);
+        dtensor.dtype = get_dl_data_type(rocal_tensor.data_type());
 
         // Set up strides
         dtensor.strides = new int64_t[dtensor.ndim];
+        std::vector<size_t> rocal_strides = rocal_tensor.strides();
         for (int32_t i = 0; i < dtensor.ndim; i++) {
-            int64_t stride = static_cast<int64_t>(tensor._info._strides[i]);
-            if (stride % sizeof(tensor.data_type()) != 0) {
+            int64_t stride = static_cast<int64_t>(rocal_strides[i]);
+            if (stride % sizeof(rocal_tensor.data_type()) != 0) {
                 throw std::runtime_error(
                     "Stride is not a multiple of the data type size.");
             }
 
-            dtensor.strides[i] = stride / sizeof(tensor.data_type());
+            dtensor.strides[i] = stride / sizeof(rocal_tensor.data_type());
         }
     } catch (...) {
         delete[] dmtensor->dl_tensor.shape;
@@ -233,6 +233,7 @@ py::capsule dlpack() {
     return cap;
 }
 
+// TODO: check what layout elayout will be -- it's from dlpack 
 RocalTensor from_dlpack(py::object src, RocalTensorLayout elayout) {
     RocalTensor rocal_tensor;
     if (hasattr(src, "__dlpack__")) {
@@ -271,8 +272,9 @@ RocalTensor from_dlpack(py::object src, RocalTensorLayout elayout) {
             RocalTensorOutputType dtype(get_data_type(dtensor.dtype));
 
             // layout
+            //todo: change line below according to dlpack layout type
             RocalTensorLayout layout(elayout);
-            rocal_tensor._info.set_tensor_layout(layout);
+            rocal_tensor->set_tensor_layout(layout);
 
             // ndim
             unsigned ndim = rocal_tensor->num_of_dims();
@@ -1042,12 +1044,14 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("melFilterBank", &rocalMelFilterBank,
           py::return_value_policy::reference);
     //dlpack
-    m.def(
-        "__dlpack__", &dlpack(), "stream"_a = 1,
-        R"code(Export the tensor as capsule that contains a DLPackManagedTensor.)code");
-    m.def("__dlpack_device__", &dlpack_device(),
+    m.def("__dlpack__", &dlpack,
+            py::return_value_policy::reference,
+            R"code(Export the tensor as capsule that contains a DLPackManagedTensor.)code");
+    m.def("__dlpack_device__", &dlpack_device,
+            py::return_value_policy::reference,
             R"code(Generate a tuple containing device info of the tensor.)code");
-    m.def("fromDlpack", &from_dlpack(), "tensor"_a, "layout"_a,
-             R"code(Wrap an existing object into a Rocal Tensor.)code");
+    m.def("fromDlpack", &from_dlpack,
+            py::return_value_policy::reference,
+            R"code(Wrap an existing object into a Rocal Tensor.)code");
 }
 }  // namespace rocal

@@ -355,7 +355,9 @@ class Tensor : public rocalTensor {
     std::vector<size_t> dims() override { return _info.dims(); }
     std::vector<size_t> strides() override { return _info.strides(); }
     RocalTensorLayout layout() override { return (RocalTensorLayout)_info.layout(); }
+    void set_tensor_layout(RocalTensorLayout layout) override { _info.set_tensor_layout((RocalTensorlayout)layout); }
     RocalTensorOutputType data_type() override { return (RocalTensorOutputType)_info.data_type(); }
+    RocalOutputMemType mem_type() override { return (RocalOutputMemType)_info.mem_type(); }
     size_t data_size() override { return _info.data_size(); }
     RocalROICordsType roi_type() override { return (RocalROICordsType)_info.roi_type(); }
     std::vector<size_t> shape() override { return _info.max_shape(); }
