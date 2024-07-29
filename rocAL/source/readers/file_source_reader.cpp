@@ -298,10 +298,8 @@ Reader::Status FileSourceReader::generate_file_names() {
             if (largest_shard_size_without_padding % _batch_count) {
                 _num_padded_samples = (largest_shard_size_without_padding - actual_shard_size_without_padding) + _batch_count - (largest_shard_size_without_padding % _batch_count);
                 _file_count_all_shards += _num_padded_samples;
+                _file_names.insert(end, _num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
                 total_padded_samples += _num_padded_samples;
-                for (uint num_padded_samples = 0; num_padded_samples < _num_padded_samples; num_padded_samples++) {
-                    _file_names.insert(end, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples]);
-                }
             }
         }
     }
