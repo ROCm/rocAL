@@ -29,6 +29,8 @@ THE SOFTWARE.
 /// @param output 
 /// @param window_size 
 inline void hann_window(float *output, int window_size) {
+    if (window_size <= 0)
+        THROW("Invalid window size, for Hann window")
     double a = (2.0 * M_PI) / window_size;
     for (int t = 0; t < window_size; t++) {
         double phase = a * (t + 0.5);

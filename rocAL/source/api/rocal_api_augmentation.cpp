@@ -2174,8 +2174,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
     try {
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_datatype != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for PreEmphasis filter augmentation.")
-            op_tensor_datatype = RocalTensorDataType::FP32;
+            THROW("Only FP32 dtype is supported for PreEmphasis filter augmentation.")
         }
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_datatype);
@@ -2271,8 +2270,7 @@ rocalToDecibels(
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for To decibels augmentation.")
-            op_tensor_data_type = RocalTensorDataType::FP32;
+            THROW("Only FP32 dtype is supported for To decibels augmentation.")
         }
         output_info.set_data_type(op_tensor_data_type);
         if (input->info().layout() == RocalTensorlayout::NFT || input->info().layout() == RocalTensorlayout::NTF) // Layout is changed when input is from spectrogram/mel filter bank
@@ -2307,8 +2305,7 @@ rocalResample(RocalContext p_context,
         TensorInfo output_info = input->info();
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for resample augmentation.")
-            op_tensor_data_type = RocalTensorDataType::FP32;
+            THROW("Only FP32 dtype is supported for resample augmentation.")
         }
         output_info.set_data_type(op_tensor_data_type);
         if (sample_hint > 0) {
@@ -2344,8 +2341,7 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
     try {
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for TensorMulScalar augmentation.")
-            op_tensor_data_type = RocalTensorDataType::FP32;
+            THROW("Only FP32 dtype is supported for TensorMulScalar augmentation.")
         }
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
@@ -2374,8 +2370,7 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
     try {
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for TensorAddTensor augmentation.")
-            op_tensor_data_type = RocalTensorDataType::FP32;
+            THROW("Only FP32 dtype is supported for TensorAddTensor augmentation.")
         }
         TensorInfo output_info = input1->info();
         output_info.set_data_type(op_tensor_data_type);
@@ -2559,13 +2554,11 @@ rocalMelFilterBank(
     try {
         RocalTensorDataType op_tensor_data_type = (RocalTensorDataType)output_datatype;
         if (op_tensor_data_type != RocalTensorDataType::FP32) {
-            WRN("Only FP32 dtype is supported for MelFilterBank augmentation.")
-            op_tensor_data_type = RocalTensorDataType::FP32;
+            THROW("Only FP32 dtype is supported for MelFilterBank augmentation.")
         }
         TensorInfo output_info = input->info();
         std::vector<size_t> max_dims = output_info.max_shape();
-        int max_frame = max_dims[1];
-        max_frame = std::max(0, max_frame);
+        int max_frame = std::max(0ul, max_dims[1]);
         std::vector<size_t> dims = output_info.dims();
         dims[1] = nfilter;
         dims[2] = max_frame;

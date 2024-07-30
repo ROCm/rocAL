@@ -390,7 +390,7 @@ std::string COCOFileSourceReader::get_root_folder_path() {
 }
 
 std::vector<std::string> COCOFileSourceReader::get_file_paths_from_meta_data_reader() {   if (_meta_data_reader) {
-        return _meta_data_reader->get_file_path_content();
+        return _meta_data_reader->get_relative_file_path();
     } else {
         std::clog << "\n Meta Data Reader is not initialized!";
         return {};

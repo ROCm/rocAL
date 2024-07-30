@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include <cassert>
 #include <algorithm>
 #include <cstring>
-#include <math.h>
+#include <cmath>
 #include "pipeline/commons.h"
 #include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
@@ -42,27 +42,30 @@ FileSourceReader::FileSourceReader() {
 }
 
 unsigned FileSourceReader::count_items() {
-    int ret;
-    if (_shard_size == -1) {
-        if (_loop) return shard_size_with_padding();
-        int size = std::max(shard_size_with_padding(), _batch_count);
+    int ret = 0;
+    if (_shard_size == -1) {                                     // When shard_size is set to -1, The shard_size variable is not used
+        if (_loop) return largest_shard_size_without_padding();  // Return the size of the largest shard amongst all the shard's size
+        int size = std::max(largest_shard_size_without_padding(), _batch_count);
         ret = (size - _read_counter);
+        // Formula used to calculate - [_last_batch_padded_size = _batch_count - (_shard_size % _batch_count) ]
+        // Since "size" doesnt involve padding - we add the count of padded samples to the number of remaining elements
+        // which equals to the shard size with padding
         if (_last_batch_info.first == RocalBatchPolicy::PARTIAL || _last_batch_info.first == RocalBatchPolicy::FILL) {
             ret += _last_batch_padded_size;
         } else if (_last_batch_info.first == RocalBatchPolicy::DROP &&
-                   _last_batch_info.second == true) { // When pad_last_batch_repeated is False - Enough
-                                                      // number of samples would not be present in the last batch - hence
-                                                      // dropped by condition handled in the loader
+                   _last_batch_info.second == true) {  // When pad_last_batch_repeated is False - Enough
+                                                       // number of samples would not be present in the last batch - hence
+                                                       // dropped by condition handled in the loader
             ret -= _batch_count;
         }
     } else if (_shard_size > 0) {
-        auto shard_size_with_padding =
-            _shard_size + (_batch_count - (_shard_size % _batch_count));
+        auto largest_shard_size_with_padding =
+            _shard_size + (_batch_count - (_shard_size % _batch_count));  // The shard size used here is padded
         if (_loop)
-            return shard_size_with_padding;
-        int size = std::max(shard_size_with_padding, _batch_count);
+            return largest_shard_size_with_padding;
+        int size = std::max(largest_shard_size_with_padding, _batch_count);
         ret = (size - _read_counter);
-        if (_last_batch_info.first == RocalBatchPolicy::DROP) // The shard size is padded at the beginning of the condition, hence dropping the last batch
+        if (_last_batch_info.first == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
             ret -= _batch_count;
     }
     return ((ret < 0) ? 0 : ret);
@@ -84,25 +87,26 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _stick_to_shard = desc.get_stick_to_shard();
     _shard_size = desc.get_shard_size();
     ret = subfolder_reading();
-    _curr_file_idx = get_start_idx(); // shard's start_idx would vary for every shard in the vector
+    _curr_file_idx = get_start_idx();  // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
-                            _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
+        std::random_shuffle(_file_names.begin() + _curr_file_idx,
+                            _file_names.begin() + _curr_file_idx + actual_shard_size_without_padding());
 
     return ret;
 }
 
 void FileSourceReader::increment_curr_file_idx() {
-    // Should work for both pad_last_batch = True (or) False
-    if (_stick_to_shard == false) {
-        _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
-    } else {
-        if (_curr_file_idx >= get_start_idx() &&
-            _curr_file_idx < get_start_idx() + shard_size_without_padding() - 1) // checking if current-element lies within the shard size [begin_idx, last_idx -1]
+    // The condition satisfies for both pad_last_batch = True (or) False
+    auto start_idx_of_shard = get_start_idx();
+    if (_stick_to_shard == false) {  // The elements of each shard rotate in a round-robin fashion once the elements in particular shard is exhausted
+        _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+    } else {  // Stick to only elements from the current shard
+        if (_curr_file_idx >= start_idx_of_shard &&
+            _curr_file_idx < start_idx_of_shard + actual_shard_size_without_padding() - 1)  // checking if current-element lies within the shard size [begin_idx, last_idx -1]
             _curr_file_idx = (_curr_file_idx + 1);
         else
-            _curr_file_idx = get_start_idx();
+            _curr_file_idx = start_idx_of_shard;
     }
 }
 
@@ -112,7 +116,7 @@ void FileSourceReader::incremenet_read_ptr() {
 }
 
 size_t FileSourceReader::open() {
-    auto file_path = _all_shard_file_names_padded[_curr_file_idx];  // Get next file name
+    auto file_path = _file_names[_curr_file_idx];  // Get next file name
     incremenet_read_ptr();
     _last_file_path = _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -169,15 +173,15 @@ int FileSourceReader::release() {
 
 void FileSourceReader::reset() {
     if (_shuffle)
-        std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
-                            _all_shard_file_names_padded.begin() + get_start_idx() + shard_size_without_padding());
+        std::random_shuffle(_file_names.begin() + get_start_idx(),
+                            _file_names.begin() + get_start_idx() + actual_shard_size_without_padding());
 
-    if (_stick_to_shard == false)
-        increment_shard_id(); // Should work for both single and multiple shards
+    if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
+        increment_shard_id();      // Should work for both single and multiple shards
 
     _read_counter = 0;
 
-    if (_last_batch_info.first == RocalBatchPolicy::DROP) { // Skipping the dropped batch in next epoch
+    if (_last_batch_info.first == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
         for (uint i = 0; i < _batch_count; i++)
             increment_curr_file_idx();
     }
@@ -205,8 +209,8 @@ Reader::Status FileSourceReader::generate_file_names() {
     auto ret = Reader::Status::OK;
     if (!_file_list_path.empty()) {  // Reads the file paths from the file list and adds to file_names vector for decoding
         if (_meta_data_reader) {
-            auto vec_rel_file_path = _meta_data_reader->get_file_path_content(); // Get the relative file path's from meta_data_reader
-            for(auto file_path: vec_rel_file_path) {
+            auto vec_rel_file_path = _meta_data_reader->get_relative_file_path();  // Get the relative file path's from meta_data_reader
+            for (auto file_path : vec_rel_file_path) {
                 if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
                     if (!filesys::exists(_folder_path))
                         THROW("File list contains relative paths but root path doesn't exists");
@@ -276,35 +280,31 @@ Reader::Status FileSourceReader::generate_file_names() {
     if (_shard_size > 0)
         _padded_samples = _shard_size % _batch_count;
     else
-        _padded_samples = shard_size_with_padding() % _batch_count;
-    _last_batch_padded_size = _batch_count - _padded_samples;
+        _padded_samples = largest_shard_size_without_padding() % _batch_count;
+    _last_batch_padded_size = (_batch_count > 1) ? (_batch_count - _padded_samples) : 0;
 
     if (_pad_last_batch_repeated ==
-        true) { // pad the last sample when the dataset_size is not divisible by
-                // the number of shard's (or) when the shard's size is not
-                // divisible by the batch size making each shard having equal
-                // number of samples
+        true) {  // pad the last sample when the dataset_size is not divisible by
+                 // the number of shard's (or) when the shard's size is not
+                 // divisible by the batch size making each shard having equal
+                 // number of samples
+        uint total_padded_samples = 0; // initialize the total_padded_samples to 0
         for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
             uint start_idx = (dataset_size * shard_id) / _shard_count;
-            uint shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
-            uint shard_size_with_padding = std::ceil(dataset_size * 1.0 / _shard_count);
-            auto start = _file_names.begin() + start_idx;
-            auto end = _file_names.begin() + start_idx + shard_size_without_padding;
-            if (start != end && start <= _file_names.end() &&
-                end <= _file_names.end()) {
-                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), start, end);
-            }
-            if (shard_size_with_padding % _batch_count) {
-                _num_padded_samples = (shard_size_with_padding - shard_size_without_padding) + _batch_count - (shard_size_with_padding % _batch_count);
+            uint actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - std::floor(shard_id * dataset_size / _shard_count);
+            uint largest_shard_size_without_padding = std::ceil(dataset_size * 1.0 / _shard_count);
+            auto start = _file_names.begin() + start_idx + total_padded_samples;
+            auto end = _file_names.begin() + start_idx + actual_shard_size_without_padding + total_padded_samples;
+            if (largest_shard_size_without_padding % _batch_count) {
+                _num_padded_samples = (largest_shard_size_without_padding - actual_shard_size_without_padding) + _batch_count - (largest_shard_size_without_padding % _batch_count);
                 _file_count_all_shards += _num_padded_samples;
-                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _num_padded_samples, _all_shard_file_names_padded.back());
+                _file_names.insert(end, _num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
+                total_padded_samples += _num_padded_samples;
             }
         }
-    } else {
-        _all_shard_file_names_padded = _file_names;
     }
 
-    _last_file_name = _all_shard_file_names_padded[_all_shard_file_names_padded.size() - 1];
+    _last_file_name = _file_names[_file_names.size() - 1];
 
     return ret;
 }
@@ -315,7 +315,6 @@ Reader::Status FileSourceReader::subfolder_reading() {
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + STR(_folder_path))
     return ret;
 }
-
 
 Reader::Status FileSourceReader::open_folder() {
     if ((_src_dir = opendir(_folder_path.c_str())) == nullptr)
@@ -367,10 +366,11 @@ std::string FileSourceReader::get_root_folder_path() {
     return _folder_path;
 }
 
-std::vector<std::string> FileSourceReader::get_file_paths_from_meta_data_reader() {   if (_meta_data_reader) {
-        return _meta_data_reader->get_file_path_content();
+std::vector<std::string> FileSourceReader::get_file_paths_from_meta_data_reader() {
+    if (_meta_data_reader) {
+        return _meta_data_reader->get_relative_file_path();
     } else {
-        std::clog << "\n Meta Data Reader is not initialized!";
+        std::cout << "\n Meta Data Reader is not initialized!";
         return {};
     }
 }
@@ -384,11 +384,10 @@ size_t FileSourceReader::get_dataset_size() {
     return _file_count_all_shards;
 }
 
-
-size_t FileSourceReader::shard_size_without_padding() {
-    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - floor(_shard_id * get_dataset_size() / _shard_count);
+size_t FileSourceReader::actual_shard_size_without_padding() {
+    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - std::floor(_shard_id * get_dataset_size() / _shard_count);
 }
 
-size_t FileSourceReader::shard_size_with_padding() {
-  return std::ceil(get_dataset_size() * 1.0 / _shard_count);
+size_t FileSourceReader::largest_shard_size_without_padding() {
+    return std::ceil(get_dataset_size() * 1.0 / _shard_count);
 }

@@ -31,13 +31,13 @@ NormalizeNode::NormalizeNode(const std::vector<Tensor *> &inputs, const std::vec
 void NormalizeNode::create_node() {
     if (_node)
         return;
-    unsigned char compute_mean_and_stddev = 0;
+    uint compute_mean_and_stddev = NormalizeModes::DO_NOT_COMPUTE;
     if (!_mean.size() && !_std_dev.size()) {
-        compute_mean_and_stddev = 3;
-    } else if (!_mean.size()) {
-        compute_mean_and_stddev = 1;
-    } else if (!_std_dev.size()) {
-        compute_mean_and_stddev = 2;
+        compute_mean_and_stddev = NormalizeModes::COMPUTE_MEAN_STDDEV;
+    } else if (!_mean.size() && _std_dev.size()) {
+        compute_mean_and_stddev = NormalizeModes::COMPUTE_MEAN;
+    } else if (!_std_dev.size() && _mean.size()) {
+        compute_mean_and_stddev = NormalizeModes::COMPUTE_STDDEV;
     }
 
     int mean_stddev_array_size = 1;

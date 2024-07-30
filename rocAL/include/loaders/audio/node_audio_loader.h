@@ -44,8 +44,9 @@ class AudioLoaderNode : public Node {
     /// \param load_batch_count Defines the quantum count of the Audios to be loaded. It's usually equal to the user's batch size.
     /// \param mem_type Memory type, host or device
     /// \param meta_data_reader Determines the meta-data information
-    /// \param last_batch_policy Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
-    /// \param pad_last_batch_repeated If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
+    /// \param last_batch_policy, pad_last_batch_repeated A std::pair object representing the Last Batch Policies in rocAL and the padding of the samples.
+    ///            first: Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
+    ///            second: If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
     /// \param stick_to_shard Determines whether reader should stick to a single shards dataset or it to be used in a round robin fashion.
     /// \param shard_size Provides the size of the shard for an epoch.
     /// The loader will repeat Audios if necessary to be able to have Audios in multiples of the load_batch_count,

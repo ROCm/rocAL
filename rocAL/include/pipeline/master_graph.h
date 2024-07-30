@@ -113,7 +113,7 @@ class MasterGraph {
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
     Tensor *create_loader_output_tensor(const TensorInfo &info);
-    std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type, const char *file_list_path = "");
+    std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool ltrb_bbox = true, bool is_box_encoder = false,
                                                                 bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, bool is_box_iou_matcher = false, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);

@@ -52,6 +52,7 @@ option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
+option(BUILD_WITH_AMD_ADVANCE   "Build rocAL for advanced AMD GPU Architecture" OFF)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -134,6 +135,7 @@ message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
+message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:OFF)]${ColourReset}")
 
 add_subdirectory(rocAL)
 if(BUILD_PYPACKAGE)
@@ -200,14 +202,16 @@ set(ROCAL_RPM_PACKAGE_LIST     "rpp, mivisionx")
 set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev")
 set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
 
-# Add rocDecode Deps - Exclude centos-7
-file(READ "/etc/os-release" OS_RELEASE)
-string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
-if(NOT CENTOS_7_FOUND)
-  set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
-  set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
-  set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
-  set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
+# Add rocDecode Deps for HW Decode - Exclude centos-7
+if (EXISTS "/etc/os-release")
+  file(READ "/etc/os-release" OS_RELEASE)
+  string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
+  if(NOT CENTOS_7_FOUND)
+    set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
+    set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
+    set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
+    set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
+  endif()
 endif()
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides

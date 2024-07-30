@@ -125,12 +125,12 @@ struct ReaderConfig {
     size_t _sequence_frame_stride = 1;
     bool _shuffle = false;
     bool _loop = false;
-    std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
-    std::string _file_list_path = "";  //!< to read only files present in the file list
+    std::string _file_prefix;  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_list_path;  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
-    bool _stick_to_shard = true;
-    signed _shard_size = -1;
+    bool _stick_to_shard = true; //!< This bool variables tell if the samples from the same shard will be maintained in next epoch if true (or) will be taken from next epoch in a round robin fashion if false
+    signed _shard_size = -1; //!< The size of the shard for an iterator. Tells when the 
     std::pair<RocalBatchPolicy, bool> _last_batch_info = {RocalBatchPolicy::FILL, true};
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
