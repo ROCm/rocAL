@@ -38,6 +38,10 @@ ImageLoader::ImageLoader(void *dev_resources) : _circ_buff(dev_resources),
     _is_initialized = false;
     _remaining_image_count = 0;
     _device_id = 0;
+#if ENABLE_HIP
+    DeviceResourcesHip *hipres = static_cast<DeviceResourcesHip *>(dev_resources);
+    _hip_stream = hipres->hip_stream;
+#endif
 }
 
 ImageLoader::~ImageLoader() {
@@ -140,6 +144,11 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _image_loader = std::make_shared<ImageReadAndDecode>();
     size_t shard_count = reader_cfg.get_shard_count();
     int device_id = reader_cfg.get_shard_id();
+#if ENABLE_HIP
+    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
+        decoder_cfg.set_hip_stream(_hip_stream);
+    }
+#endif
     try {
         // set the device_id for decoder same as shard_id for number of shards > 1
         if (shard_count > 1)

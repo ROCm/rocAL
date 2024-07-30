@@ -198,10 +198,10 @@ void RocJpegDecoder::initialize_batch(int device_id, unsigned batch_size) {
         _rocjpeg_streams.push_back(rocjpeg_stream);
     }
 
-    hipError_t err = hipStreamCreate(&_hip_stream);
-    if (err != hipSuccess) {
-        THROW("init_hip::hipStreamCreate failed " + TOSTR(err))
-    }
+    // hipError_t err = hipStreamCreate(&_hip_stream);
+    // if (err != hipSuccess) {
+    //     THROW("init_hip::hipStreamCreate failed " + TOSTR(err))
+    // }
     _batch_size = batch_size;
 
     // Allocate mem for width and height arrays for src and dst
@@ -265,7 +265,7 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
     if (!_rocjpeg_image_buff) {
         CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
         _prev_image_buff_size = _rocjpeg_image_buff_size;
-    } else if (_rocjpeg_image_buff_size > _prev_image_buff_size) {
+    } else if (_rocjpeg_image_buff_size > _prev_image_buff_size) {  // Reallocate if the intermediate output exceeds the allocated memory
         CHECK_HIP(hipFree((void *)_rocjpeg_image_buff));
         CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
         _prev_image_buff_size = _rocjpeg_image_buff_size;

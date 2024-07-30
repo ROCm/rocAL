@@ -49,9 +49,11 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
             return std::make_shared<HWJpegDecoder>();
             break;
 #endif
+#if ENABLE_HIP
         case DecoderType::ROCJPEG_DEC:
-            return std::make_shared<RocJpegDecoder>();
+            return std::make_shared<RocJpegDecoder>(config.get_hip_stream());
             break;
+#endif
         default:
             THROW("Unsupported decoder type " + TOSTR(config.type()));
     }

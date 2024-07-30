@@ -34,6 +34,9 @@ class RocJpegDecoder : public Decoder {
    public:
     //! Default constructor
     RocJpegDecoder();
+#if ENABLE_HIP
+    RocJpegDecoder(hipStream_t &stream) { _hip_stream = stream; }
+#endif
     //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
     /*!
      \param input_buffer  User provided buffer containig the encoded image
