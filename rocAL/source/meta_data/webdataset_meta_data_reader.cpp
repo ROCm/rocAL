@@ -374,8 +374,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                         for (size_t i = 0; i < cls_data.size(); ++i)
                             ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
                         ascii_values.at(_ext_map[component.ext]) = ascii_component;
-                        last_file_name = component.filename;
                     }
+                    last_file_name = component.filename;
                 }
                 add(last_file_name, ascii_values);
                 ascii_values.clear();
@@ -393,8 +393,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                         for (size_t i = 0; i < cls_data.size(); ++i)
                             ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
                         ascii_values.at(_ext_map[component.ext]) = ascii_component;
-                        last_file_name = component.filename;
                     }
+                    last_file_name = component.filename;
                 }
                 for (auto& ascii_component: ascii_values) {
                     if(ascii_component.size() == 0) {   // TODO - Check if it should be less that extension size
@@ -404,12 +404,12 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                         } else if (_missing_component_behaviour == MissingComponentsBehaviour::ERROR) { // throw error
                             THROW("ERROR: Missing components in the sample. Please check the sample components");
                         }
+                    }
+                    // ascii_values.clear();    // Commented to fix seg fault
                 }
-                ascii_values.clear();
+                if (skip_sample == false)
+                    add(last_file_name, ascii_values);
             }
-            if (skip_sample = false)
-                add(last_file_name, ascii_values);
         }
-    }
     }
 }

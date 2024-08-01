@@ -335,8 +335,10 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
             // After parsing add the contents to the map
             for (auto& sample : unfiltered_samples) {
                 for (auto& component : sample.components) {
-                     if (webdataset_record_reader_from_components(component, wds_shard_index) != Reader::Status::OK)
-                                WRN("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] WebDataset File reader cannot access the storage at " + _folder_path + component.filename);
+                    if (!_meta_data_reader || _meta_data_reader->exists(component.filename)) {
+                        if (webdataset_record_reader_from_components(component, wds_shard_index) != Reader::Status::OK)
+                                    WRN("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] WebDataset File reader cannot access the storage at " + _folder_path + component.filename);
+                    }
                 }
             }
         }
