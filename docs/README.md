@@ -49,17 +49,17 @@ Refer [rocAL build instructions](https://github.com/ROCm/rocAL#build-instruction
 | :----------------: | :-----------------------: | :--------------------------: | :------------------------: |
 |    Color Twist     |   Image File Reader       |     Crop Mirror Normalize    |    PreEmphasis Filter      |
 | Color Temperature  |      Caffe Reader         |          Crop Resize         |      Non-Silent Region     |
-|     Brightness     |      Caffe2 Reader        |            Resize            |           Slice            |
+|     Brightness     |      Caffe2 Reader        |            Resize            |          Resample          |
 |  Gamma Correction  |      CIFAR10 Reader       |          Random Crop         |        Spectrogram         |
 |        Snow        |       COCO Reader         |         Warp Affine          |        Mel-Filter Bank     |
 |        Rain        |     TF Record Reader      |           Fish Eye           |          ToDecibels        |
 |        Blur        |   MXNet Record Reader     |        Lens Correction       |          Normalize         |
-|       Jitter       |    Video File Reader      |           Rotate             |          Resample          |
+|       Jitter       |    Video File Reader      |           Rotate             |                            |  
 |        Hue         |     Image Decoder         |            Crop              |                            |
 |     Saturation     | Image Decoder Random Crop |            Flip              |                            |
 |        Fog         |      Video Decoder        |    Resize Crop Mirror        |                            |
 |      Contrast      |      Audio Decoder        | Resize Crop Mirror Normalize |                            |
-|      Vignette      |                           |                              |                            |
+|      Vignette      |                           |            Slice             |                            |
 |     SNP Noise      |                           |                              |                            |
 |      Pixelate      |                           |                              |                            |
 |       Blend        |                           |                              |                            |
