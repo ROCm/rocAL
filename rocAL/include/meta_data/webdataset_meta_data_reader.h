@@ -57,7 +57,7 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     std::string _path;
     std::string _paths, _index_paths;
     std::vector<std::string> _index_name_list;
-    unsigned _missing_component_behaviour;
+    MissingComponentsBehaviour _missing_component_behaviour;
     pMetaDataBatch _output;
     DIR *_src_dir, *_sub_dir;
     struct dirent *_entity;

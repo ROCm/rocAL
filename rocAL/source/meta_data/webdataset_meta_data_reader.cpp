@@ -361,7 +361,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
 
         // After parsing add the contents to the map
         for (auto &sample : unfiltered_samples) {
-            if (_missing_component_behaviour == 1) { // empty_outputs
+            if (_missing_component_behaviour == MissingComponentsBehaviour::EMPTY) { // empty_outputs
                 AsciiValues ascii_values;
                 ascii_values.resize(_ext_map.size());
                 std::string  last_file_name;
@@ -397,13 +397,12 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                     }
                 }
                 for (auto& ascii_component: ascii_values) {
-                        if(ascii_component.size() == 0) {
-                           if (_missing_component_behaviour == 0) { // skipping sample
-                                WRN("WARNING: Skipping the sample with missing components.");
-                                skip_sample = true;
-                           }
-                            else if (_missing_component_behaviour == 2) { // throw error
-                                THROW("ERROR: Missing components in the sample. Please check the sample components");
+                    if(ascii_component.size() == 0) {   // TODO - Check if it should be less that extension size
+                        if (_missing_component_behaviour == MissingComponentsBehaviour::SKIP) { // skipping sample
+                            WRN("WARNING: Skipping the sample with missing components.");
+                            skip_sample = true;
+                        } else if (_missing_component_behaviour == MissingComponentsBehaviour::ERROR) { // throw error
+                            THROW("ERROR: Missing components in the sample. Please check the sample components");
                         }
                 }
                 ascii_values.clear();

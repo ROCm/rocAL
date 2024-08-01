@@ -1159,7 +1159,7 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
 std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(
     const char *source_path, const char *index_path,
     std::vector<std::set<std::string>> extensions,
-    MetaDataReaderType reader_type, unsigned missing_component_behaviour) {
+    MetaDataReaderType reader_type, MissingComponentsBehaviour missing_component_behaviour) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
@@ -1462,8 +1462,7 @@ std::vector<rocalTensorList *> MasterGraph::ascii_values_meta_data() {
             _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext].size(), 1});
             _ascii_tensor_list[ext][i]->set_mem_handle((void *)meta_data_buffers);
             meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
-            }
-        else if (ascii_values[i][ext].size() == 0) {
+            } else if (ascii_values[i][ext].size() == 0) {
             std::cerr << "\n EMPTY OUTPUTS FOR MISSING COMPONENT BEHAVIOUR";
             _ascii_tensor_list[ext][i]->set_dims({0});
             _ascii_tensor_list[ext][i]->set_mem_handle((void *)nullptr);

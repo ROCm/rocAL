@@ -514,12 +514,12 @@ void
 
 RocalMetaData
     ROCAL_API_CALL
-    rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, bool is_output) {
+    rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output) {
     // TODO: Missing component behaviour is to be handled (Error Handling) - passed as 0
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateWebDatasetReader")
     auto context = static_cast<Context*>(p_context);
-    return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, 0);
+    return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, static_cast<MissingComponentsBehaviour>(missing_components_behavior));
 }
 
 RocalTensorList

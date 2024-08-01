@@ -166,3 +166,12 @@ enum RocalBatchPolicy {
     DROP,
     PARTIAL
 };
+
+/*! \brief MissingComponentsBehaviour for Webdataset
+ *
+ */
+enum MissingComponentsBehaviour {
+    ERROR = 0,
+    SKIP,
+    EMPTY
+};

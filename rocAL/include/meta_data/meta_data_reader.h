@@ -60,11 +60,11 @@ struct MetaDataConfig {
     bool _avoid_class_remapping;
     bool _aspect_ratio_grouping;
     std::string _index_path;
-    unsigned _missing_component_behaviour;
+    MissingComponentsBehaviour _missing_component_behaviour;
     std::vector<std::set<std::string>>_exts;
 
    public:
-    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1, const std::string index_path = std::string(), const unsigned& missing_component_behaviour = 0, const std::vector<std::set<std::string>> &exts  = std::vector<std::set<std::string>>())
+    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1, const std::string index_path = std::string(), const MissingComponentsBehaviour& missing_component_behaviour = MissingComponentsBehaviour::ERROR, const std::vector<std::set<std::string>> &exts  = std::vector<std::set<std::string>>())
         : _type(type), _reader_type(reader_type), _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride), _index_path(index_path), _missing_component_behaviour(missing_component_behaviour), _exts(exts){}
     MetaDataConfig() = delete;
     MetaDataType type() const { return _type; }
@@ -72,7 +72,7 @@ struct MetaDataConfig {
     std::string path() const { return _path; }
     std::string index_path() const { return _index_path; }
     std::vector<std::set<std::string>> exts() const { return _exts; }
-    unsigned get_missing_component_behaviour() const { return _missing_component_behaviour; }
+    MissingComponentsBehaviour get_missing_component_behaviour() const { return _missing_component_behaviour; }
     std::map<std::string, std::string> feature_key_map() const { return _feature_key_map; }
     std::string file_prefix() const { return _file_prefix; }
     bool class_remapping() const { return _avoid_class_remapping; }

@@ -392,4 +392,19 @@ enum RocalLastBatchPolicy {
     ROCAL_LAST_BATCH_PARTIAL = 2
 };
 
+/*! \brief Missing components behaviour for Webdataset
+ *  \ingroup group_rocal_types
+ */
+enum RocalMissingComponentsBehaviour {
+    /*! \brief ROCAL_ERROR
+     */
+    ROCAL_ERROR = 0,
+    /*! \brief ROCAL_SKIP
+     */
+    ROCAL_SKIP = 1,
+    /*! \brief ROCAL_EMPTY
+     */
+    ROCAL_EMPTY = 2
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

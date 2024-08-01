@@ -120,7 +120,7 @@ class MasterGraph {
     std::vector<rocalTensorList *> create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
     std::vector<rocalTensorList *> create_cifar10_label_reader(const char *source_path, const char *file_prefix);
     std::vector<rocalTensorList *> create_mxnet_label_reader(const char *source_path, bool is_output);
-    std::vector<rocalTensorList *> create_webdataset_reader(const char *source_path, const char* index_path, std::vector<std::set<std::string>> extensions , MetaDataReaderType reader_type, unsigned missing_component_behaviour);
+    std::vector<rocalTensorList *> create_webdataset_reader(const char *source_path, const char* index_path, std::vector<std::set<std::string>> extensions , MetaDataReaderType reader_type, MissingComponentsBehaviour missing_component_behaviour);
     // std::vector<rocalTensorList *> create_webdataset_reader(const char *source_path, const char* index_path, std::vector<std::set<std::string>> extensions , MetaDataReaderType reader_type, unsigned missing_component_behaviour);
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
     void box_iou_matcher(std::vector<float> &anchors, float high_threshold, float low_threshold, bool allow_low_quality_matches);

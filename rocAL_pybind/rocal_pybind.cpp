@@ -401,6 +401,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
         .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
         .export_values();
+    py::enum_<RocalMissingComponentsBehaviour>(types_m, "RocalMissingComponentsBehaviour", "Rocal Missing components behavior")
+        .value("ERROR", ROCAL_ERROR)
+        .value("SKIP", ROCAL_SKIP)
+        .value("EMPTY", ROCAL_EMPTY)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)

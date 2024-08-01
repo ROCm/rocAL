@@ -99,6 +99,11 @@ from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
 from rocal_pybind.types import LAST_BATCH_PARTIAL
 
+#     RocalMissingComponentsBehaviour
+from rocal_pybind.types import ERROR
+from rocal_pybind.types import SKIP
+from rocal_pybind.types import EMPTY
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -161,6 +166,10 @@ _known_types = {
     LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
     LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
     LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
+
+    ERROR : ("ERROR", ERROR),
+    SKIP : ("SKIP", SKIP),
+    EMPTY : ("EMPTY", EMPTY),
 }
 
 def data_type_function(dtype):
