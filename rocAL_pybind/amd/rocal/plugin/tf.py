@@ -119,9 +119,10 @@ class ROCALGenericIteratorDetection(object):
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
                     print("in dlpack __next__")
-                    self.output = np.empty(self.dimensions, dtype=self.dtype)
-                    self.output = self.output.__dlpack__()
-                    self.output_tensor_list[i].copy_data(self.output, self.loader._output_memory_type)
+                    #self.output = np.empty(self.dimensions, dtype=self.dtype)
+                    #self.output = self.output.__dlpack__()
+                    #self.output_tensor_list[i].copy_data(self.output, self.loader._output_memory_type)
+                    self.output_tensor_list[i].__dlpack__()
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
