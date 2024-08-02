@@ -479,6 +479,12 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
         @param pad_last_batch_repeated  If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
         @return                         Decoded audio.
     """
+    print("pad_last_batch_repeated in decoders.py :: ", pad_last_batch_repeated)
+    ShardingInfo = b.ShardingInfo()
+    ShardingInfo.last_batch_policy = last_batch_policy
+    ShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
+    ShardingInfo.stick_to_shard = stick_to_shard
+    ShardingInfo.shard_size = shard_size
     kwargs_pybind = {
             "source_path": file_root,
             "source_file_list_path": file_list_path,
@@ -488,9 +494,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
             "shuffle": random_shuffle,
             "loop": False,
             "downmix": downmix,
-            "stick_to_shard": stick_to_shard,
-            "shard_size": shard_size,
-            "last_batch_info": (last_batch_policy, pad_last_batch_repeated)}
+            "sharding_info": ShardingInfo}
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio

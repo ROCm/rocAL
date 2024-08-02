@@ -986,8 +986,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       bool shuffle = false,
                                                                       bool loop = false,
                                                                       bool downmix = false,
-                                                                      bool stick_to_shard = false,
-                                                                      int shard_size = -1,
-                                                                      std::pair<RocalLastBatchPolicy, bool> last_batch_info = {RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL, false});
+                                                                      ShardingInfo sharding_info = {});
 
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H
