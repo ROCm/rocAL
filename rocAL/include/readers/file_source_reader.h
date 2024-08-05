@@ -86,6 +86,7 @@ class FileSourceReader : public Reader {
     FILE *_current_fPtr;
     unsigned _current_file_size;
     unsigned _shard_start_idx;
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
     size_t _shard_id = 0;
@@ -116,7 +117,7 @@ class FileSourceReader : public Reader {
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
     Reader::Status generate_file_names();         // Function that would generate _file_names containing all the samples in the dataset
-    size_t get_start_idx();                       // Start Idx of the Shard's Data
+    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
     size_t get_dataset_size();                    // DataSet Size
     size_t actual_shard_size_without_padding();   // Actual Number of Files present in the shard (without padding)
     size_t largest_shard_size_without_padding();  // The size of the shard having largest files (without padding)
