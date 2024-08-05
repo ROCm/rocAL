@@ -278,10 +278,7 @@ Reader::Status FileSourceReader::generate_file_names() {
 
     auto dataset_size = _file_count_all_shards;
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
-    if (_shard_size > 0)
-        _padded_samples = _shard_size % _batch_size;
-    else
-        _padded_samples = largest_shard_size_without_padding() % _batch_size;
+    _padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = (_batch_size > 1) ? (_batch_size - _padded_samples) : 0;
 
     if (_pad_last_batch_repeated == true) {
