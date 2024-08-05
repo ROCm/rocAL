@@ -114,7 +114,7 @@ class FileSourceReader : public Reader {
     std::pair<RocalBatchPolicy, bool> _last_batch_info;  //  A std::pair object representing the Last Batch Policies in rocAL and the padding of the samples.
                                                          //  first: Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
                                                          //  second: If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
-    size_t _last_batch_padded_size = 0;                  // The size
+    size_t _last_batch_padded_size = 0;                  // The size of number of padded samples in the last batch
     size_t _num_padded_samples = 0;                      //! Number of samples that are padded in the last batch which would differ for each shard.
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;

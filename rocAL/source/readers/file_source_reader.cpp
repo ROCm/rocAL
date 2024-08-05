@@ -292,16 +292,14 @@ Reader::Status FileSourceReader::generate_file_names() {
         for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
             uint start_idx = (dataset_size * shard_id) / _shard_count;
             uint actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - std::floor(shard_id * dataset_size / _shard_count);
-            uint largest_shard_size_without_padding = std::ceil(dataset_size * 1.0 / _shard_count);
+            uint largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
             auto start = _file_names.begin() + start_idx + total_padded_samples;
-            auto end = _file_names.begin() + start_idx + actual_shard_size_without_padding + total_padded_samples;
-            if (largest_shard_size_without_padding % _batch_count) {
-                _num_padded_samples = (largest_shard_size_without_padding - actual_shard_size_without_padding) + _batch_count - (largest_shard_size_without_padding % _batch_count);
+            auto end = start + actual_shard_size_without_padding;
+            if (largest_shard_size % _batch_count) {
+                _num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_count - (largest_shard_size % _batch_count);
                 _file_count_all_shards += _num_padded_samples;
+                _file_names.insert(end, _num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
                 total_padded_samples += _num_padded_samples;
-                for (uint num_padded_samples = 0; num_padded_samples < _num_padded_samples; num_padded_samples++) {
-                    _file_names.insert(end, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples]);
-                }
             }
         }
     }
@@ -387,9 +385,9 @@ size_t FileSourceReader::get_dataset_size() {
 }
 
 size_t FileSourceReader::actual_shard_size_without_padding() {
-    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - std::floor(_shard_id * get_dataset_size() / _shard_count);
+    return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - std::floor(_shard_id * _file_count_all_shards / _shard_count);
 }
 
 size_t FileSourceReader::largest_shard_size_without_padding() {
-    return std::ceil(get_dataset_size() * 1.0 / _shard_count);
+    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }
