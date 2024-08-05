@@ -453,4 +453,22 @@ enum RocalLastBatchPolicy {
     ROCAL_LAST_BATCH_PARTIAL = 2
 };
 
+/*! \brief  rocAL ShardingInfo enum
+ * \ingroup group_rocal_types
+ */
+struct ShardingInfo {
+    RocalLastBatchPolicy last_batch_policy;
+    bool pad_last_batch_repeated;
+    bool stick_to_shard;
+    int shard_size;
+
+    // Constructor with default values
+    ShardingInfo()
+        : last_batch_policy(RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL),
+          pad_last_batch_repeated(false),
+          stick_to_shard(true),
+          shard_size(-1)
+    {}
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
