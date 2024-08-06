@@ -357,7 +357,7 @@ class Tensor : public rocalTensor {
     RocalTensorLayout layout() override { return (RocalTensorLayout)_info.layout(); }
     void set_tensor_layout(RocalTensorLayout layout) override { _info.set_tensor_layout((RocalTensorlayout)layout); }
     RocalTensorOutputType data_type() override { return (RocalTensorOutputType)_info.data_type(); }
-    RocalOutputMemType mem_type() override { return (RocalOutputMemType)_info.mem_type(); }
+    RocalOutputMemType mem_type() override { return (_info.mem_type() == RocalMemType::HOST ? ROCAL_MEMCPY_HOST : ROCAL_MEMCPY_GPU); }
     size_t data_size() override { return _info.data_size(); }
     RocalROICordsType roi_type() override { return (RocalROICordsType)_info.roi_type(); }
     std::vector<size_t> shape() override { return _info.max_shape(); }

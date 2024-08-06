@@ -31,6 +31,7 @@ from parse_config import parse_args
 def draw_patches(img, idx, device_type, args=None):
     import cv2
     args = parse_args()
+    print("device type from draw patches", device_type)
     if device_type == "gpu":
         try:
             import cupy as cp

@@ -47,7 +47,7 @@ get_ago_affinity_info(
     return affinity;
 }
 
-Graph::Graph(vx_context context, RocalAffinity affinity, int cpu_id, size_t cpu_num_threads, int gpu_id) : _mem_type(((affinity == RocalAffinity::GPU) ? RocalMemType::OCL : RocalMemType::HOST)),
+Graph::Graph(vx_context context, RocalAffinity affinity, int cpu_id, size_t cpu_num_threads, int gpu_id) : _mem_type(((affinity == RocalAffinity::GPU) ? RocalMemType::HIP : RocalMemType::HOST)),
                                                                                                            _context(context),
                                                                                                            _graph(nullptr),
                                                                                                            _affinity(affinity),
