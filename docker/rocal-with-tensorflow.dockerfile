@@ -36,11 +36,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g+
         git clone https://github.com/Tencent/rapidjson.git && cd rapidjson && mkdir build && cd build && \
         cmake ../ && make -j4 && sudo make install && cd ../../ && \
         pip install pytest==7.3.1 && git clone -b v2.11.1 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
-        cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
-        pip install numpy==1.24.2 scipy==1.9.3 cython==0.29.* git+https://github.com/ROCm/hipify_torch.git && \
-        env CC=$MPI_HOME/bin/mpicc python -m pip install mpi4py && \
-        git clone -b rocm6.1_internal_testing https://github.com/ROCm/cupy.git && cd cupy && git submodule update --init && \
-        pip install -e . --no-cache-dir -vvvv
+        cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../
 
 # install MIVisionX 
 RUN git clone https://github.com/ROCm/MIVisionX.git && cd MIVisionX && \
@@ -56,14 +52,3 @@ WORKDIR $ROCAL_WORKSPACE
 RUN pip install --upgrade pip
 RUN git clone -b develop https://github.com/ROCm/rocAL && \
         mkdir build && cd build && cmake -D PYTHON_VERSION_SUGGESTED=${ROCAL_PYTHON_VERSION_SUGGESTED} ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install
-
-WORKDIR /workspace
-
-#install tensorflow dependencies - Compile protos and Install TensorFlow Object Detection API.
-RUN cd ~/models/research/ && \
-protoc object_detection/protos/*.proto --python_out=. && \
-cp object_detection/packages/tf2/setup.py . && \
-python -m pip install .
-
-#upgrade pip
-RUN pip3 install --upgrade pip
