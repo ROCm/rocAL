@@ -229,7 +229,6 @@ static DLDevice generate_dl_device(rocalTensor *rocal_tensor) {
             dev.device_type = kDLCPU;
             break;
     }
-    std::cout << "generate_dl_device -- " << (int)dev.device_type << std::endl;
     return dev;
 }
 
@@ -280,7 +279,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def(
             "__dlpack__",
             [](rocalTensor *rocal_tensor, py::object stream) {
-                std::cout << "coming to dlpack function!!!" << std::endl;
                 DLManagedTensor *dmtensor = new DLManagedTensor;
                 dmtensor->deleter = [](DLManagedTensor *self) {
                     delete[] self->dl_tensor.shape;
@@ -295,10 +293,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
 
                     // Set up ndim
                     dtensor.ndim = rocal_tensor->num_of_dims();
-                    //std::cout << "num of dims -- " << rocal_tensor->num_of_dims() << std::endl;
 
                     // Set up data
-                    //std::cout << "rocal buffer ptr -- " << rocal_tensor->buffer() << std::endl;
                     dtensor.data = rocal_tensor->buffer();
                     dtensor.byte_offset = 0;
 
@@ -307,19 +303,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
                     std::vector<size_t> rocal_shape = rocal_tensor->dims();
                     for (int32_t i = 0; i < dtensor.ndim; ++i) {
                         dtensor.shape[i] = static_cast<int64_t>(rocal_shape[i]);
-                        //std::cout << "shape[" << i << "]" <<  rocal_shape[i] << std::endl;
                     }
 
                     // Set up dtype
                     dtensor.dtype = get_dl_data_type(rocal_tensor->data_type());
-                    //std::cout << "dtype -- " << rocal_tensor->data_type() << std::endl;
 
                     // Set up strides
                     dtensor.strides = new int64_t[dtensor.ndim];
                     std::vector<size_t> rocal_strides = rocal_tensor->strides();
                     for (int32_t i = 0; i < dtensor.ndim; i++) {
                         int64_t stride = static_cast<int64_t>(rocal_strides[i]);
-                        //std::cout << "stride[" << i << "]" <<  rocal_strides[i] << std::endl;
                         dtensor.strides[i] = stride / sizeof(rocal_tensor->data_type());
                     }
                 } catch (...) {
@@ -506,14 +499,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 )code")
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
-                /*std::cout <<" i am here at object\n";
-                if (PyCapsule_CheckExact(p.ptr())) {
-                    auto ptr = PyCapsule_GetPointer(p.ptr(), PyCapsule_GetName(p.ptr()));
-                    output_tensor.copy_data(static_cast<void *>(ptr), RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                } else {*/
-                    auto ptr = ctypes_void_ptr(p);
-                    output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
-                //}   
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
+  
             },
             py::return_value_policy::reference,
             R"code(
@@ -521,7 +509,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 )code")
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::array array) {
-                std::cout <<" i am here at py::array\n";
                 auto buf = array.request();
                 output_tensor.copy_data(static_cast<void *>(buf.ptr), RocalOutputMemType::ROCAL_MEMCPY_HOST);
             },
