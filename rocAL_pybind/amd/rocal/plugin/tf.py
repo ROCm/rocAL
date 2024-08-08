@@ -127,8 +127,7 @@ class ROCALGenericIteratorDetection(object):
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
-                    self.output_tensor_list[i].copy_data(
-                        self.output_list[i], self.loader._output_memory_type)
+                    self.output_tensor_list[i].copy_data(self.output_list[i])
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
@@ -186,6 +185,7 @@ class ROCALGenericIteratorDetection(object):
                 else:
                     # TODO: check how to reshape labels from dlpack
                     self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
+                    self.labels = self.labels.__dlpack__()
                     self.loader.get_one_hot_encoded_labels(self.labels, self.loader._output_memory_type)
                     # copy back to cpu - gives back rocalTensor & copy to numpy
                     self.labels.copy_data(self.labels.fromDlpack(), self.loader._output_memory_type)

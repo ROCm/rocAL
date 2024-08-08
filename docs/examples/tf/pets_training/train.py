@@ -173,8 +173,8 @@ def main():
         valPipe.set_outputs(cmn_images)
     valPipe.build()
 
-    trainIterator = ROCALIterator(trainPipe)
-    valIterator = ROCALIterator(valPipe)
+    trainIterator = ROCALIterator(trainPipe, device=device)
+    valIterator = ROCALIterator(valPipe, device=device)
 
     # Create the metrics
     accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(
