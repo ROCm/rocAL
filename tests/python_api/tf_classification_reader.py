@@ -28,16 +28,9 @@ import numpy as np
 from parse_config import parse_args
 
 
-def draw_patches(img, idx, device_type, args=None):
+def draw_patches(img, idx, args=None):
     import cv2
     args = parse_args()
-    print("device type from draw patches", device_type)
-    if device_type == "gpu":
-        try:
-            import cupy as cp
-            img = cp.asnumpy(img)
-        except ImportError:
-            pass
     if not args.NHWC:
         img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -102,7 +95,7 @@ def main():
             print("\n\nPrinted first batch with", (batch_size), "images!")
         for element in list(range(batch_size)):
             cnt += 1
-            draw_patches(images_array[element], cnt, device, args=args)
+            draw_patches(images_array[element], cnt, args=args)
         break
     image_iterator.reset()
 
