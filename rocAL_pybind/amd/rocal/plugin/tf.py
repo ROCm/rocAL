@@ -26,8 +26,6 @@ import numpy as np
 import ctypes
 import rocal_pybind as b
 import amd.rocal.types as types
-import array
-import dlpack as dlpack
 
 class ROCALGenericImageIterator(object):
     """!Generic iterator for rocAL pipelines that process images

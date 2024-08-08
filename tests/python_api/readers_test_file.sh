@@ -94,13 +94,13 @@ ver=$(python3 -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2
 ####################################################################################################################################
 # USER TO MAKE CHANGES HERE FOR TEST
 # Make the respective " Pipeline " to test equal to 1
-unit_test=0
-coco_reader=0
-caffe_reader=0
-caffe2_reader=0
+unit_test=1
+coco_reader=1
+caffe_reader=1
+caffe2_reader=1
 tf_classification_reader=1
-tf_detection_reader=0
-video_pipeline=0
+tf_detection_reader=1
+video_pipeline=1
 ####################################################################################################################################
 
 

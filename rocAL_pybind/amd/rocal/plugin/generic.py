@@ -27,7 +27,6 @@ import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
 import ctypes
-import dlpack as dlpack
     
 class ROCALGenericIterator(object):
     """!Iterator for processing data
@@ -143,7 +142,7 @@ class ROCALGenericIterator(object):
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
                     self.output_tensor_list[i].copy_data(
-                        self.output_list[i], self.loader._output_memory_type)
+                        self.output_list[i])
         if (self.loader._is_external_source_operator):
             self.labels = self.loader.get_image_labels()
             if self.device == "cpu":
