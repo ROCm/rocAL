@@ -30,10 +30,16 @@ THE SOFTWARE.
 #pragma once
 #include <random>
 #include <vector>
+<<<<<<< HEAD
 
 #include "pipeline/exception.h"
 #include "pipeline/log.h"
 #include "pipeline/filesystem.h"
+=======
+#include "exception.h"
+#include "log.h"
+#include "filesystem.h"
+>>>>>>> upstream/release/rocm-rel-6.2
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f
@@ -158,6 +164,7 @@ struct Timing {
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
 };
+<<<<<<< HEAD
 
 /*! \brief Tensor Last Batch Policies
  These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
@@ -204,3 +211,5 @@ class BatchRNG {
     int64_t _seed;
     std::vector<RNG> _rngs;
 };
+=======
+>>>>>>> upstream/release/rocm-rel-6.2

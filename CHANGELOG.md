@@ -1,5 +1,3 @@
-<p align="center"><img width="70%" src="docs/data/rocAL_logo.png" /></p>
-
 # Changelog
 
 ## Online Documentation
@@ -8,7 +6,7 @@
 
 ## rocAL 2.0.0 (unreleased)
 
-### Added
+### Additions
 
 * Packages - dev & tests
 * Support for audio loader and decoder, which uses libsndfile library to decode wav files
@@ -37,7 +35,11 @@
 * CentOS 7 support
 * SLES 15 SP5 support
 
-### Changed
+### Changes
+
+* Removed CuPy from `setup.py`
+
+### Fixes
 
 * Image to tensor updates
 * ROCm install - use case graphics removed
@@ -100,7 +102,7 @@
 * FFMPEG - [n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * MIVisionX - [master](https://github.com/ROCm/MIVisionX)
 * Dependencies for all the above packages
-* rocAL Setup Script - `V1.0.2`
+* rocAL Setup Script - `V1.1.0`
 
 ### Known issues
 

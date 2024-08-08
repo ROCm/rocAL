@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <cassert>
+<<<<<<< HEAD
 #include "pipeline/commons.h"
 #include <cstring>
 #include <algorithm>
@@ -29,6 +30,17 @@ THE SOFTWARE.
 #include "pipeline/filesystem.h"
 
 CIFAR10DataReader::CIFAR10DataReader() {
+=======
+#include <commons.h>
+#include <cstring>
+#include <algorithm>
+#include "cifar10_data_reader.h"
+#include <file_source_reader.h>
+#include "filesystem.h"
+
+CIFAR10DataReader::CIFAR10DataReader()
+{
+>>>>>>> upstream/release/rocm-rel-6.2
     _src_dir = nullptr;
     _sub_dir = nullptr;
     _entity = nullptr;

@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <cstring>
 #include <map>
 #include <tuple>
+<<<<<<< HEAD
 #include "pipeline/commons.h"
 #include "decoders/video/ffmpeg_video_decoder.h"
 #include "readers/video/video_reader_factory.h"
@@ -37,6 +38,16 @@ THE SOFTWARE.
 #include "readers/video/video_reader.h"
 #include "pipeline/filesystem.h"
 
+=======
+#include "commons.h"
+#include "ffmpeg_video_decoder.h"
+#include "video_reader_factory.h"
+#include "timing_debug.h"
+#include "filesystem.h"
+
+#include "video_loader_module.h"
+#include "video_properties.h"
+>>>>>>> upstream/release/rocm-rel-6.2
 #ifdef ROCAL_VIDEO
 extern "C" {
 #include <libavutil/pixdesc.h>

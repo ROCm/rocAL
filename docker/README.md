@@ -7,6 +7,7 @@ Docker is a set of platform as a service (PaaS) products that use OS-level virtu
 ```shell
 sudo docker build --build-arg {ARG_1_NAME}={ARG_1_VALUE} [--build-arg {ARG_2_NAME}={ARG_2_VALUE}] -f {DOCKER_FILE_NAME}.dockerfile -t {DOCKER_IMAGE_NAME} .
 ```
+<<<<<<< HEAD
 
 ## ARG options
 
@@ -24,3 +25,7 @@ TENSORFLOW_VERSION:                 rocm/tensorflow docker tag
 ROCAL_PYTHON_VERSION_SUGGESTED:     Python version if required for rocal_pybind
 ```
 
+=======
+sudo docker build --build-arg {ARG_NAME}={ARG_VALUE} -f {DOCKER_FILE_NAME}.dockerfile -t {DOCKER_IMAGE_NAME} .
+```
+>>>>>>> upstream/release/rocm-rel-6.2

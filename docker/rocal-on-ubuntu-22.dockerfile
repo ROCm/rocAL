@@ -34,12 +34,23 @@ RUN apt-get -y install half rocblas-dev miopen-hip-dev migraphx-dev
 # install rocAL dependencies
 RUN apt-get -y install rpp-dev curl make g++ unzip libomp-dev libpthread-stubs0-dev wget clang
 RUN apt-get update -y && apt-get -y install autoconf automake libbz2-dev libssl-dev python3-dev libgflags-dev libgoogle-glog-dev liblmdb-dev nasm yasm libjsoncpp-dev && \
+<<<<<<< HEAD
         git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../ && \
         make -j4 && sudo make install && cd ../../
 RUN apt-get -y install sqlite3 libsqlite3-dev libtool build-essential
 RUN git clone -b v3.21.9 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
+=======
+        git clone -b 2.0.6.2 https://github.com/rrawther/libjpeg-turbo.git && cd libjpeg-turbo && mkdir build && cd build && \
+        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
+        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib ../ && make -j4 && sudo make install && cd
+RUN apt-get -y install sqlite3 libsqlite3-dev libtool build-essential
+RUN git clone -b v3.21.9 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
+        ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd
+RUN git clone -b 1.1.0  https://github.com/ROCm/rpp.git && cd rpp && mkdir build && cd build && \
+        cmake -DBACKEND=HIP ../ && make -j4 && sudo make install && cd
+>>>>>>> upstream/release/rocm-rel-6.2
 ENV CUPY_INSTALL_USE_HIP=1
 ENV ROCM_HOME=/opt/rocm
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev && \
@@ -62,7 +73,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rocdecode-dev
 ENV ROCAL_WORKSPACE=/workspace
 WORKDIR $ROCAL_WORKSPACE
 
+<<<<<<< HEAD
 # Install rocAL
 RUN pip install --upgrade pip
 RUN git clone -b develop https://github.com/ROCm/rocAL && \
         mkdir build && cd build && cmake ../rocAL && make -j8 && cmake --build . --target PyPackageInstall && make install
+=======
+# Install MIVisionX
+RUN git clone https://github.com/ROCm/MIVisionX.git && \
+        mkdir build && cd build && cmake -DBACKEND=HIP -DROCAL=OFF ../MIVisionX && make -j8 && make install
+>>>>>>> upstream/release/rocm-rel-6.2

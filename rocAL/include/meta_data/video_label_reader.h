@@ -64,5 +64,6 @@ class VideoLabelReader : public MetaDataReader {
     unsigned _sequence_length;
     unsigned _step;
     unsigned _stride;
+    std::vector<int> _labels;
 };
 #endif

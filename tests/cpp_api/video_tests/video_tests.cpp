@@ -145,6 +145,11 @@ int main(int argc, const char **argv) {
         std::cerr << "Resize height : " << resize_height << std::endl;
     }
 
+    /*>>>>>>>>>>>>>>>> Getting the path for MIVisionX-data  <<<<<<<<<<<<<<<<*/
+    std::string rocal_data_path;
+    if(std::getenv("ROCAL_DATA_PATH"))
+        rocal_data_path = std::getenv("ROCAL_DATA_PATH");
+
     RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24 : RocalImageColor::ROCAL_COLOR_U8;
     RocalContext handle;
     handle = rocalCreate(input_batch_size, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1);
@@ -183,16 +188,6 @@ int main(int argc, const char **argv) {
                 std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
                 return -1;
             }
-            input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
-            break;
-        }
-        case 3: {
-            std::cout << "\nSEQUENCE READER\n";
-            enable_framenumbers = enable_timestamps = 0;
-            input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
-            break;
-        }
-    }
     if (enable_sequence_rearrange) {
         std::cout << "\nENABLE SEQUENCE REARRANGE\n";
         std::vector<unsigned> new_order = {0, 0, 1, 1, 0};  // The integers in new order should range only from 0 to sequence_length - 1

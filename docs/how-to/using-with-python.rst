@@ -176,7 +176,11 @@ Building the Pipeline
 
 Building the pipeline ensures that all operators are validated with the corresponding inputs and outputs.
 
+<<<<<<< HEAD
 To build the pipeline, see `https://github.com/ROCm/rocAL/blob/master/tests/python_api/unit_test.py#L166`
+=======
+To build the pipeline, see `https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/examples/rocAL_api_python_unittest.py#L166`
+>>>>>>> upstream/release/rocm-rel-6.2
 
 .. code-block:: python
    :caption: Build the Pipeline
@@ -245,7 +249,10 @@ To run the pipeline, see:
     images, labels = pipe_out
     show_images(images)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/release/rocm-rel-6.2
 rocAL Data Types
 =========================
 

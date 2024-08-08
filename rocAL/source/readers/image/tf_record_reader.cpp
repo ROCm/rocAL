@@ -27,12 +27,7 @@ THE SOFTWARE.
 #include <vector>
 
 TFRecordReader::TFRecordReader() {
-    _src_dir = nullptr;
     _sub_dir = nullptr;
-    _entity = nullptr;
-    _curr_file_idx = 0;
-    _current_file_size = 0;
-    _loop = false;
     _shuffle = false;
     _file_id = 0;
     _last_rec = false;

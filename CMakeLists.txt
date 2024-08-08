@@ -23,6 +23,9 @@ set(VERSION "2.0.0")
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
+# Set Project Version and Language
+project(rocal VERSION ${VERSION} LANGUAGES CXX)
+
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
 

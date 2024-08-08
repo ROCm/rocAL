@@ -344,3 +344,24 @@ if [[ video_pipeline -eq 1 ]]; then
         --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_log.${CURRENTDATE}.txt
 fi
 ####################################################################################################################################
+
+
+####################################################################################################################################
+if [[ rocAL_api_video_labels_pipeline -eq 1 ]]; then
+
+    # Mention dataset_path
+    # Detection
+    data_dir=$ROCAL_DATA_PATH/video_and_sequence_samples/labelled_videos/
+    # rocAL_api_video_labels_pipeline.py
+    # By default : cpu backend, NHWC format , uint8
+
+    python"$ver" rocAL_api_video_labels_pipeline.py \
+        --video-path $data_dir \
+        --$backend_arg \
+        --batch-size 10 \
+        --$display_arg \
+        --$print_tensor_arg \
+        --sequence-length 3 \
+        --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_log.${CURRENTDATE}.txt
+fi
+####################################################################################################################################

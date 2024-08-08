@@ -185,6 +185,17 @@ def caffe2(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
     else:
         return (caffe2_meta_data, labels)
 
+<<<<<<< HEAD
+=======
+def video(*inputs, sequence_length, additional_decode_surfaces=2, bytes_per_sample_hint=0, channels=3,
+          dont_use_mmap=False, dtype=types.FLOAT, enable_frame_num=False,  enable_timestamps=False, file_list="",
+          file_list_frame_num=False, file_list_include_preceding_frame=False, file_root="", filenames=[],
+          image_type=types.RGB, initial_fill=1024, labels=[], lazy_init=False, normalized=False, num_shards=1,
+          pad_last_batch=False, pad_sequences=False, prefetch_queue_depth=1, preserve=False, random_shuffle=False,
+          read_ahead=False, seed=-1, shard_id=0, skip_cached_images=False, skip_vfr_check=False, step=1,
+          stick_to_shard=False, stride=1, tensor_init_bytes=1048576, decoder_mode=types.SOFTWARE_DECODE,
+          device=None, name=None):
+>>>>>>> upstream/release/rocm-rel-6.2
 
 def video(sequence_length, file_list_frame_num=False, file_root="", image_type=types.RGB, num_shards=1,
           random_shuffle=False, step=1, stride=1, decoder_mode=types.SOFTWARE_DECODE, enable_frame_num=False,
@@ -215,6 +226,7 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
     Pipeline._current_pipeline._reader = "VideoDecoder"
     # Output
     videos = []
+<<<<<<< HEAD
     kwargs_pybind_reader = {
         "source_path": file_root,
         "sequence_length": sequence_length,
@@ -223,6 +235,11 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         "file_list_frame_num": file_list_frame_num}  # VideoMetaDataReader
     b.videoMetaDataReader(Pipeline._current_pipeline._handle,
                           *(kwargs_pybind_reader.values()))
+=======
+    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_names_list":filenames,"labels":labels,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
+    b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
+    kwargs_pybind_decoder = {"source_path": file_root,"color_format":image_type,"decoder_mode":decoder_mode,"shard_count":num_shards,"sequence_length":sequence_length,"file_names_list":filenames,"shuffle":random_shuffle ,"is_output":False,"loop":False, "frame_step":step,"frame_stride":stride, "file_list_frame_num":file_list_frame_num} #VideoDecoder
+>>>>>>> upstream/release/rocm-rel-6.2
 
     kwargs_pybind_decoder = {
         "source_path": file_root,
@@ -240,11 +257,21 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         Pipeline._current_pipeline._handle, *(kwargs_pybind_decoder.values()))
     return (videos)
 
+<<<<<<< HEAD
 
 def video_resize(sequence_length, resize_width, resize_height, file_list_frame_num=False,
                  file_root="", image_type=types.RGB,
                  num_shards=1, random_shuffle=False, step=3,
                  stride=3, decoder_mode=types.SOFTWARE_DECODE,
+=======
+def video_resize(*inputs, sequence_length, resize_width, resize_height, additional_decode_surfaces=2,
+                 bytes_per_sample_hint=0, channels=3, dont_use_mmap=False, dtype=types.FLOAT, enable_frame_num=False,
+                 enable_timestamps=False, file_list="", file_list_frame_num=False, file_list_include_preceding_frame=False,
+                 file_root="", filenames=[], image_type=types.RGB, initial_fill=1024, labels=[], lazy_init=False, normalized=False,
+                 num_shards=1, pad_last_batch=False, pad_sequences=False, prefetch_queue_depth=1, preserve=False, random_shuffle=False,
+                 read_ahead=False, seed=-1, shard_id=0, skip_cached_images=False, skip_vfr_check=False, step=3, stick_to_shard=False,
+                 stride=3, tensor_init_bytes=1048576, decoder_mode=types.SOFTWARE_DECODE, device=None, name=None,
+>>>>>>> upstream/release/rocm-rel-6.2
                  scaling_mode=types.SCALING_MODE_DEFAULT, interpolation_type=types.LINEAR_INTERPOLATION,
                  resize_longer=0, resize_shorter=0, max_size=[], enable_frame_num=False,
                  enable_timestamps=False, file_list="", stick_to_shard=False, pad_last_batch=False,
@@ -281,6 +308,7 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
     Pipeline._current_pipeline._reader = "VideoDecoderResize"
     # Output
     videos = []
+<<<<<<< HEAD
     kwargs_pybind_reader = {
         "source_path": file_root,
         "sequence_length": sequence_length,
@@ -298,6 +326,18 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
     videos = b.videoDecoderResize(
         Pipeline._current_pipeline._handle, *(kwargs_pybind_decoder.values()))
     return (videos, meta_data)
+=======
+    kwargs_pybind_reader = {"source_path": file_root,"sequence_length":sequence_length,"frame_step":step,"frame_stride":stride,"file_names_list":filenames,"labels":labels,"file_list_frame_num":file_list_frame_num} #VideoMetaDataReader
+    meta_data = b.VideoMetaDataReader(Pipeline._current_pipeline._handle ,*(kwargs_pybind_reader.values()))
+    kwargs_pybind_decoder = {"source_path": file_root, "color_format":image_type, "decoder_mode":decoder_mode, "shard_count":num_shards,
+                            "sequence_length":sequence_length, "resize_width":resize_width, "resize_height":resize_height,"file_names_list":filenames,
+                            "shuffle":random_shuffle , "is_output":False, "loop":False, "frame_step":step,"frame_stride":stride,
+                            "file_list_frame_num":file_list_frame_num, "scaling_mode":scaling_mode ,"max_size":max_size,
+                            "resize_shorter": resize_shorter, "resize_longer": resize_longer,"interpolation_type": interpolation_type }
+
+    videos = b.VideoDecoderResize(Pipeline._current_pipeline._handle ,*(kwargs_pybind_decoder.values()))
+    return videos
+>>>>>>> upstream/release/rocm-rel-6.2
 
 
 def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards=1, random_shuffle=False, step=3, stride=1, stick_to_shard=False, pad_last_batch=False):

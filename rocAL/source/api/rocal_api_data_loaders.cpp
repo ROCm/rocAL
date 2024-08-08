@@ -43,6 +43,7 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_resize.h"
 #include "rocal_api.h"
 
+<<<<<<< HEAD
 #ifdef ROCAL_AUDIO
 std::tuple<unsigned, unsigned>
 evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
@@ -61,6 +62,8 @@ evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
 }
 #endif
 
+=======
+>>>>>>> upstream/release/rocm-rel-6.2
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
                         DecoderType decoder_type, const std::string& source_path, const std::string& json_path) {
@@ -1636,6 +1639,7 @@ rocalFusedJpegCropSingleShard(
 
 RocalTensor ROCAL_API_CALL
 rocalVideoFileSource(
+<<<<<<< HEAD
     RocalContext p_context,
     const char* source_path,
     RocalImageColor rocal_color_format,
@@ -1650,6 +1654,23 @@ rocalVideoFileSource(
     bool file_list_frame_num,
     std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* output = nullptr;
+=======
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        RocalDecodeDevice rocal_decode_device,
+        unsigned internal_shard_count,
+        unsigned sequence_length,
+        const std::vector<std::string>& file_names_list,
+        bool shuffle,
+        bool is_output,
+        bool loop,
+        unsigned step,
+        unsigned stride,
+        bool file_list_frame_num)
+{
+    Image* output = nullptr;
+>>>>>>> upstream/release/rocm-rel-6.2
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return output;
@@ -1659,16 +1680,32 @@ rocalVideoFileSource(
 #ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
+<<<<<<< HEAD
 
+=======
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
+        if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
+            THROW("file_root and filenames are mutually exclusive")
+        // Set video loader flag in master_graph
+        context->master_graph->set_video_loader_flag();
+>>>>>>> upstream/release/rocm-rel-6.2
         // Set default step and stride values if 0 is passed
         step = (step == 0) ? sequence_length : step;
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
+<<<<<<< HEAD
         DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
+=======
+        VideoDecoderType decoder_type;
+        find_video_properties(video_prop, source_path, file_list_frame_num, file_names_list);
+        if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
+            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+>>>>>>> upstream/release/rocm-rel-6.2
         else
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
@@ -1701,6 +1738,7 @@ rocalVideoFileSource(
 
 RocalTensor ROCAL_API_CALL
 rocalVideoFileSourceSingleShard(
+<<<<<<< HEAD
     RocalContext p_context,
     const char* source_path,
     RocalImageColor rocal_color_format,
@@ -1716,6 +1754,24 @@ rocalVideoFileSourceSingleShard(
     bool file_list_frame_num,
     std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* output = nullptr;
+=======
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        RocalDecodeDevice rocal_decode_device,
+        unsigned shard_id,
+        unsigned shard_count,
+        unsigned sequence_length,
+        const std::vector<std::string>& file_names_list,
+        bool shuffle,
+        bool is_output,
+        bool loop,
+        unsigned step,
+        unsigned stride,
+        bool file_list_frame_num)
+{
+    Image* output = nullptr;
+>>>>>>> upstream/release/rocm-rel-6.2
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context")
         return output;
@@ -1725,6 +1781,15 @@ rocalVideoFileSourceSingleShard(
 #ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
+<<<<<<< HEAD
+=======
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
+        if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
+            THROW("file_root and filenames are mutually exclusive")
+        // Set video loader flag in master_graph
+        context->master_graph->set_video_loader_flag();
+>>>>>>> upstream/release/rocm-rel-6.2
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1737,10 +1802,17 @@ rocalVideoFileSourceSingleShard(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
+<<<<<<< HEAD
         DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
+=======
+        VideoDecoderType decoder_type;
+        find_video_properties(video_prop, source_path, file_list_frame_num, file_names_list);
+        if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
+            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+>>>>>>> upstream/release/rocm-rel-6.2
         else
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
@@ -1773,6 +1845,7 @@ rocalVideoFileSourceSingleShard(
 
 RocalTensor ROCAL_API_CALL
 rocalVideoFileResize(
+<<<<<<< HEAD
     RocalContext p_context,
     const char* source_path,
     RocalImageColor rocal_color_format,
@@ -1794,6 +1867,30 @@ rocalVideoFileResize(
     RocalResizeInterpolationType interpolation_type,
     std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* resize_output = nullptr;
+=======
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        RocalDecodeDevice rocal_decode_device,
+        unsigned internal_shard_count,
+        unsigned sequence_length,
+        unsigned dest_width,
+        unsigned dest_height,
+        const std::vector<std::string>& file_names_list,
+        bool shuffle,
+        bool is_output,
+        bool loop,
+        unsigned step,
+        unsigned stride,
+        bool file_list_frame_num,
+        RocalResizeScalingMode scaling_mode,
+        std::vector<unsigned> max_size,
+        unsigned resize_shorter,
+        unsigned resize_longer,
+        RocalResizeInterpolationType interpolation_type)
+{
+    Image* resize_output = nullptr;
+>>>>>>> upstream/release/rocm-rel-6.2
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return resize_output;
@@ -1804,16 +1901,32 @@ rocalVideoFileResize(
 #ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
+<<<<<<< HEAD
+=======
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
+        if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
+            THROW("file_root and filenames are mutually exclusive")
+        // Set video loader flag in master_graph
+        context->master_graph->set_video_loader_flag();
+>>>>>>> upstream/release/rocm-rel-6.2
 
         // Set default step and stride values if 0 is passed
         step = (step == 0) ? sequence_length : step;
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
+<<<<<<< HEAD
         DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
+=======
+        VideoDecoderType decoder_type;
+        find_video_properties(video_prop, source_path, file_list_frame_num, file_names_list);
+        if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
+            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+>>>>>>> upstream/release/rocm-rel-6.2
         else
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
@@ -1925,6 +2038,7 @@ rocalVideoFileResize(
 
 RocalTensor ROCAL_API_CALL
 rocalVideoFileResizeSingleShard(
+<<<<<<< HEAD
     RocalContext p_context,
     const char* source_path,
     RocalImageColor rocal_color_format,
@@ -1947,6 +2061,31 @@ rocalVideoFileResizeSingleShard(
     RocalResizeInterpolationType interpolation_type,
     std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
     Tensor* resize_output = nullptr;
+=======
+        RocalContext p_context,
+        const char* source_path,
+        RocalImageColor rocal_color_format,
+        RocalDecodeDevice rocal_decode_device,
+        unsigned shard_id,
+        unsigned shard_count,
+        unsigned sequence_length,
+        unsigned dest_width,
+        unsigned dest_height,
+        const std::vector<std::string>& file_names_list,
+        bool shuffle,
+        bool is_output,
+        bool loop,
+        unsigned step,
+        unsigned stride,
+        bool file_list_frame_num,
+        RocalResizeScalingMode scaling_mode,
+        std::vector<unsigned> max_size,
+        unsigned resize_shorter,
+        unsigned resize_longer,
+        RocalResizeInterpolationType interpolation_type)
+{
+    Image* resize_output = nullptr;
+>>>>>>> upstream/release/rocm-rel-6.2
     if (p_context == nullptr) {
         ERR("Invalid ROCAL context or invalid input image")
         return resize_output;
@@ -1957,6 +2096,15 @@ rocalVideoFileResizeSingleShard(
 #ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
+<<<<<<< HEAD
+=======
+        if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names_list.size() == 0)
+            THROW("Invalid input path, Either file_root or filenames must be passed")
+        if ((source_path != nullptr) && (source_path[0] != '\0') && file_names_list.size() != 0)
+            THROW("file_root and filenames are mutually exclusive")
+        // Set video loader flag in master_graph
+        context->master_graph->set_video_loader_flag();
+>>>>>>> upstream/release/rocm-rel-6.2
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1969,10 +2117,17 @@ rocalVideoFileResizeSingleShard(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
+<<<<<<< HEAD
         DecoderType decoder_type;
         find_video_properties(video_prop, source_path, file_list_frame_num);
         if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
             decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
+=======
+        VideoDecoderType decoder_type;
+        find_video_properties(video_prop, source_path, file_list_frame_num, file_names_list);
+        if(rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
+            decoder_type = VideoDecoderType::FFMPEG_HARDWARE_DECODE;
+>>>>>>> upstream/release/rocm-rel-6.2
         else
             decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),

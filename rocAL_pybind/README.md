@@ -20,11 +20,19 @@ rocAL_pybind installs during [rocAL build](https://github.com/ROCm/rocAL#build-i
 
 ### Prerequisites
 
+#### Prerequisites install to run test scripts
+
+* Install PIP3
+  + Ubuntu 20/22
+    ```
+    sudo apt install python3-pip
+    ```
 * Install pip packages
 
 ````shell
 pip3 install numpy opencv-python torch pillow
 ````
+* Install `CuPy` for `ROCm` - `https://github.com/ROCmSoftwarePlatform/cupy`
 
 ### Run Test Scripts
 

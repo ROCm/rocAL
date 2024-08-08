@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+<<<<<<< HEAD
 #include "meta_data/caffe_meta_data_reader.h"
 
 #include <string.h>
@@ -27,12 +28,27 @@ THE SOFTWARE.
 #include <algorithm>
 #include "pipeline/commons.h"
 #include "pipeline/exception.h"
+=======
+#include <string.h>
+#include <iostream>
+#include <fstream>
+#include <utility>
+#include <algorithm>
+#include "commons.h"
+#include "exception.h"
+#include "caffe_meta_data_reader.h"
+>>>>>>> upstream/release/rocm-rel-6.2
 
 using caffe_protos::Datum;
 using std::string;
 using namespace std;
 
+<<<<<<< HEAD
 CaffeMetaDataReader::CaffeMetaDataReader() {
+=======
+CaffeMetaDataReader::CaffeMetaDataReader()
+{
+>>>>>>> upstream/release/rocm-rel-6.2
 }
 
 void CaffeMetaDataReader::init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) {

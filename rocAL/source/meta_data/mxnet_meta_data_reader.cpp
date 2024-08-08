@@ -24,7 +24,12 @@ THE SOFTWARE.
 
 #include <memory.h>
 #include <stdint.h>
+<<<<<<< HEAD
 #include "pipeline/filesystem.h"
+=======
+#include "mxnet_meta_data_reader.h"
+#include "filesystem.h"
+>>>>>>> upstream/release/rocm-rel-6.2
 
 using namespace std;
 

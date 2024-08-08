@@ -84,9 +84,13 @@ ENABLE_SEQUENCE_REARRANGE : If set to true, the frames in each sequence will be 
 
 **Example 1: Video Reader**
 
+<<<<<<< HEAD:tests/cpp_api/video_tests/README.md
 ```bash
 ./testScript.sh <[path/to/test_frame_num.mp4](https://github.com/ROCm/MIVisionX-data/blob/main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.mp4)> 1
 ```
+=======
+> ./testScript.sh <[path/to/test_frame_num.mp4](https://github.com/ROCm/MIVisionX-data/blob/main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.mp4)> 1
+>>>>>>> upstream/release/rocm-rel-6.2:tests/cpp_api_tests/rocAL_video_unittests/README.md
 
 Arguments to be modified in testScript.sh to get the following output:
 
@@ -109,9 +113,13 @@ Also RESIZE_WIDTH and RESIZE_HEIGHT can be changed in testScript.sh
 
 **Example 2: Sequence Reader**
 
+<<<<<<< HEAD:tests/cpp_api/video_tests/README.md
 ```bash
 ./testScript.sh <[path/to/sequence_folder](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data/video_and_sequence_samples/sequence)> 3 
 ```
+=======
+> ./testScript.sh <[path/to/sequence_folder](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data/video_and_sequence_samples/sequence)> 3 
+>>>>>>> upstream/release/rocm-rel-6.2:tests/cpp_api_tests/rocAL_video_unittests/README.md
 
 ![sequence_reader.png](./samples/sequence_reader.png)
 
@@ -140,3 +148,16 @@ New Sequence order : (2, 1, 1, 0), The order can be changed directly in video_te
 **NOTE**:
 
 The outputs frames will be dumped inside the build/output_frames folder. The above images are for illustration purpose only.
+
+<br>
+
+**Example 4: Video Reader with Labels**
+
+This test case passes a list of filenames and labels as input and returns the sequences along with the corresponding labels
+
+> ./testScript.sh 4
+
+NOTE : 
+
+- ROCAL_DATA_PATH must be set, as the videos present in [rocal_data](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data) is used.
+- The list of filenames and labels can be modified in the rocAL_video_unittests.cpp file.

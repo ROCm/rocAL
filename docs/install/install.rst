@@ -227,4 +227,7 @@ Test package will install ctest module to test rocAL. Follow below steps to test
   mkdir rocAL-test && cd rocAL-test
   cmake /opt/rocm/share/rocal/test/
   ctest -VV
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/release/rocm-rel-6.2

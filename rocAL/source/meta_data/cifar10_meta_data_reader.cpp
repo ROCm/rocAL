@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+<<<<<<< HEAD
 #include "meta_data/cifar10_meta_data_reader.h"
 
 #include <string.h>
@@ -29,6 +30,17 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 #include "pipeline/filesystem.h"
 
+=======
+#include <string.h>
+#include <iostream>
+#include <utility>
+#include <algorithm>
+#include "commons.h"
+#include "exception.h"
+#include "filesystem.h"
+#include "cifar10_meta_data_reader.h"
+
+>>>>>>> upstream/release/rocm-rel-6.2
 using namespace std;
 
 Cifar10MetaDataReader::Cifar10MetaDataReader()
