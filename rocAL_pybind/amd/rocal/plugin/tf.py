@@ -183,12 +183,8 @@ class ROCALGenericIteratorDetection(object):
                     self.labels = np.reshape(
                         self.labels, (-1, self.bs, self.loader._num_classes))
                 else:
-                    # TODO: check how to reshape labels from dlpack
                     self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
-                    self.labels = self.labels.__dlpack__()
                     self.loader.get_one_hot_encoded_labels(self.labels, self.loader._output_memory_type)
-                    # copy back to cpu - gives back rocalTensor & copy to numpy
-                    self.labels.copy_data(self.labels.fromDlpack(), self.loader._output_memory_type)
                     self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))          
             else:
                 self.labels = self.loader.get_image_labels()

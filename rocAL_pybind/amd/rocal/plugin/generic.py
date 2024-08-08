@@ -130,12 +130,12 @@ class ROCALGenericIterator(object):
                     self.dtype = self.output_tensor_list[i].dtype()
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.labels = np.empty(self.labels_size, dtype="int32")
-                    self.output = self.output.__dlpack__()
-                    self.labels = self.labels.__dlpack__()
+                    self.output_tensor_list[i].__dlpack__()
+                    self.output_tensor_list[i].copy_data(self.output)
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output_tensor_list[i].copy_data(self.output, self.loader._output_memory_type) 
+                    self.output_tensor_list[i].copy_data(self.output) 
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
@@ -150,7 +150,6 @@ class ROCALGenericIterator(object):
                 self.labels_tensor = self.labels.astype(dtype=np.int_)
             else:
                 self.labels_tensor = self.labels.astype(dtype=np.int_)
-                self.labels_tensor = self.labels_tensor.__dlpack__()
             return self.output_list, self.labels_tensor
 
         if self.loader._name == "labelReader":
@@ -172,7 +171,6 @@ class ROCALGenericIterator(object):
                     self.labels_tensor = self.labels.astype(dtype=np.int_)
                 else:
                     self.labels_tensor = self.labels.astype(dtype=np.int_)
-                    self.labels_tensor = self.labels_tensor.__dlpack__()
         return self.output_list, self.labels_tensor
 
     def reset(self):
