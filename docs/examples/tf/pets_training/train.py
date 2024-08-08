@@ -21,36 +21,74 @@
 import os, math
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
+import argparse
+import sys
 
 from amd.rocal.plugin.tf import ROCALIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 
-
-############################### CHANGE THESE GLOBAL VARIABLES APPROPRIATELY ###############################
-
-RECORDS_DIR = 'tf_pets_records/'
-NUM_CLASSES = 37
-LEARNING_RATE = 0.005
-TRAIN_BATCH_SIZE = 8
-RUN_ON_HOST = True
-
-############################### CHANGE THESE GLOBAL VARIABLES APPROPRIATELY ###############################
-
-
-######################################## NO CHANGES IN CODE NEEDED ########################################
-
-TRAIN_RECORDS_DIR = RECORDS_DIR + 'train/'
-VAL_RECORDS_DIR = RECORDS_DIR + 'val/'
-
 def main():
+    parser = argparse.ArgumentParser(
+        description='Tensorflow pets training arguments')
+    parser.add_argument(
+        '-b',
+        '--backend',
+        type=str,
+        help='run rocal on cpu/gpu; optional; default: cpu',
+        default='cpu',
+        required=False)
+    parser.add_argument(
+        '-d',
+        '--device-id',
+        type=int,
+        help='GPU device ID; optional; default: 0',
+        default=0,
+        required=False)
+    parser.add_argument(
+        '-bs',
+        '--batch-size',
+        type=int,
+        help='batch size to run training; optional; default: 8',
+        default=8,
+        required=False)
+    parser.add_argument(
+        '-c',
+        '--num-classes',
+        type=int,
+        help='Number of classes in the dataset; ; optional; default: 37',
+        default=37,
+        required=False)
+    parser.add_argument(
+        '-l',
+        '--learning-rate',
+        type=float,
+        help='Learning rate for training; optional; default: 0.005',
+        default=0.005,
+        required=False)
+    parser.add_argument(
+        '-dir',
+        '--records-dir',
+        type=str,
+        help='Path for tf records; optional',
+        default='tf_pets_records/',
+        required=False)
+    
+    try:
+        args = parser.parse_args()
+    except BaseException:
+        sys.exit()
+    
+    TRAIN_RECORDS_DIR = args.records_dir + 'train/'
+    VAL_RECORDS_DIR = args.records_dir + 'val/'
 
-    global NUM_CLASSES
-    global LEARNING_RATE
-    global TRAIN_BATCH_SIZE
-    global TRAIN_RECORDS_DIR
-    global VAL_RECORDS_DIR
+    NUM_CLASSES = args.num_classes
+    LEARNING_RATE = args.learning_rate
+    TRAIN_BATCH_SIZE = args.batch_size
+    rocal_cpu = True if (args.backend == "cpu") else False
+    device = "cpu" if rocal_cpu else "gpu"
+    device_id = args.device_id
 
     print("\n-----------------------------------------------------------------------------------------")
     print('TF records (train) are located in %s' % TRAIN_RECORDS_DIR)
@@ -83,7 +121,7 @@ def main():
         'image/filename': 'image/filename'
     }
 
-    trainPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=8, rocal_cpu=RUN_ON_HOST,
+    trainPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=8, rocal_cpu=rocal_cpu, device_id=device_id, prefetch_queue_depth=6,
                          tensor_layout=types.NHWC, mean=[0, 0, 0], std=[255, 255, 255], tensor_dtype=types.FLOAT)
     with trainPipe:
         inputs = fn.readers.tfrecord(path=TRAIN_RECORDS_DIR, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
@@ -110,7 +148,7 @@ def main():
     trainPipe.build()
 
     valPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=8,
-                       rocal_cpu=RUN_ON_HOST, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT)
+                       rocal_cpu=rocal_cpu, device_id=device_id, prefetch_queue_depth=6, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT)
     with valPipe:
         inputs = fn.readers.tfrecord(path=VAL_RECORDS_DIR, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
                                      features={
