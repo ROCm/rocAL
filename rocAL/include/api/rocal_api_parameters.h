@@ -32,163 +32,132 @@ THE SOFTWARE.
  * \brief The AMD rocAL Parameters.
  */
 
-/*!
- * \brief  rocalSetSeed
+/*! \brief set seed for random number generation
  * \ingroup group_rocal_parameters
- *
- * \param seed
+ * \param [in] seed seed for the random number generation
  */
 extern "C" void ROCAL_API_CALL rocalSetSeed(unsigned seed);
 
-/*!
- * \brief  rocalGetSeed
+/*! \brief gets the seed value
  * \ingroup group_rocal_parameters
- *
- * \return
+ * \return seed value
  */
 extern "C" unsigned ROCAL_API_CALL rocalGetSeed();
 
-/*!
- * \brief  rocalCreateIntUniformRand
+/*! \brief Creates a new uniform random integer parameter within a specified range.
  * \ingroup group_rocal_parameters
- *
- * \param start
- * \param end
- * \return
+ * \param start start value of the integer range
+ * \param end end value of the integer range
+ * \return RocalIntParam representing the uniform random integer parameter.
  */
 extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntUniformRand(int start, int end);
 
-/*!
- * \brief  rocalUpdateIntUniformRand
+/*! \brief updates uniform random integer parameter within a specified range.
  * \ingroup group_rocal_parameters
- *
- * \param start
- * \param end
- * \param input_obj
- * \return
+ * \param start start value of the integer range
+ * \param end start value of the integer range
+ * \param input_obj  RocalIntParam to be updated.
+ * \return rocal status value
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalUpdateIntUniformRand(int start, int end, RocalIntParam updating_obj);
 
-/*!
- * \brief  rocalGetIntValue
+/*! \brief gets the value of a RocalIntParam.
  * \ingroup group_rocal_parameters
- *
- * \param obj
- * \return
+ * \param [in] obj The RocalIntParam from which to retrieve the value.
+ * \return integer value of the RocalIntParam.
  */
 extern "C" int ROCAL_API_CALL rocalGetIntValue(RocalIntParam obj);
 
-/*!
- * \brief  rocalGetFloatValue
+/*! \brief gets the value of a RocalFloatParam.
  * \ingroup group_rocal_parameters
- *
- * \param obj
- * \return
+ * \param [in] obj The RocalFloatParam from which to retrieve the value.
+ * \return float value of the RocalIntParam.
  */
 extern "C" float ROCAL_API_CALL rocalGetFloatValue(RocalFloatParam obj);
 
-/*!
- * \brief  rocalCreateFloatUniformRand
+/*! \brief Creates a new uniform random float parameter within a specified range.
  * \ingroup group_rocal_parameters
- *
- * \param start
- * \param end
- * \return
+ * \param start start value of the float range
+ * \param end end value of the float range
+ * \return RocalFloatParam representing the uniform random float parameter.
  */
 extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatUniformRand(float start, float end);
 
-/*!
- * \brief  rocalCreateFloatParameter
+/*! \brief Creates a new float parameter with a specified value.
  * \ingroup group_rocal_parameters
- *
- * \param val
- * \return
+ * \param [in] val value to create float param
+ * \return A new RocalFloatParam representing the float parameter.
  */
 extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatParameter(float val);
 
-/*!
- * \brief  rocalCreateIntParameter
+/*! \brief Creates a new int parameter with a specified value.
  * \ingroup group_rocal_parameters
- *
- * \param val
- * \return
+ * \param [in] val value to create integer param
+ * \return A new RocalIntParam representing the integer parameter.
  */
 extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntParameter(int val);
 
-/*!
- * \brief  rocalUpdateFloatParameter
+/*! \brief Updates a float parameter with a new value.
  * \ingroup group_rocal_parameters
- *
- * \param new_val
- * \param input_obj
- * \return
+ * \param[in] new_val The new value to update the float parameter.
+ * \param[in] input_obj The RocalFloatParam to be updated.
+ * \return RocalStatus value.
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatParameter(float new_val, RocalFloatParam input_obj);
 
-/*!
- * \brief  rocalUpdateIntParameter
+/*! \brief Updates a integer parameter with a new value.
  * \ingroup group_rocal_parameters
- *
- * \param new_val
- * \param input_obj
- * \return
+ * \param[in] new_val The new value to update the integer parameter.
+ * \param[in] input_obj The RocalIntParam to be updated.
+ * \return RocalStatus value.
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalUpdateIntParameter(int new_val, RocalIntParam input_obj);
 
-/*!
- * \brief  rocalUpdateFloatUniformRand
+/*! \brief updates uniform random float parameter within a specified range.
  * \ingroup group_rocal_parameters
- *
- * \param start
- * \param end
- * \param input_obj
- * \return
+ * \param start start value of the float range
+ * \param end start value of the float range
+ * \param input_obj  RocalFloatParam to be updated.
+ * \return rocal status value
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatUniformRand(float start, float end, RocalFloatParam updating_obj);
 
-/*!
- * \brief  rocalCreateIntRand
+/*! \brief Sets the parameters for a new or existing RocalIntRandGen object
  * \ingroup group_rocal_parameters
- *
- * \param values
- * \param frequencies
- * \param size
- * \return
+ * \param [in] values random int values
+ * \param [in] frequencies frequencies of the values
+ * \param size size of the array
+ * \return random int paraeter
  */
 extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntRand(const int *values, const double *frequencies, unsigned size);
 
-/*!
- * \brief  rocalUpdateIntRand
+/*! \brief update the int random value
  * \ingroup group_rocal_parameters
- *
- * \param values
- * \param frequencies
- * \param size
- * \param updating_obj
- * \return
+ * \param [in] values random int values
+ * \param [in] frequencies frequencies of the values
+ * \param [in] size size of the array
+ * \param [in] updating_obj Rocal int Param to update
+ * \return rocal status value
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalUpdateIntRand(const int *values, const double *frequencies, unsigned size, RocalIntParam updating_obj);
 
-/*!
- * \brief  Sets the parameters for a new or existing RocalFloatRandGen object
+/*! \brief Sets the parameters for a new or existing RocalFloatRandGen object
  * \ingroup group_rocal_parameters
- * \param values
- * \param frequencies
- * \param size
- * \return
+ * \param [in] values random float values
+ * \param [in] frequencies frequencies of the values
+ * \param size size of the array
+ * \return random float parameter
  */
 extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatRand(const float *values, const double *frequencies, unsigned size);
 
-/*!
- * \brief  rocalUpdateFloatRand
+/*! \brief update the float random value
  * \ingroup group_rocal_parameters
- *
- * \param values
- * \param frequencies
- * \param size
- * \param updating_obj
- * \return
+ * \param [in] values random float values
+ * \param [in] frequencies frequencies of the values
+ * \param [in] size size of the array
+ * \param [in] updating_obj Rocal Float Param to update
+ * \return rocal status value
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatRand(const float *values, const double *frequencies, unsigned size, RocalFloatParam updating_obj);
 
-#endif // MIVISIONX_ROCAL_API_PARAMETERS_H
+#endif  // MIVISIONX_ROCAL_API_PARAMETERS_H

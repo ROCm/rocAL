@@ -21,38 +21,37 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <set>
 #include <memory>
-#include "graph.h"
-#include "image.h"
-#include "meta_data_graph.h"
-class Node
-{
-public:
-    Node(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs) :
-        _inputs(inputs),
-        _outputs(outputs),
-        _batch_size(outputs[0]->info().batch_size()) {}
+#include <set>
+
+#include "pipeline/graph.h"
+#include "meta_data/meta_data_graph.h"
+#include "pipeline/tensor.h"
+class Node {
+   public:
+    Node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : _inputs(inputs),
+                                                                                      _outputs(outputs),
+                                                                                      _batch_size(outputs[0]->info().batch_size()) {}
     virtual ~Node();
     void create(std::shared_ptr<Graph> graph);
     void update_parameters();
-    std::vector<Image*> input() { return _inputs; };
-    std::vector<Image*> output() { return _outputs; };
-    void add_next(const std::shared_ptr<Node>& node) {} // To be implemented
-    void add_previous(const std::shared_ptr<Node>& node) {} //To be implemented
+    std::vector<Tensor *> input() { return _inputs; };
+    std::vector<Tensor *> output() { return _outputs; };
+    void add_next(const std::shared_ptr<Node> &node) {}      // To be implemented
+    void add_previous(const std::shared_ptr<Node> &node) {}  // To be implemented
     std::shared_ptr<Graph> graph() { return _graph; }
-    void set_meta_data(MetaDataBatch* meta_data_info){_meta_data_info = meta_data_info;}
+    void set_meta_data(pMetaDataBatch meta_data_info) { _meta_data_info = meta_data_info; }
     bool _is_ssd = false;
-protected:
+    const Roi2DCords *get_src_roi() { return _inputs[0]->info().roi().get_2D_roi(); }
+    const Roi2DCords *get_dst_roi() { return _outputs[0]->info().roi().get_2D_roi(); }
+
+   protected:
     virtual void create_node() = 0;
     virtual void update_node() = 0;
-    virtual void update_src_roi();
-    std::vector<Image*> _inputs;
-    std::vector<Image*> _outputs;
+    const std::vector<Tensor *> _inputs;
+    const std::vector<Tensor *> _outputs;
     std::shared_ptr<Graph> _graph = nullptr;
-    vx_array _src_roi_width = nullptr;
-    vx_array _src_roi_height = nullptr;
     vx_node _node = nullptr;
     size_t _batch_size;
-    MetaDataBatch* _meta_data_info;
+    pMetaDataBatch _meta_data_info;
 };

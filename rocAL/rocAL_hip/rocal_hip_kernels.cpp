@@ -32,43 +32,41 @@ Hip_CopyInt8ToNHWC_fp32(
     void *output_tensor,
     unsigned int dst_buf_offset,
     uint4 nchw,
+    uint2 out_dims,
     float3 multiplier,
     float3 offset,
-    unsigned int reverse_channels)
-{
+    unsigned int reverse_channels) {
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
     const int W = nchw.w;
     const int H = nchw.z;
     const int C = nchw.y;
+    const int max_roi_height = out_dims.x;
+    const int max_roi_width = out_dims.y;
     const int img_offset = C * W * H;
+    const int out_img_offset = C * max_roi_width * max_roi_height;
 
-    if ((x >= W) || (y >= H))
+    if ((x >= max_roi_width) || (y >= max_roi_height))
         return;
-    for (unsigned int n = 0; n < nchw.x; n++)
-    {
-        unsigned int srcIdx = (y * W + x) * C; // src is RGB
-        unsigned int dstIdx = (y * W + x) * C;
+    for (unsigned int n = 0; n < nchw.x; n++) {
+        unsigned int src_idx = (y * W + x) * C;  // src is RGB
+        unsigned int dst_idx = (y * max_roi_width + x) * C;
         // copy float3  pixels to dst
-        if (C == 3)
-        {
+        if (C == 3) {
             float3 dst;
-
             const uchar *inp_img = &inp_image_u8[n * img_offset];
-            float *out_tensor = (float *)((float *)output_tensor + dst_buf_offset + n * img_offset);
+            float *out_tensor = (float *)((float *)output_tensor + dst_buf_offset + n * out_img_offset);
             if (reverse_channels)
-                dst = make_float3((float)inp_img[srcIdx + 2], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx]) * multiplier + offset;
+                dst = make_float3((float)inp_img[src_idx + 2], (float)inp_img[src_idx + 1], (float)inp_img[src_idx]) * multiplier + offset;
             else
-                dst = make_float3((float)inp_img[srcIdx], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx + 2]) * multiplier + offset;
-            out_tensor[dstIdx] = dst.x;
-            out_tensor[dstIdx + 1] = dst.y;
-            out_tensor[dstIdx + 2] = dst.z;
-        }
-        else
-        {
+                dst = make_float3((float)inp_img[src_idx], (float)inp_img[src_idx + 1], (float)inp_img[src_idx + 2]) * multiplier + offset;
+            out_tensor[dst_idx] = dst.x;
+            out_tensor[dst_idx + 1] = dst.y;
+            out_tensor[dst_idx + 2] = dst.z;
+        } else {
             const uchar *inp_img = &inp_image_u8[n * img_offset + dst_buf_offset];
-            float *out_tensor = (float *)output_tensor + dst_buf_offset + n * img_offset;
-            out_tensor[dstIdx] = (float)inp_img[srcIdx] * multiplier.x + offset.x;
+            float *out_tensor = (float *)output_tensor + dst_buf_offset + n * out_img_offset;
+            out_tensor[dst_idx] = (float)inp_img[src_idx] * multiplier.x + offset.x;
         }
     }
 }
@@ -79,43 +77,42 @@ Hip_CopyInt8ToNHWC_fp16(
     void *output_tensor,
     unsigned int dst_buf_offset,
     uint4 nchw,
+    uint2 out_dims,
     float3 multiplier,
     float3 offset,
-    const unsigned int reverse_channels)
-{
+    const unsigned int reverse_channels) {
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
     const int W = nchw.w;
     const int H = nchw.z;
     const int C = nchw.y;
+    const int max_roi_height = out_dims.x;
+    const int max_roi_width = out_dims.y;
     const int img_offset = C * W * H;
+    const int out_img_offset = C * max_roi_width * max_roi_height;
 
-    if ((x >= W) || (y >= H))
+    if ((x >= max_roi_width) || (y >= max_roi_height))
         return;
-    for (unsigned int n = 0; n < nchw.x; n++)
-    {
-        __half *out_tensor = (__half *)output_tensor + dst_buf_offset + n * img_offset;
-        unsigned int srcIdx = (y * W + x) * C;
+    for (unsigned int n = 0; n < nchw.x; n++) {
+        __half *out_tensor = (__half *)output_tensor + dst_buf_offset + n * out_img_offset;
+        unsigned int src_idx = (y * W + x) * C;
         // copy float3  pixels to dst
-        if (C == 3)
-        {
-            unsigned int dstIdx = y * W + x * 3;
+        if (C == 3) {
+            unsigned int dst_idx = y * max_roi_width + x * 3;
             const uchar *inp_img = &inp_image_u8[n * img_offset];
             float3 dst;
             if (reverse_channels)
-                dst = make_float3((float)inp_img[srcIdx + 2], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx]) * multiplier + offset;
+                dst = make_float3((float)inp_img[src_idx + 2], (float)inp_img[src_idx + 1], (float)inp_img[src_idx]) * multiplier + offset;
             else
-                dst = make_float3((float)inp_img[srcIdx], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx + 2]) * multiplier + offset;
-            out_tensor[dstIdx] = __float2half(dst.x);
-            out_tensor[dstIdx + 1] = __float2half(dst.y);
-            out_tensor[dstIdx + 2] = __float2half(dst.z);
-        }
-        else
-        {
-            unsigned int dstIdx = y * W + x;
+                dst = make_float3((float)inp_img[src_idx], (float)inp_img[src_idx + 1], (float)inp_img[src_idx + 2]) * multiplier + offset;
+            out_tensor[dst_idx] = __float2half(dst.x);
+            out_tensor[dst_idx + 1] = __float2half(dst.y);
+            out_tensor[dst_idx + 2] = __float2half(dst.z);
+        } else {
+            unsigned int dst_idx = y * max_roi_width + x;
             const uchar *inp_img = &inp_image_u8[n * img_offset];
-            float *out_tensor = (float *)output_tensor + n * img_offset;
-            out_tensor[dstIdx] = __float2half((float)inp_img[srcIdx] * multiplier.x + offset.x);
+            float *out_tensor = (float *)output_tensor + n * out_img_offset;
+            out_tensor[dst_idx] = __float2half((float)inp_img[src_idx] * multiplier.x + offset.x);
         }
     }
 }
@@ -126,40 +123,40 @@ Hip_CopyInt8ToNCHW_fp32(
     void *output_tensor,
     unsigned int dst_buf_offset,
     uint4 nchw,
+    uint2 out_dims,
     float3 multiplier,
     float3 offset,
-    unsigned int reverse_channels)
-{
+    unsigned int reverse_channels) {
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
     const int W = nchw.w;
     const int H = nchw.z;
     const int C = nchw.y;
+    const int max_roi_height = out_dims.x;
+    const int max_roi_width = out_dims.y;
     const int img_offset = C * W * H;
+    const int out_img_offset = C * max_roi_width * max_roi_height;
+    unsigned int cstride = max_roi_width * max_roi_height;
 
-    if ((x >= W) || (y >= H))
+    if ((x >= max_roi_width) || (y >= max_roi_height))
         return;
-    for (unsigned int n = 0; n < nchw.x; n++)
-    {
-        unsigned int srcIdx = (y * W + x) * C;
-        unsigned int dstIdx = y * W + x;
+    for (unsigned int n = 0; n < nchw.x; n++) {
+        unsigned int src_idx = (y * W + x) * C;
+        unsigned int dst_idx = y * max_roi_width + x;
         // copy float3  pixels to dst
         const uchar *inp_img = &inp_image_u8[n * img_offset];
-        float *out_tensor = (float *)output_tensor + n * img_offset + dst_buf_offset;
-        if (C == 3)
-        {
+        float *out_tensor = (float *)output_tensor + n * out_img_offset + dst_buf_offset;
+        if (C == 3) {
             float3 dst;
             if (reverse_channels)
-                dst = make_float3((float)inp_img[srcIdx + 2], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx]) * multiplier + offset;
+                dst = make_float3((float)inp_img[src_idx + 2], (float)inp_img[src_idx + 1], (float)inp_img[src_idx]) * multiplier + offset;
             else
-                dst = make_float3((float)inp_img[srcIdx], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx + 2]) * multiplier + offset;
-            out_tensor[dstIdx] = dst.x;
-            out_tensor[dstIdx + W * H] = dst.y;
-            out_tensor[dstIdx + W * H * 2] = dst.z;
-        }
-        else
-        {
-            out_tensor[dstIdx] = (float)inp_img[srcIdx] * multiplier.x + offset.x;
+                dst = make_float3((float)inp_img[src_idx], (float)inp_img[src_idx + 1], (float)inp_img[src_idx + 2]) * multiplier + offset;
+            out_tensor[dst_idx] = dst.x;
+            out_tensor[dst_idx + cstride] = dst.y;
+            out_tensor[dst_idx + cstride * 2] = dst.z;
+        } else {
+            out_tensor[dst_idx] = (float)inp_img[src_idx] * multiplier.x + offset.x;
         }
     }
 }
@@ -170,40 +167,40 @@ Hip_CopyInt8ToNCHW_fp16(
     void *output_tensor,
     unsigned int dst_buf_offset,
     uint4 nchw,
+    uint2 out_dims,
     float3 multiplier,
     float3 offset,
-    const unsigned int reverse_channels)
-{
+    const unsigned int reverse_channels) {
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
     const int W = nchw.w;
     const int H = nchw.z;
     const int C = nchw.y;
+    const int max_roi_height = out_dims.x;
+    const int max_roi_width = out_dims.y;
     const int img_offset = C * W * H;
+    const int out_img_offset = C * max_roi_width * max_roi_height;
+    unsigned int cstride = max_roi_width * max_roi_height;
 
-    if ((x >= W) || (y >= H))
+    if ((x >= max_roi_width) || (y >= max_roi_height))
         return;
-    for (unsigned int n = 0; n < nchw.x; n++)
-    {
-        __half *out_tensor = (__half *)output_tensor + n * img_offset + dst_buf_offset;
+    for (unsigned int n = 0; n < nchw.x; n++) {
+        __half *out_tensor = (__half *)output_tensor + n * out_img_offset + dst_buf_offset;
         const uchar *inp_img = &inp_image_u8[n * img_offset];
-        unsigned int srcIdx = (y * W + x) * C;
+        unsigned int src_idx = (y * W + x) * C;
         // copy float3  pixels to dst
-        unsigned int dstIdx = y * W + x;
-        if (C == 3)
-        {
+        unsigned int dst_idx = y * max_roi_width + x;
+        if (C == 3) {
             float3 dst;
             if (reverse_channels)
-                dst = make_float3((float)inp_img[srcIdx + 2], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx]) * multiplier + offset;
+                dst = make_float3((float)inp_img[src_idx + 2], (float)inp_img[src_idx + 1], (float)inp_img[src_idx]) * multiplier + offset;
             else
-                dst = make_float3((float)inp_img[srcIdx], (float)inp_img[srcIdx + 1], (float)inp_img[srcIdx + 2]) * multiplier + offset;
-            out_tensor[dstIdx] = __float2half(dst.x);
-            out_tensor[dstIdx + W * H] = __float2half(dst.y);
-            out_tensor[dstIdx + W * H * 2] = __float2half(dst.z);
-        }
-        else
-        {
-            out_tensor[dstIdx] = __float2half((float)inp_img[srcIdx] * multiplier.x + offset.x);
+                dst = make_float3((float)inp_img[src_idx], (float)inp_img[src_idx + 1], (float)inp_img[src_idx + 2]) * multiplier + offset;
+            out_tensor[dst_idx] = __float2half(dst.x);
+            out_tensor[dst_idx + cstride] = __float2half(dst.y);
+            out_tensor[dst_idx + cstride * 2] = __float2half(dst.z);
+        } else {
+            out_tensor[dst_idx] = __float2half((float)inp_img[src_idx] * multiplier.x + offset.x);
         }
     }
 }
@@ -224,27 +221,30 @@ int HipExecCopyInt8ToNHWC(
     float offset1,
     float offset2,
     unsigned int reverse_channels,
-    unsigned int fp16)
-{
-    int localThreads_x = 16, localThreads_y = 16;
-    int globalThreads_x = w, globalThreads_y = h;
-    if (!fp16)
-    {
+    unsigned int fp16,
+    const unsigned max_output_height,
+    const unsigned max_output_width) {
+    int local_threads_x = 16, local_threads_y = 16;
+    uint2 out_dims;
+    if ((max_output_height == 0) || (max_output_width == 0))
+        out_dims = make_uint2(h, w);
+    else
+        out_dims = make_uint2(max_output_height, max_output_width);
+    int global_threads_x = w, global_threads_y = h;
+    if (!fp16) {
         hipLaunchKernelGGL(Hip_CopyInt8ToNHWC_fp32,
-                           dim3(ceil((float)globalThreads_x / localThreads_x), ceil((float)globalThreads_y / localThreads_y)),
-                           dim3(localThreads_x, localThreads_y),
+                           dim3(ceil((float)global_threads_x / local_threads_x), ceil((float)global_threads_y / local_threads_y)),
+                           dim3(local_threads_x, local_threads_y),
                            0, stream, (const uchar *)inp_image_u8, output_tensor, dst_buf_offset,
-                           make_uint4(n, c, h, w),
+                           make_uint4(n, c, h, w), out_dims,
                            make_float3(multiplier0, multiplier1, multiplier2), make_float3(offset0, offset1, offset2),
                            reverse_channels);
-    }
-    else
-    {
+    } else {
         hipLaunchKernelGGL(Hip_CopyInt8ToNHWC_fp16,
-                           dim3(ceil((float)globalThreads_x / localThreads_x), ceil((float)globalThreads_y / localThreads_y)),
-                           dim3(localThreads_x, localThreads_y),
+                           dim3(ceil((float)global_threads_x / local_threads_x), ceil((float)global_threads_y / local_threads_y)),
+                           dim3(local_threads_x, local_threads_y),
                            0, stream, (const uchar *)inp_image_u8, output_tensor, dst_buf_offset,
-                           make_uint4(n, c, h, w),
+                           make_uint4(n, c, h, w), out_dims,
                            make_float3(multiplier0, multiplier1, multiplier2), make_float3(offset0, offset1, offset2),
                            reverse_channels);
     }
@@ -267,27 +267,30 @@ int HipExecCopyInt8ToNCHW(
     float offset1,
     float offset2,
     unsigned int reverse_channels,
-    unsigned int fp16)
-{
-    int localThreads_x = 16, localThreads_y = 16;
-    int globalThreads_x = w, globalThreads_y = h;
-    if (!fp16)
-    {
+    unsigned int fp16,
+    const unsigned max_output_height,
+    const unsigned max_output_width) {
+    int local_threads_x = 16, local_threads_y = 16;
+    uint2 out_dims;
+    if ((max_output_height == 0) || (max_output_width == 0))
+        out_dims = make_uint2(h, w);
+    else
+        out_dims = make_uint2(max_output_height, max_output_width);
+    int global_threads_x = w, global_threads_y = h;
+    if (!fp16) {
         hipLaunchKernelGGL(Hip_CopyInt8ToNCHW_fp32,
-                           dim3(ceil((float)globalThreads_x / localThreads_x), ceil((float)globalThreads_y / localThreads_y)),
-                           dim3(localThreads_x, localThreads_y),
+                           dim3(ceil((float)global_threads_x / local_threads_x), ceil((float)global_threads_y / local_threads_y)),
+                           dim3(local_threads_x, local_threads_y),
                            0, stream, (const uchar *)inp_image_u8, output_tensor, dst_buf_offset,
-                           make_uint4(n, c, h, w),
+                           make_uint4(n, c, h, w), out_dims,
                            make_float3(multiplier0, multiplier1, multiplier2), make_float3(offset0, offset1, offset2),
                            reverse_channels);
-    }
-    else
-    {
+    } else {
         hipLaunchKernelGGL(Hip_CopyInt8ToNCHW_fp16,
-                           dim3(ceil((float)globalThreads_x / localThreads_x), ceil((float)globalThreads_y / localThreads_y)),
-                           dim3(localThreads_x, localThreads_y),
+                           dim3(ceil((float)global_threads_x / local_threads_x), ceil((float)global_threads_y / local_threads_y)),
+                           dim3(local_threads_x, local_threads_y),
                            0, stream, (const uchar *)inp_image_u8, output_tensor, dst_buf_offset,
-                           make_uint4(n, c, h, w),
+                           make_uint4(n, c, h, w), out_dims,
                            make_float3(multiplier0, multiplier1, multiplier2), make_float3(offset0, offset1, offset2),
                            reverse_channels);
     }

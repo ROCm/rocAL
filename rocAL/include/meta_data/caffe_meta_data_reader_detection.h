@@ -21,44 +21,44 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <map>
 #include <dirent.h>
-#include <memory>
+
 #include <list>
+#include <map>
+#include <memory>
 #include <variant>
 #include <lmdb.h>
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
-#include "image_reader.h"
+#include "pipeline/commons.h"
+#include "lmdb.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
+#include "readers/image/image_reader.h"
 #include "caffe_protos.pb.h"
 
-class CaffeMetaDataReaderDetection: public MetaDataReader
-{
-public :
-    void init(const MetaDataConfig& cfg) override;
+class CaffeMetaDataReaderDetection : public MetaDataReader {
+   public:
+    void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
     void lookup(const std::vector<std::string>& image_names) override;
     void read_all(const std::string& path) override;
     void release(std::string image_name);
     void release() override;
     bool set_timestamp_mode() override { return false; }
     void print_map_contents();
-    std::map<std::string, std::shared_ptr<MetaData>> &get_map_content() override{ return _map_content;}
-    MetaDataBatch * get_output() override { return _output; }
+    std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     CaffeMetaDataReaderDetection();
-    ~CaffeMetaDataReaderDetection() override { delete _output; }
-private:
+
+   private:
     void read_files(const std::string& _path);
-    bool exists(const std::string &image_name) override;
-    void add(std::string image_name, BoundingBoxCords bbox, BoundingBoxLabels b_labels, ImgSize image_size);
+    bool exists(const std::string& image_name) override;
+    void add(std::string image_name, BoundingBoxCords bbox, Labels labels, ImgSize image_size);
     bool _last_rec;
     void read_lmdb_record(std::string file_name, uint file_size);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
     std::string _path;
-    BoundingBoxBatch* _output;
-    DIR *_src_dir;
-    struct dirent *_entity;
+    pMetaDataBatch _output;
+    DIR* _src_dir;
+    struct dirent* _entity;
     std::vector<std::string> _file_names;
     MDB_env* _mdb_env;
     MDB_dbi _mdb_dbi;

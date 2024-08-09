@@ -20,73 +20,66 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <iostream>
-#include <utility>
+#include "meta_data/caffe2_meta_data_reader.h"
+
+#include <google/protobuf/message_lite.h>
+#include <stdint.h>
+
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <string>
-#include <stdint.h>
-#include <google/protobuf/message_lite.h>
-#include <lmdb.h>
-#include "caffe2_meta_data_reader.h"
+#include <utility>
+
 #include "caffe2_protos.pb.h"
+#include <lmdb.h>
 
 using namespace std;
 
-void Caffe2MetaDataReader::init(const MetaDataConfig &cfg)
-{
+void Caffe2MetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
     _path = cfg.path();
-    _output = new LabelBatch();
+    _output = meta_data_batch;
     _last_rec = false;
 }
 
-bool Caffe2MetaDataReader::exists(const std::string& _image_name)
-{
+bool Caffe2MetaDataReader::exists(const std::string &_image_name) {
     return _map_content.find(_image_name) != _map_content.end();
 }
 
-void Caffe2MetaDataReader::add(std::string _image_name, int label)
-{
+void Caffe2MetaDataReader::add(std::string _image_name, int label) {
     pMetaData info = std::make_shared<Label>(label);
-    if(exists(_image_name))
-    {
+    if (exists(_image_name)) {
         WRN("Entity with the same name exists")
         return;
     }
     _map_content.insert(pair<std::string, std::shared_ptr<MetaData>>(_image_name, info));
 }
 
-void Caffe2MetaDataReader::lookup(const std::vector<std::string> &_image_names)
-{
-    if(_image_names.empty())
-    {
+void Caffe2MetaDataReader::lookup(const std::vector<std::string> &_image_names) {
+    if (_image_names.empty()) {
         WRN("No image names passed")
         return;
     }
-    if(_image_names.size() != (unsigned)_output->size())
+    if (_image_names.size() != (unsigned)_output->size())
         _output->resize(_image_names.size());
 
-    for(unsigned i = 0; i < _image_names.size(); i++)
-    {
+    for (unsigned i = 0; i < _image_names.size(); i++) {
         auto _image_name = _image_names[i];
         auto it = _map_content.find(_image_name);
-        if(_map_content.end() == it)
-            THROW("ERROR: Given name not present in the map"+ _image_name )
-        _output->get_label_batch()[i] = it->second->get_label();
+        if (_map_content.end() == it)
+            THROW("ERROR: Given name not present in the map" + _image_name)
+        _output->get_labels_batch()[i] = it->second->get_labels();
     }
-
 }
 
-void Caffe2MetaDataReader::print_map_contents()
-{
+void Caffe2MetaDataReader::print_map_contents() {
     std::cerr << "\nMap contents: \n";
-    for (auto& elem : _map_content) {
-        std::cerr << "Name :\t " << elem.first << "\t ID:  " << elem.second->get_label() << std::endl;
+    for (auto &elem : _map_content) {
+        std::cerr << "Name :\t " << elem.first << "\t ID:  " << elem.second->get_labels()[0] << std::endl;
     }
 }
 
-void Caffe2MetaDataReader::read_all(const std::string &path)
-{
+void Caffe2MetaDataReader::read_all(const std::string &path) {
     string tmp1 = path + "/data.mdb";
     string tmp2 = path + "/lock.mdb";
     uint file_size, file_size1, file_bytes;
@@ -102,8 +95,7 @@ void Caffe2MetaDataReader::read_all(const std::string &path)
     // print_map_contents();
 }
 
-void Caffe2MetaDataReader::read_lmdb_record(std::string file_name, uint file_byte_size)
-{
+void Caffe2MetaDataReader::read_lmdb_record(std::string file_name, uint file_byte_size) {
     int rc;
     MDB_env *env;
     MDB_dbi dbi;
@@ -129,10 +121,9 @@ void Caffe2MetaDataReader::read_lmdb_record(std::string file_name, uint file_byt
     CHECK_LMDB_RETURN_STATUS(mdb_cursor_open(txn, dbi, &cursor));
 
     // Retrieve by cursor. It retrieves key/data pairs from the database
-    while((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0)
-    {
+    while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0) {
         // Reading the key value for each record from LMDB
-        str_key = string((char *) key.mv_data);
+        str_key = string((char *)key.mv_data);
 
         // Parsing Image and Label Protos using the key and data values
         // read from LMDB records
@@ -140,25 +131,20 @@ void Caffe2MetaDataReader::read_lmdb_record(std::string file_name, uint file_byt
         tens_protos.ParseFromArray((char *)data.mv_data, data.mv_size);
         // parse_Image_Protos(tens_protos);
         int protos_size = tens_protos.protos_size();
-        if(protos_size != 0)
-        {
+        if (protos_size != 0) {
             // Parsing label protos
             caffe2_protos::TensorProto label_proto = tens_protos.protos(1);
 
             // Parsing Label data size
             int label_data_size = label_proto.int32_data_size();
-            if(label_data_size != 0)
-            {
+            if (label_data_size != 0) {
                 // Parsing label data
                 auto label_data = label_proto.int32_data(0);
                 add(str_key.c_str(), (int)label_data);
             }
-        }
-        else
-        {
+        } else {
             cout << "Parsing Protos Failed" << endl;
         }
-
     }
 
     // Closing all the LMDB environment and cursor handles
@@ -168,11 +154,8 @@ void Caffe2MetaDataReader::read_lmdb_record(std::string file_name, uint file_byt
     mdb_env_close(env);
 }
 
-
-void Caffe2MetaDataReader::release(std::string _image_name)
-{
-    if(!exists(_image_name))
-    {
+void Caffe2MetaDataReader::release(std::string _image_name) {
+    if (!exists(_image_name)) {
         WRN("ERROR: Given not present in the map" + _image_name);
         return;
     }
@@ -183,6 +166,5 @@ void Caffe2MetaDataReader::release() {
     _map_content.clear();
 }
 
-Caffe2MetaDataReader::Caffe2MetaDataReader()
-{
+Caffe2MetaDataReader::Caffe2MetaDataReader() {
 }
