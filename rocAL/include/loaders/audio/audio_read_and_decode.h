@@ -64,6 +64,7 @@ class AudioReadAndDecode {
         const size_t max_decoded_channels);
     // returns timing info or other status information
     Timing GetTiming();
+    size_t last_batch_padded_size(); // The number of padded samples in the last batch
 
    private:
     std::vector<std::shared_ptr<AudioDecoder>> _decoder;

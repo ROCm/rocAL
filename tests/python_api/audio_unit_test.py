@@ -80,7 +80,7 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
     for i in range(roi_data[0]):
         for j in range(roi_data[1]):
             ref_val = data_array[i * roi_data[1] + j]
-            out_val = audio_data[i * dimensions[2] + j]
+            out_val = audio_data[i * roi_data[1] + j]   # Stride upto max_roi
             # ensuring that out_val is not exactly zero while ref_val is non-zero.
             invalid_comparison = (out_val == 0.0) and (ref_val != 0.0)
             #comparing the absolute difference between the output value (out_val) and the reference value (ref_val) with a tolerance threshold of 1e-20.
@@ -106,7 +106,8 @@ def audio_decoder_pipeline(path, file_list, downmix=False):
         downmix=downmix,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
 
 @pipeline_def(seed=seed)
 def pre_emphasis_filter_pipeline(path, file_list):
@@ -118,7 +119,8 @@ def pre_emphasis_filter_pipeline(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     return fn.preemphasis_filter(decoded_audio)
 
 @pipeline_def(seed=seed)
@@ -131,7 +133,8 @@ def spectrogram_pipeline(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     spec = fn.spectrogram(
         decoded_audio,
         nfft=512,
@@ -150,7 +153,8 @@ def to_decibels_pipeline(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     return fn.to_decibels(
             decoded_audio,
             multiplier=np.log(10),
@@ -168,7 +172,8 @@ def resample_pipeline(path, file_list):
         downmix=True,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     input_sample_rate = 16000.00
     uniform_distribution_resample = fn.random.uniform(decoded_audio, range=[1.15, 1.15])
     resampled_rate = uniform_distribution_resample * input_sample_rate
@@ -188,7 +193,8 @@ def tensor_add_tensor_pipeline(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     uniform_distribution_sample = fn.random.uniform(decoded_audio, range=[1.15, 1.15])
     return decoded_audio + uniform_distribution_sample
 
@@ -202,7 +208,8 @@ def tensor_mul_scalar_pipeline(path, file_list):
         downmix=True,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     return decoded_audio * 1.15
 
 @pipeline_def(seed=seed)
@@ -215,7 +222,8 @@ def non_silent_region(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
     return begin, length
 
@@ -229,7 +237,8 @@ def non_silent_region_and_slice(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     begin, length = fn.nonsilent_region(decoded_audio, cutoff_db=-60)
     trim_silence = fn.slice(
         decoded_audio,
@@ -248,7 +257,8 @@ def mel_filter_bank_pipeline(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     spec = fn.spectrogram(
         decoded_audio,
         nfft=512,
@@ -272,7 +282,8 @@ def normalize_pipeline(path, file_list):
         downmix=False,
         shard_id=0,
         num_shards=1,
-        stick_to_shard=False)
+        stick_to_shard=False,
+        last_batch_policy=types.LAST_BATCH_DROP, pad_last_batch_repeated=False)
     spec = fn.spectrogram(
         decoded_audio,
         nfft=512,
