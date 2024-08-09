@@ -109,8 +109,4 @@ Decoders                Description
 ======================  ========================================
 
 To see examples demonstrating the usage of decoders and readers, see 
-<<<<<<< HEAD
 `rocAL Python Examples <https://github.com/ROCm/rocAL/tree/master/docs/examples>`_.
-=======
-`MIVisionX rocAL Python Binding Examples <https://github.com/ROCm/MIVisionX/tree/master/rocAL/rocAL_pybind/examples>`_.
->>>>>>> upstream/release/rocm-rel-6.2

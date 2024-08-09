@@ -72,23 +72,6 @@ find_library(VXRPP_LIBRARIES
 )
 mark_as_advanced(VXRPP_LIBRARIES)
 
-<<<<<<< HEAD
-=======
-find_path(MIVisionX_LIBRARIES_DIRS
-    NAMES libopenvx${SHARED_LIB_TYPE}
-    HINTS
-    $ENV{MIVisionX_PATH}/lib
-    $ENV{MIVisionX_PATH}/lib64
-    PATHS
-    ${MIVisionX_PATH}/lib
-    ${MIVisionX_PATH}/lib64
-    /usr/lib
-    $ENV{ROCM_PATH}/lib
-    ${ROCM_PATH}/lib
-)
-mark_as_advanced(MIVisionX_LIBRARIES_DIRS)
-
->>>>>>> upstream/release/rocm-rel-6.2
 if(OPENVX_LIBRARIES AND MIVisionX_INCLUDE_DIRS)
     set(MIVisionX_FOUND TRUE)
 endif( )

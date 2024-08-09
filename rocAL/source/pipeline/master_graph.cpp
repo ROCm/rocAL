@@ -1157,7 +1157,6 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
     return _metadata_output_tensor_list;
 }
 
-<<<<<<< HEAD
 std::vector<rocalTensorList *> MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
@@ -1168,23 +1167,6 @@ std::vector<rocalTensorList *> MasterGraph::create_video_label_reader(const char
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
 
     if (!file_list_frame_num) {
-=======
-MetaDataBatch * MasterGraph::create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, const std::vector<std::string>& file_names, const std::vector<int>& labels, bool file_list_frame_num)
-{
-    if( _meta_data_reader)
-        THROW("A metadata reader has already been created")
-    if (((source_path == nullptr) || (source_path[0] == '\0')) && file_names.size() == 0)
-        THROW("Invalid input path, Either file_root or filenames must be passed")
-    if ((source_path != nullptr) && (source_path[0] != '\0') && file_names.size() != 0)
-        THROW("file_root and filenames are mutually exclusive")
-    MetaDataConfig config(MetaDataType::Label, reader_type, source_path, std::map<std::string, std::string>(), std::string(), sequence_length, frame_step, frame_stride);
-    config.set_file_names(file_names);
-    config.set_labels(labels);
-    _meta_data_reader = create_meta_data_reader(config);
-    _meta_data_reader->init(config);
-    if(!file_list_frame_num)
-    {
->>>>>>> upstream/release/rocm-rel-6.2
         _meta_data_reader->set_timestamp_mode();
     }
 

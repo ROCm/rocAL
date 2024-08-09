@@ -56,13 +56,8 @@ struct MetaDataConfig {
     unsigned _frame_stride;
     unsigned _out_img_width;
     unsigned _out_img_height;
-<<<<<<< HEAD
     bool _avoid_class_remapping;
     bool _aspect_ratio_grouping;
-=======
-    std::vector<std::string> _file_names;
-    std::vector<int> _labels;
->>>>>>> upstream/release/rocm-rel-6.2
 
    public:
     MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
@@ -82,15 +77,8 @@ struct MetaDataConfig {
     unsigned out_img_height() const { return _out_img_height; }
     void set_out_img_width(unsigned out_img_width) { _out_img_width = out_img_width; }
     void set_out_img_height(unsigned out_img_height) { _out_img_height = out_img_height; }
-<<<<<<< HEAD
     void set_avoid_class_remapping(bool avoid_class_remapping) { _avoid_class_remapping = avoid_class_remapping; }
     void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { _aspect_ratio_grouping = aspect_ratio_grouping; }
-=======
-    const std::vector<std::string>& file_names() const { return _file_names; }
-    const std::vector<int>& labels() const { return _labels; }
-    void set_file_names(const std::vector<std::string>& file_names) { _file_names = file_names; }
-    void set_labels(const std::vector<int>& labels) { _labels = labels; }
->>>>>>> upstream/release/rocm-rel-6.2
 };
 
 class MetaDataReader {

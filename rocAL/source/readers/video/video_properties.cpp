@@ -132,12 +132,7 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
         THROW("Can't open the metadata file at " + std::string(file_path))
 }
 
-<<<<<<< HEAD
 void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num) {
-=======
-void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num, const std::vector<std::string>& filenames)
-{
->>>>>>> upstream/release/rocm-rel-6.2
     DIR *_sub_dir;
     struct dirent *_entity;
     std::string video_file_path;

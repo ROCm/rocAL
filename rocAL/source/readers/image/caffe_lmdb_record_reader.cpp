@@ -20,14 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-<<<<<<< HEAD
 #include "readers/image/caffe_lmdb_record_reader.h"
 
 #include "pipeline/commons.h"
-=======
-#include <cassert>
-#include <commons.h>
->>>>>>> upstream/release/rocm-rel-6.2
 #include <iostream>
 #include <sstream>
 #include <string>

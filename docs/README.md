@@ -84,53 +84,13 @@ amd.rocal.types are enums exported from C++ API to python. Some examples include
 
 ### amd.rocal.plugin.tf
 
-<<<<<<< HEAD
 * Contains ROCALIterator for TensorFlow.
 * Any hybrid iterator pipeline can be created by adding augmentations.
 * See example [Tensorflow Simple Example](./examples/tf/). Requires TensorFlow.
-=======
-*  Build and install RPP
-*  Build and install MIVisionX which installs rocAL c++ lib
-*  Go to the [rocal_pybind](https://github.com/ROCm/rocAL/tree/develop/rocAL_pybind) folder
-*  sudo ./run.sh
->>>>>>> upstream/release/rocm-rel-6.2
 
 ### installing rocAL python plugin (Python 3.9+)
 
-<<<<<<< HEAD
 * Build and install RPP
 * Build and install MIVisionX
 * Build and install [rocAL](https://github.com/ROCm/rocAL/)
 
-=======
-* Step 1: Ensure you have downloaded ILSVRC2012_img_val.tar (6.3GB) and ILSVRC2012_img_train.tar (138 GB) files and unzip into train and val folders
-* Step 2: Build [MIVisionX Pytorch docker](https://github.com/ROCm/rocAL/blob/master/docker/README.md)
-* Step 3: Install rocAL python_pybind plugin as described above
-* Step 4: Clone [MLPerf](https://github.com/rrawther/MLPerf-mGPU) branch and checkout mlperf-v1.1-rocal branch
-
-``` bash
-git clone -b mlperf-v1.1-rocal https://github.com/rrawther/MLPerf-mGPU
-```
-
-* Step 5: Modify RN50_AMP_LARS_8GPUS_NCHW.sh or RN50_AMP_LARS_8GPUS_NHWC.sh to reflect correct path for imagenet directory
-* Step 8: Run RN50_AMP_LARS_8GPUS_NCHC.sh or RN50_AMP_LARS_8GPUS_NHWC.sh
-
-``` bash
-./RN50_AMP_LARS_8GPUS_NCHW.sh 
-(or)
-./RN50_AMP_LARS_8GPUS_NHWC.sh
-```
-
-### MIVisionX Pytorch Docker
-
-* Refer to the [docker](https://github.com/ROCm/MIVisionX#docker) page for prerequisites and information on building the docker
-* Step 1: Run the docker image*
-  
-``` bash
-sudo docker run -it -v <Path-To-Data-HostSystem>:/data -v /<Path-to-GitRepo>:/dockerx -w /dockerx --privileged --device=/dev/kfd --device=/dev/dri --group-add video --shm-size=4g --ipc="host" --network=host <docker-name>
-```
-
-  * Optional: Map localhost directory on the docker image
-    * option to map the localhost directory with imagenet dataset folder to be accessed on the docker image.
-    * usage: -v {LOCAL_HOST_DIRECTORY_PATH}:{DOCKER_DIRECTORY_PATH}
->>>>>>> upstream/release/rocm-rel-6.2

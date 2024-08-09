@@ -62,23 +62,13 @@ RocalMetaData
 }
 
 RocalMetaData
-<<<<<<< HEAD
     ROCAL_API_CALL
     rocalCreateVideoLabelReader(RocalContext p_context, const char* source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num) {
-=======
-ROCAL_API_CALL rocalCreateVideoLabelReader(RocalContext p_context, const char* source_path, unsigned sequence_length, unsigned frame_step, unsigned frame_stride,
-                                           const std::vector<std::string>& file_names_list, const std::vector<int>& labels, bool file_list_frame_num) {
->>>>>>> upstream/release/rocm-rel-6.2
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateLabelReader")
     auto context = static_cast<Context*>(p_context);
 
-<<<<<<< HEAD
     return context->master_graph->create_video_label_reader(source_path, MetaDataReaderType::VIDEO_LABEL_READER, sequence_length, frame_step, frame_stride, file_list_frame_num);
-=======
-    return context->master_graph->create_video_label_reader(source_path, MetaDataReaderType::VIDEO_LABEL_READER, sequence_length, frame_step, frame_stride, file_names_list, labels, file_list_frame_num);
-
->>>>>>> upstream/release/rocm-rel-6.2
 }
 
 RocalMetaData

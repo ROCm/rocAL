@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-<<<<<<< HEAD
 #include "meta_data/label_reader_folders.h"
 
 #include <string.h>
@@ -33,21 +32,6 @@ THE SOFTWARE.
 using namespace std;
 
 LabelReaderFolders::LabelReaderFolders() {
-=======
-#include <string.h>
-#include <iostream>
-#include <utility>
-#include <algorithm>
-#include "commons.h"
-#include "exception.h"
-#include "label_reader_folders.h"
-#include "filesystem.h"
-
-using namespace std;
-
-LabelReaderFolders::LabelReaderFolders()
-{
->>>>>>> upstream/release/rocm-rel-6.2
     _src_dir = nullptr;
     _entity = nullptr;
     _sub_dir = nullptr;

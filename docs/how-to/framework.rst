@@ -80,11 +80,7 @@ Follow these steps:
    import torch.optim as optim
 
 
-<<<<<<< HEAD
 4. Call the training pipeline with rocAL classification data `loader <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L78>`_.
-=======
-4. Call the training pipeline with rocAL classification data `loader <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/test_training.py#L78>`_.
->>>>>>> upstream/release/rocm-rel-6.2
 
 .. code-block:: python
    :caption: Call the training pipeline

@@ -25,13 +25,8 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include <memory.h>
 #include <stdint.h>
-<<<<<<< HEAD
 #include "readers/image/mxnet_recordio_reader.h"
 #include "pipeline/filesystem.h"
-=======
-#include "mxnet_recordio_reader.h"
-#include "filesystem.h"
->>>>>>> upstream/release/rocm-rel-6.2
 
 using namespace std;
 
