@@ -21,11 +21,7 @@
 # SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-<<<<<<< HEAD
 set(VERSION "2.0.0")
-=======
-set(VERSION "1.0.0")
->>>>>>> upstream/release/rocm-rel-6.2
 
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
@@ -48,10 +44,7 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
-<<<<<<< HEAD
 find_package(SndFile QUIET)
-=======
->>>>>>> upstream/release/rocm-rel-6.2
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -63,16 +56,10 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         endif()
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
-<<<<<<< HEAD
     # Set supported GPU Targets
     set(DEFAULT_AMDGPU_TARGETS "gfx908;gfx90a;gfx940;gfx941;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
     if (BUILD_WITH_AMD_ADVANCE)
         set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx1200;gfx1201")
-=======
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032;gfx1100")
-    if(BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941,gfx942")
->>>>>>> upstream/release/rocm-rel-6.2
     endif()
 
     # Set AMDGPU_TARGETS
@@ -204,13 +191,8 @@ if(NOT FILESYSTEM_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires FileSystem, Not Found ${ColourReset}")	
 endif()
-<<<<<<< HEAD
 if(NOT HALF_FOUND)
     set(BUILD_ROCAL false)
-=======
-if(NOT HALF_FOUND)	
-    set(BUILD_ROCAL false)	
->>>>>>> upstream/release/rocm-rel-6.2
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
 
@@ -324,7 +306,6 @@ if(${BUILD_ROCAL})
     else()
         message(FATAL_ERROR "No filesystem library found.")
     endif()
-<<<<<<< HEAD
     
     # Audio features for rocAL
     if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "0" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER "0")
@@ -348,8 +329,6 @@ if(${BUILD_ROCAL})
     else()
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
     endif()
-=======
->>>>>>> upstream/release/rocm-rel-6.2
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation
@@ -377,10 +356,7 @@ if(${BUILD_ROCAL})
             include/api/rocal_api_data_transfer.h
             include/api/rocal_api_parameters.h
             include/api/rocal_api_meta_data.h
-<<<<<<< HEAD
             include/api/rocal_api_tensor.h
-=======
->>>>>>> upstream/release/rocm-rel-6.2
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
 else()
     message(FATAL_ERROR "-- ${Red}rocAL dependencies not satisfied${ColourReset}")
