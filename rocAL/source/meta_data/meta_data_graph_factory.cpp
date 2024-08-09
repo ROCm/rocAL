@@ -20,26 +20,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
 #include <memory>
-#include "bounding_box_graph.h"
-#include "meta_data_graph.h"
-#include "meta_data_reader.h"
-#include "exception.h"
 
+#include "meta_data/bounding_box_graph.h"
+#include "pipeline/exception.h"
+#include "meta_data/meta_data_graph.h"
+#include "meta_data/meta_data_reader.h"
 
 std::shared_ptr<MetaDataGraph> create_meta_data_graph(const MetaDataConfig& config) {
-    switch(config.type()) {
-        case MetaDataType::Label:
-        {
+    switch (config.type()) {
+        case MetaDataType::Label: {
             return nullptr;
         }
-        case MetaDataType::BoundingBox:
-        {
+        case MetaDataType::BoundingBox: {
             return std::make_shared<BoundingBoxGraph>();
         }
-        case MetaDataType::KeyPoints:
-        {
+        case MetaDataType::PolygonMask: {
+            return std::make_shared<BoundingBoxGraph>();
+        }
+        case MetaDataType::KeyPoints: {
             return std::make_shared<BoundingBoxGraph>();
         }
 

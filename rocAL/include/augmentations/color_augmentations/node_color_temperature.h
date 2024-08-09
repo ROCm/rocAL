@@ -21,24 +21,24 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
-#include "graph.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
-class ColorTemperatureNode : public Node
-{
-public:
-    ColorTemperatureNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+class ColorTemperatureNode : public Node {
+   public:
+    ColorTemperatureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
 
     ColorTemperatureNode() = delete;
     void init(int adjustment);
     void init(IntParam *adjustment);
 
-protected:
-    void create_node() override ;
+   protected:
+    void create_node() override;
     void update_node() override;
-private:
+
+   private:
     ParameterVX<int> _adj_value_param;
-    constexpr static int ADJUSTMENT_RANGE [2] = {-99, 99};
+    constexpr static int ADJUSTMENT_RANGE[2] = {-99, 99};
 };

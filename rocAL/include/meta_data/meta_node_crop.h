@@ -21,23 +21,24 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <set>
 #include <memory>
-#include "bounding_box_graph.h"
-#include "meta_data.h"
-#include "node.h"
-#include "node_crop.h"
-#include "parameter_vx.h"
-class CropMetaNode:public MetaNode
-{
-    public:
-        CropMetaNode() {};
-        void update_parameters(MetaDataBatch* input_meta_data)override;
-        std::shared_ptr<CropNode> _node = nullptr;
-    private:
-        void initialize();
-        std::shared_ptr<RocalCropParam> _meta_crop_param;
-        vx_array _crop_width, _crop_height, _x1, _y1;
-        std::vector<uint> _crop_width_val, _crop_height_val, _x1_val, _y1_val,  _input_width_val, _input_height_val;
-        unsigned int _dst_width, _dst_height;
+#include <set>
+
+#include "meta_data/bounding_box_graph.h"
+#include "meta_data/meta_data.h"
+#include "pipeline/node.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_vx.h"
+class CropMetaNode : public MetaNode {
+   public:
+    CropMetaNode(){};
+    void update_parameters(pMetaDataBatch input_meta_data, pMetaDataBatch output_meta_data) override;
+    std::shared_ptr<CropNode> _node = nullptr;
+
+   private:
+    void initialize();
+    std::shared_ptr<RocalCropParam> _meta_crop_param;
+    vx_array _crop_width, _crop_height, _x1, _y1;
+    std::vector<uint> _crop_width_val, _crop_height_val, _x1_val, _y1_val, _input_width_val, _input_height_val;
+    unsigned int _dst_width, _dst_height;
 };
