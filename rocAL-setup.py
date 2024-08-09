@@ -405,7 +405,7 @@ else:
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm'))
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install ffmpeg ffmpeg-free-devel'))
+                        ' install ffmpeg ffmpeg-devel'))
             elif "SLES" in platfromInfo:
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install ffmpeg-4 ffmpeg-4-libavcodec-devel ffmpeg-4-libavformat-devel'))
