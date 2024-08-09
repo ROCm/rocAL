@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.4.0"
+__version__ = "2.5.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -297,11 +297,6 @@ debianOptionalPackages = [
     'libopencv-dev'
 ]
 
-slesOptionalPackages = [
-    'ffmpeg-devel',
-    'opencv-dev'
-]
-
 # Install
 ERROR_CHECK(os.system(sudoValidate))
 if os.path.exists(deps_dir):
@@ -358,7 +353,7 @@ else:
 
     #pip3 packages
     for i in range(len(pip3Packages)):
-        ERROR_CHECK(os.system('sudo pip3 install '+ pip3Packages[i]))
+        ERROR_CHECK(os.system('pip3 install '+ pip3Packages[i]))
 
     # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
     turboJpegVersion = '3.0.2'
@@ -376,12 +371,8 @@ else:
     os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
             linuxCMake+' ../; make -j$(nproc); sudo make install)')
 
-# Optional Deps
-    if "SLES" in platfromInfo:
-        for i in range(len(slesOptionalPackages)):
-                ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                                ' '+linuxSystemInstall_check+' install -y '+ slesOptionalPackages[i]))
-    elif "Ubuntu" in platfromInfo:
+    # Optional Deps
+    if "Ubuntu" in platfromInfo:
         for i in range(len(debianOptionalPackages)):
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                                 ' '+linuxSystemInstall_check+' install -y '+ debianOptionalPackages[i]))
@@ -414,7 +405,12 @@ else:
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-$(rpm -E %rhel).noarch.rpm'))
                 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install ffmpeg ffmpeg-free-devel'))
+                        ' install ffmpeg ffmpeg-devel'))
+            elif "SLES" in platfromInfo:
+                ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install ffmpeg-4 ffmpeg-4-libavcodec-devel ffmpeg-4-libavformat-devel'))
+                ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install ffmpeg-4-libavutil-devel ffmpeg-4-libswscale-devel'))
 
         # Install OpenCV -- TBD cleanup
         opencvVersion = '4.6.0'
@@ -433,7 +429,7 @@ else:
             '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
         ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
         ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; '+linuxCMake +
-                ' -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF  -D CMAKE_INSTALL_PREFIX=/usr/local ../../opencv-'+opencvVersion+' )'))
+                ' -D WITH_EIGEN=OFF -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF  -D CMAKE_INSTALL_PREFIX=/usr/local ../../opencv-'+opencvVersion+' )'))
         ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; make -j$(nproc))'))
         ERROR_CHECK(os.system(sudoValidate))
         ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
