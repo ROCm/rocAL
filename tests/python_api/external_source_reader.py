@@ -7,14 +7,17 @@ import os
 import numpy as np
 import cupy as cp
 import cv2
-from PIL import Image
+import sys
 
 
 def main():
-    batch_size = 3
+    if  len(sys.argv) < 3:
+        print ('Please pass cpu/gpu batch_size')
+        exit(0)
+    batch_size = int(sys.argv[2])
+    device = "cpu" if sys.argv[1] == "cpu" else "gpu"
     data_dir = os.environ["ROCAL_DATA_PATH"] + \
         "rocal_data/coco/coco_10_img/train_10images_2017/"
-    device = "cpu"
     try:
         path_mode0 = "output_folder/external_source_reader/mode0/"
         isExist = os.path.exists(path_mode0)
