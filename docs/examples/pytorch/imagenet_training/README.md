@@ -63,6 +63,14 @@ Node 1:
 python imagenet_training.py -a resnet50 --dist-url 'tcp://IP_OF_NODE0:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 1 [imagenet-folder with train and val folders]
 ```
 
+## Calculating dataloader performance
+
+You can use the training example to calculate the performance of torch and rocAL dataloaders - passing `calculate-ips` calculates the dataloader performance (in images per second) by running the dataloader without training for 3 epochs. You can choose the rocAL dataloaders by passing `rocal-cpu` or `rocal-gpu`
+
+```shell
+python imagenet_training.py --dist-url 'tcp://127.0.0.1:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 [imagenet-folder with train and val folders] --calculate-ips
+```
+
 ## Usage
 
 ```bash
