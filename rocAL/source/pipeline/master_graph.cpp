@@ -437,6 +437,11 @@ MasterGraph::mem_type() {
     return _mem_type;
 }
 
+size_t
+MasterGraph::last_batch_padded_size() {
+    return _loader_module->last_batch_padded_size();
+}
+
 Timing
 MasterGraph::timing() {
     Timing t = _loader_module->timing();
@@ -1131,7 +1136,8 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
-
+    if (strlen(source_path) == 0)
+        THROW("Source path needs to be provided")
     MetaDataConfig config(MetaDataType::Label, reader_type, source_path);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);

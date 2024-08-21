@@ -26,6 +26,11 @@ import numpy as np
 import ctypes
 import rocal_pybind as b
 import amd.rocal.types as types
+try:
+    import cupy as cp
+    CUPY_FOUND=True
+except ImportError:
+    CUPY_FOUND=False
 
 
 class ROCALGenericImageIterator(object):
@@ -92,9 +97,7 @@ class ROCALGenericIteratorDetection(object):
         self.offset = offset or [0.0, 0.0, 0.0]
         self.device = device
         if self.device is "gpu" or "cuda":
-            try:
-                import cupy as cp
-            except ImportError:
+            if not CUPY_FOUND:
                 print('info: Import CuPy failed. Falling back to CPU!')
                 self.device = "cpu"
         self.device_id = device_id
@@ -104,17 +107,13 @@ class ROCALGenericIteratorDetection(object):
         self.output_list = self.dimensions = self.dtype = None
         if self.loader._name is None:
             self.loader._name = self.loader._reader
+        self.iterator_length = b.getRemainingImages(self.loader._handle)
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
         if self.loader.rocal_run() != 0:
-            timing_info = self.loader.timing_info()
-            print("Load     time ::", timing_info.load_time)
-            print("Decode   time ::", timing_info.decode_time)
-            print("Process  time ::", timing_info.process_time)
-            print("Transfer time ::", timing_info.transfer_time)
             raise StopIteration
         self.output_tensor_list = self.loader.get_output_tensors()
 
@@ -214,6 +213,8 @@ class ROCALGenericIteratorDetection(object):
     def __del__(self):
         b.rocalRelease(self.loader._handle)
 
+    def __len__(self):
+        return self.iterator_length
 
 class ROCALIterator(ROCALGenericIteratorDetection):
     """!ROCAL iterator for detection and classification tasks for TF reader. It returns 2 or 3 outputs
