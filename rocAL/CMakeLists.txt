@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-set(VERSION "2.0.0")
+set(VERSION "1.0.0")
 
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
@@ -44,7 +44,6 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
-find_package(SndFile QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -56,21 +55,11 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         endif()
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
-    # Set supported GPU Targets
-    set(DEFAULT_AMDGPU_TARGETS "gfx908;gfx90a;gfx940;gfx941;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx1200;gfx1201")
+    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1031;gfx1032;gfx1100")
+    if(BUILD_WITH_AMD_ADVANCE)
+        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941,gfx942")
     endif()
-
-    # Set AMDGPU_TARGETS
-    if(DEFINED ENV{AMDGPU_TARGETS})
-        set(AMDGPU_TARGETS $ENV{AMDGPU_TARGETS} CACHE STRING "List of specific machine types for library to target")
-    elseif(AMDGPU_TARGETS)
-        message("-- ${White}${PROJECT_NAME} -- AMDGPU_TARGETS set with -D option${ColourReset}")
-    else()
-        set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
-    endif()
-    message("-- ${White}${PROJECT_NAME} -- AMDGPU_TARGETS: ${AMDGPU_TARGETS}${ColourReset}")
+    set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
         SET(BUILD_ROCAL true)
@@ -89,10 +78,10 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL")
         set(BUILD_ROCAL true)
         message("-- ${White}rocAL -- Using OpenCL -- Path:" ${OpenCL_LIBRARIES} "\tVersion:" ${CL_TARGET_OpenCL_VERSION})
     else()
-        set(BACKEND "CPU")
-        message("-- ${Yellow}NOTE: rocAL library requires OpenCL for BACKEND=OpenCL, Not Found ${ColourReset}")
-        message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
-    endif()
+      set(BACKEND "CPU")
+      message("-- ${Yellow}NOTE: rocAL library requires OpenCL for BACKEND=OpenCL, Not Found ${ColourReset}")
+      message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
+  endif()
 endif()
 # Dependency Check
 # AMD RPP
@@ -179,20 +168,20 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
-if(NOT LMDB_FOUND)
-    set(BUILD_ROCAL false)
+if(NOT LMDB_FOUND)	
+    set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires LMDB, Not Found ${ColourReset}")	
-endif()
-if(NOT RapidJSON_FOUND)
-    set(BUILD_ROCAL false)
+endif()	
+if(NOT RapidJSON_FOUND)	
+    set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires RapidJSON, Not Found ${ColourReset}")	
 endif()
 if(NOT FILESYSTEM_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires FileSystem, Not Found ${ColourReset}")	
 endif()
-if(NOT HALF_FOUND)
-    set(BUILD_ROCAL false)
+if(NOT HALF_FOUND)	
+    set(BUILD_ROCAL false)	
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
 
@@ -215,10 +204,10 @@ if(${BUILD_ROCAL})
     # Protobuf
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
-    # LMDB
+    # LMDB	
     include_directories(${LMDB_INCLUDE_DIRS})	
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})	
-    # RapidJSON
+    # RapidJSON	
     include_directories(${RapidJSON_INCLUDE_DIRS})
     # Filesystem
     include_directories(${FILESYSTEM_INCLUDE_DIRS})
@@ -232,8 +221,22 @@ if(${BUILD_ROCAL})
 
     include_directories(
                 ${CMAKE_CURRENT_BINARY_DIR}
-                include
-                include/api
+                include/api/
+                include/augmentations/
+                include/augmentations/color_augmentations/
+                include/augmentations/effects_augmentations/
+                include/augmentations/geometry_augmentations/
+                include/decoders/image/
+                include/decoders/video/
+                include/device/
+                include/loaders/
+                include/loaders/image/
+                include/loaders/video/
+                include/meta_data/
+                include/parameters/
+                include/pipeline/
+                include/readers/image/
+                include/readers/video/
     )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
@@ -284,7 +287,7 @@ if(${BUILD_ROCAL})
         if(${OpenCV_VERSION_MAJOR} EQUAL 4)
             target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
         else()
-            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
         endif()
     else()
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
@@ -305,29 +308,6 @@ if(${BUILD_ROCAL})
         message("-- ${White}rocAL built with std experimental Filesystem${ColourReset}")
     else()
         message(FATAL_ERROR "No filesystem library found.")
-    endif()
-    
-    # Audio features for rocAL
-    if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "0" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER "0")
-        if(NOT SNDFILE_FOUND)
-            message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
-            set(AUDIO_SUPPORT FALSE)
-        else()
-            set(AUDIO_SUPPORT TRUE)
-        endif()
-    else()
-        set(AUDIO_SUPPORT FALSE)
-        message("-- ${Yellow}rocAL -- Requires MIVisionX vx_rpp version > 3.0.0 for audio${ColourReset}")
-    endif()
-
-    # SndFile
-    if(AUDIO_SUPPORT)
-        include_directories(${SNDFILE_INCLUDE_DIRS})
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${SNDFILE_LIBRARIES})
-        message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
-    else()
-        message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
@@ -356,7 +336,6 @@ if(${BUILD_ROCAL})
             include/api/rocal_api_data_transfer.h
             include/api/rocal_api_parameters.h
             include/api/rocal_api_meta_data.h
-            include/api/rocal_api_tensor.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
 else()
     message(FATAL_ERROR "-- ${Red}rocAL dependencies not satisfied${ColourReset}")

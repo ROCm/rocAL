@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 cmake_minimum_required(VERSION 3.5)
-set(VERSION "2.0.0")
+set(VERSION "1.0.0")
 
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
@@ -51,8 +51,7 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
-option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
-option(BUILD_WITH_AMD_ADVANCE   "Build rocAL for advanced AMD GPU Architecture" OFF)
+option(BUILD_WITH_AMD_ADVANCE  "Build rocAL with Advanced GPU support" OFF)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -118,8 +117,13 @@ else()
 endif()
 message("-- ${BoldBlue}rocAL Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
 
+message("-- ${Cyan}rocAL Developer Options${ColourReset}")
+message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (default:ON)]${ColourReset}")
+message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
+message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
+message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [rocAL support for advanced GPU(default:OFF)]${ColourReset}")
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
 find_package(HALF QUIET)
 
 if(HALF_FOUND)
@@ -130,19 +134,8 @@ else()
   message("-- ${Blue}rocAL Built with float16 Support OFF${ColourReset}")
 endif()
 
-message("-- ${Cyan}rocAL Developer Options${ColourReset}")
-message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
-message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
-message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:OFF)]${ColourReset}")
-
 add_subdirectory(rocAL)
-if(BUILD_PYPACKAGE)
-  add_subdirectory(rocAL_pybind)
-else()
-  message("-- ${Cyan}rocAL Python Module turned OFF by user option -D BUILD_PYPACKAGE=OFF ${ColourReset}")
-endif()
+add_subdirectory(rocAL_pybind)
 
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/
 install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal COMPONENT runtime)
@@ -150,11 +143,11 @@ install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal COMP
 # test package
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp_api/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
-# CTest - Needs rocAL Installed
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp_api_tests/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
+# CTest - Needs RPP Installed
 enable_testing()
 include(CTest)
-add_subdirectory(tests/cpp_api)
+add_subdirectory(tests/cpp_api_tests)
 
 # set package information
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -187,6 +180,8 @@ set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-dev COMPONENT dev)
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-test COMPONENT test)
 
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
   set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
@@ -199,20 +194,8 @@ endif()
 set(ROCAL_DEBIAN_PACKAGE_LIST  "rpp, mivisionx")
 set(ROCAL_RPM_PACKAGE_LIST     "rpp, mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
-
-# Add rocDecode Deps for HW Decode - Exclude centos-7
-if (EXISTS "/etc/os-release")
-  file(READ "/etc/os-release" OS_RELEASE)
-  string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
-  if(NOT CENTOS_7_FOUND)
-    set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
-    set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
-    set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
-    set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
-  endif()
-endif()
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel")
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
 execute_process(
@@ -248,17 +231,21 @@ set(CPACK_RPM_COMPONENT_INSTALL ON)
 set(CPACK_RPM_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${ROCAL_RPM_PACKAGE_LIST}")
 set(CPACK_RPM_RUNTIME_PACKAGE_PROVIDES "${PROJECT_NAME}")
+set(CPACK_RPM_RUNTIME_PACKAGE_OBSOLETES "${PROJECT_NAME}")
 set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
 set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${CPACK_RPM_RUNTIME_PACKAGE_NAME}, ${ROCAL_RPM_DEV_PACKAGE_LIST}")
 set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-devel")
+set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-devel")
 # RPM package - specific variable for ASAN
 set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
 set(CPACK_RPM_ASAN_PACKAGE_REQUIRES "rocm-core-asan, ${ROCAL_RPM_PACKAGE_LIST}" )
 set(CPACK_RPM_ASAN_PACKAGE_PROVIDES "${PROJECT_NAME}-asan")
+set(CPACK_RPM_ASAN_PACKAGE_OBSOLETES "${PROJECT_NAME}-asan")
 # RPM package specific variable for ASAN
 set(CPACK_RPM_TEST_PACKAGE_NAME "${PROJECT_NAME}-test" )
 set(CPACK_RPM_TEST_PACKAGE_REQUIRES "rocm-core, ${CPACK_RPM_DEV_PACKAGE_NAME}" )
 set(CPACK_RPM_TEST_PACKAGE_PROVIDES "${PROJECT_NAME}-test")
+set(CPACK_RPM_TEST_PACKAGE_OBSOLETES "${PROJECT_NAME}-test")
 
 if(NOT ROCM_DEP_ROCMCORE)
   string(REGEX REPLACE ",? ?rocm-core," "" CPACK_RPM_RUNTIME_PACKAGE_REQUIRES ${CPACK_RPM_RUNTIME_PACKAGE_REQUIRES})
@@ -284,10 +271,10 @@ set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 set(CPACK_RPM_PACKAGE_RELEASE "local")
 
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
-  set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
+ set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
 endif()
 if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
-  set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
+ set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 if(APPLE)

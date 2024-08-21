@@ -33,9 +33,11 @@ find_path(MIVisionX_INCLUDE_DIRS
     NAMES vx_ext_amd.h
     HINTS
     $ENV{MIVisionX_PATH}/include/mivisionx
+    $ENV{ROCM_PATH}/include/mivisionx
     PATHS
     ${MIVisionX_PATH}/include/mivisionx
     /usr/include
+    $ENV{ROCM_PATH}/include/mivisionx
     ${ROCM_PATH}/include/mivisionx
 )
 mark_as_advanced(MIVisionX_INCLUDE_DIRS)
@@ -45,9 +47,12 @@ find_library(OPENVX_LIBRARIES
     NAMES libopenvx${SHARED_LIB_TYPE}
     HINTS
     $ENV{MIVisionX_PATH}/lib
+    $ENV{MIVisionX_PATH}/lib64
     PATHS
     ${MIVisionX_PATH}/lib
+    ${MIVisionX_PATH}/lib64
     /usr/lib
+    $ENV{ROCM_PATH}/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(OPENVX_LIBRARIES)
@@ -57,12 +62,29 @@ find_library(VXRPP_LIBRARIES
     NAMES libvx_rpp${SHARED_LIB_TYPE}
     HINTS
     $ENV{MIVisionX_PATH}/lib
+    $ENV{MIVisionX_PATH}/lib64
     PATHS
     ${MIVisionX_PATH}/lib
+    ${MIVisionX_PATH}/lib64
     /usr/lib
+    $ENV{ROCM_PATH}/lib
     ${ROCM_PATH}/lib
 )
 mark_as_advanced(VXRPP_LIBRARIES)
+
+find_path(MIVisionX_LIBRARIES_DIRS
+    NAMES libopenvx${SHARED_LIB_TYPE}
+    HINTS
+    $ENV{MIVisionX_PATH}/lib
+    $ENV{MIVisionX_PATH}/lib64
+    PATHS
+    ${MIVisionX_PATH}/lib
+    ${MIVisionX_PATH}/lib64
+    /usr/lib
+    $ENV{ROCM_PATH}/lib
+    ${ROCM_PATH}/lib
+)
+mark_as_advanced(MIVisionX_LIBRARIES_DIRS)
 
 if(OPENVX_LIBRARIES AND MIVisionX_INCLUDE_DIRS)
     set(MIVisionX_FOUND TRUE)
@@ -73,36 +95,19 @@ find_package_handle_standard_args( MIVisionX
     FOUND_VAR  MIVisionX_FOUND 
     REQUIRED_VARS
         OPENVX_LIBRARIES
-        VXRPP_LIBRARIES
+        VXRPP_LIBRARIES  
         MIVisionX_INCLUDE_DIRS
+        MIVisionX_LIBRARIES_DIRS
 )
 
 set(MIVisionX_FOUND ${MIVisionX_FOUND} CACHE INTERNAL "")
 set(OPENVX_LIBRARIES ${OPENVX_LIBRARIES} CACHE INTERNAL "")
 set(VXRPP_LIBRARIES ${VXRPP_LIBRARIES} CACHE INTERNAL "")
 set(MIVisionX_INCLUDE_DIRS ${MIVisionX_INCLUDE_DIRS} CACHE INTERNAL "")
+set(MIVisionX_LIBRARIES_DIRS ${MIVisionX_LIBRARIES_DIRS} CACHE INTERNAL "")
 
 if(MIVisionX_FOUND)
-    if(VXRPP_LIBRARIES)
-        if(EXISTS "${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_version.h")
-            # Find RPP Version
-            file(READ "${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_version.h" VX_EXT_RPP_VERSION_FILE)
-            string(REGEX MATCH "VX_EXT_RPP_VERSION_MAJOR ([0-9]*)" _ ${VX_EXT_RPP_VERSION_FILE})
-            set(VX_EXT_RPP_VERSION_MAJOR ${CMAKE_MATCH_1} CACHE INTERNAL "")
-            string(REGEX MATCH "VX_EXT_RPP_VERSION_MINOR ([0-9]*)" _ ${VX_EXT_RPP_VERSION_FILE})
-            set(VX_EXT_RPP_VERSION_MINOR ${CMAKE_MATCH_1} CACHE INTERNAL "")
-            string(REGEX MATCH "VX_EXT_RPP_VERSION_PATCH ([0-9]*)" _ ${VX_EXT_RPP_VERSION_FILE})
-            set(VX_EXT_RPP_VERSION_PATCH ${CMAKE_MATCH_1} CACHE INTERNAL "")
-            message("-- ${White}Found VX RPP Version: ${VX_EXT_RPP_VERSION_MAJOR}.${VX_EXT_RPP_VERSION_MINOR}.${VX_EXT_RPP_VERSION_PATCH}${ColourReset}")
-            message("-- ${White}Using MIVisionX -- \n\tLibraries:${OPENVX_LIBRARIES} \n\tIncludes:${MIVisionX_INCLUDE_DIRS}${ColourReset}")
-        else()
-            set(VX_EXT_RPP_VERSION_MAJOR 0)
-            set(VX_EXT_RPP_VERSION_MINOR 0)
-            set(VX_EXT_RPP_VERSION_PATCH 0)
-        endif()
-    else()
-        message("-- ${Yellow}VX RPP - Not Found${ColourReset}")
-    endif()
+    message("-- ${White}Using MIVisionX -- \n\tLibraries:${OPENVX_LIBRARIES} \n\tIncludes:${MIVisionX_INCLUDE_DIRS}${ColourReset}")    
 else()
     if(MIVisionX_FIND_REQUIRED)
         message(FATAL_ERROR "{Red}FindMIVisionX -- NOT FOUND${ColourReset}")

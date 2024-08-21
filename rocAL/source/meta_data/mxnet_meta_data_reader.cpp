@@ -20,73 +20,87 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "meta_data/mxnet_meta_data_reader.h"
-
+#include <iostream>
+#include <utility>
+#include <algorithm>
 #include <memory.h>
 #include <stdint.h>
-#include "pipeline/filesystem.h"
+#include "mxnet_meta_data_reader.h"
+#include "filesystem.h"
 
 using namespace std;
 
-void MXNetMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
+void MXNetMetaDataReader::init(const MetaDataConfig &cfg)
+{
     _path = cfg.path();
-    _output = meta_data_batch;
+    _output = new LabelBatch();
     _src_dir = nullptr;
     _entity = nullptr;
 }
 
-bool MXNetMetaDataReader::exists(const std::string &_image_name) {
+bool MXNetMetaDataReader::exists(const std::string& _image_name)
+{
     return _map_content.find(_image_name) != _map_content.end();
 }
 
-void MXNetMetaDataReader::add(std::string image_name, int label) {
+void MXNetMetaDataReader::add(std::string image_name, int label)
+{
     pMetaData info = std::make_shared<Label>(label);
-    if (exists(image_name)) {
+    if(exists(image_name))
+    {
         WRN("Entity with the same name exists")
         return;
     }
     _map_content.insert(std::pair<std::string, std::shared_ptr<Label>>(image_name, info));
 }
 
-void MXNetMetaDataReader::lookup(const std::vector<std::string> &_image_names) {
-    if (_image_names.empty()) {
+void MXNetMetaDataReader::lookup(const std::vector<std::string> &_image_names)
+{
+    if(_image_names.empty())
+    {
         WRN("No image names passed")
         return;
     }
-    if (_image_names.size() != (unsigned)_output->size())
+    if(_image_names.size() != (unsigned)_output->size())
         _output->resize(_image_names.size());
 
-    for (unsigned i = 0; i < _image_names.size(); i++) {
+    for(unsigned i = 0; i < _image_names.size(); i++)
+    {
         auto _image_name = _image_names[i];
         auto it = _map_content.find(_image_name);
-        if (_map_content.end() == it)
-            THROW("MXNetMetaDataReader ERROR: Given name not present in the map" + _image_name)
-        _output->get_labels_batch()[i] = it->second->get_labels();
+        if(_map_content.end() == it)
+            THROW("MXNetMetaDataReader ERROR: Given name not present in the map"+ _image_name )
+        _output->get_label_batch()[i] = it->second->get_label();
     }
 }
 
-void MXNetMetaDataReader::print_map_contents() {
+void MXNetMetaDataReader::print_map_contents()
+{
     std::cerr << "\nMap contents: \n";
-    for (auto &elem : _map_content) {
-        std::cerr << "Name :\t " << elem.first << "\t ID:  " << elem.second->get_labels()[0] << std::endl;
+    for (auto& elem : _map_content) {
+        std::cerr << "Name :\t " << elem.first << "\t ID:  " << elem.second->get_label() << std::endl;
     }
 }
 
-void MXNetMetaDataReader::read_all(const std::string &_path) {
+void MXNetMetaDataReader::read_all(const std::string &_path)
+{
     std::string _rec_file, _idx_file;
-    if ((_src_dir = opendir(_path.c_str())) == nullptr)
+    if ((_src_dir = opendir (_path.c_str())) == nullptr)
         THROW("MXNetMetaDataReader ERROR: Failed opening the directory at " + _path);
 
-    while ((_entity = readdir(_src_dir)) != nullptr) {
+    while((_entity = readdir (_src_dir)) != nullptr)
+    {
         std::string file_name = _path + "/" + _entity->d_name;
         filesys::path pathObj(file_name);
-        if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
+        if(filesys::exists(pathObj) && filesys::is_regular_file(pathObj))
+        {
             auto file_extension_idx = file_name.find_last_of(".");
-            if (file_extension_idx != std::string::npos) {
-                std::string file_extension = file_name.substr(file_extension_idx + 1);
+            if (file_extension_idx  != std::string::npos)
+            {
+                std::string file_extension = file_name.substr(file_extension_idx+1);
                 if (file_extension == "rec")
                     _rec_file = file_name;
-                else if (file_extension == "idx")
+                else if(file_extension == "idx")
                     _idx_file = file_name;
                 else
                     continue;
@@ -103,14 +117,14 @@ void MXNetMetaDataReader::read_all(const std::string &_path) {
     _file_contents.seekg(0, ifstream::beg);
 
     ifstream index_file(_idx_file);
-    if (!index_file)
+    if(!index_file)
         THROW("MXNetMetaDataReader ERROR: Could not open RecordIO index file. Provided path: " + _idx_file);
 
     std::vector<size_t> _index_list;
     size_t _index, _offset;
     while (index_file >> _index >> _offset)
         _index_list.push_back(_offset);
-    if (_index_list.empty())
+    if(_index_list.empty())
         THROW("MXNetMetaDataReader ERROR: RecordIO index file doesn't contain any indices. Provided path: " + _idx_file);
     _index_list.push_back(rec_size);
     std::sort(_index_list.begin(), _index_list.end());
@@ -119,8 +133,10 @@ void MXNetMetaDataReader::read_all(const std::string &_path) {
     read_images();
 }
 
-void MXNetMetaDataReader::release(std::string _image_name) {
-    if (!exists(_image_name)) {
+void MXNetMetaDataReader::release(std::string _image_name)
+{
+    if(!exists(_image_name))
+    {
         WRN("ERROR: Given not present in the map" + _image_name);
         return;
     }
@@ -131,28 +147,33 @@ void MXNetMetaDataReader::release() {
     _map_content.clear();
 }
 
-void MXNetMetaDataReader::read_images() {
-    for (int current_index = 0; current_index < (int)_indices.size(); current_index++) {
+void MXNetMetaDataReader::read_images()
+{
+    for(int current_index = 0; current_index < (int)_indices.size(); current_index++ )
+    {
         uint32_t _magic, _length_flag;
         int64_t _seek_pos, _data_size_to_read;
         std::tie(_seek_pos, _data_size_to_read) = _indices[current_index];
         _file_contents.seekg(_seek_pos, ifstream::beg);
-        uint8_t *_data = new uint8_t[_data_size_to_read];
-        uint8_t *_data_ptr = _data;
+        uint8_t* _data = new uint8_t[_data_size_to_read];
+        uint8_t* _data_ptr = _data;
         auto ret = _file_contents.read((char *)_data_ptr, _data_size_to_read).gcount();
-        if (ret == -1 || ret != _data_size_to_read)
+        if(ret == -1 || ret != _data_size_to_read)
             THROW("MXNetMetaDataReader ERROR:  Unable to read the data from the file ");
-        _magic = *((uint32_t *)_data_ptr);
+        _magic = *((uint32_t *) _data_ptr);
         _data_ptr += sizeof(_magic);
-        if (_magic != _kMagic)
+        if(_magic != _kMagic)
             THROW("MXNetMetaDataReader ERROR: Invalid RecordIO: wrong magic number");
-        _length_flag = *((uint32_t *)_data_ptr);
+        _length_flag = *((uint32_t *) _data_ptr);
         _data_ptr += sizeof(_length_flag);
-        _hdr = *((ImageRecordIOHeader *)_data_ptr);
+        _hdr = *((ImageRecordIOHeader *) _data_ptr);
 
-        if (_hdr.flag == 0) {
+        if (_hdr.flag == 0)
+        {
             add((to_string(_hdr.image_id[0])), _hdr.label);
-        } else {
+        }
+        else
+        {
             WRN("\nMultiple record reading has not supported");
             continue;
         }
@@ -160,5 +181,6 @@ void MXNetMetaDataReader::read_images() {
     }
 }
 
-MXNetMetaDataReader::MXNetMetaDataReader() {
+MXNetMetaDataReader::MXNetMetaDataReader()
+{
 }

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,13 +23,13 @@ from setuptools.dist import Distribution
 import sys
 import os
 
-if sys.version_info < (3, 0):
-    sys.exit('rocal Python Package requires Python > 3.0')
-
 ROCM_PATH = '/opt/rocm'
 if "ROCM_PATH" in os.environ:
     ROCM_PATH = os.environ.get('ROCM_PATH')
 print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
+
+if sys.version_info < (3, 0):
+    sys.exit('rocal Python Package requires Python > 3.0')
 
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
@@ -38,17 +38,15 @@ class BinaryDistribution(Distribution):
         return True
 
 setup(
-    name='amd-rocal',
-    description='AMD ROCm Augmentation Library Python Bindings',
-    url='https://github.com/ROCm/rocAL',
-    version='2.0.0',
-    author='AMD',
-    license='MIT',
-    packages=find_packages(where='@TARGET_NAME@'),
-    package_dir={'amd': '@TARGET_NAME@/amd'},
-    include_package_data=True,
-    ext_modules=[Extension('rocal_pybind',
-                    sources=['rocal_pybind.cpp'], 
-                    include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
-    distclass=BinaryDistribution
-)
+      name='amd-rocal',
+      description='AMD ROCm Augmentation Library',
+      url='https://github.com/ROCm/MIVisionX/rocAL',
+      version='1.0.0',
+      author='AMD',
+      license='Apache License 2.0',
+      packages=find_packages(where='@TARGET_NAME@'),
+      package_dir={'amd':'@TARGET_NAME@/amd'},
+      include_package_data=True,
+      ext_modules=[Extension('rocal_pybind',sources=['rocal_pybind.cpp'], include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
+      distclass=BinaryDistribution
+      )

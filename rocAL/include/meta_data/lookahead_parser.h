@@ -20,14 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #pragma once
-#include <rapidjson/document.h>
 #include <rapidjson/reader.h>
-
-#include <fstream>
-#include <functional>
+#include <rapidjson/document.h>
 #include <iostream>
-#include <memory>
 #include <string>
+#include <fstream>
+#include <memory>
+#include <functional>
 
 RAPIDJSON_DIAG_PUSH
 #ifdef __GNUC__
@@ -66,76 +65,29 @@ RAPIDJSON_DIAG_OFF(effc++)
 
 using namespace rapidjson;
 
-class LookaheadParserHandler {
-   public:
-    bool Null() {
-        st_ = kHasNull;
-        v_.SetNull();
-        return true;
-    }
-    bool Bool(bool b) {
-        st_ = kHasBool;
-        v_.SetBool(b);
-        return true;
-    }
-    bool Int(int i) {
-        st_ = kHasNumber;
-        v_.SetInt(i);
-        return true;
-    }
-    bool Uint(unsigned u) {
-        st_ = kHasNumber;
-        v_.SetUint(u);
-        return true;
-    }
-    bool Int64(int64_t i) {
-        st_ = kHasNumber;
-        v_.SetInt64(i);
-        return true;
-    }
-    bool Uint64(uint64_t u) {
-        st_ = kHasNumber;
-        v_.SetUint64(u);
-        return true;
-    }
-    bool Double(double d) {
-        st_ = kHasNumber;
-        v_.SetDouble(d);
-        return true;
-    }
-    bool RawNumber(const char*, SizeType, bool) { return false; }
-    bool String(const char* str, SizeType length, bool) {
-        st_ = kHasString;
-        v_.SetString(str, length);
-        return true;
-    }
-    bool StartObject() {
-        st_ = kEnteringObject;
-        return true;
-    }
-    bool Key(const char* str, SizeType length, bool) {
-        st_ = kHasKey;
-        v_.SetString(str, length);
-        return true;
-    }
-    bool EndObject(SizeType) {
-        st_ = kExitingObject;
-        return true;
-    }
-    bool StartArray() {
-        st_ = kEnteringArray;
-        return true;
-    }
-    bool EndArray(SizeType) {
-        st_ = kExitingArray;
-        return true;
-    }
 
-   protected:
+class LookaheadParserHandler {
+public:
+    bool Null() { st_ = kHasNull; v_.SetNull(); return true; }
+    bool Bool(bool b) { st_ = kHasBool; v_.SetBool(b); return true; }
+    bool Int(int i) { st_ = kHasNumber; v_.SetInt(i); return true; }
+    bool Uint(unsigned u) { st_ = kHasNumber; v_.SetUint(u); return true; }
+    bool Int64(int64_t i) { st_ = kHasNumber; v_.SetInt64(i); return true; }
+    bool Uint64(uint64_t u) { st_ = kHasNumber; v_.SetUint64(u); return true; }
+    bool Double(double d) { st_ = kHasNumber; v_.SetDouble(d); return true; }
+    bool RawNumber(const char*, SizeType, bool) { return false; }
+    bool String(const char* str, SizeType length, bool) { st_ = kHasString; v_.SetString(str, length); return true; }
+    bool StartObject() { st_ = kEnteringObject; return true; }
+    bool Key(const char* str, SizeType length, bool) { st_ = kHasKey; v_.SetString(str, length); return true; }
+    bool EndObject(SizeType) { st_ = kExitingObject; return true; }
+    bool StartArray() { st_ = kEnteringArray; return true; }
+    bool EndArray(SizeType) { st_ = kExitingArray; return true; }
+
+protected:
     LookaheadParserHandler(char* str);
     void ParseNext();
 
-   protected:
+protected:
     enum LookaheadParsingState {
         kInit,
         kError,
@@ -173,7 +125,7 @@ inline void LookaheadParserHandler::ParseNext() {
 }
 
 class LookaheadParser : protected LookaheadParserHandler {
-   public:
+public:
     LookaheadParser(char* str) : LookaheadParserHandler(str) {}
 
     bool EnterObject();
@@ -190,17 +142,17 @@ class LookaheadParser : protected LookaheadParserHandler {
     void SkipArray();
     void SkipValue();
     Value* PeekValue();
-    int PeekType();  // returns a rapidjson::Type, or -1 for no value (at end of object/array)
+    int PeekType(); // returns a rapidjson::Type, or -1 for no value (at end of object/array)
 
     bool IsValid() { return st_ != kError; }
 
-   protected:
+protected:
     void SkipOut(int depth);
 };
 
 inline bool LookaheadParser::EnterObject() {
     if (st_ != kEnteringObject) {
-        st_ = kError;
+        st_  = kError;
         return false;
     }
 
@@ -210,7 +162,7 @@ inline bool LookaheadParser::EnterObject() {
 
 inline bool LookaheadParser::EnterArray() {
     if (st_ != kEnteringArray) {
-        st_ = kError;
+        st_  = kError;
         return false;
     }
 
@@ -261,7 +213,7 @@ inline int LookaheadParser::GetInt() {
 
 inline double LookaheadParser::GetDouble() {
     if (st_ != kHasNumber) {
-        st_ = kError;
+        st_  = kError;
         return 0.;
     }
 
@@ -272,7 +224,7 @@ inline double LookaheadParser::GetDouble() {
 
 inline bool LookaheadParser::GetBool() {
     if (st_ != kHasBool) {
-        st_ = kError;
+        st_  = kError;
         return false;
     }
 
@@ -283,7 +235,7 @@ inline bool LookaheadParser::GetBool() {
 
 inline void LookaheadParser::GetNull() {
     if (st_ != kHasNull) {
-        st_ = kError;
+        st_  = kError;
         return;
     }
 
@@ -292,7 +244,7 @@ inline void LookaheadParser::GetNull() {
 
 inline const char* LookaheadParser::GetString() {
     if (st_ != kHasString) {
-        st_ = kError;
+        st_  = kError;
         return 0;
     }
 
@@ -305,14 +257,17 @@ inline void LookaheadParser::SkipOut(int depth) {
     do {
         if (st_ == kEnteringArray || st_ == kEnteringObject) {
             ++depth;
-        } else if (st_ == kExitingArray || st_ == kExitingObject) {
+        }
+        else if (st_ == kExitingArray || st_ == kExitingObject) {
             --depth;
-        } else if (st_ == kError) {
+        }
+        else if (st_ == kError) {
             return;
         }
 
         ParseNext();
-    } while (depth > 0);
+    }
+    while (depth > 0);
 }
 
 inline void LookaheadParser::SkipValue() {

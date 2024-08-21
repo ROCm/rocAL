@@ -22,6 +22,5 @@ THE SOFTWARE.
 
 #pragma once
 #include <memory>
-
-#include "decoders/image/decoder.h"
+#include "decoder.h"
 std::shared_ptr<Decoder> create_decoder(DecoderConfig config);

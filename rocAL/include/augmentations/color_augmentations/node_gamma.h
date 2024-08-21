@@ -21,22 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class GammaNode : public Node {
-   public:
-    GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+
+class GammaNode : public Node
+{
+public:
+    GammaNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     GammaNode() = delete;
-    void init(float gamma);
-    void init(FloatParam *gamma_param);
+    void init(float shift);
+    void init(FloatParam *shift);
 
-   protected:
+protected:
     void update_node() override;
     void create_node() override;
-
-   private:
-    ParameterVX<float> _gamma;
-    constexpr static float GAMMA_RANGE[2] = {0.3, 7.00};
+private:
+    ParameterVX<float> _shift;
+    constexpr static float SHIFT_RANGE [2] = {0.3, 7.00};
 };

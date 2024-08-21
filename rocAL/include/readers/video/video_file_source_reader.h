@@ -21,23 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <memory>
-#include <string>
-#include <tuple>
 #include <vector>
-
-#include "pipeline/commons.h"
-#include "pipeline/timing_debug.h"
-#include "readers/video/video_reader.h"
+#include <tuple>
+#include <string>
+#include <memory>
+#include "video_reader.h"
+#include "commons.h"
+#include "timing_debug.h"
 
 #ifdef ROCAL_VIDEO
-class VideoFileSourceReader : public VideoReader {
-   public:
+class VideoFileSourceReader : public VideoReader
+{
+public:
     //! Looks up the folder which contains the files, amd loads the video sequences
     /*!
      \param desc  User provided descriptor containing the files' path.
     */
-    VideoReader::Status initialize(ReaderConfig desc) override;
+    VideoReader::Status initialize(VideoReaderConfig desc) override;
     //! Reads the next resource item
     SequenceInfo get_sequence_info() override;
 
@@ -45,15 +45,14 @@ class VideoFileSourceReader : public VideoReader {
     void reset() override;
 
     //! Returns the name of the latest file opened
-    std::string id() override { return _last_id; };
+    std::string id() override { return _last_id;};
 
     unsigned count_items() override;
 
     ~VideoFileSourceReader() override;
 
     VideoFileSourceReader();
-
-   private:
+private:
     std::string _folder_path;
     std::vector<std::string> _video_file_names;
     VideoProperties _video_prop;
@@ -69,7 +68,7 @@ class VideoFileSourceReader : public VideoReader {
     unsigned _curr_sequence_idx;
     std::string _last_id;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
+    size_t _shard_count = 1; // equivalent of batch size
     //!< _batch_count Defines the quantum count of the sequences to be read. It's usually equal to the user's batch size.
     /// The loader will repeat sequences if necessary to be able to have the sequences available in multiples of the load_batch_count,
     /// for instance if there are 10 sequences in the dataset and _batch_count is 3, the loader repeats 2 sequences as if there are 12 sequences available.

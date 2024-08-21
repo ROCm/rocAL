@@ -21,28 +21,30 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
-#include "rocal_api_types.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+#include "graph.h"
 
-class RotateNode : public Node {
-   public:
-    RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class RotateNode : public Node
+{
+public:
+    RotateNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     RotateNode() = delete;
-    void init(float angle, RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
-    void init(FloatParam *angle_param, RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION);
-    unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
-    unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
+    void init(float angle);
+    void init(FloatParam *angle);
+    unsigned int get_dst_width() { return _outputs[0]->info().width(); }
+    unsigned int get_dst_height() { return _outputs[0]->info().height_single(); }
+    vx_array get_src_width() { return _src_roi_width; }
+    vx_array get_src_height() { return _src_roi_height; }
     vx_array get_angle() { return _angle.default_array(); }
 
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
+private:
     ParameterVX<float> _angle;
-    int _interpolation_type;
-    constexpr static float ROTATE_ANGLE_RANGE[2] = {0, 180};
+    vx_array _dst_roi_width,_dst_roi_height;
+    constexpr static float ROTATE_ANGLE_RANGE [2] = {0, 180};
+
 };

@@ -20,23 +20,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "meta_data/randombboxcrop_meta_data_reader_factory.h"
-
 #include <memory>
+#include "randombboxcrop_meta_data_reader_factory.h"
+#include "exception.h"
 
-#include "pipeline/exception.h"
-
-std::shared_ptr<RandomBBoxCrop_MetaDataReader> create_meta_data_reader(const RandomBBoxCrop_MetaDataConfig& config, std::shared_ptr<CropCordBatch>& meta_data_batch) {
-    switch (config.reader_type()) {
-        case RandomBBoxCrop_MetaDataReaderType::RandomBBoxCropReader: {
-            if (config.type() != RandomBBoxCrop_MetaDataType::BoundingBox)
-                THROW("RANDOMBBOXCROP can only be used to load CROP OUTPUTS")
-            auto ret = std::make_shared<RandomBBoxCropReader>();
-            meta_data_batch = std::make_shared<CropCordBatch>();
-            ret->init(config, meta_data_batch);
-            return ret;
-        } break;
-        default:
-            THROW("RandomBBoxCrop_MetaDataReader type is unsupported : " + TOSTR(config.reader_type()));
+std::shared_ptr<RandomBBoxCrop_MetaDataReader> create_meta_data_reader(const RandomBBoxCrop_MetaDataConfig &config)
+{
+    switch (config.reader_type())
+    {
+    case RandomBBoxCrop_MetaDataReaderType::RandomBBoxCropReader:
+    {
+        if (config.type() != RandomBBoxCrop_MetaDataType::BoundingBox)
+            THROW("RANDOMBBOXCROP can only be used to load CROP OUTPUTS")
+        auto ret = std::make_shared<RandomBBoxCropReader>();
+        ret->init(config);
+        return ret;
+    }
+    break;
+    default:
+        THROW("RandomBBoxCrop_MetaDataReader type is unsupported : " + TOSTR(config.reader_type()));
     }
 }

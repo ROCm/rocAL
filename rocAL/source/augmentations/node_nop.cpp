@@ -20,21 +20,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "augmentations/node_nop.h"
 #include <vx_ext_rpp.h>
-#include "pipeline/exception.h"
+#include "node_nop.h"
+#include "exception.h"
 
-NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
-
-void NopNode::create_node() {
-    if (_node)
-        return;
-
-    _node = vxExtRppNop(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
-
-    vx_status status;
-    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the nop (vxNopNode) node failed: " + TOSTR(status))
+NopNode::NopNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs) :
+        Node(inputs, outputs)
+{
 }
 
-void NopNode::update_node() {}
+void NopNode::create_node()
+{
+    if(_node)
+        return;
+
+
+    _node = vxExtrppNode_NopbatchPD(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle());
+
+    vx_status status;
+    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the nop (vxNopNode) node failed: "+ TOSTR(status))
+
+}
+
+void NopNode::update_node()
+{
+}

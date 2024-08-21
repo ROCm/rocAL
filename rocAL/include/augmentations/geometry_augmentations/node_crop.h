@@ -21,30 +21,29 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/node.h"
-#include "parameters/parameter_crop_factory.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_rocal_crop.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_crop_factory.h"
+#include "parameter_rocal_crop.h"
 
-class CropNode : public Node {
-   public:
-    CropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class CropNode : public Node
+{
+public:
+    CropNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     CropNode() = delete;
-    ~CropNode();
     void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift);
     void init(unsigned int crop_h, unsigned int crop_w);
-    void init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam *x_drift, FloatParam *y_drift);
-    unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
-    unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
+    void init( FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam * x_drift, FloatParam * y_drift);
+    unsigned int get_dst_width() { return _outputs[0]->info().width(); }
+    unsigned int get_dst_height() { return _outputs[0]->info().height_single(); }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
-
-   protected:
-    void create_node() override;
+protected:
+    void create_node() override ;
     void update_node() override;
-    void create_crop_tensor();
-    void *_crop_coordinates = nullptr;
-    vx_tensor _crop_tensor = nullptr;
+private:
 
-   private:
+    size_t _dest_width;
+    size_t _dest_height;
     std::shared_ptr<RocalCropParam> _crop_param;
 };
+

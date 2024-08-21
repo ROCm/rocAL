@@ -21,25 +21,27 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "node.h"
+#include "parameter_vx.h"
+#include "parameter_factory.h"
 
-class FlipNode : public Node {
-   public:
-    FlipNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class FlipNode : public Node
+{
+public:
+    FlipNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     FlipNode() = delete;
-    void init(int h_flag, int v_flag);
-    void init(IntParam *h_flag_param, IntParam *v_flag_param);
-    vx_array get_horizontal_flip() { return _horizontal.default_array(); }
-    vx_array get_vertical_flip() { return _vertical.default_array(); }
-
-   protected:
+    void init(int flip_axis);
+    void init(IntParam *flip_axis);
+    unsigned int get_dst_width() { return _outputs[0]->info().width(); }
+    unsigned int get_dst_height() { return _outputs[0]->info().height_single(); }
+    vx_array get_src_width() { return _src_roi_width; }
+    vx_array get_src_height() { return _src_roi_height; }
+    vx_array get_flip_axis() { return _flip_axis.default_array(); }
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
-    ParameterVX<int> _horizontal, _vertical;
-    constexpr static int HORIZONTAL_RANGE[2] = {0, 1};
-    constexpr static int VERTICAL_RANGE[2] = {0, 1};
+private:
+    int _axis;
+    ParameterVX<int> _flip_axis;
+    constexpr static int   FLIP_SIZE [2] =  {0, 2};
 };

@@ -23,9 +23,8 @@ THE SOFTWARE.
 #pragma once
 
 #include <exception>
-
-#include "readers/video/video_reader.h"
+#include "video_reader.h"
 
 #ifdef ROCAL_VIDEO
-std::shared_ptr<VideoReader> create_video_reader(ReaderConfig config);
+std::shared_ptr<VideoReader> create_video_reader(VideoReaderConfig config);
 #endif

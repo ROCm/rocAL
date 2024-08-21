@@ -21,28 +21,30 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "augmentations/geometry_augmentations/node_crop.h"
-#include "parameters/parameter_crop_factory.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
-
-class CropMirrorNormalizeNode : public CropNode {
-   public:
-    CropMirrorNormalizeNode(const std::vector<Tensor *> &inputs,
-                            const std::vector<Tensor *> &outputs);
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_crop_factory.h"
+#include "parameter_vx.h"
+class CropMirrorNormalizeNode : public Node
+{
+public:
+    CropMirrorNormalizeNode(const std::vector<Image *> &inputs,
+                            const std::vector<Image *> &outputs);
     CropMirrorNormalizeNode() = delete;
-    void init(int crop_h, int crop_w, float start_x, float start_y, std::vector<float> &mean, std::vector<float> &std_dev, IntParam *mirror);
-    vx_array return_mirror() { return _mirror.default_array(); }
+    void init(int crop_h, int crop_w, float start_x, float start_y, float mean, float std_dev, IntParam *mirror);
+    vx_array return_mirror(){ return _mirror.default_array();  }
     std::shared_ptr<RocalCropParam> return_crop_param() { return _crop_param; }
-
-   protected:
-    void create_node() override;
+    vx_array get_src_width() { return _src_roi_width; }
+    vx_array get_src_height() { return _src_roi_height; }
+protected:
+    void create_node() override ;
     void update_node() override;
-
-   private:
+private:
     std::shared_ptr<RocalCropParam> _crop_param;
-    vx_array _multiplier_vx_array, _offset_vx_array;
-    std::vector<float> _mean, _std_dev;
+    std::vector<vx_float32> _mean_vx, _std_dev_vx;
+    vx_array _mean_array, _std_dev_array;
+    float _mean;
+    float _std_dev;
     ParameterVX<int> _mirror;
-    constexpr static int MIRROR_RANGE[2] = {0, 1};
+    constexpr static int   MIRROR_RANGE [2] =  {0, 1};
 };

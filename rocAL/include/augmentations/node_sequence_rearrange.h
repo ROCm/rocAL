@@ -21,21 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+#include "graph.h"
 
-class SequenceRearrangeNode : public Node {
-   public:
-    SequenceRearrangeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class SequenceRearrangeNode : public Node
+{
+public:
+    SequenceRearrangeNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     SequenceRearrangeNode() = delete;
-    void init(std::vector<unsigned int> &new_order);
-
-   protected:
+    void init(unsigned int* new_order, unsigned int new_sequence_length, unsigned int sequence_length, unsigned int sequence_count);
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
+private:
     std::vector<unsigned int> _new_order;
+    unsigned int  _new_sequence_length, _sequence_length, _sequence_count;
+    vx_array _sequence_array;
 };

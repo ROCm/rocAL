@@ -18,9 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-##
-# @file types.py
-# @brief File containing various user defined types used in rocAL
+
 
 # RocalStatus
 from rocal_pybind.types import OK
@@ -37,11 +35,10 @@ from rocal_pybind.types import CPU
 from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
-from rocal_pybind.types import UINT8
 
 #  RocalOutputMemType
-from rocal_pybind.types import HOST_MEMORY
-from rocal_pybind.types import DEVICE_MEMORY
+from rocal_pybind.types import CPU_MEMORY
+from rocal_pybind.types import GPU_MEMORY
 from rocal_pybind.types import PINNED_MEMORY
 
 # RocalImageSizeEvaluationPolicy
@@ -60,12 +57,6 @@ from rocal_pybind.types import RGB_PLANAR
 #     RocalTensorLayout
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
-from rocal_pybind.types import NFHWC
-from rocal_pybind.types import NFCHW
-from rocal_pybind.types import NHW
-#     RocalSpectrogramLayout
-from rocal_pybind.types import NFT
-from rocal_pybind.types import NTF
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -83,7 +74,6 @@ from rocal_pybind.types import SCALING_MODE_DEFAULT
 from rocal_pybind.types import SCALING_MODE_STRETCH
 from rocal_pybind.types import SCALING_MODE_NOT_SMALLER
 from rocal_pybind.types import SCALING_MODE_NOT_LARGER
-from rocal_pybind.types import SCALING_MODE_MIN_MAX
 
 #     RocalResizeInterpolationType
 from rocal_pybind.types import NEAREST_NEIGHBOR_INTERPOLATION
@@ -92,30 +82,6 @@ from rocal_pybind.types import CUBIC_INTERPOLATION
 from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
-
-#     Rocal External Source Mode
-from rocal_pybind.types import EXTSOURCE_FNAME
-from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
-from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
-
-#     RocalAudioBorderType
-from rocal_pybind.types import ZERO
-from rocal_pybind.types import CLAMP
-from rocal_pybind.types import REFLECT
-
-#     RocalOutOfBoundsPolicy
-from rocal_pybind.types import PAD
-from rocal_pybind.types import TRIMTOSHAPE
-from rocal_pybind.types import ERROR
-
-#     RocalMelScaleFormula
-from rocal_pybind.types import MELSCALE_SLANEY
-from rocal_pybind.types import MELSCALE_HTK
-
-#     RocalLastBatchPolicy
-from rocal_pybind.types import LAST_BATCH_FILL
-from rocal_pybind.types import LAST_BATCH_DROP
-from rocal_pybind.types import LAST_BATCH_PARTIAL
 
 _known_types = {
 
@@ -130,9 +96,8 @@ _known_types = {
     UINT8: ("UINT8", UINT8),
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
-    UINT8: ("UINT8", UINT8),
-    HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
-    DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
+    CPU_MEMORY: ("CPU_MEMORY", CPU_MEMORY),
+    GPU_MEMORY: ("GPU_MEMORY", GPU_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
 
     MAX_SIZE: ("MAX_SIZE", MAX_SIZE),
@@ -143,9 +108,6 @@ _known_types = {
 
     NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
-    NFHWC: ("NFHWC", NFHWC),
-    NFCHW: ("NFCHW", NFCHW),
-    NHW: ("NHW", NHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -171,43 +133,12 @@ _known_types = {
     SCALING_MODE_STRETCH: ("SCALING_MODE_STRETCH", SCALING_MODE_STRETCH),
     SCALING_MODE_NOT_SMALLER: ("SCALING_MODE_NOT_SMALLER", SCALING_MODE_NOT_SMALLER),
     SCALING_MODE_NOT_LARGER: ("SCALING_MODE_NOT_LARGER", SCALING_MODE_NOT_LARGER),
-    SCALING_MODE_MIN_MAX: ("SCALING_MODE_MIN_MAX", SCALING_MODE_MIN_MAX),
 
-    EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
-    EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
-    EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
-
-    ZERO: ("ZERO", ZERO),
-    CLAMP: ("CLAMP", CLAMP),
-    REFLECT: ("REFLECT", REFLECT),
-
-    PAD: ("PAD", PAD),
-    TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
-    ERROR: ("ERROR", ERROR),
-
-    NTF: ("NTF", NTF),
-    NFT: ("NFT", NFT),
-
-    MELSCALE_SLANEY: ("MELSCALE_SLANEY", MELSCALE_SLANEY),
-    MELSCALE_HTK: ("MELSCALE_HTK", MELSCALE_HTK),
-
-    LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
-    LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
-    LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
 }
 
 def data_type_function(dtype):
-    """!Converts a given data type identifier to its corresponding known type.
-
-        @param dtype    The data type identifier.
-
-        @return    Known type corresponding to the given data type identifier.
-
-        @raise     RuntimeError: If the given data type identifier does not correspond to a known type.
-    """
     if dtype in _known_types:
         ret = _known_types[dtype][0]
         return ret
     else:
-        raise RuntimeError(
-            str(dtype) + " does not correspond to a known type.")
+        raise RuntimeError(str(dtype) + " does not correspond to a known type.")

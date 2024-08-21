@@ -21,23 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+#include "graph.h"
 
-class VignetteNode : public Node {
-   public:
-    VignetteNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    VignetteNode() = delete;
+class VignetteNode : public Node
+{
+public:
+    VignetteNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+    VignetteNode () = delete;
     void init(float sdev);
     void init(FloatParam *sdev);
-
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
+private:
     ParameterVX<float> _sdev;
-    constexpr static float SDEV_RANGE[2] = {40, 60};
+    constexpr static float SDEV_RANGE [2] = {40 , 60};
 };

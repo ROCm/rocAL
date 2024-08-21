@@ -21,25 +21,30 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "augmentations/geometry_augmentations/node_crop.h"
-#include "parameters/parameter_crop_factory.h"
-#include "parameters/parameter_factory.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_crop_factory.h"
 
-class RandomCropNode : public CropNode {
-   public:
-    RandomCropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class RandomCropNode : public Node
+{
+public:
+    RandomCropNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     RandomCropNode() = delete;
+    void init(float area, float aspect_ratio, float x_drift, float y_drift);
     void init(FloatParam *crop_area_factor, FloatParam *crop_aspect_ratio, FloatParam *x_drift, FloatParam *y_drift, int num_of_attempts);
-    unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
-    unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
+    unsigned int get_dst_width() { return _outputs[0]->info().width(); }
+    unsigned int get_dst_height() { return _outputs[0]->info().height_single(); }
     std::shared_ptr<RocalRandomCropParam> get_crop_param() { return _crop_param; }
-    int get_num_of_attempts() { return _num_of_attempts; }
+    int get_num_of_attempts(){return _num_of_attempts;}
 
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
 
-   private:
-    int _num_of_attempts = 20;
+private:
+    size_t _dest_width;
+    size_t _dest_height;
+    int    _num_of_attempts = 20;
     std::shared_ptr<RocalRandomCropParam> _crop_param;
 };
+

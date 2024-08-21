@@ -20,34 +20,41 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "augmentations/node_sequence_rearrange.h"
-
-#include <VX/vx_compatibility.h>
 #include <vx_ext_rpp.h>
+#include <VX/vx_compatibility.h>
+#include "node_sequence_rearrange.h"
+#include "exception.h"
 
-#include "pipeline/exception.h"
 
-SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
+SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs) :
+        Node(inputs, outputs)
+{
+}
 
-void SequenceRearrangeNode::create_node() {
-    if (_node)
+void SequenceRearrangeNode::create_node()
+{
+    if(_node)
         return;
 
     vx_status status;
-    vx_array sequence_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _new_order.size());
-    status = vxAddArrayItems(sequence_array, _new_order.size(), _new_order.data(), sizeof(vx_uint32));
-    if (status != VX_SUCCESS)
-        THROW("Adding array items failed: " + TOSTR(status));
-    int input_layout = (int)_inputs[0]->info().layout();
-    vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
-    _node = vxExtRppSequenceRearrange(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), sequence_array, input_layout_vx);
-
-    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the sequence rearrange (vxExtRppSequenceRearrange) node failed: " + TOSTR(status))
+    _sequence_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _new_sequence_length);
+    status = vxAddArrayItems(_sequence_array, _new_sequence_length, _new_order.data(), sizeof(vx_uint32));
+    if(status != VX_SUCCESS)
+        THROW("Adding array items failed: "+ TOSTR(status))
+    _node = vxExtrppNode_SequenceRearrangebatchPD(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), _sequence_array, _new_sequence_length, _sequence_length, _sequence_count);
+    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the sequence rearrange (vxExtrppNode_SequenceRearrange) node failed: "+ TOSTR(status))
 }
 
-void SequenceRearrangeNode::init(std::vector<unsigned int> &new_order) {
-    _new_order = new_order;
+void SequenceRearrangeNode::init(unsigned int* new_order, unsigned int new_sequence_length, unsigned int sequence_length, unsigned int sequence_count)
+{
+    _new_sequence_length = new_sequence_length;
+    _sequence_length = sequence_length;
+    _sequence_count = sequence_count;
+    _new_order.resize(_new_sequence_length);
+    std::copy(new_order, new_order + _new_sequence_length, _new_order.begin());
 }
 
-void SequenceRearrangeNode::update_node() {}
+void SequenceRearrangeNode::update_node()
+{
+}

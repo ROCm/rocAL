@@ -21,19 +21,24 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <exception>
 #include <stdexcept>
+#include <exception>
 #include <string>
 
-class RocalException : public std::exception {
-   public:
-    explicit RocalException(const std::string& message) : _message(message) {}
-    virtual const char* what() const throw() override {
+class RocalException : public std::exception
+{
+public:
+
+    explicit RocalException(const std::string& message):_message(message)
+    {}
+    virtual const char* what() const throw() override
+    {
         return _message.c_str();
     }
-
-   private:
+private:
     std::string _message;
 };
 
-#define THROW(X) throw RocalException(" { " + std::string(__func__) + " } " + X);
+#define THROW(X) throw RocalException(" { "+std::string(__func__)+" } " + X);
+
+

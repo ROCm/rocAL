@@ -22,22 +22,21 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class SnowNode : public Node {
-   public:
-    SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class SnowNode : public Node
+{
+public:
+    SnowNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     SnowNode() = delete;
-    void init(float snow_value);
-    void init(FloatParam *snow_value_param);
-
-   protected:
+    void init(float shift);
+    void init(FloatParam *shift);
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
-    ParameterVX<float> _snow_value;
-    constexpr static float SNOW_VALUE_RANGE[2] = {0.1, 0.8};
+private:
+    ParameterVX<float> _shift;
+    constexpr static float SNOW_VALUE_RANGE [2] = {0.1, 0.8};
 };

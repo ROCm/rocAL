@@ -21,15 +21,15 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
-#include "pipeline/node.h"
+#include "node.h"
+#include "graph.h"
 
-class NopNode : public Node {
-   public:
-    NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class NopNode : public Node
+{
+public:
+    NopNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     NopNode() = delete;
-
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
 };

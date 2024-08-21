@@ -21,23 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
+#include "graph.h"
 
-class ExposureNode : public Node {
-   public:
-    ExposureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+class ExposureNode : public Node
+{
+public:
+    ExposureNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     ExposureNode() = delete;
-    void init(float exposure_factor);
-    void init(FloatParam *exposure_factor_param);
-
-   protected:
+    void init(float shift);
+    void init(FloatParam *shift);
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
-    ParameterVX<float> _exposure_factor;
-    constexpr static float EXPOSURE_FACTOR_RANGE[2] = {0.15, 0.95};
+private:
+    ParameterVX<float> _shift;
+    vx_array _width_array ,_height_array;
+    constexpr static float SHIFT_RANGE [2] = {0.15, 0.95};
 };

@@ -21,22 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "node.h"
+#include "parameter_factory.h"
+#include "parameter_vx.h"
 
-class SaturationNode : public Node {
-   public:
-    SaturationNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    SaturationNode() = delete;
+
+class SatNode : public Node
+{
+public:
+    SatNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+    SatNode() = delete;
     void init(float sat);
     void init(FloatParam *sat);
-
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
-    ParameterVX<float> _saturation;
-    constexpr static float SAT_RANGE[2] = {-0.5, 0.5};
+private:
+    ParameterVX<float> _sat; // For saturation
+    constexpr static float SAT_RANGE [2] = {-0.5, 0.5};
 };

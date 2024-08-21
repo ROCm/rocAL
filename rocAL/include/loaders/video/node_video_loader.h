@@ -21,16 +21,16 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "node.h"
+#include "video_loader_sharded.h"
+#include "graph.h"
 #include <tuple>
 
-#include "pipeline/graph.h"
-#include "pipeline/node.h"
-#include "video_loader_sharded.h"
-
 #ifdef ROCAL_VIDEO
-class VideoLoaderNode : public Node {
-   public:
-    VideoLoaderNode(Tensor *output, void *device_resources);
+class VideoLoaderNode : public Node
+{
+public:
+    VideoLoaderNode(Image *output, void * device_resources);
     ~VideoLoaderNode() override;
     VideoLoaderNode() = delete;
     ///
@@ -39,15 +39,13 @@ class VideoLoaderNode : public Node {
     /// \param load_batch_count Defines the quantum count of the sequences to be loaded. It's usually equal to the user's batch size.
     /// The loader will repeat sequences if necessary to be able to have sequences in multiples of the load_batch_count,
     /// for example if there are 10 sequences in the dataset and load_batch_count is 3, the loader repeats 2 sequences as if there are 12 sequences available.
-    void init(unsigned internal_shard_count, const std::string &source_path, StorageType storage_type, DecoderType decoder_type, DecodeMode decoder_mode,
+    void init(unsigned internal_shard_count, const std::string &source_path, VideoStorageType storage_type, VideoDecoderType decoder_type, DecodeMode decoder_mode,
               unsigned sequence_length, unsigned step, unsigned stride, VideoProperties &video_prop, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type);
-    std::shared_ptr<LoaderModule> get_loader_module();
-
-   protected:
+    std::shared_ptr<VideoLoaderModule> get_loader_module();
+protected:
     void create_node() override{};
     void update_node() override{};
-
-   private:
+private:
     DecodeMode _decode_mode = DecodeMode::CPU;
     std::shared_ptr<VideoLoaderSharded> _loader_module = nullptr;
 };

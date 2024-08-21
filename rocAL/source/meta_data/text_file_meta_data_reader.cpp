@@ -20,30 +20,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "meta_data/text_file_meta_data_reader.h"
-
 #include <string.h>
-
-#include <fstream>
-#include <iostream>
 #include <sstream>
+#include <iostream>
+#include <fstream>
 #include <utility>
+#include "commons.h"
+#include "exception.h"
+#include "text_file_meta_data_reader.h"
 
-#include "pipeline/commons.h"
-#include "pipeline/exception.h"
-
-void TextFileMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
-    _path = cfg.path();
-    _output = meta_data_batch;
+void TextFileMetaDataReader::init(const MetaDataConfig &cfg) {
+	_path = cfg.path();
+    _output = new LabelBatch();
 }
 
-bool TextFileMetaDataReader::exists(const std::string &image_name) {
+bool TextFileMetaDataReader::exists(const std::string& image_name)
+{
     return _map_content.find(image_name) != _map_content.end();
 }
 
-void TextFileMetaDataReader::add(std::string image_name, int label) {
+void TextFileMetaDataReader::add(std::string image_name, int label)
+{
     pMetaData info = std::make_shared<Label>(label);
-    if (exists(image_name)) {
+    if(exists(image_name))
+    {
         WRN("Entity with the same name exists")
         return;
     }
@@ -51,46 +51,48 @@ void TextFileMetaDataReader::add(std::string image_name, int label) {
 }
 
 void TextFileMetaDataReader::lookup(const std::vector<std::string> &image_names) {
-    if (image_names.empty()) {
+	if(image_names.empty())
+    {
         WRN("No image names passed")
         return;
     }
-    if (image_names.size() != (unsigned)_output->size())
+    if(image_names.size() != (unsigned)_output->size())   
         _output->resize(image_names.size());
-    for (unsigned i = 0; i < image_names.size(); i++) {
+    for(unsigned i = 0; i < image_names.size(); i++)
+    {
         auto image_name = image_names[i];
         auto it = _map_content.find(image_name);
-        if (_map_content.end() == it)
-            THROW("ERROR: Given name not present in the map" + image_name)
-        _output->get_labels_batch()[i] = it->second->get_labels();
+        if(_map_content.end() == it)
+            THROW("ERROR: Given name not present in the map"+ image_name )
+        _output->get_label_batch()[i] = it->second->get_label();
     }
 }
 
 void TextFileMetaDataReader::read_all(const std::string &path) {
-    std::ifstream text_file(path.c_str());
-    if (text_file.good()) {
-        std::string line;
-        while (std::getline(text_file, line)) {
+	std::ifstream text_file(path.c_str());
+	if(text_file.good())
+	{
+		//_text_file.open(path.c_str(), std::ifstream::in);
+		std::string line;
+		while(std::getline(text_file, line))
+		{
             std::istringstream line_ss(line);
             int label;
-            std::string file_name;
-            if (!(line_ss >> file_name >> label))
+            std::string image_name;
+            if(!(line_ss>>image_name>>label))
                 continue;
-            // process pair (file_name, label)
-            auto last_id = file_name;
-            auto last_slash_idx = last_id.find_last_of("\\/");
-            if (std::string::npos != last_slash_idx) {
-                last_id.erase(0, last_slash_idx + 1);
-            }
-            add(last_id, label);
-        }
-    } else {
-        THROW("Can't open the metadata file at " + path)
+			add(image_name, label);
+		}
+	}
+	else
+    {
+	    THROW("Can't open the metadata file at "+ path)
     }
 }
 
 void TextFileMetaDataReader::release(std::string image_name) {
-    if (!exists(image_name)) {
+	if(!exists(image_name))
+    {
         WRN("ERROR: Given not present in the map" + image_name);
         return;
     }
@@ -98,11 +100,13 @@ void TextFileMetaDataReader::release(std::string image_name) {
 }
 
 void TextFileMetaDataReader::release() {
-    _map_content.clear();
+	_map_content.clear();
 }
 
 TextFileMetaDataReader::TextFileMetaDataReader() {
+
 }
 //
 // Created by mvx on 3/31/20.
 //
+

@@ -22,71 +22,69 @@ THE SOFTWARE.
 
 #pragma once
 #include <VX/vx_types.h>
-
-#include "parameters/parameter_factory.h"
-enum class RocalCropType {
+#include "parameter_factory.h"
+enum class RocalCropType
+{
     ROCALCROP = 0,
     RANDOMCROP,
 };
 
-class CropParam {
-    // +-----------------------------------------> X direction
-    // |  ___________________________________
-    // |  |   p1(x,y)      |                |
-    // |  |    +-----------|-----------+    |
-    // |  |    |           |           |    |
-    // |  -----------------o-----------------
-    // |  |    |           |           |    |
-    // |  |    +-----------|-----------+    |
-    // |  |                |        p2(x,y) |
-    // |  +++++++++++++++++++++++++++++++++++
-    // |
-    // V Y directoin
-   public:
+class CropParam
+{
+// +-----------------------------------------> X direction
+// |  ___________________________________
+// |  |   p1(x,y)      |                |
+// |  |    +-----------|-----------+    |
+// |  |    |           |           |    |
+// |  -----------------o-----------------
+// |  |    |           |           |    |
+// |  |    +-----------|-----------+    |
+// |  |                |        p2(x,y) |
+// |  +++++++++++++++++++++++++++++++++++
+// |
+// V Y directoin
+public:
     CropParam() = delete;
-    CropParam(unsigned int batch_size) : batch_size(batch_size), _random(false), _is_fixed_crop(false) {
-        x_drift_factor = default_x_drift_factor();
-        y_drift_factor = default_y_drift_factor();
+    CropParam(unsigned int batch_size): batch_size(batch_size), _random(false), _is_fixed_crop(false)
+    {
+        x_drift_factor     = default_x_drift_factor();
+        y_drift_factor     = default_y_drift_factor();
     }
-    void set_image_dimensions(Roi2DCords *roi) {
-        if (roi == nullptr)
-            THROW("Empty ROI ptr passed to be set to parameter_crop")
-        in_roi = roi;
+    void set_image_dimensions( const std::vector<uint32_t>& in_width_, const std::vector<uint32_t>& in_height_)
+    {
+        if(in_width_.size() != in_width.size() || in_height.size() != in_height_.size())
+            THROW("wrong input width = "+ TOSTR(in_width.size())+" or height size = "+TOSTR(in_height_.size()))
+        in_width  = in_width_;
+        in_height = in_height_;
     }
-    void set_random() { _random = true; }
-    void set_fixed_crop(float anchor_x, float anchor_y) {
-        _is_fixed_crop = true;
-        _random = false;
-        _crop_anchor[0] = anchor_x;
-        _crop_anchor[1] = anchor_y;
-    }
-    void set_x_drift_factor(Parameter<float> *x_drift);
-    void set_y_drift_factor(Parameter<float> *y_drift);
-    const Roi2DCords *in_roi;
-    unsigned int x1, y1, x2, y2;
+    void set_random() {_random = true;}
+    void set_fixed_crop(float anchor_x, float anchor_y) { _is_fixed_crop = true; _random = false; _crop_anchor[0] = anchor_x; _crop_anchor[1] = anchor_y;}
+    void set_x_drift_factor(Parameter<float>* x_drift);
+    void set_y_drift_factor(Parameter<float>* y_drift);
+    std::vector<uint32_t> in_width, in_height;
+    unsigned int  x1, y1, x2, y2;
     const unsigned int batch_size;
     void set_batch_size(unsigned int batch_size);
     vx_array x1_arr, y1_arr, croph_arr, cropw_arr, x2_arr, y2_arr;
     void array_init();
     void create_array(std::shared_ptr<Graph> graph);
-    virtual void update_array(){};
-    Parameter<float> *get_x_drift_factor() { return x_drift_factor; }
-    Parameter<float> *get_y_drift_factor() { return y_drift_factor; }
-    std::vector<uint32_t> get_x1_arr_val() { return x1_arr_val; }
-    std::vector<uint32_t> get_y1_arr_val() { return y1_arr_val; }
-    std::vector<uint32_t> get_croph_arr_val() { return croph_arr_val; }
-    std::vector<uint32_t> get_cropw_arr_val() { return cropw_arr_val; }
+    virtual void update_array() {};
+    Parameter<float> * get_x_drift_factor() {return x_drift_factor;}
+    Parameter<float> * get_y_drift_factor() {return y_drift_factor;}
+    std::vector<uint32_t> get_x1_arr_val() {return x1_arr_val;}
+    std::vector<uint32_t> get_y1_arr_val() {return y1_arr_val;}
+    std::vector<uint32_t> get_croph_arr_val() {return croph_arr_val;}
+    std::vector<uint32_t> get_cropw_arr_val() {return cropw_arr_val;}
     void get_crop_dimensions(std::vector<uint32_t> &crop_w_dim, std::vector<uint32_t> &crop_h_dim);
-
-   protected:
-    constexpr static float CROP_X_DRIFT_RANGE[2] = {0.01, 0.99};
-    constexpr static float CROP_Y_DRIFT_RANGE[2] = {0.01, 0.99};
-    Parameter<float> *x_drift_factor, *y_drift_factor;
-    Parameter<float> *default_x_drift_factor();
-    Parameter<float> *default_y_drift_factor();
+protected:
+    constexpr static float CROP_X_DRIFT_RANGE [2]  = {0.01, 0.99};
+    constexpr static float CROP_Y_DRIFT_RANGE [2]  = {0.01, 0.99};
+    Parameter<float>  *x_drift_factor, *y_drift_factor;
+    Parameter<float>* default_x_drift_factor();
+    Parameter<float>* default_y_drift_factor();
     std::vector<uint32_t> x1_arr_val, y1_arr_val, croph_arr_val, cropw_arr_val, x2_arr_val, y2_arr_val;
     bool _random, _is_fixed_crop;
-    float _crop_anchor[2] = {0.5, 0.5};
+    float _crop_anchor [2] = {0.5, 0.5};
     virtual void fill_crop_dims(){};
     void update_crop_array();
 };

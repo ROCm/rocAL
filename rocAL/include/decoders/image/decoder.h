@@ -25,26 +25,26 @@ THE SOFTWARE.
 #include <cstddef>
 #include <iostream>
 #include <vector>
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_random_crop_decoder.h"
+#include "parameter_factory.h"
+#include "parameter_random_crop_decoder.h"
 
-enum class DecoderType {
-    TURBO_JPEG = 0,        //!< Can only decode
-    FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
-    OPENCV_DEC = 2,        //!< for back_up decoding
-    HW_JPEG_DEC = 3,
-    SKIP_DECODE = 4,       //!< For skipping decoding in case of uncompressed data from reader
-    OVX_FFMPEG = 5,        //!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
-    FFMPEG_SOFTWARE_DECODE = 6,
-    FFMPEG_HARDWARE_DECODE = 7,
-    AUDIO_SOFTWARE_DECODE = 8   //!< Uses sndfile to decode audio files
+enum class DecoderType
+{
+    TURBO_JPEG = 0,//!< Can only decode
+    FUSED_TURBO_JPEG = 1, //!< FOR PARTIAL DECODING
+    OPENCV_DEC = 2, //!< for back_up decoding
+    HW_JPEG_DEC  = 3,
+    SKIP_DECODE  = 4, //!< For skipping decoding in case of uncompressed data from reader
+    OVX_FFMPEG,//!< Uses FFMPEG to decode video streams, can decode up to 4 video streams simultaneously
 };
 
-class DecoderConfig {
-   public:
+
+class DecoderConfig
+{
+public:
     DecoderConfig() {}
-    explicit DecoderConfig(DecoderType type) : _type(type) {}
-    virtual DecoderType type() { return _type; };
+    explicit DecoderConfig(DecoderType type):_type(type){}
+    virtual DecoderType type() {return _type; };
     DecoderType _type = DecoderType::TURBO_JPEG;
     void set_random_area(std::vector<float> &random_area) { _random_area = std::move(random_area); }
     void set_random_aspect_ratio(std::vector<float> &random_aspect_ratio) { _random_aspect_ratio = std::move(random_aspect_ratio); }
@@ -54,15 +54,17 @@ class DecoderConfig {
     unsigned get_num_attempts() { return _num_attempts; }
     void set_seed(int seed) { _seed = seed; }
     int get_seed() { return _seed; }
-
-   private:
+private:
     std::vector<float> _random_area, _random_aspect_ratio;
     unsigned _num_attempts = 10;
-    int _seed = std::time(0);  // seed for decoder random crop
+    int _seed = std::time(0); //seed for decoder random crop
 };
 
-class Decoder {
-   public:
+
+class Decoder
+{
+public:
+
     enum class Status {
         OK = 0,
         HEADER_DECODE_FAILED,
@@ -84,11 +86,11 @@ class Decoder {
      \param height pointer to the user's buffer to write the height of the compressed image to
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
-    virtual Status decode_info(unsigned char *input_buffer,
-                               size_t input_size,
-                               int *width,
-                               int *height,
-                               int *color_comps) = 0;
+    virtual Status decode_info(unsigned char* input_buffer,
+                                size_t input_size,
+                                int* width,
+                                int* height,
+                                int* color_comps) = 0;
 
     // TODO: Extend the decode API if needed, color format and order can be passed to the function
     //! Decodes the actual image data
@@ -109,7 +111,7 @@ class Decoder {
     virtual ~Decoder() = default;
     virtual void initialize(int device_id) = 0;
     virtual bool is_partial_decoder() = 0;
-    virtual void set_bbox_coords(std::vector<float> bbox_coords) = 0;
-    virtual std::vector<float> get_bbox_coords() = 0;
+    virtual void set_bbox_coords(std::vector <float> bbox_coords) = 0;
+    virtual std::vector <float> get_bbox_coords() = 0;
     virtual void set_crop_window(CropWindow &crop_window) = 0;
 };

@@ -22,17 +22,18 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "pipeline/graph.h"
-#include "pipeline/node.h"
+#include "node.h"
+#include "graph.h"
 
-class FisheyeNode : public Node {
-   public:
-    FisheyeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+
+class FisheyeNode : public Node
+{
+public:
+    FisheyeNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
     FisheyeNode() = delete;
 
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
-
-   private:
+private:
 };
