@@ -112,6 +112,13 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     // std::setfill('0') << std::setw(2) << std::right << std::hex << pci_bus_id << ":" << std::setfill('0') << std::setw(2) <<
     // std::right << std::hex << pci_domain_id << "." << pci_device_id << std::dec << std::endl;
 
+    // Reconfig the decoder
+    ReconfigDumpFileStruct reconfig_user_struct = { 0 };
+    _reconfig_params.p_fn_reconfigure_flush = ReconfigureFlushCallback;
+    _reconfig_params.reconfig_flush_mode = RECONFIG_FLUSH_MODE_NONE;
+    _reconfig_params.p_reconfig_user_struct = &reconfig_user_struct;
+    _rocvid_decoder->SetReconfigParams(&_reconfig_params);
+
     if (!_demuxer || !_rocvid_decoder || !out_buffer) {
         ERR("RocDecVideoDecoder::Decoder is not initialized");
         return Status::FAILED;        
@@ -142,6 +149,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             pts = video_seek_ctx.out_frame_pts_;
             std::cout << "info: Number of frames that were decoded during seek - " << video_seek_ctx.num_frames_decoded_ << std::endl;
             b_seek = false;
+            _rocvid_decoder->FlushAndReconfigure();
         } else {
             _demuxer->Demux(&pvideo, &n_video_bytes, &pts);
         }
@@ -177,13 +185,6 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             break;
         }
     } while (n_video_bytes);
-
-    // Reconfig the decoder
-    ReconfigDumpFileStruct reconfig_user_struct = { 0 };
-    _reconfig_params.p_fn_reconfigure_flush = ReconfigureFlushCallback;
-    _reconfig_params.reconfig_flush_mode = RECONFIG_FLUSH_MODE_NONE;
-    _reconfig_params.p_reconfig_user_struct = &reconfig_user_struct;
-    _rocvid_decoder->SetReconfigParams(&_reconfig_params);
 
     return status;
 }
