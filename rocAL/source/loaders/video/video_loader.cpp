@@ -130,7 +130,7 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoder_keep_original = decoder_keep_original;
     _video_loader = std::make_shared<VideoReadAndDecode>();
     try {
-        _video_loader->create(reader_cfg, decoder_cfg, _batch_size);
+        _video_loader->create(reader_cfg, decoder_cfg, _batch_size, _device_id);
     } catch (const std::exception &e) {
         de_init();
         throw;

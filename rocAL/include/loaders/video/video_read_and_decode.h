@@ -48,7 +48,7 @@ class VideoReadAndDecode {
     ~VideoReadAndDecode();
     size_t count();
     void reset();
-    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size);
+    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id);
     void set_video_process_count(size_t video_count) {
         _video_process_count = (video_count <= _max_video_count) ? video_count : _max_video_count;
     }
@@ -110,5 +110,6 @@ class VideoReadAndDecode {
     size_t _max_decoded_stride;
     AVPixelFormat _out_pix_fmt;
     DecoderConfig _video_decoder_config;
+    int _device_id = 0;
 };
 #endif
