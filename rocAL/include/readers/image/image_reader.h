@@ -57,6 +57,27 @@ enum class ExternalSourceFileMode {
     NONE = 3,
 };
 
+struct RocalShardingInfo {
+    RocalBatchPolicy last_batch_policy;
+    bool pad_last_batch_repeated;
+    bool stick_to_shard;
+    int32_t shard_size;
+
+    // Constructor with default values
+    RocalShardingInfo()
+        : last_batch_policy(RocalBatchPolicy::FILL),
+          pad_last_batch_repeated(false),
+          stick_to_shard(true),
+          shard_size(-1) {}
+
+    // Parameterized constructor
+    RocalShardingInfo(RocalBatchPolicy policy, bool pad_repeated, bool stick, int32_t size)
+        : last_batch_policy(policy),
+          pad_last_batch_repeated(pad_repeated),
+          stick_to_shard(stick),
+          shard_size(size) {}
+};
+
 struct ReaderConfig {
     explicit ReaderConfig(StorageType type, std::string path = "", std::string json_path = "",
                           const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(),
