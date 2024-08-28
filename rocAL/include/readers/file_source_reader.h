@@ -91,7 +91,7 @@ class FileSourceReader : public Reader {
     std::string _last_file_name, _last_file_path, _absolute_file_path;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
-    signed _shard_size = -1;
+    int32_t _shard_size = -1;
     size_t _batch_size = 1;
     size_t _file_id = 0;
     size_t _padded_samples = 0;

@@ -460,7 +460,7 @@ struct ShardingInfo {
     RocalLastBatchPolicy last_batch_policy;
     bool pad_last_batch_repeated;
     bool stick_to_shard;
-    int shard_size;
+    int32_t shard_size;
 
     // Constructor with default values
     ShardingInfo()

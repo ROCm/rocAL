@@ -2201,6 +2201,11 @@ rocalAudioFileSourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try {
         std::cerr << "\n inside rocal_api_data_loader.cpp";
+        std::cout << "ShardingInfo - "
+            << "last_batch_policy: " << static_cast<int>(sharding_info.last_batch_policy)
+            << ", pad_last_batch_repeated: " << std::boolalpha << sharding_info.pad_last_batch_repeated
+            << ", stick_to_shard: " << std::boolalpha << sharding_info.stick_to_shard
+            << ", shard_size: " << sharding_info.shard_size << std::endl;
 #ifdef ROCAL_AUDIO
         std::cerr << "\n #ifdef ROCAL_AUDIO - inside rocal_api_data_loader.cpp";
         if (shard_count < 1)
