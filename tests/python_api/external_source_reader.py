@@ -5,7 +5,6 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 import os
 import numpy as np
-import cupy as cp
 import cv2
 import sys
 
@@ -42,6 +41,7 @@ def main():
 
     def image_dump(img, idx, device="cpu", mode=0):
         if device == "gpu":
+            import cupy as cp
             img = cp.asnumpy(img)
         img = img.transpose([1, 2, 0])  # NCHW
         img = (img).astype('uint8')
