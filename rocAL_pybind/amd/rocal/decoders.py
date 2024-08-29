@@ -31,7 +31,7 @@ from amd.rocal.pipeline import Pipeline
 def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
           output_type=types.RGB, decoder_type=types.DECODER_TJPEG, device=None,
           decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000,
-          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=False, shard_size=-1):
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1):
     """!Decodes images using different readers and decoders.
 
         @param inputs                   list of input images.
@@ -170,7 +170,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
 
 
 def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False, output_type=types.RGB, max_decoded_width=1000, max_decoded_height=1000,
-              last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=False, shard_size=-1):
+              last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1):
     """!Decodes raw images for TF reader and decoder.
 
         @param inputs                  list of input images.
@@ -211,7 +211,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
                       random_shuffle=False, num_attempts=10, output_type=types.RGB, random_area=[0.08, 1.0],
                       random_aspect_ratio=[0.8, 1.25], decode_size_policy=types.USER_GIVEN_SIZE_ORIG,
                       max_decoded_width=1000, max_decoded_height=1000, decoder_type=types.DECODER_TJPEG,
-                      last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=False, shard_size=-1):
+                      last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1):
     """!Applies random cropping to images using different readers and decoders.
 
         @param inputs                  list of input images.
@@ -337,7 +337,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
 
 def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
                 random_aspect_ratio=[0.75, 1.33333], random_area=[0.08, 1.0], num_attempts=100, output_type=types.RGB,
-                decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=False, shard_size=-1):
+                decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1):
     """!Slices images randomly using different readers and decoders.
 
         @param inputs                 list of input images.
@@ -445,7 +445,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (image_decoder_slice)
 
-def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, sample_rate=0.0, seed=1, stick_to_shard=False, shard_size=-1, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False,
+def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, sample_rate=0.0, seed=1, stick_to_shard=True, shard_size=-1, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False,
           decode_size_policy=types.MAX_SIZE, max_decoded_samples=522320, max_decoded_channels=1):
     """!Decodes wav audio files.
 
