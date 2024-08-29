@@ -376,9 +376,9 @@ class ROCALAudioIterator(object):
             torch.from_numpy(self.labels)).long()
 
         if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
-            return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size], torch.tensor(self.roi_array.reshape(self.batch_size, self.num_of_rois)[..., self.num_of_rois-2:self.num_of_rois][0:self.last_batch_size, :])
+            return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size], torch.from_numpy(self.roi_array.reshape(self.batch_size, self.num_of_rois)[..., self.num_of_rois-2:self.num_of_rois][0:self.last_batch_size, :])
         else:
-            return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size, self.num_of_rois)[..., self.num_of_rois-2:self.num_of_rois])
+            return self.output_list, self.labels_tensor, torch.from_numpy(self.roi_array.reshape(self.batch_size, self.num_of_rois)[..., self.num_of_rois-2:self.num_of_rois])
 
     def reset(self):
         self.batch_count = 0
