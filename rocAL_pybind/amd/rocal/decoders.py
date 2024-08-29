@@ -55,7 +55,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     RocalShardingInfo = b.RocalShardingInfo()
     RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
+    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
     RocalShardingInfo.stick_to_shard = stick_to_shard
     RocalShardingInfo.shard_size = shard_size
     if (device == "gpu"):
@@ -187,7 +187,7 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     RocalShardingInfo = b.RocalShardingInfo()
     RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
+    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
     RocalShardingInfo.stick_to_shard = stick_to_shard
     RocalShardingInfo.shard_size = shard_size
     if (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
@@ -237,7 +237,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     RocalShardingInfo = b.RocalShardingInfo()
     RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
+    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
     RocalShardingInfo.stick_to_shard = stick_to_shard
     RocalShardingInfo.shard_size = shard_size
     # Internally calls the C++ Partial decoder's
@@ -361,7 +361,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     RocalShardingInfo = b.RocalShardingInfo()
     RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
+    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
     RocalShardingInfo.stick_to_shard = stick_to_shard
     RocalShardingInfo.shard_size = shard_size
     # Reader -> Randon BBox Crop -> ImageDecoderSlice
