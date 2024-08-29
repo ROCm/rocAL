@@ -50,9 +50,7 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
     reader_cfg.set_frame_step(step);
     reader_cfg.set_frame_stride(stride);
     reader_cfg.set_external_filemode(external_file_mode);
-    reader_cfg.set_stick_to_shard(stick_to_shard);
-    reader_cfg.set_shard_size(shard_size);
-    reader_cfg.set_last_batch_policy(last_batch_info);
+    reader_cfg.set_sharding_info(sharding_info);
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type),
                                mem_type,
                                _batch_size, decoder_keep_original);

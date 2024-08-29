@@ -109,7 +109,7 @@ class FileSourceReader : public Reader {
     void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
-    std::pair<RocalBatchPolicy, bool> _last_batch_info;  //  A std::pair object representing the Last Batch Policies in rocAL and the padding of the samples.
+    RocalShardingInfo _last_batch_info = RocalShardingInfo();  //  A std::pair object representing the Last Batch Policies in rocAL and the padding of the samples.
                                                          //  first: Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
                                                          //  second: If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
     size_t _last_batch_padded_size = 0;                  // The size of number of padded samples in the last batch

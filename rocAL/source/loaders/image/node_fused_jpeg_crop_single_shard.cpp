@@ -45,10 +45,7 @@ void FusedJpegCropSingleShardNode::init(unsigned shard_id, unsigned shard_count,
     reader_cfg.set_cpu_num_threads(cpu_num_threads);
     reader_cfg.set_batch_count(load_batch_count);
     reader_cfg.set_meta_data_reader(meta_data_reader);
-    reader_cfg.set_stick_to_shard(stick_to_shard);
-    reader_cfg.set_shard_size(shard_size);
-    reader_cfg.set_last_batch_policy(last_batch_info);
-
+    reader_cfg.set_sharding_info(sharding_info);
     auto decoder_cfg = DecoderConfig(decoder_type);
 
     decoder_cfg.set_random_area(area_factor);

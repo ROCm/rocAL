@@ -470,6 +470,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
     ShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
     ShardingInfo.stick_to_shard = stick_to_shard
     ShardingInfo.shard_size = shard_size
+    print(ShardingInfo)
     kwargs_pybind = {
             "source_path": file_root,
             "source_file_list_path": file_list_path,
