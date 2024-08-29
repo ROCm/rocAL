@@ -57,21 +57,21 @@ enum class ExternalSourceFileMode {
     NONE = 3,
 };
 
-struct RocalShardingInfo {
+struct ShardingInfo {
     RocalBatchPolicy last_batch_policy;
     bool pad_last_batch_repeated;
     bool stick_to_shard;
     int32_t shard_size;
 
     // Constructor with default values
-    RocalShardingInfo()
+    ShardingInfo()
         : last_batch_policy(RocalBatchPolicy::FILL),
           pad_last_batch_repeated(false),
           stick_to_shard(true),
           shard_size(-1) {}
 
     // Parameterized constructor
-    RocalShardingInfo(RocalBatchPolicy policy, bool pad_repeated, bool stick, int32_t size)
+    ShardingInfo(RocalBatchPolicy policy, bool pad_repeated, bool stick, int32_t size)
         : last_batch_policy(policy),
           pad_last_batch_repeated(pad_repeated),
           stick_to_shard(stick),
@@ -101,7 +101,7 @@ struct ReaderConfig {
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
-    void set_sharding_info(const RocalShardingInfo& sharding_info) {
+    void set_sharding_info(const ShardingInfo& sharding_info) {
         _sharding_info = sharding_info;
     }
     size_t get_shard_count() { return _shard_count; }
@@ -124,7 +124,7 @@ struct ReaderConfig {
     std::string file_list_path() { return _file_list_path; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     ExternalSourceFileMode mode() { return _file_mode; }
-    const RocalShardingInfo& get_sharding_info() { return _sharding_info; }
+    const ShardingInfo& get_sharding_info() { return _sharding_info; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -147,7 +147,7 @@ struct ReaderConfig {
     bool _stick_to_shard = false; //!< This bool variables tell if the samples from the same shard will be maintained in next epoch if true (or) will be taken from next epoch in a round robin fashion if false
     int32_t _shard_size = -1; //!< The size of the shard for an iterator. Tells when the 
     std::pair<RocalBatchPolicy, bool> _last_batch_info = {RocalBatchPolicy::FILL, true};
-    RocalShardingInfo _sharding_info;
+    ShardingInfo _sharding_info;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
