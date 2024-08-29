@@ -2171,7 +2171,10 @@ rocalAudioFileSourceSingleShard(
     bool shuffle,
     bool loop,
     bool downmix,
-    ShardingInfo sharding_info) {
+    ShardingInfo sharding_info,
+    RocalImageSizeEvaluationPolicy decode_size_policy,
+    unsigned max_decoded_samples,
+    unsigned max_decoded_channels) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2180,7 +2183,14 @@ rocalAudioFileSourceSingleShard(
             THROW("Shard count should be bigger than 0")
         if (shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
-        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+
+        if (use_input_dimension && (max_decoded_samples == 0 || max_decoded_channels == 0)) {
+            THROW("Invalid input max width and height");
+        } else {
+            LOG("User input size " + TOSTR(max_decoded_samples) + " x " + TOSTR(max_decoded_channels))
+        }
+        auto [max_sample_length, max_channels] = use_input_dimension ? std::make_tuple(max_decoded_samples, max_decoded_channels) : evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
@@ -2230,12 +2240,22 @@ rocalAudioFileSource(
     bool shuffle,
     bool loop,
     bool downmix,
-    ShardingInfo sharding_info) {
+    ShardingInfo sharding_info,
+    RocalImageSizeEvaluationPolicy decode_size_policy,
+    unsigned max_decoded_samples,
+    unsigned max_decoded_channels) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_AUDIO
-        auto [max_sample_length, max_channels] = evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+
+        if (use_input_dimension && (max_decoded_samples == 0 || max_decoded_channels == 0)) {
+            THROW("Invalid input max width and height");
+        } else {
+            LOG("User input size " + TOSTR(max_decoded_samples) + " x " + TOSTR(max_decoded_channels))
+        }
+        auto [max_sample_length, max_channels] = use_input_dimension ? std::make_tuple(max_decoded_samples, max_decoded_channels) : evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};

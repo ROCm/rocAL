@@ -445,7 +445,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (image_decoder_slice)
 
-def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, sample_rate=0.0, seed=1, stick_to_shard=False, shard_size=-1, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False):
+def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, sample_rate=0.0, seed=1, stick_to_shard=False, shard_size=-1, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False,
+          decode_size_policy=types.MAX_SIZE, max_decoded_samples=522320, max_decoded_channels=1):
     """!Decodes wav audio files.
 
         @param inputs                   list of input audio.
@@ -463,6 +464,9 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
         @param shard_size               Number of files in an epoch
         @param last_batch_policy        Determines the handling of the last batch when the shard size is not divisible by the batch size. Check types.py enum for possible values.
         @param pad_last_batch_repeated  If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
+        @param decode_size_policy       Size policy for decoding images.
+        @param max_decoded_samples      Maximum samples for decoded images.
+        @param max_decoded_channels     Maximum channels for decoded images.
         @return                         Decoded audio.
     """
     ShardingInfo = b.ShardingInfo()
@@ -479,7 +483,10 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
             "shuffle": random_shuffle,
             "loop": False,
             "downmix": downmix,
-            "sharding_info": ShardingInfo}
+            "sharding_info": ShardingInfo,
+            "decode_size_policy": decode_size_policy,
+            "max_width": max_decoded_samples,
+            "max_height": max_decoded_channels,}
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
