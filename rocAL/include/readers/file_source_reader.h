@@ -69,9 +69,9 @@ class FileSourceReader : public Reader {
 
     size_t last_batch_padded_size() override;  // The size of the number of samples padded in the last batch
 
-    std::string get_root_folder_path();  // Returns the root folder path
+    std::string get_root_folder_path() override;  // Returns the root folder path
 
-    std::vector<std::string> get_file_paths_from_meta_data_reader();  // Returns the relative file path from the meta-data reader
+    std::vector<std::string> get_file_paths_from_meta_data_reader() override;  // Returns the relative file path from the meta-data reader
    private:
     //! opens the folder containnig the images
     Reader::Status open_folder();

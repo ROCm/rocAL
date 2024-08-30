@@ -144,9 +144,6 @@ struct ReaderConfig {
     std::string _file_list_path;  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
-    bool _stick_to_shard = false; //!< This bool variables tell if the samples from the same shard will be maintained in next epoch if true (or) will be taken from next epoch in a round robin fashion if false
-    int32_t _shard_size = -1; //!< The size of the shard for an iterator. Tells when the 
-    std::pair<RocalBatchPolicy, bool> _last_batch_info = {RocalBatchPolicy::FILL, true};
     ShardingInfo _sharding_info;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
@@ -214,6 +211,7 @@ class Reader {
     virtual std::string get_root_folder_path() { return {}; }
 
     virtual std::vector<std::string> get_file_paths_from_meta_data_reader() { return {}; }
+
     //! Returns the number of images in the last batch
     virtual size_t last_batch_padded_size() { return 0; }
 };
