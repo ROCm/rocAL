@@ -110,6 +110,7 @@ class ROCALGenericIterator(object):
                 b.externalSourceFeedInput(*(kwargs_pybind.values()))
             self.index = self.index + 1
         if self.loader.rocal_run() != 0:
+            b.rocalResetLoaders(self.loader._handle)
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
