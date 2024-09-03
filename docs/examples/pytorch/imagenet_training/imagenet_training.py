@@ -221,6 +221,7 @@ class Prefetcher:
 def calc_ips(batch_size, time):
     world_size = torch.distributed.get_world_size() if torch.distributed.is_initialized() else 1
     tbs = world_size * batch_size
+    assert time != 0, "time should be non-zero value"
     return tbs/time
 
 
