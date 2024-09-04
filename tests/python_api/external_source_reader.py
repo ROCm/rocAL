@@ -7,6 +7,7 @@ import os
 import numpy as np
 import cv2
 import sys
+import glob
 
 
 def main():
@@ -16,7 +17,7 @@ def main():
     batch_size = int(sys.argv[2])
     device = "cpu" if sys.argv[1] == "cpu" else "gpu"
     data_dir = os.environ["ROCAL_DATA_PATH"] + \
-        "rocal_data/coco/coco_10_img/train_10images_2017/"
+        "rocal_data/coco/coco_10_img/images/"
     try:
         path_mode0 = "output_folder/external_source_reader/mode0/"
         isExist = os.path.exists(path_mode0)
@@ -57,9 +58,9 @@ def main():
             self.images_dir = data_dir
             self.batch_size = batch_size
             self.files = []
-            import glob
-            for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
-                self.files.append(filename)
+            self.file_patterns = ['*.jpg', '*.jpeg', '*.JPG', '*.JPEG']
+            for pattern in self.file_patterns:
+                self.files.extend(glob.glob(os.path.join(self.images_dir, pattern)))
             shuffle(self.files)
 
         def __iter__(self):
@@ -122,9 +123,9 @@ def main():
             self.batch_size = batch_size
             self.files = []
             import os
-            import glob
-            for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
-                self.files.append(filename)
+            self.file_patterns = ['*.jpg', '*.jpeg', '*.JPG', '*.JPEG']
+            for pattern in self.file_patterns:
+                self.files.extend(glob.glob(os.path.join(self.images_dir, pattern)))
 
         def __iter__(self):
             self.i = 0
@@ -193,9 +194,9 @@ def main():
             self.files = []
             self.maxHeight = self.maxWidth = 0
             import os
-            import glob
-            for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
-                self.files.append(filename)
+            self.file_patterns = ['*.jpg', '*.jpeg', '*.JPG', '*.JPEG']
+            for pattern in self.file_patterns:
+                self.files.extend(glob.glob(os.path.join(self.images_dir, pattern)))
             shuffle(self.files)
             self.i = 0
             self.n = len(self.files)
