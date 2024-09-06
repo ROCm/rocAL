@@ -93,7 +93,6 @@ class FileSourceReader : public Reader {
     size_t _shard_count = 1;  // equivalent of batch size
     int32_t _shard_size = -1;
     size_t _batch_size = 1;
-    size_t _file_id = 0;
     size_t _padded_samples = 0;
     bool _loop;
     bool _shuffle;
@@ -103,8 +102,6 @@ class FileSourceReader : public Reader {
     void incremenet_read_ptr();
     void increment_curr_file_idx();
     int release();
-    size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
     void fill_last_batch();
     void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;

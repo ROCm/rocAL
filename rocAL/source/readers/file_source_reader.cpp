@@ -36,7 +36,6 @@ FileSourceReader::FileSourceReader() {
     _current_file_size = 0;
     _current_fPtr = nullptr;
     _loop = false;
-    _file_id = 0;
     _shuffle = false;
     _file_count_all_shards = 0;
 }
@@ -73,7 +72,6 @@ unsigned FileSourceReader::count_items() {
 
 Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
-    _file_id = 0;
     _folder_path = desc.path();
     _file_list_path = desc.file_list_path();
     _shard_id = desc.get_shard_id();
@@ -217,7 +215,6 @@ Reader::Status FileSourceReader::generate_file_names() {
                 if (filesys::is_regular_file(_absolute_file_path)) {
                     _file_names.push_back(_absolute_file_path);
                     _file_count_all_shards++;
-                    incremenet_file_id();
                 }
             }
             _last_file_name = _absolute_file_path;
@@ -241,7 +238,6 @@ Reader::Status FileSourceReader::generate_file_names() {
                         _last_file_name = file_path;
                         _file_names.push_back(file_path);
                         _file_count_all_shards++;
-                        incremenet_file_id();
                     }
                 }
             }
@@ -337,7 +333,6 @@ Reader::Status FileSourceReader::open_folder() {
             _file_names.push_back(file_path);
             _last_file_name = file_path;
             _file_count_all_shards++;
-            incremenet_file_id();
         } else {
             WRN("Skipping file," + filename + " as it is not present in metadata reader")
         }
@@ -347,12 +342,6 @@ Reader::Status FileSourceReader::open_folder() {
         ERR("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
     closedir(_src_dir);
     return Reader::Status::OK;
-}
-
-size_t FileSourceReader::get_file_shard_id() {
-    if (_batch_size == 0 || _shard_count == 0)
-        THROW("Shard (Batch) size cannot be set to 0")
-    return _file_id % _shard_count;
 }
 
 size_t FileSourceReader::last_batch_padded_size() {
