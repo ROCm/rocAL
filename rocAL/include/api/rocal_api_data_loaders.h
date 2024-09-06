@@ -890,8 +890,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
  * \param [in] shuffle Boolean variable to shuffle the dataset.
  * \param [in] loop Boolean variable to indefinitely loop through audio.
  * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
- * \param [in] stick_to_shard Determines whether reader should stick to a single shards dataset or to be used in a round robin fashion.
- * \param [in] shard_size Provides the size of the shard for an epoch.
  * \param [in] decode_size_policy is the RocalImageSizeEvaluationPolicy for decoding.
  * \param [in] max_decoded_samples The maximum samples of the decoded audio data.
  * \param [in] max_decoded_channels The maximum channels of the decoded audio data.
@@ -922,8 +920,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
  * \param [in] shuffle Boolean variable to shuffle the dataset.
  * \param [in] loop Boolean variable to indefinitely loop through audio.
  * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
- * \param [in] stick_to_shard Determines whether reader should stick to a single shards dataset or to be used in a round robin fashion.
- * \param [in] shard_size Provides the size of the shard for an epoch.
  * \param [in] decode_size_policy is the RocalImageSizeEvaluationPolicy for decoding.
  * \param [in] max_decoded_samples The maximum samples of the decoded audio data.
  * \param [in] max_decoded_channels The maximum channels of the decoded audio data.
