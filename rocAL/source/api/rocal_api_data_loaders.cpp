@@ -2171,10 +2171,10 @@ rocalAudioFileSourceSingleShard(
     bool shuffle,
     bool loop,
     bool downmix,
-    RocalShardingInfo rocal_sharding_info,
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_decoded_samples,
-    unsigned max_decoded_channels) {
+    unsigned max_decoded_channels, 
+    RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2240,10 +2240,10 @@ rocalAudioFileSource(
     bool shuffle,
     bool loop,
     bool downmix,
-    RocalShardingInfo rocal_sharding_info,
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_decoded_samples,
-    unsigned max_decoded_channels) {
+    unsigned max_decoded_channels,
+    RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {

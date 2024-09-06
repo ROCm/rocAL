@@ -892,10 +892,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegExternalFileSource(RocalContext p
  * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
  * \param [in] stick_to_shard Determines whether reader should stick to a single shards dataset or to be used in a round robin fashion.
  * \param [in] shard_size Provides the size of the shard for an epoch.
- * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \param [in] decode_size_policy is the RocalImageSizeEvaluationPolicy for decoding.
  * \param [in] max_decoded_samples The maximum samples of the decoded audio data.
  * \param [in] max_decoded_channels The maximum channels of the decoded audio data.
+ * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output audio
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
@@ -906,10 +906,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                            bool shuffle = false,
                                                            bool loop = false,
                                                            bool downmix = false,
-                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                            unsigned max_decoded_samples = 0,
-                                                           unsigned max_decoded_channels =0);
+                                                           unsigned max_decoded_channels = 0,
+                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
 
 /*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
  * If the files are not in standard audio compression formats they will be ignored.
@@ -924,10 +924,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
  * \param [in] downmix Boolean variable to downmix all input channels to mono. If downmixing is turned on, the decoder output is 1D. If downmixing is turned off, it produces 2D output with interleaved channels incase of multichannel audio.
  * \param [in] stick_to_shard Determines whether reader should stick to a single shards dataset or to be used in a round robin fashion.
  * \param [in] shard_size Provides the size of the shard for an epoch.
- * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \param [in] decode_size_policy is the RocalImageSizeEvaluationPolicy for decoding.
  * \param [in] max_decoded_samples The maximum samples of the decoded audio data.
  * \param [in] max_decoded_channels The maximum channels of the decoded audio data.
+ * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output audio
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalContext p_context,
@@ -939,9 +939,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       bool shuffle = false,
                                                                       bool loop = false,
                                                                       bool downmix = false,
-                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
                                                                       RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                                       unsigned max_decoded_samples = 0,
-                                                                      unsigned max_decoded_channels =0);
+                                                                      unsigned max_decoded_channels = 0,
+                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
 
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H

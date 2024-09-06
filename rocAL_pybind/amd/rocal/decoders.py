@@ -483,10 +483,10 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
             "shuffle": random_shuffle,
             "loop": False,
             "downmix": downmix,
-            "sharding_info": RocalShardingInfo,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_samples,
-            "max_height": max_decoded_channels,}
+            "max_height": max_decoded_channels,
+            "sharding_info": RocalShardingInfo}
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
