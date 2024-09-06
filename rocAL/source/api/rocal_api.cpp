@@ -68,7 +68,9 @@ rocalCreate(
                     THROW("Unkown Rocal data type")
             }
         };
-        context = new Context(batch_size, translate_process_mode(affinity), gpu_id, cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type));
+        if (gpu_id < 0)
+            ERR(STR("Negative GPU device ID passed to context creation. Setting GPU device ID to 0"));
+        context = new Context(batch_size, translate_process_mode(affinity), std::max(gpu_id, 0), cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type));
         // Reset seed in case it's being randomized during context creation
     } catch (const std::exception& e) {
         ERR(STR("Failed to init the Rocal context, ") + STR(e.what()))
