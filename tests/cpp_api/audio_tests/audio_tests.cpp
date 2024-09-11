@@ -44,7 +44,7 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return 1;
+        return 0;
     }
 
     // Get the size of the file
@@ -61,7 +61,7 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return 1;
+        return 0;
     }
 
     fin.close();
