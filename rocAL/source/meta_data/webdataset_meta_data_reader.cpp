@@ -81,7 +81,7 @@ split_name(const std::string &file_path) {
 
 void WebDataSetMetaDataReader::add(std::string image_name,
                                    AsciiValues ascii_value) {
-    pMetaDataAscii info = std::make_shared<AsciiValue>(ascii_value);
+        pMetaDataAscii info = std::make_shared<AsciiValue>(ascii_value);
     if (exists(image_name)) {
         auto it = _map_content.find(image_name);
         it->second->get_ascii_values().insert(
@@ -174,6 +174,14 @@ void WebDataSetMetaDataReader::parse_sample_description(
 
         if (component.filename.empty()) // Use line number as file number
             component.filename = std::to_string(line);
+        else {
+            // Find the position of the last period
+            auto last_period_pos = component.filename.find_last_of('.');
+            // If a period is found, truncate everything after it
+            if (last_period_pos != std::string::npos) {
+                component.filename.erase(last_period_pos);
+            }
+        }
 
         if (!(component.offset % kBlockSize == 0))
             THROW("tar offset is not a multiple of tar block size kBlockSize, "

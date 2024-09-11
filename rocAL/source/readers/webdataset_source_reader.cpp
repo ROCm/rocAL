@@ -208,6 +208,14 @@ void WebDatasetSourceReader::parse_sample_description(
 
         if (component.filename.empty()) // Use line number as file number
             component.filename = std::to_string(line);
+        else {
+            // Find the position of the last period
+            auto last_period_pos = component.filename.find_last_of('.');
+            // If a period is found, truncate everything after it
+            if (last_period_pos != std::string::npos) {
+                component.filename.erase(last_period_pos);
+            }
+        }
 
         if (!(component.offset % kBlockSize == 0))
             THROW("tar offset is not a multiple of tar block size kBlockSize, "
@@ -375,7 +383,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
                 parse_tar_files(unfiltered_samples, unfiltered_components, _wds_shards[wds_shard_index]);
             else
                 parse_index_files(unfiltered_samples, unfiltered_components, _folder_path + _index_name_list[wds_shard_index]);
-
+            
             // After parsing add the contents to the map
             for (auto& sample : unfiltered_samples) {
                 for (auto& component : sample.components) {
