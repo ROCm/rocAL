@@ -21,25 +21,24 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
-
-
-class LensCorrectionNode : public Node
-{
-public:
-    LensCorrectionNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs);
+class LensCorrectionNode : public Node {
+   public:
+    LensCorrectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     LensCorrectionNode() = delete;
     void init(float strength, float zoom);
     void init(FloatParam *strength, FloatParam *zoom);
-protected:
+
+   protected:
     void create_node() override;
     void update_node() override;
-private:
+
+   private:
     ParameterVX<float> _strength;
     ParameterVX<float> _zoom;
-    constexpr static float STRENGTH_RANGE [2] = {0.05, 3.0};
-    constexpr static float   ZOOM_RANGE [2] = {1.0, 1.3};
+    constexpr static float STRENGTH_RANGE[2] = {0.05, 3.0};
+    constexpr static float ZOOM_RANGE[2] = {1.0, 1.3};
 };

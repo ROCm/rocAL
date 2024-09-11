@@ -27,7 +27,7 @@ Create Data-loading Pipeline
 
 Follow these steps:
 
-1. Import libraries for `rocAL <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/test_training.py#L28>`_.
+1. Import libraries for `rocAL <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L28>`_.
 
 .. code-block:: python
    :caption: Import libraries
@@ -38,7 +38,7 @@ Follow these steps:
     import amd.rocal.types as types
 
 
-2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a fileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the `pipeline <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/test_training.py#L38>`_.
+2. See a rocAL pipeline for PyTorch below. It reads data from the dataset using a fileReader and uses image_slice to decode the raw images. The other required augmentation operations are also defined in the `pipeline <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L38>`_.
 
 .. code-block:: python
    :caption: Pipeline for PyTorch
@@ -80,7 +80,7 @@ Follow these steps:
    import torch.optim as optim
 
 
-4. Call the training pipeline with rocAL classification data `loader <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/test_training.py#L78>`_.
+4. Call the training pipeline with rocAL classification data `loader <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L78>`_.
 
 .. code-block:: python
    :caption: Call the training pipeline
@@ -93,7 +93,7 @@ Follow these steps:
            train_loader = ROCALClassificationIterator(pipe_train, device=”cpu” if self.rocal_cpu else “cuda”, device_id = self.local_rank)
 
 
-5. Run the `training script <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/test_training.py#L179>`_.
+5. Run the `training script <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/toynet_training/train.py#L179>`_.
 
 .. code-block:: python
    :caption: Run the training pipeline
@@ -191,15 +191,15 @@ Follow these steps:
                     train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
 
 
-4. To see and run a sample training script, refer to `rocAL TensorFlow example <https://github.com/ROCm/MIVisionX/tree/master/rocAL/rocAL_pybind/examples/tf_petsTrainingExample>`_.
+4. To see and run a sample training script, refer to `rocAL TensorFlow example <https://github.com/ROCm/rocAL/tree/master/docs/examples/tf/pets_training>`_.
 
 .. __resnet50:
 
-Run MLPerf Resnet50 classification training with rocAL
+Run Resnet50 classification training with rocAL
 =======================================================
 
 #. Ensure you have downloaded ``ILSVRC2012_img_val.tar`` (6.3GB) and ``ILSVRC2012_img_train.tar`` (138 GB) files and unzip into ``train`` and ``val`` folders
-#. Build `MIVisionX Pytorch docker <https://github.com/ROCm/rocAL/blob/master/docker/README.md>`_ 
+#. Build `rocAL Pytorch docker <https://github.com/ROCm/rocAL/blob/master/docker/README.md>`_ 
 
     * Run the docker image
 
@@ -208,7 +208,7 @@ Run MLPerf Resnet50 classification training with rocAL
         sudo docker run -it -v <Path-To-Data-HostSystem>:/data -v /<Path-to-GitRepo>:/dockerx -w /dockerx --privileged --device=/dev/kfd --device=/dev/dri --group-add video --shm-size=4g --ipc="host" --network=host <docker-name>
 
     .. note:: 
-        Refer to the `docker <https://github.com/ROCm/MIVisionX#docker>`_ page for prerequisites and information on building the docker image. 
+        Refer to the `docker <https://github.com/ROCm/rocAL#docker>`_ page for prerequisites and information on building the docker image. 
 
     Optional: Map localhost directory on the docker image
 
@@ -217,16 +217,4 @@ Run MLPerf Resnet50 classification training with rocAL
 
 #. To see and run a sample training script, refer to `rocAL Imagenet example <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch/imagenet_training>`_.
 
-.. code-block:: shell 
-
-    git clone -b mlperf-v1.1-rocal https://github.com/rrawther/MLPerf-mGPU
-
-#. Modify ``RN50_AMP_LARS_8GPUS_NCHW.sh`` or ``RN50_AMP_LARS_8GPUS_NHWC.sh`` to reflect correct path for imagenet directory
-#. Run appropriate script as needed:
-
-.. code-block:: shell 
-
-    ./RN50_AMP_LARS_8GPUS_NCHW.sh 
-    (or)
-    ./RN50_AMP_LARS_8GPUS_NHWC.sh
 

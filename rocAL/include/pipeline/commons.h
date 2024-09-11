@@ -28,26 +28,45 @@ THE SOFTWARE.
  */
 
 #pragma once
+#include <random>
 #include <vector>
-#include "exception.h"
-#include "log.h"
-#include "filesystem.h"
+
+#include "pipeline/exception.h"
+#include "pipeline/log.h"
+#include "pipeline/filesystem.h"
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f
 
-enum class RocalTensorFormat
-{
+/*! \brief Tensor layouts
+ *
+ * currently supported by Rocal SDK as input/output
+ */
+enum class RocalTensorlayout {
     NHWC = 0,
-    NCHW
+    NCHW,
+    NFHWC,
+    NFCHW,
+    NHW,
+    NFT,
+    NTF,
+    NONE
 };
-enum class RocalTensorDataType
-{
+
+/*! \brief Tensor data type
+ *
+ * currently supported by Rocal SDK as input/output
+ */
+enum class RocalTensorDataType {
     FP32 = 0,
-    FP16
+    FP16,
+    UINT8,
+    INT8,
+    UINT32,
+    INT32
 };
-enum class RocalAffinity
-{
+
+enum class RocalAffinity {
     GPU = 0,
     CPU
 };
@@ -55,8 +74,7 @@ enum class RocalAffinity
 /*! \brief Color formats currently supported by Rocal SDK as input/output
  *
  */
-enum class RocalColorFormat
-{
+enum class RocalColorFormat {
     RGB24 = 0,
     BGR24,
     U8,
@@ -67,8 +85,7 @@ enum class RocalColorFormat
  *
  *  Currently supports HOST and OCL, will support HIP in future
  */
-enum class RocalMemType
-{
+enum class RocalMemType {
     HOST = 0,
     OCL,
     HIP
@@ -78,27 +95,112 @@ enum class RocalMemType
  *
  *  Currently supports Software decoding, will support Hardware decoding in future
  */
-enum class DecodeMode
-{
+enum class DecodeMode {
     HW_VAAPI = 0,
-    CPU = 1
+    CPU
 };
 
-struct Timing
-{
+/*! \brief Tensor ROI type
+ *
+ * currently supports following formats
+ */
+enum class RocalROIType {
+    LTRB = 0,
+    XYWH
+};
+
+/*! \brief Tensor ROI in LTRB format
+ *
+ */
+typedef struct {
+    unsigned l, t, r, b;
+} RoiLtrb;
+
+/*! \brief Tensor ROI in XYWH format
+ *
+ */
+typedef struct {
+    unsigned x, y, w, h;
+} RoiXywh;
+
+/*! \brief Tensor ROI union
+ *
+ * Supports LTRB and XYWH formats
+ */
+typedef union {
+    RoiLtrb ltrb;
+    RoiXywh xywh;
+} Roi2DCords;
+
+/*! \brief Tensor ROI
+ *
+ * Points to the begin and end in the ROI for each data
+ */
+typedef struct {
+    unsigned *begin;
+    unsigned *end;
+} RoiCords;
+
+struct Timing {
     // The following timings are accumulated timing not just the most recent activity
-    long long unsigned image_read_time= 0;
-    long long unsigned image_decode_time= 0;
-    long long unsigned to_device_xfer_time= 0;
-    long long unsigned from_device_xfer_time= 0;
+    long long unsigned read_time = 0;
+    long long unsigned decode_time = 0;
+    long long unsigned to_device_xfer_time = 0;
+    long long unsigned from_device_xfer_time = 0;
     long long unsigned copy_to_output = 0;
-    long long unsigned image_process_time= 0;
-    long long unsigned bb_process_time= 0;
-    long long unsigned mask_process_time= 0;
-    long long unsigned label_load_time= 0;
-    long long unsigned bb_load_time= 0;
+    long long unsigned process_time = 0;
+    long long unsigned bb_process_time = 0;
+    long long unsigned mask_process_time = 0;
+    long long unsigned label_load_time = 0;
+    long long unsigned bb_load_time = 0;
     long long unsigned mask_load_time = 0;
     long long unsigned video_read_time= 0;
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
+};
+
+/*! \brief Tensor Last Batch Policies
+ These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
+        FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
+        DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
+        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, and padding the remaining samples with either last image or wrapping up the dataset - the padded images are removed in the python end
+ */
+enum RocalBatchPolicy {
+    FILL = 0,
+    DROP,
+    PARTIAL
+};
+
+template <typename RNG = std::mt19937>
+class BatchRNG {
+   public:
+    /**
+     * @brief Used to keep batch of RNGs
+     *
+     * @param seed Used to generate seed_seq to initialize batch of RNGs
+     * @param batch_size How many RNGs to store
+     * @param state_size How many seed are used to initialize one RNG. Used to
+     * lower probablity of collisions between seeds used to initialize RNGs in
+     * different operators.
+     */
+    BatchRNG(int64_t seed = 1, int batch_size = 1, int state_size = 4)
+        : _seed(seed) {
+        std::seed_seq seq{_seed};
+        std::vector<uint32_t> seeds(batch_size * state_size);
+        seq.generate(seeds.begin(), seeds.end());
+        _rngs.reserve(batch_size);
+        for (int i = 0; i < batch_size * state_size; i += state_size) {
+            std::seed_seq s(seeds.begin() + i, seeds.begin() + i + state_size);
+            _rngs.emplace_back(s);
+        }
+    }
+
+    /**
+     * Returns engine corresponding to given sample ID
+     */
+    RNG &operator[](int sample) noexcept { return _rngs[sample]; }
+
+   private:
+    int64_t _seed;
+    std::vector<RNG> _rngs;
 };

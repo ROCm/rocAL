@@ -21,42 +21,38 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include <VX/vx_compatibility.h>
-#include <graph.h>
-#include "node_hue.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_hue.h"
+#include "pipeline/exception.h"
 
+HueNode::HueNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
+                                                                                              _hue(HUE_RANGE[0], HUE_RANGE[1]) {}
 
-HueNode::HueNode(const std::vector<Image *> &inputs, const std::vector<Image *> &outputs) :
-        Node(inputs, outputs),
-        _hue(HUE_RANGE[0], HUE_RANGE[1])
-{
-}
-
-void HueNode::create_node()
-{
-    if(_node)
+void HueNode::create_node() {
+    if (_node)
         return;
 
-    _hue.create_array(_graph , VX_TYPE_FLOAT32, _batch_size);
-    _node = vxExtrppNode_HuebatchPD(_graph->get(), _inputs[0]->handle(), _src_roi_width, _src_roi_height, _outputs[0]->handle(), _hue.default_array(), _batch_size);
-    vx_status status;
-    if((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the Hue (vxExtrppNode_HueCorrectionbatchPD) node failed: "+ TOSTR(status))
+    _hue.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    int input_layout = static_cast<int>(_inputs[0]->info().layout());
+    int output_layout = static_cast<int>(_outputs[0]->info().layout());
+    int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
+    vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
+    vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
+    _node = vxExtRppHue(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _hue.default_array(), input_layout_vx, output_layout_vx,roi_type_vx);
+    vx_status status;
+    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
+        THROW("Adding the hue (vxExtRppHue) node failed: " + TOSTR(status))
 }
 
-void HueNode::init(float hue)
-{
+void HueNode::init(float hue) {
     _hue.set_param(hue);
 }
 
-void HueNode::init(FloatParam* hue)
-{
+void HueNode::init(FloatParam *hue) {
     _hue.set_param(core(hue));
 }
 
-void HueNode::update_node()
-{
-     _hue.update_array();
+void HueNode::update_node() {
+    _hue.update_array();
 }
