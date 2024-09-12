@@ -90,7 +90,7 @@ void AudioSourceEvaluator::FindMaxDimension() {
             _decoder->Release();
         }
     }
-    // return the reader read pointer to the begining of the resource
+    // return the reader read pointer to the beginning of the resource
     _reader->reset();
 }
 #endif
