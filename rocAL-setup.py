@@ -136,9 +136,11 @@ linuxCMake = 'cmake'
 linuxSystemInstall_check = ''
 linuxFlag = ''
 sudoValidate = 'sudo -v'
+osUpdate = ''
 if "centos" in os_info_data or "redhat" in os_info_data or "Oracle" in os_info_data:
     linuxSystemInstall = 'yum -y'
     linuxSystemInstall_check = '--nogpgcheck'
+    osUpdate = 'makecache'
     if "VERSION_ID=7" in os_info_data:
         linuxCMake = 'cmake3'
         sudoValidate = 'sudo -k'
@@ -153,6 +155,7 @@ elif "Ubuntu" in os_info_data:
     linuxSystemInstall = 'apt-get -y'
     linuxSystemInstall_check = '--allow-unauthenticated'
     linuxFlag = '-S'
+    osUpdate = 'update'
     if "VERSION_ID=20" in os_info_data:
         platfromInfo = platfromInfo+'-Ubuntu-20'
     elif "VERSION_ID=22" in os_info_data:
@@ -165,10 +168,12 @@ elif "SLES" in os_info_data:
     linuxSystemInstall = 'zypper -n'
     linuxSystemInstall_check = '--no-gpg-checks'
     platfromInfo = platfromInfo+'-SLES'
+    osUpdate = 'refresh'
 elif "Mariner" in os_info_data:
     linuxSystemInstall = 'tdnf -y'
     linuxSystemInstall_check = '--nogpgcheck'
     platfromInfo = platfromInfo+'-Mariner'
+    osUpdate = 'makecache'
 else:
     print("\nrocAL Setup on "+platfromInfo+" is unsupported\n")
     print("\nrocAL Setup Supported on: Ubuntu 20/22, RedHat 8/9, & SLES 15\n")
@@ -178,7 +183,7 @@ else:
 print("\nrocAL Setup on: "+platfromInfo+"\n")
 
 if userName == 'root':
-    ERROR_CHECK(os.system(linuxSystemInstall+' update'))
+    ERROR_CHECK(os.system(linuxSystemInstall+' '+osUpdate))
     ERROR_CHECK(os.system(linuxSystemInstall+' install sudo'))
 
 # Delete previous install
@@ -311,7 +316,7 @@ else:
     # Create Build folder
     ERROR_CHECK(os.system('(cd '+deps_dir+'; mkdir build )'))
     # update
-    ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' update'))
+    ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' '+osUpdate))
     # common packages
     for i in range(len(commonPackages)):
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
