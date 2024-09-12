@@ -434,7 +434,19 @@ else:
             '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
         ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
         ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; '+linuxCMake +
-                ' -D WITH_EIGEN=OFF -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF  -D CMAKE_INSTALL_PREFIX=/usr/local ../../opencv-'+opencvVersion+' )'))
+                        ' -D WITH_EIGEN=OFF \
+                        -D WITH_GTK=ON \
+                        -D WITH_JPEG=ON \
+                        -D BUILD_JPEG=ON \
+                        -D WITH_OPENCL=OFF \
+                        -D WITH_OPENCLAMDFFT=OFF \
+                        -D WITH_OPENCLAMDBLAS=OFF \
+                        -D WITH_VA_INTEL=OFF \
+                        -D WITH_OPENCL_SVM=OFF  \
+                        -D CMAKE_INSTALL_PREFIX=/usr/local \
+                        -D BUILD_LIST=core,features2d,highgui,imgcodecs,imgproc,photo,video,videoio  \
+                        -D CMAKE_PLATFORM_NO_VERSIONED_SONAME=ON \
+                        ../../opencv-'+opencvVersion+' )'))
         ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; make -j$(nproc))'))
         ERROR_CHECK(os.system(sudoValidate))
         ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
