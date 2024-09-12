@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 cmake_minimum_required(VERSION 3.5)
-set(VERSION "2.0.0")
+set(VERSION "2.1.0")
 
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
@@ -203,16 +203,16 @@ set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev, libprot
 set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
 
 # Add rocDecode Deps for HW Decode - Exclude centos-7
-if (EXISTS "/etc/os-release")
-  file(READ "/etc/os-release" OS_RELEASE)
-  string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
-  if(NOT CENTOS_7_FOUND)
-    set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
-    set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
-    set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
-    set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
-  endif()
-endif()
+#if (EXISTS "/etc/os-release")
+  #file(READ "/etc/os-release" OS_RELEASE)
+  #string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
+  #if(NOT CENTOS_7_FOUND)
+    #set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
+    #set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
+    #set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
+    #set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
+  #endif()
+#endif()
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
 execute_process(
