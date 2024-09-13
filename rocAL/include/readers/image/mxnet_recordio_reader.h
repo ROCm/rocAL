@@ -86,10 +86,7 @@ class MXNetRecordIOReader : public Reader {
     int64_t _last_data_size;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
+    size_t _batch_size = 1;
     size_t _file_id = 0;
     size_t _in_batch_read_count = 0;
     bool _loop;
@@ -109,10 +106,11 @@ class MXNetRecordIOReader : public Reader {
     int64_t _seek_pos, _data_size_to_read;
     ImageRecordIOHeader _hdr;
     unsigned _shard_start_idx;
-    signed _shard_size = -1;
+    int32_t _shard_size = -1;
     size_t _padded_samples = 0;
     void increment_curr_file_idx();
-    std::pair<RocalBatchPolicy, bool>  _last_batch_info;
+    ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     size_t _num_padded_samples_counter = 0;
     size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;
@@ -127,4 +125,5 @@ class MXNetRecordIOReader : public Reader {
     void increment_shard_id();
     std::vector<std::string> _all_shard_file_names_padded;
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
+    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
 };
