@@ -271,6 +271,14 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 Copies the ring buffer data to cupy arrays.
                 )code")
         .def(
+            "copy_data", [](rocalTensor &output_tensor, py::object p, uint x_offset, uint y_offset, uint roi_width, uint roi_height) {
+                auto ptr = ctypes_void_ptr(p);
+                output_tensor.copy_data(static_cast<void *>(ptr), x_offset, y_offset, roi_width, roi_height);
+            },
+            R"code(
+                Copies the ring buffer data to python buffer pointers given a ROI with dimensions in x and y direction.
+                )code")
+        .def(
             "at", [](rocalTensor &output_tensor, uint idx) {
                 std::vector<size_t> stride_per_sample(output_tensor.strides());
                 stride_per_sample.erase(stride_per_sample.begin());
@@ -452,6 +460,12 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("y", &ROIxywh::y)
         .def_readwrite("w", &ROIxywh::w)
         .def_readwrite("h", &ROIxywh::h);
+    py::class_<RocalShardingInfo>(m, "RocalShardingInfo")
+        .def(py::init<>())
+        .def_readwrite("last_batch_policy", &RocalShardingInfo::last_batch_policy)
+        .def_readwrite("pad_last_batch_repeated", &RocalShardingInfo::pad_last_batch_repeated)
+        .def_readwrite("stick_to_shard", &RocalShardingInfo::stick_to_shard)
+        .def_readwrite("shard_size", &RocalShardingInfo::shard_size);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);

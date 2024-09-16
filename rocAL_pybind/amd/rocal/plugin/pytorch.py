@@ -216,9 +216,8 @@ class ROCALGenericIterator(object):
 
             # Check if last batch policy is partial and only return the valid images in last batch
             if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
-                if (self.last_batch_size is None):
-                    self.last_batch_size = self.batch_size - \
-                        b.getLastBatchPaddedSize(self.loader._handle)
+                self.last_batch_size = self.batch_size - \
+                    b.getLastBatchPaddedSize(self.loader._handle)
                 return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
             else:
                 return self.output_list, self.labels_tensor
@@ -286,6 +285,7 @@ class ROCALClassificationIterator(ROCALGenericIterator):
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
+
 class ROCALAudioIterator(object):
     """! rocAL iterator for audio tasks for PyTorch
     The Tensors that are returned by the iterator will be owned by rocAL and would be valid until next iteration.
@@ -296,51 +296,92 @@ class ROCALAudioIterator(object):
         @param device              The device to use for processing - CPU / GPU
         @param device_id           The ID of the device to use
     """
-    def __init__(self, pipeline, tensor_dtype = types.FLOAT, size = -1, auto_reset = False, device = "cpu", device_id = 0):
+
+    def __init__(self, pipeline, tensor_dtype=types.FLOAT, size=-1, auto_reset=False, device="cpu", device_id=0):
         self.loader = pipeline
         self.device = device
         self.device_id = device_id
         self.output = None
-        self.iterator_length = b.getRemainingImages(self.loader._handle) # To change the name of getRemainingImages to getRemainingSamples in upcoming PRs
+        # To change the name of getRemainingImages to getRemainingSamples in upcoming PRs
+        self.iterator_length = b.getRemainingImages(self.loader._handle)
         self.max_shape = None
         self.batch_size = self.loader._batch_size
         self.output_list = None
         self.labels_size = self.batch_size
         self.output_memory_type = self.loader._output_memory_type
+        self.last_batch_padded_size = b.getLastBatchPaddedSize(
+            self.loader._handle)
+        self.last_batch_policy = self.loader._last_batch_policy
+        self.shard_size = size
+        self.auto_reset = auto_reset
+        self.batch_count = 0
 
     def next(self):
         return self.__next__()
 
     def __next__(self):
-        if self.loader.rocal_run() != 0:
+        rocal_run = self.loader.rocal_run()
+        if (rocal_run != 0 or self.shard_size > 0 and self.batch_count >= self.shard_size):
+            if self.auto_reset:
+                self.reset()
             raise StopIteration
         else:
             self.output_tensor_list = self.loader.get_output_tensors()
-        # Output list used to store pipeline outputs - can support multiple augmentation outputs
+        self.batch_count += self.batch_size
+        self.last_batch_size = self.batch_size - \
+            b.getLastBatchPaddedSize(self.loader._handle)
         self.output_list = []
         for i in range(len(self.output_tensor_list)):
             dimensions = self.output_tensor_list[i].dimensions()
             self.num_roi_dims = self.output_tensor_list[i].roi_dims_size()
             self.num_of_rois = self.num_roi_dims * 2
-            self.roi_array = np.zeros(self.batch_size * self.num_of_rois, dtype=np.int32)
+            self.roi_array = np.zeros(
+                self.batch_size * self.num_of_rois, dtype=np.int32)
             self.output_tensor_list[i].copy_roi(self.roi_array)
-            torch_dtype = self.output_tensor_list[i].dtype()
+            roi = self.roi_array.reshape(self.batch_size, self.num_of_rois)
+            max_x1 = np.max(roi[..., self.num_of_rois-2:self.num_of_rois-1])
+            max_y1 = np.max(roi[..., self.num_of_rois-1:self.num_of_rois])
             if self.device == "cpu":
-                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype))
-                self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype))
+                torch_dtype = self.output_tensor_list[i].dtype()
+                if (max_x1 == 0 or max_y1 == 0):
+                    output = torch.empty(
+                        dimensions, dtype=getattr(torch, torch_dtype))
+                else:
+                    output = torch.empty(
+                        dimensions[0], max_x1, max_y1, dtype=getattr(torch, torch_dtype))
+                self.labels_tensor = torch.empty(
+                    self.labels_size, dtype=getattr(torch, torch_dtype))
             else:
                 torch_gpu_device = torch.device('cuda', self.device_id)
-                output = torch.empty(dimensions, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
-                self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(torch, torch_dtype), device=torch_gpu_device)
+                torch_dtype = self.output_tensor_list[i].dtype()
+                if (max_x1 == 0 or max_y1 == 0):
+                    output = torch.empty(dimensions, dtype=getattr(
+                        torch, torch_dtype), device=torch_gpu_device)
+                else:
+                    output = torch.empty(
+                        dimensions[0], max_x1, max_y1, dtype=getattr(torch, torch_dtype))
+                self.labels_tensor = torch.empty(self.labels_size, dtype=getattr(
+                    torch, torch_dtype), device=torch_gpu_device)
 
-            self.output_tensor_list[i].copy_data(ctypes.c_void_p(output.data_ptr()), self.output_memory_type)
+            if (max_x1 == 0 or max_y1 == 0):
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(
+                    output.data_ptr()), self.output_memory_type)
+            else:
+                self.output_tensor_list[i].copy_data(
+                    ctypes.c_void_p(output.data_ptr()), 0, 0, max_y1, max_x1)
             self.output_list.append(output)
 
         self.labels = self.loader.get_image_labels()
-        self.labels_tensor = self.labels_tensor.copy_(torch.from_numpy(self.labels)).long()
-        return self.output_list, self.labels_tensor, torch.tensor(self.roi_array.reshape(self.batch_size, self.num_of_rois)[...,self.num_of_rois-2:self.num_of_rois])
+        self.labels_tensor = self.labels_tensor.copy_(
+            torch.from_numpy(self.labels)).long()
+
+        if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
+            return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size], torch.from_numpy(self.roi_array.reshape(self.batch_size, self.num_of_rois)[..., self.num_of_rois-2:self.num_of_rois][0:self.last_batch_size, :])
+        else:
+            return self.output_list, self.labels_tensor, torch.from_numpy(self.roi_array.reshape(self.batch_size, self.num_of_rois)[..., self.num_of_rois-2:self.num_of_rois])
 
     def reset(self):
+        self.batch_count = 0
         b.rocalResetLoaders(self.loader._handle)
 
     def __iter__(self):

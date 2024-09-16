@@ -72,6 +72,10 @@ AudioReadAndDecode::Count() {
     return _reader->count_items();
 }
 
+size_t AudioReadAndDecode::last_batch_padded_size() {
+    return _reader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
 AudioReadAndDecode::Load(float *audio_buffer,
                          DecodedDataInfo& audio_info,
