@@ -44,7 +44,7 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return 0;
+        return false;
     }
 
     // Get the size of the file
@@ -61,7 +61,7 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return 0;
+        return false;
     }
 
     fin.close();
@@ -80,7 +80,7 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return 0;
+        return false;
     }
 
     // Get the size of the file
@@ -97,7 +97,7 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return 0;
+        return false;
     }
 
     fin.close();
