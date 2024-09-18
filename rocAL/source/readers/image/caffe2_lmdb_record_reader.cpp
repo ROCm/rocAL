@@ -83,11 +83,11 @@ Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
     _stick_to_shard = _last_batch_info.stick_to_shard;
     _shard_size = _last_batch_info.shard_size;
     ret = folder_reading();
-    _curr_file_idx = get_start_idx(); // shard's start_idx would vary for every shard in the vector
+    _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
-                            _all_shard_file_names_padded.begin() + get_start_idx() + actual_shard_size_without_padding());
+        std::random_shuffle(_all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id],
+                            _all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
 
     return ret;
 }
@@ -97,11 +97,11 @@ void Caffe2LMDBRecordReader::increment_curr_file_idx() {
     if (_stick_to_shard == false) {
         _curr_file_idx = (_curr_file_idx + 1) % _all_shard_file_names_padded.size();
     } else {
-        if (_curr_file_idx >= get_start_idx() &&
-            _curr_file_idx < get_start_idx() + actual_shard_size_without_padding() - 1) // checking if current-element lies within the shard size [begin_idx, last_idx -1]
+        if (_curr_file_idx >= _shard_start_idx_vector[_shard_id] &&
+            _curr_file_idx < _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding() - 1) // checking if current-element lies within the shard size [begin_idx, last_idx -1]
             _curr_file_idx = (_curr_file_idx + 1);
         else
-            _curr_file_idx = get_start_idx();
+            _curr_file_idx = _shard_start_idx_vector[_shard_id];
     }
 }
 
@@ -142,8 +142,8 @@ int Caffe2LMDBRecordReader::release() {
 
 void Caffe2LMDBRecordReader::reset() {
     if (_shuffle)
-        std::random_shuffle(_all_shard_file_names_padded.begin() + get_start_idx(),
-                            _all_shard_file_names_padded.begin() + get_start_idx() + actual_shard_size_without_padding());
+        std::random_shuffle(_all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id],
+                            _all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
 
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();      // Should work for both single and multiple shards
@@ -167,14 +167,12 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
 
         if (!_file_names.empty())
         std::cout << "Caffe2LMDBRecordReader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _full_path << std::endl;
-            auto dataset_size = _file_count_all_shards;
+    auto dataset_size = _file_count_all_shards;
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
-    if (_shard_size > 0)
-        _padded_samples = _shard_size % _batch_size;
-    else
-        _padded_samples = largest_shard_size_without_padding() % _batch_size;
-    if (_padded_samples != 0)
-        _last_batch_padded_size = _batch_size - _padded_samples;
+    size_t padded_samples = 0;
+    // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
+    padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
+    _last_batch_padded_size = (_batch_size > 1) ? (_batch_size - padded_samples) : 0;
 
     if (_pad_last_batch_repeated == true) { 
         // pad the last sample when the dataset_size is not divisible by
@@ -196,10 +194,11 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
                     _all_shard_file_sizes_padded.insert(*it);
             }
             if (shard_size_with_padding % _batch_size) {
-                _num_padded_samples = (shard_size_with_padding - shard_size_without_padding) + _batch_size - (shard_size_with_padding % _batch_size);
-                _file_count_all_shards += _num_padded_samples;
-                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _num_padded_samples, _all_shard_file_names_padded.back());
-                for (uint i = 0; i < _num_padded_samples; ++i)
+                size_t num_padded_samples = 0;
+                num_padded_samples = (shard_size_with_padding - shard_size_without_padding) + _batch_size - (shard_size_with_padding % _batch_size);
+                _file_count_all_shards += num_padded_samples;
+                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), num_padded_samples, _all_shard_file_names_padded.back());
+                for (uint i = 0; i < num_padded_samples; ++i)
                     _all_shard_file_sizes_padded.insert({_all_shard_file_names_padded.back(), _file_size[_all_shard_file_names_padded.back()]});
             }
         }
@@ -349,11 +348,6 @@ size_t Caffe2LMDBRecordReader::last_batch_padded_size() {
 
 void Caffe2LMDBRecordReader::increment_shard_id() {
     _shard_id = (_shard_id + 1) % _shard_count;
-}
-
-size_t Caffe2LMDBRecordReader::get_start_idx() {
-    _shard_start_idx = (get_dataset_size() * _shard_id) / _shard_count;
-    return _shard_start_idx;
 }
 
 size_t Caffe2LMDBRecordReader::get_dataset_size() {

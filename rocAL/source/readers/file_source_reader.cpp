@@ -270,9 +270,10 @@ Reader::Status FileSourceReader::generate_file_names() {
         ERR("FileReader ShardID [" + TOSTR(_shard_id) + "] Did not load any file from " + _folder_path)
 
     auto dataset_size = _file_count_all_shards;
+    size_t padded_samples = 0;
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
-    _padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
-    _last_batch_padded_size = (_batch_size > 1) ? (_batch_size - _padded_samples) : 0;
+    padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
+    _last_batch_padded_size = (_batch_size > 1) ? (_batch_size - padded_samples) : 0;
 
     if (_pad_last_batch_repeated == true) {
                                             // pad the last sample when the dataset_size is not divisible by

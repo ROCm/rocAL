@@ -96,20 +96,16 @@ class CIFAR10DataReader : public Reader {
     void incremenet_read_ptr();
     int release();
     void increment_curr_file_idx();
-    unsigned _shard_start_idx;
     int32_t _shard_size = -1;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
-    size_t _padded_samples = 0;
     ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     size_t _last_batch_padded_size = 0;
-    size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
-    size_t get_start_idx(); // Start Idx of the Shard's Data
     size_t get_dataset_size(); // DataSet Size
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)

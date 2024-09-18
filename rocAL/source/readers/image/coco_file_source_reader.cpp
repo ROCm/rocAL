@@ -92,7 +92,7 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
         std::cout<<"Metadata reader not initialized for COCO file source\n";
 
     ret = subfolder_reading();
-    _curr_file_idx = get_start_idx(); // shard's start_idx would vary for every shard in the vector
+    _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
 
     if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
         // calculate the aspect ratio for each file and create a pair of <filename, aspect_ratio>
@@ -125,7 +125,8 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     } else {
         // shuffle dataset if set
         if (ret == Reader::Status::OK && _shuffle)
-            std::random_shuffle(_all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id], _all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
+            std::random_shuffle(_all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id],
+                                _all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
     }
     return ret;
 }
@@ -297,9 +298,10 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
     closedir(_sub_dir);
 
     auto dataset_size = _file_count_all_shards;
+    size_t padded_samples = 0;
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
-    _padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
-    _last_batch_padded_size = (_batch_size > 1) ? (_batch_size - _padded_samples) : 0;
+    padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
+    _last_batch_padded_size = (_batch_size > 1) ? (_batch_size - padded_samples) : 0;
 
     if (_pad_last_batch_repeated == true) { 
         // pad the last sample when the dataset_size is not divisible by
@@ -317,9 +319,10 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
                 _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), start, end);
             }
             if (largest_shard_size % _batch_size) {
-                _num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);
-                _file_count_all_shards += _num_padded_samples;
-                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), _num_padded_samples, _all_shard_file_names_padded.back());
+                size_t num_padded_samples = 0;
+                num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);
+                _file_count_all_shards += num_padded_samples;
+                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), num_padded_samples, _all_shard_file_names_padded.back());
             }
         }
     } else {
@@ -368,11 +371,6 @@ void COCOFileSourceReader::compute_start_and_end_idx_of_all_shards() {
         _shard_end_idx_vector.push_back(end_idx_of_shard);
      
     }
-}
-
-size_t COCOFileSourceReader::get_start_idx() {
-    _shard_start_idx = (get_dataset_size() * _shard_id) / _shard_count;
-    return _shard_start_idx;
 }
 
 size_t COCOFileSourceReader::get_dataset_size() {
