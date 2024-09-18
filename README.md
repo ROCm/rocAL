@@ -318,7 +318,6 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * ROCm: rocm-core - `6.1.0.60100-64`
 * RPP - `rpp` & `rpp-dev`/`rpp-devel`
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
-* rocDecode - `rocdecode` & `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
 * Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
@@ -326,5 +325,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* rocAL Setup Script - `V2.5.0`
+* rocAL Setup Script - `V2.6.0`
 * Dependencies for all the above packages
