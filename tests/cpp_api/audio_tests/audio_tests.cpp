@@ -36,15 +36,15 @@ THE SOFTWARE.
 
 using namespace std::chrono;
 
-bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name, std::string rocal_data_path) {
-    bool pass_status = false;
+int verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name, std::string rocal_data_path) {
+    int status = -1;
     // read data from golden outputs
     std::string ref_file_path = rocal_data_path + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return false;
+        return -1;
     }
 
     // Get the size of the file
@@ -61,26 +61,26 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return false;
+        return -1;
     }
 
     fin.close();
 
     if ((nsr_begin[0] == ref_output[0]) && (nsr_length[0] == ref_output[1]))
-        pass_status = true;
+        status = 0;
 
-    return pass_status;
+    return status;
 }
 
-bool verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size, std::string rocal_data_path) {
-    bool pass_status = false;
+int verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size, std::string rocal_data_path) {
+    int status = -1;
     // read data from golden outputs
     std::string ref_file_path = rocal_data_path + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return false;
+        return -1;
     }
 
     // Get the size of the file
@@ -97,7 +97,7 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return false;
+        return -1;
     }
 
     fin.close();
@@ -116,10 +116,10 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
 
     std::cout << std::endl << "Results for Test case: " << std::endl;
     if ((matched_indices == buffer_size) && matched_indices != 0) {
-        pass_status = true;
+        status = 0;
     }
 
-    return pass_status;
+    return status;
 }
 
 int test(int test_case, const char *path, int qa_mode, int downmix, int gpu);
@@ -332,9 +332,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
             exit(0);
         }
-        if (test_case != 8 && verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path)) {
+        if (test_case != 8 && (verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path) == 0)) {
             std::cout << "PASSED!\n\n";
-        } else if (test_case == 8 && verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path)) {
+        } else if (test_case == 8 && (verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path) == 0)) {
             std::cout << "PASSED!\n\n";
         } else {
             std::cout << "FAILED!\n\n";
