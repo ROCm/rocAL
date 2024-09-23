@@ -281,8 +281,8 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
         CHECK_ROCJPEG(rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[i], &num_components, &subsampling, widths, heights));
         std::string chroma_sub_sampling = "";
         GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
-        std::cout << "Input image resolution: " << widths[0] << "x" << heights[0] << std::endl;
-        std::cout << "Chroma subsampling: " + chroma_sub_sampling  << std::endl;
+        // std::cout << "Input image resolution: " << widths[0] << "x" << heights[0] << std::endl;
+        // std::cout << "Chroma subsampling: " + chroma_sub_sampling  << std::endl;
         if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411) {
             std::cerr << "The chroma sub-sampling is not supported by VCN Hardware" << std::endl;
             return Status::UNSUPPORTED;
@@ -294,7 +294,7 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
             return Status::HEADER_DECODE_FAILED;
         }
 
-        std::cout << "Decoding started, please wait! ... "<<  num_channels<< std::endl;
+        // std::cout << "Decoding started, please wait! ... "<<  num_channels<< std::endl;
         output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
         src_img_offset[i] = src_offset;
         src_offset += (max_widths[0] * max_heights[0] * num_channels);

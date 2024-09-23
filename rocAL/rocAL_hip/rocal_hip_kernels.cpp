@@ -713,12 +713,12 @@ void HipExecResizeTensor(
     unsigned globalThreads_y = maxDstHeight;
     unsigned globalThreads_z = batchSize;
 
-    for (int i = 0; i < batchSize; i++) {
-        std::cerr << srcWidth[i] << " " << srcHeight[i] << " " << dstWidth[i] << " " << dstHeight[i] << "\n\n";
-    }
+    // for (int i = 0; i < batchSize; i++) {
+    //     std::cerr << srcWidth[i] << " " << srcHeight[i] << " " << dstWidth[i] << " " << dstHeight[i] << "\n\n";
+    // }
 
-    std::cerr << "Dst :: " << maxDstWidth * maxDstHeight * channels << " &  " << maxDstWidth * channels << "\n";
-    printf("SRC : %p, DST : %p, %p %p %p %p\n", srcPtr, dstPtr, srcWidth, srcHeight, dstWidth, dstHeight);
+    // std::cerr << "Dst :: " << maxDstWidth * maxDstHeight * channels << " &  " << maxDstWidth * channels << "\n";
+    // printf("SRC : %p, DST : %p, %p %p %p %p\n", srcPtr, dstPtr, srcWidth, srcHeight, dstWidth, dstHeight);
     // hipLaunchKernelGGL(resize_bilinear_pkd_hip_tensor,
     //                     dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
     //                     dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
