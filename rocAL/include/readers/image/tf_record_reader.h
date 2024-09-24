@@ -109,7 +109,7 @@ class TFRecordReader : public Reader {
     Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size);
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map<std::string, uint> _image_record_starting;
-    ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     size_t _last_batch_padded_size = 0;
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;

@@ -48,10 +48,10 @@ unsigned COCOFileSourceReader::count_items() {
         // Formula used to calculate - [_last_batch_padded_size = _batch_size - (_shard_size % _batch_size) ]
         // Since "size" doesnt involve padding - we add the count of padded samples to the number of remaining elements
         // which equals to the shard size with padding
-        if (_last_batch_info.last_batch_policy == RocalBatchPolicy::PARTIAL || _last_batch_info.last_batch_policy == RocalBatchPolicy::FILL) {
+        if (_sharding_info.last_batch_policy == RocalBatchPolicy::PARTIAL || _sharding_info.last_batch_policy == RocalBatchPolicy::FILL) {
             ret += _last_batch_padded_size;
-        } else if (_last_batch_info.last_batch_policy == RocalBatchPolicy::DROP &&
-                   _last_batch_info.pad_last_batch_repeated == true) {  // When pad_last_batch_repeated is False - Enough
+        } else if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP &&
+                   _sharding_info.pad_last_batch_repeated == true) {  // When pad_last_batch_repeated is False - Enough
                                                        // number of samples would not be present in the last batch - hence
                                                        // dropped by condition handled in the loader
             ret -= _batch_size;
@@ -63,7 +63,7 @@ unsigned COCOFileSourceReader::count_items() {
             return largest_shard_size_with_padding;
         int size = std::max(largest_shard_size_with_padding, _batch_size);
         ret = (size - _read_counter);
-        if (_last_batch_info.last_batch_policy == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
+        if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
             ret -= _batch_size;
     }
     return ((ret < 0) ? 0 : ret);
@@ -76,10 +76,10 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_size = desc.get_batch_size();
-    _last_batch_info = desc.get_sharding_info();
-    _pad_last_batch_repeated = _last_batch_info.pad_last_batch_repeated;
-    _stick_to_shard = _last_batch_info.stick_to_shard;
-    _shard_size = _last_batch_info.shard_size;
+    _sharding_info = desc.get_sharding_info();
+    _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
+    _stick_to_shard = _sharding_info.stick_to_shard;
+    _shard_size = _sharding_info.shard_size;
     _loop = desc.loop();
     _shuffle = desc.shuffle();
     _meta_data_reader = desc.meta_data_reader();
@@ -96,9 +96,9 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
 
     if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
         // calculate the aspect ratio for each file and create a pair of <filename, aspect_ratio>
-        std::vector<std::pair<std::string, float>> file_aspect_ratio_pair(_all_shard_file_names_padded.size());
-        for (size_t i = 0; i < _all_shard_file_names_padded.size(); i++) {
-            auto filename = _all_shard_file_names_padded[i];
+        std::vector<std::pair<std::string, float>> file_aspect_ratio_pair(_file_names.size());
+        for (size_t i = 0; i < _file_names.size(); i++) {
+            auto filename = _file_names[i];
             std::string base_filename = filename.substr(filename.find_last_of("/\\") + 1);
             auto img_size = _meta_data_reader->lookup_image_size(base_filename);
             auto aspect_ratio = static_cast<float>(img_size.h) / img_size.w;
@@ -116,7 +116,7 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
         std::transform(file_aspect_ratio_pair.begin(), file_aspect_ratio_pair.end(), std::back_inserter(_aspect_ratios), [](auto &pair) { return pair.second; });
 
         // Copy the sorted file_names to _file_names vector to be used in sharding
-        _all_shard_file_names_padded = _sorted_file_names;
+        _file_names = _sorted_file_names;
 
         // shuffle dataset if set
         if (ret == Reader::Status::OK && _shuffle) {
@@ -125,8 +125,8 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     } else {
         // shuffle dataset if set
         if (ret == Reader::Status::OK && _shuffle)
-            std::random_shuffle(_all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id],
-                                _all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
+            std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                                _file_names.begin() + _shard_end_idx_vector[_shard_id]);
     }
     return ret;
 }
@@ -150,7 +150,7 @@ void COCOFileSourceReader::incremenet_read_ptr() {
 }
 
 size_t COCOFileSourceReader::open() {
-    auto file_path = _all_shard_file_names_padded[_curr_file_idx];  // Get next file name
+    auto file_path = _file_names[_curr_file_idx];  // Get next file name
     incremenet_read_ptr();
     _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -231,34 +231,31 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     auto shard_start_idx = _shard_start_idx_vector[_shard_id];
     auto mid = std::upper_bound(_aspect_ratios.begin() + shard_start_idx, _aspect_ratios.begin() + shard_start_idx + actual_shard_size_without_padding(), 1.0f) - (_aspect_ratios.begin() + shard_start_idx);
     // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
-    std::random_shuffle(_all_shard_file_names_padded.begin() + shard_start_idx, _all_shard_file_names_padded.begin() + shard_start_idx + mid);
-    std::random_shuffle(_all_shard_file_names_padded.begin() + shard_start_idx + mid, _all_shard_file_names_padded.begin() + shard_start_idx + actual_shard_size_without_padding());
+    std::random_shuffle(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_start_idx + mid);
+    std::random_shuffle(_file_names.begin() + shard_start_idx + mid, _file_names.begin() + shard_start_idx + actual_shard_size_without_padding());
     std::vector<std::string> shuffled_filenames;
-    int split_count = (_all_shard_file_names_padded.size() /_shard_count) / _batch_size;  // Number of batches for this shard
+    int split_count = (_file_names.size() /_shard_count) / _batch_size;  // Number of batches for this shard
     std::vector<int> indexes(split_count);
     std::iota(indexes.begin(), indexes.end(), 0);
     // Shuffle the index vector and use the index to fetch batch size elements for decoding
     std::random_shuffle(indexes.begin(), indexes.end());
     for (auto const idx : indexes)
-        shuffled_filenames.insert(shuffled_filenames.end(), _all_shard_file_names_padded.begin() + shard_start_idx + idx * _batch_size, _all_shard_file_names_padded.begin() + shard_start_idx + idx * _batch_size + _batch_size);
-    std::copy(_all_shard_file_names_padded.begin() + shard_start_idx, _all_shard_file_names_padded.begin() + shard_start_idx + actual_shard_size_without_padding(), std::back_inserter(shuffled_filenames));
+        shuffled_filenames.insert(shuffled_filenames.end(), _file_names.begin() + shard_start_idx + idx * _batch_size, _file_names.begin() + shard_start_idx + idx * _batch_size + _batch_size);
+    std::copy(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_start_idx + actual_shard_size_without_padding(), std::back_inserter(shuffled_filenames));
 }
 
 void COCOFileSourceReader::reset() {
-    if (_stick_to_shard == false) // Pick elements from the next shard - hence increment shard_id
-        increment_shard_id();     // Should work for both single and multiple shards
-
     if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
-        _all_shard_file_names_padded = _sorted_file_names;
+        _file_names = _sorted_file_names;
         if (_shuffle) shuffle_with_aspect_ratios();
     } else if (_shuffle) {
-        std::random_shuffle(_all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id],
-                            _all_shard_file_names_padded.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
+        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
     }
-
+    if (_stick_to_shard == false) // Pick elements from the next shard - hence increment shard_id
+        increment_shard_id();     // Should work for both single and multiple shards
     _read_counter = 0;
-
-    if (_last_batch_info.last_batch_policy == RocalBatchPolicy::DROP) { // Skipping the dropped batch in next epoch
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) { // Skipping the dropped batch in next epoch
         for (uint i = 0; i < _batch_size; i++)
             increment_curr_file_idx();
     }
@@ -309,26 +306,22 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
         // divisible by the batch size making each shard having equal
         // number of samples
         for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
+            uint32_t total_padded_samples = 0; // initialize the total_padded_samples to 0
             uint start_idx = (dataset_size * shard_id) / _shard_count;
             uint actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
             uint largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
-            auto start = _file_names.begin() + start_idx;
-            auto end = _file_names.begin() + start_idx + actual_shard_size_without_padding;
-            if (start != end && start <= _file_names.end() &&
-                end <= _file_names.end()) {
-                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), start, end);
-            }
+            auto start = _file_names.begin() + start_idx + total_padded_samples;
+            auto end = start + actual_shard_size_without_padding;
             if (largest_shard_size % _batch_size) {
                 size_t num_padded_samples = 0;
                 num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);
                 _file_count_all_shards += num_padded_samples;
-                _all_shard_file_names_padded.insert(_all_shard_file_names_padded.end(), num_padded_samples, _all_shard_file_names_padded.back());
+                _file_names.insert(end, num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
+                total_padded_samples += num_padded_samples;
             }
         }
-    } else {
-        _all_shard_file_names_padded = _file_names;
     }
-    _last_file_name = _all_shard_file_names_padded[_all_shard_file_names_padded.size() - 1];
+    _last_file_name = _file_names[_file_names.size() - 1];
     compute_start_and_end_idx_of_all_shards();
     return ret;
 }

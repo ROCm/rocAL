@@ -107,7 +107,7 @@ class MXNetRecordIOReader : public Reader {
     ImageRecordIOHeader _hdr;
     int32_t _shard_size = -1;
     void increment_curr_file_idx();
-    ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;

@@ -98,7 +98,7 @@ class COCOFileSourceReader : public Reader {
     int release();
     void shuffle_with_aspect_ratios();
     void increment_curr_file_idx();
-    ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     size_t _last_batch_padded_size = 0;
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
