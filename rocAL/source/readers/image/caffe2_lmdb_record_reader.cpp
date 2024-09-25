@@ -148,7 +148,7 @@ void Caffe2LMDBRecordReader::reset() {
         increment_shard_id();      // Should work for both single and multiple shards
     _read_counter = 0;
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
-        for (uint i = 0; i < _batch_size; i++)
+        for (uint32_t i = 0; i < _batch_size; i++)
             increment_curr_file_idx();
     }
 }
@@ -176,34 +176,23 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
         // the number of shard's (or) when the shard's size is not
         // divisible by the batch size making each shard having equal
         // number of samples
-        for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
+        for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
             uint32_t total_padded_samples = 0; // initialize the total_padded_samples to 0
-            uint start_idx = (dataset_size * shard_id) / _shard_count;
-            uint actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
-            uint largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
+            uint32_t start_idx = (dataset_size * shard_id) / _shard_count;
+            uint32_t actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
+            uint32_t largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
             auto start = _file_names.begin() + start_idx + total_padded_samples;
             auto end = start + actual_shard_size_without_padding;
-            auto start_file_size = std::next(_file_size.begin(), start_idx);
-            auto end_file_size = std::next(_file_size.begin(), start_idx + actual_shard_size_without_padding);
-            if (start != end && start <= _file_names.end() &&
-                end <= _file_names.end()) {
-                for (auto it = start_file_size; it != end_file_size; ++it) 
-                    _all_shard_file_sizes_padded.insert(*it);
-            }
             if (largest_shard_size % _batch_size) {
                 size_t num_padded_samples = 0;
                 num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);
                 _file_count_all_shards += num_padded_samples;
                 _file_names.insert(end, num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
-                for (uint i = 0; i < num_padded_samples; ++i)
-                    _all_shard_file_sizes_padded.insert({_file_names.back(), _file_size[_file_names.back()]});
             }
         }
-    } else {
-        _all_shard_file_sizes_padded = _file_size;
     }
     _last_file_name = _file_names[_file_names.size() - 1];
-    _last_file_size = _all_shard_file_sizes_padded[_last_file_name];
+    _last_file_size = _file_size[_last_file_name];
     compute_start_and_end_idx_of_all_shards();
     closedir(_sub_dir);
     return ret;

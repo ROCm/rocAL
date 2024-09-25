@@ -192,10 +192,10 @@ Reader::Status CaffeLMDBRecordReader::folder_reading() {
         // divisible by the batch size making each shard having equal
         // number of samples
         uint32_t total_padded_samples = 0; // initialize the total_padded_samples to 0
-        for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
-            uint start_idx = (dataset_size * shard_id) / _shard_count;
-            uint actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
-            uint largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
+        for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
+            uint32_t start_idx = (dataset_size * shard_id) / _shard_count;
+            uint32_t actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
+            uint32_t largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
             auto start = _file_names.begin() + start_idx + total_padded_samples;
             auto end = start + actual_shard_size_without_padding;
             if (largest_shard_size % _batch_size) {
@@ -332,20 +332,17 @@ size_t CaffeLMDBRecordReader::last_batch_padded_size() {
 }
 
 void CaffeLMDBRecordReader::compute_start_and_end_idx_of_all_shards() {
-    for (uint shard_id = 0; shard_id < _shard_count; shard_id++) {
+    for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
         auto start_idx_of_shard = (_file_count_all_shards * shard_id) / _shard_count;
         auto end_idx_of_shard = start_idx_of_shard + actual_shard_size_without_padding() - 1;
         _shard_start_idx_vector.push_back(start_idx_of_shard);
         _shard_end_idx_vector.push_back(end_idx_of_shard);
-     
     }
 }
-
 
 size_t CaffeLMDBRecordReader::get_dataset_size() {
     return _file_count_all_shards;
 }
-
 
 size_t CaffeLMDBRecordReader::actual_shard_size_without_padding() {
     return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - floor(_shard_id * _file_count_all_shards / _shard_count);
