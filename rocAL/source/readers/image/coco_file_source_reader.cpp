@@ -362,7 +362,6 @@ void COCOFileSourceReader::compute_start_and_end_idx_of_all_shards() {
         auto end_idx_of_shard = start_idx_of_shard + actual_shard_size_without_padding() - 1;
         _shard_start_idx_vector.push_back(start_idx_of_shard);
         _shard_end_idx_vector.push_back(end_idx_of_shard);
-     
     }
 }
 

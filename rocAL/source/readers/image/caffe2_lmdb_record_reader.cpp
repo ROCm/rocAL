@@ -188,6 +188,7 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
                 num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);
                 _file_count_all_shards += num_padded_samples;
                 _file_names.insert(end, num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
+                total_padded_samples += num_padded_samples;
             }
         }
     }
@@ -326,6 +327,15 @@ void Caffe2LMDBRecordReader::read_image(unsigned char *buff, std::string file_na
     // Closing cursor handles
     mdb_cursor_close(_read_mdb_cursor);
     _read_mdb_cursor = nullptr;
+}
+
+void Caffe2LMDBRecordReader::compute_start_and_end_idx_of_all_shards() {
+    for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
+        auto start_idx_of_shard = (_file_count_all_shards * shard_id) / _shard_count;
+        auto end_idx_of_shard = start_idx_of_shard + actual_shard_size_without_padding() - 1;
+        _shard_start_idx_vector.push_back(start_idx_of_shard);
+        _shard_end_idx_vector.push_back(end_idx_of_shard);
+    }
 }
 
 size_t Caffe2LMDBRecordReader::last_batch_padded_size() {
