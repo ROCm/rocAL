@@ -43,31 +43,20 @@ MXNetRecordIOReader::MXNetRecordIOReader() {
 
 unsigned MXNetRecordIOReader::count_items() {
     int ret = 0;
+    int size = 0;
     if (_shard_size == -1) {                                     // When shard_size is set to -1, The shard_size variable is not used
         if (_loop) return largest_shard_size_without_padding();  // Return the size of the largest shard amongst all the shard's size
-        int size = std::max(largest_shard_size_without_padding(), _batch_size);
-        ret = (size - _read_counter);
-        // Formula used to calculate - [_last_batch_padded_size = _batch_size - (_shard_size % _batch_size) ]
-        // Since "size" doesnt involve padding - we add the count of padded samples to the number of remaining elements
-        // which equals to the shard size with padding
-        if (_sharding_info.last_batch_policy == RocalBatchPolicy::PARTIAL || _sharding_info.last_batch_policy == RocalBatchPolicy::FILL) {
-            ret += _last_batch_padded_size;
-        } else if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP &&
-                   _sharding_info.pad_last_batch_repeated == true) {  // When pad_last_batch_repeated is False - Enough
-                                                       // number of samples would not be present in the last batch - hence
-                                                       // dropped by condition handled in the loader
-            ret -= _batch_size;
-        }
+        size = std::max(largest_shard_size_without_padding(), _batch_size);
     } else if (_shard_size > 0) {
         auto largest_shard_size_with_padding =
             _shard_size + (_batch_size - (_shard_size % _batch_size));  // The shard size used here is padded
         if (_loop)
             return largest_shard_size_with_padding;
-        int size = std::max(largest_shard_size_with_padding, _batch_size);
-        ret = (size - _read_counter);
-        if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
-            ret -= _batch_size;
+        size = std::max(largest_shard_size_with_padding, _batch_size);
     }
+    ret = (size - _read_counter);
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
+        ret -= _batch_size;
     return ((ret < 0) ? 0 : ret);
 }
 
@@ -164,7 +153,7 @@ Reader::Status MXNetRecordIOReader::record_reading() {
     size_t padded_samples = 0;
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
-    _last_batch_padded_size = (_batch_size > 1) ? (_batch_size - padded_samples) : 0;
+    _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
 
     if (_pad_last_batch_repeated == true) { 
         // pad the last sample when the dataset_size is not divisible by
@@ -331,7 +320,7 @@ size_t MXNetRecordIOReader::get_dataset_size() {
 }
 
 size_t MXNetRecordIOReader::actual_shard_size_without_padding() {
-    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - floor(_shard_id * get_dataset_size() / _shard_count);
+    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - std::floor(_shard_id * get_dataset_size() / _shard_count);
 }
 
 size_t MXNetRecordIOReader::largest_shard_size_without_padding() {
