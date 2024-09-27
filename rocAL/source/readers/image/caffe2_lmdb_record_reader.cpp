@@ -37,6 +37,7 @@ Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
     _loop = false;
     _shuffle = false;
     _last_rec = false;
+    _file_count_all_shards = 0;
 }
 
 unsigned Caffe2LMDBRecordReader::count_items() {
@@ -98,6 +99,7 @@ void Caffe2LMDBRecordReader::incremenet_read_ptr() {
     _read_counter++;
     increment_curr_file_idx();
 }
+
 size_t Caffe2LMDBRecordReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     _last_id = file_path;
@@ -151,8 +153,9 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
     if (Caffe2_LMDB_reader() != Reader::Status::OK)
         WRN("Caffe2LMDBRecordReader ShardID [" + TOSTR(_shard_id) + "] Caffe2LMDBRecordReader cannot access the storage at " + _folder_path);
 
-        if (!_file_names.empty())
+    if (!_file_names.empty())
         std::cout << "Caffe2LMDBRecordReader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _full_path << std::endl;
+
     auto dataset_size = _file_count_all_shards;
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     size_t padded_samples = 0;
@@ -340,9 +343,9 @@ size_t Caffe2LMDBRecordReader::get_dataset_size() {
 }
 
 size_t Caffe2LMDBRecordReader::actual_shard_size_without_padding() {
-    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - std::floor(_shard_id * get_dataset_size() / _shard_count);
+    return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - std::floor(_shard_id * _file_count_all_shards / _shard_count);
 }
 
 size_t Caffe2LMDBRecordReader::largest_shard_size_without_padding() {
-  return std::ceil(get_dataset_size() * 1.0 / _shard_count);
+  return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }

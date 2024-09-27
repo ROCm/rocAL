@@ -79,8 +79,9 @@ Reader::Status CaffeLMDBRecordReader::initialize(ReaderConfig desc) {
     ret = folder_reading();
     _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
-    std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                        _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+    if (ret == Reader::Status::OK && _shuffle)
+        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
 
     return ret;
 }
@@ -102,6 +103,7 @@ void CaffeLMDBRecordReader::incremenet_read_ptr() {
     _read_counter++;
     increment_curr_file_idx();
 }
+
 size_t CaffeLMDBRecordReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     _last_id = file_path;
@@ -149,7 +151,7 @@ void CaffeLMDBRecordReader::reset() {
         increment_shard_id();      // Should work for both single and multiple shards
     _read_counter = 0;
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
-        for (uint i = 0; i < _batch_size; i++)
+        for (uint32_t i = 0; i < _batch_size; i++)
             increment_curr_file_idx();
     }
 }
