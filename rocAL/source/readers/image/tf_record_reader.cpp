@@ -189,7 +189,7 @@ Reader::Status TFRecordReader::folder_reading() {
             uint32_t actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - std::floor(shard_id * dataset_size / _shard_count);
             uint32_t largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
             auto start = _file_names.begin() + start_idx + total_padded_samples;
-            auto end = _file_names.begin() + start_idx + actual_shard_size_without_padding;
+            auto end = start + actual_shard_size_without_padding;
             if (largest_shard_size % _batch_size) {
                 size_t num_padded_samples = 0;
                 num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);

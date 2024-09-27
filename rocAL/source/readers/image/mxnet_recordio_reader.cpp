@@ -160,10 +160,10 @@ Reader::Status MXNetRecordIOReader::record_reading() {
         // the number of shard's (or) when the shard's size is not
         // divisible by the batch size making each shard having equal
         // number of samples
+        uint32_t total_padded_samples = 0; // initialize the total_padded_samples to 0
         for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
-            uint32_t total_padded_samples = 0; // initialize the total_padded_samples to 0
             uint32_t start_idx = (dataset_size * shard_id) / _shard_count;
-            uint32_t actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - floor(shard_id * dataset_size / _shard_count);
+            uint32_t actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - std::floor(shard_id * dataset_size / _shard_count);
             uint32_t largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
             auto start = _file_names.begin() + start_idx + total_padded_samples;
             auto end = start + actual_shard_size_without_padding;
