@@ -116,7 +116,6 @@ class TFRecordReader : public Reader {
     int32_t _shard_size = -1;
     std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     void increment_curr_file_idx();
-    size_t get_dataset_size(); // DataSet Size
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>

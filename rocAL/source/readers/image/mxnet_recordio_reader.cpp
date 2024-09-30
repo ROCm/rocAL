@@ -314,16 +314,12 @@ void MXNetRecordIOReader::compute_start_and_end_idx_of_all_shards() {
     }
 }
 
-size_t MXNetRecordIOReader::get_dataset_size() {
-    return _file_count_all_shards;
-}
-
 size_t MXNetRecordIOReader::actual_shard_size_without_padding() {
-    return std::floor((_shard_id + 1) * get_dataset_size() / _shard_count) - std::floor(_shard_id * get_dataset_size() / _shard_count);
+    return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - std::floor(_shard_id * _file_count_all_shards / _shard_count);
 }
 
 size_t MXNetRecordIOReader::largest_shard_size_without_padding() {
-  return std::ceil(get_dataset_size() * 1.0 / _shard_count);
+  return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }
 
 void MXNetRecordIOReader::increment_shard_id() {

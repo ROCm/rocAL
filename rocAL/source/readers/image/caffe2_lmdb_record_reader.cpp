@@ -338,10 +338,6 @@ void Caffe2LMDBRecordReader::increment_shard_id() {
     _shard_id = (_shard_id + 1) % _shard_count;
 }
 
-size_t Caffe2LMDBRecordReader::get_dataset_size() {
-    return _file_count_all_shards;
-}
-
 size_t Caffe2LMDBRecordReader::actual_shard_size_without_padding() {
     return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - std::floor(_shard_id * _file_count_all_shards / _shard_count);
 }

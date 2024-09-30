@@ -300,10 +300,6 @@ void CIFAR10DataReader::compute_start_and_end_idx_of_all_shards() {
     }
 }
 
-size_t CIFAR10DataReader::get_dataset_size() {
-    return _file_count_all_shards;
-}
-
 size_t CIFAR10DataReader::actual_shard_size_without_padding() {
     return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - floor(_shard_id * _file_count_all_shards / _shard_count);
 }

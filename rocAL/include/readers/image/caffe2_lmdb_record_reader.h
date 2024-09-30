@@ -118,7 +118,6 @@ class Caffe2LMDBRecordReader : public Reader {
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
     std::vector<std::string> _all_shard_file_names_padded;
-    size_t get_dataset_size(); // DataSet Size
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>

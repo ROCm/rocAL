@@ -119,7 +119,6 @@ class CaffeLMDBRecordReader : public Reader {
     std::vector<std::string> _all_shard_file_names_padded;
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     Reader::Status generate_file_names(); // Function that would generate _file_names containing all the samples in the dataset
-    size_t get_dataset_size(); // DataSet Size
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
