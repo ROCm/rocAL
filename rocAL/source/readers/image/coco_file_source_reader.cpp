@@ -218,10 +218,11 @@ int COCOFileSourceReader::release() {
 void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     // Calculate the mid element which divides the aspect ratios into two groups (<=1.0 and >1.0)
     auto shard_start_idx = _shard_start_idx_vector[_shard_id];
-    auto mid = std::upper_bound(_aspect_ratios.begin() + shard_start_idx, _aspect_ratios.begin() + shard_start_idx + actual_shard_size_without_padding(), 1.0f) - (_aspect_ratios.begin() + shard_start_idx);
+    auto shard_end_idx = shard_start_idx + actual_shard_size_without_padding();
+    auto mid = std::upper_bound(_aspect_ratios.begin() + shard_start_idx, _aspect_ratios.begin() + shard_end_idx, 1.0f) - (_aspect_ratios.begin() + shard_start_idx);
     // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
     std::random_shuffle(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_start_idx + mid);
-    std::random_shuffle(_file_names.begin() + shard_start_idx + mid, _file_names.begin() + shard_start_idx + actual_shard_size_without_padding());
+    std::random_shuffle(_file_names.begin() + shard_start_idx + mid, _file_names.begin() + shard_end_idx);
     std::vector<std::string> shuffled_filenames;
     int split_count = (_file_names.size() /_shard_count) / _batch_size;  // Number of batches for this shard
     std::vector<int> indexes(split_count);
@@ -230,7 +231,7 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     std::random_shuffle(indexes.begin(), indexes.end());
     for (auto const idx : indexes)
         shuffled_filenames.insert(shuffled_filenames.end(), _file_names.begin() + shard_start_idx + idx * _batch_size, _file_names.begin() + shard_start_idx + idx * _batch_size + _batch_size);
-    std::copy(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_start_idx + actual_shard_size_without_padding(), std::back_inserter(shuffled_filenames));
+    std::copy(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_end_idx, std::back_inserter(shuffled_filenames));
 }
 
 void COCOFileSourceReader::reset() {
