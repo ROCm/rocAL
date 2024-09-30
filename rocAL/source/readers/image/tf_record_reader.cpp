@@ -82,7 +82,7 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc) {
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
     return ret;
 }
 

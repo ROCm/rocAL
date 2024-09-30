@@ -204,7 +204,6 @@ Reader::Status CaffeLMDBRecordReader::folder_reading() {
     return ret;
 }
 
-
 Reader::Status CaffeLMDBRecordReader::Caffe_LMDB_reader() {
     _open_env = 0;
     string tmp1 = _folder_path + "/data.mdb";

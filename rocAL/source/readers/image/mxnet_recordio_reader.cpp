@@ -262,7 +262,6 @@ void MXNetRecordIOReader::read_image_names() {
 
         _file_names.push_back(_image_key.c_str());
         _last_file_name = _image_key.c_str();
-
         _file_count_all_shards++;
 
         _last_file_size = image_size;

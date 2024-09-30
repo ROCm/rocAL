@@ -277,7 +277,6 @@ Reader::Status CIFAR10DataReader::open_folder() {
                 _file_count_all_shards++;
                 file_offset += _raw_file_size;
             }
-
             fclose(fp);
         }
     }
