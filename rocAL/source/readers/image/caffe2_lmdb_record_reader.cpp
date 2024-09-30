@@ -83,8 +83,8 @@ Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
 }
 
 void Caffe2LMDBRecordReader::increment_curr_file_idx() {
-    // Should work for both pad_last_batch = True (or) False
-    if (_stick_to_shard == false) {
+    // The condition satisfies for both pad_last_batch = True (or) False
+    if (_stick_to_shard == false) {  // The elements of each shard rotate in a round-robin fashion once the elements in particular shard is exhausted
         _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
     } else {
         if (_curr_file_idx >= _shard_start_idx_vector[_shard_id] &&
@@ -343,5 +343,5 @@ size_t Caffe2LMDBRecordReader::actual_shard_size_without_padding() {
 }
 
 size_t Caffe2LMDBRecordReader::largest_shard_size_without_padding() {
-  return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
+    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }

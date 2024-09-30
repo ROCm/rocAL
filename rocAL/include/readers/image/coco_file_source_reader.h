@@ -87,7 +87,7 @@ class COCOFileSourceReader : public Reader {
     std::string _last_id;
     std::string _last_file_name;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
+    size_t _shard_count = 1;
     size_t _batch_size = 1;
     bool _loop;
     bool _shuffle;
@@ -104,8 +104,6 @@ class COCOFileSourceReader : public Reader {
     bool _pad_last_batch_repeated = false;
     int32_t _shard_size = -1;
     std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
-    std::vector<std::string> _all_shard_file_names_padded;
-    Reader::Status generate_file_names(); // Function that would generate _file_names containing all the samples in the dataset
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>

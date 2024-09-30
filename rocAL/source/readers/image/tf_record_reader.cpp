@@ -159,6 +159,7 @@ Reader::Status TFRecordReader::folder_reading() {
         if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
             continue;
         entry_name_list.push_back(entry_name);
+        // std::cerr<<"\n entry_name::"<<entry_name;
     }
     std::sort(entry_name_list.begin(), entry_name_list.end());
     for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
@@ -167,7 +168,7 @@ Reader::Status TFRecordReader::folder_reading() {
         if (tf_record_reader() != Reader::Status::OK)
             WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
     }
- 
+
     if (!_file_names.empty())
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
@@ -346,7 +347,7 @@ size_t TFRecordReader::actual_shard_size_without_padding() {
 }
 
 size_t TFRecordReader::largest_shard_size_without_padding() {
-  return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
+    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }
 
 void TFRecordReader::increment_shard_id() {

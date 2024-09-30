@@ -74,9 +74,9 @@ class CIFAR10DataReader : public Reader {
     DIR *_src_dir;
     DIR *_sub_dir;
     struct dirent *_entity;
-    std::vector<std::string> _file_names, _all_shard_file_names_padded;
-    std::vector<unsigned> _file_offsets, _all_shard_file_offsets;
-    std::vector<unsigned> _file_idx, _all_shard_file_idxs;
+    std::vector<std::string> _file_names;
+    std::vector<unsigned> _file_offsets;
+    std::vector<unsigned> _file_idx;
     unsigned _curr_file_idx;
     FILE *_current_fPtr;
     unsigned _current_file_size;
@@ -95,10 +95,9 @@ class CIFAR10DataReader : public Reader {
     int _read_counter = 0;
     void incremenet_read_ptr();
     int release();
-    void increment_curr_file_idx();
     int32_t _shard_size = -1;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
+    size_t _shard_count = 1;
     std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
@@ -110,5 +109,6 @@ class CIFAR10DataReader : public Reader {
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
+    void increment_curr_file_idx();
     void compute_start_and_end_idx_of_all_shards();
 };

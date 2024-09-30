@@ -109,19 +109,17 @@ class CaffeLMDBRecordReader : public Reader {
     int _open_env = 1;
     int rc;
     void open_env_for_read_image();
-    void increment_curr_file_idx();
+    std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     int32_t _shard_size = -1;
     std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     size_t _last_batch_padded_size = 0;
     ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
-    std::vector<std::string> _all_shard_file_names_padded;
-    std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    Reader::Status generate_file_names(); // Function that would generate _file_names containing all the samples in the dataset
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
+    void increment_curr_file_idx();
     void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
 };

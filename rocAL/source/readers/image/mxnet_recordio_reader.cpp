@@ -136,7 +136,7 @@ void MXNetRecordIOReader::reset() {
         increment_shard_id();     // Should work for both single and multiple shards
     _read_counter = 0;
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) { // Skipping the dropped batch in next epoch
-        for (uint i = 0; i < _batch_size; i++)
+        for (uint32_t i = 0; i < _batch_size; i++)
             increment_curr_file_idx();
     }
 }
@@ -319,7 +319,7 @@ size_t MXNetRecordIOReader::actual_shard_size_without_padding() {
 }
 
 size_t MXNetRecordIOReader::largest_shard_size_without_padding() {
-  return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
+    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }
 
 void MXNetRecordIOReader::increment_shard_id() {

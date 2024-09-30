@@ -305,7 +305,7 @@ size_t CIFAR10DataReader::actual_shard_size_without_padding() {
 }
 
 size_t CIFAR10DataReader::largest_shard_size_without_padding() {
-  return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
+    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }
 
 void CIFAR10DataReader::increment_shard_id() {

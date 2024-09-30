@@ -147,6 +147,7 @@ void CaffeLMDBRecordReader::reset() {
     if (_shuffle)
         std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
                             _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();      // Should work for both single and multiple shards
     _read_counter = 0;
@@ -177,7 +178,7 @@ Reader::Status CaffeLMDBRecordReader::folder_reading() {
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
-    if (_pad_last_batch_repeated == true) { 
+    if (_pad_last_batch_repeated == true) {
         // pad the last sample when the dataset_size is not divisible by
         // the number of shard's (or) when the shard's size is not
         // divisible by the batch size making each shard having equal
@@ -263,7 +264,6 @@ void CaffeLMDBRecordReader::read_image_names() {
     release();
 }
 
-
 void CaffeLMDBRecordReader::open_env_for_read_image() {
     // Creating an LMDB environment handle
     CHECK_LMDB_RETURN_STATUS(mdb_env_create(&_read_mdb_env));
@@ -335,5 +335,5 @@ size_t CaffeLMDBRecordReader::actual_shard_size_without_padding() {
 }
 
 size_t CaffeLMDBRecordReader::largest_shard_size_without_padding() {
-  return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
+    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }
