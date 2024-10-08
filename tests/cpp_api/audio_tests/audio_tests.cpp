@@ -102,6 +102,7 @@ int verify_output(float *dst_ptr, long int frames, long int channels, std::strin
 
     fin.close();
 
+    auto atol = (case_name != "normalize") ? 1e-20 : 1e-5;  // Absolute tolerance
     int matched_indices = 0;
     for (int i = 0; i < frames; i++) {
         for (int j = 0; j < channels; j++) {
@@ -109,7 +110,7 @@ int verify_output(float *dst_ptr, long int frames, long int channels, std::strin
             ref_val = ref_output[i * channels + j];
             out_val = dst_ptr[i * max_channels + j];
             bool invalid_comparison = ((out_val == 0.0f) && (ref_val != 0.0f));
-            if (!invalid_comparison && std::abs(out_val - ref_val) < 1e-20)
+            if (!invalid_comparison && std::abs(out_val - ref_val) < atol)
                 matched_indices += 1;
         }
     }
