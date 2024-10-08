@@ -29,6 +29,6 @@ subtrees:
       - file: doxygen/html/group__group__rocal__parameters
       - file: doxygen/html/files
         title: rocAL Header files
-  - file: examples.rst
-    title: Examples
+  - file: examples/examples.rst
+    title: rocAL examples
   - file: license.rst

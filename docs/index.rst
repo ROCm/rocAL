@@ -51,8 +51,8 @@ The rocAL documentation is structured as follows:
     * `rocAL Header Files <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/files.html>`_
 
   .. grid-item-card:: Tutorials
-
-    * :ref:`examples`
+    
+    * :doc:`rocAL examples <./examples/examples>`
 
 To contribute to the documentation refer to `Contributing to ROCm Docs <https://rocm.docs.amd.com/en/latest/contribute/contributing.html>`_.
 
