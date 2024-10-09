@@ -68,6 +68,8 @@ class Caffe2LMDBRecordReader : public Reader {
 
     Caffe2LMDBRecordReader();
 
+    size_t last_batch_padded_size() override; // The size of the number of samples padded in the last batch
+
    private:
     //! opens the folder containnig the images
     Reader::Status Caffe2_LMDB_reader();
@@ -78,7 +80,7 @@ class Caffe2LMDBRecordReader : public Reader {
     DIR* _sub_dir;
     struct dirent* _entity;
     std::vector<std::string> _file_names;
-    std::map<std::string, unsigned int> _file_size;
+    std::map<std::string, unsigned int> _file_size, _all_shard_file_sizes_padded;
     unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
@@ -87,11 +89,7 @@ class Caffe2LMDBRecordReader : public Reader {
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
     bool _last_rec;
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
-    size_t _file_id = 0;
+    size_t _batch_size = 1;
     size_t _in_batch_read_count = 0;
     bool _loop;
     bool _shuffle;
@@ -99,12 +97,8 @@ class Caffe2LMDBRecordReader : public Reader {
     uint _file_byte_size;
     void incremenet_read_ptr();
     int release();
-    size_t get_file_shard_id();
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
-    void incremenet_file_id() { _file_id++; }
-    void replicate_last_image_to_fill_last_shard();
-    void replicate_last_batch_to_pad_partial_shard();
     void read_image(unsigned char* buff, std::string file_name);
     void read_image_names();
     std::map<std::string, uint> _image_record_starting;
@@ -116,4 +110,16 @@ class Caffe2LMDBRecordReader : public Reader {
     MDB_txn* _read_mdb_txn;
     MDB_cursor* _read_mdb_cursor;
     void open_env_for_read_image();
+    int32_t _shard_size = -1;
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
+    size_t _last_batch_padded_size = 0;
+    bool _stick_to_shard = false;
+    bool _pad_last_batch_repeated = false;
+    size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
+    size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
+    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
+    void increment_shard_id();
+    void increment_curr_file_idx();
+    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
 };
