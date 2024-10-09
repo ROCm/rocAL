@@ -77,7 +77,7 @@ def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_
     roi_data = roi_tensor.detach().numpy()
     buffer_size = roi_data[0] * roi_data[1]
     matched_indices = 0
-    atol = 1e-20 if case_name != "normalize" else 1e-5
+    atol = 1e-20 if case_name != "normalize" else 1e-5  # Reducing absolute tolerance for normalize test case to fix test case failures
     for i in range(roi_data[0]):
         for j in range(roi_data[1]):
             ref_val = data_array[i * roi_data[1] + j]
