@@ -40,7 +40,7 @@ class rocalTensor {
     virtual ~rocalTensor() = default;
     virtual void* buffer() = 0;
     virtual unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type = ROCAL_MEMCPY_HOST) = 0;
-    virtual unsigned copy_data(void* user_buffer, uint max_cols, uint max_rows) = 0; // Copy only the ROI to the user_buffer [The padded region is not copied]
+    virtual unsigned copy_data(void* user_buffer, uint x_offset, uint y_offset, uint max_cols, uint max_rows) = 0; // Copy only the ROI to the user_buffer [The padded region is not copied]
     virtual unsigned num_of_dims() = 0;
     virtual unsigned batch_size() = 0;
     virtual std::vector<size_t> dims() = 0;

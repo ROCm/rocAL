@@ -453,17 +453,17 @@ enum RocalLastBatchPolicy {
     ROCAL_LAST_BATCH_PARTIAL = 2
 };
 
-/*! \brief  rocAL ShardingInfo enum
+/*! \brief  rocAL RocalShardingInfo enum
  * \ingroup group_rocal_types
  */
-struct ShardingInfo {
+struct RocalShardingInfo {
     RocalLastBatchPolicy last_batch_policy;
     bool pad_last_batch_repeated;
     bool stick_to_shard;
-    int shard_size;
+    int32_t shard_size;
 
     // Constructor with default values
-    ShardingInfo()
+    RocalShardingInfo()
         : last_batch_policy(RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL),
           pad_last_batch_repeated(false),
           stick_to_shard(true),

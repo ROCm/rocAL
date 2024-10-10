@@ -69,9 +69,9 @@ class FileSourceReader : public Reader {
 
     size_t last_batch_padded_size() override;  // The size of the number of samples padded in the last batch
 
-    std::string get_root_folder_path();  // Returns the root folder path
+    std::string get_root_folder_path() override;  // Returns the root folder path
 
-    std::vector<std::string> get_file_paths_from_meta_data_reader();  // Returns the relative file path from the meta-data reader
+    std::vector<std::string> get_file_paths_from_meta_data_reader() override;  // Returns the relative file path from the meta-data reader
    private:
     //! opens the folder containnig the images
     Reader::Status open_folder();
@@ -86,16 +86,13 @@ class FileSourceReader : public Reader {
     FILE *_current_fPtr;
     unsigned _current_file_size;
     unsigned _shard_start_idx;
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
-    signed _shard_size = -1;
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
-    size_t _file_id = 0;
+    int32_t _shard_size = -1;
+    size_t _batch_size = 1;
     size_t _padded_samples = 0;
     bool _loop;
     bool _shuffle;
@@ -105,21 +102,17 @@ class FileSourceReader : public Reader {
     void incremenet_read_ptr();
     void increment_curr_file_idx();
     int release();
-    size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
     void fill_last_batch();
     void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
-    std::pair<RocalBatchPolicy, bool> _last_batch_info;  //  A std::pair object representing the Last Batch Policies in rocAL and the padding of the samples.
-                                                         //  first: Determines the handling of the last batch when the shard size is not divisible by the batch size. Check RocalLastBatchPolicy() enum for possible values.
-                                                         //  second: If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
-    size_t _last_batch_padded_size = 0;                  // The size
-    size_t _num_padded_samples = 0;                      //! Number of samples that are padded in the last batch which would differ for each shard.
+    ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    size_t _last_batch_padded_size = 0;              // The size of number of padded samples in the last batch
+    size_t _num_padded_samples = 0;                  //! Number of samples that are padded in the last batch which would differ for each shard.
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
     Reader::Status generate_file_names();         // Function that would generate _file_names containing all the samples in the dataset
-    size_t get_start_idx();                       // Start Idx of the Shard's Data
+    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
     size_t get_dataset_size();                    // DataSet Size
     size_t actual_shard_size_without_padding();   // Actual Number of Files present in the shard (without padding)
     size_t largest_shard_size_without_padding();  // The size of the shard having largest files (without padding)
