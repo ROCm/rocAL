@@ -18,11 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from amd.rocal.pipeline import pipeline
+from amd.rocal.pipeline import Pipeline
 
 from inspect import getmembers, isfunction
 
 print('rocAL PyBind Pipelines')
-Pipelines = getmembers(pipeline, isfunction)
+Pipelines = getmembers(Pipeline, isfunction)
 for i in range(len(Pipelines)):
     print(Pipelines[i])
