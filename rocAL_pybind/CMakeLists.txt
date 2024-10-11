@@ -287,8 +287,8 @@ if(${BUILD_ROCAL_PYBIND})
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
     enable_testing()
     include(CTest)
-    add_subdirectory(tests/pybind)
-    
+    add_subdirectory(${CMAKE_SOURCE_DIR}/tests/pybind)
+
 else()
     message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
 endif()
