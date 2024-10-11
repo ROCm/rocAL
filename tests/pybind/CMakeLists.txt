@@ -50,7 +50,7 @@ endif()
 
 # OpenVX Tests
 if(Python3_FOUND AND ROCAL_PYBIND_SCRIPTS)
-  message("-- ${PROJECT_NAME} rocAL Pybind found -- ${ROCAL_PYBIND_SCRIPTS}")
+  message("-- ${PROJECT_NAME}: rocAL Pybind found at ${ROCM_PATH}/lib/amd/rocal")
   # 1 - decoders test
   add_test(NAME rocal_pybind_test_decoders
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/decoders_test.py
