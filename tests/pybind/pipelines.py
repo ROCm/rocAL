@@ -1,4 +1,3 @@
-
 # Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,3 +22,10 @@ from amd.rocal.pipeline import pipeline_def
 from amd.rocal.plugin.generic import ROCALClassificationIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
+
+from inspect import getmembers, isfunction
+
+print('rocAL PyBind Pipelines')
+Pipelines = getmembers(pipeline_def, isfunction)
+for i in range(len(Pipelines)):
+    print(Pipelines[i])
