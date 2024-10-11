@@ -40,17 +40,16 @@ else()
   set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 
-# find rocAL
-find_library(ROCAL_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
-find_library(ROCAL_PYBIND_LIBRARY NAMES rocal_pybind HINTS ${ROCM_PATH}/lib)
-find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${ROCM_PATH}/include/rocal)
-
 set(Python3_FIND_VIRTUALENV FIRST)
 find_package(Python3 QUIET)
 
+set(ROCAL_PYBIND_SCRIPTS OFF)
+if(EXISTS "${ROCM_PATH}/lib/amd/rocal")
+  set(ROCAL_PYBIND_SCRIPTS ON)
+endif()
+
 # OpenVX Tests
-if(Python3_FOUND)
-  message("-- ${PROJECT_NAME} INFO:ROCAL_PYBIND_LIBRARY -- ${ROCAL_PYBIND_LIBRARY}")
+if(Python3_FOUND AND ROCAL_PYBIND_SCRIPTS)
   # 1 - decoders test
   add_test(NAME rocal_pybind_test_decoders
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/decoders_test.py
@@ -81,4 +80,11 @@ if(Python3_FOUND)
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/types_test.py
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
-endif(Python3_FOUND)
+else()
+  if(NOT Python3_FOUND)
+    message("-- NOTE: rocAL pybind requires Python3 - NOT FOUND")
+  endif()
+  if(NOT ROCAL_PYBIND_SCRIPTS)
+    message("-- NOTE: rocAL pybind requires rocal_pybind project built and installed - NOT FOUND")
+  endif()
+endif(Python3_FOUND AND ROCAL_PYBIND_SCRIPTS)
