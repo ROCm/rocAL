@@ -18,14 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from amd.rocal.pipeline import pipeline_def
-from amd.rocal.plugin.generic import ROCALClassificationIterator
-import amd.rocal.fn as fn
-import amd.rocal.types as types
+from amd.rocal.pipeline import pipeline
 
 from inspect import getmembers, isfunction
 
 print('rocAL PyBind Pipelines')
-Pipelines = getmembers(pipeline_def, isfunction)
+Pipelines = getmembers(pipeline, isfunction)
 for i in range(len(Pipelines)):
     print(Pipelines[i])

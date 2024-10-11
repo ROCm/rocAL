@@ -18,11 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import amd.rocal.fn as fn
+import amd.rocal.readers as readers
 
 from inspect import getmembers, isfunction
 
-print('rocAL PyBind Functions')
-rocalFunctions = getmembers(fn, isfunction)
-for i in range(len(rocalFunctions)):
-    print(rocalFunctions[i])
+print('rocAL PyBind Types')
+rocalReaders = getmembers(readers, isfunction)
+for i in range(len(rocalReaders)):
+    print(rocalReaders[i])
