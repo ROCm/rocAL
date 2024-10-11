@@ -21,9 +21,9 @@
 cmake_minimum_required(VERSION 3.5)
 
 # Set Project Version and Language
-project(rocAL_pybind VERSION ${VERSION} LANGUAGES CXX)
+project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
 
-set(TARGET_NAME rocAL_pybind)
+set(TARGET_NAME rocal_pybind)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -284,7 +284,7 @@ if(${BUILD_ROCAL_PYBIND})
     message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
 
     # PyBind Test - Installed
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
 else()
     message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
 endif()
