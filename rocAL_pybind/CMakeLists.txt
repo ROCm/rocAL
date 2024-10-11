@@ -282,6 +282,13 @@ if(${BUILD_ROCAL_PYBIND})
     install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
     install(DIRECTORY amd DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
     message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
+
+    # CTest - Needs rocAL Installed
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
+    enable_testing()
+    include(CTest)
+    add_subdirectory(tests/pybind)
+    
 else()
     message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
 endif()
