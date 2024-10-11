@@ -22,7 +22,7 @@ import amd.rocal.readers as readers
 
 from inspect import getmembers, isfunction
 
-print('rocAL PyBind Types')
+print('rocAL PyBind Readers')
 rocalReaders = getmembers(readers, isfunction)
 for i in range(len(rocalReaders)):
     print(rocalReaders[i])

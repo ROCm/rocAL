@@ -22,7 +22,7 @@ import amd.rocal.random as random
 
 from inspect import getmembers, isfunction
 
-print('rocAL PyBind Types')
+print('rocAL PyBind Randoms')
 rocalRandom = getmembers(random, isfunction)
 for i in range(len(rocalRandom)):
     print(rocalRandom[i])
