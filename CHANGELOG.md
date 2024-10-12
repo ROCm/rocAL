@@ -6,24 +6,26 @@
 
 [rocAL Documentation](https://github.com/ROCm/rocAL)
 
-## rocAL 2.1.0 (unreleased)
+## rocAL 2.1.0 for ROCm 6.3.0
 
 ### Changes
 * Setup: rocdecode install disabled
 * Package: rocdecode dependency removed
+* rocAL Pybind support for package install - rocAL Python module: To use python module, you can set PYTHONPATH:
+  + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
 
 ### Removals
-* TBA
+* rocdecode dependencies for package install removed
 
 ### Optimizations
-* TBA
+* CTest updates
 
 ### Resolved issues
-* TBA
+* Test failures fixed
 
 ### Known issues
-* Package install requires `OpenCV` manual install
-* CentOS/RedHat/SLES requires `FFMPEG Dev` package manual install
+* Package install requires `TurboJPEG`, and `RapidJSON` manual install
+* `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 * Hardware decode requires rocm usecase `graphics`
  
 ### Upcoming changes
