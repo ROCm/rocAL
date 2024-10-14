@@ -33,7 +33,7 @@ void AudioLoaderSingleShardNode::Init(unsigned shard_id, unsigned shard_count, u
                                       StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count,
                                       RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, const ShardingInfo& sharding_info) {
     if (!_loader_module)
-        THROW("ERROR: loader module is not set for AudioLoaderNode, cannot inpitialize")
+        THROW("ERROR: loader module is not set for AudioLoaderNode, cannot initialize")
     if (shard_count < 1)
         THROW("Shard count should be greater than or equal to one")
     if (shard_id >= shard_count)
