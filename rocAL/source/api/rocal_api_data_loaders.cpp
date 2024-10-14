@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include <assert.h>
-#include <unordered_map>
 #ifdef ROCAL_VIDEO
 #include "loaders/video/node_video_loader.h"
 #include "loaders/video/node_video_loader_single_shard.h"
@@ -94,11 +93,13 @@ evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
 };
 
 std::vector<size_t>
-evaluate_numpy_data_set(StorageType storage_type,
-                        DecoderType decoder_type, const std::string& source_path) {
+evaluate_numpy_data_set(StorageType storage_type, DecoderType decoder_type,
+                        const std::string& source_path, const std::vector<std::string>& files) {
     ImageSourceEvaluator source_evaluator;
     source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
     auto reader_cfg = ReaderConfig(storage_type, source_path);
+    if (!files.empty())
+        reader_cfg.set_files(files);
     if (source_evaluator.create(reader_cfg) != ImageSourceEvaluatorStatus::OK)
         THROW("Initializing file source input evaluator failed ")
     auto max_dims = source_evaluator.max_numpy_dims();
@@ -1698,18 +1699,20 @@ rocalNumpyFileSource(
     RocalContext p_context,
     const char* source_path,
     unsigned shard_count,
+    std::vector<std::string> files,
     bool is_output,
     bool shuffle,
     bool loop,
-    std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
+    unsigned seed,
+    RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
         auto max_dimensions = evaluate_numpy_data_set(StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
-                                                      source_path);
+                                                      source_path, files);
 
         RocalTensorDataType tensor_data_type;
-        std::unordered_map<int, RocalTensorDataType> data_type_map = {
+        std::map<int, RocalTensorDataType> data_type_map = {
             {0, RocalTensorDataType::FP32},
             {1, RocalTensorDataType::FP16},
             {2, RocalTensorDataType::UINT8},
@@ -1731,9 +1734,8 @@ rocalNumpyFileSource(
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
-        auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
-        std::pair<RocalBatchPolicy, bool> policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
-        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(shard_count, source_path, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), policy_info);
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed, sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1752,12 +1754,14 @@ RocalTensor ROCAL_API_CALL
 rocalNumpyFileSourceSingleShard(
     RocalContext p_context,
     const char* source_path,
+    std::vector<std::string> files,
     bool is_output,
     bool shuffle,
     bool loop,
     unsigned shard_id,
     unsigned shard_count,
-    std::pair<RocalLastBatchPolicy, bool> last_batch_info) {
+    unsigned seed,
+    RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1768,10 +1772,10 @@ rocalNumpyFileSourceSingleShard(
             THROW("Shard id should be smaller than shard count")
 
         auto max_dimensions = evaluate_numpy_data_set(StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
-                                                      source_path);
+                                                      source_path, files);
 
         RocalTensorDataType tensor_data_type;
-        std::unordered_map<int, RocalTensorDataType> data_type_map = {
+        std::map<int, RocalTensorDataType> data_type_map = {
             {0, RocalTensorDataType::FP32},
             {1, RocalTensorDataType::FP16},
             {2, RocalTensorDataType::UINT8},
@@ -1794,9 +1798,8 @@ rocalNumpyFileSourceSingleShard(
         info.set_max_shape();
         output = context->master_graph->create_loader_output_tensor(info);
 
-        auto last_batch_policy = convert_last_batch_policy(last_batch_info.first);
-        std::pair<RocalBatchPolicy, bool> policy_info = std::make_pair(last_batch_policy, last_batch_info.second);
-        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), policy_info);
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed, sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -2314,9 +2317,7 @@ rocalAudioFileSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
-        std::cerr << "\n inside rocal_api_data_loader.cpp";
 #ifdef ROCAL_AUDIO
-        std::cerr << "\n #ifdef ROCAL_AUDIO - inside rocal_api_data_loader.cpp";
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
         if (shard_id >= shard_count)

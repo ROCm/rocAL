@@ -28,8 +28,8 @@ NumpyLoaderSingleShardNode::NumpyLoaderSingleShardNode(Tensor *output, void *dev
     _loader_module = std::make_shared<NumpyLoader>(device_resources);
 }
 
-void NumpyLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, DecoderType decoder_type,
-                                      bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::pair<RocalBatchPolicy, bool> last_batch_info) {
+void NumpyLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::vector<std::string> &files, StorageType storage_type, DecoderType decoder_type,
+                                      bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, unsigned seed, const ShardingInfo& sharding_info) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for NumpyLoaderSingleShardNode, cannot initialize")
     if (shard_count < 1)
@@ -42,7 +42,9 @@ void NumpyLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, c
     reader_cfg.set_shard_count(shard_count);
     reader_cfg.set_shard_id(shard_id);
     reader_cfg.set_batch_count(load_batch_count);
-    reader_cfg.set_last_batch_policy(last_batch_info);
+    reader_cfg.set_files(files);
+    reader_cfg.set_seed(seed);
+    reader_cfg.set_sharding_info(sharding_info);
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::SKIP_DECODE), mem_type, _batch_size);
     _loader_module->start_loading();
 }
