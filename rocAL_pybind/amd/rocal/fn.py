@@ -1056,7 +1056,7 @@ def box_iou_matcher(*inputs, anchors, high_threshold=0.5,
     return (box_iou_matcher, [])
 
 
-def external_source(source, device=None, color_format=types.RGB, random_shuffle=False, mode=types.EXTSOURCE_FNAME, max_width=2000, max_height=2000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+def external_source(source, device=None, color_format=types.RGB, random_shuffle=False, mode=types.EXTSOURCE_FNAME, max_width=2000, max_height=2000, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False, stick_to_shard=True, shard_size=-1):
     """
     External Source Reader - User can pass a iterator or callable source.
     @param source (iterator or callable)                                 The source iterator or callable object.
@@ -1073,8 +1073,13 @@ def external_source(source, device=None, color_format=types.RGB, random_shuffle=
     Pipeline._current_pipeline._external_source_mode = mode
     Pipeline._current_pipeline._external_source_user_given_width = max_width
     Pipeline._current_pipeline._external_source_user_given_height = max_height
+    RocalShardingInfo = b.RocalShardingInfo()
+    RocalShardingInfo.last_batch_policy = last_batch_policy
+    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
+    RocalShardingInfo.stick_to_shard = stick_to_shard
+    RocalShardingInfo.shard_size = shard_size
     kwargs_pybind = {"rocal_color_format": color_format, "is_output": False, "shuffle": random_shuffle, "loop": False, "decode_size_policy": types.USER_GIVEN_SIZE,
-                     "max_width": max_width, "max_height": max_height, "dec_type": types.DECODER_TJPEG, "external_source_mode": mode, "last_batch_info": (last_batch_policy, last_batch_padded)}
+                     "max_width": max_width, "max_height": max_height, "dec_type": types.DECODER_TJPEG, "external_source_mode": mode, "sharding_info": RocalShardingInfo}
     external_source_operator = b.externalFileSource(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (external_source_operator, [])  # Labels is Empty

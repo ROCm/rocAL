@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include <cstring>
 #include <algorithm>
+#include <math.h>
 #include "readers/image/cifar10_data_reader.h"
 #include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
@@ -36,31 +37,67 @@ CIFAR10DataReader::CIFAR10DataReader() {
     _current_file_size = 0;
     _current_fPtr = nullptr;
     _loop = false;
-    _file_id = 0;
     _total_file_size = 0;
     _last_file_idx = 0;
+    _file_count_all_shards = 0;
 }
 
 unsigned CIFAR10DataReader::count_items() {
-    if (_loop)
-        return _file_names.size();
-
-    int ret = ((int)_file_names.size() - _read_counter);
+    int ret = 0;
+    int size = 0;
+    if (_shard_size == -1) {                                     // When shard_size is set to -1, The shard_size variable is not used
+        if (_loop) return largest_shard_size_without_padding();  // Return the size of the largest shard amongst all the shard's size
+        size = std::max(largest_shard_size_without_padding(), _batch_size);
+    } else if (_shard_size > 0) {
+        auto largest_shard_size_with_padding =
+            _shard_size + (_batch_size - (_shard_size % _batch_size));  // The shard size used here is padded
+        if (_loop)
+            return largest_shard_size_with_padding;
+        size = std::max(largest_shard_size_with_padding, _batch_size);
+    }
+    ret = (size - _read_counter);
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
+        ret -= _batch_size;
     return ((ret < 0) ? 0 : ret);
 }
 
 Reader::Status CIFAR10DataReader::initialize(ReaderConfig desc) {
-    _file_id = 0;
+    auto ret = Reader::Status::OK;
     _folder_path = desc.path();
-    _batch_count = desc.get_batch_size();
     _loop = desc.loop();
     _file_name_prefix = desc.file_prefix();
-    return subfolder_reading();
+    _batch_size = desc.get_batch_size();
+    _sharding_info = desc.get_sharding_info();
+    _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
+    _stick_to_shard = _sharding_info.stick_to_shard;
+    _shard_size = _sharding_info.shard_size;
+    _shuffle = desc.shuffle();
+    ret = subfolder_reading();
+    _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
+    // shuffle dataset if set
+    if (ret == Reader::Status::OK && _shuffle)
+        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+    return ret;
+
+}
+
+void CIFAR10DataReader::increment_curr_file_idx() {
+    // The condition satisfies for both pad_last_batch = True (or) False
+    if (_stick_to_shard == false) {  // The elements of each shard rotate in a round-robin fashion once the elements in particular shard is exhausted
+        _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+    } else {  // Stick to only elements from the current shard
+        if (_curr_file_idx >= _shard_start_idx_vector[_shard_id] &&
+            _curr_file_idx < _shard_end_idx_vector[_shard_id])  // checking if current-element lies within the shard size [begin_idx, last_idx -1]
+            _curr_file_idx = (_curr_file_idx + 1);
+        else
+            _curr_file_idx = _shard_start_idx_vector[_shard_id];
+    }
 }
 
 void CIFAR10DataReader::incremenet_read_ptr() {
     _read_counter++;
-    _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+    increment_curr_file_idx();
 }
 
 size_t CIFAR10DataReader::open() {
@@ -137,8 +174,13 @@ int CIFAR10DataReader::release() {
 }
 
 void CIFAR10DataReader::reset() {
+    if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
+        increment_shard_id();      // Should work for both single and multiple shards
     _read_counter = 0;
-    _curr_file_idx = 0;
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
+        for (uint32_t i = 0; i < _batch_size; i++)
+            increment_curr_file_idx();
+    }
 }
 
 Reader::Status CIFAR10DataReader::subfolder_reading() {
@@ -171,17 +213,44 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
     if (!_file_names.empty())
         LOG("CIFAR10DataReader  Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
 
+    auto dataset_size = _file_count_all_shards;
+    size_t padded_samples = 0;
+    // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
+    padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
+    _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
+
+    if (_pad_last_batch_repeated == true) { 
+        // pad the last sample when the dataset_size is not divisible by
+        // the number of shard's (or) when the shard's size is not
+        // divisible by the batch size making each shard having equal
+        // number of samples
+        uint32_t total_padded_samples = 0; // initialize the total_padded_samples to 0
+        for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
+            uint32_t start_idx = (dataset_size * shard_id) / _shard_count;
+            uint32_t actual_shard_size_without_padding = std::floor((shard_id + 1) * dataset_size / _shard_count) - std::floor(shard_id * dataset_size / _shard_count);
+            uint32_t largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
+            auto start = _file_names.begin() + start_idx + total_padded_samples;
+            auto end = start + actual_shard_size_without_padding;
+            auto start_offset = _file_offsets.begin() + start_idx + total_padded_samples;
+            auto end_offset = start_offset + actual_shard_size_without_padding;
+            auto start_file_idx = _file_idx.begin() + start_idx + total_padded_samples;
+            auto end_file_idx = start_file_idx + actual_shard_size_without_padding;
+            if (largest_shard_size % _batch_size) {
+                size_t num_padded_samples = 0;
+                num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);
+                _file_count_all_shards += num_padded_samples;
+                _file_names.insert(end, num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
+                _file_offsets.insert(end_offset, num_padded_samples, _file_offsets[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
+                _file_idx.insert(end_file_idx, num_padded_samples, _file_idx[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
+                total_padded_samples += num_padded_samples;
+            }
+        }
+    }
+    _last_file_name = _file_names[_file_names.size() - 1];
+    compute_start_and_end_idx_of_all_shards();
     closedir(_sub_dir);
     return ret;
 }
-/*
- //TODO..
-void CIFAR10DataReader::replicate_last_image_to_fill_last_shard()
-{
-    for(size_t i = _in_batch_read_count; i < _batch_count; i++)
-        _file_names.push_back(_last_file_name);
-}
-*/
 
 Reader::Status CIFAR10DataReader::open_folder() {
     if ((_src_dir = opendir(_folder_path.c_str())) == nullptr)
@@ -190,8 +259,6 @@ Reader::Status CIFAR10DataReader::open_folder() {
     while ((_entity = readdir(_src_dir)) != nullptr) {
         if (_entity->d_type != DT_REG)
             continue;
-        _in_batch_read_count++;
-        _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
         std::string file_path = _folder_path;
         // check if the filename has the _file_name_prefix
         std::string data_file_name = std::string(_entity->d_name);
@@ -207,8 +274,8 @@ Reader::Status CIFAR10DataReader::open_folder() {
                 _file_names.push_back(file_path);
                 _file_offsets.push_back(file_offset);
                 _file_idx.push_back(i);
+                _file_count_all_shards++;
                 file_offset += _raw_file_size;
-                incremenet_file_id();
             }
             fclose(fp);
         }
@@ -218,4 +285,29 @@ Reader::Status CIFAR10DataReader::open_folder() {
 
     closedir(_src_dir);
     return Reader::Status::OK;
+}
+
+size_t CIFAR10DataReader::last_batch_padded_size() {
+    return _last_batch_padded_size;
+}
+
+void CIFAR10DataReader::compute_start_and_end_idx_of_all_shards() {
+    for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
+        auto start_idx_of_shard = (_file_count_all_shards * shard_id) / _shard_count;
+        auto end_idx_of_shard = start_idx_of_shard + actual_shard_size_without_padding() - 1;
+        _shard_start_idx_vector.push_back(start_idx_of_shard);
+        _shard_end_idx_vector.push_back(end_idx_of_shard);
+    }
+}
+
+size_t CIFAR10DataReader::actual_shard_size_without_padding() {
+    return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - floor(_shard_id * _file_count_all_shards / _shard_count);
+}
+
+size_t CIFAR10DataReader::largest_shard_size_without_padding() {
+    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
+}
+
+void CIFAR10DataReader::increment_shard_id() {
+    _shard_id = (_shard_id + 1) % _shard_count;
 }

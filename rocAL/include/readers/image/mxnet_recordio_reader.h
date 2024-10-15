@@ -66,8 +66,10 @@ class MXNetRecordIOReader : public Reader {
 
     MXNetRecordIOReader();
 
+    size_t last_batch_padded_size() override; // The size of the number of samples padded in the last batch
+
    private:
-    //! opens the folder containnig the images
+    //! opens the folder containig the images
     Reader::Status record_reading();
     Reader::Status MXNet_reader();
     std::string _path;
@@ -83,11 +85,8 @@ class MXNetRecordIOReader : public Reader {
     int64_t _last_seek_pos;
     int64_t _last_data_size;
     size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
+    size_t _shard_count = 1;
+    size_t _batch_size = 1;
     size_t _file_id = 0;
     size_t _in_batch_read_count = 0;
     bool _loop;
@@ -97,10 +96,6 @@ class MXNetRecordIOReader : public Reader {
     size_t _file_count_all_shards;
     void incremenet_read_ptr();
     int release();
-    size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
-    void replicate_last_image_to_fill_last_shard();
-    void replicate_last_batch_to_pad_partial_shard();
     void read_image(unsigned char* buff, int64_t seek_position, int64_t data_size);
     void read_image_names();
     uint32_t DecodeFlag(uint32_t rec) { return (rec >> 29U) & 7U; };
@@ -110,4 +105,16 @@ class MXNetRecordIOReader : public Reader {
     const uint32_t _kMagic = 0xced7230a;
     int64_t _seek_pos, _data_size_to_read;
     ImageRecordIOHeader _hdr;
+    int32_t _shard_size = -1;
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
+    bool _stick_to_shard = false;
+    bool _pad_last_batch_repeated = false;
+    size_t _last_batch_padded_size = 0;
+    size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
+    size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
+    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
+    void increment_shard_id();
+    void increment_curr_file_idx();
+    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
 };

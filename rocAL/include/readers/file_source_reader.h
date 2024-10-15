@@ -85,7 +85,6 @@ class FileSourceReader : public Reader {
     unsigned _curr_file_idx;
     FILE *_current_fPtr;
     unsigned _current_file_size;
-    unsigned _shard_start_idx;
     std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
@@ -93,7 +92,6 @@ class FileSourceReader : public Reader {
     size_t _shard_count = 1;  // equivalent of batch size
     int32_t _shard_size = -1;
     size_t _batch_size = 1;
-    size_t _padded_samples = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
