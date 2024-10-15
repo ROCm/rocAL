@@ -719,25 +719,11 @@ void HipExecResizeTensor(
 
     // std::cerr << "Dst :: " << maxDstWidth * maxDstHeight * channels << " &  " << maxDstWidth * channels << "\n";
     // printf("SRC : %p, DST : %p, %p %p %p %p\n", srcPtr, dstPtr, srcWidth, srcHeight, dstWidth, dstHeight);
-    // hipLaunchKernelGGL(resize_bilinear_pkd_hip_tensor,
-    //                     dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-    //                     dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-    //                     0,
-    //                     stream,
-    //                     static_cast<unsigned char *>(srcPtr),
-    //                     make_uint2(maxSrcWidth * maxSrcHeight * channels, maxSrcWidth * channels),
-    //                     static_cast<unsigned char *>(dstPtr),
-    //                     make_uint2(maxDstWidth * maxDstHeight * channels, maxDstWidth * channels),
-    //                     srcWidth,
-    //                     srcHeight,
-    //                     dstWidth,
-    //                     dstHeight,
-    //                     srcHeightStride,
-    //                     srcImgOffset);
+
 
     globalThreads_x = maxDstWidth;
     if (channels == 3) {    // For RGB images
-        hipLaunchKernelGGL(resize_generic_pkd_hip_tensor,
+        hipLaunchKernelGGL(resize_bilinear_pkd_hip_tensor,
                             dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                             0,
@@ -751,7 +737,7 @@ void HipExecResizeTensor(
                             dstWidth,
                             dstHeight,
                             srcHeightStride,
-                            srcImgOffset);     
+                            srcImgOffset);
     } else if (channels == 1) {
         hipLaunchKernelGGL(resize_generic_pln1_hip_tensor,
                     dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),

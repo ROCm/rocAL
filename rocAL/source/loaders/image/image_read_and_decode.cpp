@@ -338,7 +338,35 @@ ImageReadAndDecode::load(unsigned char *buff,
             }
         } else {
             int jpeg_sub_samp;
-            _rocjpeg_decoder->decode_info_batch(_compressed_buff, _actual_read_size, _original_width, _original_height, &jpeg_sub_samp);
+            for (size_t i = 0; i < _batch_size; i++) {
+                _actual_decoded_width[i] = max_decoded_width;
+                _actual_decoded_height[i] = max_decoded_height;
+                int original_width, original_height, jpeg_sub_samp;
+                if (_decoder[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
+                                            &jpeg_sub_samp) != Decoder::Status::OK) {
+                    // Substituting the image which failed decoding with other image from the same batch
+                    int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
+                    while ((j >= 0)) {
+                        if (_decoder[i]->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
+                                                    &jpeg_sub_samp) == Decoder::Status::OK) {
+                            _image_names[i] = _image_names[j];
+                            _compressed_buff[i] = _compressed_buff[j];
+                            _actual_read_size[i] = _actual_read_size[j];
+                            _compressed_image_size[i] = _compressed_image_size[j];
+                            break;
+
+                        } else
+                            j--;
+                        if (j < 0) {
+                            THROW("All images in the batch failed decoding\n");
+                        }
+                    }
+                }
+                _original_height[i] = original_height;
+                _original_width[i] = original_width;
+            }
+            
+            // _rocjpeg_decoder->decode_info_batch(_compressed_buff, _actual_read_size, _original_width, _original_height, &jpeg_sub_samp);
             if (_rocjpeg_decoder->decode_batch(_compressed_buff, _compressed_image_size, _decompressed_buff_ptrs,
                                          max_decoded_width, max_decoded_height,
                                          _original_width, _original_height,
