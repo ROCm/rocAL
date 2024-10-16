@@ -438,7 +438,7 @@ enum RocalMelScaleFormula {
     ROCAL_MELSCALE_HTK
 };
 
-/*! \brief Tensor Last Batch Policies
+/*! \brief Tensor Last Batch Policy Type enum
  *  \ingroup group_rocal_types
  */
 enum RocalLastBatchPolicy {
@@ -448,9 +448,27 @@ enum RocalLastBatchPolicy {
     /*! \brief ROCAL_LAST_BATCH_DROP - The last batch is dropped if there are not enough samples from the current epoch.
      */
     ROCAL_LAST_BATCH_DROP = 1,
-    /*! \brief ROCAL_LAST_BATCH_PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled from python end)
+    /*! \brief ROCAL_LAST_BATCH_PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the python iterator)
      */
     ROCAL_LAST_BATCH_PARTIAL = 2
+};
+
+/*! \brief  rocAL RocalShardingInfo enum
+ * \ingroup group_rocal_types
+ */
+struct RocalShardingInfo {
+    RocalLastBatchPolicy last_batch_policy;
+    bool pad_last_batch_repeated;
+    bool stick_to_shard;
+    int32_t shard_size;
+
+    // Constructor with default values
+    RocalShardingInfo()
+        : last_batch_policy(RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL),
+          pad_last_batch_repeated(false),
+          stick_to_shard(true),
+          shard_size(-1)
+    {}
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

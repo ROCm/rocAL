@@ -5,16 +5,19 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 import os
 import numpy as np
-import cupy as cp
 import cv2
-from PIL import Image
+import sys
+import glob
 
 
 def main():
-    batch_size = 3
+    if  len(sys.argv) < 3:
+        print ('Please pass cpu/gpu batch_size')
+        exit(0)
+    batch_size = int(sys.argv[2])
+    device = "cpu" if sys.argv[1] == "cpu" else "gpu"
     data_dir = os.environ["ROCAL_DATA_PATH"] + \
-        "rocal_data/coco/coco_10_img/train_10images_2017/"
-    device = "cpu"
+        "rocal_data/coco/coco_10_img/images/"
     try:
         path_mode0 = "output_folder/external_source_reader/mode0/"
         isExist = os.path.exists(path_mode0)
@@ -39,6 +42,7 @@ def main():
 
     def image_dump(img, idx, device="cpu", mode=0):
         if device == "gpu":
+            import cupy as cp
             img = cp.asnumpy(img)
         img = img.transpose([1, 2, 0])  # NCHW
         img = (img).astype('uint8')
@@ -54,9 +58,9 @@ def main():
             self.images_dir = data_dir
             self.batch_size = batch_size
             self.files = []
-            import glob
-            for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
-                self.files.append(filename)
+            self.file_patterns = ['*.jpg', '*.jpeg', '*.JPG', '*.JPEG']
+            for pattern in self.file_patterns:
+                self.files.extend(glob.glob(os.path.join(self.images_dir, pattern)))
             shuffle(self.files)
 
         def __iter__(self):
@@ -119,9 +123,9 @@ def main():
             self.batch_size = batch_size
             self.files = []
             import os
-            import glob
-            for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
-                self.files.append(filename)
+            self.file_patterns = ['*.jpg', '*.jpeg', '*.JPG', '*.JPEG']
+            for pattern in self.file_patterns:
+                self.files.extend(glob.glob(os.path.join(self.images_dir, pattern)))
 
         def __iter__(self):
             self.i = 0
@@ -190,9 +194,9 @@ def main():
             self.files = []
             self.maxHeight = self.maxWidth = 0
             import os
-            import glob
-            for filename in glob.glob(os.path.join(self.images_dir, '*.jpg')):
-                self.files.append(filename)
+            self.file_patterns = ['*.jpg', '*.jpeg', '*.JPG', '*.JPEG']
+            for pattern in self.file_patterns:
+                self.files.extend(glob.glob(os.path.join(self.images_dir, pattern)))
             shuffle(self.files)
             self.i = 0
             self.n = len(self.files)

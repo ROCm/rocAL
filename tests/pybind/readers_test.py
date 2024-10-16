@@ -1,4 +1,4 @@
-# Copyright (c) 2015 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,23 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.5)
-project(rocAL_hip CXX)
+import amd.rocal.readers as readers
 
-list(APPEND rocAL_HIP_SOURCES
-    rocal_hip_kernels.cpp
-    box_encoder_hip.cpp
-)
-file (GLOB rocDecode_HIP_SOURCES ${ROCM_PATH}/share/rocdecode/utils/*.cpp )
+from inspect import getmembers, isfunction
 
-set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
-
-set(HIP_CXX_FLAGS -std=gnu++17)
-set(COMPILER_FOR_HIP ${ROCM_PATH}/lib/llvm/bin/clang++)
-set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_CXX_FLAGS}")
-
-add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_HIP_SOURCES})
-set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
-target_link_libraries(${PROJECT_NAME} hip::device)
+print('rocAL PyBind Readers')
+rocalReaders = getmembers(readers, isfunction)
+for i in range(len(rocalReaders)):
+    print(rocalReaders[i])
