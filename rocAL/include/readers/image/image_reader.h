@@ -259,4 +259,19 @@ class Reader {
     size_t largest_shard_size_without_padding() {
         return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
     }
+
+    size_t get_max_size_of_shard(size_t batch_size, bool loop) {
+        int size = 0;
+        if (_shard_size == -1) {                                     // When shard_size is set to -1, The shard_size variable is not used
+            if (loop) 
+                return largest_shard_size_without_padding();  // Return the size of the largest shard amongst all the shard's size
+            size = std::max(largest_shard_size_without_padding(), batch_size);
+        } else if (_shard_size > 0) {
+            auto largest_shard_size_with_padding = _shard_size + (batch_size - (_shard_size % batch_size));  // The shard size used here is padded
+            if (loop)
+                return largest_shard_size_with_padding;
+            size = std::max(largest_shard_size_with_padding, batch_size);
+        }
+        return size;
+    }
 };

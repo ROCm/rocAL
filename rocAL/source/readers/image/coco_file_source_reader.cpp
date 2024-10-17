@@ -40,19 +40,8 @@ COCOFileSourceReader::COCOFileSourceReader() {
 }
 
 unsigned COCOFileSourceReader::count_items() {
-    int ret = 0;
-    int size = 0;
-    if (_shard_size == -1) {                                     // When shard_size is set to -1, The shard_size variable is not used
-        if (_loop) return largest_shard_size_without_padding();  // Return the size of the largest shard amongst all the shard's size
-        size = std::max(largest_shard_size_without_padding(), _batch_size);
-    } else if (_shard_size > 0) {
-        auto largest_shard_size_with_padding =
-            _shard_size + (_batch_size - (_shard_size % _batch_size));  // The shard size used here is padded
-        if (_loop)
-            return largest_shard_size_with_padding;
-        size = std::max(largest_shard_size_with_padding, _batch_size);
-    }
-    ret = (size - _read_counter);
+    int size = get_max_size_of_shard(_batch_size, _loop); // TODO - recheck name
+    int ret = (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
     return ((ret < 0) ? 0 : ret);
