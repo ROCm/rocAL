@@ -96,7 +96,6 @@ class FileSourceReader : public Reader {
     void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
-    ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     size_t _num_padded_samples = 0;                  //! Number of samples that are padded in the last batch which would differ for each shard.
     Reader::Status generate_file_names();         // Function that would generate _file_names containing all the samples in the dataset
 };

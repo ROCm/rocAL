@@ -55,7 +55,7 @@ unsigned FileSourceReader::count_items() {
         size = std::max(largest_shard_size_with_padding, _batch_size);
     }
     ret = (size - _read_counter);
-    if (_last_batch_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
     return ((ret < 0) ? 0 : ret);
 }
@@ -70,10 +70,10 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _shuffle = desc.shuffle();
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
-    _last_batch_info = desc.get_sharding_info();
-    _pad_last_batch_repeated = _last_batch_info.pad_last_batch_repeated;
-    _stick_to_shard = _last_batch_info.stick_to_shard;
-    _shard_size = _last_batch_info.shard_size;
+    _sharding_info = desc.get_sharding_info();
+    _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
+    _stick_to_shard = _sharding_info.stick_to_shard;
+    _shard_size = _sharding_info.shard_size;
     ret = subfolder_reading();
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
@@ -154,7 +154,7 @@ void FileSourceReader::reset() {
 
     _read_counter = 0;
 
-    if (_last_batch_info.last_batch_policy == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
         for (uint i = 0; i < _batch_size; i++)
             increment_curr_file_idx(_file_names.size());
     }
