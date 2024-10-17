@@ -212,6 +212,51 @@ class Reader {
 
     virtual std::vector<std::string> get_file_paths_from_meta_data_reader() { return {}; }
 
-    //! Returns the number of images in the last batch
-    virtual size_t last_batch_padded_size() { return 0; }
+    size_t last_batch_padded_size() { return _last_batch_padded_size; }
+
+   protected:
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
+    unsigned _curr_file_idx = 0;
+    size_t _file_count_all_shards;
+    size_t _last_batch_padded_size = 0;
+    size_t _shard_id = 0;
+    size_t _shard_count = 1;
+    bool _stick_to_shard = false;
+    bool _pad_last_batch_repeated = false;
+    int32_t _shard_size = -1;
+
+    void increment_curr_file_idx(size_t dataset_size) {
+        // The condition satisfies for both pad_last_batch = True (or) False
+        if (_stick_to_shard == false) {  // The elements of each shard rotate in a round-robin fashion once the elements in particular shard is exhausted
+            _curr_file_idx = (_curr_file_idx + 1) % dataset_size;
+        } else {
+            if (_curr_file_idx >= _shard_start_idx_vector[_shard_id] &&
+                _curr_file_idx < _shard_end_idx_vector[_shard_id]) // checking if current-element lies within the shard size [begin_idx, last_idx -1]
+                _curr_file_idx = (_curr_file_idx + 1);
+            else
+                _curr_file_idx = _shard_start_idx_vector[_shard_id];
+        }
+    }
+
+    void compute_start_and_end_idx_of_all_shards() {
+        for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
+            auto start_idx_of_shard = (_file_count_all_shards * shard_id) / _shard_count;
+            auto end_idx_of_shard = start_idx_of_shard + actual_shard_size_without_padding() - 1;
+            _shard_start_idx_vector.push_back(start_idx_of_shard);
+            _shard_end_idx_vector.push_back(end_idx_of_shard);
+        }
+    }
+
+    void increment_shard_id() {
+        _shard_id = (_shard_id + 1) % _shard_count;
+    }
+
+    size_t actual_shard_size_without_padding() {
+        return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - std::floor(_shard_id * _file_count_all_shards / _shard_count);
+    }
+
+    size_t largest_shard_size_without_padding() {
+        return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
+    }
 };

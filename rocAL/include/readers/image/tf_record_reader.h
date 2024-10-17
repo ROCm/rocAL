@@ -68,8 +68,6 @@ class TFRecordReader : public Reader {
 
     TFRecordReader();
 
-    size_t last_batch_padded_size() override; // The size of the number of samples padded in the last batch
-
    private:
     //! opens the folder containnig the images
     Reader::Status tf_record_reader();
@@ -84,20 +82,16 @@ class TFRecordReader : public Reader {
     struct dirent *_entity;
     std::vector<std::string> _file_names;
     std::map<std::string, unsigned int> _file_size, _all_shard_file_sizes_padded;
-    unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
     unsigned int _last_file_size;
-    size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
     bool _last_rec;
     size_t _batch_size = 1;
     size_t _file_id = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
-    size_t _file_count_all_shards;
     //!< _record_name_prefix tells the reader to read only files with the prefix
     std::string _record_name_prefix;
     // protobuf message objects
@@ -109,16 +103,4 @@ class TFRecordReader : public Reader {
     Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size);
     Reader::Status read_image_names(std::ifstream &file_contents, uint file_size);
     std::map<std::string, uint> _image_record_starting;
-    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
-    size_t _last_batch_padded_size = 0;
-    bool _stick_to_shard = false;
-    bool _pad_last_batch_repeated = false;
-    int32_t _shard_size = -1;
-    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
-    void increment_curr_file_idx();
-    size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
-    size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
-    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
-    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
-    void increment_shard_id();
 };

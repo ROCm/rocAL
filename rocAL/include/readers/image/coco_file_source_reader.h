@@ -66,8 +66,6 @@ class COCOFileSourceReader : public Reader {
 
     COCOFileSourceReader();
 
-    size_t last_batch_padded_size() override; // The size of the number of samples padded in the last batch
-
    private:
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! opens the folder containnig the images
@@ -80,33 +78,17 @@ class COCOFileSourceReader : public Reader {
     struct dirent *_entity;
     std::vector<std::string> _file_names, _sorted_file_names;
     std::vector<float> _aspect_ratios;
-    unsigned _curr_file_idx;
     FILE *_current_fPtr;
     std::ifstream _current_ifs;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
-    size_t _shard_id = 0;
-    size_t _shard_count = 1;
     size_t _batch_size = 1;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t _file_count_all_shards;
     void incremenet_read_ptr();
     int release();
     void shuffle_with_aspect_ratios();
-    void increment_curr_file_idx();
-    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
-    size_t _last_batch_padded_size = 0;
-    bool _stick_to_shard = false;
-    bool _pad_last_batch_repeated = false;
-    int32_t _shard_size = -1;
-    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
-    size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
-    size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
-    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
-    void increment_shard_id();
-    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
 };

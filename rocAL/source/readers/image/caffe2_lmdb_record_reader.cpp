@@ -82,22 +82,9 @@ Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
     return ret;
 }
 
-void Caffe2LMDBRecordReader::increment_curr_file_idx() {
-    // The condition satisfies for both pad_last_batch = True (or) False
-    if (_stick_to_shard == false) {  // The elements of each shard rotate in a round-robin fashion once the elements in particular shard is exhausted
-        _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
-    } else {
-        if (_curr_file_idx >= _shard_start_idx_vector[_shard_id] &&
-            _curr_file_idx < _shard_end_idx_vector[_shard_id]) // checking if current-element lies within the shard size [begin_idx, last_idx -1]
-            _curr_file_idx = (_curr_file_idx + 1);
-        else
-            _curr_file_idx = _shard_start_idx_vector[_shard_id];
-    }
-}
-
 void Caffe2LMDBRecordReader::incremenet_read_ptr() {
     _read_counter++;
-    increment_curr_file_idx();
+    increment_curr_file_idx(_file_names.size());
 }
 
 size_t Caffe2LMDBRecordReader::open() {
@@ -140,7 +127,7 @@ void Caffe2LMDBRecordReader::reset() {
     _read_counter = 0;
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
         for (uint32_t i = 0; i < _batch_size; i++)
-            increment_curr_file_idx();
+            increment_curr_file_idx(_file_names.size());
     }
 }
 
@@ -163,7 +150,7 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
     padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
 
-    if (_pad_last_batch_repeated == true) { 
+    if (_pad_last_batch_repeated == true) {
         // pad the last sample when the dataset_size is not divisible by
         // the number of shard's (or) when the shard's size is not
         // divisible by the batch size making each shard having equal
@@ -319,29 +306,4 @@ void Caffe2LMDBRecordReader::read_image(unsigned char *buff, std::string file_na
     // Closing cursor handles
     mdb_cursor_close(_read_mdb_cursor);
     _read_mdb_cursor = nullptr;
-}
-
-void Caffe2LMDBRecordReader::compute_start_and_end_idx_of_all_shards() {
-    for (uint32_t shard_id = 0; shard_id < _shard_count; shard_id++) {
-        auto start_idx_of_shard = (_file_count_all_shards * shard_id) / _shard_count;
-        auto end_idx_of_shard = start_idx_of_shard + actual_shard_size_without_padding() - 1;
-        _shard_start_idx_vector.push_back(start_idx_of_shard);
-        _shard_end_idx_vector.push_back(end_idx_of_shard);
-    }
-}
-
-size_t Caffe2LMDBRecordReader::last_batch_padded_size() {
-    return _last_batch_padded_size;
-}
-
-void Caffe2LMDBRecordReader::increment_shard_id() {
-    _shard_id = (_shard_id + 1) % _shard_count;
-}
-
-size_t Caffe2LMDBRecordReader::actual_shard_size_without_padding() {
-    return std::floor((_shard_id + 1) * _file_count_all_shards / _shard_count) - std::floor(_shard_id * _file_count_all_shards / _shard_count);
-}
-
-size_t Caffe2LMDBRecordReader::largest_shard_size_without_padding() {
-    return std::ceil(_file_count_all_shards * 1.0 / _shard_count);
 }
