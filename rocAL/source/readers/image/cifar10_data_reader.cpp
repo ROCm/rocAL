@@ -195,7 +195,7 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
     padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
     _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
 
-    if (_pad_last_batch_repeated == true) { 
+    if (_pad_last_batch_repeated == true) {
         // pad the last sample when the dataset_size is not divisible by
         // the number of shard's (or) when the shard's size is not
         // divisible by the batch size making each shard having equal
