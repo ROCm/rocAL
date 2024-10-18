@@ -41,7 +41,7 @@ FileSourceReader::FileSourceReader() {
 }
 
 unsigned FileSourceReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop); // TODO - recheck name
+    int size = get_max_size_of_shard(_batch_size, _loop);
     int ret = (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
@@ -235,7 +235,7 @@ Reader::Status FileSourceReader::generate_file_names() {
 
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     if (_pad_last_batch_repeated == true) {
-        update_filenames_with_padded_data(_file_names, _batch_size);
+        update_filenames_with_padding(_file_names, _batch_size);
     }
 
     _last_file_name = _file_names[_file_names.size() - 1];

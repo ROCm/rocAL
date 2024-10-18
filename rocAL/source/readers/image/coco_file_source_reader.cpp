@@ -40,7 +40,7 @@ COCOFileSourceReader::COCOFileSourceReader() {
 }
 
 unsigned COCOFileSourceReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop); // TODO - recheck name
+    int size = get_max_size_of_shard(_batch_size, _loop);
     int ret = (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
@@ -66,8 +66,8 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
         std::cout << "\n _json_path has to be set manually";
         exit(0);
     }
-    if (!_meta_data_reader )
-        std::cout<<"Metadata reader not initialized for COCO file source\n";
+    // if (!_meta_data_reader )
+    //     std::cout<<"Metadata reader not initialized for COCO file source\n";
 
     ret = subfolder_reading();
     _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
@@ -265,7 +265,7 @@ Reader::Status COCOFileSourceReader::subfolder_reading() {
 
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     if (_pad_last_batch_repeated == true) {
-        update_filenames_with_padded_data(_file_names, _batch_size);
+        update_filenames_with_padding(_file_names, _batch_size);
     }
     _last_file_name = _file_names[_file_names.size() - 1];
     compute_start_and_end_idx_of_all_shards();

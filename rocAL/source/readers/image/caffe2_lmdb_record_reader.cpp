@@ -25,7 +25,6 @@ THE SOFTWARE.
 #include <sstream>
 #include <string>
 #include <vector>
-#include <math.h>
 using namespace std;
 
 Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
@@ -41,7 +40,7 @@ Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
 }
 
 unsigned Caffe2LMDBRecordReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop); // TODO - recheck name
+    int size = get_max_size_of_shard(_batch_size, _loop);
     int ret = (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
@@ -54,9 +53,9 @@ Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
     _path = desc.path();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
+    _batch_size = desc.get_batch_size();
     _loop = desc.loop();
     _shuffle = desc.shuffle();
-    _batch_size = desc.get_batch_size();
     _sharding_info = desc.get_sharding_info();
     _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
     _stick_to_shard = _sharding_info.stick_to_shard;
@@ -137,7 +136,7 @@ Reader::Status Caffe2LMDBRecordReader::folder_reading() {
     
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     if (_pad_last_batch_repeated == true) {
-        update_filenames_with_padded_data(_file_names, _batch_size);
+        update_filenames_with_padding(_file_names, _batch_size);
     }
     _last_file_name = _file_names[_file_names.size() - 1];
     _last_file_size = _file_size[_last_file_name];

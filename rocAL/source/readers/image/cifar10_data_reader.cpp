@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include <cstring>
 #include <algorithm>
-#include <math.h>
 #include "readers/image/cifar10_data_reader.h"
 #include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
@@ -43,7 +42,7 @@ CIFAR10DataReader::CIFAR10DataReader() {
 }
 
 unsigned CIFAR10DataReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop); // TODO - recheck name
+    int size = get_max_size_of_shard(_batch_size, _loop);
     int ret = (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
@@ -53,9 +52,9 @@ unsigned CIFAR10DataReader::count_items() {
 Reader::Status CIFAR10DataReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _folder_path = desc.path();
+    _batch_size = desc.get_batch_size();
     _loop = desc.loop();
     _file_name_prefix = desc.file_prefix();
-    _batch_size = desc.get_batch_size();
     _sharding_info = desc.get_sharding_info();
     _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
     _stick_to_shard = _sharding_info.stick_to_shard;
@@ -150,6 +149,9 @@ int CIFAR10DataReader::release() {
 }
 
 void CIFAR10DataReader::reset() {
+    if (_shuffle)
+        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();      // Should work for both single and multiple shards
     _read_counter = 0;

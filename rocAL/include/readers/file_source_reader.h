@@ -92,8 +92,6 @@ class FileSourceReader : public Reader {
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     void incremenet_read_ptr();
     int release();
-    void fill_last_batch();
-    void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
     size_t _num_padded_samples = 0;                  //! Number of samples that are padded in the last batch which would differ for each shard.

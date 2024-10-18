@@ -66,7 +66,6 @@ class MXNetRecordIOReader : public Reader {
 
     MXNetRecordIOReader();
 
-
    private:
     //! opens the folder containing the images
     Reader::Status record_reading();

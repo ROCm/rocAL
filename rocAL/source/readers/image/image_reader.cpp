@@ -58,7 +58,7 @@ size_t Reader::largest_shard_size_without_padding() {
 
 size_t Reader::get_max_size_of_shard(size_t batch_size, bool loop) {
     int size = 0;
-    if (_shard_size == -1) {                                     // When shard_size is set to -1, The shard_size variable is not used
+    if (_shard_size == -1) { // When shard_size is set to -1, The shard_size variable is not used
         if (loop) 
             return largest_shard_size_without_padding();  // Return the size of the largest shard amongst all the shard's size
         size = std::max(largest_shard_size_without_padding(), batch_size);
@@ -71,7 +71,7 @@ size_t Reader::get_max_size_of_shard(size_t batch_size, bool loop) {
     return size;
 }
 
-void Reader::update_filenames_with_padded_data(std::vector<std::string> &file_names, size_t batch_size) {
+void Reader::update_filenames_with_padding(std::vector<std::string> &file_names, size_t batch_size) {
     // pad the last sample when the dataset_size is not divisible by
     // the number of shard's (or) when the shard's size is not
     // divisible by the batch size making each shard having equal

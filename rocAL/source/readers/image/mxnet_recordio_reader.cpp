@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 #include "pipeline/commons.h"
 #include <memory.h>
-#include <math.h>
 #include <stdint.h>
 #include "readers/image/mxnet_recordio_reader.h"
 #include "pipeline/filesystem.h"
@@ -42,7 +41,7 @@ MXNetRecordIOReader::MXNetRecordIOReader() {
 }
 
 unsigned MXNetRecordIOReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop); // TODO - recheck name
+    int size = get_max_size_of_shard(_batch_size, _loop);
     int ret = (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
@@ -54,9 +53,9 @@ Reader::Status MXNetRecordIOReader::initialize(ReaderConfig desc) {
     _path = desc.path();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
+    _batch_size = desc.get_batch_size();
     _loop = desc.loop();
     _shuffle = desc.shuffle();
-    _batch_size = desc.get_batch_size();
     _sharding_info = desc.get_sharding_info();
     _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
     _stick_to_shard = _sharding_info.stick_to_shard;
@@ -130,7 +129,7 @@ Reader::Status MXNetRecordIOReader::record_reading() {
 
     // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
     if (_pad_last_batch_repeated == true) {
-        update_filenames_with_padded_data(_file_names, _batch_size);
+        update_filenames_with_padding(_file_names, _batch_size);
     }
     _last_file_name = _file_names[_file_names.size() - 1];
     compute_start_and_end_idx_of_all_shards();
