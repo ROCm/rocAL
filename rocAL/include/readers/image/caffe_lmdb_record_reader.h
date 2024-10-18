@@ -68,10 +68,8 @@ class CaffeLMDBRecordReader : public Reader {
 
     CaffeLMDBRecordReader();
 
-    size_t last_batch_padded_size() override; // The size of the number of samples padded in the last batch
-
    private:
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status folder_reading();
     Reader::Status Caffe_LMDB_reader();
     std::string _folder_path;
@@ -79,13 +77,10 @@ class CaffeLMDBRecordReader : public Reader {
     DIR* _sub_dir;
     std::vector<std::string> _file_names;
     std::map<std::string, unsigned int> _file_size;
-    unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
     unsigned int _last_file_size;
-    size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
     bool _last_rec;
     size_t _batch_size = 1;
     size_t _file_id = 0;
@@ -101,8 +96,6 @@ class CaffeLMDBRecordReader : public Reader {
     uint _file_byte_size;
     void incremenet_read_ptr();
     int release();
-    //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t _file_count_all_shards;
     void read_image(unsigned char* buff, std::string _file_name);
     void read_image_names();
     std::map<std::string, uint> _image_record_starting;
@@ -110,16 +103,4 @@ class CaffeLMDBRecordReader : public Reader {
     int rc;
     void open_env_for_read_image();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    int32_t _shard_size = -1;
-    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
-    size_t _last_batch_padded_size = 0;
-    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
-    bool _stick_to_shard = false;
-    bool _pad_last_batch_repeated = false;
-    size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
-    size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
-    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
-    void increment_shard_id();
-    void increment_curr_file_idx();
-    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
 };
