@@ -68,7 +68,7 @@ class MXNetRecordIOReader : public Reader {
 
 
    private:
-    //! opens the folder containig the images
+    //! opens the folder containing the images
     Reader::Status record_reading();
     Reader::Status MXNet_reader();
     std::string _path;

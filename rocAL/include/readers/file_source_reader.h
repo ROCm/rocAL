@@ -71,7 +71,7 @@ class FileSourceReader : public Reader {
 
     std::vector<std::string> get_file_paths_from_meta_data_reader() override;  // Returns the relative file path from the meta-data reader
    private:
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;

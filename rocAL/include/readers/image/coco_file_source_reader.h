@@ -68,7 +68,7 @@ class COCOFileSourceReader : public Reader {
 
    private:
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;

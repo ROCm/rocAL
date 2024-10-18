@@ -69,7 +69,7 @@ class Caffe2LMDBRecordReader : public Reader {
     Caffe2LMDBRecordReader();
 
    private:
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status Caffe2_LMDB_reader();
     Reader::Status folder_reading();
     std::string _folder_path;
@@ -78,7 +78,7 @@ class Caffe2LMDBRecordReader : public Reader {
     DIR* _sub_dir;
     struct dirent* _entity;
     std::vector<std::string> _file_names;
-    std::map<std::string, unsigned int> _file_size, _all_shard_file_sizes_padded;
+    std::map<std::string, unsigned int> _file_size;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
