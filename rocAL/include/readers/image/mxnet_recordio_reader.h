@@ -67,7 +67,7 @@ class MXNetRecordIOReader : public Reader {
     MXNetRecordIOReader();
 
    private:
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status record_reading();
     Reader::Status MXNet_reader();
     std::string _path;
@@ -76,31 +76,20 @@ class MXNetRecordIOReader : public Reader {
     std::string _image_key;
     std::vector<std::string> _file_names;
     std::map<std::string, std::tuple<unsigned int, int64_t, int64_t>> _record_properties;
-    unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id, _last_file_name;
     unsigned int _last_file_size;
     int64_t _last_seek_pos;
     int64_t _last_data_size;
-    size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
+    size_t _batch_size = 1;
     size_t _file_id = 0;
     size_t _in_batch_read_count = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t _file_count_all_shards;
     void incremenet_read_ptr();
     int release();
-    size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
-    void replicate_last_image_to_fill_last_shard();
-    void replicate_last_batch_to_pad_partial_shard();
     void read_image(unsigned char* buff, int64_t seek_position, int64_t data_size);
     void read_image_names();
     uint32_t DecodeFlag(uint32_t rec) { return (rec >> 29U) & 7U; };

@@ -41,10 +41,10 @@ TFRecordReader::TFRecordReader() {
 }
 
 unsigned TFRecordReader::count_items() {
-    if (_loop)
-        return _file_names.size();
-
-    int ret = ((int)_file_names.size() - _read_counter);
+    int size = get_max_size_of_shard(_batch_size, _loop);
+    int ret = (size - _read_counter);
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
+        ret -= _batch_size;
     return ((ret < 0) ? 0 : ret);
 }
 
@@ -56,30 +56,27 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc) {
     _feature_key_map = desc.feature_key_map();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
-    _batch_count = desc.get_batch_size();
+    _batch_size = desc.get_batch_size();
     _loop = desc.loop();
     _shuffle = desc.shuffle();
     _record_name_prefix = desc.file_prefix();
     _encoded_key = _feature_key_map.at("image/encoded");
     _filename_key = _feature_key_map.at("image/filename");
+    _sharding_info = desc.get_sharding_info();
+    _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
+    _stick_to_shard = _sharding_info.stick_to_shard;
+    _shard_size = _sharding_info.shard_size;
     ret = folder_reading();
-    if (_shard_count > 1 && _batch_count > 1) {
-        int _num_batches = _file_names.size() / _batch_count;
-        int max_batches_per_shard = (_file_count_all_shards + _shard_count - 1) / _shard_count;
-        max_batches_per_shard = (max_batches_per_shard + _batch_count - 1) / _batch_count;
-        if (_num_batches < max_batches_per_shard) {
-            replicate_last_batch_to_pad_partial_shard();
-        }
-    }
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_file_names.begin(), _file_names.end());
+        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
     return ret;
 }
 
 void TFRecordReader::incremenet_read_ptr() {
     _read_counter++;
-    _curr_file_idx = (_curr_file_idx + 1) % _file_names.size();
+    increment_curr_file_idx(_file_names.size());
 }
 size_t TFRecordReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
@@ -114,9 +111,15 @@ int TFRecordReader::release() {
 
 void TFRecordReader::reset() {
     if (_shuffle)
-        std::random_shuffle(_file_names.begin(), _file_names.end());
+        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
+    if (_stick_to_shard == false) // Pick elements from the next shard - hence increment shard_id
+        increment_shard_id();     // Should work for both single and multiple shards
     _read_counter = 0;
-    _curr_file_idx = 0;
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) { // Skipping the dropped batch in next epoch
+        for (uint32_t i = 0; i < _batch_size; i++)
+            increment_curr_file_idx(_file_names.size());
+    }
 }
 
 Reader::Status TFRecordReader::folder_reading() {
@@ -140,28 +143,22 @@ Reader::Status TFRecordReader::folder_reading() {
         if (tf_record_reader() != Reader::Status::OK)
             WRN("FileReader ShardID [" + TOSTR(_shard_id) + "] File reader cannot access the storage at " + _folder_path);
     }
-    if (_in_batch_read_count > 0 && _in_batch_read_count < _batch_count) {
-        replicate_last_image_to_fill_last_shard();
-        LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Replicated " + _folder_path + _last_file_name + " " + TOSTR((_batch_count - _in_batch_read_count)) + " times to fill the last batch")
-    }
+
     if (!_file_names.empty())
         LOG("FileReader ShardID [" + TOSTR(_shard_id) + "] Total of " + TOSTR(_file_names.size()) + " images loaded from " + _full_path)
     closedir(_sub_dir);
-    return ret;
-}
-void TFRecordReader::replicate_last_image_to_fill_last_shard() {
-    // std::cerr<<"\n Replicate last image";
-    for (size_t i = _in_batch_read_count; i < _batch_count; i++) {
-        _file_names.push_back(_last_file_name);
-        _file_size.insert(std::pair<std::string, unsigned int>(_last_file_name, _last_file_size));
-    }
-}
 
-void TFRecordReader::replicate_last_batch_to_pad_partial_shard() {
-    if (_file_names.size() >= _batch_count) {
-        for (size_t i = 0; i < _batch_count; i++)
-            _file_names.push_back(_file_names[i - _batch_count]);
+    size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
+    _last_batch_padded_size = ((_batch_size > 1) && (padded_samples > 0)) ? (_batch_size - padded_samples) : 0;
+
+    // Pad the _file_names with last element of the shard in the vector when _pad_last_batch_repeated is True
+    if (_pad_last_batch_repeated == true) {
+        update_filenames_with_padding(_file_names, _batch_size);
     }
+    _last_file_name = _file_names[_file_names.size() - 1];
+    _last_file_size = _file_size[_last_file_name];
+    compute_start_and_end_idx_of_all_shards();
+    return ret;
 }
 
 Reader::Status TFRecordReader::tf_record_reader() {
@@ -187,11 +184,6 @@ Reader::Status TFRecordReader::tf_record_reader() {
     return Reader::Status::OK;
 }
 
-size_t TFRecordReader::get_file_shard_id() {
-    if (_batch_count == 0 || _shard_count == 0)
-        THROW("Shard (Batch) size cannot be set to 0")
-    return _file_id % _shard_count;
-}
 
 Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, uint file_size) {
     auto ret = Reader::Status::OK;
@@ -231,19 +223,8 @@ Reader::Status TFRecordReader::read_image_names(std::ifstream &file_contents, ui
             file_path.append(fname);
         }
         _image_record_starting.insert(std::pair<std::string, uint>(fname, length));
-        _in_batch_read_count++;
-        _in_batch_read_count = (_in_batch_read_count % _batch_count == 0) ? 0 : _in_batch_read_count;
         _last_file_name = file_path;
-        if (get_file_shard_id() != _shard_id) {
-            incremenet_file_id();
-            _file_count_all_shards++;
-            file_contents.read((char *)&data_crc, sizeof(data_crc));
-            if (!file_contents)
-                THROW("TFRecordReader: Error in reading TF records")
-            continue;
-        }
         _file_names.push_back(file_path);
-        incremenet_file_id();
         _file_count_all_shards++;
         _single_feature = feature.at(_encoded_key);
         _last_file_size = _single_feature.bytes_list().value()[0].size();
