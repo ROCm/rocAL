@@ -231,7 +231,7 @@ Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsign
     return Status::OK;
 }
 
-Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, size_t *width, size_t *height, int *color_comps) {
+Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
@@ -242,8 +242,8 @@ Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t 
     if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[0], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
         return Status::HEADER_DECODE_FAILED;
     }
-    width = widths[0];
-    height = heights[0];
+    *width = widths[0];
+    *height = heights[0];
     _rocjpeg_image_buff_size += (((widths[0] + 8) &~ 7) * ((heights[0] + 8) &~ 7));
 
     if (widths[0] < 64 || heights[0] < 64) {
