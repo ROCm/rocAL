@@ -155,7 +155,7 @@ const RocalTensorDataType NumpyDataReader::get_dtype(const std::string& format) 
     if (format == "u4") return RocalTensorDataType::UINT32;
     if (format == "u8") THROW("uint64_t dtype not supported in rocAL");
     if (format == "i1") return RocalTensorDataType::INT8;
-    if (format == "i2") THROW("int16_t dtype not supported in rocAL");
+    if (format == "i2") return RocalTensorDataType::INT16;
     if (format == "i4") return RocalTensorDataType::INT32;
     if (format == "i8") THROW("int64_t dtype not supported in rocAL");
     if (format == "f2")
@@ -361,6 +361,8 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
         actual_read_size = parse_numpy_data<u_int32_t>((u_int32_t*)buf, strides, shape);
     if (_curr_file_header.type() == RocalTensorDataType::INT8)
         actual_read_size = parse_numpy_data<int8_t>((int8_t*)buf, strides, shape);
+    if (_curr_file_header.type() == RocalTensorDataType::INT16)
+        actual_read_size = parse_numpy_data<int16_t>((int16_t*)buf, strides, shape);
     if (_curr_file_header.type() == RocalTensorDataType::INT32)
         actual_read_size = parse_numpy_data<int32_t>((int32_t*)buf, strides, shape);
     if (_curr_file_header.type() == RocalTensorDataType::FP16)

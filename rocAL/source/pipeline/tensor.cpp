@@ -63,6 +63,8 @@ vx_size tensor_data_size(RocalTensorDataType data_type) {
             return sizeof(vx_uint32);
         case RocalTensorDataType::INT32:
             return sizeof(vx_int32);
+        case RocalTensorDataType::INT16:
+            return sizeof(vx_int16);
         default:
             throw std::runtime_error("tensor data_type not valid");
     }
@@ -81,6 +83,8 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_UINT32;
         case RocalTensorDataType::INT32:
             return VX_TYPE_INT32;
+        case RocalTensorDataType::INT16:
+            return VX_TYPE_INT16;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }

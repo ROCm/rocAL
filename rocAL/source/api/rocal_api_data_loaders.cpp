@@ -1719,6 +1719,7 @@ rocalNumpyFileSource(
             {3, RocalTensorDataType::INT8},
             {4, RocalTensorDataType::UINT32},
             {5, RocalTensorDataType::INT32},
+            {6, RocalTensorDataType::INT16},
         };
         tensor_data_type = data_type_map[max_dimensions.back()];
         max_dimensions.pop_back();
@@ -1782,6 +1783,7 @@ rocalNumpyFileSourceSingleShard(
             {3, RocalTensorDataType::INT8},
             {4, RocalTensorDataType::UINT32},
             {5, RocalTensorDataType::INT32},
+            {6, RocalTensorDataType::INT16},
         };
         auto dtype = max_dimensions.at(max_dimensions.size() - 1);
         max_dimensions.pop_back();
