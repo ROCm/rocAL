@@ -42,11 +42,13 @@ class AudioLoaderSingleShardNode : public Node {
     /// \param load_batch_count Defines the quantum count of the Audios to be loaded. It's usually equal to the user's batch size.
     /// \param mem_type Memory type, host or device
     /// \param meta_data_reader Determines the meta-data information
+    /// \param sharding_info The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     /// The loader will repeat Audios if necessary to be able to have Audios in multiples of the load_batch_count,
     /// for example if there are 10 Audios in the dataset and load_batch_count is 3, the loader repeats 2 Audios as if there are 12 Audios available.
     void Init(unsigned shard_id, unsigned shard_count, unsigned cpu_num_threads, const std::string &source_path,
               const std::string &file_list_path, StorageType storage_type, DecoderType decoder_type, bool shuffle,
-              bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader);
+              bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
+              const ShardingInfo& sharding_info);
     std::shared_ptr<LoaderModule> GetLoaderModule();
 
    protected:

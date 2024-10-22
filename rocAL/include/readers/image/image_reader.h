@@ -57,6 +57,27 @@ enum class ExternalSourceFileMode {
     NONE = 3,
 };
 
+struct ShardingInfo {
+    RocalBatchPolicy last_batch_policy;
+    bool pad_last_batch_repeated;
+    bool stick_to_shard;
+    int32_t shard_size;
+
+    // Constructor with default values
+    ShardingInfo()
+        : last_batch_policy(RocalBatchPolicy::FILL),
+          pad_last_batch_repeated(false),
+          stick_to_shard(true),
+          shard_size(-1) {}
+
+    // Parameterized constructor
+    ShardingInfo(RocalBatchPolicy policy, bool pad_repeated, bool stick, int32_t size)
+        : last_batch_policy(policy),
+          pad_last_batch_repeated(pad_repeated),
+          stick_to_shard(stick),
+          shard_size(size) {}
+};
+
 struct ReaderConfig {
     explicit ReaderConfig(StorageType type, std::string path = "", std::string json_path = "",
                           const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(),
@@ -80,8 +101,8 @@ struct ReaderConfig {
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
-    void set_last_batch_policy(std::pair<RocalBatchPolicy, bool> last_batch_info) {
-        _last_batch_info = last_batch_info;
+    void set_sharding_info(const ShardingInfo& sharding_info) {
+        _sharding_info = sharding_info;
     }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
@@ -103,7 +124,7 @@ struct ReaderConfig {
     std::string file_list_path() { return _file_list_path; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     ExternalSourceFileMode mode() { return _file_mode; }
-    std::pair<RocalBatchPolicy, bool> get_last_batch_policy() { return _last_batch_info; }
+    const ShardingInfo& get_sharding_info() { return _sharding_info; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -123,7 +144,7 @@ struct ReaderConfig {
     std::string _file_list_path;  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
-    std::pair<RocalBatchPolicy, bool> _last_batch_info = {RocalBatchPolicy::FILL, true};
+    ShardingInfo _sharding_info;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
@@ -186,6 +207,10 @@ class Reader {
     virtual unsigned count_items() = 0;
 
     virtual ~Reader() = default;
+
+    virtual std::string get_root_folder_path() { return {}; }
+
+    virtual std::vector<std::string> get_file_paths_from_meta_data_reader() { return {}; }
 
     //! Returns the number of images in the last batch
     virtual size_t last_batch_padded_size() { return 0; }
