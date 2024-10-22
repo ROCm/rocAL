@@ -1073,13 +1073,9 @@ def external_source(source, device=None, color_format=types.RGB, random_shuffle=
     Pipeline._current_pipeline._external_source_mode = mode
     Pipeline._current_pipeline._external_source_user_given_width = max_width
     Pipeline._current_pipeline._external_source_user_given_height = max_height
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     kwargs_pybind = {"rocal_color_format": color_format, "is_output": False, "shuffle": random_shuffle, "loop": False, "decode_size_policy": types.USER_GIVEN_SIZE,
-                     "max_width": max_width, "max_height": max_height, "dec_type": types.DECODER_TJPEG, "external_source_mode": mode, "sharding_info": RocalShardingInfo}
+                     "max_width": max_width, "max_height": max_height, "dec_type": types.DECODER_TJPEG, "external_source_mode": mode, "sharding_info": sharding_info}
     external_source_operator = b.externalFileSource(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (external_source_operator, [])  # Labels is Empty

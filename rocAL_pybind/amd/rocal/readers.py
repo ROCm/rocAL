@@ -223,11 +223,7 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         "file_list_frame_num": file_list_frame_num}  # VideoMetaDataReader
     b.videoMetaDataReader(Pipeline._current_pipeline._handle,
                           *(kwargs_pybind_reader.values()))
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
     kwargs_pybind_decoder = {
         "source_path": file_root,
         "color_format": image_type,
@@ -240,7 +236,7 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         "frame_step": step,
         "frame_stride": stride,
         "file_list_frame_num": file_list_frame_num,
-        "sharding_info": RocalShardingInfo}  # VideoDecoder
+        "sharding_info": sharding_info}  # VideoDecoder
     videos = b.videoDecoder(
         Pipeline._current_pipeline._handle, *(kwargs_pybind_decoder.values()))
     return (videos)
@@ -295,16 +291,12 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
         "file_list_frame_num": file_list_frame_num}  # VideoMetaDataReader
     meta_data = b.videoMetaDataReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind_reader.values()))
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     kwargs_pybind_decoder = {"source_path": file_root, "color_format": image_type, "decoder_mode": decoder_mode, "shard_count": num_shards,
                              "sequence_length": sequence_length, "resize_width": resize_width, "resize_height": resize_height,
                              "shuffle": random_shuffle, "is_output": False, "loop": False, "frame_step": step, "frame_stride": stride,
                              "file_list_frame_num": file_list_frame_num, "scaling_mode": scaling_mode, "max_size": max_size,
-                             "resize_shorter": resize_shorter, "resize_longer": resize_longer, "interpolation_type": interpolation_type, "sharding_info": RocalShardingInfo}
+                             "resize_shorter": resize_shorter, "resize_longer": resize_longer, "interpolation_type": interpolation_type, "sharding_info": sharding_info}
     videos = b.videoDecoderResize(
         Pipeline._current_pipeline._handle, *(kwargs_pybind_decoder.values()))
     return (videos, meta_data)
@@ -326,11 +318,7 @@ def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards
         @return    list of loaded image sequences.
     """
     Pipeline._current_pipeline._reader = "SequenceReader"
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     # Output
     
     kwargs_pybind = {
@@ -343,7 +331,7 @@ def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards
         "loop": False,
         "frame_step": step,
         "frame_stride": stride,
-        "sharding_info": RocalShardingInfo}
+        "sharding_info": sharding_info}
     frames = b.sequenceReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (frames)

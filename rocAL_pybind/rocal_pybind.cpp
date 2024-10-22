@@ -462,6 +462,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("h", &ROIxywh::h);
     py::class_<RocalShardingInfo>(m, "RocalShardingInfo")
         .def(py::init<>())
+        .def(py::init<RocalLastBatchPolicy, bool, bool, int>())
         .def_readwrite("last_batch_policy", &RocalShardingInfo::last_batch_policy)
         .def_readwrite("pad_last_batch_repeated", &RocalShardingInfo::pad_last_batch_repeated)
         .def_readwrite("stick_to_shard", &RocalShardingInfo::stick_to_shard)
