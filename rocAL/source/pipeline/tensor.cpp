@@ -415,10 +415,10 @@ unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_ty
     if (external_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
 #if ENABLE_HIP
         if (_info._mem_type == RocalMemType::HIP) {
+            std::cout << "copy_data::hipMemcpyDtoD " << " " << "of size ";
             // copy from device to device
             hipError_t status;
-            std::cout <<  "  ";
-            std::cout << _info.data_size() << std:: endl;
+            std::cout << _info.data_size() << " and address " << user_buffer << std:: endl;
             if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
                 THROW("copy_data::hipMemcpyDtoD failed: " + hipGetErrorName(status))
         } else if (_info._mem_type == RocalMemType::HOST) {
@@ -432,6 +432,7 @@ unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_ty
 #endif
     } else if (external_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST) {
         if (_info._mem_type == RocalMemType::HIP) {
+            std::cout << "copy_data::hipMemcpyDtoH " << std::endl;
 #if ENABLE_HIP
             // copy from device to host
             hipError_t status;

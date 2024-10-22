@@ -26,6 +26,7 @@ import numpy as np
 import ctypes
 import rocal_pybind as b
 import amd.rocal.types as types
+import tensorflow as tf
 
 class ROCALGenericImageIterator(object):
     """!Generic iterator for rocAL pipelines that process images
@@ -116,16 +117,20 @@ class ROCALGenericIteratorDetection(object):
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output = np.empty(self.dimensions, dtype=self.dtype)
-                    self.output_tensor_list[i].__dlpack__()
-                    self.output_tensor_list[i].copy_data(self.output)
+                    #self.output = tf.zeros(self.dimensions, dtype=self.dtype)
+                    #self.output_tensor_list[i].__dlpack__()
+                    #self.output_tensor_list[i].copy_data(self.output)
+                    # get rocalTensor output in dlcapsule and convert to tf.tensor
+                    self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__())
+                    print("type of self.output -- ", type(self.output), " on device ", self.output.device)
                 self.output_list.append(self.output)
+                print("length of output_list - ", len(self.output_list))
         else:
             for i in range(len(self.output_tensor_list)):
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
-                    self.output_tensor_list[i].copy_data(self.output_list[i])
+                    self.output_tensor_list[i].copy_data(self.output_list[i], self.loader._output_memory_type)
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
@@ -183,7 +188,7 @@ class ROCALGenericIteratorDetection(object):
                 else:
                     self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
                     self.loader.get_one_hot_encoded_labels(self.labels, self.loader._output_memory_type)
-                    self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))          
+                    self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
             else:
                 self.labels = self.loader.get_image_labels()
 

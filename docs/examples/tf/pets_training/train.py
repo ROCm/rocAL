@@ -177,14 +177,13 @@ def main():
     valIterator = ROCALIterator(valPipe, device=device)
 
     # Create the metrics
-    accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(
-        name='train_acc')
+    accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='train_acc')
     epoch = 0
     train_batches = math.ceil(len(trainIterator) / TRAIN_BATCH_SIZE)
     val_batches = math.ceil(len(valIterator) / TRAIN_BATCH_SIZE)
     while epoch < 10:
         print('Epoch :', epoch + 1)
-        accuracy_metric.reset_states()
+        accuracy_metric.reset_state()
         pbar = tf.keras.utils.Progbar(target=train_batches, stateful_metrics=[])
         step = 0
         for ([train_image_ndArray], train_label_ndArray) in trainIterator:
