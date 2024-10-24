@@ -48,11 +48,13 @@ def get_weights(num_bboxes):
     return weights_array
 
 
-def draw_patches(img, idx, bboxes, args=None):
+def draw_patches(img, idx, bboxes, device, args=None):
     import cv2
     args = parse_args()
     if not args.NHWC:
         img = img.transpose([0, 1, 2])
+    if device == "gpu":
+        img = img.numpy()
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     image = cv2.normalize(image, None, alpha=0, beta=255,
                           norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
@@ -146,7 +148,7 @@ def main():
             if args.print_tensor:
                 print("\nPROCESSED_TENSORS:\n", processed_tensors)
             draw_patches(images_array[element], cnt,
-                         bboxes_array[element], args=args)
+                         bboxes_array[element], device, args=args)
         print("\n\nPrinted first batch with", (batch_size), "images!")
         break
     image_iterator.reset()

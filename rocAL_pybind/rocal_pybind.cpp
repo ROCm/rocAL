@@ -317,8 +317,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
                         dtensor.strides = new int64_t[dtensor.ndim];
                         std::vector<size_t> rocal_strides = rocal_tensor->strides();
                         for (int32_t i = 0; i < dtensor.ndim; i++) {
-                            int64_t stride = static_cast<int64_t>(rocal_strides[i]);
-                            dtensor.strides[i] = stride / sizeof(rocal_tensor->data_type());
+                            dtensor.strides[i] = static_cast<int64_t>(rocal_strides[i]) / rocal_tensor->data_type_size();
                         }
                     } catch (...) {
                         delete[] dmtensor->dl_tensor.shape;
@@ -512,8 +511,9 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
                 std::cout << "\nin this copy data function\n";
-                std::cout << "is p a pycapsule? " << PyCapsule_CheckExact(&p) << std::endl;
-                auto ptr = ctypes_void_ptr(p);
+                const char* py_cap_name = PyCapsule_GetName(p.ptr());
+                auto ptr = PyCapsule_GetPointer(p.ptr(), py_cap_name);
+                //auto ptr = ctypes_void_ptr(p);
                 std::cout << ptr << std::endl;
                 output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
   

@@ -57,6 +57,7 @@ class rocalTensor {
     virtual void set_dims(std::vector<size_t> dims) = 0;
     virtual void set_mem_handle(void* buffer) = 0;
     virtual void set_tensor_layout(RocalTensorLayout layout) = 0;
+    virtual uint64_t data_type_size() = 0;
 };
 
 /*!

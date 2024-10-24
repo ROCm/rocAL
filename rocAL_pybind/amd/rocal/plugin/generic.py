@@ -126,15 +126,15 @@ class ROCALGenericIterator(object):
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.labels = np.empty(self.labels_size, dtype="int32")
                 else:
-                    self.dtype = self.output_tensor_list[i].dtype()
-                    self.output = np.empty(self.dimensions, dtype=self.dtype)
-                    self.labels = np.empty(self.labels_size, dtype="int32")
-                    self.output_tensor_list[i].__dlpack__()
-                    self.output_tensor_list[i].copy_data(self.output)
+                    #self.dtype = self.output_tensor_list[i].dtype()
+                    #self.output = np.empty(self.dimensions, dtype=self.dtype)
+                    #self.labels = np.empty(self.labels_size, dtype="int32")
+                    self.output = np.from_dlpack(self.output_tensor_list[i].__dlpack__())
+                    print("type of self.output -- ", type(self.output), " on device ", self.output.device)
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output_tensor_list[i].copy_data(self.output) 
+                    self.output_tensor_list[i].copy_data(self.output)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):

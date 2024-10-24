@@ -365,6 +365,7 @@ class Tensor : public rocalTensor {
     RocalTensorBackend backend() override {
         return (_info.mem_type() == RocalMemType::HOST ? ROCAL_CPU : ROCAL_GPU);
     }
+    uint64_t data_type_size() override { return _info.data_type_size(); }
 
    private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
