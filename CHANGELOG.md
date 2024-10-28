@@ -13,6 +13,7 @@
 * Package: rocdecode dependency removed
 * rocAL Pybind support for package install - rocAL Python module: To use python module, you can set PYTHONPATH:
   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
+* Add Last batch policy, pad last batch, stick to shard and shard size support for the following image readers : coco, caffe, caffe2, mxnet, tf and cifar10
 
 ### Removals
 * rocdecode dependencies for package install removed

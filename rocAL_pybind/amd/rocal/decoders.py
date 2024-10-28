@@ -53,11 +53,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+
     if (device == "gpu"):
         decoder_type = types.DECODER_HW_JEPG
     else:
@@ -76,7 +73,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         decoded_image = b.cocoImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -94,7 +91,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         decoded_image = b.tfImageDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -111,7 +108,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         decoded_image = b.caffe2ImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -128,7 +125,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         decoded_image = b.caffeImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -145,7 +142,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         decoded_image = b.mxnetDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -162,7 +159,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         decoded_image = b.imageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -185,11 +182,8 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+
     if (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
         kwargs_pybind = {
             "source_path": path,
@@ -201,7 +195,7 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
             "loop": False,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         decoded_image = b.tfImageDecoderRaw(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
         return (decoded_image)
@@ -235,11 +229,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+
     # Internally calls the C++ Partial decoder's
     if (reader == 'COCOReader'):
         kwargs_pybind = {
@@ -257,7 +248,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         crop_output_image = b.cocoImageDecoderSliceShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
@@ -274,7 +265,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         crop_output_image = b.tfImageDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
@@ -292,7 +283,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         crop_output_image = b.caffeImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
@@ -310,7 +301,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         crop_output_image = b.caffe2ImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
@@ -328,7 +319,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         crop_output_image = b.fusedDecoderCropShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -359,11 +350,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
     """
     reader = Pipeline._current_pipeline._reader
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+
     # Reader -> Randon BBox Crop -> ImageDecoderSlice
     # Random crop parameters taken from pytorch's RandomResizedCrop default function arguments
     # TODO:To pass the crop co-ordinates from random_bbox_crop to image_slice
@@ -386,7 +374,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         image_decoder_slice = b.cocoImageDecoderSliceShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
@@ -404,7 +392,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         image_decoder_slice = b.caffeImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
@@ -422,7 +410,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         image_decoder_slice = b.caffe2ImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
@@ -440,7 +428,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
         image_decoder_slice = b.fusedDecoderCropShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (image_decoder_slice)
@@ -469,11 +457,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
         @param max_decoded_channels     Maximum channels for decoded images.
         @return                         Decoded audio.
     """
-    RocalShardingInfo = b.RocalShardingInfo()
-    RocalShardingInfo.last_batch_policy = last_batch_policy
-    RocalShardingInfo.pad_last_batch_repeated =  pad_last_batch_repeated
-    RocalShardingInfo.stick_to_shard = stick_to_shard
-    RocalShardingInfo.shard_size = shard_size
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     kwargs_pybind = {
             "source_path": file_root,
             "source_file_list_path": file_list_path,
@@ -486,7 +470,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_samples,
             "max_height": max_decoded_channels,
-            "sharding_info": RocalShardingInfo}
+            "sharding_info": sharding_info}
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio

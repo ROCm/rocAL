@@ -68,7 +68,7 @@ class COCOFileSourceReader : public Reader {
 
    private:
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;
@@ -78,30 +78,17 @@ class COCOFileSourceReader : public Reader {
     struct dirent *_entity;
     std::vector<std::string> _file_names, _sorted_file_names;
     std::vector<float> _aspect_ratios;
-    unsigned _curr_file_idx;
     FILE *_current_fPtr;
     std::ifstream _current_ifs;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
-    size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
-    size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
+    size_t _batch_size = 1;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t _file_count_all_shards;
     void incremenet_read_ptr();
     int release();
-    size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
-    void replicate_last_image_to_fill_last_shard();
-    void replicate_last_batch_to_pad_partial_shard();
     void shuffle_with_aspect_ratios();
 };
