@@ -213,5 +213,38 @@ class Reader {
     virtual std::vector<std::string> get_file_paths_from_meta_data_reader() { return {}; }
 
     //! Returns the number of images in the last batch
-    virtual size_t last_batch_padded_size() { return 0; }
+    size_t last_batch_padded_size() { return _last_batch_padded_size; }
+
+   protected:
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;   // Holds the start and end idx of the file names vector for each shard
+    unsigned _curr_file_idx = 0;    // Tracks the current file idx being processed
+    size_t _file_count_all_shards;  // Total number of files present in all shards
+    size_t _last_batch_padded_size = 0; // Number of files padded in the last batch
+    size_t _shard_id = 0;   // Shard ID of the current shard
+    size_t _shard_count = 1;    // Total number of shards in the pipeline
+    bool _stick_to_shard = false;   // Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+    bool _pad_last_batch_repeated = false;  // Determines if last file is to be repeated for padding the batch.
+    int32_t _shard_size = -1;   // Size of the shard
+
+    //! Modified the file idx, and sets the current file idx to be processed
+    void increment_curr_file_idx(size_t dataset_size);
+
+    //! Increments the shard id, to process data from next shard
+    void increment_shard_id();
+
+    //! Computes the start and end index of the file names vector for each shard
+    void compute_start_and_end_idx_of_all_shards();
+
+    //! Returns the shard size without padding
+    size_t actual_shard_size_without_padding();
+
+    //! Returns the largest shard size without padding
+    size_t largest_shard_size_without_padding();
+
+    //! Returns the maximum size of the current shard
+    size_t get_max_size_of_shard(size_t batch_size, bool loop);
+
+    //! Modifies the file names vector with files to be padded
+    void update_filenames_with_padding(std::vector<std::string> &file_names, size_t batch_size);
 };
