@@ -302,12 +302,18 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
         THROW("Can not read header.");
     token[n_read] = '\0';
 
-    // check if heqder is too short
+    // rocAL does not support numpy V2 headers
+    // https://numpy.org/neps/nep-0001-npy-format.html
+    int np_api_version = token[6];
+    if (np_api_version != 1)
+        THROW("rocAL only supports reading npy files with NPY file format version 1");
+
+    // check if header is too short
     std::string header = std::string(token.data());
     if (header.find_first_of("NUMPY") == std::string::npos)
         THROW("File is not a numpy file.");
 
-    // extract header length
+    // extract header length which can have up to 65535 bytes
     uint16_t header_len = 0;
     memcpy(&header_len, &token[8], 2);
     if ((header_len + 10) % 16 != 0)
@@ -315,9 +321,6 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
 
     // read header: the offset is a magic number
     int64_t offset = 6 + 1 + 1 + 2;
-    // the header_len can be 4GiB according to the NPYv2 file format
-    // specification: https://numpy.org/neps/nep-0001-npy-format.html
-    // while this allocation could be sizable, it is performed on the host.
     token.resize(header_len + 1);
     if (std::fseek(_current_fPtr, offset, SEEK_SET))
         THROW("Seek operation failed: " + std::strerror(errno));
