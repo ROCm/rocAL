@@ -6,6 +6,7 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
+import numpy as np
 
 seed = 1549361629
 image_dir = "../../data/images/AMD-tinyDataSet/"
@@ -20,22 +21,22 @@ def show_images(image_batch, device):
     for j in range(rows*columns):
         #print('\n Display image: ', j)
         plt.subplot(gs[j])
-        img = image_batch[j]
         plt.axis("off")
         if device == "cpu":
+            img = image_batch[j]
             plt.imshow(img)
         else:
-            try:
-                import cupy as cp
-                plt.imshow(cp.asnumpy(img))
-            except ImportError:
-                pass
+            print("type(image_batch) -- ", type(image_batch))
+            image_batch = np.from_dlpack(image_batch)
+            print("type(image_batch) -- ", type(image_batch))
+            img = image_batch[j]
+            plt.imshow(img)
     plt.show()
 
 
 def show_pipeline_output(pipe, device):
     pipe.build()
-    data_loader = ROCALClassificationIterator(pipe, device)
+    data_loader = ROCALClassificationIterator(pipe, device=device)
     images = next(iter(data_loader))
     show_images(images[0][0], device)
 

@@ -47,6 +47,7 @@ class ROCALGenericIterator(object):
         self.tensor_format = tensor_layout
         self.multiplier = multiplier
         self.offset = offset
+        print("in pipeline -- device -- ", device)
         self.device = device
         self.device_id = device_id
         self.reverse_channels = reverse_channels
@@ -125,24 +126,20 @@ class ROCALGenericIterator(object):
                     self.dtype = self.output_tensor_list[i].dtype()
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.labels = np.empty(self.labels_size, dtype="int32")
-                else:
-                    #self.dtype = self.output_tensor_list[i].dtype()
-                    #self.output = np.empty(self.dimensions, dtype=self.dtype)
-                    #self.labels = np.empty(self.labels_size, dtype="int32")
-                    self.output = np.from_dlpack(self.output_tensor_list[i].__dlpack__())
-                    print("type of self.output -- ", type(self.output), " on device ", self.output.device)
-                if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output_tensor_list[i].copy_data(self.output)
+                    print("in gpu1")
+                    self.output = self.output_tensor_list[i].__dlpack__()
+                    #np.from_dlpack(self.output_tensor_list[i])
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
-                    self.output_tensor_list[i].copy_data(
-                        self.output_list[i])
+                    print("in gpu2")
+                    self.output_tensor_list[i].__dlpack__()
+                    #np.from_dlpack(self.output_tensor_list[i])
         if (self.loader._is_external_source_operator):
             self.labels = self.loader.get_image_labels()
             if self.device == "cpu":
