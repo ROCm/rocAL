@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 seed = 1549361629
-image_dir = "../../data/images/AMD-tinyDataSet/"
+image_dir = "/opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet"
 batch_size = 4
 gpu_id = 0
 
