@@ -186,6 +186,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
         //auto time_per_decode = std::chrono::duration<double, std::milli>(end_time - start_time).count();
         //total_dec_time += time_per_decode;
         if (sequence_decoded) {
+            hipStreamSynchronize(_rocvid_decoder->GetStream());
             break;
         }
     } while (n_video_bytes);
