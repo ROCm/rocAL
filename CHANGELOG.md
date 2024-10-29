@@ -1,56 +1,39 @@
-<p align="center"><img width="70%" src="docs/data/rocAL_logo.png" /></p>
+# Changelog for rocAL
 
-# Changelog
-
-## Online Documentation
-
-[rocAL Documentation](https://github.com/ROCm/rocAL)
+Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
 ## rocAL 2.1.0 for ROCm 6.3.0
 
-### Changes
-* Setup: rocdecode install disabled
-* Package: rocdecode dependency removed
-* rocAL Pybind support for package install - rocAL Python module: To use python module, you can set PYTHONPATH:
-  + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
-* Add Last batch policy, pad last batch, stick to shard and shard size support for the following image readers : coco, caffe, caffe2, mxnet, tf and cifar10
+### Added
 
-### Removals
-* rocdecode dependencies for package install removed
+* rocAL Pybind support for package installation has been added. To use the rocAL python module, set the `PYTHONPATH`: `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
+* Last batch policy, pad last batch, stick to shard, and shard size support have been added for the coco, caffe, caffe2, mxnet, tf, and cifar10 image readers.
+
+### Changed
+
+* rocdecode installation disabled when running the setup script.
+
+### Removed
+
+* rocDecode dependencies for package install has been removed.
 
 ### Optimizations
-* CTest updates
+
+* CTest has been updated.
 
 ### Resolved issues
-* Test failures fixed
+
+* Test failures have been fixed
 
 ### Known issues
-* Package install requires `TurboJPEG`, and `RapidJSON` manual install
-* `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
-* Hardware decode requires rocm usecase `graphics`
- 
+
+* The package installation requires the manual installation of `TurboJPEG` and `RapidJSON`.
+* CentOS/RedHat/SLES requires additional the manual installation of the `FFMPEG Dev` package.
+* Hardware decode requires installing ROCm with the `graphics` usecase.
+
 ### Upcoming changes
+
 * Optimized audio augmentations support
-
-### Tested Configurations
-
-* Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
-  * RedHat - `8` / `9`
-  * SLES - `15-SP5`
-* ROCm: rocm-core - `6.3.0.60300`
-* RPP - `rpp` & `rpp-dev`/`rpp-devel`
-* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
-* Protobuf - `libprotobuf-dev`/`protobuf-devel`
-* RapidJSON - `https://github.com/Tencent/rapidjson`
-* Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
-* PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
-* FFMPEG - `ffmpeg 4` dev package
-* OpenCV - `libopencv` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* rocAL Setup Script - `V2.5.0`
-* Dependencies for all the above packages
 
 ## rocAL 2.0.0 for ROCm 6.2.1
 
