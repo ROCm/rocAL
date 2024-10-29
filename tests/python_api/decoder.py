@@ -8,7 +8,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 
 seed = 1549361629
-image_dir = "../../data/images/AMD-tinyDataSet/"
+image_dir = "/opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet"
 batch_size = 4
 gpu_id = 0
 
