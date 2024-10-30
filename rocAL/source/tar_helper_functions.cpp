@@ -25,7 +25,6 @@ THE SOFTWARE.
 #include <vector>
 #include <list>
 #include <cassert>
-// #include <cmath>
 #include <cstdarg>
 #include <algorithm>
 #include <cstring>
@@ -40,12 +39,11 @@ constexpr uint64_t operator ""_u64(unsigned long long x) {
     return x;
 }
 
-constexpr uint64_t kEmptyEofBlocks = 2;
-constexpr uint64_t kTarArchiveBufferInitSize = 1;
+constexpr uint64_t TARARCHIVEBUFFERINITSIZE = 1;
 
 std::mutex instances_mutex;
 std::list<std::vector<TarArchive*>> instances_registry = {
-    std::vector<TarArchive*>(kTarArchiveBufferInitSize)
+    std::vector<TarArchive*>(TARARCHIVEBUFFERINITSIZE)
   };
 TarArchive** instances = instances_registry.back().data();
 
@@ -69,8 +67,8 @@ int add_to_register(TarArchive* archive) {
   return old.size();
 }
 
-inline void remove_from_register(int _instance_handle) {
-  instances[_instance_handle] = nullptr;
+inline void remove_from_register(int instance_handle) {
+  instances[instance_handle] = nullptr;
 }
 
 inline TAR* void_ptr_to_tar_ptr(void* handle) {
@@ -81,8 +79,8 @@ inline TAR** void_ptr_to_tar_ptr(void** handle) {
   return reinterpret_cast<TAR**>(handle);
 }
 
-ssize_t read_tar_archive(int _instance_handle, void* buf, size_t count) {
-  const auto current_archive = instances[_instance_handle];
+ssize_t read_tar_archive(int instance_handle, void* buf, size_t count) {
+  const auto current_archive = instances[instance_handle];
   const ssize_t num_read = current_archive->_stream->read_into_buffer(reinterpret_cast<uint8_t*>(buf), count);
   return num_read;
 }
@@ -140,10 +138,8 @@ constexpr size_t round_it_to_given_block_size(size_t count) {
 }
 
 bool TarArchive::advance_to_next_file_in_tar() {
-  if (_eof) {
+  if (_eof)
     return false;
-  }
-
   const int64_t offset = _stream->get_current_read_position() + round_it_to_given_block_size(_filesize) - _readoffset;
   _current_header = offset;
   _stream->set_read_position(offset);
@@ -156,9 +152,8 @@ bool TarArchive::at_end_of_archive() const {
 }
 
 void TarArchive::seek_to_offset_in_archive(int64_t offset) {
-  if (offset == _current_header) {
+  if (offset == _current_header)
     return;
-  }
   assert(offset % T_BLOCKSIZE == 0);
   _eof = false;
   _readoffset = 0;
@@ -218,9 +213,8 @@ inline void TarArchive::mark_end_of_file() {
 }
 
 inline void TarArchive::parse_current_header() {
-  if (_eof) {
+  if (_eof)
     return;
-  }
   int errorcode = th_read(void_ptr_to_tar_ptr(_handle));
   if (errorcode) {
     if (errorcode == -1)

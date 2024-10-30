@@ -1136,8 +1136,7 @@ std::vector<rocalTensorList *> MasterGraph::create_label_reader(const char *sour
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
-    if (strlen(source_path) == 0)
-        THROW("Source path needs to be provided")
+
     MetaDataConfig config(MetaDataType::Label, reader_type, source_path);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
@@ -1177,18 +1176,18 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(
                           extensions);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
-    for (uint _ext_count = 0; _ext_count < _ascii_tensor_list.size(); _ext_count++) {
+    std::vector<size_t> dims;
+    dims = {MAX_ASCII_BUFFER, 1};
+    auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type,RocalTensorDataType::UINT8); // Create default ascii values Info
+    default_ascii_values_info.set_metadata();
+    for (uint ext_count = 0; ext_count < _ascii_tensor_list.size(); ext_count++) {
         for (unsigned i = 0; i < _user_batch_size; i++) {
-            std::vector<size_t> dims;
-            dims = {MAX_ASCII_BUFFER, 1};
-            auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type,RocalTensorDataType::UINT8); // Create default ascii values Info
-            default_ascii_values_info.set_metadata();
             _meta_data_buffer_size.emplace_back(_user_batch_size * default_ascii_values_info.data_size());
             auto info = default_ascii_values_info;
             auto tensor = new Tensor(info);
-            _ascii_tensor_list[_ext_count].push_back(tensor);
+            _ascii_tensor_list[ext_count].push_back(tensor);
         }
-        _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[_ext_count]);
+        _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[ext_count]);
     }
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);

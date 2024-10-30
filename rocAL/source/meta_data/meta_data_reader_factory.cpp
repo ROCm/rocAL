@@ -42,14 +42,6 @@ THE SOFTWARE.
 
 std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& config, pMetaDataBatch& meta_data_batch) {
     switch (config.reader_type()) {
-        case MetaDataReaderType::WEBDATASET_META_DATA_READER: {
-            if (config.type() != MetaDataType::AsciiValue)
-                THROW("WEBDATASET_META_DATA_READER can only be used to load ascii values")
-            auto meta_data_reader = std::make_shared<WebDataSetMetaDataReader>();
-            meta_data_batch = std::make_shared<AsciiValueBatch>();
-            meta_data_reader->init(config, meta_data_batch);
-            return meta_data_reader;
-        } break;
         case MetaDataReaderType::FOLDER_BASED_LABEL_READER: {
             if (config.type() != MetaDataType::Label)
                 THROW("FOLDER_BASED_LABEL_READER can only be used to load labels")
@@ -159,17 +151,14 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
-        // case MetaDataReaderType::WEBDATASET_META_DATA_READER: {
-        //     if (config.type() != MetaDataType::BoundingBox && config.type() != MetaDataType::Label)
-        //         THROW("WEBDATASET_READER can only be used to load labels and bounding boxes from tar files")
-        //     auto meta_data_reader = std::make_shared<WebDataSetMetaDataReader>();
-        //     if (config.type() == MetaDataType::Label)
-        //          meta_data_batch = std::make_shared<LabelBatch>();
-        //     else if (config.type() == MetaDataType::BoundingBox)
-        //         meta_data_batch = std::make_shared<BoundingBoxBatch>();
-        //     meta_data_reader->init(config, meta_data_batch);
-        //     return meta_data_reader;
-        // } break;
+        case MetaDataReaderType::WEBDATASET_META_DATA_READER: {
+            if (config.type() != MetaDataType::AsciiValue)
+                THROW("WEBDATASET_META_DATA_READER can only be used to load ascii values")
+            auto meta_data_reader = std::make_shared<WebDataSetMetaDataReader>();
+            meta_data_batch = std::make_shared<AsciiValueBatch>();
+            meta_data_reader->init(config, meta_data_batch);
+            return meta_data_reader;
+        } break;
         default:
             THROW("MetaDataReader type is unsupported : " + TOSTR(config.reader_type()));
     }

@@ -9,3 +9,4 @@ _templates/
 _toc.yml
 docBin/
 _doxygen/
+tests/

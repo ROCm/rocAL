@@ -48,7 +48,6 @@ typedef struct BoundingBoxCord_ {
 
 typedef std::vector<BoundingBoxCord> BoundingBoxCords;
 typedef std::vector<int> Labels;
-// typedef std::vector<uint8_t> AsciiValues;
 
 typedef std::vector<uint8_t> AsciiComponent;
 typedef std::vector<AsciiComponent> AsciiValues;
@@ -145,8 +144,6 @@ class MetaData {
 
 class AsciiValue : public MetaData {
    public:
-    // AsciiValue(uint8_t ascii_value) { _ascii_values = {ascii_value}; }
-    // AsciiValue() { _ascii_values = {}; }
     AsciiValue() = default;
     AsciiValue(AsciiValues ascii_values) {
         _ascii_values = std::move(ascii_values);
@@ -365,8 +362,7 @@ class AsciiValueBatch : public MetaDataBatch {
         for (unsigned component = 0; component < _ascii_values[0].size(); component++) {
             size_t size = 0;
             for (unsigned i = 0; i < _ascii_values.size(); i++) {
-                AsciiValues sample = _ascii_values[i];
-                size += sample[component].size();
+                size += _ascii_values[i][component].size();
             }
             _buffer_size.emplace_back(size * sizeof(uint8_t));
         }
@@ -376,14 +372,18 @@ class AsciiValueBatch : public MetaDataBatch {
 
     // Not implemented
     std::vector<Labels>& get_labels_batch() override { THROW("Not Implemented") }
-    int mask_size() override{THROW("Not Implemented")} std::vector<BoundingBoxCords>& get_bb_cords_batch() override { THROW("Not Implemented") }
-    void set_xywh_bbox() override{THROW("Not Implemented")} std::vector<MaskCords>& get_mask_cords_batch() override{THROW("Not Implemented")} std::vector<std::vector<int>>& get_mask_polygons_count_batch() override{THROW("Not Implemented")} std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() override{THROW("Not Implemented")} JointsDataBatch& get_joints_data_batch() override { THROW("Not Implemented") }
+    int mask_size() override{THROW("Not Implemented")} 
+    std::vector<BoundingBoxCords>& get_bb_cords_batch() override { THROW("Not Implemented") }
+    void set_xywh_bbox() override{THROW("Not Implemented")} 
+    std::vector<MaskCords>& get_mask_cords_batch() override{THROW("Not Implemented")} 
+    std::vector<std::vector<int>>& get_mask_polygons_count_batch() override{THROW("Not Implemented")} 
+    std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() override{THROW("Not Implemented")} 
+    JointsDataBatch& get_joints_data_batch() override { THROW("Not Implemented") }
 
    protected:
     std::vector<AsciiValues> _ascii_values = {};
     std::vector<size_t> _buffer_size;
 };
-
 
 class LabelBatch : public MetaDataBatch {
    public:

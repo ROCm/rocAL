@@ -10,7 +10,6 @@
 #include "pipeline/commons.h"
 #include <iostream>
 
-
 std::unique_ptr<FileIOStream> FileIOStream::open(const std::string& path) {
     return std::make_unique<FileIOStream>(path);
 }
@@ -57,9 +56,6 @@ size_t FileIOStream::get_size() const {
   return sb.st_size;
 }
 
-
-
-// Define operator<< for std::unique_ptr<FileIOStream>
 inline std::ostream& operator<<(std::ostream& os, const std::unique_ptr<FileIOStream>& ptr) {
     std::cout << ptr << std::endl;
 }

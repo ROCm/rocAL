@@ -335,9 +335,6 @@ if(${BUILD_ROCAL})
     else()
         include_directories(${libtar_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${libtar_LIBRARIES})
-        # message("-- ${White}rocAL built with Audio Functionality${ColourReset}")
-        # target_compile_definitions(${PROJECT_NAME} PUBLIC -fPIC)
-        
         message("-- ${Yellow}NOTE: rocAL built with LibTar support - WebDataset Functionalities enabled${ColourReset}")
     endif()
     # -Wall -- Enable most warning messages
