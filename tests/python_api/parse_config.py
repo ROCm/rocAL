@@ -111,7 +111,9 @@ def parse_args():
         'audio-python-unittest', 'audio-python-unittest-related options')
     audio_unit_test.add_argument('--audio_path', type=str, default="",
                                   help='audio files path')
-    audio_unit_test.add_argument('--test_case', type=int, default=0,
+    audio_unit_test.add_argument('--file_list_path', type=str, default="",
+                                  help='file list path')
+    audio_unit_test.add_argument('--test_case', type=int, default=None,
                                   help='test case')
     audio_unit_test.add_argument('--qa_mode', type=int, default=1,
                                   help='enable qa mode to compare audio output with ref outputs')

@@ -66,10 +66,10 @@ unsigned WebDatasetSourceReader::count_items() {
         // Formula used to calculate - [_last_batch_padded_size = _batch_count - (_shard_size % _batch_count) ]
         // Since "size" doesnt involve padding - we add the count of padded samples to the number of remaining elements
         // which equals to the shard size with padding
-        if (_last_batch_info.first == RocalBatchPolicy::PARTIAL || _last_batch_info.first == RocalBatchPolicy::FILL) {
+        if (_sharding_info.last_batch_policy == RocalBatchPolicy::PARTIAL || _sharding_info.last_batch_policy == RocalBatchPolicy::FILL) {
             ret += _last_batch_padded_size;
-        } else if (_last_batch_info.first == RocalBatchPolicy::DROP &&
-                   _last_batch_info.second == true) { // When pad_last_batch_repeated is False - Enough
+        } else if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP &&
+                   _pad_last_batch_repeated == true) { // When pad_last_batch_repeated is False - Enough
                                                       // number of samples would not be present in the last batch - hence
                                                       // dropped by condition handled in the loader
             ret -= _batch_count;
@@ -81,7 +81,7 @@ unsigned WebDatasetSourceReader::count_items() {
             return shard_size_with_padding;
         int size = std::max(shard_size_with_padding, _batch_count);
         ret = (size - _read_counter);
-        if (_last_batch_info.first == RocalBatchPolicy::DROP) // The shard size is padded at the beginning of the condition, hence dropping the last batch
+        if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) // The shard size is padded at the beginning of the condition, hence dropping the last batch
             ret -= _batch_count;
     }
     return ((ret < 0) ? 0 : ret);
@@ -100,11 +100,11 @@ Reader::Status WebDatasetSourceReader::initialize(ReaderConfig desc) {
     _batch_count = desc.get_batch_size();
     _loop = desc.loop();
     _meta_data_reader = desc.meta_data_reader();
-    _last_batch_info = desc.get_last_batch_policy();
+    _sharding_info = desc.get_sharding_info();
+    _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
+    _stick_to_shard = _sharding_info.stick_to_shard;
+    _shard_size = _sharding_info.shard_size;
     _shuffle = desc.shuffle();
-    _pad_last_batch_repeated = _last_batch_info.second;
-    _stick_to_shard = true;
-    _shard_size = -1;
     ret = folder_reading();
     _curr_file_idx = get_start_idx(); // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set

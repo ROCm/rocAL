@@ -191,7 +191,7 @@ Follow these steps:
                     train_label_one_hot_list = get_label_one_hot(train_label_ndArray)
 
 
-4. To see and run a sample training script, refer to `rocAL TensorFlow example <https://github.com/ROCm/rocAL/tree/master/rocAL/docs/examples/tf/pets_training>`_.
+4. To see and run a sample training script, refer to `rocAL TensorFlow example <https://github.com/ROCm/rocAL/tree/master/docs/examples/tf/pets_training>`_.
 
 .. __resnet50:
 

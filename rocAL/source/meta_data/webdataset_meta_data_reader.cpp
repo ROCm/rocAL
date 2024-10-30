@@ -409,7 +409,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                         if (_missing_component_behaviour == MissingComponentsBehaviour::SKIP) { // skipping sample
                             WRN("WARNING: Skipping the sample with missing components.");
                             skip_sample = true;
-                        } else if (_missing_component_behaviour == MissingComponentsBehaviour::ERROR) { // throw error
+                        } else if (_missing_component_behaviour == MissingComponentsBehaviour::THROW_ERROR) { // throw error
                             THROW("ERROR: Missing components in the sample. Please check the sample components");
                         }
                     }

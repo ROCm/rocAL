@@ -19,12 +19,11 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-set(VERSION "2.0.0")
 
 # Set Project Version and Language
-project(rocAL_pybind VERSION ${VERSION} LANGUAGES CXX)
+project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
 
-set(TARGET_NAME rocAL_pybind)
+set(TARGET_NAME rocal_pybind)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -280,8 +279,12 @@ if(${BUILD_ROCAL_PYBIND})
     add_dependencies(PyPackageInstall PyPackageBuild)
         
     #install rocAL pybind libs
-    install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX_PYTHON} COMPONENT runtime)
+    install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
+    install(DIRECTORY amd DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
     message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
+
+    # PyBind Test - Installed
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
 else()
     message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
 endif()

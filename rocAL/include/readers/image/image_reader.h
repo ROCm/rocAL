@@ -58,6 +58,27 @@ enum class ExternalSourceFileMode {
     NONE = 3,
 };
 
+struct ShardingInfo {
+    RocalBatchPolicy last_batch_policy;
+    bool pad_last_batch_repeated;
+    bool stick_to_shard;
+    int32_t shard_size;
+
+    // Constructor with default values
+    ShardingInfo()
+        : last_batch_policy(RocalBatchPolicy::FILL),
+          pad_last_batch_repeated(false),
+          stick_to_shard(true),
+          shard_size(-1) {}
+
+    // Parameterized constructor
+    ShardingInfo(RocalBatchPolicy policy, bool pad_repeated, bool stick, int32_t size)
+        : last_batch_policy(policy),
+          pad_last_batch_repeated(pad_repeated),
+          stick_to_shard(stick),
+          shard_size(size) {}
+};
+
 struct ReaderConfig {
     explicit ReaderConfig(StorageType type, std::string path = "", std::string json_path = "",
                           const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(),
@@ -82,8 +103,8 @@ struct ReaderConfig {
     void set_frame_step(unsigned step) { _sequence_frame_step = step; }
     void set_frame_stride(unsigned stride) { _sequence_frame_stride = stride; }
     void set_external_filemode(ExternalSourceFileMode mode) { _file_mode = mode; }
-    void set_last_batch_policy(std::pair<RocalBatchPolicy, bool> last_batch_info) {
-        _last_batch_info = last_batch_info;
+    void set_sharding_info(const ShardingInfo& sharding_info) {
+        _sharding_info = sharding_info;
     }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
@@ -102,9 +123,11 @@ struct ReaderConfig {
     std::map<std::string, std::string> feature_key_map() { return _feature_key_map; }
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
+    void set_file_list_path(const std::string &file_list_path) { _file_list_path = file_list_path; }
+    std::string file_list_path() { return _file_list_path; }
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     ExternalSourceFileMode mode() { return _file_mode; }
-    std::pair<RocalBatchPolicy, bool> get_last_batch_policy() { return _last_batch_info; }
+    const ShardingInfo& get_sharding_info() { return _sharding_info; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -120,10 +143,11 @@ struct ReaderConfig {
     size_t _sequence_frame_stride = 1;
     bool _shuffle = false;
     bool _loop = false;
-    std::string _file_prefix = "";  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_prefix;  //!< to read only files with prefix. supported only for cifar10_data_reader and tf_record_reader
+    std::string _file_list_path;  //!< to read only files present in the file list
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
-    std::pair<RocalBatchPolicy, bool> _last_batch_info = {RocalBatchPolicy::FILL, true};
+    ShardingInfo _sharding_info;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
@@ -234,6 +258,43 @@ class Reader {
 
     virtual ~Reader() = default;
 
+    virtual std::string get_root_folder_path() { return {}; }
+
+    virtual std::vector<std::string> get_file_paths_from_meta_data_reader() { return {}; }
+
     //! Returns the number of images in the last batch
-    virtual size_t last_batch_padded_size() { return 0; }
+    size_t last_batch_padded_size() { return _last_batch_padded_size; }
+
+   protected:
+    ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;   // Holds the start and end idx of the file names vector for each shard
+    unsigned _curr_file_idx = 0;    // Tracks the current file idx being processed
+    size_t _file_count_all_shards;  // Total number of files present in all shards
+    size_t _last_batch_padded_size = 0; // Number of files padded in the last batch
+    size_t _shard_id = 0;   // Shard ID of the current shard
+    size_t _shard_count = 1;    // Total number of shards in the pipeline
+    bool _stick_to_shard = false;   // Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+    bool _pad_last_batch_repeated = false;  // Determines if last file is to be repeated for padding the batch.
+    int32_t _shard_size = -1;   // Size of the shard
+
+    //! Modified the file idx, and sets the current file idx to be processed
+    void increment_curr_file_idx(size_t dataset_size);
+
+    //! Increments the shard id, to process data from next shard
+    void increment_shard_id();
+
+    //! Computes the start and end index of the file names vector for each shard
+    void compute_start_and_end_idx_of_all_shards();
+
+    //! Returns the shard size without padding
+    size_t actual_shard_size_without_padding();
+
+    //! Returns the largest shard size without padding
+    size_t largest_shard_size_without_padding();
+
+    //! Returns the maximum size of the current shard
+    size_t get_max_size_of_shard(size_t batch_size, bool loop);
+
+    //! Modifies the file names vector with files to be padded
+    void update_filenames_with_padding(std::vector<std::string> &file_names, size_t batch_size);
 };

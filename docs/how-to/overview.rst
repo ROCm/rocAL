@@ -109,4 +109,4 @@ Decoders                Description
 ======================  ========================================
 
 To see examples demonstrating the usage of decoders and readers, see 
-`rocAL Python Examples <https://github.com/ROCm/rocAL/tree/master/rocAL/docs/examples>`_.
+`rocAL Python Examples <https://github.com/ROCm/rocAL/tree/master/docs/examples>`_.

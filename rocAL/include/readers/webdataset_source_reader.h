@@ -71,7 +71,7 @@ class WebDatasetSourceReader : public Reader {
     WebDatasetSourceReader();
 
     //! Returns the number of images in the last batch
-    size_t last_batch_padded_size() override;
+    size_t last_batch_padded_size();
 
   private:
     //! opens the folder containnig the images
@@ -136,7 +136,6 @@ class WebDatasetSourceReader : public Reader {
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     size_t _file_count_all_shards;
     size_t _padded_samples = 0;
-    std::pair<RocalBatchPolicy, bool> _last_batch_info;
     size_t _last_batch_padded_size = 0;
     size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;

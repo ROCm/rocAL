@@ -199,8 +199,13 @@ AudioLoader::load_routine() {
     return LoaderModuleStatus::OK;
 }
 
+// Uses the same condition in audio_read_and_decode.cpp to check if enough samples are present
 bool AudioLoader::is_out_of_data() {
-    return (remaining_count() < 0);
+    return (remaining_count() < _batch_size);
+}
+
+size_t AudioLoader::last_batch_padded_size() {
+    return _audio_loader->last_batch_padded_size();
 }
 
 LoaderModuleStatus
