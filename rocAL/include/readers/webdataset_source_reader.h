@@ -70,9 +70,6 @@ class WebDatasetSourceReader : public Reader {
 
     WebDatasetSourceReader();
 
-    //! Returns the number of images in the last batch
-    size_t last_batch_padded_size();
-
   private:
     //! opens the folder containnig the images
     Reader::Status webdataset_record_reader();
@@ -96,13 +93,7 @@ class WebDatasetSourceReader : public Reader {
     std::vector<std::string> _index_name_list;
     int _file_name_count = 0;
     bool _last_rec;
-    //!< _batch_count Defines the quantum count of the images to be read. It's
-    //!< usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images
-    /// available in multiples of the load_batch_count, for instance if there
-    /// are 10 images in the dataset and _batch_count is 3, the loader repeats 2
-    /// images as if there are 12 images available.
-    size_t _batch_count = 1;
+    size_t _batch_size = 1;
     size_t _file_id = 0;
     size_t _in_batch_read_count = 0;
     bool _loop;
@@ -140,7 +131,6 @@ class WebDatasetSourceReader : public Reader {
     size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
-    size_t get_start_idx(); // Start Idx of the Shard's Data
     size_t get_dataset_size(); // DataSet Size
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
