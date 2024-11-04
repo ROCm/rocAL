@@ -64,7 +64,7 @@ def main():
         img_raw = fn.readers.webdataset(
         path=wds_data, ext=[{'jpg', 'cls'}],
         )
-        img = fn.decoders.webdataset(img_raw, file_root=wds_data, color_format=color_format,max_decoded_width=500, max_decoded_height=500)
+        img = fn.decoders.webdataset(img_raw, file_root=wds_data, output_type=color_format,max_decoded_width=500, max_decoded_height=500, shard_id=0, num_shards=1)
 
         tensor_format = types.NHWC
         tensor_dtype = types.FLOAT
@@ -80,7 +80,7 @@ def main():
             for j in range(len(output_list)):
                 print("**************", i, "*******************")
                 print("**************starts*******************")
-                print("\nImages:\n", output_list[j])
+                # print("\nImages:\n", output_list[j])
                 print("\nLABELS:\n", labels)
                 print("**************ends*******************")
                 print("**************", i, "*******************")

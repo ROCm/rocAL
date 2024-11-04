@@ -39,6 +39,12 @@ THE SOFTWARE.
 
 using namespace std;
 
+inline bool isJPEG(const std::string& ext) {
+    std::string lowerExt = ext;
+    std::transform(lowerExt.begin(), lowerExt.end(), lowerExt.begin(), ::tolower);
+    return lowerExt == "jpg" || lowerExt == "jpeg" || lowerExt == "jpe";
+}
+
 constexpr int create_version_number(int major, int minor, int patch = 0) {
     if (major < 0 || minor < 0 || patch < 0) {
         return -1;
@@ -58,11 +64,13 @@ void WebDataSetMetaDataReader::init(const MetaDataConfig &cfg,
     _wds_shards.reserve(_paths.size());
     _index_paths = cfg.index_path();
     _exts = cfg.exts();
-    std::string elementToRemove = "jpg";
+    std::vector<std::string> elementsToRemove = {"jpg", "jpeg", "JPEG"};
     for (auto &ext_set : _exts) {
-        auto it = ext_set.find(elementToRemove);
-        if (it != ext_set.end()) {
-            ext_set.erase(it);
+        for (const auto &elementToRemove : elementsToRemove) {
+            auto it = ext_set.find(elementToRemove);
+            if (it != ext_set.end()) {
+                ext_set.erase(it);
+            }
         }
     }
     _missing_component_behaviour = cfg.get_missing_component_behaviour();
@@ -373,7 +381,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 ascii_values.resize(_ext_map.size());
                 std::string  last_file_name;
                 for (auto &component : sample.components) {
-                    if (component.ext != "jpg") { // Add more components as we encounter
+                    if (!isJPEG(component.ext)) { // Add more components as we encounter
                         _wds_shards[wds_shard_index]->set_read_position(component.offset);
                         std::vector<uint8_t> cls_data(component.size);
                         _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
@@ -392,7 +400,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 ascii_values.resize(_ext_map.size());
                 std::string  last_file_name;
                 for (auto &component : sample.components) {
-                    if (component.ext != "jpg") { // Add more components as we encounter
+                    std::cerr << "\n ext::" << component.ext;
+                    if (!isJPEG(component.ext)) { // Add more components as we encounter
                         _wds_shards[wds_shard_index]->set_read_position(component.offset);
                         std::vector<uint8_t> cls_data(component.size);
                         _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
@@ -404,6 +413,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                     last_file_name = component.filename;
                 }
                 for (auto& ascii_component: ascii_values) {
+                    std::cerr << "\n ascii_component.size()::" << ascii_component.size();
+                    std::cerr << "\n _ext_map size :: " << _ext_map.size();
                     if(ascii_component.size() < _ext_map.size()) {   // TODO - Check if it should be less that extension size
                         if (_missing_component_behaviour == MissingComponentsBehaviour::SKIP) { // skipping sample
                             WRN("WARNING: Skipping the sample with missing components.");

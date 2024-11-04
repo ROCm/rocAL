@@ -319,6 +319,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateMXNetReader(handle, path, true);
             decoded_output = rocalMXNetRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
+        case 12: {
+            std::cout << "Running WEB DATASET READER" << std::endl;
+            pipeline_type = 1;
+            std::vector<std::set<std::string>> extensions = {
+                {"JPEG"},  // First set with 'JPEG'
+                {"cls"}    // Second set with 'cls'
+            };
+            rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_THROW_ERROR, true);
+            // decoded_output = rocALWebDatasetDecoderSingleShard(handle, path, "", color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            decoded_output = rocALWebDatasetSource(handle, path, "", color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -328,6 +339,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             else
                 decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
+
     }
 
     if (rocalGetStatus(handle) != ROCAL_OK) {

@@ -86,7 +86,7 @@ class WebDatasetSourceReader : public Reader {
     std::vector<std::string> _file_names, _all_shard_file_names_padded;
     std::map<std::string, unsigned int> _file_wds_shard_idx_mapping, _all_shard_wds_shard_idx_mapping_padded;
     std::map<std::string, unsigned int> _file_size, _file_offset, _all_shard_file_sizes_padded, _all_shard_file_offset_padded;
-    unsigned _curr_file_idx;
+    // unsigned _curr_file_idx;
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
@@ -101,8 +101,8 @@ class WebDatasetSourceReader : public Reader {
     int _read_counter = 0;
     void incremenet_read_ptr();
     int release();
-    size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
+    // size_t get_file_shard_id();
+    // void incremenet_file_id() { _file_id++; }
     void parse_tar_files(std::vector<SampleDescription> &samples_container, std::vector<ComponentDescription> &components_container, std::unique_ptr<FileIOStream> &tar_file);
     void parse_index_files(std::vector<SampleDescription> &samples_container,
                       std::vector<ComponentDescription> &components_container,
@@ -120,7 +120,7 @@ class WebDatasetSourceReader : public Reader {
                                               uint file_size, uint offset,
                                               uint wds_shard_index);
     void increment_curr_file_idx();
-    unsigned _shard_start_idx;
+    // unsigned _shard_start_idx;
     signed _shard_size = -1;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
@@ -134,6 +134,7 @@ class WebDatasetSourceReader : public Reader {
     size_t get_dataset_size(); // DataSet Size
     size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
+    void compute_start_and_end_idx_of_all_shards();
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
 };

@@ -963,12 +963,43 @@ extern "C" RocalTensor ROCAL_API_CALL rocALWebDatasetDecoderSingleShard(RocalCon
                                                                         unsigned shard_id,
                                                                         unsigned shard_count,
                                                                         bool is_output,
-                                                                        bool shuffle,
-                                                                        bool loop,
-                                                                        RocalImageSizeEvaluationPolicy decode_size_policy,
-                                                                        unsigned max_width,
-                                                                        unsigned max_height,
-                                                                        RocalDecoderType dec_type,
+                                                                        bool shuffle = false,
+                                                                        bool loop = false,
+                                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
+                                                                        unsigned max_width = 0,
+                                                                        unsigned max_height = 0,
+                                                                        RocalDecoderType dec_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
                                                                         RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+
+/*! Creates WebDataset tar files reader and decoder. It allocates the resources and objects required to read and decode files in webdataset format stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
+ * \param [in] context Rocal context
+ * \param [in] source_path A NULL terminated char string pointing to the location of files on the disk
+ * \param [in] index_path A NULL terminated char string pointing to the location of index files on the disk
+ * \param [in] rocal_color_format The color format the images will be decoded to.
+ * \param [in] internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
+ * \param [in] is_output Boolean variable to enable the audio to be part of the output.
+ * \param [in] shuffle Boolean variable to shuffle the dataset.
+ * \param [in] loop Boolean variable to indefinitely loop through audio.
+ * \param [in] decode_size_policy is the RocalImageSizeEvaluationPolicy for decoding
+ * \param [in] max_width The maximum width of the decoded image files, larger or smaller will be resized to closest
+ * \param [in] max_height The maximum height of the decoded image files, larger or smaller will be resized to closest
+ * \param [in] rocal_decoder_type Determines the decoder_type - image / video / audio
+ * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \return Reference to the output tensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocALWebDatasetSource(RocalContext p_context,
+                                                            const char* source_path,
+                                                            const char* index_path,
+                                                            RocalImageColor rocal_color_format,
+                                                            unsigned internal_shard_count,
+                                                            bool is_output,
+                                                            bool shuffle = false,
+                                                            bool loop = false,
+                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
+                                                            unsigned max_width = 0,
+                                                            unsigned max_height = 0,
+                                                            RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                            RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+
                                                                       
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H

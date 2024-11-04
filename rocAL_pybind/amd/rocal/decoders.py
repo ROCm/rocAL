@@ -477,15 +477,15 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
 
 
 def webdataset(*inputs, file_root='', index_path='', shard_id=0, num_shards=1, random_shuffle=False, stick_to_shard=False, shard_size=-1,
-          color_format=types.RGB, decoder_type=types.DECODER_TJPEG,
-          decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+          output_type=types.RGB, decoder_type=types.DECODER_TJPEG,
+          decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True, device=None):
     """!TODO: Later
     """
     sharding_info = b.RocalShardingInfo(last_batch_policy, last_batch_padded, stick_to_shard, shard_size)
     kwargs_pybind = {
         "source_path": file_root,
         "index_path": index_path,
-        "color_format": color_format,
+        "output_type": output_type,
         "shard_id": shard_id,
         "num_shards": num_shards,
         'is_output': False,
