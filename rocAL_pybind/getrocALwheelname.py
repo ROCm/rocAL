@@ -21,4 +21,4 @@ def wheel_name(**kwargs):
 # Version updates - IMP: Change in version requires to match top level CMakeLists.txt
 ## * getrocALWheelname.py
 ## * setup.py
-print(wheel_name(name='amd-rocal', version='2.1.0'), end='')
+print(wheel_name(name='amd-rocal', version='2.2.0'), end='')
