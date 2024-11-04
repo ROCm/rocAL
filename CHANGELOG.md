@@ -1,61 +1,92 @@
-<p align="center"><img width="70%" src="docs/data/rocAL_logo.png" /></p>
+# Changelog for rocAL
 
-# Changelog
+Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## Online Documentation
-
-[rocAL Documentation](https://github.com/ROCm/rocAL)
-
-## rocAL 2.0.0 (unreleased)
+## rocAL 2.2.0 (unreleased)
 
 ### Added
 
-* Packages - dev & tests
-* Support for audio loader and decoder, which uses libsndfile library to decode wav files
-* C++ rocAL audio unit test and python script to run and compare the outputs
-* Python support for audio decoders
-* Pytorch iterator for Audio
-* Python audio unit test, and support to verify outputs
-* rocDecode for HW decode
+### Changed
+
+### Removed
 
 ### Optimizations
 
-* Tests
-* Setup Script
-
-### Changed
-
-* Image to tensor updates
-* ROCm install - use case graphics removed
-
-### Fixed
-
-* Tests & readme
-
-### Tested Configurations
-
-* Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
-  * RedHat - `8` / `9`
-  * SLES - `15-SP5`
-* ROCm: rocm-core - `5.7.0.50700-6`
-* RPP - `rpp` & `rpp-dev`/`rpp-devel`
-* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
-* rocDecode - `rocdecode` & `rocdecode-dev`/`rocdecode-devel`
-* Protobuf - `libprotobuf-dev`/`protobuf-devel`
-* RapidJSON - `rapidjson-dev` / `rapidjson-devel`
-* Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
-* PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
-* libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* FFMPEG - `ffmpeg` dev package
-* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
-* rocAL Setup Script - `V2.1.0`
-* Dependencies for all the above packages
+### Resolved issues
 
 ### Known issues
 
-* Requires custom deps install
+* The package installation requires manual installation of `TurboJPEG`
+  ```
+  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  mkdir tj-build && cd tj-build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
+  make -j8 && sudo make install
+  ```
+* CentOS/RedHat/SLES requires additional the manual installation of the `FFMPEG Dev` package
+* Hardware decode requires installing ROCm with the `graphics` usecase
+
+### Upcoming changes
+
+## rocAL 2.1.0 for ROCm 6.3.0
+
+### Added
+
+* rocAL Pybind support for package installation has been added. To use the rocAL python module, set the `PYTHONPATH`: `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
+* Last batch policy, pad last batch, stick to shard, and shard size support have been added for the coco, caffe, caffe2, mxnet, tf, and cifar10 image readers.
+
+### Changed
+
+* rocdecode installation disabled when running the setup script.
+
+### Removed
+
+* rocDecode dependencies for package install has been removed.
+
+### Optimizations
+
+* CTest has been updated.
+
+### Resolved issues
+
+* Test failures have been fixed
+
+### Known issues
+
+* The package installation requires the manual installation of `TurboJPEG` and `RapidJSON`.
+* CentOS/RedHat/SLES requires additional the manual installation of the `FFMPEG Dev` package.
+* Hardware decode requires installing ROCm with the `graphics` usecase.
+
+### Upcoming changes
+
+* Optimized audio augmentations support
+
+## rocAL 2.0.0 for ROCm 6.2.1
+
+### Changes
+
+* The new version of rocAL introduces many new features, but does not modify any of the existing public API functions.However, the version number was incremented from 1.3 to 2.0.
+  Applications linked to version 1.3 must be recompiled to link against version 2.0.
+* Added development and test packages.
+* Added C++ rocAL audio unit test and Python script to run and compare the outputs.
+* Added Python support for audio decoders.
+* Added Pytorch iterator for audio.
+* Added Python audio unit test and support to verify outputs.
+* Added rocDecode for HW decode.
+* Added support for:
+  * Audio loader and decoder, which uses libsndfile library to decode wav files
+  * Audio augmentation - PreEmphasis filter, Spectrogram, ToDecibels, Resample, NonSilentRegionDetection. MelFilterBank
+  * Generic augmentation - Slice, Normalize
+  * Reading from file lists in file reader
+  * Downmixing audio channels during decoding
+  * TensorTensorAdd and TensorScalarMultiply operations
+  * Uniform and Normal distribution nodes
+* Image to tensor updates
+* ROCm install - use case graphics removed
+
+### Known issues
+
+* Dependencies are not installed with the rocAL package installer. Dependencies must be installed with the prerequisite setup script provided. See the [rocAL README on GitHub](https://github.com/ROCm/rocAL/blob/docs/6.2.1/README.md#prerequisites-setup-script) for details.
 
 ## rocAL 1.0.0
 

@@ -218,9 +218,20 @@ enum RocalTensorLayout {
     /*! \brief AMD ROCAL_NFCHW
      */
     ROCAL_NFCHW = 3,
+    /*! \brief AMD ROCAL_NHW
+     */
+    ROCAL_NHW = 4,
+    /*! \brief AMD ROCAL_NFT
+     * Spectrogram Layout FT
+     */
+    ROCAL_NFT = 5,
+    /*! \brief AMD ROCAL_NTF
+     * Spectrogram Layout TF
+     */
+    ROCAL_NTF = 6,
     /*! \brief AMD ROCAL_NONE
      */
-    ROCAL_NONE = 4  // Layout for generic tensors (Non-Image or Non-Video)
+    ROCAL_NONE = 7  // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 /*! \brief rocAL Tensor Output Type enum
@@ -238,7 +249,13 @@ enum RocalTensorOutputType {
     ROCAL_UINT8 = 2,
     /*! \brief AMD ROCAL_INT8
      */
-    ROCAL_INT8 = 3
+    ROCAL_INT8 = 3,
+    /*! \brief AMD ROCAL_UINT32
+     */
+    ROCAL_UINT32 = 4,
+    /*! \brief AMD ROCAL_INT32
+     */
+    ROCAL_INT32 = 5
 };
 
 /*! \brief rocAL Decoder Type enum
@@ -377,7 +394,51 @@ enum RocalExternalSourceMode {
     ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
 };
 
-/*! \brief Tensor Last Batch Policies
+/*! \brief rocAL Audio Border Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalAudioBorderType {
+    /*! \brief AMD ROCAL_ZERO
+     */
+    ROCAL_ZERO = 0,
+    /*! \brief AMD ROCAL_CLAMP
+     */
+    ROCAL_CLAMP = 1,
+    /*! \brief AMD ROCAL_REFLECT
+     */
+    ROCAL_REFLECT = 2
+};
+
+/*! \brief rocAL Out Of Bounds Policy Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalOutOfBoundsPolicy {
+    /*! \brief Pad
+     */
+    ROCAL_PAD = 0,
+    /*! \brief Trimtoshape
+     */
+    ROCAL_TRIMTOSHAPE,
+    /*! \brief Error
+     */
+    ROCAL_ERROR
+};
+
+/*! \brief rocAL MelScale formula enum
+ * \ingroup group_rocal_types
+ */
+enum RocalMelScaleFormula {
+    /*! \brief Slaney
+     * Follows Slaney’s MATLAB Auditory Modelling Work behavior
+     */
+    ROCAL_MELSCALE_SLANEY = 0,
+    /*! \brief HTK
+     * Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+     */
+    ROCAL_MELSCALE_HTK
+};
+
+/*! \brief Tensor Last Batch Policy Type enum
  *  \ingroup group_rocal_types
  */
 enum RocalLastBatchPolicy {
@@ -387,9 +448,39 @@ enum RocalLastBatchPolicy {
     /*! \brief ROCAL_LAST_BATCH_DROP - The last batch is dropped if there are not enough samples from the current epoch.
      */
     ROCAL_LAST_BATCH_DROP = 1,
-    /*! \brief ROCAL_LAST_BATCH_PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled from python end)
+    /*! \brief ROCAL_LAST_BATCH_PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the python iterator)
      */
     ROCAL_LAST_BATCH_PARTIAL = 2
+};
+
+/*! \brief  rocAL RocalShardingInfo enum
+ * \ingroup group_rocal_types
+ */
+struct RocalShardingInfo {
+    RocalLastBatchPolicy last_batch_policy;
+    bool pad_last_batch_repeated;
+    bool stick_to_shard;
+    int32_t shard_size;
+
+    // Constructor with default values
+    RocalShardingInfo()
+        : last_batch_policy(RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL),
+          pad_last_batch_repeated(false),
+          stick_to_shard(true),
+          shard_size(-1)
+    {}
+
+    // Constructor that initializes all members
+    RocalShardingInfo(
+        RocalLastBatchPolicy last_batch_policy,
+        bool pad_last_batch_repeated,
+        bool stick_to_shard,
+        int shard_size
+    )
+        : last_batch_policy(last_batch_policy),
+          pad_last_batch_repeated(pad_last_batch_repeated),
+          stick_to_shard(stick_to_shard),
+          shard_size(shard_size) {}
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

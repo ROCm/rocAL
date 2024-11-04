@@ -45,25 +45,25 @@ Refer [rocAL build instructions](https://github.com/ROCm/rocAL#build-instruction
 * Contains the image augmentations & file read and decode operations which are linked to rocAL C++ API
 * All ops (listed below) are supported for the single input image and batched inputs.
 
-| Image Augmentation |   Reader and Decoder      |        Geometric Ops         |
-| :----------------: | :-----------------------: | :--------------------------: |
-|    Color Twist     |   Image File Reader       |     Crop Mirror Normalize    |
-| Color Temperature  |      Caffe Reader         |          Crop Resize         |
-|     Brightness     |      Caffe2 Reader        |            Resize            |
-|  Gamma Correction  |      CIFAR10 Reader       |          Random Crop         |
-|        Snow        |       COCO Reader         |         Warp Affine          |
-|        Rain        |     TF Record Reader      |           Fish Eye           |
-|        Blur        |   MXNet Record Reader     |        Lens Correction       |
-|       Jitter       |    Video File Reader      |           Rotate             |
-|        Hue         |     Image Decoder         |            Crop              |
-|     Saturation     | Image Decoder Random Crop |            Flip              |
-|        Fog         |      Video Decoder        |    Resize Crop Mirror        |
-|      Contrast      |                           | Resize Crop Mirror Normalize |
-|      Vignette      |                           |                              |
-|     SNP Noise      |                           |                              |
-|      Pixelate      |                           |                              |
-|       Blend        |                           |                              |
-|      Exposure      |                           |                              |
+| Image Augmentation |   Reader and Decoder      |        Geometric Ops         |     Audio Augmentation     |
+| :----------------: | :-----------------------: | :--------------------------: | :------------------------: |
+|    Color Twist     |   Image File Reader       |     Crop Mirror Normalize    |    PreEmphasis Filter      |
+| Color Temperature  |      Caffe Reader         |          Crop Resize         |      Non-Silent Region     |
+|     Brightness     |      Caffe2 Reader        |            Resize            |          Resample          |
+|  Gamma Correction  |      CIFAR10 Reader       |          Random Crop         |        Spectrogram         |
+|        Snow        |       COCO Reader         |         Warp Affine          |        Mel-Filter Bank     |
+|        Rain        |     TF Record Reader      |           Fish Eye           |          ToDecibels        |
+|        Blur        |   MXNet Record Reader     |        Lens Correction       |          Normalize         |
+|       Jitter       |    Video File Reader      |           Rotate             |                            |  
+|        Hue         |     Image Decoder         |            Crop              |                            |
+|     Saturation     | Image Decoder Random Crop |            Flip              |                            |
+|        Fog         |      Video Decoder        |    Resize Crop Mirror        |                            |
+|      Contrast      |      Audio Decoder        | Resize Crop Mirror Normalize |                            |
+|      Vignette      |                           |            Slice             |                            |
+|     SNP Noise      |                           |                              |                            |
+|      Pixelate      |                           |                              |                            |
+|       Blend        |                           |                              |                            |
+|      Exposure      |                           |                              |                            |
 
 ### amd.rocal.pipeline
 
@@ -80,6 +80,7 @@ amd.rocal.types are enums exported from C++ API to python. Some examples include
 
 * Contains ROCALGenericIterator for Pytorch.
 * ROCALClassificationIterator class implements iterator for image classification and return images with corresponding labels.
+* ROCALAudioIterator class for audio tasks and returns audio data, corresponding labels and its roi.
 * From the above classes, any hybrid iterator pipeline can be created by adding augmentations.
 * See example [PyTorch Simple Example](./examples/pytorch/). Requires PyTorch.
 

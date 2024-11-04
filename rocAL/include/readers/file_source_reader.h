@@ -28,8 +28,8 @@ THE SOFTWARE.
 #include <vector>
 
 #include "pipeline/commons.h"
-#include "readers/image/image_reader.h"
 #include "pipeline/timing_debug.h"
+#include "readers/image/image_reader.h"
 
 class FileSourceReader : public Reader {
    public:
@@ -67,45 +67,32 @@ class FileSourceReader : public Reader {
 
     FileSourceReader();
 
-    //! Returns the number of images in the last batch
-    size_t last_batch_padded_size() override;
+    std::string get_root_folder_path() override;  // Returns the root folder path
 
+    std::vector<std::string> get_file_paths_from_meta_data_reader() override;  // Returns the relative file path from the meta-data reader
    private:
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;
+    std::string _file_list_path;
     DIR *_src_dir;
     DIR *_sub_dir;
     struct dirent *_entity;
     std::vector<std::string> _file_names;
-    unsigned _curr_file_idx;
     FILE *_current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
-    std::string _last_file_name, _last_file_path;
-    size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
-    size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
+    std::string _last_file_name, _last_file_path, _absolute_file_path;
+    size_t _batch_size = 1;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t _file_count_all_shards;
     void incremenet_read_ptr();
     int release();
-    size_t get_file_shard_id();
-    void incremenet_file_id() { _file_id++; }
-    void fill_last_batch();
-    void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    //! Pair containing the last batch policy and last_batch_padded values for deciding what to do with last batch
-    std::pair<RocalBatchPolicy, bool> _last_batch_info;
-    size_t _last_batch_padded_size = 0;
-    Reader::Status generate_file_names();
+    //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
+    size_t _num_padded_samples = 0;                  //! Number of samples that are padded in the last batch which would differ for each shard.
+    Reader::Status generate_file_names();         // Function that would generate _file_names containing all the samples in the dataset
 };

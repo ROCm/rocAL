@@ -28,6 +28,7 @@ THE SOFTWARE.
  */
 
 #pragma once
+#include <random>
 #include <vector>
 
 #include "pipeline/exception.h"
@@ -46,6 +47,9 @@ enum class RocalTensorlayout {
     NCHW,
     NFHWC,
     NFCHW,
+    NHW,
+    NFT,
+    NTF,
     NONE
 };
 
@@ -155,14 +159,48 @@ struct Timing {
     long long unsigned video_process_time= 0;
 };
 
-/*! \brief Tensor Last Batch Policies
+/*! \brief Tensor Last Batch Policy Type enum
  These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
         FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
         DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
-        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, and padding the remaining samples with either last image or wrapping up the dataset - the padded images are removed in the python end
+        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the pytorch iterator)
  */
 enum RocalBatchPolicy {
     FILL = 0,
     DROP,
     PARTIAL
+};
+
+template <typename RNG = std::mt19937>
+class BatchRNG {
+   public:
+    /**
+     * @brief Used to keep batch of RNGs
+     *
+     * @param seed Used to generate seed_seq to initialize batch of RNGs
+     * @param batch_size How many RNGs to store
+     * @param state_size How many seed are used to initialize one RNG. Used to
+     * lower probablity of collisions between seeds used to initialize RNGs in
+     * different operators.
+     */
+    BatchRNG(int64_t seed = 1, int batch_size = 1, int state_size = 4)
+        : _seed(seed) {
+        std::seed_seq seq{_seed};
+        std::vector<uint32_t> seeds(batch_size * state_size);
+        seq.generate(seeds.begin(), seeds.end());
+        _rngs.reserve(batch_size);
+        for (int i = 0; i < batch_size * state_size; i += state_size) {
+            std::seed_seq s(seeds.begin() + i, seeds.begin() + i + state_size);
+            _rngs.emplace_back(s);
+        }
+    }
+
+    /**
+     * Returns engine corresponding to given sample ID
+     */
+    RNG &operator[](int sample) noexcept { return _rngs[sample]; }
+
+   private:
+    int64_t _seed;
+    std::vector<RNG> _rngs;
 };
