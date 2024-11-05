@@ -18,18 +18,19 @@ def show_images(image_batch, device):
     rows = (batch_size + 1) // (columns)
     #fig = plt.figure(figsize = (32,(32 // columns) * rows))
     gs = gridspec.GridSpec(rows, columns)
-    if device == "gpu":
-        print("type(image_batch) -- ", type(image_batch))
-        image_batch = np.from_dlpack(image_batch)
-        print("type(image_batch) -- ", type(image_batch))
-
     for j in range(rows*columns):
         #print('\n Display image: ', j)
         plt.subplot(gs[j])
-        plt.axis("off")
         img = image_batch[j]
-        plt.imshow(img)
-        
+        plt.axis("off")
+        if device == "cpu":
+            plt.imshow(img)
+        else:
+            try:
+                import cupy as cp
+                plt.imshow(cp.asnumpy(img))
+            except ImportError:
+                pass
     plt.show()
 
 

@@ -223,7 +223,6 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
         DLDevice dev;
 
         dev.device_id = 0;
-        std::cout << "in generate device type -- " << rocal_tensor->mem_type() << std::endl;
         switch (rocal_tensor->mem_type()) {
             case RocalOutputMemType::ROCAL_MEMCPY_GPU:
                 dev.device_type = kDLROCM;
