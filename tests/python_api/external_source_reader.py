@@ -42,8 +42,11 @@ def main():
 
     def image_dump(img, idx, device="cpu", mode=0):
         if device == "gpu":
-            print("type(img) -- ", type(img))
-            img = np.from_dlpack(img)
+            try:
+                import cupy as cp
+                img = cp.asnumpy(img)
+            except ImportError:
+                pass
         img = img.transpose([1, 2, 0])  # NCHW
         img = (img).astype('uint8')
         if mode!=2:
