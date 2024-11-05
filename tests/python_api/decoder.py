@@ -18,19 +18,18 @@ def show_images(image_batch, device):
     rows = (batch_size + 1) // (columns)
     #fig = plt.figure(figsize = (32,(32 // columns) * rows))
     gs = gridspec.GridSpec(rows, columns)
+    if device == "gpu":
+        print("type(image_batch) -- ", type(image_batch))
+        image_batch = np.from_dlpack(image_batch)
+        print("type(image_batch) -- ", type(image_batch))
+
     for j in range(rows*columns):
         #print('\n Display image: ', j)
         plt.subplot(gs[j])
         plt.axis("off")
-        if device == "cpu":
-            img = image_batch[j]
-            plt.imshow(img)
-        else:
-            print("type(image_batch) -- ", type(image_batch))
-            image_batch = np.from_dlpack(image_batch)
-            print("type(image_batch) -- ", type(image_batch))
-            img = image_batch[j]
-            plt.imshow(img)
+        img = image_batch[j]
+        plt.imshow(img)
+        
     plt.show()
 
 
@@ -50,13 +49,15 @@ def main():
     print ('Optional arguments: <cpu/gpu image_folder>')
     bs = batch_size
     rocal_device = "cpu"
+    rocal_cpu = True
     img_folder = image_dir
     if  len(sys.argv) > 1:
       if(sys.argv[1] == "gpu"):
           rocal_device = "gpu"
+          rocal_cpu = False
     if  len(sys.argv) > 2:
       img_folder = sys.argv[2]
-    pipe = image_decoder_pipeline(batch_size=bs, num_threads=1, device_id=gpu_id, rocal_cpu=True, tensor_layout=types.NHWC, 
+    pipe = image_decoder_pipeline(batch_size=bs, num_threads=1, device_id=gpu_id, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC, 
                                 reverse_channels=True, mean = [0, 0, 0], std=[255,255,255], device=rocal_device, path=img_folder)
     show_pipeline_output(pipe, device=rocal_device)
 

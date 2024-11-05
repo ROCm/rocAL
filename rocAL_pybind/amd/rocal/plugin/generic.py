@@ -27,7 +27,12 @@ import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
 import ctypes
-    
+try:
+    import cupy as cp
+    CUPY_FOUND=True
+except ImportError:
+    CUPY_FOUND=False
+
 class ROCALGenericIterator(object):
     """!Iterator for processing data
 
@@ -47,8 +52,11 @@ class ROCALGenericIterator(object):
         self.tensor_format = tensor_layout
         self.multiplier = multiplier
         self.offset = offset
-        print("in pipeline -- device -- ", device)
         self.device = device
+        if self.device is "gpu" or "cuda":
+            if not CUPY_FOUND:
+                print('info: Import CuPy failed. Falling back to CPU!')
+                self.device = "cpu"
         self.device_id = device_id
         self.reverse_channels = reverse_channels
         self.tensor_dtype = tensor_dtype
@@ -126,26 +134,33 @@ class ROCALGenericIterator(object):
                     self.dtype = self.output_tensor_list[i].dtype()
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.labels = np.empty(self.labels_size, dtype="int32")
+                else:
+                    self.dtype = self.output_tensor_list[i].dtype()
+                    with cp.cuda.Device(device=self.device_id):
+                        self.output = cp.empty(
+                            self.dimensions, dtype=self.dtype)
+                        self.labels = cp.empty(
+                            self.labels_size, dtype="int32")
+
+                if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    print("in gpu1")
-                    self.output = self.output_tensor_list[i].__dlpack__()
-                    #np.from_dlpack(self.output_tensor_list[i])
+                    self.output_tensor_list[i].copy_data(self.output.data.ptr)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
                 if self.device == "cpu":
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
-                    print("in gpu2")
-                    self.output_tensor_list[i].__dlpack__()
-                    #np.from_dlpack(self.output_tensor_list[i])
+                    self.output_tensor_list[i].copy_data(
+                        self.output_list[i].data.ptr)
         if (self.loader._is_external_source_operator):
             self.labels = self.loader.get_image_labels()
             if self.device == "cpu":
                 self.labels_tensor = self.labels.astype(dtype=np.int_)
             else:
-                self.labels_tensor = self.labels.astype(dtype=np.int_)
+                with cp.cuda.Device(device=self.device_id):
+                    self.labels_tensor = self.labels.astype(dtype=cp.int_)
             return self.output_list, self.labels_tensor
 
         if self.loader._name == "labelReader":
@@ -166,7 +181,9 @@ class ROCALGenericIterator(object):
                 if self.device == "cpu":
                     self.labels_tensor = self.labels.astype(dtype=np.int_)
                 else:
-                    self.labels_tensor = self.labels.astype(dtype=np.int_)
+                    with cp.cuda.Device(device=self.device_id):
+                        self.labels_tensor = self.labels.astype(dtype=cp.int_)
+
         return self.output_list, self.labels_tensor
 
     def reset(self):
