@@ -357,8 +357,13 @@ def mxnet(path, stick_to_shard=False, pad_last_batch=False):
     return mxnet_metadata
 
 def webdataset(path, index_paths="", ext = None, missing_components_behavior = types.THROW_ERROR):
-    """
-    TODO: to be added later
+    """!Creates an WebDataset node for reading data from tar files.
+
+        @param path                         Path to the tar files.
+        @param index_paths                  Index Path to index files
+        @param missing_components_behavior  Tells what to do with output tensor data when any compoenet is missing - THROW_ERROR, SKIP, EMPTY_OUTPUT
+
+        @return    Metadata and loaded data from the tar file.
     """
     Pipeline._current_pipeline._reader = "WebDataset"
      # Output
@@ -369,7 +374,6 @@ def webdataset(path, index_paths="", ext = None, missing_components_behavior = t
         "missing_components_behavior": missing_components_behavior,
         "is_output": True
     }
-    print("\n webdataset decoder - kwargs_pybind: " , kwargs_pybind)
     webdata_metadata = b.webDatasetReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return webdata_metadata
