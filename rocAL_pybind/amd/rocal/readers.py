@@ -369,6 +369,7 @@ def webdataset(path, index_paths="", ext = None, missing_components_behavior = t
         "missing_components_behavior": missing_components_behavior,
         "is_output": True
     }
+    print("\n webdataset decoder - kwargs_pybind: " , kwargs_pybind)
     webdata_metadata = b.webDatasetReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return webdata_metadata

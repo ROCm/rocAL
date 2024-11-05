@@ -417,17 +417,11 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
             uint32_t largest_shard_size = std::ceil(dataset_size * 1.0 / _shard_count);
             auto start = _file_names.begin() + start_idx + total_padded_samples;
             auto end = start + actual_shard_size_without_padding;
-            // auto start_offset = _file_offsets.begin() + start_idx + total_padded_samples;
-            // auto end_offset = start_offset + actual_shard_size_without_padding;
-            // auto start_file_idx = _file_idx.begin() + start_idx + total_padded_samples;
-            // auto end_file_idx = start_file_idx + actual_shard_size_without_padding;
             if (largest_shard_size % _batch_size) {
                 size_t num_padded_samples = 0;
                 num_padded_samples = (largest_shard_size - actual_shard_size_without_padding) + _batch_size - (largest_shard_size % _batch_size);
                 _file_count_all_shards += num_padded_samples;
                 _file_names.insert(end, num_padded_samples, _file_names[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
-                // _file_offsets.insert(end_offset, num_padded_samples, _file_offsets[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
-                // _file_idx.insert(end_file_idx, num_padded_samples, _file_idx[start_idx + actual_shard_size_without_padding + total_padded_samples - 1]);
                 total_padded_samples += num_padded_samples;
             }
         }
@@ -436,7 +430,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
     compute_start_and_end_idx_of_all_shards();
     closedir(_sub_dir);
     if (!_file_names.empty())
-        std::cout << "WebDataset Reader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _full_path << std::endl;
+        std::cout << "\n WebDataset Reader ShardID [" << TOSTR(_shard_id) << "] Total of " << TOSTR(_file_names.size()) << " images loaded from " << _full_path << std::endl;
 
     return ret;
 }

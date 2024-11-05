@@ -496,5 +496,6 @@ def webdataset(*inputs, file_root='', index_path='', shard_id=0, num_shards=1, r
         "max_height": max_decoded_height,
         "dec_type": decoder_type,
         "sharding_info": sharding_info} # TODO:Add support for LBP for web-dataset reader
+    print("\n webdataset decoder - kwargs_pybind: " , kwargs_pybind)
     decoded_audio = b.webdatasetDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
