@@ -59,17 +59,12 @@ def main():
     world_size = 1
     color_format=types.RGB
     print("*********************************************************************")
-    webdataset_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu, tensor_dtype = types.UINT8, )
+    webdataset_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=_rali_cpu, tensor_dtype = types.UINT8)
     with webdataset_pipeline:
         img_raw = fn.readers.webdataset(
         path=wds_data, ext=[{'jpg', 'cls'}],
         )
-        img = fn.decoders.webdataset(img_raw, file_root=wds_data, output_type=color_format,max_decoded_width=500, max_decoded_height=500, shard_id=0, num_shards=1)
-
-        tensor_format = types.NHWC
-        tensor_dtype = types.FLOAT
-
-
+        img = fn.decoders.webdataset(img_raw, file_root=wds_data, output_type=color_format, max_decoded_width=500, max_decoded_height=500, shard_id=0, num_shards=1)
         webdataset_pipeline.set_outputs(img)
     webdataset_pipeline.build()
     audioIteratorPipeline = ROCALClassificationIterator(webdataset_pipeline, auto_reset=True)
@@ -80,12 +75,12 @@ def main():
             for j in range(len(output_list)):
                 print("**************", i, "*******************")
                 print("**************starts*******************")
-                # print("\nImages:\n", output_list[j])
+                print("\nImages:\n", output_list[j])
                 print("\nLABELS:\n", labels)
                 print("**************ends*******************")
                 print("**************", i, "*******************")
                 for img in output_list[j]:
-                    draw_patches(img, cnt, "cpu", tensor_dtype, color_format=color_format)
+                    draw_patches(img, cnt, "cpu", types.FLOAT, color_format=color_format)
                     cnt += 1
 
         audioIteratorPipeline.reset()
