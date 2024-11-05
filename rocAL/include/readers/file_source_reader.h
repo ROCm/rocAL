@@ -82,7 +82,6 @@ class FileSourceReader : public Reader {
     std::vector<std::string> _file_names;
     FILE *_current_fPtr;
     unsigned _current_file_size;
-    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
     size_t _batch_size = 1;
