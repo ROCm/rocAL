@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include <dirent.h>
 
 #include <map>
+#include <set>
+#include <unordered_set>
 
 #include "meta_data/meta_data.h"
 #include "meta_data/meta_data_reader.h"
@@ -31,10 +33,8 @@ THE SOFTWARE.
 #include "pipeline/filesystem.h"
 #include "readers/image/image_reader.h"
 #include "tar_helper_functions.h"
-#include <set>
-#include <unordered_set>
 class WebDataSetMetaDataReader : public MetaDataReader {
-  public:
+   public:
     void init(const MetaDataConfig &cfg,
               pMetaDataBatch meta_data_batch) override;
     void lookup(const std::vector<std::string> &image_names) override;
@@ -49,7 +49,7 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     }
     WebDataSetMetaDataReader();
 
-  private:
+   private:
     bool exists(const std::string &image_name) override;
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
@@ -67,11 +67,11 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     std::unordered_map<std::string, uint> _ext_map;
     std::vector<std::string> _subfolder_file_names;
     void parse_tar_files(std::vector<SampleDescription> &samples_container,
-                    std::vector<ComponentDescription> &components_container,
-                    std::unique_ptr<FileIOStream> &tar_file);
+                         std::vector<ComponentDescription> &components_container,
+                         std::unique_ptr<FileIOStream> &tar_file);
     void parse_index_files(std::vector<SampleDescription> &samples_container,
-                      std::vector<ComponentDescription> &components_container,
-                      const std::string &paths_to_index_files);
+                           std::vector<ComponentDescription> &components_container,
+                           const std::string &paths_to_index_files);
     void parse_sample_description(
         std::vector<SampleDescription> &samples_container,
         std::vector<ComponentDescription> &components_container,

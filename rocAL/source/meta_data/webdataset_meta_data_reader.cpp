@@ -22,24 +22,26 @@ THE SOFTWARE.
 
 #include "meta_data/webdataset_meta_data_reader.h"
 
-#include "pipeline/commons.h"
-#include "pipeline/exception.h"
+#include <fcntl.h>
+#include <libtar.h>
+#include <string.h>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <cerrno>
 #include <cstring>
-#include <fcntl.h>
-#include <libtar.h>
 #include <sstream>
-#include <string.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
+
 using namespace std;
 
-inline bool isJPEG(const std::string& ext) {
+inline bool isJPEG(const std::string &ext) {
     std::string lowerExt = ext;
     std::transform(lowerExt.begin(), lowerExt.end(), lowerExt.begin(), ::tolower);
     return lowerExt == "jpg" || lowerExt == "jpeg" || lowerExt == "jpe";
@@ -89,7 +91,7 @@ split_name(const std::string &file_path) {
 
 void WebDataSetMetaDataReader::add(std::string image_name,
                                    AsciiValues ascii_value) {
-        pMetaDataAscii info = std::make_shared<AsciiValue>(ascii_value);
+    pMetaDataAscii info = std::make_shared<AsciiValue>(ascii_value);
     if (exists(image_name)) {
         auto it = _map_content.find(image_name);
         it->second->get_ascii_values().insert(
@@ -163,23 +165,24 @@ void WebDataSetMetaDataReader::parse_sample_description(
     // Reading consecutive components
     ComponentDescription component;
     while (components_stream >> component.ext) {
-
         if (index_version == create_version_number(1, 2)) {
             if (!(components_stream >> component.offset >> component.size >>
                   component.filename)) {
-                THROW("Could not find all necessary component parameters "
-                      "(offset, size or filename). Every record in the index "
-                      "file should look like: `<ext> <offset> <size> "
-                      "<filename>`.");
+                THROW(
+                    "Could not find all necessary component parameters "
+                    "(offset, size or filename). Every record in the index "
+                    "file should look like: `<ext> <offset> <size> "
+                    "<filename>`.");
             }
         } else {
             if (!(components_stream >> component.offset >> component.size))
-                THROW("Could not find all necessary component parameters "
-                      "(offset or size). Every record in the index file should "
-                      "look like: `<ext> <offset> <size>`");
+                THROW(
+                    "Could not find all necessary component parameters "
+                    "(offset or size). Every record in the index file should "
+                    "look like: `<ext> <offset> <size>`");
         }
 
-        if (component.filename.empty()) // Use line number as file number
+        if (component.filename.empty())  // Use line number as file number
             component.filename = std::to_string(line);
         else {
             // Find the position of the last period
@@ -191,8 +194,9 @@ void WebDataSetMetaDataReader::parse_sample_description(
         }
 
         if (!(component.offset % kBlockSize == 0))
-            THROW("tar offset is not a multiple of tar block size kBlockSize, "
-                  "perhaps the size value is exported before offset?");
+            THROW(
+                "tar offset is not a multiple of tar block size kBlockSize, "
+                "perhaps the size value is exported before offset?");
 
         components_container.emplace_back(std::move(component));
         samples_container.back().components.num++;
@@ -300,7 +304,6 @@ void WebDataSetMetaDataReader::parse_tar_files(
 }
 
 void WebDataSetMetaDataReader::read_all(const std::string &_path) {
-
     uint ext_idx = 0;
     for (size_t output_index = 0; output_index < _exts.size(); output_index++) {
         for (auto &ext : _exts[output_index]) {
@@ -331,9 +334,10 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
     } else {
         _folder_path = _index_paths;
         if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
-            THROW("WebDatasetSourceReader :: ERROR: Failed opening the "
-                  "directory at " +
-                  _folder_path);
+            THROW(
+                "WebDatasetSourceReader :: ERROR: Failed opening the "
+                "directory at " +
+                _folder_path);
         _full_path = _folder_path;
         while ((_entity = readdir(_sub_dir)) != nullptr) {
             std::string entry_name(_entity->d_name);
@@ -343,9 +347,10 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
         }
         std::sort(_index_name_list.begin(), _index_name_list.end());
         if ((_sub_dir = opendir(_path.c_str())) == nullptr)
-            THROW("WebDatasetSourceReader :: ERROR: Failed opening the "
-                  "directory at " +
-                  _path);
+            THROW(
+                "WebDatasetSourceReader :: ERROR: Failed opening the "
+                "directory at " +
+                _path);
         _full_path = _path;
         while ((_entity = readdir(_sub_dir)) != nullptr) {
             std::string entry_name(_entity->d_name);
@@ -376,12 +381,12 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
 
         // After parsing add the contents to the map
         for (auto &sample : unfiltered_samples) {
-            if (_missing_component_behaviour == MissingComponentsBehaviour::EMPTY) { // empty_outputs
+            if (_missing_component_behaviour == MissingComponentsBehaviour::EMPTY) {  // empty_outputs
                 AsciiValues ascii_values;
                 ascii_values.resize(_ext_map.size());
-                std::string  last_file_name;
+                std::string last_file_name;
                 for (auto &component : sample.components) {
-                    if (!isJPEG(component.ext)) { // Add more components as we encounter
+                    if (!isJPEG(component.ext)) {  // Add more components as we encounter
                         _wds_shards[wds_shard_index]->set_read_position(component.offset);
                         std::vector<uint8_t> cls_data(component.size);
                         _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
@@ -394,13 +399,13 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 }
                 add(last_file_name, ascii_values);
                 ascii_values.clear();
-            }  else {
+            } else {
                 auto skip_sample = false;
                 AsciiValues ascii_values;
                 ascii_values.resize(_ext_map.size());
-                std::string  last_file_name;
+                std::string last_file_name;
                 for (auto &component : sample.components) {
-                    if (!isJPEG(component.ext)) { // Add more components as we encounter
+                    if (!isJPEG(component.ext)) {  // Add more components as we encounter
                         _wds_shards[wds_shard_index]->set_read_position(component.offset);
                         std::vector<uint8_t> cls_data(component.size);
                         _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
@@ -411,12 +416,12 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                     }
                     last_file_name = component.filename;
                 }
-                for (auto& ascii_component: ascii_values) {
-                    if(ascii_component.size() < _ext_map.size()) {   // TODO - Check if it should be less that extension size
-                        if (_missing_component_behaviour == MissingComponentsBehaviour::SKIP) { // skipping sample
+                for (auto &ascii_component : ascii_values) {
+                    if (ascii_component.size() < _ext_map.size()) {                              // TODO - Check if it should be less that extension size
+                        if (_missing_component_behaviour == MissingComponentsBehaviour::SKIP) {  // skipping sample
                             WRN("WARNING: Skipping the sample with missing components.");
                             skip_sample = true;
-                        } else if (_missing_component_behaviour == MissingComponentsBehaviour::THROW_ERROR) { // throw error
+                        } else if (_missing_component_behaviour == MissingComponentsBehaviour::THROW_ERROR) {  // throw error
                             THROW("ERROR: Missing components in the sample. Please check the sample components");
                         }
                     }

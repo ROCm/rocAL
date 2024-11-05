@@ -38,7 +38,7 @@ THE SOFTWARE.
 #include "readers/image/image_reader.h"
 
 class WebDatasetSourceReader : public Reader {
-  public:
+   public:
     //! Reads the TFRecord File, and loads the image ids and other necessary
     //! info
     /*!
@@ -70,7 +70,7 @@ class WebDatasetSourceReader : public Reader {
 
     WebDatasetSourceReader();
 
-  private:
+   private:
     //! opens the folder containnig the images
     Reader::Status webdataset_record_reader();
     Reader::Status folder_reading();
@@ -105,8 +105,8 @@ class WebDatasetSourceReader : public Reader {
     // void incremenet_file_id() { _file_id++; }
     void parse_tar_files(std::vector<SampleDescription> &samples_container, std::vector<ComponentDescription> &components_container, std::unique_ptr<FileIOStream> &tar_file);
     void parse_index_files(std::vector<SampleDescription> &samples_container,
-                      std::vector<ComponentDescription> &components_container,
-                      const std::string &index_path);
+                           std::vector<ComponentDescription> &components_container,
+                           const std::string &index_path);
     void parse_sample_description(
         std::vector<SampleDescription> &samples_container,
         std::vector<ComponentDescription> &components_container,
@@ -131,9 +131,9 @@ class WebDatasetSourceReader : public Reader {
     size_t _num_padded_samples = 0;
     bool _stick_to_shard = false;
     bool _pad_last_batch_repeated = false;
-    size_t get_dataset_size(); // DataSet Size
-    size_t actual_shard_size_without_padding(); // Number of files belonging to a shard (without padding)
-    size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
+    size_t get_dataset_size();                    // DataSet Size
+    size_t actual_shard_size_without_padding();   // Number of files belonging to a shard (without padding)
+    size_t largest_shard_size_without_padding();  // Number of files belonging to a shard (with padding)
     void compute_start_and_end_idx_of_all_shards();
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
