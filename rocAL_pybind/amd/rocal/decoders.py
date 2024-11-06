@@ -479,7 +479,7 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
 def webdataset(*inputs, file_root='', index_path='', shard_id=0, num_shards=1, random_shuffle=False, stick_to_shard=False, shard_size=-1,
           output_type=types.RGB, decoder_type=types.DECODER_TJPEG,
           decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True, device=None):
-        """!Decodes tar files.
+    """!Decodes tar files.
 
         @param inputs                   list of input tar files.
         @param file_root                Folder Path to the audio data.
