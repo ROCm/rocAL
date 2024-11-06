@@ -2,6 +2,32 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
+## rocAL 2.2.0 (unreleased)
+
+### Added
+
+### Changed
+
+### Removed
+
+### Optimizations
+
+### Resolved issues
+
+### Known issues
+
+* The package installation requires manual installation of `TurboJPEG`
+  ```
+  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  mkdir tj-build && cd tj-build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
+  make -j8 && sudo make install
+  ```
+* CentOS/RedHat/SLES requires additional the manual installation of the `FFMPEG Dev` package
+* Hardware decode requires installing ROCm with the `graphics` usecase
+
+### Upcoming changes
+
 ## rocAL 2.1.0 for ROCm 6.3.0
 
 ### Added
@@ -61,16 +87,6 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Known issues
 
 * Dependencies are not installed with the rocAL package installer. Dependencies must be installed with the prerequisite setup script provided. See the [rocAL README on GitHub](https://github.com/ROCm/rocAL/blob/docs/6.2.1/README.md#prerequisites-setup-script) for details.
-
-### **rocBLAS** (4.2.1)
-
-#### Removals
-
-* Removed Device_Memory_Allocation.pdf link in documentation.
-
-#### Resolved issues
-
-* Fixed error/warning message during `rocblas_set_stream()` call.
 
 ## rocAL 1.0.0
 

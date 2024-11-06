@@ -60,8 +60,7 @@ rocAL can be currently used to perform the following operations either with rand
 ## Prerequisites
 
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
+  + Ubuntu - `22.04` / `24.04`
   + RedHat - `8` / `9`
   + SLES - `15-SP5`
 
@@ -78,19 +77,9 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install rocm-hip-runtime-dev
   ```
 
-* [RPP](https://github.com/ROCm/rpp)
-  ```shell
-  sudo apt install rpp-dev
-  ```
-
 * [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
   ```shell
   sudo apt install mivisionx-dev
-  ```
-
-* [rocDecode](https://github.com/ROCm/rocDecode)
-  ```shell
-  sudo apt install rocdecode-dev
   ```
 
 * [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
@@ -198,7 +187,13 @@ Install rocAL runtime, development, and test packages.
   ```
 
 >[!IMPORTANT]
-> * Package install requires `TurboJPEG`, and `RapidJSON` manual install
+> * Package install requires `TurboJPEG` manual install
+>   ```
+>   git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
+>   mkdir tj-build && cd tj-build
+>   cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
+>   make -j8 && sudo make install
+>   ```
 > * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 > * rocAL Python module: To use python module, you can set PYTHONPATH:
 >   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
@@ -338,12 +333,10 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 ### Tested Configurations
 
 * Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
+  * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.1.0.60100-64`
-* RPP - `rpp` & `rpp-dev`/`rpp-devel`
+* ROCm: rocm-core - `6.1.0.60100-64`+
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
