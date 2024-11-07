@@ -28,7 +28,7 @@ import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
 
 
-def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
+def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', index_path ='', shard_id=0, num_shards=1, random_shuffle=False,
           output_type=types.RGB, decoder_type=types.DECODER_TJPEG, device=None,
           decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000,
           last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1):
@@ -145,7 +145,23 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "sharding_info": sharding_info}
         decoded_image = b.mxnetDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-
+    elif reader == "WebDataset":
+        kwargs_pybind = {
+            "source_path": file_root,
+            "index_path": index_path,
+            "output_type": output_type,
+            "shard_id": shard_id,
+            "num_shards": num_shards,
+            'is_output': False,
+            "shuffle": random_shuffle,
+            "loop": False,
+            "decode_size_policy": decode_size_policy,
+            "max_width": max_decoded_width,
+            "max_height": max_decoded_height,
+            "dec_type": decoder_type,
+            "sharding_info": sharding_info}
+        decoded_image = b.webdatasetDecoderSingleShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {
             "source_path": file_root,
@@ -475,43 +491,3 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
 
-
-def webdataset(*inputs, file_root='', index_path='', shard_id=0, num_shards=1, random_shuffle=False, stick_to_shard=True, shard_size=-1,
-          output_type=types.RGB, decoder_type=types.DECODER_TJPEG,
-          decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True, device=None):
-    """!Decodes tar files.
-
-        @param inputs                   list of input tar files.
-        @param file_root                Folder Path to the audio data.
-        @param index_path               Index file containing tar file offset, size
-        @param shard_id                 Shard ID for parallel processing.
-        @param num_shards               Total number of shards for parallel processing.
-        @param random_shuffle           Whether to shuffle images randomly.
-        @param stick_to_shard           The reader sticks to the data for it's corresponding shard when enabled
-        @param shard_size               Number of files in an epoch
-        @param output_type              Data type of the output tensor
-        @param decoder_type             Type of the decoder
-        @param decode_size_policy       Size policy for decoding images.
-        @param max_decoded_width        Maximum width for decoded images.
-        @param max_decoded_height       Maximum height for decoded images.
-        @param last_batch_policy        Determines the handling of the last batch when the shard size is not divisible by the batch size. Check types.py enum for possible values.
-        @param pad_last_batch_repeated  If set to True, pads the shards last batch by repeating the last sample's data (dummy data).
-        @return                         Decoded audio.
-    """
-    sharding_info = b.RocalShardingInfo(last_batch_policy, last_batch_padded, stick_to_shard, shard_size)
-    kwargs_pybind = {
-        "source_path": file_root,
-        "index_path": index_path,
-        "output_type": output_type,
-        "shard_id": shard_id,
-        "num_shards": num_shards,
-        'is_output': False,
-        "shuffle": random_shuffle,
-        "loop": False,
-        "decode_size_policy": decode_size_policy,
-        "max_width": max_decoded_width,
-        "max_height": max_decoded_height,
-        "dec_type": decoder_type,
-        "sharding_info": sharding_info}
-    decoded_audio = b.webdatasetDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return decoded_audio

@@ -282,8 +282,8 @@ def main():
                                        random_shuffle=False)
         elif reader_type == "web_dataset":
             jpegs = fn.readers.webdataset(path=data_path, ext=[{'jpg', 'cls'}])
-            images = fn.decoders.webdataset(jpegs,
-                                       file_root=data_path,
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
                                        device=decoder_device,
                                        max_decoded_width=max_width,
                                        max_decoded_height=max_height,
