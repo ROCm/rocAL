@@ -47,11 +47,10 @@ class RocJpegDecoder : public Decoder {
     */
     Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
 
-    Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer,
-                                     std::vector<size_t> &input_size,
-                                     std::vector<size_t> &width,
-                                     std::vector<size_t> &height,
-                                     int *color_comps) override;
+    Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<unsigned char *> &output_buffer,
+                              std::vector<size_t> &original_width, std::vector<size_t> &original_height, Decoder::ColorFormat desired_decoded_color_format, 
+                              size_t max_decoded_width, size_t max_decoded_height,
+                              std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) override;
     //! Decodes the actual image data
     /*!
       \param input_buffer  User provided buffer containig the encoded image
@@ -96,6 +95,13 @@ class RocJpegDecoder : public Decoder {
     size_t *_dev_src_height = nullptr;
     size_t *_dev_dst_width = nullptr, *_dev_dst_height = nullptr;
     size_t *_dev_src_hstride = nullptr, *_dev_src_img_offset = nullptr;
+    std::vector<size_t> _src_hstride;
+    std::vector<size_t> _src_img_offset;
+    std::vector<RocJpegImage> _output_images = {};
+    RocJpegDecodeParams _decode_params = {};
+    uint32_t _num_channels = 0;
+    bool _resize_batch = false;
+
 #if ENABLE_HIP
     hipStream_t _hip_stream;
 #endif

@@ -102,11 +102,10 @@ class Decoder {
                                int *width,
                                int *height,
                                int *color_comps) = 0;
-    virtual Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer,
-                                     std::vector<size_t> &input_size,
-                                     std::vector<size_t> &width,
-                                     std::vector<size_t> &height,
-                                     int *color_comps) {}
+    virtual Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<unsigned char *> &output_buffer,
+                              std::vector<size_t> &original_width, std::vector<size_t> &original_height, Decoder::ColorFormat desired_decoded_color_format, 
+                              size_t max_decoded_width, size_t max_decoded_height,
+                              std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {}
 
     // TODO: Extend the decode API if needed, color format and order can be passed to the function
     //! Decodes the actual image data
