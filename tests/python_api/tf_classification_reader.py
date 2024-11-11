@@ -31,10 +31,10 @@ from parse_config import parse_args
 def draw_patches(img, idx, device, args=None):
     import cv2
     args = parse_args()
-    if not args.NHWC:
-        img = img.transpose([0, 1, 2])
     if device == "gpu":
         img = img.numpy()
+    if not args.NHWC:
+        img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     cv2.imwrite("output_folder/tf_reader/classification/" +
                 str(idx) + "_" + "train" + ".png", image)

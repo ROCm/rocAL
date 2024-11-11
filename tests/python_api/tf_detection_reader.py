@@ -51,10 +51,10 @@ def get_weights(num_bboxes):
 def draw_patches(img, idx, bboxes, device, args=None):
     import cv2
     args = parse_args()
-    if not args.NHWC:
-        img = img.transpose([0, 1, 2])
     if device == "gpu":
         img = img.numpy()
+    if not args.NHWC:
+        img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     image = cv2.normalize(image, None, alpha=0, beta=255,
                           norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
