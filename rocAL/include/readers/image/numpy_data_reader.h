@@ -72,13 +72,11 @@ class NumpyDataReader : public Reader {
 
     NumpyDataReader();
 
-    size_t last_batch_padded_size() override;  // The size of the number of samples padded in the last batch
-
     std::string get_root_folder_path() override;  // Returns the root folder path
 
     std::vector<std::string> get_file_paths_from_meta_data_reader() override;  // Returns the relative file path from the meta-data reader
    private:
-    //! opens the folder containnig the images
+    //! opens the folder containing the images
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;
@@ -89,25 +87,17 @@ class NumpyDataReader : public Reader {
     std::vector<std::string> _file_names;
     std::vector<std::string> _files;
     std::vector<NumpyHeaderData> _file_headers;
-    unsigned _curr_file_idx;
     FILE *_current_fPtr;
     unsigned _current_file_size;
-    unsigned _shard_start_idx;
-    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     NumpyHeaderData _curr_file_header;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
-    size_t _shard_id = 0;
-    size_t _shard_count = 1;  // equivalent of batch size
-    int32_t _shard_size = -1;
     size_t _batch_size = 1;
-    size_t _padded_samples = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
     unsigned _seed = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
-    size_t _file_count_all_shards;
     std::mutex _cache_mutex;
     std::map<std::string, NumpyHeaderData> _header_cache;
     const RocalTensorDataType get_dtype(const std::string& format);
@@ -128,22 +118,9 @@ class NumpyDataReader : public Reader {
     bool get_header_from_cache(const std::string& file_name, NumpyHeaderData& target);
     void update_header_cache(const std::string& file_name, const NumpyHeaderData& value);
     void incremenet_read_ptr();
-    void increment_curr_file_idx();
     int release();
-    void fill_last_batch();
-    void replicate_last_batch_to_pad_partial_shard();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
-    ShardingInfo _last_batch_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
-    size_t _last_batch_padded_size = 0;              // The size of number of padded samples in the last batch
     size_t _num_padded_samples = 0;                  //! Number of samples that are padded in the last batch which would differ for each shard.
-    bool _stick_to_shard = false;
-    bool _pad_last_batch_repeated = false;
     Reader::Status generate_file_names();            // Function that would generate _file_names containing all the samples in the dataset
-    void compute_start_and_end_idx_of_all_shards();  // Start Idx of all the Shards
-    size_t get_dataset_size();                       // DataSet Size
-    size_t actual_shard_size_without_padding();      // Actual Number of Files present in the shard (without padding)
-    size_t largest_shard_size_without_padding();     // The size of the shard having largest files (without padding)
-    //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
-    void increment_shard_id();
 };

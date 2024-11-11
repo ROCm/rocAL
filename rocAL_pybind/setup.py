@@ -44,7 +44,7 @@ setup(
     name='amd-rocal',
     description='AMD ROCm Augmentation Library Python Bindings',
     url='https://github.com/ROCm/rocAL',
-    version='2.1.0',
+    version='2.2.0',
     author='AMD',
     license='MIT',
     packages=find_packages(where='@TARGET_NAME@'),

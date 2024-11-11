@@ -2,6 +2,9 @@
 
 <p align="center"><img width="70%" src="https://raw.githubusercontent.com/ROCm/rocAL/master/docs/data/rocAL_logo.png" /></p>
 
+> [!NOTE]
+> The published documentation is available at [rocAL](https://rocm.docs.amd.com/projects/rocAL/en/latest/) in an organized, easy-to-read format, with search and a table of contents. The documentation source files reside in the `docs` folder of this repository. As with all ROCm projects, the documentation is open source. For more information on contributing to the documentation, see [Contribute to ROCm documentation](https://rocm.docs.amd.com/en/latest/contribute/contributing.html).
+
 The AMD ROCm Augmentation Library (**rocAL**) is designed to efficiently decode and process images and videos from a variety of storage formats and modify them through a processing graph programmable by the user. rocAL currently provides C API.
 For more details, go to [rocAL user guide](docs) page.
 
@@ -57,8 +60,7 @@ rocAL can be currently used to perform the following operations either with rand
 ## Prerequisites
 
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
+  + Ubuntu - `22.04` / `24.04`
   + RedHat - `8` / `9`
   + SLES - `15-SP5`
 
@@ -75,19 +77,9 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install rocm-hip-runtime-dev
   ```
 
-* [RPP](https://github.com/ROCm/rpp)
-  ```shell
-  sudo apt install rpp-dev
-  ```
-
 * [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
   ```shell
   sudo apt install mivisionx-dev
-  ```
-
-* [rocDecode](https://github.com/ROCm/rocDecode)
-  ```shell
-  sudo apt install rocdecode-dev
   ```
 
 * [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
@@ -114,33 +106,38 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   pip3 install wheel
   ```
-
-* [PyBind11](https://github.com/pybind/pybind11)
-  * Source: `https://github.com/pybind/pybind11`
-  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
-
-* [Turbo JPEG](https://libjpeg-turbo.org/) 
-  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
-
-* [RapidJSON](https://github.com/Tencent/rapidjson)
-  * Source: `https://github.com/Tencent/rapidjson.git`
-  * Tag: `master`
-
-* **Optional**: FFMPEG
+  
+* [FFMPEG](https://www.ffmpeg.org) - Optional for source install, but required for package install
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
   ```
 
-* **Optional**: OpenCV
+* [OpenCV](https://docs.opencv.org/4.6.0/index.html) -  Optional for source install, but required for package install
   ```shell
   sudo apt install libopencv-dev
   ```
 
+* [PyBind11](https://github.com/pybind/pybind11) - Manual install
+  * Source: `https://github.com/pybind/pybind11`
+  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
+
+* [Turbo JPEG](https://libjpeg-turbo.org/) - Manual install
+  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
+  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
+
+* [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
+  * Source: `https://github.com/Tencent/rapidjson.git`
+  * Tag: `master`
+
 > [!IMPORTANT] 
 > * Compiler features required
->   * OpenMP
 >   * C++17
+>     ```shell
+>     sudo apt install libstdc++-12-dev
+>   * OpenMP
+>     ```shell
+>     sudo apt install libomp-dev
+>     ```
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
@@ -195,7 +192,13 @@ Install rocAL runtime, development, and test packages.
   ```
 
 >[!IMPORTANT]
-> * Package install requires `TurboJPEG`, and `RapidJSON` manual install
+> * Package install requires `TurboJPEG` manual install
+>   ```
+>   git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
+>   mkdir tj-build && cd tj-build
+>   cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
+>   make -j8 && sudo make install
+>   ```
 > * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 > * rocAL Python module: To use python module, you can set PYTHONPATH:
 >   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
@@ -335,12 +338,10 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 ### Tested Configurations
 
 * Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
+  * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.1.0.60100-64`
-* RPP - `rpp` & `rpp-dev`/`rpp-devel`
+* ROCm: rocm-core - `6.1.0.60100-64`+
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
