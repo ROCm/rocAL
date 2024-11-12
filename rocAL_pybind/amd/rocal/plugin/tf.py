@@ -117,7 +117,7 @@ class ROCALGenericIteratorDetection(object):
                     self.output = np.empty(self.dimensions, dtype=self.dtype)
                     self.output_tensor_list[i].copy_data(self.output)
                 else:
-                    self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__())
+                    self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
@@ -125,7 +125,7 @@ class ROCALGenericIteratorDetection(object):
                     self.output_tensor_list[i].copy_data(self.output_list[i])
                 else:
                     # returns tf tensor on gpu
-                    self.output_list[i] = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__())
+                    self.output_list[i] = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []

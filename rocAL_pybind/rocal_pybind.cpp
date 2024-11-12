@@ -219,10 +219,10 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
         }
     }
 
-    static DLDevice generate_dl_device(rocalTensor *rocal_tensor) {
+    static DLDevice generate_dl_device(rocalTensor *rocal_tensor, int device_id) {
         DLDevice dev;
 
-        dev.device_id = 0;
+        dev.device_id = device_id;
         switch (rocal_tensor->mem_type()) {
             case RocalOutputMemType::ROCAL_MEMCPY_GPU:
                 dev.device_type = kDLROCM;
@@ -282,7 +282,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
 #if ENABLE_DLPACK
             .def(
                 "__dlpack__",
-                [](rocalTensor *rocal_tensor) {
+                [](rocalTensor *rocal_tensor, int device_id) {
                     DLManagedTensor *dmtensor = new DLManagedTensor;
                     dmtensor->deleter = [](DLManagedTensor *self) {
                         delete[] self->dl_tensor.shape;
@@ -293,7 +293,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
                     try {
                         DLTensor &dtensor = dmtensor->dl_tensor;
 
-                        dtensor.device = generate_dl_device(rocal_tensor);
+                        dtensor.device = generate_dl_device(rocal_tensor, device_id);
 
                         // Set up ndim
                         dtensor.ndim = rocal_tensor->num_of_dims();
@@ -344,8 +344,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
                     )code"
             )
             .def("dlpack_device",
-                [] (rocalTensor *rocal_tensor) {
-                    DLDevice dev = generate_dl_device(rocal_tensor);
+                [] (rocalTensor *rocal_tensor, int device_id) {
+                    DLDevice dev = generate_dl_device(rocal_tensor, device_id);
                     return py::make_tuple(py::int_(static_cast<int>(dev.device_type)),
                                         py::int_(static_cast<int>(dev.device_id)));
                 },
@@ -427,7 +427,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
 #else
     .def(
                 "__dlpack__",
-                [](rocalTensor *rocal_tensor) {
+                [](rocalTensor *rocal_tensor, int device_id) {
                     throw std::runtime_error("Dlpack not installed. Please use CPU backend or try again after installing dlpack.");
                 }
         )
