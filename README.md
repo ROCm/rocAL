@@ -114,38 +114,33 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   pip3 install wheel
   ```
-  
-* [FFMPEG](https://www.ffmpeg.org) - Optional for source install, but required for package install
+
+* [PyBind11](https://github.com/pybind/pybind11)
+  * Source: `https://github.com/pybind/pybind11`
+  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
+
+* [Turbo JPEG](https://libjpeg-turbo.org/) 
+  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
+  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
+
+* [RapidJSON](https://github.com/Tencent/rapidjson)
+  * Source: `https://github.com/Tencent/rapidjson.git`
+  * Tag: `master`
+
+* **Optional**: FFMPEG
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
   ```
 
-* [OpenCV](https://docs.opencv.org/4.6.0/index.html) -  Optional for source install, but required for package install
+* **Optional**: OpenCV
   ```shell
   sudo apt install libopencv-dev
   ```
 
-* [PyBind11](https://github.com/pybind/pybind11) - Manual install
-  * Source: `https://github.com/pybind/pybind11`
-  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
-
-* [Turbo JPEG](https://libjpeg-turbo.org/) - Manual install
-  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
-
-* [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
-  * Source: `https://github.com/Tencent/rapidjson.git`
-  * Tag: `master`
-
 > [!IMPORTANT] 
 > * Compiler features required
->   * C++17
->     ```shell
->     sudo apt install libstdc++-12-dev
 >   * OpenMP
->     ```shell
->     sudo apt install libomp-dev
->     ```
+>   * C++17
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
