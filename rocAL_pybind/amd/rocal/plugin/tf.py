@@ -111,21 +111,9 @@ class ROCALGenericIteratorDetection(object):
             # Output list used to store pipeline outputs - can support multiple augmentation outputs
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
-                self.dimensions = self.output_tensor_list[i].dimensions()
-                self.dtype = self.output_tensor_list[i].dtype()
-                if self.device == "cpu":
-                    self.output = np.empty(self.dimensions, dtype=self.dtype)
-                    self.output_tensor_list[i].copy_data(self.output)
-                else:
-                    self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
+                # returns tf tensor on gpu/cpu 
+                self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
                 self.output_list.append(self.output)
-        else:
-            for i in range(len(self.output_tensor_list)):
-                if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data(self.output_list[i])
-                else:
-                    # returns tf tensor on gpu
-                    self.output_list[i] = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []

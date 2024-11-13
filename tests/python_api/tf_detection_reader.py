@@ -51,8 +51,8 @@ def get_weights(num_bboxes):
 def draw_patches(img, idx, bboxes, device, args=None):
     import cv2
     args = parse_args()
-    if device == "gpu":
-        img = img.numpy()
+    # converting to numpy for opencv display since iterator returns tf.tensor
+    img = img.numpy()
     if not args.NHWC:
         img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
