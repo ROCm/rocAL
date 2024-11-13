@@ -58,32 +58,22 @@ WebDatasetSourceReader::WebDatasetSourceReader() {
 }
 
 unsigned WebDatasetSourceReader::count_items() {
-    int ret = 0;  // Default initialization
-    if (_shard_size == -1) {
-        if (_loop) return largest_shard_size_without_padding();                  // When shard_size is set to -1, The shard_size variable is not used
-        int size = std::max(largest_shard_size_without_padding(), _batch_size);  // Return the size of the largest shard amongst all the shard's size
-        ret = (size - _read_counter);
-        // Formula used to calculate - [_last_batch_padded_size = _batch_size - (_shard_size % _batch_size) ]
-        // Since "size" doesnt involve padding - we add the count of padded samples to the number of remaining elements
-        // which equals to the shard size with padding
-        if (_sharding_info.last_batch_policy == RocalBatchPolicy::PARTIAL || _sharding_info.last_batch_policy == RocalBatchPolicy::FILL) {
-            ret += _last_batch_padded_size;
-        } else if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP &&
-                   _pad_last_batch_repeated == true) {  // When pad_last_batch_repeated is False - Enough
-                                                        // number of samples would not be present in the last batch - hence
-                                                        // dropped by condition handled in the loader
-            ret -= _batch_size;
-        }
+    int ret = 0;
+    int size = 0;
+    if (_shard_size == -1) {                                     // When shard_size is set to -1, The shard_size variable is not used
+        if (_loop) return largest_shard_size_without_padding();  // Return the size of the largest shard amongst all the shard's size - 
+                                                                 // _file_count_all_shards is now padded - hence with/ without padding is one and the same
+        size = std::max(largest_shard_size_without_padding(), _batch_size);
     } else if (_shard_size > 0) {
-        auto shard_size_with_padding =
-            _shard_size + (_batch_size - (_shard_size % _batch_size));
-        if (_loop)
-            return shard_size_with_padding;
-        int size = std::max(shard_size_with_padding, _batch_size);
-        ret = (size - _read_counter);
-        if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP)  // The shard size is padded at the beginning of the condition, hence dropping the last batch
-            ret -= _batch_size;
+        auto largest_shard_size_with_padding = 
+            _shard_size + (_batch_size - (_shard_size % _batch_size));  // The shard size used here is padded
+        if (_loop) 
+            return largest_shard_size_with_padding;
+        size = std::max(largest_shard_size_with_padding, _batch_size);
     }
+    ret = (size - _read_counter);
+    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
+        ret -= _batch_size;
     return ((ret < 0) ? 0 : ret);
 }
 
@@ -133,7 +123,7 @@ void WebDatasetSourceReader::incremenet_read_ptr() {
 }
 
 size_t WebDatasetSourceReader::open() {
-    std::cerr << "\n _curr_file_idx :: " << _curr_file_idx;
+    // std::cerr << "\n _curr_file_idx :: " << _curr_file_idx;
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     _last_id = file_path;
     auto last_slash_idx = _last_id.find_last_of("\\/");
@@ -168,17 +158,13 @@ void WebDatasetSourceReader::reset() {
     if (_shuffle)
         std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
                             _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
-    std::cerr << "\n here 1";
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();      // Should work for both single and multiple shards
-    std::cerr << "\n here 2";
     _read_counter = 0;
-    std::cerr << "\n here 3";
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP) {  // Skipping the dropped batch in next epoch
         for (uint i = 0; i < _batch_size; i++)
             increment_curr_file_idx();
     }
-    std::cerr << "\n here 4";
 }
 
 void WebDatasetSourceReader::increment_shard_id() {
