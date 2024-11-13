@@ -26,7 +26,7 @@ import sys
 import datetime
 import time
 
-def HybridTrainPipe(batch_size, num_threads, device_id, data_dir, rocal_cpu, prefetch_queue_depth=2):
+def HybridTrainPipe(batch_size, num_threads, device_id, data_dir, rocal_cpu=True, prefetch_queue_depth=2):
     world_size = 1
     local_rank = 0
     resize_width = 300

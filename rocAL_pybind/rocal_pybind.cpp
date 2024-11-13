@@ -178,32 +178,30 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             throw std::runtime_error("Data type lanes != 1 is not supported.");
         }
 
-        switch (dtype.bits) {
-            case 8:
-                switch (dtype.code) {
-                    case kDLInt:
-                        return RocalTensorOutputType::ROCAL_INT8;
-                    case kDLUInt:
-                        return RocalTensorOutputType::ROCAL_UINT8;
-                    default:
-                        throw std::runtime_error(
-                            "Data type code is not supported.");
-                }
-            case 32:
-                switch (dtype.code) {
-                    case kDLInt:
-                        return RocalTensorOutputType::ROCAL_INT32;
-                    case kDLUInt:
-                        return RocalTensorOutputType::ROCAL_UINT32;
-                    case kDLFloat:
-                        return RocalTensorOutputType::ROCAL_FP32;
-                    default:
-                        throw std::runtime_error(
-                            "Data type code is not supported.");
-                }
-            case 16:
-            default:
-                throw std::runtime_error("Data type bits is not supported.");
+        if (dtype.bits == 8) {
+            switch (dtype.code) {
+                case kDLInt:
+                    return RocalTensorOutputType::ROCAL_INT8;
+                case kDLUInt:
+                    return RocalTensorOutputType::ROCAL_UINT8;
+                default:
+                    throw std::runtime_error(
+                        "Data type code is not supported.");
+            }
+        } else if (dtype.bits ==  32) {
+            switch (dtype.code) {
+                case kDLInt:
+                    return RocalTensorOutputType::ROCAL_INT32;
+                case kDLUInt:
+                    return RocalTensorOutputType::ROCAL_UINT32;
+                case kDLFloat:
+                    return RocalTensorOutputType::ROCAL_FP32;
+                default:
+                    throw std::runtime_error(
+                        "Data type code is not supported.");
+            }
+        } else { // dlpack does not support FP16; only BF16 which is not supported by rocAL
+                throw std::runtime_error("Data type bits is not supporte by dlpack.");
         }
     }
 
@@ -230,6 +228,8 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case RocalOutputMemType::ROCAL_MEMCPY_HOST:
                 dev.device_type = kDLCPU;
                 break;
+            default:
+                throw std::runtime_error("Device type not supported - cannot generate dl device");
         }
         return dev;
     }
@@ -258,6 +258,8 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case RocalTensorOutputType::ROCAL_FP32:
                 out.bits = 32;
                 out.code = kDLFloat;
+            default:
+                throw std::runtime_error("Data type not supported - cannot generate dl data type");
         }
 
         return out;
@@ -322,7 +324,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
                         delete[] dmtensor->dl_tensor.shape;
                         delete[] dmtensor->dl_tensor.strides;
                         delete dmtensor;
-                        throw;
                     }
 
                     py::capsule cap(dmtensor, "dltensor", [](PyObject *ptr) {
@@ -509,13 +510,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 )code")
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
-                std::cout << "\nin this copy data function\n";
-                const char* py_cap_name = PyCapsule_GetName(p.ptr());
-                auto ptr = PyCapsule_GetPointer(p.ptr(), py_cap_name);
-                //auto ptr = ctypes_void_ptr(p);
-                std::cout << ptr << std::endl;
+                auto ptr = ctypes_void_ptr(p);
                 output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
-  
             },
             py::return_value_policy::reference,
             R"code(

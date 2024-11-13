@@ -80,20 +80,20 @@ def main():
         args = parser.parse_args()
     except BaseException:
         sys.exit()
-    
-    TRAIN_RECORDS_DIR = args.records_dir + 'train/'
-    VAL_RECORDS_DIR = args.records_dir + 'val/'
 
-    NUM_CLASSES = args.num_classes
-    LEARNING_RATE = args.learning_rate
-    TRAIN_BATCH_SIZE = args.batch_size
+    train_records_dir = args.records_dir + 'train/'
+    val_records_dir = args.records_dir + 'val/'
+
+    num_classes = args.num_classes
+    learning_rate = args.learning_rate
+    train_batch_size = args.batch_size
     rocal_cpu = True if (args.backend == "cpu") else False
     device = "cpu" if rocal_cpu else "gpu"
     device_id = args.device_id
 
     print("\n-----------------------------------------------------------------------------------------")
-    print('TF records (train) are located in %s' % TRAIN_RECORDS_DIR)
-    print('TF records (val) are located in %s' % VAL_RECORDS_DIR)
+    print('TF records (train) are located in %s' % train_records_dir)
+    print('TF records (val) are located in %s' % val_records_dir)
     print("-----------------------------------------------------------------------------------------\n")
 
     image_size = [128, 128, 3]
@@ -104,11 +104,11 @@ def main():
     model = tf.keras.Sequential([
         base_model,
         tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Dense(NUM_CLASSES)
+        tf.keras.layers.Dense(num_classes)
     ])
 
     model.summary()
-    optimizer = tf.keras.optimizers.SGD(learning_rate=LEARNING_RATE)
+    optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     model.compile(
         optimizer=optimizer,
@@ -122,10 +122,10 @@ def main():
         'image/filename': 'image/filename'
     }
 
-    trainPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=8, rocal_cpu=rocal_cpu, device_id=device_id, prefetch_queue_depth=6,
+    trainPipe = Pipeline(batch_size=train_batch_size, num_threads=8, rocal_cpu=rocal_cpu, device_id=device_id, prefetch_queue_depth=6,
                          tensor_layout=types.NHWC, mean=[0, 0, 0], std=[255, 255, 255], tensor_dtype=types.FLOAT)
     with trainPipe:
-        inputs = fn.readers.tfrecord(path=TRAIN_RECORDS_DIR, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
+        inputs = fn.readers.tfrecord(path=train_records_dir, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
                                      features={
                                          'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
                                          'image/class/label': tf.io.FixedLenFeature([1], tf.int64, -1),
@@ -135,7 +135,7 @@ def main():
         jpegs = inputs["image/encoded"]
         labels = inputs["image/class/label"]
         images = fn.decoders.image(
-            jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=TRAIN_RECORDS_DIR)
+            jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=train_records_dir)
         resized = fn.resize(
             images, resize_width=image_size[0], resize_height=image_size[1])
         flip_coin = fn.random.coin_flip(probability=0.5)
@@ -148,10 +148,10 @@ def main():
         trainPipe.set_outputs(cmn_images)
     trainPipe.build()
 
-    valPipe = Pipeline(batch_size=TRAIN_BATCH_SIZE, num_threads=8,
+    valPipe = Pipeline(batch_size=train_batch_size, num_threads=8,
                        rocal_cpu=rocal_cpu, device_id=device_id, prefetch_queue_depth=6, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT)
     with valPipe:
-        inputs = fn.readers.tfrecord(path=VAL_RECORDS_DIR, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
+        inputs = fn.readers.tfrecord(path=val_records_dir, reader_type=TFRecordReaderType, user_feature_key_map=featureKeyMap,
                                      features={
                                          'image/encoded': tf.io.FixedLenFeature((), tf.string, ""),
                                          'image/class/label': tf.io.FixedLenFeature([1], tf.int64, -1),
@@ -161,7 +161,7 @@ def main():
         jpegs = inputs["image/encoded"]
         labels = inputs["image/class/label"]
         images = fn.decoders.image(
-            jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=VAL_RECORDS_DIR)
+            jpegs, user_feature_key_map=featureKeyMap, output_type=types.RGB, path=val_records_dir)
         resized = fn.resize(
             images, resize_width=image_size[0], resize_height=image_size[1])
         flip_coin = fn.random.coin_flip(probability=0.5)
@@ -180,8 +180,8 @@ def main():
     # Create the metrics
     accuracy_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='train_acc')
     epoch = 0
-    train_batches = math.ceil(len(trainIterator) / TRAIN_BATCH_SIZE)
-    val_batches = math.ceil(len(valIterator) / TRAIN_BATCH_SIZE)
+    train_batches = math.ceil(len(trainIterator) / train_batch_size)
+    val_batches = math.ceil(len(valIterator) / train_batch_size)
     while epoch < 10:
         print('Epoch :', epoch + 1)
         accuracy_metric.reset_state()
