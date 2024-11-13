@@ -178,39 +178,35 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             throw std::runtime_error("Data type lanes != 1 is not supported.");
         }
 
-        if (dtype.bits == 8) {
-            switch (dtype.code) {
-                case kDLInt:
+        switch (dtype.bits) {
+            case 8:
+                if (dtype.code ==  kDLInt) {
                     return RocalTensorOutputType::ROCAL_INT8;
-                case kDLUInt:
+                } else if (dtype.code == kDLUInt) {
                     return RocalTensorOutputType::ROCAL_UINT8;
-                default:
-                    throw std::runtime_error(
-                        "Data type code for 8 bit type is not supported.");
-            }
-        } else if (dtype.bits ==  32) {
-            switch (dtype.code) {
-                case kDLInt:
+                } else {
+                    throw std::runtime_error("Data type code for 8 bit type is not supported.");
+                }
+                break;
+            case 32:
+                if (dtype.code == kDLInt) {
                     return RocalTensorOutputType::ROCAL_INT32;
-                case kDLUInt:
+                } else if (dtype.code == kDLUInt) {
                     return RocalTensorOutputType::ROCAL_UINT32;
-                case kDLFloat:
+                } else if (dtype.code == kDLFloat) {
                     return RocalTensorOutputType::ROCAL_FP32;
-                default:
-                    throw std::runtime_error(
-                        "Data type code for 32 bit type is not supported.");
-            }
-        } else if (dtype.bits ==  16){
-                switch (dtype.code) {
-                    case kDLInt:
-                        return RocalTensorOutputType::ROCAL_INT16;
-                    case kDLFloat:
-                        return RocalTensorOutputType::ROCAL_FLOAT16;
-                    default:
-                        throw std::runtime_error(
-                            "Data type code for 16 bit type is not supported.");
-        }
-        else {
+                } else {
+                    throw std::runtime_error("Data type code for 32 bit type is not supported.");
+                }
+                break;
+            case 16:
+                if (dtype.code == kDLFloat) {
+                    return RocalTensorOutputType::ROCAL_FP16;
+                } else {
+                    throw std::runtime_error("Data type code for 16 bit type is not supported.");
+                }
+                break;
+            default:
                 throw std::runtime_error("Data type bits is not supporte by dlpack.");
         }
     }
@@ -268,11 +264,7 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case RocalTensorOutputType::ROCAL_FP32:
                 out.bits = 32;
                 out.code = kDLFloat;
-            case RocalTensorOutputType::ROCAL_INT16:
-                out.bits = 16;
-                out.code = kDLInt;
-                break;
-            case RocalTensorOutputType::ROCAL_FLOAT16:
+            case RocalTensorOutputType::ROCAL_FP16:
                 out.bits = 16;
                 out.code = kDLFloat;
                 break;
