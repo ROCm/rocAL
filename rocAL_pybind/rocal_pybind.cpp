@@ -186,7 +186,7 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
                     return RocalTensorOutputType::ROCAL_UINT8;
                 default:
                     throw std::runtime_error(
-                        "Data type code is not supported.");
+                        "Data type code for 8 bit type is not supported.");
             }
         } else if (dtype.bits ==  32) {
             switch (dtype.code) {
@@ -198,9 +198,19 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
                     return RocalTensorOutputType::ROCAL_FP32;
                 default:
                     throw std::runtime_error(
-                        "Data type code is not supported.");
+                        "Data type code for 32 bit type is not supported.");
             }
-        } else { // dlpack does not support FP16; only BF16 which is not supported by rocAL
+        } else if (dtype.bits ==  16){
+                switch (dtype.code) {
+                    case kDLInt:
+                        return RocalTensorOutputType::ROCAL_INT16;
+                    case kDLFloat:
+                        return RocalTensorOutputType::ROCAL_FLOAT16;
+                    default:
+                        throw std::runtime_error(
+                            "Data type code for 16 bit type is not supported.");
+        }
+        else {
                 throw std::runtime_error("Data type bits is not supporte by dlpack.");
         }
     }
@@ -258,6 +268,14 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case RocalTensorOutputType::ROCAL_FP32:
                 out.bits = 32;
                 out.code = kDLFloat;
+            case RocalTensorOutputType::ROCAL_INT16:
+                out.bits = 16;
+                out.code = kDLInt;
+                break;
+            case RocalTensorOutputType::ROCAL_FLOAT16:
+                out.bits = 16;
+                out.code = kDLFloat;
+                break;
             default:
                 throw std::runtime_error("Data type not supported - cannot generate dl data type");
         }
