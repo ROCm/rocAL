@@ -124,6 +124,7 @@ class WebDatasetSourceReader : public Reader {
                                               uint wds_shard_index);
     void increment_curr_file_idx();
     unsigned _shard_start_idx;
+    std::vector<unsigned> _shard_start_idx_vector, _shard_end_idx_vector;
     signed _shard_size = -1;
     size_t _shard_id = 0;
     size_t _shard_count = 1;  // equivalent of batch size
@@ -140,4 +141,6 @@ class WebDatasetSourceReader : public Reader {
     size_t largest_shard_size_without_padding(); // Number of files belonging to a shard (with padding)
     //!< Used to advance to the next shard's data to increase the entropy of the data seen by the pipeline>
     void increment_shard_id();
+    void compute_start_and_end_idx_of_all_shards();     // Start Idx of all the Shards
+
 };
