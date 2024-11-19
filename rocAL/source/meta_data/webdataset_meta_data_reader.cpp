@@ -66,7 +66,7 @@ void WebDataSetMetaDataReader::init(const MetaDataConfig &cfg,
     _wds_shards.reserve(_paths.size());
     _index_paths = cfg.index_path();
     _exts = cfg.exts();
-    std::vector<std::string> elementsToRemove = {"jpg", "jpeg", "JPEG"};
+    std::vector<std::string> elementsToRemove = {"jpg", "jpeg", "JPEG", "jpe"};
     for (auto &ext_set : _exts) {
         for (const auto &elementToRemove : elementsToRemove) {
             auto it = ext_set.find(elementToRemove);
@@ -381,7 +381,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
 
         // After parsing add the contents to the map
         for (auto &sample : unfiltered_samples) {
-            if (_missing_component_behaviour == MissingComponentsBehaviour::EMPTY) {  // empty_outputs
+            if (_missing_component_behaviour == MissingComponentsBehaviour::MISSING_COMPONENT_EMPTY) {  // empty_outputs
                 AsciiValues ascii_values;
                 ascii_values.resize(_ext_map.size());
                 std::string last_file_name;
@@ -418,10 +418,10 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 }
                 for (auto &ascii_component : ascii_values) {
                     if (ascii_component.size() < _ext_map.size()) {                              // TODO - Check if it should be less that extension size
-                        if (_missing_component_behaviour == MissingComponentsBehaviour::SKIP) {  // skipping sample
+                        if (_missing_component_behaviour == MissingComponentsBehaviour::MISSING_COMPONENT_SKIP) {  // skipping sample
                             WRN("WARNING: Skipping the sample with missing components.");
                             skip_sample = true;
-                        } else if (_missing_component_behaviour == MissingComponentsBehaviour::THROW_ERROR) {  // throw error
+                        } else if (_missing_component_behaviour == MissingComponentsBehaviour::MISSING_COMPONENT_ERROR) {  // throw error
                             THROW("ERROR: Missing components in the sample. Please check the sample components");
                         }
                     }

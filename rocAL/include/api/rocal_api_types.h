@@ -487,15 +487,15 @@ struct RocalShardingInfo {
  *  \ingroup group_rocal_types
  */
 enum RocalMissingComponentsBehaviour {
-    /*! \brief ROCAL_ERROR
+    /*! \brief ROCAL_MISSING_COMPONENT_ERROR
      */
-    ROCAL_THROW_ERROR = 0,
-    /*! \brief ROCAL_SKIP
+    ROCAL_MISSING_COMPONENT_ERROR = 0,
+    /*! \brief ROCAL_MISSING_COMPONENT_SKIP
      */
-    ROCAL_SKIP = 1,
-    /*! \brief ROCAL_EMPTY
+    ROCAL_MISSING_COMPONENT_SKIP = 1,
+    /*! \brief ROCAL_MISSING_COMPONENT_EMPTY
      */
-    ROCAL_EMPTY = 2
+    ROCAL_MISSING_COMPONENT_EMPTY = 2
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

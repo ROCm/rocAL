@@ -66,7 +66,6 @@ std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
                         DecoderType decoder_type, const std::string& source_path, const std::string& json_path) {
 
-std::cerr << "\n Inside evaluate_image_dataset";
     auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy) {
         switch (decode_size_policy) {
             case ROCAL_USE_MAX_SIZE:
@@ -85,8 +84,6 @@ std::cerr << "\n Inside evaluate_image_dataset";
         THROW("Initializing file source input evaluator failed ")
     auto max_width = source_evaluator.max_width();
     auto max_height = source_evaluator.max_height();
-    std::cerr << "\n max_width:: " << max_width;
-    std::cerr << "\n max_height:: " << max_height;
     if (max_width == 0 || max_height == 0)
         THROW("Cannot find size of the images or images cannot be accessed")
 
@@ -2326,21 +2323,24 @@ rocALWebDatasetDecoderSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) {
+            decType = DecoderType::OPENCV_DEC;
+        } else if (dec_type == ROCAL_DECODER_HW_JPEG) {
+            decType = DecoderType::HW_JPEG_DEC;
+        }
 
-        if (shard_count < 1)
-            THROW("Shard count should be bigger than 0")
-
-        if (shard_id >= shard_count)
-            THROW("Shard id should be smaller than shard count")
+        if (shard_count < 1) {
+            THROW("Shard count should be bigger than 0");
+        } else if (shard_id >= shard_count) {
+            THROW("Shard id should be smaller than shard count");
+        }
 
         if (use_input_dimension && (max_width == 0 || max_height == 0)) {
             THROW("Invalid input max width and height");
         } else {
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
-        auto [width, height] = evaluate_image_data_set(decode_size_policy, StorageType::WEBDATASET_RECORDS, DecoderType::TURBO_JPEG, source_path, index_path);
+        auto [width, height] = evaluate_image_data_set(decode_size_policy, StorageType::WEBDATASET_RECORDS, decType, source_path, index_path);
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
 
@@ -2354,66 +2354,6 @@ rocALWebDatasetDecoderSingleShard(
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
         context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::WEBDATASET_RECORDS, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, 
                                                                                         std::map<std::string, std::string>(), 0, 0, 0, ExternalSourceFileMode::NONE, index_path);
-        context->master_graph->set_loop(loop);
-
-        if (is_output) {
-            auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_node<CopyNode>({output}, {actual_output});
-        }
-
-    } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
-    }
-    return output;
-}
-
-RocalTensor ROCAL_API_CALL
-rocALWebDatasetSource(
-    RocalContext p_context,
-    const char* source_path,
-    const char* index_path,
-    RocalImageColor rocal_color_format,
-    unsigned internal_shard_count,
-    bool is_output,
-    bool shuffle,
-    bool loop,
-    RocalImageSizeEvaluationPolicy decode_size_policy,
-    unsigned max_width,
-    unsigned max_height,
-    RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
-    Tensor* output = nullptr;
-    auto context = static_cast<Context*>(p_context);
-    try {
-        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
-        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
-        DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
-
-        if (internal_shard_count < 1)
-            THROW("Shard count should be bigger than 0")
-
-        if (use_input_dimension && (max_width == 0 || max_height == 0)) {
-            THROW("Invalid input max width and height");
-        } else {
-            LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
-        }
-        auto [width, height] = evaluate_image_data_set(decode_size_policy, StorageType::WEBDATASET_RECORDS, DecoderType::TURBO_JPEG, source_path, index_path);
-        auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
-        INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
-
-        auto info = TensorInfo(std::move(dims),
-                               context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8,
-                               tensor_layout,
-                               color_format);
-        output = context->master_graph->create_loader_output_tensor(info);
-        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
-        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
-        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", std::map<std::string, std::string>(), StorageType::WEBDATASET_RECORDS, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, "", 0, 0, 0, ExternalSourceFileMode::NONE, index_path);
-
         context->master_graph->set_loop(loop);
 
         if (is_output) {

@@ -348,7 +348,7 @@ class AsciiValueBatch : public MetaDataBatch {
             THROW("The buffers are insufficient")  // TODO -change
 
         for (unsigned component = 0; component < _ascii_values[0].size(); component++) {
-            auto ascii_values_buffer = (uint8_t*)buffer[component];
+            auto ascii_values_buffer = static_cast<uint8_t*>(buffer[component]);
             for (unsigned i = 0; i < _ascii_values.size(); i++) {
                 AsciiValues sample = _ascii_values[i];
                 memcpy(ascii_values_buffer, sample[component].data(), sample[component].size() * sizeof(uint8_t));

@@ -23,7 +23,7 @@
 # SOFTWARE.
 # 
 ################################################################################
-find_path(libtar_INCLUDE_DIRS
+find_path(LIBTAR_INCLUDE_DIRS
     NAMES libtar.h
     HINTS
     $ENV{LIBTAR_PATH}/include
@@ -31,9 +31,9 @@ find_path(libtar_INCLUDE_DIRS
     /usr/include
     /usr/local/include
 )
-mark_as_advanced(libtar_INCLUDE_DIRS)
+mark_as_advanced(LIBTAR_INCLUDE_DIRS)
 
-find_library(libtar_LIBRARIES
+find_library(LIBTAR_LIBRARIES
         NAMES libtar.a tar libtar
         HINTS
         $ENV{LIBTAR_PATH}/lib
@@ -41,29 +41,29 @@ find_library(libtar_LIBRARIES
         PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBTAR_PATH} "/usr/local" "/usr/lib"
         PATH_SUFFIXES lib lib64)
 
-mark_as_advanced(libtar_LIBRARIES)
+mark_as_advanced(LIBTAR_LIBRARIES)
 
-if(libtar_LIBRARIES AND libtar_INCLUDE_DIRS)
-    message("-- ${Yellow}NOTE: rocAL built WITH LibTar - WebDataset Functionalities will be supported${ColourReset}")
+if(LIBTAR_LIBRARIES AND LIBTAR_INCLUDE_DIRS)
+    message("-- ${Blue}NOTE: rocAL built WITH LibTar - WebDataset Functionalities will be supported${ColourReset}")
     set(LIBTAR_FOUND TRUE)
 else()
-    message("---not found!!!!!!!!!!!!!!!!!!!!!!${ColourReset}")
+    message("-- ${Yellow}NOTE: rocAL is not built WITH LibTar - WebDataset Functionalities will not be supported${ColourReset}")
 endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LibTar
     FOUND_VAR  LIBTAR_FOUND 
     REQUIRED_VARS
-        libtar_LIBRARIES
-        libtar_INCLUDE_DIRS
+        LIBTAR_LIBRARIES
+        LIBTAR_INCLUDE_DIRS
 )
 
 set(LIBTAR_FOUND ${LIBTAR_FOUND} CACHE INTERNAL "")
-set(libtar_LIBRARIES ${libtar_LIBRARIES} CACHE INTERNAL "")
-set(libtar_INCLUDE_DIRS ${libtar_INCLUDE_DIRS} CACHE INTERNAL "")
+set(LIBTAR_LIBRARIES ${LIBTAR_LIBRARIES} CACHE INTERNAL "")
+set(LIBTAR_INCLUDE_DIRS ${LIBTAR_INCLUDE_DIRS} CACHE INTERNAL "")
 
 if(LIBTAR_FOUND)
-    message("-- ${Blue}Using Libtar -- \n\tLibraries:${libtar_LIBRARIES} \n\tIncludes:${libtar_INCLUDE_DIRS}${ColourReset}")   
+    message("-- ${Blue}Using Libtar -- \n\tLibraries:${LIBTAR_LIBRARIES} \n\tIncludes:${LIBTAR_INCLUDE_DIRS}${ColourReset}")   
 else()
     message( "-- ${Yellow}NOTE: FindLibTar failed to find -- LibTar${ColourReset}" )
 endif()

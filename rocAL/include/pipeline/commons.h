@@ -209,7 +209,7 @@ class BatchRNG {
  *
  */
 enum MissingComponentsBehaviour {
-    THROW_ERROR = 0,
-    SKIP,
-    EMPTY
+    MISSING_COMPONENT_ERROR = 0,
+    MISSING_COMPONENT_SKIP,
+    MISSING_COMPONENT_EMPTY
 };
