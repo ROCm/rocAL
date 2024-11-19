@@ -129,7 +129,7 @@ void SSDRandomCropNode::update_node() {
                 crop_box.b = 1;
                 break;
             }
-            float aspect_ratio;
+            float aspect_ratio = 0.0f;
             for (int j = 0; j < _num_of_attempts; j++) {
                 // Setting width and height factor btw 0.3 and 1.0";
                 float w_factor = _float_dis(_rngs[sample]);
