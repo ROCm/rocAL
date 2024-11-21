@@ -381,7 +381,6 @@ else:
                         ' install dlpack-devel'))
     elif "redhat" in platformInfo:
         # no package avialable -- using source
-        #ERROR_CHECK(os.system('(cd '+deps_dir+';wget https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm)'))
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm'))
 
