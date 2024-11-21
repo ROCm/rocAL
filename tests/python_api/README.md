@@ -14,6 +14,12 @@ sudo apt install libdlpack-dev
 sudo zypper install dlpack-devel
 ```
 
+* Redhat:
+
+```
+sudo yum install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm
+```
+
 ## Set environmental variables
 
 ``export ROCAL_DATA_PATH=/Absolute/Path/Of/MIVisionX-data/``
