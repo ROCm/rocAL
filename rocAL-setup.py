@@ -98,7 +98,7 @@ else:
     else:
         print("\nSTATUS: CPU Backend Install\n")
 
-# get platfrom info
+# get platform info
 platformInfo = platform.platform()
 
 # sudo requirement check
@@ -167,12 +167,12 @@ elif "Ubuntu" in os_info_data:
 elif "SLES" in os_info_data:
     linuxSystemInstall = 'zypper -n'
     linuxSystemInstall_check = '--no-gpg-checks'
-    platfromInfo = platfromInfo+'-SLES'
+    platformInfo = platformInfo+'-SLES'
     osUpdate = 'refresh'
 elif "Mariner" in os_info_data:
     linuxSystemInstall = 'tdnf -y'
     linuxSystemInstall_check = '--nogpgcheck'
-    platfromInfo = platfromInfo+'-Mariner'
+    platformInfo = platformInfo+'-Mariner'
     osUpdate = 'makecache'
 else:
     print("\nrocAL Setup on "+platformInfo+" is unsupported\n")
@@ -336,11 +336,11 @@ else:
                         ' '+linuxSystemInstall_check+' install -y '+ rocmRPMPackages[i]))
             
     # rocDecode - TBD: Revert when rocDecode is fully supported on all OS
-    # if "Ubuntu" in platfromInfo:
+    # if "Ubuntu" in platformInfo:
         # for i in range(len(rocdecodeDebianPackages)):
             # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
-    # elif "redhat-7" not in platfromInfo:
+    # elif "redhat-7" not in platformInfo:
         #for i in range(len(rocdecodeRPMPackages)):
             # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))

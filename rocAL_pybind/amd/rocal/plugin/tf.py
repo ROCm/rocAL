@@ -192,7 +192,7 @@ class ROCALGenericIteratorDetection(object):
 
 class ROCALIterator(ROCALGenericIteratorDetection):
     """!ROCAL iterator for detection and classification tasks for TF reader. It returns 2 or 3 outputs
-    (data and label) or (data , bbox , labels) in the form of numpy or cupy arrays.
+    (data and label) or (data , bbox , labels) in the form of TF tensors.
     Calling
     .. code-block:: python
        ROCALIterator(pipelines, size)
@@ -225,7 +225,7 @@ class ROCALIterator(ROCALGenericIteratorDetection):
 
 
 class ROCAL_iterator(ROCALGenericImageIterator):
-    """! ROCAL iterator for processing images for TF reader. It returns outputs in the form of numpy or cupy arrays.
+    """! ROCAL iterator for processing images for TF reader. It returns outputs in the form of tf tensors.
 
         @param pipelines            The rocAL pipelines to use for processing data.
         @param size                 The size of the iterator.
