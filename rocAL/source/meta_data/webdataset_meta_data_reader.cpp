@@ -249,8 +249,9 @@ void WebDataSetMetaDataReader::parse_index_files(
 void WebDataSetMetaDataReader::parse_tar_files(
     std::vector<SampleDescription> &samples_container,
     std::vector<ComponentDescription> &components_container,
-    std::unique_ptr<FileIOStream> &tar_file) {
-    TarArchive tar_archive(std::move(tar_file));
+    std::unique_ptr<std::ifstream> &tar_file) {
+    // TarArchive tar_archive(std::move(tar_file));
+    TarArchive tar_archive(std::move(tar_file)); // Dereferencing the unique_ptr
 
     std::string last_filename;
     for (; !tar_archive.at_end_of_archive();
@@ -330,7 +331,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
         for (auto &path : entry_name_list)
-            _wds_shards.emplace_back(FileIOStream::open(_path + path));
+            _wds_shards.emplace_back(std::make_unique<std::ifstream>(_path + path, std::ios::binary));
+            // _wds_shards.emplace_back(FileIOStream::open(_path + path));
     } else {
         _folder_path = _index_paths;
         if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
@@ -361,7 +363,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
         std::sort(entry_name_list.begin(), entry_name_list.end());
         _wds_shards.reserve(entry_name_list.size());
         for (auto &path : entry_name_list)
-            _wds_shards.emplace_back(FileIOStream::open(_path + path));
+            // _wds_shards.emplace_back(FileIOStream::open(_path + path));
+            _wds_shards.emplace_back(std::make_unique<std::ifstream>(_path + path, std::ios::binary));
     }
     closedir(_sub_dir);
 
@@ -387,9 +390,10 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 std::string last_file_name;
                 for (auto &component : sample.components) {
                     if (!isJPEG(component.ext)) {  // Add more components as we encounter
-                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                        _wds_shards[wds_shard_index]->seekg(component.offset, std::ios::beg);
                         std::vector<uint8_t> cls_data(component.size);
-                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        // _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        _wds_shards[wds_shard_index]->read(reinterpret_cast<char*>(cls_data.data()), component.size);
                         AsciiComponent ascii_component = {};
                         for (size_t i = 0; i < cls_data.size(); ++i)
                             ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
@@ -406,9 +410,10 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 std::string last_file_name;
                 for (auto &component : sample.components) {
                     if (!isJPEG(component.ext)) {  // Add more components as we encounter
-                        _wds_shards[wds_shard_index]->set_read_position(component.offset);
+                        _wds_shards[wds_shard_index]->seekg(component.offset, std::ios::beg);
                         std::vector<uint8_t> cls_data(component.size);
-                        _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        // _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
+                        _wds_shards[wds_shard_index]->read(reinterpret_cast<char*>(cls_data.data()), component.size);
                         AsciiComponent ascii_component = {};
                         for (size_t i = 0; i < cls_data.size(); ++i)
                             ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));

@@ -261,46 +261,53 @@ void WebDatasetSourceReader::parse_index_files(
 
 void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& samples_vector,
                                               std::vector<ComponentDescription>& components_vector,
-                                              std::unique_ptr<FileIOStream>& tar_file) {
-    TarArchive tar_archive(std::move(tar_file));
+                                              std::unique_ptr<std::ifstream>& tar_file) {
+    // TarArchive tar_archive(std::move(tar_file));
+    TarArchive tar_archive(std::move(tar_file)); // Dereferencing the unique_ptr
 
+    std::cerr << "\n parse tar files";
     std::string last_filename;
     for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
+        std::cerr << "\n TAR archive";
         if (tar_archive.get_current_file_type() == TarArchive::ENTRY_FILE) {
-        std::tie(last_filename, std::ignore) = split_name(tar_archive.get_current_file_name());
-        break;
+            std::tie(last_filename, std::ignore) = split_name(tar_archive.get_current_file_name());
+            break;
         }
     }
+    std::cerr << "\n tar_archive.get_current_file_name() :: " << tar_archive.get_current_file_name();
+    std::cerr << "\n last_filename :: " << last_filename;
     size_t last_components_size = components_vector.size();
     for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
         if (tar_archive.get_current_file_type() != TarArchive::ENTRY_FILE) {
-        continue;
+            continue;
         }
 
-    std::string basename, ext;
-    std::tie(basename, ext) = split_name(tar_archive.get_current_file_name());
-    if (basename.empty()) {
-      continue;
-    }
+        std::string basename, ext;
+        std::tie(basename, ext) = split_name(tar_archive.get_current_file_name());
+        if (basename.empty()) {
+            continue;
+        }
+        std::cerr << "\n basename :: " << basename;
+        std::cerr << "\n ext :: " << ext;
 
-    if (basename != last_filename) {
-      samples_vector.emplace_back();
-      samples_vector.back().components = VectorView<ComponentDescription>(components_vector, last_components_size, components_vector.size() - last_components_size);
-      last_filename = basename;
-      last_components_size = components_vector.size();
+        if (basename != last_filename) {
+            samples_vector.emplace_back();
+            samples_vector.back().components = VectorView<ComponentDescription>(components_vector, last_components_size, components_vector.size() - last_components_size);
+            last_filename = basename;
+            last_components_size = components_vector.size();
+        }
+        std::cerr << "\n ext :: " << ext;
+        components_vector.emplace_back();
+        components_vector.back().size = tar_archive.get_current_file_size();
+        components_vector.back().offset = tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
+        components_vector.back().ext = std::move(ext);
+        auto _last_id = basename;
+        auto last_slash_idx = _last_id.find_last_of("\\/");
+        if (std::string::npos != last_slash_idx) {
+            _last_id.erase(0, last_slash_idx + 1);
+        }
+        components_vector.back().filename = _last_id;
     }
-
-    components_vector.emplace_back();
-    components_vector.back().size = tar_archive.get_current_file_size();
-    components_vector.back().offset = tar_archive.get_current_archive_offset() + tar_archive.get_current_header_size();
-    components_vector.back().ext = std::move(ext);
-    auto _last_id = basename;
-    auto last_slash_idx = _last_id.find_last_of("\\/");
-    if (std::string::npos != last_slash_idx) {
-        _last_id.erase(0, last_slash_idx + 1);
-    }
-    components_vector.back().filename = _last_id;
-  }
     samples_vector.emplace_back();
     samples_vector.back().components = VectorView<ComponentDescription>(components_vector, last_components_size, components_vector.size() - last_components_size);
 
@@ -311,11 +318,50 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
     auto ret = Reader::Status::OK;
     std::string _full_path;
     std::vector<std::string> entry_name_list;
-    if (_index_paths.size() == 0) { 
+    if (_index_paths.empty()) { 
         _folder_path = _path;
-            if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
-        THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
+        std::cerr << "\n HERE 3";
+        if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
+            THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
+        _full_path = _folder_path;  
+        while ((_entity = readdir(_sub_dir)) != nullptr) {
+            std::string entry_name(_entity->d_name);
+            if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
+                continue;
+            entry_name_list.push_back(entry_name);
+        }
+        std::sort(entry_name_list.begin(), entry_name_list.end());
+        _wds_shards.reserve(entry_name_list.size());
+        std::cerr << "\n HERE 4";
+        // Create n such std-streams for n paths
+        for (auto& path : entry_name_list)
+         {
+            auto file = std::make_unique<std::ifstream>(_path + path, std::ios::binary);
+            if (!file->is_open()) {
+                // Handle error (e.g., log, throw exception, etc.)
+                std::cerr << "Failed to open file: " << _path + path << std::endl;
+            } else {
+                _wds_shards.emplace_back(std::move(file));
+            }
+        }
+            // _wds_shards.emplace_back(std::make_unique<std::ifstream>(_path + path, std::ios::binary));
+    } else {
+        _folder_path = _index_paths;
+        if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
+            THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
         _full_path = _folder_path;
+        while ((_entity = readdir(_sub_dir)) != nullptr) {
+            std::string entry_name(_entity->d_name);
+            if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
+                continue;
+            _index_name_list.push_back(entry_name);
+        }
+        std::cerr << "\n HERE 2";
+        std::sort(_index_name_list.begin(), _index_name_list.end());
+        // Tar file path
+        if ((_sub_dir = opendir(_path.c_str())) == nullptr)
+            THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _path);
+        std::string _full_path = _path;
         while ((_entity = readdir(_sub_dir)) != nullptr) {
             std::string entry_name(_entity->d_name);
             if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
@@ -325,58 +371,43 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
         std::sort(entry_name_list.begin(), entry_name_list.end());
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
-        for (auto& path : entry_name_list)
-            _wds_shards.emplace_back(FileIOStream::open(_path + path));
-    } else {
-            _folder_path = _index_paths;
-            if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
-                THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
-            _full_path = _folder_path;
-            while ((_entity = readdir(_sub_dir)) != nullptr) {
-                std::string entry_name(_entity->d_name);
-                if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
-                    continue;
-                _index_name_list.push_back(entry_name);
+        for (auto& path : entry_name_list) {
+            auto file = std::make_unique<std::ifstream>(_path + path, std::ios::binary);
+            if (!file->is_open()) {
+                // Handle error (e.g., log, throw exception, etc.)
+                std::cerr << "Failed to open file: " << _path + path << std::endl;
+            } else {
+                _wds_shards.emplace_back(std::move(file));
             }
-            std::sort(_index_name_list.begin(), _index_name_list.end());
-            // tar file path
-            if ((_sub_dir = opendir(_path.c_str())) == nullptr)
-                THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _path);
-            std::string _full_path = _path;
-            while ((_entity = readdir(_sub_dir)) != nullptr) {
-                std::string entry_name(_entity->d_name);
-                if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
-                    continue;
-                entry_name_list.push_back(entry_name);
-            }
-            std::sort(entry_name_list.begin(), entry_name_list.end());
-            _wds_shards.reserve(entry_name_list.size());
-            // Create n such std-streams for n paths
-            for (auto& path : entry_name_list)
-                _wds_shards.emplace_back(FileIOStream::open(_path + path));
+        }
+            // _wds_shards.emplace_back(std::make_unique<std::ifstream>(_path + path, std::ios::binary));
     }
-
-    // if (!_meta_data_reader) {
-        std::vector<SampleDescription> unfiltered_samples;
-        std::vector<ComponentDescription> unfiltered_components;
-
-        for (unsigned wds_shard_index = 0; wds_shard_index < entry_name_list.size(); ++wds_shard_index) {
+    std::cerr << "HERE 1";
+    std::vector<SampleDescription> unfiltered_samples;
+    std::vector<ComponentDescription> unfiltered_components;
+    
+    for (unsigned wds_shard_index = 0; wds_shard_index < entry_name_list.size(); ++wds_shard_index) {
             unfiltered_samples.resize(0);
             unfiltered_components.resize(0);
+            std::cerr << "\n _index_paths.size() :: " << _index_paths.size();
             if (_index_paths.size() == 0)
-                parse_tar_files(unfiltered_samples, unfiltered_components, _wds_shards[wds_shard_index]);
+            parse_tar_files(unfiltered_samples, unfiltered_components, _wds_shards[wds_shard_index]);
             else
-                parse_index_files(unfiltered_samples, unfiltered_components, _folder_path + _index_name_list[wds_shard_index]);
-            
+            parse_index_files(unfiltered_samples, unfiltered_components, _folder_path + _index_name_list[wds_shard_index]);
+        std::cerr << "HERE after parse_tar_files";
+        std::cerr << "\n unfiltered_samples " << unfiltered_samples.size();
             // After parsing add the contents to the map
-            for (auto& sample : unfiltered_samples) {
-                for (auto& component : sample.components) {
-                    if (!_meta_data_reader || _meta_data_reader->exists(component.filename)) {
-                        if (webdataset_record_reader_from_components(component, wds_shard_index) != Reader::Status::OK)
-                                    WRN("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] WebDataset File reader cannot access the storage at " + _folder_path + component.filename);
-                    }
+        for (auto& sample : unfiltered_samples) {
+            std::cerr << "\n sample";
+            for (auto& component : sample.components) {
+                std::cerr << "\n compoenent";
+                if (!_meta_data_reader || _meta_data_reader->exists(component.filename)) {
+                    if (webdataset_record_reader_from_components(component, wds_shard_index) != Reader::Status::OK)
+                        WRN("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] WebDataset File reader cannot access the storage at " + _folder_path + component.filename);
                 }
             }
+        }
+        std::cerr << "\n AFTER FOR LOOP";
     }
 
     size_t padded_samples = ((_shard_size > 0) ? _shard_size : largest_shard_size_without_padding()) % _batch_size;
@@ -386,10 +417,13 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
     if (_pad_last_batch_repeated == true) {
         update_filenames_with_padding(_file_names, _batch_size);
     }
-
+    std::cerr << "\n HERE after update_file_names_with_padding";
+    std::cerr << "\n _file_names.size():: " << _file_names.size();
     _last_file_name = _file_names[_file_names.size() - 1];
-    compute_start_and_end_idx_of_all_shards();
-
+    std::cerr << "\n _file_names.size():: " << _file_names.size();
+    std::cerr << "\n HERE after update_file_names_with_padding 2";
+     compute_start_and_end_idx_of_all_shards();
+    
     return ret;
 }
 
@@ -401,11 +435,13 @@ inline bool isJPEG(const std::string& ext) {
 
 Reader::Status WebDatasetSourceReader::webdataset_record_reader_from_components(ComponentDescription component, unsigned wds_shard_index) {
     auto ret = Reader::Status::OK;
+    std::cerr << "\n called here";
     if (isJPEG(component.ext)) {
         // Update file path and size
         std::string file_path = _folder_path;
         file_path.append("/");
         file_path.append(component.filename);
+        std::cerr << "\n file_path :: " << file_path;
         _file_names.push_back(file_path);
         _last_file_name = file_path;
         _file_size.insert(std::pair<std::string, unsigned int>(file_path, component.size));
@@ -419,8 +455,10 @@ Reader::Status WebDatasetSourceReader::webdataset_record_reader_from_components(
 Reader::Status WebDatasetSourceReader::read_web_dataset_at_offset(unsigned char* buff, std::string file_name, uint file_size, uint offset, uint wds_shard_index) {
     auto ret = Reader::Status::OK;
     auto& current_tar_file_stream = _wds_shards[wds_shard_index];
-    current_tar_file_stream->set_read_position(offset);
-    current_tar_file_stream->read_into_buffer(buff, file_size);
+    // current_tar_file_stream->set_read_position(offset);
+    current_tar_file_stream->seekg(offset, std::ios::beg);
+    // current_tar_file_stream->read_into_buffer(buff, file_size);
+    current_tar_file_stream->read(reinterpret_cast<char*>(buff), file_size); // Check if needed
     return ret;
 }
 

@@ -106,7 +106,7 @@ class WebDatasetSourceReader : public Reader {
     int release();
     size_t get_file_shard_id();
     void incremenet_file_id() { _file_id++; }
-    void parse_tar_files(std::vector<SampleDescription> &samples_container, std::vector<ComponentDescription> &components_container, std::unique_ptr<FileIOStream> &tar_file);
+    void parse_tar_files(std::vector<SampleDescription> &samples_container, std::vector<ComponentDescription> &components_container, std::unique_ptr<std::ifstream> &tar_file);
     void parse_index_files(std::vector<SampleDescription> &samples_container,
                       std::vector<ComponentDescription> &components_container,
                       const std::string &index_path);
@@ -117,7 +117,7 @@ class WebDatasetSourceReader : public Reader {
         int index_version);
     Reader::Status webdataset_record_reader_from_components(ComponentDescription component, unsigned wds_shard_index);
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    std::vector<std::unique_ptr<FileIOStream>> _wds_shards;
+    std::vector<std::unique_ptr<std::ifstream>> _wds_shards;
     Reader::Status read_web_dataset_at_offset(unsigned char *buff,
                                               std::string file_name,
                                               uint file_size, uint offset,

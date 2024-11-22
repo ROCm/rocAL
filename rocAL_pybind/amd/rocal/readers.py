@@ -356,7 +356,7 @@ def mxnet(path, stick_to_shard=False, pad_last_batch=False):
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return mxnet_metadata
 
-def webdataset(path, index_paths="", ext = None, missing_components_behavior = types.THROW_ERROR):
+def webdataset(path, index_paths="", ext = None, missing_components_behavior = types.MISSING_COMPONENT_ERROR):
     """!Creates an WebDataset node for reading data from tar files.
 
         @param path                         Path to the tar files.
