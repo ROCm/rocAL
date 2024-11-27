@@ -28,15 +28,11 @@ import numpy as np
 from parse_config import parse_args
 
 
-def draw_patches(img, idx, device_type, args=None):
+def draw_patches(img, idx, device, args=None):
     import cv2
     args = parse_args()
-    if device_type == "gpu":
-        try:
-            import cupy as cp
-            img = cp.asnumpy(img)
-        except ImportError:
-            pass
+    # converting to numpy for opencv display since iterator returns tf.tensor
+    img = img.numpy()
     if not args.NHWC:
         img = img.transpose([0, 1, 2])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
