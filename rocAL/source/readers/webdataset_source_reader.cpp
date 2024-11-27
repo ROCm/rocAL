@@ -353,7 +353,6 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
                 _wds_shards.emplace_back(std::move(file));
             }
         }
-            // _wds_shards.emplace_back(std::make_unique<std::ifstream>(_path + path, std::ios::binary));
     }
     std::vector<SampleDescription> unfiltered_samples;
     std::vector<ComponentDescription> unfiltered_components;

@@ -1458,11 +1458,11 @@ std::vector<rocalTensorList *> MasterGraph::ascii_values_meta_data() {
         auto meta_data_buffers = (uint8_t *)_ring_buffer.get_meta_read_buffers()[ext]; // Get ASCII buffer from ring buffer
         auto ascii_values = _ring_buffer.get_meta_data().second->get_ascii_values_batch();
         for (unsigned i = 0; i < _ascii_tensor_list[ext].size(); i++) {
-            if (ascii_values[i][ext].size() != 0) {
-                _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext].size(), 1});
+            if (ascii_values[i][ext]->size() != 0) {
+                _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext]->size(), 1});
                 _ascii_tensor_list[ext][i]->set_mem_handle((void *)meta_data_buffers);
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
-            } else if (ascii_values[i][ext].size() == 0) {
+            } else if (ascii_values[i][ext]->size() == 0) {
                 _ascii_tensor_list[ext][i]->set_dims({0});
                 _ascii_tensor_list[ext][i]->set_mem_handle((void *)nullptr);
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();

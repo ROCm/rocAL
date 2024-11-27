@@ -111,8 +111,8 @@ void WebDataSetMetaDataReader::print_map_contents() {
         std::cerr << "Name :\t " << elem.first;
         samples_ascii = elem.second->get_ascii_values();
         for (const auto &sample : samples_ascii) {
-            std::cerr << "\n Number of Samples:" << sample.size();
-            for (const auto &component_ascii : sample) {
+            std::cerr << "\n Number of Samples:" << sample->size();
+            for (const auto &component_ascii : *sample) {
                 std::cout << "[" << static_cast<int>(component_ascii) << "]";
                 std::cout << " ]" << std::endl;
             }
@@ -391,12 +391,11 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 for (auto &component : sample.components) {
                     if (!isJPEG(component.ext)) {  // Add more components as we encounter
                         _wds_shards[wds_shard_index]->seekg(component.offset, std::ios::beg);
-                        std::vector<uint8_t> cls_data(component.size);
-                        // _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
-                        _wds_shards[wds_shard_index]->read(reinterpret_cast<char*>(cls_data.data()), component.size);
-                        AsciiComponent ascii_component = {};
-                        for (size_t i = 0; i < cls_data.size(); ++i)
-                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                        // std::vector<uint8_t> cls_data(component.size);
+                        AsciiComponent ascii_component = std::make_shared<std::vector<uint8_t>>(component.size);
+                        _wds_shards[wds_shard_index]->read(reinterpret_cast<char*>(ascii_component->data()), component.size);
+                        // for (size_t i = 0; i < cls_data.size(); ++i)
+                        //     ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
                         ascii_values.at(_ext_map[component.ext]) = ascii_component;
                     }
                     last_file_name = component.filename;
@@ -411,18 +410,18 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 for (auto &component : sample.components) {
                     if (!isJPEG(component.ext)) {  // Add more components as we encounter
                         _wds_shards[wds_shard_index]->seekg(component.offset, std::ios::beg);
-                        std::vector<uint8_t> cls_data(component.size);
-                        // _wds_shards[wds_shard_index]->read_into_buffer(cls_data.data(), component.size);
-                        _wds_shards[wds_shard_index]->read(reinterpret_cast<char*>(cls_data.data()), component.size);
-                        AsciiComponent ascii_component = {};
-                        for (size_t i = 0; i < cls_data.size(); ++i)
-                            ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
+                        // std::vector<uint8_t> cls_data(component.size);
+                        // AsciiComponent ascii_component(component.size);
+                        AsciiComponent ascii_component = std::make_shared<std::vector<uint8_t>>(component.size);
+                        _wds_shards[wds_shard_index]->read(reinterpret_cast<char*>(ascii_component->data()), component.size);
+                        // for (size_t i = 0; i < cls_data.size(); ++i)
+                        //     ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
                         ascii_values.at(_ext_map[component.ext]) = ascii_component;
                     }
                     last_file_name = component.filename;
                 }
                 for (auto &ascii_component : ascii_values) {
-                    if (ascii_component.size() < _ext_map.size()) {                              // TODO - Check if it should be less that extension size
+                    if (ascii_component->size() < _ext_map.size()) {                              // TODO - Check if it should be less that extension size
                         if (_missing_component_behaviour == MissingComponentsBehaviour::MISSING_COMPONENT_SKIP) {  // skipping sample
                             WRN("WARNING: Skipping the sample with missing components.");
                             skip_sample = true;
