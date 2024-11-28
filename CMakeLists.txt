@@ -33,7 +33,7 @@ if (NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 endif()
 
 # rocAL Version
-set(VERSION "2.3.0")
+set(VERSION "2.2.0")
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
