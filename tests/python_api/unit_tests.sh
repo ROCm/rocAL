@@ -94,42 +94,42 @@ do
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name contrast --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Contrast_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name vignette --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Vignette_${rgb_name[$rgb]}_${device_name}"
 
-        # # # tf classification
+        # tf classification
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name blend --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Blend_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name warp_affine --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}WarpAffine_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name blur --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Blur_${rgb_name[$rgb]}_${device_name}"
 
-        # # tf detection
+        # tf detection
         python"$ver" unit_test.py --image-dataset-path "$tf_detection_path" --reader-type "tf_detection" --augmentation-name snp_noise --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$tf_detection_path" --reader-type "tf_detection" --augmentation-name color_temp --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ColorTemp_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$tf_detection_path" --reader-type "tf_detection" --augmentation-name fog --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Fog_${rgb_name[$rgb]}_${device_name}"
 
-        # # caffe classification
+        # caffe classification
         python"$ver" unit_test.py --image-dataset-path "$caffe_classification_path" --reader-type "caffe_classification" --augmentation-name rotate --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Rotate_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$caffe_classification_path" --reader-type "caffe_classification" --augmentation-name brightness --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Brightness_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$caffe_classification_path" --reader-type "caffe_classification" --augmentation-name hue --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Hue_${rgb_name[$rgb]}_${device_name}"
 
-        # # caffe detection
+        # caffe detection
         python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name saturation --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Saturation_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name color_twist --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ColorTwist_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name rain --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Rain_${rgb_name[$rgb]}_${device_name}"
 
-        # # caffe2 classification
+        # caffe2 classification
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name center_crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name resize_crop_mirror --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name snow --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Snow_${rgb_name[$rgb]}_${device_name}"
 
-        # # caffe2 detection
+        # caffe2 detection
         python"$ver" unit_test.py --image-dataset-path "$caffe2_detection_path" --reader-type "caffe2_detection" --augmentation-name fish_eye --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}FishEye_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$caffe2_detection_path" --reader-type "caffe2_detection" --augmentation-name pixelate --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$caffe2_detection_path" --reader-type "caffe2_detection" --augmentation-name center_crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}_cmn"
 
-        # # mxnet
+        # mxnet
         python"$ver" unit_test.py --image-dataset-path "$mxnet_path" --reader-type "mxnet" --augmentation-name jitter --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$mxnet_path" --reader-type "mxnet" --augmentation-name resize_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$mxnet_path" --reader-type "mxnet" --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_mxnet"
 
-        # # CMN 
+        # CMN 
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_FileReader"
         python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_webDataset"
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_coco"
@@ -165,7 +165,7 @@ do
         python"$ver" unit_test.py --image-dataset-path "$caffe2_detection_path" --reader-type "caffe2_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 5 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_default_caffe2Detection"
         python"$ver" unit_test.py --image-dataset-path "$mxnet_path" --reader-type "mxnet" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 4 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_gaussian_default_mxnet"
 
-        # # Special Case - One Hot Encoded Labels
+        # Special Case - One Hot Encoded Labels
         python"$ver" unit_test.py --image-dataset-path "$one_hot_data_path" --augmentation-name one_hot --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}OneHot_${rgb_name[$rgb]}_${device_name}"
 
     done
