@@ -32,7 +32,6 @@ def HybridTrainPipe(batch_size, num_threads, device_id, data_dir, rocal_cpu=True
     resize_width = 300
     resize_height = 300
     decoder_device = 'cpu'  # hardcoding decoder_device to cpu until VCN can decode all JPEGs
-
     # Create Pipeline instance
     pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id,
                     rocal_cpu=rocal_cpu, prefetch_queue_depth=prefetch_queue_depth)
@@ -54,8 +53,10 @@ def main():
     image_folder_path = sys.argv[1]
     if (sys.argv[2] == "cpu"):
         rocal_cpu = True
+        device= "cpu"
     else:
         rocal_cpu = False
+        device = "gpu"
     batch_size = int(sys.argv[3])
     prefetch_queue_depth = int(sys.argv[4])
     num_threads = 8
@@ -63,7 +64,7 @@ def main():
     pipe = HybridTrainPipe(batch_size=batch_size, num_threads=num_threads, device_id=device_id,
                            data_dir=image_folder_path, rocal_cpu=rocal_cpu, prefetch_queue_depth=prefetch_queue_depth)
     pipe.build()
-    imageIterator = ROCALClassificationIterator(pipe)
+    imageIterator = ROCALClassificationIterator(pipe,device=device)
     start = datetime.datetime.now()
     for _ in range(0, 10):
         for _ in imageIterator:
