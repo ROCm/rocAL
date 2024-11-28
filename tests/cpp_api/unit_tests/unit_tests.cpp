@@ -326,7 +326,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
             else
-                decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, ROCAL_DECODER_HW_JPEG);
+                decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, true, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, ROCAL_DECODER_HW_JPEG);
+                // decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, true, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
             // ROCAL_DECODER_HW_JPEG
         } break;
     }
@@ -346,6 +347,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
     }
+    /*
     switch (test_case) {
         case 0: {
             std::cout << "Running rocalResize" << std::endl;
@@ -598,7 +600,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
     }
-
+    */
     // Calling the API to verify and build the augmentation graph
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK) {
