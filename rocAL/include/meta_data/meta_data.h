@@ -331,11 +331,11 @@ class AsciiValueBatch : public MetaDataBatch {
     }
     std::shared_ptr<MetaDataBatch> clone(bool copy_contents) override {
         if (copy_contents) {
-            return std::make_shared<AsciiValueBatch>(*this);  // Copy the entire metadata batch with all the metadata values and info
+            return std::make_shared<AsciiValueBatch>(*this);
         } else {
             std::shared_ptr<MetaDataBatch> ascii_value_batch_instance = std::make_shared<AsciiValueBatch>();
             ascii_value_batch_instance->resize(this->size());
-            ascii_value_batch_instance->get_info_batch() = this->get_info_batch();  // Copy only info to newly created instance excluding the metadata values
+            ascii_value_batch_instance->get_info_batch() = this->get_info_batch();
             return ascii_value_batch_instance;
         }
     }
@@ -345,7 +345,7 @@ class AsciiValueBatch : public MetaDataBatch {
     AsciiValueBatch() = default;
     void copy_data(std::vector<void*> buffer) override {
         if (buffer.size() < 1)
-            THROW("The buffers are insufficient")  // TODO -change
+            THROW("The buffers are insufficient")
 
         for (unsigned component = 0; component < _ascii_values[0].size(); component++) {
             auto ascii_values_buffer = static_cast<uint8_t*>(buffer[component]);
