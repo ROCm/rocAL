@@ -72,6 +72,14 @@ rocAL can be currently used to perform the following operations either with rand
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
+* CMake Version `3.10` or later
+
+  ```shell
+  sudo apt install cmake
+  ```
+
+* AMD Clang++ Version `18.0.0` or later - installed with ROCm
+
 * [HIP](https://github.com/ROCm/HIP)
   ```shell
   sudo apt install rocm-hip-runtime-dev
