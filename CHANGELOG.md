@@ -7,6 +7,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Added
 
 ### Changed
+* AMD Clang is now the default CXX and C compiler.
 
 ### Removed
 
