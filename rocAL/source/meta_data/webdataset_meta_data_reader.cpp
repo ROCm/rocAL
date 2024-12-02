@@ -21,21 +21,7 @@ THE SOFTWARE.
 */
 
 #include "meta_data/webdataset_meta_data_reader.h"
-
-#include <fcntl.h>
-#include <libtar.h>
-#include <string.h>
-
-#include <algorithm>
-#include <array>
 #include <cassert>
-#include <cerrno>
-#include <cstring>
-#include <sstream>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "pipeline/commons.h"
 #include "pipeline/exception.h"
 
@@ -206,16 +192,16 @@ void WebDataSetMetaDataReader::parse_sample_description(
         THROW("No extensions provided for the sample");
 }
 
-inline int parse_index_version(const string &version_str) {
-    const char *s = version_str.c_str();
-    assert(*s == 'v');
-    s++;
-    int major = atoi(s);
-    s = strchr(s, '.');
-    assert(s);
-    s++;
-    int minor = atoi(s);
-    return create_version_number(major, minor);
+inline int parse_index_version(const string& idx_version_in_str) {
+  const char* c_string_ptr = idx_version_in_str.c_str();
+  assert(*c_string_ptr == 'v');
+  c_string_ptr++;
+  auto major = atoi(c_string_ptr);
+  c_string_ptr = strchr(c_string_ptr, '.');
+  assert(c_string_ptr);
+  c_string_ptr++;
+  auto minor = atoi(c_string_ptr);
+  return create_version_number(major, minor);
 }
 
 void WebDataSetMetaDataReader::parse_index_files(
@@ -304,7 +290,7 @@ void WebDataSetMetaDataReader::parse_tar_files(
     tar_file = tar_archive.release_file_stream();
 }
 
-void WebDataSetMetaDataReader::read_all(const std::string &_path) {
+void WebDataSetMetaDataReader::read_all(const std::string &folder_path) {
     uint ext_idx = 0;
     for (size_t output_index = 0; output_index < _exts.size(); output_index++) {
         for (auto &ext : _exts[output_index]) {
@@ -331,8 +317,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
         for (auto &path : entry_name_list)
-            _wds_shards.emplace_back(std::make_unique<std::ifstream>(_path + path, std::ios::binary));
-            // _wds_shards.emplace_back(FileIOStream::open(_path + path));
+            _wds_shards.emplace_back(std::make_unique<std::ifstream>( folder_path + path, std::ios::binary));
+            // _wds_shards.emplace_back(FileIOStream::open( folder_path + path));
     } else {
         _folder_path = _index_paths;
         if ((_sub_dir = opendir(_folder_path.c_str())) == nullptr)
@@ -348,12 +334,12 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
             _index_name_list.push_back(entry_name);
         }
         std::sort(_index_name_list.begin(), _index_name_list.end());
-        if ((_sub_dir = opendir(_path.c_str())) == nullptr)
+        if ((_sub_dir = opendir( folder_path.c_str())) == nullptr)
             THROW(
                 "WebDatasetSourceReader :: ERROR: Failed opening the "
                 "directory at " +
-                _path);
-        _full_path = _path;
+                 folder_path);
+        _full_path =  folder_path;
         while ((_entity = readdir(_sub_dir)) != nullptr) {
             std::string entry_name(_entity->d_name);
             if (strcmp(_entity->d_name, ".") == 0 || strcmp(_entity->d_name, "..") == 0)
@@ -363,8 +349,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
         std::sort(entry_name_list.begin(), entry_name_list.end());
         _wds_shards.reserve(entry_name_list.size());
         for (auto &path : entry_name_list)
-            // _wds_shards.emplace_back(FileIOStream::open(_path + path));
-            _wds_shards.emplace_back(std::make_unique<std::ifstream>(_path + path, std::ios::binary));
+            // _wds_shards.emplace_back(FileIOStream::open( folder_path + path));
+            _wds_shards.emplace_back(std::make_unique<std::ifstream>( folder_path + path, std::ios::binary));
     }
     closedir(_sub_dir);
 
@@ -410,12 +396,8 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                 for (auto &component : sample.components) {
                     if (!isJPEG(component.ext)) {  // Add more components as we encounter
                         _wds_shards[wds_shard_index]->seekg(component.offset, std::ios::beg);
-                        // std::vector<uint8_t> cls_data(component.size);
-                        // AsciiComponent ascii_component(component.size);
                         AsciiComponent ascii_component = std::make_shared<std::vector<uint8_t>>(component.size);
                         _wds_shards[wds_shard_index]->read(reinterpret_cast<char*>(ascii_component->data()), component.size);
-                        // for (size_t i = 0; i < cls_data.size(); ++i)
-                        //     ascii_component.push_back(static_cast<uint8_t>(cls_data[i]));
                         ascii_values.at(_ext_map[component.ext]) = ascii_component;
                     }
                     last_file_name = component.filename;
@@ -429,7 +411,6 @@ void WebDataSetMetaDataReader::read_all(const std::string &_path) {
                             THROW("ERROR: Missing components in the sample. Please check the sample components");
                         }
                     }
-                    // ascii_values.clear();    // Commented to fix seg fault
                 }
                 if (skip_sample == false)
                     add(last_file_name, ascii_values);

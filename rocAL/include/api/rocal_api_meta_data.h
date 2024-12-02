@@ -24,6 +24,7 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_META_DATA_H
 #include "rocal_api_types.h"
 #include <set>
+
 /*!
  * \file
  * \brief The AMD rocAL Library - Meta Data

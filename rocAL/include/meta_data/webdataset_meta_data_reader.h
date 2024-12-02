@@ -21,14 +21,13 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <dirent.h>
-// #include <map>
 #include "meta_data/meta_data.h"
 #include "meta_data/meta_data_reader.h"
 #include "pipeline/commons.h"
 #include "pipeline/filesystem.h"
 #include "readers/image/image_reader.h"
 #include "tar_helper_functions.h"
+
 class WebDataSetMetaDataReader : public MetaDataReader {
    public:
     void init(const MetaDataConfig &cfg,

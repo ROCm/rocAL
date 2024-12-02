@@ -49,8 +49,8 @@ typedef struct BoundingBoxCord_ {
 typedef std::vector<BoundingBoxCord> BoundingBoxCords;
 typedef std::vector<int> Labels;
 
-typedef std::shared_ptr<std::vector<uint8_t>> AsciiComponent; // Shared pointer to a vector that can store each component of the samples in a atr file in ASCII format.
-typedef std::vector<AsciiComponent> AsciiValues;
+typedef std::shared_ptr<std::vector<uint8_t>> AsciiComponent; // Shared pointer to a vector that can store each component of the samples in a tar file in ASCII format.
+typedef std::vector<AsciiComponent> AsciiValues; // A vector that can store all the components of the samples in a tar file in ASCII format.
 
 typedef struct {
     int w;
