@@ -220,7 +220,7 @@ class Reader {
 
     virtual const NumpyHeaderData get_numpy_header_data() { return {}; }
 
-    virtual size_t read_numpy_data(void *buf, size_t read_size, std::vector<size_t> max_shape) { return 0; }
+    virtual size_t read_numpy_data(void *buf, size_t read_size, std::vector<unsigned>& strides_in_dims) { return 0; }
 
     //! Closes the opened item
     virtual int close() = 0;

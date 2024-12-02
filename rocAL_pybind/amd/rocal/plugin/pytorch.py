@@ -455,7 +455,6 @@ class ROCALNumpyIterator(object):
     def __del__(self):
         b.rocalRelease(self.loader._handle)
 
-
 def draw_patches(img, idx, bboxes):
     """!Writes images to disk as a PNG file.
 

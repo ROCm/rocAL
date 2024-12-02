@@ -34,14 +34,14 @@ THE SOFTWARE.
 
 class NumpyDataReader : public Reader {
    public:
-    //! Looks up the folder which contains the files, amd loads the image names
+    //! Looks up the folder which contains the files, amd loads the numpy files
     /*!
      \param desc  User provided descriptor containing the files' path.
     */
     Reader::Status initialize(ReaderConfig desc) override;
     //! Reads the next resource item
     /*!
-     \param buf User's provided buffer to receive the loaded images
+     \param buf User's provided buffer to receive the loaded numpy data
      \return Size of the loaded resource
     */
     size_t read_data(unsigned char* buf, size_t max_size) override;
@@ -51,9 +51,20 @@ class NumpyDataReader : public Reader {
     */
     size_t open() override;
 
+    //! Returns the numpy header data 
+    /*!
+     \return The numpy header data of the current file
+    */
     const NumpyHeaderData get_numpy_header_data() override;
 
-    size_t read_numpy_data(void* buf, size_t read_size, std::vector<size_t> max_shape) override;
+    //! Reads the next numpy file
+    /*!
+     \param buf User's provided buffer to receive the loaded numpy data
+     \param raad_size Requested read size by the user
+     \param buf Max dimension strides of the output tensor used for padding along the dimensions
+     \return Size of the loaded resource
+    */
+    size_t read_numpy_data(void* buf, size_t read_size, std::vector<unsigned>& max_shape) override;
 
     //! Resets the object's state to read from the first file in the folder
     void reset() override;
@@ -74,9 +85,8 @@ class NumpyDataReader : public Reader {
 
     std::string get_root_folder_path() override;  // Returns the root folder path
 
-    std::vector<std::string> get_file_paths_from_meta_data_reader() override;  // Returns the relative file path from the meta-data reader
    private:
-    //! opens the folder containing the images
+    //! opens the folder containing the numpy arrays
     Reader::Status open_folder();
     Reader::Status subfolder_reading();
     std::string _folder_path;
@@ -114,13 +124,12 @@ class NumpyDataReader : public Reader {
     std::string parse_string(const char*& input, char delim_start = '\'', char delim_end = '\'');
     void parse_header(NumpyHeaderData& parsed_header, std::string file_path);
     template <typename T>
-    size_t parse_numpy_data(T* buf, std::vector<unsigned> strides, std::vector<unsigned> shapes, unsigned dim = 0);
+    size_t parse_numpy_data(T* buf, std::vector<unsigned>& strides, std::vector<unsigned>& shapes, unsigned dim = 0);
     bool get_header_from_cache(const std::string& file_name, NumpyHeaderData& target);
     void update_header_cache(const std::string& file_name, const NumpyHeaderData& value);
     void incremenet_read_ptr();
     int release();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
-    size_t _num_padded_samples = 0;                  //! Number of samples that are padded in the last batch which would differ for each shard.
+    size_t _num_padded_samples = 0;                  // Number of samples that are padded in the last batch which would differ for each shard.
     Reader::Status generate_file_names();            // Function that would generate _file_names containing all the samples in the dataset
 };

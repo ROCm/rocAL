@@ -51,7 +51,7 @@ ImageSourceEvaluator::create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg)
 }
 
 ImageSourceEvaluatorStatus
-ImageSourceEvaluator::create(ReaderConfig reader_cfg) {
+ImageSourceEvaluator::create_numpy_reader(ReaderConfig reader_cfg) {
     ImageSourceEvaluatorStatus status = ImageSourceEvaluatorStatus::OK;
     _reader = create_reader(std::move(reader_cfg));
     find_max_numpy_dimensions();

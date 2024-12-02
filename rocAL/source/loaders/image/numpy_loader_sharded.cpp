@@ -48,7 +48,7 @@ NumpyLoaderSharded::~NumpyLoaderSharded() {
 
 void NumpyLoaderSharded::fast_forward_through_empty_loaders() {
     int loaders_count = _loaders.size();
-    // reject empty loaders and get to a loader that still has images to play
+    // reject empty loaders and get to a loader that still has numpy arrays to read
     while (_loaders[_loader_idx]->remaining_count() == 0 && loaders_count-- > 0)
         increment_loader_idx();
 }
@@ -59,7 +59,7 @@ LoaderModuleStatus NumpyLoaderSharded::load_next() {
 
     increment_loader_idx();
 
-    // Since loaders may have different number of images loaded, some run out earlier than other.
+    // Since loaders may have different number of numpy arrays loaded, some run out earlier than other.
     // Fast forward through loaders that are empty to get to a loader that is not empty.
     fast_forward_through_empty_loaders();
 
@@ -141,12 +141,11 @@ Timing NumpyLoaderSharded::timing() {
     long long unsigned max_read_time = 0;
     long long unsigned swap_handle_time = 0;
 
-    // image read and decode runs in parallel using multiple loaders, and the observable latency that the NumpyLoaderSharded user
-    // is experiences on the load_next() call due to read and decode time is the maximum of all
+    // numpy array read runs in parallel using multiple loaders, and the observable latency that the NumpyLoaderSharded user
+    // is experiences on the load_next() call due to read time is the maximum of all
     for (auto& loader : _loaders) {
         auto info = loader->timing();
         max_read_time = (info.read_time > max_read_time) ? info.read_time : max_read_time;
-        max_decode_time = (info.decode_time > max_decode_time) ? info.decode_time : max_decode_time;
         swap_handle_time += info.process_time;
     }
     t.decode_time = max_decode_time;

@@ -295,7 +295,7 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
         THROW("Error extracting header length.");
 
     // read header: the offset is a magic number
-    int64_t offset = 6 + 1 + 1 + 2;
+    int64_t offset = 10;
     token.resize(header_len + 1);
     if (std::fseek(_current_fPtr, offset, SEEK_SET))
         THROW("Seek operation failed: " + std::strerror(errno));
@@ -314,7 +314,7 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
     parsed_header.data_offset = offset;
 }
 
-size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector<size_t> max_shape) {
+size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector<unsigned>& strides_in_dims) {
     if (!_current_fPtr)
         THROW("Null file pointer");
 
@@ -325,38 +325,32 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
         THROW("Seek operation failed: " + std::strerror(errno));
 
     auto shape = _curr_file_header.shape();
-    auto num_dims = max_shape.size();
-    std::vector<unsigned> strides(num_dims + 1);
-    strides[num_dims] = 1;
-    for (int i = num_dims - 1; i >= 0; i--) {
-        strides[i] = strides[i + 1] * max_shape[i];
-    }
 
     size_t actual_read_size = 0;
     if (_curr_file_header.type() == RocalTensorDataType::UINT8)
-        actual_read_size = parse_numpy_data<u_int8_t>((u_int8_t*)buf, strides, shape);
+        actual_read_size = parse_numpy_data<u_int8_t>((u_int8_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::UINT32)
-        actual_read_size = parse_numpy_data<u_int32_t>((u_int32_t*)buf, strides, shape);
+        actual_read_size = parse_numpy_data<u_int32_t>((u_int32_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::INT8)
-        actual_read_size = parse_numpy_data<int8_t>((int8_t*)buf, strides, shape);
+        actual_read_size = parse_numpy_data<int8_t>((int8_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::INT16)
-        actual_read_size = parse_numpy_data<int16_t>((int16_t*)buf, strides, shape);
+        actual_read_size = parse_numpy_data<int16_t>((int16_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::INT32)
-        actual_read_size = parse_numpy_data<int32_t>((int32_t*)buf, strides, shape);
+        actual_read_size = parse_numpy_data<int32_t>((int32_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::FP16)
 #if defined(AMD_FP16_SUPPORT)
-        actual_read_size = parse_numpy_data<half>((half*)buf, strides, shape);
+        actual_read_size = parse_numpy_data<half>((half*)buf, strides_in_dims, shape);
 #else
         THROW("FLOAT16 type tensor not supported")
 #endif
     else if (_curr_file_header.type() == RocalTensorDataType::FP32)
-        actual_read_size = parse_numpy_data<float>((float*)buf, strides, shape);
+        actual_read_size = parse_numpy_data<float>((float*)buf, strides_in_dims, shape);
 
     return actual_read_size;
 }
 
 template <typename T>
-size_t NumpyDataReader::parse_numpy_data(T* buf, std::vector<unsigned> strides, std::vector<unsigned> shapes, unsigned dim) {
+size_t NumpyDataReader::parse_numpy_data(T* buf, std::vector<unsigned>& strides_in_dims, std::vector<unsigned>& shapes, unsigned dim) {
     if (dim == (shapes.size() - 1)) {
         auto actual_read_size = std::fread(buf, sizeof(T), shapes[dim], _current_fPtr);
         return actual_read_size;
@@ -364,8 +358,8 @@ size_t NumpyDataReader::parse_numpy_data(T* buf, std::vector<unsigned> strides, 
     T* startPtr = buf;
     size_t read_size = 0;
     for (unsigned d = 0; d < shapes[dim]; d++) {
-        read_size += parse_numpy_data<T>(startPtr, strides, shapes, dim + 1);
-        startPtr += strides[dim + 1];
+        read_size += parse_numpy_data<T>(startPtr, strides_in_dims, shapes, dim + 1);
+        startPtr += strides_in_dims[dim + 1];
     }
     return read_size;
 }
@@ -424,7 +418,7 @@ Reader::Status NumpyDataReader::generate_file_names() {
         THROW("NumpyDataReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _folder_path);
 
     std::vector<std::string> entry_name_list;
-    std::string _full_path = _folder_path;
+    std::string full_path = _folder_path;
 
     while ((_entity = readdir(_sub_dir)) != nullptr) {
         std::string entry_name(_entity->d_name);
@@ -497,7 +491,7 @@ Reader::Status NumpyDataReader::generate_file_names() {
         }
     } else {
         for (unsigned dir_count = 0; dir_count < entry_name_list.size(); ++dir_count) {
-            std::string subfolder_path = _full_path + "/" + entry_name_list[dir_count];
+            std::string subfolder_path = full_path + "/" + entry_name_list[dir_count];
             filesys::path pathObj(subfolder_path);
             if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
                 // ignore files with unsupported extensions
@@ -581,13 +575,4 @@ Reader::Status NumpyDataReader::open_folder() {
 
 std::string NumpyDataReader::get_root_folder_path() {
     return _folder_path;
-}
-
-std::vector<std::string> NumpyDataReader::get_file_paths_from_meta_data_reader() {
-    if (_meta_data_reader) {
-        return _meta_data_reader->get_relative_file_path();
-    } else {
-        std::cout << "\n Meta Data Reader is not initialized!";
-        return {};
-    }
 }

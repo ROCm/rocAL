@@ -58,6 +58,7 @@ from rocal_pybind.types import GRAY
 from rocal_pybind.types import RGB_PLANAR
 
 #     RocalTensorLayout
+from rocal_pybind.types import NONE
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
@@ -141,6 +142,7 @@ _known_types = {
     MAX_SIZE_ORIG: ("MAX_SIZE_ORIG", MAX_SIZE_ORIG),
     USER_GIVEN_SIZE_ORIG: ("USER_GIVEN_SIZE_ORIG", USER_GIVEN_SIZE_ORIG),
 
+    NONE: ("NONE", NONE),
     NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),

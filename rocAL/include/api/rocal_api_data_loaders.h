@@ -621,16 +621,20 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
  * \ingroup group_rocal_data_loaders
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk
- * \param [in] internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances. Using shard counts bigger than 1 improves the load/decode performance if compute resources (CPU cores) are available.
+ * \param [in] internal_shard_count Defines the parallelism level by internally sharding the input dataset and load using multiple loader instances. Using shard counts bigger than 1 improves the load performance if compute resources (CPU cores) are available.
+ * \param [in] output_layout the layout to be set for the input tensor
+ * \param [in] files Contains a list of file paths to read the data from.
  * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
  * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
+ * \param [in] seed Determines the seed used by RNG for shuffling data between shards.
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalNumpyFileSource(RocalContext p_context,
                                                            const char* source_path,
                                                            unsigned internal_shard_count,
+                                                           RocalTensorLayout output_layout = RocalTensorLayout::ROCAL_NONE,
                                                            std::vector<std::string> files = {},
                                                            bool is_output = false,
                                                            bool shuffle = false,
@@ -642,16 +646,20 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNumpyFileSource(RocalContext p_contex
  * \ingroup group_rocal_data_loaders
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk
+ * \param [in] output_layout the layout to be set for the input tensor
+ * \param [in] files Contains a list of file paths to read the data from.
  * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
  * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
  * \param [in] shard_id Shard id for this loader
  * \param [in] shard_count Total shard count
+ * \param [in] seed Determines the seed used by RNG for shuffling data between shards.
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext p_context,
                                                        const char* source_path,
+                                                       RocalTensorLayout output_layout = RocalTensorLayout::ROCAL_NONE,
                                                        std::vector<std::string> files = {},
                                                        bool is_output = false,
                                                        bool shuffle = false,
@@ -984,12 +992,4 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       unsigned max_decoded_channels = 0,
                                                                       RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
 
-/*! Sets input layout for the input tensor. Used for readers like numpy where layout is passed from user and not known during reading.
- * \param [in] context Rocal context
- * \param [in] p_input Input Rocal tensor
- * \param [in] output_layout the layout to be set for the input tensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalSetLayout(RocalContext p_context,
-                                                     RocalTensor p_input,
-                                                     RocalTensorLayout output_layout);
 #endif  // MIVISIONX_ROCAL_API_DATA_LOADERS_H

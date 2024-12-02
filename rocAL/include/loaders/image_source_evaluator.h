@@ -41,7 +41,7 @@ enum class MaxSizeEvaluationPolicy {
 class ImageSourceEvaluator {
    public:
     ImageSourceEvaluatorStatus create(ReaderConfig reader_cfg, DecoderConfig decoder_cfg);
-    ImageSourceEvaluatorStatus create(ReaderConfig reader_cfg);
+    ImageSourceEvaluatorStatus create_numpy_reader(ReaderConfig reader_cfg);
     void find_max_dimension();
     void find_max_numpy_dimensions();
     void set_size_evaluation_policy(MaxSizeEvaluationPolicy arg);

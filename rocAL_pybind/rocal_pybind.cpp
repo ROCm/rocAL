@@ -412,6 +412,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("RGB_PLANAR", ROCAL_COLOR_RGB_PLANAR)
         .export_values();
     py::enum_<RocalTensorLayout>(types_m, "RocalTensorLayout", "Tensor layout type")
+        .value("NONE", ROCAL_NONE)
         .value("NHWC", ROCAL_NHWC)
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
@@ -707,8 +708,6 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("numpyReaderSourceShard", &rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
           py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
-    m.def("setLayout", &rocalSetLayout,
-          py::return_value_policy::reference);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
     m.def("ssdRandomCrop", &rocalSSDRandomCrop,
