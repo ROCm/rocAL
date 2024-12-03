@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "pipeline/filesystem.h"
 #include "readers/image/image_reader.h"
-#include "tar_helper_functions.h"
+#include "helpers/tar_helper_functions.h"
 
 class WebDataSetMetaDataReader : public MetaDataReader {
    public:
