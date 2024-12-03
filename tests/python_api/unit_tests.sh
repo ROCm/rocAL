@@ -81,8 +81,8 @@ do
     for ((rgb=rgb_start;rgb<=rgb_end;rgb++))
     do 
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name lens_correction --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}LensCorrection_${rgb_name[$rgb]}_${device_name}"
-        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name exposure --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}"
-        # python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name flip --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Flip_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name exposure --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name flip --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Flip_${rgb_name[$rgb]}_${device_name}"
 
         # web dataset reader
         python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name gamma_correction --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Gamma_${rgb_name[$rgb]}_${device_name}"
