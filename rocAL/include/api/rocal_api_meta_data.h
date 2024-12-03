@@ -24,6 +24,7 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_META_DATA_H
 #include "rocal_api_types.h"
 #include <set>
+
 /*!
  * \file
  * \brief The AMD rocAL Library - Meta Data
@@ -326,8 +327,14 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_
  * \param is_output [in] The output is set or not.
  * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
  */
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path,
+                                                                    std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output);
 
+/*! \brief get joints data pointer
+ * \ingroup group_rocal_meta_data
+ * \param [in] rocal_context rocal context
+ * \param [out] ascii_data The user's AsciiDatas pointer that will be pointed to AsciiDataBatch pointer
+ */
 RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
 
 #endif  // MIVISIONX_ROCAL_API_META_DATA_H

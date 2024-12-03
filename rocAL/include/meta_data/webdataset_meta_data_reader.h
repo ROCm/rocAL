@@ -21,18 +21,13 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <dirent.h>
-
-#include <map>
-#include <set>
-#include <unordered_set>
-
 #include "meta_data/meta_data.h"
 #include "meta_data/meta_data_reader.h"
 #include "pipeline/commons.h"
 #include "pipeline/filesystem.h"
 #include "readers/image/image_reader.h"
 #include "tar_helper_functions.h"
+
 class WebDataSetMetaDataReader : public MetaDataReader {
    public:
     void init(const MetaDataConfig &cfg,
@@ -53,7 +48,6 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     bool exists(const std::string &image_name) override;
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
-    std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
     std::string _path;
     std::string _paths, _index_paths;
     std::vector<std::string> _index_name_list;
@@ -61,11 +55,8 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     pMetaDataBatch _output;
     DIR *_src_dir, *_sub_dir;
     struct dirent *_entity;
-    int _file_name_count = 0;
-    std::vector<std::string> _file_names;
-    std::vector<std::set<std::string>> _exts, _meta_data_exts;
+    std::vector<std::set<std::string>> _exts;
     std::unordered_map<std::string, uint> _ext_map;
-    std::vector<std::string> _subfolder_file_names;
     void parse_tar_files(std::vector<SampleDescription> &samples_container,
                          std::vector<ComponentDescription> &components_container,
                          std::unique_ptr<std::ifstream> &tar_file);
@@ -77,10 +68,6 @@ class WebDataSetMetaDataReader : public MetaDataReader {
         std::vector<ComponentDescription> &components_container,
         std::ifstream &index_file, const std::string &index_path, int64_t line,
         int index_version);
-    // void read_sample_and_add_to_map(
-    //     ComponentDescription component,
-    //     std::unique_ptr<std::ifstream>> &current_tar_file_stream,
-    //     AsciiValues ascii_values);
     void add(std::string image_name, AsciiValues ascii_value);
     std::vector<std::unique_ptr<std::ifstream>> _wds_shards;
 };

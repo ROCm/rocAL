@@ -89,7 +89,7 @@ struct ReaderConfig {
     void set_shard_count(size_t shard_count) { _shard_count = shard_count; }
     void set_cpu_num_threads(size_t cpu_num_threads) { _cpu_num_threads = cpu_num_threads; }
     void set_json_path(const std::string &json_path) { _json_path = json_path; }
-    void set_index_path(const std::string &index_path) { _index_path = index_path; }
+    void set_index_path(const std::string &index_path) { _index_path = index_path; } // Index path - optional arg for webdataset reader - corresponding to each tar archive files
     /// \param read_batch_count Tells the reader it needs to read the images in multiples of load_batch_count. If available images not divisible to load_batch_count,
     /// the reader will repeat images to make available images an even multiple of this load_batch_count
     void set_batch_count(size_t read_batch_count) { _batch_count = read_batch_count; }
@@ -166,7 +166,7 @@ struct ImageRecordIOHeader {
                            */
 };
 
-
+// The VectorView Class - to refer to a portion of a vector and avoiding copies of the data.
 template <typename T>
 class VectorView {
     private:
@@ -197,6 +197,7 @@ class VectorView {
     }
 };
 
+// The contents of the component of a tar file
 struct ComponentDescription {
     std::string filename, ext;
     size_t size = 0;
@@ -205,6 +206,7 @@ struct ComponentDescription {
     ComponentDescription() = default;
 };
 
+// The contents of the sample of a tar file
 struct SampleDescription {
     VectorView<ComponentDescription> components;
     VectorView<size_t> empty_outputs;

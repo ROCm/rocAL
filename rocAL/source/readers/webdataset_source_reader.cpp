@@ -22,13 +22,7 @@ THE SOFTWARE.
 */
 
 #include "readers/webdataset_source_reader.h"
-#include <math.h>
-
 #include <cassert>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
 
 using namespace std;
 
@@ -67,12 +61,10 @@ unsigned WebDatasetSourceReader::count_items() {
 
 Reader::Status WebDatasetSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
-    _file_id = 0;
     _folder_path = desc.path();
     _path = desc.path();
     _index_paths = desc.index_path();
     _wds_shards.reserve(_path.size());
-    _feature_key_map = desc.feature_key_map();
     _shard_id = desc.get_shard_id();
     _shard_count = desc.get_shard_count();
     _batch_size = desc.get_batch_size();
@@ -248,8 +240,7 @@ void WebDatasetSourceReader::parse_index_files(
 void WebDatasetSourceReader::parse_tar_files(std::vector<SampleDescription>& samples_vector,
                                               std::vector<ComponentDescription>& components_vector,
                                               std::unique_ptr<std::ifstream>& tar_file) {
-    // TarArchive tar_archive(std::move(tar_file));
-    TarArchive tar_archive(std::move(tar_file)); // Dereferencing the unique_ptr
+    TarArchive tar_archive(std::move(tar_file));
 
     std::string last_filename;
     for (; !tar_archive.at_end_of_archive(); tar_archive.advance_to_next_file_in_tar()) {
@@ -414,9 +405,7 @@ Reader::Status WebDatasetSourceReader::webdataset_record_reader_from_components(
 Reader::Status WebDatasetSourceReader::read_web_dataset_at_offset(unsigned char* buff, std::string file_name, uint file_size, uint offset, uint wds_shard_index) {
     auto ret = Reader::Status::OK;
     auto& current_tar_file_stream = _wds_shards[wds_shard_index];
-    // current_tar_file_stream->set_read_position(offset);
     current_tar_file_stream->seekg(offset, std::ios::beg);
-    // current_tar_file_stream->read_into_buffer(buff, file_size);
-    current_tar_file_stream->read(reinterpret_cast<char*>(buff), file_size); // Check if needed
+    current_tar_file_stream->read(reinterpret_cast<char*>(buff), file_size);
     return ret;
 }

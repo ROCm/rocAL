@@ -24,9 +24,6 @@ THE SOFTWARE.
 #include <mutex>
 #include <vector>
 #include <libtar.h>
-#include <iostream>
-#include <fstream>
-#include <memory>
 #include <string>
 #include <list>
 #include <cassert>
