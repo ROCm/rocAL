@@ -341,11 +341,11 @@ if(${BUILD_ROCAL})
     endif()
     # LibTar
     if(NOT LIBTAR_FOUND)
-        message("-- ${White}NOTE: rocAL built without LibTar - WebDataset Functionalities will not be supported${ColourReset}")
+        message("-- ${Yellow}NOTE: rocAL built without LibTar - WebDataset Functionalities will not be supported${ColourReset}")
     else()
         include_directories(${LIBTAR_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LIBTAR_LIBRARIES})
-        message("-- ${Yellow}NOTE: rocAL built with LibTar support - WebDataset Functionalities enabled${ColourReset}")
+        message("-- ${White}NOTE: rocAL built with LibTar support - WebDataset Functionalities enabled${ColourReset}")
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
