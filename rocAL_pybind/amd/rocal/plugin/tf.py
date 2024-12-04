@@ -107,13 +107,12 @@ class ROCALGenericIteratorDetection(object):
         if self.loader.rocal_run() != 0:
             raise StopIteration
         self.output_tensor_list = self.loader.get_output_tensors()
-        if self.output_list is None:
-            # Output list used to store pipeline outputs - can support multiple augmentation outputs
-            self.output_list = []
-            for i in range(len(self.output_tensor_list)):
-                # returns tf tensor on gpu/cpu 
-                self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
-                self.output_list.append(self.output)
+        # Output list used to store pipeline outputs - can support multiple augmentation outputs
+        self.output_list = []
+        for i in range(len(self.output_tensor_list)):
+            # returns tf tensor on gpu/cpu 
+            self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
+            self.output_list.append(self.output)
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
