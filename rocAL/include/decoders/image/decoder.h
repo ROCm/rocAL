@@ -105,7 +105,7 @@ class Decoder {
     virtual Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<unsigned char *> &output_buffer,
                               std::vector<size_t> &original_width, std::vector<size_t> &original_height, Decoder::ColorFormat desired_decoded_color_format, 
                               size_t max_decoded_width, size_t max_decoded_height,
-                              std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {}
+                              std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) { return Status::UNSUPPORTED; }
 
     // TODO: Extend the decode API if needed, color format and order can be passed to the function
     //! Decodes the actual image data
@@ -127,7 +127,7 @@ class Decoder {
                                          size_t max_decoded_width, size_t max_decoded_height,
                                          std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
                                          std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height,
-                                         Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) {}
+                                         Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) { return Status::UNSUPPORTED; }
 
     virtual ~Decoder() = default;
     virtual void initialize(int device_id) = 0;

@@ -192,7 +192,7 @@ void RocJpegDecoder::initialize_batch(int device_id, unsigned batch_size) {
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
     // Create stream and handle
     CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
-    for (int i = 0; i < batch_size; i++) {
+    for (unsigned i = 0; i < batch_size; i++) {
         RocJpegStreamHandle rocjpeg_stream;
         CHECK_ROCJPEG(rocJpegStreamCreate(&rocjpeg_stream));
         _rocjpeg_streams.push_back(rocjpeg_stream);
@@ -245,12 +245,12 @@ Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsign
 
     uint32_t channels_size = 0;
     
-    uint32_t max_widths[4] = {max_decoded_width, 0, 0, 0};
-    uint32_t max_heights[4] = {max_decoded_height, 0, 0, 0};
+    uint32_t max_widths[4] = {static_cast<uint32_t>(max_decoded_width), 0, 0, 0};
+    uint32_t max_heights[4] = {static_cast<uint32_t>(max_decoded_height), 0, 0, 0};
 
     std::vector<uint32_t> pitch_width(_batch_size), pitch_height(_batch_size);
 
-    for (int i = 0; i < _batch_size; i++) {
+    for (unsigned i = 0; i < _batch_size; i++) {
         if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer[i].data()), input_size[i], _rocjpeg_streams[i]) != ROCJPEG_STATUS_SUCCESS) {
             is_decoded[i] = false;
             continue;
@@ -281,7 +281,7 @@ Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsign
         original_image_height[i] = heights[0];
         uint scaledw = original_image_width[i], scaledh = original_image_height[i];
         if (original_image_width[i] > max_decoded_width || original_image_height[i] > max_decoded_height) {
-            for (int j=0; j < _num_scaling_factors; j++) {
+            for (unsigned j = 0; j < _num_scaling_factors; j++) {
                 scaledw = (((original_image_width[i]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
                 scaledh = (((original_image_height[i]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
                 if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
