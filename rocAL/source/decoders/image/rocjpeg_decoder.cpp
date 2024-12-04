@@ -192,10 +192,9 @@ void RocJpegDecoder::initialize_batch(int device_id, unsigned batch_size) {
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
     // Create stream and handle
     CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
+    _rocjpeg_streams.resize(batch_size);
     for (unsigned i = 0; i < batch_size; i++) {
-        RocJpegStreamHandle rocjpeg_stream;
-        CHECK_ROCJPEG(rocJpegStreamCreate(&rocjpeg_stream));
-        _rocjpeg_streams.push_back(rocjpeg_stream);
+        CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_streams[i]));
     }
 
     // hipError_t err = hipStreamCreate(&_hip_stream);
@@ -342,7 +341,7 @@ Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsign
             }
             index = idx;
         }
-        if (actual_decoded_width[i] != original_image_width[i] || actual_decoded_height[i] != original_image_height[i]) {
+        if ((actual_decoded_width[i] != original_image_width[i] || actual_decoded_height[i] != original_image_height[i]) && _resize_batch) {
             _resize_batch = true;
             _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
             _src_img_offset[i] = src_offset;
