@@ -123,7 +123,6 @@ class ROCALGenericIterator(object):
                 self.dimensions = self.output_tensor_list[i].dimensions()
                 self.dtype = self.output_tensor_list[i].dtype()
                 self.output = np.empty(self.dimensions, dtype=self.dtype)
-                self.labels = np.empty(self.labels_size, dtype="int32")
                 # returned as numpy always - no ROCM CuPy support available
                 self.output_tensor_list[i].copy_data(self.output)
                 self.output_list.append(self.output)
@@ -137,6 +136,7 @@ class ROCALGenericIterator(object):
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:
+                self.labels = np.empty(self.labels_size, dtype="int32")
                 self.loader.get_one_hot_encoded_labels(
                         self.labels.ctypes.data, self.loader._output_memory_type)
                 self.labels_tensor = self.labels.reshape(
