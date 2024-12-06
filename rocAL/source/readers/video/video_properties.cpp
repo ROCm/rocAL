@@ -40,7 +40,6 @@ void substring_extraction(std::string const &str, const char delim, std::vector<
 // Opens the context of the Video file to obtain the width, heigh and frame rate info.
 void open_video_context(const char *video_file_path, Properties &props) {
     AVFormatContext *pFormatCtx = NULL;
-    AVCodecContext *pCodecCtx = NULL;
     int videoStream = -1;
     unsigned int i = 0;
 
@@ -55,21 +54,18 @@ void open_video_context(const char *video_file_path, Properties &props) {
     ret = avformat_find_stream_info(pFormatCtx, NULL);
     assert(ret >= 0);
     for (i = 0; i < pFormatCtx->nb_streams; i++) {
-        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && videoStream < 0) {
+        if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && videoStream < 0) {
             videoStream = i;
         }
     }
     assert(videoStream != -1);
 
     // Get a pointer to the codec context for the video stream
-    pCodecCtx = pFormatCtx->streams[videoStream]->codec;
-    assert(pCodecCtx != NULL);
-    props.width = pCodecCtx->width;
-    props.height = pCodecCtx->height;
+    props.width = pFormatCtx->streams[videoStream]->codecpar->width;
+    props.height = pFormatCtx->streams[videoStream]->codecpar->height;
     props.frames_count = pFormatCtx->streams[videoStream]->nb_frames;
     props.avg_frame_rate_num = pFormatCtx->streams[videoStream]->avg_frame_rate.num;
     props.avg_frame_rate_den = pFormatCtx->streams[videoStream]->avg_frame_rate.den;
-    avcodec_close(pCodecCtx);
     avformat_close_input(&pFormatCtx);
 }
 
