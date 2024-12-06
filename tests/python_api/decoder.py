@@ -13,7 +13,7 @@ image_dir = "/opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet"
 batch_size = 4
 gpu_id = 0
 
-def show_images(image_batch, device):
+def show_images(image_batch):
     columns = 4
     rows = (batch_size + 1) // (columns)
     #fig = plt.figure(figsize = (32,(32 // columns) * rows))
@@ -23,14 +23,7 @@ def show_images(image_batch, device):
         plt.subplot(gs[j])
         img = image_batch[j]
         plt.axis("off")
-        if device == "cpu":
-            plt.imshow(img)
-        else:
-            try:
-                import cupy as cp
-                plt.imshow(cp.asnumpy(img))
-            except ImportError:
-                pass
+        plt.imshow(img)
     plt.show()
 
 
@@ -38,7 +31,7 @@ def show_pipeline_output(pipe, device):
     pipe.build()
     data_loader = ROCALClassificationIterator(pipe, device=device)
     images = next(iter(data_loader))
-    show_images(images[0][0], device)
+    show_images(images[0][0])
 
 @pipeline_def(seed=seed)
 def image_decoder_pipeline(device="cpu", path=image_dir):
