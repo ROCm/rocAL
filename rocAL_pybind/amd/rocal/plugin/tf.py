@@ -107,13 +107,12 @@ class ROCALGenericIteratorDetection(object):
         if self.loader.rocal_run() != 0:
             raise StopIteration
         self.output_tensor_list = self.loader.get_output_tensors()
-        if self.output_list is None:
-            # Output list used to store pipeline outputs - can support multiple augmentation outputs
-            self.output_list = []
-            for i in range(len(self.output_tensor_list)):
-                # returns tf tensor on gpu/cpu 
-                self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
-                self.output_list.append(self.output)
+        # Output list used to store pipeline outputs - can support multiple augmentation outputs
+        self.output_list = []
+        for i in range(len(self.output_tensor_list)):
+            # returns tf tensor on gpu/cpu 
+            self.output = tf.experimental.dlpack.from_dlpack(self.output_tensor_list[i].__dlpack__(self.device_id))
+            self.output_list.append(self.output)
 
         if self.loader._name == "TFRecordReaderDetection":
             self.bbox_list = []
@@ -192,7 +191,7 @@ class ROCALGenericIteratorDetection(object):
 
 class ROCALIterator(ROCALGenericIteratorDetection):
     """!ROCAL iterator for detection and classification tasks for TF reader. It returns 2 or 3 outputs
-    (data and label) or (data , bbox , labels) in the form of numpy or cupy arrays.
+    (data and label) or (data , bbox , labels) in the form of TF tensors.
     Calling
     .. code-block:: python
        ROCALIterator(pipelines, size)
@@ -225,7 +224,7 @@ class ROCALIterator(ROCALGenericIteratorDetection):
 
 
 class ROCAL_iterator(ROCALGenericImageIterator):
-    """! ROCAL iterator for processing images for TF reader. It returns outputs in the form of numpy or cupy arrays.
+    """! ROCAL iterator for processing images for TF reader. It returns outputs in the form of tf tensors.
 
         @param pipelines            The rocAL pipelines to use for processing data.
         @param size                 The size of the iterator.
