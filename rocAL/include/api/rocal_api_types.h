@@ -483,4 +483,19 @@ struct RocalShardingInfo {
           shard_size(shard_size) {}
 };
 
+/*! \brief Missing components behaviour for Webdataset
+ *  \ingroup group_rocal_types
+ */
+enum RocalMissingComponentsBehaviour {
+    /*! \brief ROCAL_MISSING_COMPONENT_ERROR
+     */
+    ROCAL_MISSING_COMPONENT_ERROR = 0,
+    /*! \brief ROCAL_MISSING_COMPONENT_SKIP
+     */
+    ROCAL_MISSING_COMPONENT_SKIP = 1,
+    /*! \brief ROCAL_MISSING_COMPONENT_EMPTY
+     */
+    ROCAL_MISSING_COMPONENT_EMPTY = 2
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

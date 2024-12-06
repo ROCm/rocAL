@@ -10,6 +10,7 @@ fi
 # Path to inputs and outputs available in MIVisionX-data
 one_hot_data_path=${ROCAL_DATA_PATH}/rocal_data/images_jpg/labels_folder/
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
+web_dataset_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/
 coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 coco_json_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/annotations/coco_data.json
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/
@@ -83,12 +84,17 @@ do
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name exposure --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name flip --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Flip_${rgb_name[$rgb]}_${device_name}"
 
+        # web dataset reader
+        python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name gamma_correction --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Gamma_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name blur --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Blur_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name brightness --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Brightness_${rgb_name[$rgb]}_${device_name}"
+
         # coco detection
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name gamma_correction --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Gamma_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name contrast --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Contrast_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name vignette --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Vignette_${rgb_name[$rgb]}_${device_name}"
 
-        # # tf classification
+        # tf classification
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name blend --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Blend_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name warp_affine --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}WarpAffine_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name blur --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Blur_${rgb_name[$rgb]}_${device_name}"
@@ -125,6 +131,7 @@ do
 
         # CMN 
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_FileReader"
+        python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_webDataset"
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_coco"
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_tfClassification"
         python"$ver" unit_test.py --image-dataset-path "$tf_detection_path" --reader-type "tf_detection" --augmentation-name crop_mirror_normalize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_tfDetection"
@@ -136,6 +143,7 @@ do
 
         # crop
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_FileReader"
+        python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_webDataset"
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_coco"
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_tfClassification"
         python"$ver" unit_test.py --image-dataset-path "$tf_detection_path" --reader-type "tf_detection" --augmentation-name crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_tfDetection"
@@ -147,6 +155,7 @@ do
 
         # resize
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 1 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_default_FileReader"
+        python"$ver" unit_test.py --image-dataset-path "$web_dataset_path" --reader-type web_dataset --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 1 --scaling-mode 1 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_stretch_webDataset"
         python"$ver" unit_test.py --image-dataset-path "$coco_detection_path" --reader-type coco --json-path "$coco_json_path" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 1 --scaling-mode 1 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_stretch_coco"
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 1 --scaling-mode 2 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_notsmaller_tfClassification"
         python"$ver" unit_test.py --image-dataset-path "$tf_detection_path" --reader-type "tf_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 1 --scaling-mode 3 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_notlarger_tfDetection"
