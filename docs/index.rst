@@ -37,8 +37,13 @@ The rocAL documentation is structured as follows:
     * :ref:`using-with-python`
     * :ref:`framework`
 
+  .. grid-item-card:: Tutorials
+    
+    * :doc:`rocAL examples <./examples/examples>`
+
   .. grid-item-card:: Reference
 
+    * `rocAL RNNT dataloading <./reference/rocAL-and-RNNT.html>`_
     * `rocAL API Modules <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/modules.html>`_
     * `rocAL API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal.html>`_
     * `rocAL Datatypes <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__types.html>`_
@@ -49,10 +54,6 @@ The rocAL documentation is structured as follows:
     * `rocAL Metadata API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__meta__data.html>`_
     * `rocAL Parameter API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__parameters.html>`_
     * `rocAL Header Files <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/files.html>`_
-
-  .. grid-item-card:: Tutorials
-    
-    * :doc:`rocAL examples <./examples/examples>`
 
 To contribute to the documentation refer to `Contributing to ROCm Docs <https://rocm.docs.amd.com/en/latest/contribute/contributing.html>`_.
 
