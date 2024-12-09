@@ -380,11 +380,11 @@ Decoder::Status RocJpegDecoder::decode_info2(unsigned char *input_buffer, size_t
     };
 
     if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[index]) != ROCJPEG_STATUS_SUCCESS) {
-        std::cerr << "ERROR: Failed to parse stream " << std::endl;
+        // std::cerr << "ERROR: Failed to parse stream " << std::endl;
         return Status::HEADER_DECODE_FAILED;
     }
     if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[index], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
-        std::cerr << "ERROR: Failed to get image info " << std::endl;
+        // std::cerr << "ERROR: Failed to get image info " << std::endl;
         return Status::HEADER_DECODE_FAILED;
     }
 
@@ -395,7 +395,7 @@ Decoder::Status RocJpegDecoder::decode_info2(unsigned char *input_buffer, size_t
     std::string chroma_sub_sampling = "";
     GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
     if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
-        std::cerr << "The chroma sub-sampling is not supported by VCN Hardware" << std::endl;
+        // std::cerr << "The chroma sub-sampling is not supported by VCN Hardware" << std::endl;
         return Status::UNSUPPORTED;
     }
 
@@ -417,7 +417,7 @@ Decoder::Status RocJpegDecoder::decode_info2(unsigned char *input_buffer, size_t
     }
 
     if (GetChannelPitchAndSizes(_decode_params.output_format, subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
-        std::cerr << "ERROR: Failed to get the channel pitch and sizes" << std::endl;
+        // std::cerr << "ERROR: Failed to get the channel pitch and sizes" << std::endl;
         return Status::HEADER_DECODE_FAILED;
     }
     *actual_width = scaledw;
@@ -426,6 +426,33 @@ Decoder::Status RocJpegDecoder::decode_info2(unsigned char *input_buffer, size_t
     // _rocjpeg_image_buff_size += (((widths[0] + 8) &~ 7) * ((heights[0] + 8) &~ 7));
     _rocjpeg_image_buff_size += max_widths[0] * max_heights[0];
 
+    return Status::OK;
+}
+
+Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
+    RocJpegChromaSubsampling subsampling;
+    uint8_t num_components;
+    uint32_t widths[4] = {};
+    uint32_t heights[4] = {};
+    if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[0]) != ROCJPEG_STATUS_SUCCESS) {
+        return Status::HEADER_DECODE_FAILED;
+    }
+    if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[0], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
+        return Status::HEADER_DECODE_FAILED;
+    }
+    *width = widths[0];
+    *height = heights[0];
+    _rocjpeg_image_buff_size += (((widths[0] + 8) &~ 7) * ((heights[0] + 8) &~ 7));
+
+    if (widths[0] < 64 || heights[0] < 64) {
+        return Status::CONTENT_DECODE_FAILED;
+    }
+
+    std::string chroma_sub_sampling = "";
+    GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
+    if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
+        return Status::UNSUPPORTED;
+    }
     return Status::OK;
 }
 
