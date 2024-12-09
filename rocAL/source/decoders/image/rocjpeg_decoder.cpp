@@ -269,7 +269,7 @@ Decoder::Status RocJpegDecoder::decode_info_batch(std::vector<std::vector<unsign
 
         std::string chroma_sub_sampling = "";
         GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
-        if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411) {
+        if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
             std::cerr << "The chroma sub-sampling is not supported by VCN Hardware" << std::endl;
             is_decoded[i] = false;
             continue;
@@ -394,7 +394,7 @@ Decoder::Status RocJpegDecoder::decode_info2(unsigned char *input_buffer, size_t
 
     std::string chroma_sub_sampling = "";
     GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
-    if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411) {
+    if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
         std::cerr << "The chroma sub-sampling is not supported by VCN Hardware" << std::endl;
         return Status::UNSUPPORTED;
     }
@@ -456,8 +456,8 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
             // if ((actual_decoded_width[i] != original_image_width[i] || actual_decoded_height[i] != original_image_height[i]) && _resize_batch) {
                 _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
                 _src_img_offset[i] = src_offset;
-                unsigned pitch_width = (original_image_width[0] + 8) &~ 7;
-                unsigned pitch_height = (original_image_height[0] + 8) &~ 7;
+                unsigned pitch_width = (original_image_width[i] + 8) &~ 7;
+                unsigned pitch_height = (original_image_height[i] + 8) &~ 7;
                 src_offset += (pitch_width * pitch_height * _num_channels);
                 img_buff += (pitch_width * pitch_height * _num_channels);
                 _src_hstride[i] = pitch_width * _num_channels;
