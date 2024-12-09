@@ -45,7 +45,8 @@ class RocJpegDecoder : public Decoder {
      \param height pointer to the user's buffer to write the height of the compressed image to
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
-    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
+    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override {}
+    Status decode_info2(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index);
 
     Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<unsigned char *> &output_buffer,
                               std::vector<size_t> &original_width, std::vector<size_t> &original_height, Decoder::ColorFormat desired_decoded_color_format, 

@@ -106,6 +106,7 @@ class Decoder {
                               std::vector<size_t> &original_width, std::vector<size_t> &original_height, Decoder::ColorFormat desired_decoded_color_format, 
                               size_t max_decoded_width, size_t max_decoded_height,
                               std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) { return Status::UNSUPPORTED; }
+    virtual Status decode_info2(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, ColorFormat desired_decoded_color_format, int index) { return Status::UNSUPPORTED; }
 
     // TODO: Extend the decode API if needed, color format and order can be passed to the function
     //! Decodes the actual image data
