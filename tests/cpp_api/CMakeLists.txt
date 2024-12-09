@@ -123,10 +123,17 @@ add_test(
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
 )
 # 6 - dataloader_multithread_gpu
-add_test(NAME dataloader_multithread_gpu 
-              COMMAND dataloader_multithread 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread)
+add_test(
+  NAME
+  dataloader_multithread_gpu
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
+                              "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread_gpu"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "dataloader_multithread"
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+)
 
 # TBD - dataloader_tf unit test non-functional with tf dataset
 #add_test(
