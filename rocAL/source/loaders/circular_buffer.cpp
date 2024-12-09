@@ -78,7 +78,11 @@ unsigned char *CircularBuffer::get_write_buffer() {
     if (!_initialized)
         THROW("Circular buffer not initialized")
     block_if_full();
-    return (_host_buffer_ptrs[_write_ptr]);
+    if (_use_pinned_memory) {
+        return (_host_buffer_ptrs[_write_ptr]);
+    } else {
+        return static_cast<unsigned char *>(_dev_buffer[_write_ptr]);
+    }
 }
 
 void CircularBuffer::sync() {
@@ -112,7 +116,7 @@ void CircularBuffer::sync() {
 #elif ENABLE_HIP
     if (_output_mem_type == RocalMemType::HIP) {
         // copy memory to host only if needed
-        if (!_hip_canMapHostMemory) {
+        if (!_hip_canMapHostMemory && _use_pinned_memory) {
             hipError_t err = hipMemcpy((void *)(_dev_buffer[_write_ptr]), _host_buffer_ptrs[_write_ptr], _output_mem_size, hipMemcpyHostToDevice);
             if (err != hipSuccess) {
                 THROW("hipMemcpy of size " + TOSTR(_output_mem_size) + " failed " + TOSTR(err));
@@ -151,7 +155,10 @@ void CircularBuffer::pop() {
     if (random_bbox_crop_flag == true)
         _circ_crop_image_info.pop();
 }
-void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, size_t buffer_depth) {
+void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, size_t buffer_depth, bool use_hip_memory) {
+    
+    // When using Hardware decoder, pinned memory is not allocated for HIP backend
+    _use_pinned_memory = !use_hip_memory;
     _buff_depth = buffer_depth;
     _dev_buffer.reserve(_buff_depth);
     _host_buffer_ptrs.reserve(_buff_depth);
@@ -206,15 +213,17 @@ void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, 
                 THROW("Error HIP device resource is not initialized");
 
             for (size_t buffIdx = 0; buffIdx < _buff_depth; buffIdx++) {
-                hipError_t err = hipHostMalloc((void **)&_host_buffer_ptrs[buffIdx], _output_mem_size, hipHostMallocDefault /*hipHostMallocMapped|hipHostMallocWriteCombined*/);
-                if (err != hipSuccess || !_host_buffer_ptrs[buffIdx]) {
-                    THROW("hipHostMalloc of size " + TOSTR(_output_mem_size) + " failed " + TOSTR(err));
-                }
-                if (_hip_canMapHostMemory) {
-                    err = hipHostGetDevicePointer((void **)&_dev_buffer[buffIdx], _host_buffer_ptrs[buffIdx], 0);
-                    if (err != hipSuccess) {
-                        THROW("hipHostGetDevicePointer of size " + TOSTR(_output_mem_size) + " failed " + TOSTR(err));
+                if (_use_pinned_memory) {
+                    hipError_t err = hipHostMalloc((void **)&_host_buffer_ptrs[buffIdx], _output_mem_size, hipHostMallocDefault /*hipHostMallocMapped|hipHostMallocWriteCombined*/);
+                    if (err != hipSuccess || !_host_buffer_ptrs[buffIdx]) {
+                        THROW("hipHostMalloc of size " + TOSTR(_output_mem_size) + " failed " + TOSTR(err));
                     }
+                }
+                if (_use_pinned_memory && _hip_canMapHostMemory) {
+                        hipError_t err = hipHostGetDevicePointer((void **)&_dev_buffer[buffIdx], _host_buffer_ptrs[buffIdx], 0);
+                        if (err != hipSuccess) {
+                            THROW("hipHostGetDevicePointer of size " + TOSTR(_output_mem_size) + " failed " + TOSTR(err));
+                        }
                 } else {
                     // no zero_copy memory available: allocate device memory
                     hipError_t err = hipMalloc((void **)&_dev_buffer[buffIdx], _output_mem_size);
@@ -249,14 +258,14 @@ void CircularBuffer::release() {
         } else {
 #elif ENABLE_HIP
             if (_output_mem_type == RocalMemType::HIP) {
-                if (_host_buffer_ptrs[buffIdx]) {
+                if (_use_pinned_memory && _host_buffer_ptrs[buffIdx]) {
                     hipError_t err = hipHostFree((void *)_host_buffer_ptrs[buffIdx]);
 
                     if (err != hipSuccess)
                         ERR("Could not release hip host memory in the circular buffer " + TOSTR(err))
                     _host_buffer_ptrs[buffIdx] = nullptr;
                 }
-                if (!_hip_canMapHostMemory && _dev_buffer[buffIdx]) {
+                if (!_use_pinned_memory && _dev_buffer[buffIdx]) {
                     hipError_t err = hipFree((void *)_dev_buffer[buffIdx]);
 
                     if (err != hipSuccess)
