@@ -24,6 +24,10 @@ Prerequisites
 
 * Install ROCm `6.1.0` or later with amdgpu-install: Required usecase - rocm
 
+* CMake
+
+* AMD Clang++
+
 * HIP
 
 * RPP
@@ -32,7 +36,7 @@ Prerequisites
 
 * rocDecode
 
-* Half-precision floating-point library - Version `1.12.0` or higher
+* Half-precision floating-point (HALF) library
 
 * Google Protobuf
 
