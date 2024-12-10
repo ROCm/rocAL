@@ -397,7 +397,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &folder_path) {
                     last_file_name = component.filename;
                 }
                 for (auto &ascii_component : ascii_values) {
-                    if (ascii_component->size() < _ext_map.size()) {
+                    if (ascii_component == nullptr) {
                         if (_missing_component_behaviour == MissingComponentsBehaviour::MISSING_COMPONENT_SKIP) {  // skipping sample
                             WRN("WARNING: Skipping the sample with missing components.");
                             skip_sample = true;

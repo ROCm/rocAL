@@ -362,7 +362,8 @@ class AsciiValueBatch : public MetaDataBatch {
         for (unsigned component = 0; component < _ascii_values[0].size(); component++) {
             size_t size = 0;
             for (unsigned i = 0; i < _ascii_values.size(); i++) {
-                size += _ascii_values[i][component]->size();
+                if(_ascii_values[i][component])
+                    size += _ascii_values[i][component]->size();
             }
             _buffer_size.emplace_back(size * sizeof(uint8_t));
         }

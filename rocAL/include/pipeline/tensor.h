@@ -201,7 +201,7 @@ class TensorInfo {
     }
     void set_dims(std::vector<size_t>& new_dims) {
         if (_num_of_dims != new_dims.size())
-            WRN("The size of number of dimensions does not match with the dimensions of existing tensor")
+            THROW("The size of number of dimensions does not match with the dimensions of existing tensor")
         _dims = new_dims;
         modify_strides();
         _data_size = _strides[0] * _dims[0];
