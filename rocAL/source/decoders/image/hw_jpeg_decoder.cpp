@@ -70,7 +70,7 @@ static enum AVPixelFormat get_vaapi_format(AVCodecContext *ctx, const enum AVPix
 // ffmpeg helper functions for custom AVIOContex for bitstream reading
 static int ReadFunc(void *ptr, uint8_t *buf, int buf_size) {
     struct buffer_data *bd = (struct buffer_data *)ptr;
-    buf_size = FFMIN(buf_size, bd->size);
+    buf_size = FFMIN(buf_size, static_cast<int>(bd->size));
 
     if (!buf_size)
         return AVERROR_EOF;

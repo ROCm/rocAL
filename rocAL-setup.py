@@ -98,7 +98,7 @@ else:
     else:
         print("\nSTATUS: CPU Backend Install\n")
 
-# get platfrom info
+# get platform info
 platformInfo = platform.platform()
 
 # sudo requirement check
@@ -167,12 +167,12 @@ elif "Ubuntu" in os_info_data:
 elif "SLES" in os_info_data:
     linuxSystemInstall = 'zypper -n'
     linuxSystemInstall_check = '--no-gpg-checks'
-    platfromInfo = platfromInfo+'-SLES'
+    platformInfo = platformInfo+'-SLES'
     osUpdate = 'refresh'
 elif "Mariner" in os_info_data:
     linuxSystemInstall = 'tdnf -y'
     linuxSystemInstall_check = '--nogpgcheck'
-    platfromInfo = platfromInfo+'-Mariner'
+    platformInfo = platformInfo+'-Mariner'
     osUpdate = 'makecache'
 else:
     print("\nrocAL Setup on "+platformInfo+" is unsupported\n")
@@ -336,11 +336,11 @@ else:
                         ' '+linuxSystemInstall_check+' install -y '+ rocmRPMPackages[i]))
             
     # rocDecode - TBD: Revert when rocDecode is fully supported on all OS
-    # if "Ubuntu" in platfromInfo:
+    # if "Ubuntu" in platformInfo:
         # for i in range(len(rocdecodeDebianPackages)):
             # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
-    # elif "redhat-7" not in platfromInfo:
+    # elif "redhat-7" not in platformInfo:
         #for i in range(len(rocdecodeRPMPackages)):
             # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
@@ -379,6 +379,10 @@ else:
     elif "SLES" in platformInfo:
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install dlpack-devel'))
+    elif "redhat" in platformInfo:
+        # no package avialable -- using source
+        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm'))
 
 
     # RapidJSON - Source TBD: Package install of RapidJSON has compile issues - https://github.com/Tencent/rapidjson.git -- master
