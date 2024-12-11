@@ -8,7 +8,7 @@ rocAL RNNT dataloading in Python
 
 rocAL supports the RNNT speech recognition model through audio readers and other functions that can be used with PyTorch.
  
-All the functions used for RNNT dataloading are available in the ``amd.rocal.fn`` module. See `Using rocAL with Python API <../how-to/using-with-python.html>`_ for more details about this module. 
+All the functions used for RNNT dataloading are available in the ``amd.rocal.fn`` module. See :doc:`Using rocAL with Python API <../how-to/using-with-python>` for more details about this module. 
 
 All the augmentations used in the RNNT dataloader pipeline are available as part of rocAL. These augmentations need to be plugged into the rocAL PyTorch dataloader to run the training. PyTorch samples can be found `in the rocAL GitHub repository <https://github.com/ROCm/rocAL/tree/develop/docs/examples/pytorch>`_.
 
