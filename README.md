@@ -72,6 +72,14 @@ rocAL can be currently used to perform the following operations either with rand
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
+* CMake Version `3.10` or later
+
+  ```shell
+  sudo apt install cmake
+  ```
+
+* AMD Clang++ Version `18.0.0` or later - installed with ROCm
+
 * [HIP](https://github.com/ROCm/HIP)
   ```shell
   sudo apt install rocm-hip-runtime-dev
@@ -106,33 +114,38 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   pip3 install wheel
   ```
-
-* [PyBind11](https://github.com/pybind/pybind11)
-  * Source: `https://github.com/pybind/pybind11`
-  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
-
-* [Turbo JPEG](https://libjpeg-turbo.org/) 
-  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
-
-* [RapidJSON](https://github.com/Tencent/rapidjson)
-  * Source: `https://github.com/Tencent/rapidjson.git`
-  * Tag: `master`
-
-* **Optional**: FFMPEG
+  
+* [FFMPEG](https://www.ffmpeg.org) - Optional for source install, but required for package install
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
   ```
 
-* **Optional**: OpenCV
+* [OpenCV](https://docs.opencv.org/4.6.0/index.html) -  Optional for source install, but required for package install
   ```shell
   sudo apt install libopencv-dev
   ```
 
+* [PyBind11](https://github.com/pybind/pybind11) - Manual install
+  * Source: `https://github.com/pybind/pybind11`
+  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
+
+* [Turbo JPEG](https://libjpeg-turbo.org/) - Manual install
+  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
+  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
+
+* [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
+  * Source: `https://github.com/Tencent/rapidjson.git`
+  * Tag: `master`
+
 > [!IMPORTANT] 
 > * Compiler features required
->   * OpenMP
 >   * C++17
+>     ```shell
+>     sudo apt install libstdc++-12-dev
+>   * OpenMP
+>     ```shell
+>     sudo apt install libomp-dev
+>     ```
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
@@ -336,7 +349,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.1.0.60100-64`+
+* ROCm: rocm-core - `6.3.0`+
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
@@ -345,5 +358,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* rocAL Setup Script - `V2.6.0`
+* rocAL Setup Script - `V2.7.0`
 * Dependencies for all the above packages

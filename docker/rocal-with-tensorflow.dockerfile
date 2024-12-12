@@ -30,7 +30,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rpp-dev wget libbz2-dev li
         git clone -b v3.21.9 https://github.com/protocolbuffers/protobuf.git && cd protobuf && git submodule update --init --recursive && \
         ./autogen.sh && ./configure && make -j8 && make check -j8 && sudo make install && sudo ldconfig && cd ../
 
-ENV CUPY_INSTALL_USE_HIP=1
 ENV ROCM_HOME=/opt/rocm
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev && \
         git clone https://github.com/Tencent/rapidjson.git && cd rapidjson && mkdir build && cd build && \
