@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "helpers/tar_helper_functions.h"
 #include <mutex>
 #include <vector>
 #include <libtar.h>
@@ -30,15 +29,12 @@ THE SOFTWARE.
 #include <cstdarg>
 #include <algorithm>
 #include <cstring>
+#include "helpers/tar_helper_functions.h"
 #include "pipeline/exception.h"
 
 template <typename value, typename alignment>
 constexpr value align_up(value v, alignment a) {
   return v + ((a - 1) & -v);
-}
-
-constexpr uint64_t operator ""_u64(unsigned long long x) {
-    return x;
 }
 
 constexpr uint64_t TARARCHIVEBUFFERINITSIZE = 1;
@@ -204,7 +200,7 @@ std::shared_ptr<void> TarArchive::read_current_file() {
 
 size_t TarArchive::read_into_buffer(void *buffer, size_t count) {
   if (_eof) return 0;
-  count = std::clamp(_filesize - _readoffset, 0_u64, count);
+  count = std::clamp(_filesize - _readoffset, static_cast<uint64_t>(0), count);
   _stream->read(reinterpret_cast<char*>(buffer), count);
   size_t num_read_bytes = _stream->gcount();
   _readoffset += num_read_bytes;
