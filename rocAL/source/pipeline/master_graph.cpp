@@ -1177,7 +1177,7 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
     std::vector<size_t> dims;
-    dims = {MAX_ASCII_BUFFER, 1};
+    dims = {MAX_ASCII_BUFFER};
     auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type,RocalTensorDataType::UINT8); // Create default ascii values Info
     default_ascii_values_info.set_metadata();
     for (uint ext_count = 0; ext_count < _ascii_tensor_list.size(); ext_count++) {
@@ -1458,11 +1458,11 @@ std::vector<rocalTensorList *> MasterGraph::ascii_values_meta_data() {
         auto meta_data_buffers = (uint8_t *)_ring_buffer.get_meta_read_buffers()[ext]; // Get ASCII buffer from ring buffer
         auto ascii_values = _ring_buffer.get_meta_data().second->get_ascii_values_batch();
         for (unsigned i = 0; i < _ascii_tensor_list[ext].size(); i++) {
-            if (ascii_values[i][ext]->size() != 0) {
-                _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext]->size(), 1});
+            if (ascii_values[i][ext]) {
+                _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext]->size()});
                 _ascii_tensor_list[ext][i]->set_mem_handle((void *)meta_data_buffers);
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
-            } else if (ascii_values[i][ext]->size() == 0) {
+            } else { // To Handle Empty Case of Missing Behaviour Component
                 _ascii_tensor_list[ext][i]->set_dims({0});
                 _ascii_tensor_list[ext][i]->set_mem_handle((void *)nullptr);
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
