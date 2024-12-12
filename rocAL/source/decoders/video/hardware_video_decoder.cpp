@@ -127,7 +127,7 @@ VideoDecoder::Status HardWareVideoDecoder::Decode(unsigned char *out_buffer, uns
                     // copy from frame to out_buffer
                     memcpy(out_buffer, sw_frame->data[0], sw_frame->linesize[0] * out_height);
                 }
-                out_buffer += image_size;
+                out_buffer = out_buffer + image_size;
             }
             ++frame_count;
             av_frame_unref(sw_frame);

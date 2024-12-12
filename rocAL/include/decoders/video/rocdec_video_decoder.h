@@ -29,6 +29,18 @@ THE SOFTWARE.
 #ifdef ROCAL_VIDEO
 #ifdef ENABLE_HIP
 
+typedef enum ReconfigFlushMode_enum {
+    RECONFIG_FLUSH_MODE_NONE = 0,               /**<  Just flush to get the frame count */
+    RECONFIG_FLUSH_MODE_DUMP_TO_FILE = 1,       /**<  The remaining frames will be dumped to file in this mode */
+    RECONFIG_FLUSH_MODE_CALCULATE_MD5 = 2,      /**<  Calculate the MD5 of the flushed frames */
+} ReconfigFlushMode;
+
+// this struct is used by videodecode and videodecodeMultiFiles to dump last frames to file
+typedef struct ReconfigDumpFileStruct_t {
+    bool b_dump_frames_to_file;
+    std::string output_file_name;
+} ReconfigDumpFileStruct;
+
 class RocDecVideoDecoder : public VideoDecoder {
     public:
         //! Default constructor
@@ -44,9 +56,7 @@ class RocDecVideoDecoder : public VideoDecoder {
         std::shared_ptr<VideoDemuxer> _demuxer;
         std::shared_ptr<RocVideoDecoder> _rocvid_decoder;
         OutputFormatEnum _output_format = rgb; 
-        int _codec_width, _codec_height;
         ReconfigParams _reconfig_params = { 0 };
-        bool _first_run = true;
         int _device_id;
 };
 
