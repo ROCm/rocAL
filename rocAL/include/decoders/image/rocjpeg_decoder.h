@@ -48,10 +48,6 @@ class RocJpegDecoder : public Decoder {
     Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
     Status decode_info2(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) override;
 
-    Status decode_info_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size, std::vector<unsigned char *> &output_buffer,
-                              std::vector<size_t> &original_width, std::vector<size_t> &original_height, Decoder::ColorFormat desired_decoded_color_format, 
-                              size_t max_decoded_width, size_t max_decoded_height,
-                              std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) override;
     //! Decodes the actual image data
     /*!
       \param input_buffer  User provided buffer containig the encoded image

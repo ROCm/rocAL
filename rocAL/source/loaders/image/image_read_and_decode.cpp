@@ -369,7 +369,6 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_height[i] = decoded_height;
             }
             
-            // _rocjpeg_decoder->decode_info_batch(_compressed_buff, _actual_read_size, _decompressed_buff_ptrs, _original_width, _original_height, decoder_color_format, max_decoded_width, max_decoded_height, _actual_decoded_width, _actual_decoded_height);
             if (_rocjpeg_decoder->decode_batch(_compressed_buff, _compressed_image_size, _decompressed_buff_ptrs,
                                          max_decoded_width, max_decoded_height,
                                          _original_width, _original_height,
