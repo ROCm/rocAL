@@ -46,7 +46,7 @@ class RocJpegDecoder : public Decoder {
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
     Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
-    Status decode_info2(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) override;
+    Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) override;
 
     //! Decodes the actual image data
     /*!
@@ -73,7 +73,7 @@ class RocJpegDecoder : public Decoder {
 
     ~RocJpegDecoder() override;
     void initialize(int device_id) override {}
-    void initialize_batch(int device_id, unsigned batch_size) override;
+    void initialize(int device_id, unsigned batch_size) override;
     bool is_partial_decoder() override { return _is_partial_decoder; }
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }

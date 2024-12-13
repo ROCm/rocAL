@@ -170,7 +170,7 @@ void GetChromaSubsamplingStr(RocJpegChromaSubsampling subsampling, std::string &
     }
 }
 
-void RocJpegDecoder::initialize_batch(int device_id, unsigned batch_size) {
+void RocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     int num_devices;
     hipDeviceProp_t hip_dev_prop;
     CHECK_HIP(hipGetDeviceCount(&num_devices));
@@ -213,7 +213,7 @@ void RocJpegDecoder::initialize_batch(int device_id, unsigned batch_size) {
 }
 
 // TODO - Max decoded width and height to be passed
-Decoder::Status RocJpegDecoder::decode_info2(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
+Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};

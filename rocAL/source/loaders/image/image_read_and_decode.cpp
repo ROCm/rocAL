@@ -96,7 +96,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             }
             _rocjpeg_decoder = create_decoder(decoder_config);
-            _rocjpeg_decoder->initialize_batch(device_id, batch_size);
+            _rocjpeg_decoder->initialize(device_id, batch_size);
         }
     }
     _num_threads = reader_config.get_cpu_num_threads();
@@ -342,13 +342,13 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = max_decoded_width;
                 _actual_decoded_height[i] = max_decoded_height;
                 int original_width, original_height, jpeg_sub_samp, decoded_width, decoded_height;
-                if (_rocjpeg_decoder->decode_info2(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
+                if (_rocjpeg_decoder->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
                                             &decoded_width, &decoded_height, 
                                             max_decoded_width, max_decoded_height, decoder_color_format, i) != Decoder::Status::OK) {
                     // Substituting the image which failed decoding with other image from the same batch
                     int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
                     while ((j >= 0)) {
-                        if (_rocjpeg_decoder->decode_info2(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
+                        if (_rocjpeg_decoder->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
                                                     &decoded_width, &decoded_height, 
                                                     max_decoded_width, max_decoded_height, decoder_color_format, i) == Decoder::Status::OK) {
                             _image_names[i] = _image_names[j];

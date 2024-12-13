@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <vector>
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_random_crop_decoder.h"
+#include "pipeline/commons.h"
 
 #if ENABLE_HIP
 #include "hip/hip_runtime_api.h"
@@ -102,7 +103,7 @@ class Decoder {
                                int *width,
                                int *height,
                                int *color_comps) = 0;
-    virtual Status decode_info2(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, ColorFormat desired_decoded_color_format, int index) { return Status::UNSUPPORTED; }
+    virtual Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, ColorFormat desired_decoded_color_format, int index) { return Status::UNSUPPORTED; }
 
     // TODO: Extend the decode API if needed, color format and order can be passed to the function
     //! Decodes the actual image data
@@ -128,7 +129,7 @@ class Decoder {
 
     virtual ~Decoder() = default;
     virtual void initialize(int device_id) = 0;
-    virtual void initialize_batch(int device_id, unsigned batch_size) {}
+    virtual void initialize(int device_id, unsigned batch_size) { THROW("Initialize not implemented") }
     virtual bool is_partial_decoder() = 0;
     virtual void set_bbox_coords(std::vector<float> bbox_coords) = 0;
     virtual std::vector<float> get_bbox_coords() = 0;
