@@ -20,10 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vx_ext_rpp.h>
-#include "pipeline/graph.h"
 #include "augmentations/geometry_augmentations/node_crop_resize.h"
+
+#include <vx_ext_rpp.h>
+
 #include "pipeline/exception.h"
+#include "pipeline/graph.h"
 
 CropResizeNode::CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs) {
 }
@@ -32,8 +34,8 @@ void CropResizeNode::create_node() {
     if (_node)
         return;
 
-    if(_is_random_crop) {
-    _crop_param->create_array(_graph);
+    if (_is_random_crop) {
+        _crop_param->create_array(_graph);
     } else {
         _crop_fixed_param->create_array(_graph);
     }
@@ -66,7 +68,7 @@ void CropResizeNode::create_node() {
 void CropResizeNode::update_node() {
     std::vector<uint32_t> x1, y1;
     std::vector<uint32_t> crop_h_dims, crop_w_dims;
-    if(_is_random_crop) {
+    if (_is_random_crop) {
         _crop_param->set_image_dimensions(_inputs[0]->info().roi().get_2D_roi());
         _crop_param->update_array();
         _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
@@ -81,7 +83,7 @@ void CropResizeNode::update_node() {
         x1 = _crop_fixed_param->get_x1_arr_val();
         y1 = _crop_fixed_param->get_y1_arr_val();
     }
-    
+
     _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
     Roi2DCords *crop_dims = static_cast<Roi2DCords *>(_crop_coordinates);
     for (unsigned i = 0; i < _batch_size; i++) {

@@ -454,10 +454,10 @@ def resize_crop_mirror(*inputs, resize_width=0, resize_height=0, crop_w=0, crop_
     return (rcm)
 
 
-def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None, crop_aspect_ratio=None, x_drift=None, y_drift=None,
+def crop_resize(*inputs, resize_width=0, resize_height=0, crop_area_factor=None, crop_aspect_ratio=None, x_drift=None, y_drift=None,
                 device=None, max_size=[], resize_longer=0, resize_shorter=0, scaling_mode=types.SCALING_MODE_DEFAULT,
                 interpolation_type=types.LINEAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8):
-    """!Fused function which performs resize, crop on images.
+    """!Fused function which performs fused crop and resize on images.
 
         @param inputs: the input image passed to the augmentation
         @param resize_width (int, optional, default = 0)                                   The length of the X dimension of the resized image
@@ -475,7 +475,7 @@ def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None,
         @param output_layout (int, optional, default = types.NHWC)                         tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                         tensor dtype for the augmentation output
 
-        @return    Resized and cropped Image
+        @return    Cropped and Resized Image
     """
     crop_area_factor = b.createFloatParameter(crop_area_factor) if isinstance(
         crop_area_factor, float) else crop_area_factor
@@ -493,10 +493,11 @@ def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None,
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (crop_resized_image)
 
-def resize_crop_fixed(*inputs, resize_width=0, resize_height=0, crop_w=None, crop_h=None, crop_pos_x=None, crop_pos_y=None,
-                device=None, max_size=[], resize_longer=0, resize_shorter=0, scaling_mode=types.SCALING_MODE_DEFAULT,
-                interpolation_type=types.LINEAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8):
-    """!Fused function which performs resize, crop on images.
+
+def crop_resize_fixed(*inputs, resize_width=0, resize_height=0, crop_w=None, crop_h=None, crop_pos_x=None, crop_pos_y=None,
+                      device=None, max_size=[], resize_longer=0, resize_shorter=0, scaling_mode=types.SCALING_MODE_DEFAULT,
+                      interpolation_type=types.LINEAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Fused function which performs fused crop and resize on images.
 
         @param inputs: the input image passed to the augmentation
         @param resize_width (int, optional, default = 0)                                   The length of the X dimension of the resized image
@@ -514,9 +515,9 @@ def resize_crop_fixed(*inputs, resize_width=0, resize_height=0, crop_w=None, cro
         @param output_layout (int, optional, default = types.NHWC)                         tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                         tensor dtype for the augmentation output
 
-        @return    Resized and cropped Image
+        @return    Cropped and resized Image
     """
-        # pybind call arguments
+    # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_h": crop_h,
                      "crop_w": crop_w, "crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     crop_resized_image = b.cropResizeFixed(

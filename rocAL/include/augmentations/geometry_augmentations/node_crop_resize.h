@@ -35,11 +35,12 @@ class CropResizeNode : public CropNode {
               RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
-    std::shared_ptr<CropParam> get_crop_param() { 
-        if(_is_random_crop) 
-            return _crop_param; 
-        else 
-            return _crop_fixed_param; }
+    std::shared_ptr<CropParam> get_crop_param() {
+        if (_is_random_crop)
+            return _crop_param;
+        else
+            return _crop_fixed_param;
+    }
 
    protected:
     void create_node() override;
@@ -49,6 +50,6 @@ class CropResizeNode : public CropNode {
     std::shared_ptr<RocalRandomCropParam> _crop_param;
     std::shared_ptr<RocalCropParam> _crop_fixed_param;
     vx_array _dst_roi_width, _dst_roi_height;
-    int _interpolation_type = 1; // Linear interpolation by default
+    int _interpolation_type = 1;  // Linear interpolation by default
     bool _is_random_crop = true;
 };

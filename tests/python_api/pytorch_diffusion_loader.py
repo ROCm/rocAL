@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -68,10 +68,9 @@ def main():
     # Reference: CelebA Dataset loader - https://github.com/tqch/ddpm-torch/blob/master/ddpm_torch/datasets.py#L73
     with pipe:
         jpegs, labels = fn.readers.file(file_root=data_path)
-        rocal_device = 'cpu' if rocal_cpu else 'gpu'
         decode = fn.decoders.image(jpegs, output_type=types.RGB,
                                    file_root=data_path, shard_id=local_rank, num_shards=world_size, max_decoded_width=178, max_decoded_height=218)
-        crop_resize = fn.resize_crop_fixed(decode, resize_width=64, resize_height=64, output_layout=types.NHWC, output_dtype=types.UINT8,
+        crop_resize = fn.crop_resize_fixed(decode, resize_width=64, resize_height=64, output_layout=types.NHWC, output_dtype=types.UINT8,
                                            interpolation_type=types.TRIANGULAR_INTERPOLATION, crop_w=148, crop_h=148, crop_pos_x=15, crop_pos_y=40)
 
         flip_coin = fn.random.coin_flip(probability=0.5)
@@ -99,7 +98,7 @@ def main():
             batch = it[0][0]
             for img in batch:
                 draw_patches(img, cnt, layout="nchw",
-                            dtype="fp32", device=rocal_cpu)
+                             dtype="fp32", device=rocal_cpu)
                 cnt += 1
         imageIteratorPipeline.reset()
     print("*********************************************************************")
