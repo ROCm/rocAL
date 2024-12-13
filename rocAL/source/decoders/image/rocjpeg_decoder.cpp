@@ -251,7 +251,7 @@ Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t 
 
     std::string chroma_sub_sampling = "";
     GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
-    if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
+    if (subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
         // std::cerr << "The chroma sub-sampling is not supported by VCN Hardware" << std::endl;
         return Status::UNSUPPORTED;
     }
