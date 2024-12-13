@@ -47,8 +47,8 @@ class CropResizeNode : public CropNode {
     void update_node() override;
 
    private:
-    std::shared_ptr<RocalRandomCropParam> _crop_param;
-    std::shared_ptr<RocalCropParam> _crop_fixed_param;
+    std::shared_ptr<RocalRandomCropParam> _crop_param;  // For random crop generation
+    std::shared_ptr<RocalCropParam> _crop_fixed_param;  // For fixed crop generation
     vx_array _dst_roi_width, _dst_roi_height;
     int _interpolation_type = 1;  // Linear interpolation by default
     bool _is_random_crop = true;

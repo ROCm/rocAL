@@ -23,7 +23,6 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_crop_resize.h"
 
 #include <vx_ext_rpp.h>
-
 #include "pipeline/exception.h"
 #include "pipeline/graph.h"
 
@@ -66,8 +65,7 @@ void CropResizeNode::create_node() {
 }
 
 void CropResizeNode::update_node() {
-    std::vector<uint32_t> x1, y1;
-    std::vector<uint32_t> crop_h_dims, crop_w_dims;
+    std::vector<uint32_t> x1, y1, crop_h_dims, crop_w_dims;
     if (_is_random_crop) {
         _crop_param->set_image_dimensions(_inputs[0]->info().roi().get_2D_roi());
         _crop_param->update_array();

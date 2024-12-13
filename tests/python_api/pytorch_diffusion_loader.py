@@ -70,11 +70,11 @@ def main():
         jpegs, labels = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image(jpegs, output_type=types.RGB,
                                    file_root=data_path, shard_id=local_rank, num_shards=world_size, max_decoded_width=178, max_decoded_height=218)
-        crop_resize = fn.crop_resize_fixed(decode, resize_width=64, resize_height=64, output_layout=types.NHWC, output_dtype=types.UINT8,
-                                           interpolation_type=types.TRIANGULAR_INTERPOLATION, crop_w=148, crop_h=148, crop_pos_x=15, crop_pos_y=40)
+        roi_resize = fn.roi_resize(decode, resize_width=64, resize_height=64, output_layout=types.NHWC, output_dtype=types.UINT8,
+                                           interpolation_type=types.TRIANGULAR_INTERPOLATION, roi_w=148, roi_h=148, roi_pos_x=15, roi_pos_y=40)
 
         flip_coin = fn.random.coin_flip(probability=0.5)
-        cmnp = fn.crop_mirror_normalize(crop_resize,
+        cmnp = fn.crop_mirror_normalize(roi_resize,
                                         output_layout=types.NCHW,
                                         output_dtype=types.FLOAT,
                                         crop=(64, 64),
