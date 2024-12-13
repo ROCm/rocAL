@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 #pragma once
 
 #include "video_decoder.h"
@@ -48,7 +49,7 @@ class RocDecVideoDecoder : public VideoDecoder {
         VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) override;
         VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
         int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override { return 0; }
-        void release() override;
+        void release() override {}
         ~RocDecVideoDecoder() override;
 
     private:

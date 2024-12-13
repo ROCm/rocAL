@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 #include <iomanip>
 #include "decoders/video/rocdec_video_decoder.h"
 
@@ -30,7 +31,7 @@ RocDecVideoDecoder::RocDecVideoDecoder(){};
 // callback function to flush last frames and save it to file when reconfigure happens
 int ReconfigureFlushCallback(void *p_viddec_obj, uint32_t flush_mode, void *p_user_struct) {
     int n_frames_flushed = 0;
-    if ((p_viddec_obj == nullptr) ||  (p_user_struct == nullptr)) return n_frames_flushed;
+    if ((p_viddec_obj == nullptr) || (p_user_struct == nullptr)) return n_frames_flushed;
 
     RocVideoDecoder *viddec = static_cast<RocVideoDecoder *> (p_viddec_obj);
     OutputSurfaceInfo *surf_info;
@@ -129,7 +130,6 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             pts = video_seek_ctx.out_frame_pts_;
             dts = video_seek_ctx.out_frame_dts_;
             required_frame_dts = video_seek_ctx.selected_frame_dts_;
-            // std::cout << "info: Number of frames that were decoded during seek - " << video_seek_ctx.num_frames_decoded_ << std::endl;
             b_seek = false;
             _rocvid_decoder->FlushAndReconfigure();
         } else {
@@ -171,9 +171,6 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     } while (n_video_bytes);
 
     return status;
-}
-
-void RocDecVideoDecoder::release() {
 }
 
 RocDecVideoDecoder::~RocDecVideoDecoder() {

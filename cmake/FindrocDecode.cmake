@@ -23,6 +23,7 @@
 # SOFTWARE.
 # 
 ################################################################################
+
 find_path(ROCDECODE_INCLUDE_DIRS
     NAMES rocdecode.h rocparser.h
     HINTS
