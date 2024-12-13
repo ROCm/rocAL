@@ -23,7 +23,7 @@
 # SOFTWARE.
 # 
 ################################################################################
-find_path(rocDecode_INCLUDE_DIRS
+find_path(ROCDECODE_INCLUDE_DIRS
     NAMES rocdecode.h rocparser.h
     HINTS
     $ENV{rocDecode_PATH}/include/rocdecode
@@ -32,9 +32,9 @@ find_path(rocDecode_INCLUDE_DIRS
     /usr/local/include/
     ${ROCM_PATH}/include/rocdecode
 )
-mark_as_advanced(rocDecode_INCLUDE_DIRS)
+mark_as_advanced(ROCDECODE_INCLUDE_DIRS)
 
-find_library(rocDecode_LIBRARIES
+find_library(ROCDECODE_LIBRARIES
     NAMES rocdecode
     HINTS
     $ENV{rocDecode_PATH}/lib
@@ -45,26 +45,26 @@ find_library(rocDecode_LIBRARIES
     /usr/local/lib
     ${ROCM_PATH}/lib
 )
-mark_as_advanced(rocDecode_LIBRARIES)
+mark_as_advanced(ROCDECODE_LIBRARIES)
 
-if(rocDecode_LIBRARIES AND rocDecode_INCLUDE_DIRS)
-    set(rocDecode_FOUND TRUE)
+if(ROCDECODE_LIBRARIES AND ROCDECODE_INCLUDE_DIRS)
+    set(ROCDECODE_FOUND TRUE)
 endif( )
 
-include( FindPackageHandleStandardArgs )
-find_package_handle_standard_args( rocDecode
-    FOUND_VAR rocDecode_FOUND
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(rocDecode
+    FOUND_VAR ROCDECODE_FOUND
     REQUIRED_VARS
-        rocDecode_INCLUDE_DIRS
-        rocDecode_LIBRARIES
+        ROCDECODE_INCLUDE_DIRS
+        ROCDECODE_LIBRARIES
 )
 
-set(rocDecode_FOUND ${rocDecode_FOUND} CACHE INTERNAL "")
-set(rocDecode_LIBRARIES ${rocDecode_LIBRARIES} CACHE INTERNAL "")
-set(rocDecode_INCLUDE_DIRS ${rocDecode_INCLUDE_DIRS} CACHE INTERNAL "")
+set(ROCDECODE_FOUND ${ROCDECODE_FOUND} CACHE INTERNAL "")
+set(ROCDECODE_LIBRARIES ${ROCDECODE_LIBRARIES} CACHE INTERNAL "")
+set(ROCDECODE_INCLUDE_DIRS ${ROCDECODE_INCLUDE_DIRS} CACHE INTERNAL "")
 
-if(rocDecode_FOUND)
-    message("-- ${White}Using rocDecode -- \n\tLibraries:${rocDecode_LIBRARIES} \n\tIncludes:${rocDecode_INCLUDE_DIRS}${ColourReset}")
+if(ROCDECODE_FOUND)
+    message("-- ${White}Using rocDecode -- \n\tLibraries:${ROCDECODE_LIBRARIES} \n\tIncludes:${ROCDECODE_INCLUDE_DIRS}${ColourReset}")
 else()
     if(rocDecode_FIND_REQUIRED)
         message(FATAL_ERROR "{Red}FindrocDecode -- NOT FOUND${ColourReset}")
