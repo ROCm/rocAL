@@ -95,10 +95,11 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
 
     // Reconfig the decoder
     ReconfigDumpFileStruct reconfig_user_struct = { 0 };
-    _reconfig_params.p_fn_reconfigure_flush = ReconfigureFlushCallback;
-    _reconfig_params.reconfig_flush_mode = RECONFIG_FLUSH_MODE_NONE;
-    _reconfig_params.p_reconfig_user_struct = &reconfig_user_struct;
-    _rocvid_decoder->SetReconfigParams(&_reconfig_params);
+    ReconfigParams reconfig_params = { 0 };
+    reconfig_params.p_fn_reconfigure_flush = ReconfigureFlushCallback;
+    reconfig_params.reconfig_flush_mode = RECONFIG_FLUSH_MODE_NONE;
+    reconfig_params.p_reconfig_user_struct = &reconfig_user_struct;
+    _rocvid_decoder->SetReconfigParams(&reconfig_params);
 
     if (!_demuxer || !_rocvid_decoder || !out_buffer) {
         ERR("RocDecVideoDecoder::Decoder is not initialized");

@@ -30,7 +30,7 @@ THE SOFTWARE.
 #ifdef ROCAL_VIDEO
 #ifdef ENABLE_HIP
 
-typedef enum ReconfigFlushMode_enum {
+typedef enum ReconfigFlushModeEnum {
     RECONFIG_FLUSH_MODE_NONE = 0,               /**<  Just flush to get the frame count */
     RECONFIG_FLUSH_MODE_DUMP_TO_FILE = 1,       /**<  The remaining frames will be dumped to file in this mode */
     RECONFIG_FLUSH_MODE_CALCULATE_MD5 = 2,      /**<  Calculate the MD5 of the flushed frames */
@@ -57,7 +57,6 @@ class RocDecVideoDecoder : public VideoDecoder {
         std::shared_ptr<VideoDemuxer> _demuxer;
         std::shared_ptr<RocVideoDecoder> _rocvid_decoder;
         OutputFormatEnum _output_format = rgb; 
-        ReconfigParams _reconfig_params = { 0 };
         int _device_id;
 };
 

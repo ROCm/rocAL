@@ -44,6 +44,7 @@ find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
 find_package(SndFile QUIET)
+find_package(rocDecode QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -89,7 +90,6 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
         message("-- ${Yellow}NOTE: rocAL library requires HIP for BACKEND=HIP, Not Found ${ColourReset}")
         message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
     endif()
-    find_package(rocDecode QUIET)
 endif()
 
 # OpenCL Backend
