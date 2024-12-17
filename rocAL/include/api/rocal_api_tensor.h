@@ -65,6 +65,7 @@ class rocalTensor {
  */
 class rocalTensorList {
    public:
+    virtual ~rocalTensorList() = default;
     virtual uint64_t size() = 0;
     virtual rocalTensor* at(size_t index) = 0;
     // isDenseTensor
