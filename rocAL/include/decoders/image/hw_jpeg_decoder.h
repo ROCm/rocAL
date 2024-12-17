@@ -66,7 +66,7 @@ class HWJpegDecoder : public Decoder {
                            Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override;
 
     ~HWJpegDecoder() override;
-    void initialize(int device_id = 0);
+    void initialize(int device_id = 0) override;
     bool is_partial_decoder() override { return _is_partial_decoder; }
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
