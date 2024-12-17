@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 #ifdef ROCAL_VIDEO
 #if ENABLE_HIP
+#if ENABLE_ROCDECODE
 
 RocDecVideoDecoder::RocDecVideoDecoder(){};
 
@@ -178,5 +179,6 @@ RocDecVideoDecoder::~RocDecVideoDecoder() {
     release();
 }
 
+#endif
 #endif
 #endif

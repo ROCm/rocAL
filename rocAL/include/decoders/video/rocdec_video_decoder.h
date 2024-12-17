@@ -23,12 +23,14 @@ THE SOFTWARE.
 #pragma once
 
 #include "video_decoder.h"
+
+#ifdef ROCAL_VIDEO
+#if ENABLE_HIP
+#if ENABLE_ROCDECODE
+
 #include "video_demuxer.h"
 #include "video_post_process.h"
 #include "rocvideodecode/roc_video_dec.h"
-
-#ifdef ROCAL_VIDEO
-#ifdef ENABLE_HIP
 
 typedef enum ReconfigFlushModeEnum {
     RECONFIG_FLUSH_MODE_NONE = 0,               /**<  Just flush to get the frame count */
@@ -60,5 +62,6 @@ class RocDecVideoDecoder : public VideoDecoder {
         int _device_id;
 };
 
+#endif
 #endif
 #endif
