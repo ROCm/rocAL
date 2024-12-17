@@ -60,10 +60,12 @@ auto get_ago_affinity_info = [](RocalAffinity rocal_affinity,
         case RocalAffinity::GPU:
             affinity.device_type = AGO_TARGET_AFFINITY_GPU;
             affinity.device_info = (gpu_id >= 0 && gpu_id <= 9) ? gpu_id : 0;
+            affinity.group = affinity.reserved = 0;
             break;
         case RocalAffinity::CPU:
             affinity.device_type = AGO_TARGET_AFFINITY_CPU;
             affinity.device_info = (cpu_id >= 0 && cpu_id <= 9) ? cpu_id : 0;
+            affinity.group = affinity.reserved = 0;
             break;
         default:
             throw std::invalid_argument("Unsupported affinity");
