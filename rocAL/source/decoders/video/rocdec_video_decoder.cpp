@@ -103,11 +103,11 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     _rocvid_decoder->SetReconfigParams(&reconfig_params);
 
     if (!_demuxer || !_rocvid_decoder || !out_buffer) {
-        ERR("RocDecVideoDecoder::Decoder is not initialized");
+        ERR("Decoder is not initialized");
         return Status::FAILED;        
     }
     if (!out_buffer || !(sequence_length|stride)) {
-        ERR("RocDecVideoDecoder::Decoder Invalid parameter passed");
+        ERR("Invalid parameter passed");
         return Status::FAILED;        
     }
 
@@ -143,8 +143,8 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
         }
         n_frame_returned = _rocvid_decoder->DecodeFrame(pvideo, n_video_bytes, pkg_flags, pts);
         if (!n_frame && !_rocvid_decoder->GetOutputSurfaceInfo(&surf_info)) {
-            std::cerr << "Error: Failed to get Output Surface Info!" << std::endl;
-            break;
+            ERR("Failed to get Output Surface Info!");
+            return Status::FAILED;
         }
         // Take the min of sequence length and num frames to avoid out of bounds memory error
         int required_n_frames = std::min(static_cast<int>(sequence_length), n_frame_returned);
