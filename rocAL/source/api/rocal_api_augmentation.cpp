@@ -2235,7 +2235,7 @@ rocalSpectrogram(
                                             context->master_graph->mem_type(),
                                             op_tensor_data_type,
                                             spectrogram_layout);
-        if(power != 1 || power != 2) {
+        if(power != 1 && power != 2) {
             WRN("rocalSpectrogram power value can be 1 or 2, setting it to default 2")
             power = 2;
         }
