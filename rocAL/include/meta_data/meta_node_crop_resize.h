@@ -37,7 +37,7 @@ class CropResizeMetaNode : public MetaNode {
 
    private:
     void initialize();
-    std::shared_ptr<RocalRandomCropParam> _meta_crop_param;
+    std::shared_ptr<CropParam> _meta_crop_param;  // CropResize node returns either RocalRandomCropParam or RocalCropParam so using the base class shared ptr
     vx_array _x1, _y1, _x2, _y2;
     std::vector<uint> _x1_val, _y1_val, _x2_val, _y2_val;
 };

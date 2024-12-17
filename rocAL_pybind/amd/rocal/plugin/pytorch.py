@@ -229,7 +229,7 @@ class ROCALGenericIterator(object):
         return self
 
     def __len__(self):
-        return self.iterator_length
+        return self.iterator_length // self.batch_size
 
     def __del__(self):
         b.rocalRelease(self.loader._handle)
