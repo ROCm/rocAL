@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "decoders/video/hardware_video_decoder.h"
-
 #include "pipeline/commons.h"
 #include <stdio.h>
 
@@ -149,7 +148,7 @@ VideoDecoder::Status HardWareVideoDecoder::Decode(unsigned char *out_buffer, uns
 }
 
 // Initialize will open a new decoder and initialize the context
-VideoDecoder::Status HardWareVideoDecoder::Initialize(const char *src_filename) {
+VideoDecoder::Status HardWareVideoDecoder::Initialize(const char *src_filename, int device_id) {
     VideoDecoder::Status status = Status::OK;
     int ret;
     AVDictionary *opts = NULL;
