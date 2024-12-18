@@ -63,7 +63,7 @@ set(LIBTAR_LIBRARIES ${LIBTAR_LIBRARIES} CACHE INTERNAL "")
 set(LIBTAR_INCLUDE_DIRS ${LIBTAR_INCLUDE_DIRS} CACHE INTERNAL "")
 
 if(LIBTAR_FOUND)
-    message("-- ${Blue}Using Libtar -- \n\tLibraries:${LIBTAR_LIBRARIES} \n\tIncludes:${LIBTAR_INCLUDE_DIRS}${ColourReset}")   
+    message("-- ${White}Using Libtar -- \n\tLibraries:${LIBTAR_LIBRARIES} \n\tIncludes:${LIBTAR_INCLUDE_DIRS}${ColourReset}")   
 else()
     message( "-- ${Yellow}NOTE: FindLibTar failed to find -- LibTar${ColourReset}" )
 endif()
