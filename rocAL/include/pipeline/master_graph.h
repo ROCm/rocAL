@@ -55,6 +55,7 @@ THE SOFTWARE.
 #define MAX_SSD_ANCHORS 8732          // Num of bbox achors used in SSD training
 #define MAX_MASK_BUFFER 10000
 #define MAX_RETINANET_ANCHORS 120087  // Num of bbox achors used in Retinanet training
+#define MAX_ASCII_BUFFER 10000        // Max Number of ASCII characters that can be present in any particular extension file for webdataset reader
 
 #if ENABLE_SIMD
 #if _WIN32
@@ -120,11 +121,13 @@ class MasterGraph {
     std::vector<rocalTensorList *> create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
     std::vector<rocalTensorList *> create_cifar10_label_reader(const char *source_path, const char *file_prefix);
     std::vector<rocalTensorList *> create_mxnet_label_reader(const char *source_path, bool is_output);
+    std::vector<rocalTensorList *> create_webdataset_reader(const char *source_path, const char* index_path, std::vector<std::set<std::string>> extensions , MetaDataReaderType reader_type, MissingComponentsBehaviour missing_component_behaviour);
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
     void box_iou_matcher(std::vector<float> &anchors, float high_threshold, float low_threshold, bool allow_low_quality_matches);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
     const std::pair<ImageNameBatch, pMetaDataBatch> &meta_data();
     TensorList *labels_meta_data();
+    std::vector<rocalTensorList*> ascii_values_meta_data(); // Gets the pointer to a batch of ASCII values of all samples in the batch
     TensorList *bbox_meta_data();
     TensorList *mask_meta_data();
     TensorList *matched_index_meta_data();
@@ -175,9 +178,11 @@ class MasterGraph {
     // Output tensorList for metadata
     std::vector<rocalTensorList *> _metadata_output_tensor_list;
     TensorList _labels_tensor_list;
+    std::vector<TensorList> _ascii_tensor_list; // TensorList to store the ASCII values of all samples in a batch
     TensorList _bbox_tensor_list;
     TensorList _mask_tensor_list;
     TensorList _matches_tensor_list;
+    uint _ext_count = 0;    // Count of extensions present in the current pipeline of the webdataset reader                                                   //!< The count of total number of extensions used in the webdataset reader
     std::vector<size_t> _meta_data_buffer_size;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU

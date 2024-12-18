@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "readers/image/mxnet_recordio_reader.h"
 #include "readers/video/sequence_file_source_reader.h"
 #include "readers/image/tf_record_reader.h"
+#include "readers/webdataset_source_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch (config.type()) {
@@ -89,6 +90,12 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             auto ret = std::make_shared<ExternalSourceReader>();
             if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("ExternalSourceReader cannot access the storage");
+            return ret;
+        } break;
+        case StorageType::WEBDATASET_RECORDS: {
+            auto ret = std::make_shared<WebDatasetSourceReader>();
+            if (ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("WebDatasetSourceReader cannot access the storage");
             return ret;
         } break;
         default:
