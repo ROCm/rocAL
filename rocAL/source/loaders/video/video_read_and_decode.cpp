@@ -58,7 +58,7 @@ VideoReadAndDecode::~VideoReadAndDecode() {
     _video_decoder.clear();
 }
 
-void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size) {
+void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id) {
     _sequence_length = reader_config.get_sequence_length();
     _stride = reader_config.get_frame_stride();
     _video_prop = reader_config.get_video_properties();
@@ -72,6 +72,7 @@ void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _actual_decoded_width.resize(_batch_size);
     _actual_decoded_height.resize(_batch_size);
     _video_decoder_config = decoder_config;
+    _device_id = device_id;
 
     // Initialize the ffmpeg context once for the video files.
     size_t i = 0;
@@ -83,7 +84,7 @@ void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         video_map video_instance;
         video_instance._video_map_idx = atoi(substrings[0].c_str());
         video_instance._is_decoder_instance = true;
-        if (_video_decoder[i]->Initialize(substrings[1].c_str()) != VideoDecoder::Status::OK)
+        if (_video_decoder[i]->Initialize(substrings[1].c_str(), _device_id) != VideoDecoder::Status::OK)
             video_instance._is_decoder_instance = false;
         _video_file_name_map.insert(std::pair<std::string, video_map>(_video_names[i], video_instance));
     }
@@ -184,7 +185,7 @@ VideoReadAndDecode::load(unsigned char *buff,
                     std::vector<std::string> substrings;
                     char delim = '#';
                     substring_extraction(itr->first, delim, substrings);
-                    if (_video_decoder[video_idx]->Initialize(substrings[1].c_str()) == VideoDecoder::Status::OK) {
+                    if (_video_decoder[video_idx]->Initialize(substrings[1].c_str(), _device_id) == VideoDecoder::Status::OK) {
                         itr->second._video_map_idx = video_idx;
                         itr->second._is_decoder_instance = true;
                     }
