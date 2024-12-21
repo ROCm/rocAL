@@ -427,6 +427,51 @@ rocalCropResizeFixed(
 }
 
 RocalTensor ROCAL_API_CALL
+rocalROIResize(
+    RocalContext p_context,
+    RocalTensor p_input,
+    unsigned dest_width,
+    unsigned dest_height,
+    bool is_output,
+    unsigned roi_h,
+    unsigned roi_w,
+    float roi_pos_x,
+    float roi_pos_y,
+    RocalResizeInterpolationType interpolation_type,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        if (dest_width == 0 || dest_height == 0)
+            THROW("ROI Resize needs to receive non-zero destination dimensions")
+
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+
+        // For the ROI resize augmentation, user can create an image with a different width and height
+        output_info.modify_dims_width_and_height(op_tensor_layout, dest_width, dest_height);
+        output = context->master_graph->create_tensor(output_info, is_output);
+
+        std::shared_ptr<CropResizeNode> roi_resize_node = context->master_graph->add_node<CropResizeNode>({input}, {output});
+        roi_resize_node->init(roi_h, roi_w, roi_pos_x, roi_pos_y, interpolation_type);
+        if (context->master_graph->meta_data_graph())
+            context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(roi_resize_node);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
 rocalResize(
     RocalContext p_context,
     RocalTensor p_input,
