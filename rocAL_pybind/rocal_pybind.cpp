@@ -728,6 +728,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
         .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
         .export_values();
+    py::enum_<RocalMissingComponentsBehaviour>(types_m, "RocalMissingComponentsBehaviour", "Rocal Missing components behavior")
+        .value("MISSING_COMPONENT_ERROR", ROCAL_MISSING_COMPONENT_ERROR)
+        .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
+        .value("MISSING_COMPONENT_EMPTY", ROCAL_MISSING_COMPONENT_EMPTY)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -759,6 +764,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection, py::return_value_policy::reference);
     m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection, py::return_value_policy::reference);
     m.def("mxnetReader", &rocalCreateMXNetReader, py::return_value_policy::reference);
+    m.def("webDatasetReader", &rocalCreateWebDatasetReader, py::return_value_policy::reference);
     m.def("isEmpty", &rocalIsEmpty);
     m.def("getStatus", rocalGetStatus);
     m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
@@ -853,6 +859,34 @@ PYBIND11_MODULE(rocal_pybind, m) {
             boxes_list.append(boxes_array);
         }
         return boxes_list;
+    });
+    m.def("getAsciiDatas", [](RocalContext context) {
+        std::vector<rocalTensorList* > ascii_sample_contents = rocalGetAsciiDatas(context);
+        py::list ext_componenet_list;
+        for(uint ext = 0; ext < ascii_sample_contents.size(); ext++) { // Number of components
+            rocalTensorList *ext_ascii_values_batch = ascii_sample_contents[ext];
+            py::list component_list;
+            py::array_t<uint8_t> components_array;
+            for (int i = 0; i < ext_ascii_values_batch->size(); i++) {
+                if (ext_ascii_values_batch->at(i)->buffer() !=  nullptr) {
+                components_array = py::array(py::buffer_info(
+                                             static_cast<uint8_t *>(ext_ascii_values_batch->at(i)->buffer()),
+                                             sizeof(uint8_t),
+                                             py::format_descriptor<uint8_t>::format(),
+                                             1,
+                                             {ext_ascii_values_batch->at(i)->dims().at(0)},
+                                             {sizeof(uint8_t)}));
+                } else {
+                        std::vector<size_t> shape = {0};  // Empty array with 0 elements
+                        // Create an empty NumPy array of type uint8_t (unsigned byte)
+                        py::array_t<uint8_t> empty_array(shape);
+                        components_array = empty_array;
+                }
+                component_list.append(components_array);
+            }
+            ext_componenet_list.append(component_list);
+        }
+        return ext_componenet_list;
     });
     m.def("getMaskCount", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.mutable_data();
@@ -971,7 +1005,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
-    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+    m.def("webdatasetDecoderSingleShard", &rocALWebDatasetDecoderSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
