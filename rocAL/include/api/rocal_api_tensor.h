@@ -81,6 +81,14 @@ class rocalListOfTensorList {
     virtual rocalTensorList* at(size_t index) = 0;
 };
 
+/*! 
+ * \brief  RocalNSROutput contains the anchor and shape tensor for NonSilentRegionDetection
+ */
+struct RocalNSROutput {
+    rocalTensor* anchor;
+    rocalTensor* shape;
+};
+
 typedef rocalTensor* RocalTensor;
 typedef rocalTensorList* RocalTensorList;
 typedef rocalListOfTensorList* RocalMetaData;

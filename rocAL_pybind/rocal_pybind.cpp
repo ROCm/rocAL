@@ -741,6 +741,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("pad_last_batch_repeated", &RocalShardingInfo::pad_last_batch_repeated)
         .def_readwrite("stick_to_shard", &RocalShardingInfo::stick_to_shard)
         .def_readwrite("shard_size", &RocalShardingInfo::shard_size);
+    py::class_<RocalNSROutput>(m, "RocalNSROutput")
+        .def(py::init<>())
+        .def_readonly("anchor", &RocalNSROutput::anchor)
+        .def_readonly("shape", &RocalNSROutput::shape);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
