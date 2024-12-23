@@ -407,3 +407,24 @@ class TensorList : public rocalTensorList {
     std::vector<uint64_t> _tensor_data_size;
     std::vector<uint64_t> _tensor_roi_size;
 };
+
+/*! \brief Contains a list of rocalTensorList */
+class TensorListVector : public rocalListOfTensorList {
+   public:
+    uint64_t size() override { return _tensor_list_vector.size(); }
+    bool empty() { return _tensor_list_vector.empty(); }
+    TensorList* front() { return _tensor_list_vector.front(); }
+    void push_back(TensorList* tensor_list) {
+        _tensor_list_vector.push_back(tensor_list);
+    }
+    void emplace_back(TensorList* tensor_list) {
+        _tensor_list_vector.emplace_back(tensor_list);
+    }
+    void release() {
+        for (auto& tensor_list : _tensor_list_vector) tensor_list->release();
+    }
+    TensorList* operator[](size_t index) { return _tensor_list_vector[index]; }
+    TensorList* at(size_t index) override { return _tensor_list_vector[index]; }
+   private:
+    std::vector<TensorList*> _tensor_list_vector;
+};

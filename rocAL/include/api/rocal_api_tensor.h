@@ -71,8 +71,18 @@ class rocalTensorList {
     // isDenseTensor
 };
 
+/*!
+ * \brief class representing a list of rocal tensor list
+ */
+class rocalListOfTensorList {
+   public:
+    virtual ~rocalListOfTensorList() = default;
+    virtual uint64_t size() = 0;
+    virtual rocalTensorList* at(size_t index) = 0;
+};
+
 typedef rocalTensor* RocalTensor;
 typedef rocalTensorList* RocalTensorList;
-typedef std::vector<rocalTensorList*> RocalMetaData;
+typedef rocalListOfTensorList* RocalMetaData;
 
 #endif  // MIVISIONX_ROCAL_API_TENSOR_H

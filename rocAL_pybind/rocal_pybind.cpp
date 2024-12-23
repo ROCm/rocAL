@@ -903,8 +903,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         py::return_value_policy::reference);
     m.def("rocalGetEncodedBoxesAndLables", [](RocalContext context, uint batch_size, uint num_anchors) {
         auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(context, batch_size * num_anchors);
-        auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes[0]->at(0)->buffer());
-        auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes[1]->at(0)->buffer());
+        auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes->at(0)->at(0)->buffer());
+        auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes->at(1)->at(0)->buffer());
 
         py::array_t<int> labels_array = py::array_t<int>(py::buffer_info(
             labels_buf_ptr,
