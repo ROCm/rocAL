@@ -632,6 +632,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 Returns a rocal tensor at given position `i` in the rocalTensorlist.
                 )code",
             py::keep_alive<0, 1>());
+py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
+        .def(
+            "__getitem__",
+            [](rocalListOfTensorList &output_tensor_list, uint idx) {
+                return output_tensor_list.at(idx);
+            },
+            R"code(
+                Returns a TensorList at given position in the list.
+                )code",
+            py::return_value_policy::reference);
 
     py::module types_m = m.def_submodule("types");
     types_m.doc() = "Datatypes and options used by ROCAL";
