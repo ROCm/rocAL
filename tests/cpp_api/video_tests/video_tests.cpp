@@ -282,13 +282,13 @@ int main(int argc, const char **argv) {
             }
         }
         if (enable_metadata) {
-            int image_name_length[input_batch_size];
+            std::vector<int> image_name_length(input_batch_size);
             RocalTensorList labels = rocalGetImageLabels(handle);
-            int img_size = rocalGetImageNameLen(handle, image_name_length);
-            char img_name[img_size];
-            rocalGetImageName(handle, img_name);
+            int img_size = rocalGetImageNameLen(handle, image_name_length.data());
+            std::vector<char> img_name(img_size);
+            rocalGetImageName(handle, img_name.data());
 
-            std::cout << "\nImage names: " << img_name << "\n";
+            std::cout << "\nImage names: " << img_name.data() << "\n";
             std::cout << "Label id: ";
             int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());
             for (unsigned i = 0; i < input_batch_size; i++) {
@@ -297,11 +297,11 @@ int main(int argc, const char **argv) {
             std::cout << std::endl;
         }
         if (enable_framenumbers || enable_timestamps) {
-            unsigned int start_frame_num[input_batch_size];
-            float frame_timestamps[input_batch_size * sequence_length];
-            rocalGetSequenceStartFrameNumber(handle, start_frame_num);
+            std::vector<unsigned int> start_frame_num(input_batch_size);
+            std::vector<float> frame_timestamps(input_batch_size * sequence_length);
+            rocalGetSequenceStartFrameNumber(handle, start_frame_num.data());
             if (enable_timestamps) {
-                rocalGetSequenceFrameTimestamps(handle, frame_timestamps);
+                rocalGetSequenceFrameTimestamps(handle, frame_timestamps.data());
             }
             for (unsigned i = 0; i < input_batch_size; i++) {
                 if (enable_framenumbers)
