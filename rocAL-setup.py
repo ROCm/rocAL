@@ -30,16 +30,16 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.6.0"
+__version__ = "2.7.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
 # error check calls
-def ERROR_CHECK(call):
-    status = call
-    if(status != 0):
-        print('ERROR_CHECK failed with status:'+str(status))
+def ERROR_CHECK(waitval):
+    if(waitval != 0): # return code and signal flags
+        print('ERROR_CHECK failed with status:'+str(waitval))
         traceback.print_stack()
+        status = ((waitval >> 8) | waitval) & 255 # combine exit code and wait flags into single non-zero byte
         exit(status)
 
 # Arguments

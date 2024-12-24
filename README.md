@@ -72,6 +72,14 @@ rocAL can be currently used to perform the following operations either with rand
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
+* CMake Version `3.10` or later
+
+  ```shell
+  sudo apt install cmake
+  ```
+
+* AMD Clang++ Version `18.0.0` or later - installed with ROCm
+
 * [HIP](https://github.com/ROCm/HIP)
   ```shell
   sudo apt install rocm-hip-runtime-dev
@@ -341,7 +349,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.1.0.60100-64`+
+* ROCm: rocm-core - `6.3.0`+
 * MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
@@ -350,5 +358,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* rocAL Setup Script - `V2.6.0`
+* rocAL Setup Script - `V2.7.0`
 * Dependencies for all the above packages

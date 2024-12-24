@@ -23,22 +23,26 @@
 # SOFTWARE.
 #
 ################################################################################
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if (NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+endif()
 
 project(rocal-test)
 
 # make test with CTest
 enable_testing()
 include(CTest)
-
-# ROCM Path
-if(DEFINED ENV{ROCM_PATH})
-  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
-elseif(ROCM_PATH)
-  message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
-else()
-  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
-endif()
 
 # find rocAL
 find_library(ROCAL_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
@@ -65,7 +69,7 @@ else()
     endif()
 endif(NOT ROCAL_FOUND)
 
-# basic_test
+# 1 - basic_test_cpu
 add_test(
   NAME
     basic_test_cpu
@@ -77,14 +81,17 @@ add_test(
             --test-command "basic_test"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
 )
+# 2 - basic_test_gpu
 add_test(NAME basic_test_gpu 
               COMMAND basic_test 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+# 3 - basic_test_gray
 add_test(NAME basic_test_gray 
               COMMAND basic_test 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+# 4 - basic_test_rgb
 add_test(NAME basic_test_rgb 
               COMMAND basic_test 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
@@ -103,7 +110,7 @@ add_test(NAME basic_test_rgb
 #            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet
 #)
 
-# dataloader_multithread
+# 5 - dataloader_multithread_cpu
 add_test(
   NAME
   dataloader_multithread_cpu
@@ -115,10 +122,18 @@ add_test(
             --test-command "dataloader_multithread"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
 )
-add_test(NAME dataloader_multithread_gpu 
-              COMMAND dataloader_multithread 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread)
+# 6 - dataloader_multithread_gpu
+add_test(
+  NAME
+  dataloader_multithread_gpu
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
+                              "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread_gpu"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "dataloader_multithread"
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+)
 
 # TBD - dataloader_tf unit test non-functional with tf dataset
 #add_test(
@@ -135,6 +150,7 @@ add_test(NAME dataloader_multithread_gpu
 
 # performance_tests
 # TBD - peformance test needs to run with default options
+# 7 - performance_tests_cpu
 add_test(
   NAME
     performance_tests_cpu
@@ -146,12 +162,13 @@ add_test(
             --test-command "performance_tests"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 0
 )
+# 8 - performance_tests_gpu
 add_test(NAME performance_tests_gpu 
               COMMAND performance_tests 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests)
 
-# performance_tests_with_depth
+# 9 - performance_tests_with_depth_cpu
 add_test(
   NAME
   performance_tests_with_depth_cpu
@@ -163,12 +180,13 @@ add_test(
             --test-command "performance_tests_with_depth"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 0
 )
+# 10 - performance_tests_with_depth_gpu
 add_test(NAME performance_tests_with_depth_gpu 
               COMMAND performance_tests_with_depth 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth)
 
-# unit_tests
+# 11 - unit_tests_cpu
 add_test(
   NAME
     unit_tests_cpu
@@ -180,16 +198,18 @@ add_test(
             --test-command "unit_tests"
             0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 0 1
 )
+# 12 - unit_tests_gpu
 add_test(NAME unit_tests_gpu 
               COMMAND unit_tests 
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
+# 13 - unit_tests_gray
 add_test(NAME unit_tests_gray 
               COMMAND unit_tests 
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 
-# video_tests
+# 14 - video_tests
 add_test(
   NAME
   video_tests
