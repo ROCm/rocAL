@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "pipeline/filesystem.h"
 #include "readers/image/image_reader.h"
 #include "helpers/tar_helper_functions.h"
+#include <unordered_map>
 
 class WebDataSetMetaDataReader : public MetaDataReader {
    public:
