@@ -81,7 +81,7 @@ else
     print_tensor_arg=no-print_tensor
 fi
 
-echo $ROCAL_DATA_PATH
+
 CURRENTDATE=`date +"%Y-%m-%d-%T"`
 
 # Mention Batch Size
@@ -94,13 +94,13 @@ ver=$(python3 -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2
 ####################################################################################################################################
 # USER TO MAKE CHANGES HERE FOR TEST
 # Make the respective " Pipeline " to test equal to 1
-unit_test=0
-coco_reader=0
-caffe_reader=0
-caffe2_reader=0
-tf_classification_reader=0
-tf_detection_reader=0
-video_pipeline=0
+unit_test=1
+coco_reader=1
+caffe_reader=1
+caffe2_reader=1
+tf_classification_reader=1
+tf_detection_reader=1
+video_pipeline=1
 web_dataset_reader=1
 ####################################################################################################################################
 
@@ -349,20 +349,11 @@ fi
 ####################################################################################################################################
 if [[ web_dataset_reader -eq 1 ]]; then
 
-    echo "Web Dataset Reader"
-    echo $ROCAL_DATA_PATH
-    # Mention dataset_path
-    # Classification
+    # Mention tar data path and index file path
     data_dir=$ROCAL_DATA_PATH/rocal_data/web_dataset/tar_file/
-    echo $data_dir
-    echo $ROCAL_DATA_PATH
-    echo "Web Dataset Reader 1"
-    # Mention index path
     index_path=$ROCAL_DATA_PATH/rocal_data/web_dataset/idx_file/
-    echo "Web Dataset Reader 2"
     # web_dataset_reader.py
     # By default : cpu backend, NCHW format , fp32
-    echo "Web Dataset Reader 3"
     python"$ver" web_dataset_reader.py \
         --image-dataset-path $data_dir \
         --index-path "" \
@@ -376,6 +367,5 @@ if [[ web_dataset_reader -eq 1 ]]; then
         --world-size $gpus_per_node \
         --num-threads 1 \
         --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_log.${CURRENTDATE}.txt
-    echo "Web Dataset Reader 4"
 fi
 ####################################################################################################################################

@@ -40,6 +40,7 @@ def draw_patches(img, idx, args=None):
     cv2.imwrite("output_folder/web_dataset_reader/" +
                 str(idx)+"_"+"train"+".png", image)
 
+
 def main():
     args = parse_args()
     # Args
@@ -48,12 +49,8 @@ def main():
     rocal_cpu = False if args.rocal_gpu else True
     batch_size = args.batch_size
     num_threads = args.num_threads
-    local_rank = args.local_rank
-    world_size = args.world_size
     random_seed = args.seed
     device = "gpu" if args.rocal_gpu else "cpu"
-    tensor_layout = types.NHWC if args.NHWC else types.NCHW
-    print("here 1")
     try:
         path = "output_folder/web_dataset_reader/"
         isExist = os.path.exists(path)
@@ -67,16 +64,16 @@ def main():
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
         img_raw = fn.readers.webdataset(
-        path=image_path, ext=[{'JPEG', 'cls'}], index_paths = index_file, missing_components_behavior = types.MISSING_COMPONENT_ERROR,
+            path=image_path, ext=[{'JPEG', 'cls'}], index_paths=index_file, missing_components_behavior=types.MISSING_COMPONENT_ERROR,
         )
-        img = fn.decoders.image(img_raw, file_root=image_path, max_decoded_width=500, max_decoded_height=500, index_path = index_file)
+        img = fn.decoders.image(img_raw, file_root=image_path,
+                                max_decoded_width=500, max_decoded_height=500, index_path=index_file)
         pipe.set_outputs(img)
     # Build the pipeline
     pipe.build()
     # Dataloader
     data_loader = ROCALClassificationIterator(
         pipe, display=0, device=device, device_id=args.local_rank)
-    print("here 2")
     # Training loop
     cnt = 0
     # Enumerate over the Dataloader
@@ -91,10 +88,10 @@ def main():
             for element in list(range(batch_size)):
                 cnt += 1
                 draw_patches(image_batch[element],
-                                cnt, args=args)
-            data_loader.reset()
+                             cnt, args=args)
+        data_loader.reset()
     print("##############################  WEBDATASET READER SUCCESS  ############################")
 
+
 if __name__ == "__main__":
-    print("name is main")
     main()
