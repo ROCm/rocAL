@@ -181,8 +181,7 @@ class MasterGraph {
     std::vector<TensorList> _ascii_tensor_list; // TensorList to store the ASCII values of all samples in a batch
     TensorList _bbox_tensor_list;
     TensorList _mask_tensor_list;
-    TensorList _matches_tensor_list;
-    uint _ext_count = 0;    // Count of extensions present in the current pipeline of the webdataset reader                                                   //!< The count of total number of extensions used in the webdataset reader
+    TensorList _matches_tensor_list;                                                  //!< The count of total number of extensions used in the webdataset reader
     std::vector<size_t> _meta_data_buffer_size;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU
