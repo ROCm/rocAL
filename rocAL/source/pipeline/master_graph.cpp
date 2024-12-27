@@ -1169,7 +1169,7 @@ std::vector<rocalTensorList *> MasterGraph::create_webdataset_reader(
 
     bool generate_index = (index_path[0] == '\0') ? true : false;
     if (generate_index)
-        std::cout << "Index file is not provided, it may take some time to infer it from the tar file";
+        std::cerr << "Index file is not provided, it may take some time to infer it from the tar file\n";
 
     _ascii_tensor_list.resize(extensions[0].size() - 1);
     MetaDataConfig config(MetaDataType::AsciiValue, reader_type, source_path,

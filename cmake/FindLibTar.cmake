@@ -44,7 +44,7 @@ find_library(LIBTAR_LIBRARIES
 mark_as_advanced(LIBTAR_LIBRARIES)
 
 if(LIBTAR_LIBRARIES AND LIBTAR_INCLUDE_DIRS)
-    message("-- ${Blue}NOTE: rocAL built WITH LibTar - WebDataset Functionalities will be supported${ColourReset}")
+    message("-- ${White}NOTE: rocAL built WITH LibTar - WebDataset Functionalities will be supported${ColourReset}")
     set(LIBTAR_FOUND TRUE)
 else()
     message("-- ${Yellow}NOTE: rocAL is not built WITH LibTar - WebDataset Functionalities will not be supported${ColourReset}")
@@ -63,7 +63,7 @@ set(LIBTAR_LIBRARIES ${LIBTAR_LIBRARIES} CACHE INTERNAL "")
 set(LIBTAR_INCLUDE_DIRS ${LIBTAR_INCLUDE_DIRS} CACHE INTERNAL "")
 
 if(LIBTAR_FOUND)
-    message("-- ${Blue}Using Libtar -- \n\tLibraries:${LIBTAR_LIBRARIES} \n\tIncludes:${LIBTAR_INCLUDE_DIRS}${ColourReset}")   
+    message("-- ${White}Using Libtar -- \n\tLibraries:${LIBTAR_LIBRARIES} \n\tIncludes:${LIBTAR_INCLUDE_DIRS}${ColourReset}")   
 else()
     message( "-- ${Yellow}NOTE: FindLibTar failed to find -- LibTar${ColourReset}" )
 endif()
