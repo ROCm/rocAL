@@ -158,7 +158,7 @@ void WebDatasetSourceReader::parse_sample_description(
     // Reading consecutive components
     ComponentDescription component;
     while (components_stream >> component.ext) {
-        if (index_version == create_version_number(1, 2)) {
+        if (index_version == create_version_number(1, 0)) {
             if (!(components_stream >> component.offset >> component.size >>
                   component.filename)) {
                 THROW( "Could not find all necessary component parameters "
