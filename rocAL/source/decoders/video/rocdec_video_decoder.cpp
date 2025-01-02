@@ -111,7 +111,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
         return Status::FAILED;        
     }
 
-    int64_t pts = 0, dts = 0, required_frame_dts = 0;
+    int64_t pts = 0, dts = 0, requested_frame_dts = 0;
     int n_video_bytes = 0, n_frame_returned = 0, n_frame = 0, pkg_flags = 0;
     OutputSurfaceInfo *surf_info;
     uint8_t *pvideo = nullptr;
@@ -131,7 +131,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             _demuxer->Seek(video_seek_ctx, &pvideo, &n_video_bytes);
             pts = video_seek_ctx.out_frame_pts_;
             dts = video_seek_ctx.out_frame_dts_;
-            required_frame_dts = video_seek_ctx.selected_frame_dts_;
+            requested_frame_dts = video_seek_ctx.requested_frame_dts_;
             b_seek = false;
             _rocvid_decoder->FlushAndReconfigure();
         } else {
@@ -150,7 +150,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
         int required_n_frames = std::min(static_cast<int>(sequence_length), n_frame_returned);
         for (int i = 0; i < required_n_frames; i++) {
             uint8_t *pframe = _rocvid_decoder->GetFrame(&pts);
-            if (dts >= required_frame_dts) {
+            if (dts >= requested_frame_dts) {
                 if (n_frame % stride == 0) {
                     post_process.ColorConvertYUV2RGB(pframe, surf_info, out_buffer, _output_format, _rocvid_decoder->GetStream());
                     out_buffer += image_size;
