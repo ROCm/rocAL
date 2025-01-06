@@ -632,6 +632,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 Returns a rocal tensor at given position `i` in the rocalTensorlist.
                 )code",
             py::keep_alive<0, 1>());
+py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
+        .def(
+            "__getitem__",
+            [](rocalListOfTensorList &output_tensor_list, uint idx) {
+                return output_tensor_list.at(idx);
+            },
+            R"code(
+                Returns a TensorList at given position in the list.
+                )code",
+            py::return_value_policy::reference);
 
     py::module types_m = m.def_submodule("types");
     types_m.doc() = "Datatypes and options used by ROCAL";
@@ -741,6 +751,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("pad_last_batch_repeated", &RocalShardingInfo::pad_last_batch_repeated)
         .def_readwrite("stick_to_shard", &RocalShardingInfo::stick_to_shard)
         .def_readwrite("shard_size", &RocalShardingInfo::shard_size);
+    py::class_<RocalNSROutput>(m, "RocalNSROutput")
+        .def(py::init<>())
+        .def_readonly("anchor", &RocalNSROutput::anchor)
+        .def_readonly("shape", &RocalNSROutput::shape);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
@@ -903,8 +917,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         py::return_value_policy::reference);
     m.def("rocalGetEncodedBoxesAndLables", [](RocalContext context, uint batch_size, uint num_anchors) {
         auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(context, batch_size * num_anchors);
-        auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes[0]->at(0)->buffer());
-        auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes[1]->at(0)->buffer());
+        auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes->at(0)->at(0)->buffer());
+        auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes->at(1)->at(0)->buffer());
 
         py::array_t<int> labels_array = py::array_t<int>(py::buffer_info(
             labels_buf_ptr,

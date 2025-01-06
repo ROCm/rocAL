@@ -129,7 +129,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
     int counter = 0;
     std::vector<std::string> names;
     names.resize(batch_size);
-    int image_name_length[batch_size];
+    std::vector<int> image_name_length(batch_size);
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
 
@@ -138,12 +138,12 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
             break;
         // copy output to host as image
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
-        unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length);
-        char img_name[img_name_size];
-        rocalGetImageName(handle, img_name);
+        unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
+        std::vector<char> img_name(img_name_size);
+        rocalGetImageName(handle, img_name.data());
 #if PRINT_NAMES_AND_LABELS
         RocalTensorList labels = rocalGetImageLabels(handle);
-        std::string imageNamesStr(img_name);
+        std::string imageNamesStr(img_name.data());
         int pos = 0;
         int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
         for (int i = 0; i < batch_size; i++) {
@@ -231,7 +231,7 @@ int main(int argc, const char **argv) {
     std::cout << "Number of GPUs: " << num_gpus << std::endl;
 
     // launch threads process shards
-    std::thread loader_threads[num_shards];
+    std::vector<std::thread> loader_threads(num_shards);
     auto gpu_id = num_gpus ? 0 : -1;
     int th_id;
     for (th_id = 0; th_id < num_shards; th_id++) {

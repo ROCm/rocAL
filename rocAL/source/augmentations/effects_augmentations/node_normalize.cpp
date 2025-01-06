@@ -42,7 +42,7 @@ void NormalizeNode::create_node() {
 
     int mean_stddev_array_size = 1;
     auto nDim = _inputs[0]->info().num_of_dims() - 1;
-    uint axis[nDim];
+    std::vector<unsigned> axis(nDim);
     for (unsigned i = 0; i < _batch_size; i++) {
         int totalElements = 1;
         unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
