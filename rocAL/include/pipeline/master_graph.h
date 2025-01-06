@@ -111,15 +111,15 @@ class MasterGraph {
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
     Tensor *create_loader_output_tensor(const TensorInfo &info);
-    std::vector<rocalTensorList *> create_label_reader(const char *source_path, MetaDataReaderType reader_type);
-    std::vector<rocalTensorList *> create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
-    std::vector<rocalTensorList *> create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool ltrb_bbox = true, bool is_box_encoder = false,
+    TensorListVector * create_label_reader(const char *source_path, MetaDataReaderType reader_type);
+    TensorListVector * create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
+    TensorListVector * create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool ltrb_bbox = true, bool is_box_encoder = false,
                                                                 bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, bool is_box_iou_matcher = false, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);
-    std::vector<rocalTensorList *> create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
-    std::vector<rocalTensorList *> create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
-    std::vector<rocalTensorList *> create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
-    std::vector<rocalTensorList *> create_cifar10_label_reader(const char *source_path, const char *file_prefix);
-    std::vector<rocalTensorList *> create_mxnet_label_reader(const char *source_path, bool is_output);
+    TensorListVector * create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type, const std::map<std::string, std::string> feature_key_map);
+    TensorListVector * create_caffe_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
+    TensorListVector * create_caffe2_lmdb_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type);
+    TensorListVector * create_cifar10_label_reader(const char *source_path, const char *file_prefix);
+    TensorListVector * create_mxnet_label_reader(const char *source_path, bool is_output);
     void box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale);
     void box_iou_matcher(std::vector<float> &anchors, float high_threshold, float low_threshold, bool allow_low_quality_matches);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
@@ -139,7 +139,7 @@ class MasterGraph {
     bool is_sequence_reader_output() { return _is_sequence_reader_output; }
     void set_sequence_reader_output() { _is_sequence_reader_output = true; }
     void set_sequence_batch_size(size_t sequence_length) { _sequence_batch_size = _user_batch_size * sequence_length; }
-    std::vector<rocalTensorList *> get_bbox_encoded_buffers(size_t num_encoded_boxes);
+    TensorListVector * get_bbox_encoded_buffers(size_t num_encoded_boxes);
     void feed_external_input(const std::vector<std::string>& input_images_names, bool labels, const std::vector<unsigned char *>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode,
                              RocalTensorlayout layout, bool eos);
@@ -171,9 +171,8 @@ class MasterGraph {
     std::list<std::shared_ptr<Node>> _meta_data_nodes;                            //!< List of nodes where meta data has to be updated after augmentation
     std::map<Tensor *, std::shared_ptr<Node>> _tensor_map;                        //!< key: tensor, value : Parent node
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
-
-    // Output tensorList for metadata
-    std::vector<rocalTensorList *> _metadata_output_tensor_list;
+    TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
+    TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder
     TensorList _labels_tensor_list;
     TensorList _bbox_tensor_list;
     TensorList _mask_tensor_list;
@@ -203,7 +202,6 @@ class MasterGraph {
     bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
-    const RocalTensorDataType _out_data_type;
     bool _is_random_bbox_crop = false;
     std::vector<std::vector<size_t>> _sequence_start_framenum_vec;                //!< Stores the starting frame number of the sequences.
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;  //!< Stores the timestamps of the frames in a sequences.

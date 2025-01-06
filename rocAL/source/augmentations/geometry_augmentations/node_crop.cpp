@@ -99,7 +99,7 @@ void CropNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatP
 
 // Create vx_tensor for the crop coordinates
 void CropNode::create_crop_tensor() {
-    vx_size num_of_dims = 2;
+    const vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
     std::vector<size_t> _crop_tensor_dims = {_batch_size, 4};
     if(_inputs[0]->info().layout() == RocalTensorlayout::NFCHW || _inputs[0]->info().layout() == RocalTensorlayout::NFHWC)

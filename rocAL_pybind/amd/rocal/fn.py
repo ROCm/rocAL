@@ -1164,7 +1164,7 @@ def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_inte
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
     non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return non_silent_region_output
+    return non_silent_region_output.anchor, non_silent_region_output.shape
 
 def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
     """
