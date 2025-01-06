@@ -48,6 +48,5 @@ class SSDRandomCropMetaNode : public MetaNode {
     unsigned int _dst_width, _dst_height;
     float _threshold = 0.5;
     int _num_of_attempts = 20;
-    bool _enitire_iou = true;  // For entire_iou - true and For relative iou - false
     void initialize();
 };

@@ -82,8 +82,6 @@ class MXNetRecordIOReader : public Reader {
     int64_t _last_seek_pos;
     int64_t _last_data_size;
     size_t _batch_size = 1;
-    size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;

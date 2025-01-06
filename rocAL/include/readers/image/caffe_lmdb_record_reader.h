@@ -83,8 +83,6 @@ class CaffeLMDBRecordReader : public Reader {
     unsigned int _last_file_size;
     bool _last_rec;
     size_t _batch_size = 1;
-    size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
@@ -100,7 +98,6 @@ class CaffeLMDBRecordReader : public Reader {
     void read_image_names();
     std::map<std::string, uint> _image_record_starting;
     int _open_env = 1;
-    int rc;
     void open_env_for_read_image();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
 };
