@@ -133,8 +133,8 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     if (decode_max_height <= 0 || decode_max_width <= 0)
         tensor0 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, true);
     else
-        tensor0 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, false,
-                                      ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+        tensor0 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, true,
+                                      ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "JPEG source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
