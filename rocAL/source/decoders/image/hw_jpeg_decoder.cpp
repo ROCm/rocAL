@@ -244,7 +244,6 @@ Decoder::Status HWJpegDecoder::decode(unsigned char *input_buffer, size_t input_
         return Status::NO_MEMORY;
     }
 
-    unsigned frame_count = 0;
     bool end_of_stream = false;
     AVPacket pkt;
     uint8_t *dst_data[4] = {0};
@@ -300,7 +299,6 @@ Decoder::Status HWJpegDecoder::decode(unsigned char *input_buffer, size_t input_
             }
             av_packet_unref(&pkt);
             output_buffer += image_size;
-            frame_count++;
         }
     } while (!end_of_stream);
 

@@ -254,7 +254,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::vector<float> fill_values = {0.0};
             std::vector<unsigned> axes = {0};
             auto nsr_output = rocalNonSilentRegionDetection(handle, decoded_output, false, -60.0, 0.0, 8192, 2048);
-            rocalSlice(handle, decoded_output, true, nsr_output.first, nsr_output.second, fill_values, ROCAL_ERROR, ROCAL_FP32);
+            rocalSlice(handle, decoded_output, true, nsr_output.anchor, nsr_output.shape, fill_values, ROCAL_ERROR, ROCAL_FP32);
         } break;
         case 10: {
             std::cout << "Running MEL FILTER BANK " << std::endl;

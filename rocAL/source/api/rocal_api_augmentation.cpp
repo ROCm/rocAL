@@ -2235,7 +2235,7 @@ rocalSpectrogram(
                                             context->master_graph->mem_type(),
                                             op_tensor_data_type,
                                             spectrogram_layout);
-        if(power != 1 || power != 2) {
+        if(power != 1 && power != 2) {
             WRN("rocalSpectrogram power value can be 1 or 2, setting it to default 2")
             power = 2;
         }
@@ -2438,7 +2438,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
     return output;
 }
 
-std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL
+RocalNSROutput ROCAL_API_CALL
 rocalNonSilentRegionDetection(
     RocalContext p_context,
     RocalTensor p_input,
@@ -2449,6 +2449,7 @@ rocalNonSilentRegionDetection(
     int window_length) {
     Tensor* anchor_output = nullptr;
     Tensor* shape_output = nullptr;
+    RocalNSROutput output;
     if ((p_context == nullptr) || (p_input == nullptr))
         ERR("Invalid ROCAL context or invalid input tensor")
     auto context = static_cast<Context*>(p_context);
@@ -2467,12 +2468,14 @@ rocalNonSilentRegionDetection(
         anchor_output = context->master_graph->create_tensor(info1, is_output);
         shape_output = context->master_graph->create_tensor(info2, is_output);
         context->master_graph->add_node<NonSilentRegionDetectionNode>({input}, {anchor_output, shape_output})->init(cutoff_db, reference_power, window_length, reset_interval);
+        output.anchor = anchor_output;
+        output.shape = shape_output;
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
 
-    return std::make_pair(anchor_output, shape_output);
+    return output;
 }
 
 RocalTensor ROCAL_API_CALL

@@ -67,7 +67,6 @@ class AudioLoader : public LoaderModule {
     std::shared_ptr<AudioReadAndDecode> _audio_loader;
     Tensor* _output_tensor;
     std::vector<std::string> _output_names; // audio file name/ids that are stored in the _output_audio
-    MetaDataBatch* _meta_data = nullptr;    // The output of the meta_data_graph
     bool _internal_thread_running;
     size_t _output_mem_size, _batch_size, _max_decoded_samples, _max_decoded_channels;
     std::thread _load_thread;
