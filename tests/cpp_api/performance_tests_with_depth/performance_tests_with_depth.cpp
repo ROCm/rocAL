@@ -274,7 +274,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
             for (int j = 0; j < batch_size; j++) {
                 tensor0 = input_image;
                 for (int k = 0; k < graph_depth; k++) {
-                    tensor0 = rocalBlurFixed(handle, tensor0, 17.25, true);
+                    tensor0 = rocalBlurFixed(handle, tensor0, 17, true);
                 }
             }
         } break;
@@ -316,7 +316,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
             for (int j = 0; j < batch_size; j++) {
                 tensor0 = input_image;
                 for (int k = 0; k < graph_depth; k++) {
-                    tensor0 = rocalWarpAffineFixed(handle, tensor0, true, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5);
+                    tensor0 = rocalWarpAffineFixed(handle, tensor0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, true);
                 }
             }
         } break;
@@ -379,7 +379,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
             for (int j = 0; j < batch_size; j++) {
                 tensor0 = input_image;
                 for (int k = 0; k < graph_depth; k++) {
-                    tensor0 = rocalSnPNoiseFixed(handle, tensor0, true, 0.2, 0.2, 0.2, 0.5, 0);
+                    tensor0 = rocalSnPNoiseFixed(handle, tensor0, 0.2, 0.2, 0.2, 0.5, true, 0);
                 }
             }
         } break;
@@ -451,7 +451,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
             for (int j = 0; j < batch_size; j++) {
                 tensor0 = input_image;
                 for (int k = 0; k < graph_depth; k++) {
-                    tensor0 = rocalFogFixed(handle, tensor0, true, 2.5);
+                    tensor0 = rocalFogFixed(handle, tensor0, 2.5, true);
                 }
             }
         } break;

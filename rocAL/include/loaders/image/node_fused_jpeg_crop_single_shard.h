@@ -50,5 +50,4 @@ class FusedJpegCropSingleShardNode : public Node {
    private:
     std::shared_ptr<ImageLoader> _loader_module = nullptr;
     std::vector<float> _random_area, _random_aspect_ratio;
-    unsigned _num_attempts;
 };

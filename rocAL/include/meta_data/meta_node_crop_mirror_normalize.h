@@ -38,6 +38,6 @@ class CropMirrorNormalizeMetaNode : public MetaNode {
    private:
     void initialize();
     std::shared_ptr<RocalCropParam> _meta_crop_param;
-    vx_array _dst_img_width, _dst_img_height, _x1, _y1, _mirror, _src_width, _src_height;
+    vx_array _dst_img_width, _dst_img_height, _x1, _y1, _mirror;
     std::vector<uint> _width_val, _height_val, _x1_val, _y1_val, _mirror_val, _src_width_val, _src_height_val;
 };
