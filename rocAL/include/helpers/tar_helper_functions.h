@@ -40,8 +40,6 @@ public:
     int64_t get_current_archive_offset() const;
     int64_t get_current_header_size() const;
     std::ifstream* get_stream();
-    // Getter function to access the underlying stream
-    // std::ifstream* get_stream() { return _stream.get(); }
 
     enum EntryType {
         ENTRY_NONE = 0,

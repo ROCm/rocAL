@@ -85,7 +85,6 @@ class Caffe2LMDBRecordReader : public Reader {
     unsigned int _last_file_size;
     bool _last_rec;
     size_t _batch_size = 1;
-    size_t _in_batch_read_count = 0;
     bool _loop;
     bool _shuffle;
     int _read_counter = 0;
@@ -97,7 +96,6 @@ class Caffe2LMDBRecordReader : public Reader {
     void read_image_names();
     std::map<std::string, uint> _image_record_starting;
     int _open_env = 1;
-    int rc;
     MDB_env* _read_mdb_env;
     MDB_dbi _read_mdb_dbi;
     MDB_val _read_mdb_key, _read_mdb_value;

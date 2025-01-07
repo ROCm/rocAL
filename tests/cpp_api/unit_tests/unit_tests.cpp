@@ -153,7 +153,7 @@ int main(int argc, const char **argv) {
 
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
     size_t num_threads = 1;
-    unsigned int input_batch_size = 2;
+    const unsigned int input_batch_size = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     int pipeline_type = -1;
@@ -325,8 +325,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<std::set<std::string>> extensions = {
                 {"JPEG", "cls"},
             };
-            rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_THROW_ERROR, true);
-            decoded_output = rocALWebDatasetSource(handle, path, "", color_format, num_threads, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+            rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
+            decoded_output = rocALWebDatasetDecoderSingleShard(handle, path, "", color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
@@ -649,13 +649,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 RocalTensorList labels = rocalGetImageLabels(handle);
                 int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
-                char img_name[img_size];
-                int label_one_hot_encoded[input_batch_size * num_of_classes];
-                rocalGetImageName(handle, img_name);
+                std::vector<char> img_name(img_size);
+                std::vector<int> label_one_hot_encoded(input_batch_size * num_of_classes);
+                rocalGetImageName(handle, img_name.data());
                 if (num_of_classes != 0) {
-                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded, num_of_classes, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded.data(), num_of_classes, RocalOutputMemType::ROCAL_MEMCPY_HOST);
                 }
-                std::cerr << "\nImage name:" << img_name << "\n";
+                std::cerr << "\nImage name:" << img_name.data() << "\n";
                 for (unsigned int i = 0; i < input_batch_size; i++) {
                     std::cerr << "Label id: " << label_id[i] << std::endl;
                     if(num_of_classes != 0)
@@ -677,9 +677,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             } break;
             case 2: {   // detection pipeline
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
-                char img_name[img_size];
-                rocalGetImageName(handle, img_name);
-                std::cerr << "\nImage name:" << img_name;
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\nImage name:" << img_name.data();
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
                 for (unsigned i = 0; i < bbox_labels->size(); i++) {
@@ -719,13 +719,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             } break;
             case 4: {   // webdataset pipeline
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
-                char img_name[img_size];
-                rocalGetImageName(handle, img_name);
-                std::cerr << "\n Image name: " << img_name << "\n \n";
-                std::vector<RocalTensorList> ascii_sample_contents = rocalGetAsciiDatas(handle);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\n Image name: " << img_name.data() << "\n \n";
+                RocalMetaData ascii_sample_contents = rocalGetAsciiDatas(handle);
                 std::vector<std::vector<std::vector<uint8_t>>> ext_componenet_list;
-                for(uint ext = 0; ext < ascii_sample_contents.size(); ext++) {
-                    RocalTensorList ext_ascii_values_batch = ascii_sample_contents[ext];
+                for(uint ext = 0; ext < ascii_sample_contents->size(); ext++) {
+                    RocalTensorList ext_ascii_values_batch = ascii_sample_contents->at(ext);
                     std::vector<std::vector<uint8_t>> component_list;
                     std::vector<uint8_t> ascii_components_array;
                     for (uint i = 0; i < ext_ascii_values_batch->size(); i++) {

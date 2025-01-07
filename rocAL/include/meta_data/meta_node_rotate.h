@@ -41,7 +41,6 @@ class RotateMetaNode : public MetaNode {
 
    private:
     void initialize();
-    vx_array _src_width, _src_height;
     std::vector<uint> _src_width_val, _src_height_val;
     unsigned int _dst_width, _dst_height;
     vx_array _angle;

@@ -211,32 +211,24 @@ class ROCALGenericIterator(object):
                     for i in range(self.batch_size):
                         img = (self.output_list[0])
                         draw_patches(img[i], i, [])
-                # if webdataset reader is not set
-                if (self.loader._name != "WebDataset"):
+                if (self.loader._name == "WebDataset"):
+                    self.ascii_outputs = self.loader.get_ascii_datas()
+                else:
                     self.labels = self.loader.get_image_labels()
                     self.labels_tensor = self.labels_tensor.copy_(
                         torch.from_numpy(self.labels)).long()
-                elif (self.loader._name == "WebDataset"):
-                    self.ascii_outputs = self.loader.get_ascii_datas()
 
-            if (self.loader._name != "WebDataset"):
-                # Check if last batch policy is partial and only return the valid images in last batch
-                if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
-                    if (self.last_batch_size is None):
-                        self.last_batch_size = self.batch_size - \
-                            b.getLastBatchPaddedSize(self.loader._handle)
-                    return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
-                else:
-                    return self.output_list, self.labels_tensor
-            elif (self.loader._name == "WebDataset"):
-                # Check if last batch policy is partial and only return the valid images in last batch
-                if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
-                    if (self.last_batch_size is None):
-                        self.last_batch_size = self.batch_size - \
-                            b.getLastBatchPaddedSize(self.loader._handle)
-                    return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], [inner_list[0:self.last_batch_size] for inner_list in self.ascii_outputs]
-                else:
-                    return self.output_list, self.ascii_outputs
+            # Check if last batch policy is partial and only return the valid images in last batch
+            if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
+                if (self.last_batch_size is None):
+                    self.last_batch_size = self.batch_size - \
+                        b.getLastBatchPaddedSize(self.loader._handle)
+                    if (self.loader._name == "WebDataset"):
+                        return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], [inner_list[0:self.last_batch_size] for inner_list in self.ascii_outputs]
+                    else:
+                        return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
+            else:
+                return self.output_list, self.ascii_outputs if (self.loader._name == "WebDataset") else self.labels_tensor
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)

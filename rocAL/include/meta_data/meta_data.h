@@ -114,6 +114,7 @@ typedef class MetaDataInfo {
 
 class MetaData {
    public:
+    virtual ~MetaData() = default;
     virtual std::vector<int>& get_labels() = 0;
     virtual AsciiValues& get_ascii_values() = 0;
     virtual void set_labels(Labels label_ids) = 0;
@@ -172,6 +173,7 @@ class Label : public MetaData {
    public:
     Label(int label) { _label_ids = {label}; }
     Label() { _label_ids = {-1}; }
+    ~Label() = default;
     std::vector<int>& get_labels() override { return _label_ids; }
     void set_labels(Labels label_ids) override { _label_ids = std::move(label_ids); }
     BoundingBoxCords& get_bb_cords() override { THROW("Not Implemented") }
@@ -194,6 +196,7 @@ class Label : public MetaData {
 class BoundingBox : public Label {
    public:
     BoundingBox() = default;
+    ~BoundingBox() = default;
     BoundingBox(BoundingBoxCords bb_cords, Labels bb_label_ids, ImgSize img_size = ImgSize{0, 0}, int img_id = 0) {
         _bb_cords = std::move(bb_cords);
         _label_ids = std::move(bb_label_ids);
@@ -218,6 +221,7 @@ struct PolygonMask : public BoundingBox {
         _vertices_count = std::move(vertices_count);
         _info.img_id = img_id;
     }
+    ~PolygonMask() = default;
     std::vector<int>& get_polygon_count() override { return _polygon_count; }
     std::vector<std::vector<int>>& get_vertices_count() override { return _vertices_count; }
     MaskCords& get_mask_cords() override { return _mask_cords; }
@@ -234,6 +238,7 @@ struct PolygonMask : public BoundingBox {
 class KeyPoint : public BoundingBox {
    public:
     KeyPoint() = default;
+    ~KeyPoint() = default;
     KeyPoint(ImgSize img_size, JointsData* joints_data) {
         _info.img_size = std::move(img_size);
         _joints_data = std::move(*joints_data);
