@@ -325,8 +325,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<std::set<std::string>> extensions = {
                 {"JPEG", "cls"},
             };
-            rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_THROW_ERROR, true);
-            decoded_output = rocALWebDatasetSource(handle, path, "", color_format, num_threads, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+            rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
+            decoded_output = rocALWebDatasetDecoderSingleShard(handle, path, "", color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
@@ -719,13 +719,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             } break;
             case 4: {   // webdataset pipeline
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
-                char img_name[img_size];
-                rocalGetImageName(handle, img_name);
-                std::cerr << "\n Image name: " << img_name << "\n \n";
-                std::vector<RocalTensorList> ascii_sample_contents = rocalGetAsciiDatas(handle);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\n Image name: " << img_name.data() << "\n \n";
+                RocalMetaData ascii_sample_contents = rocalGetAsciiDatas(handle);
                 std::vector<std::vector<std::vector<uint8_t>>> ext_componenet_list;
-                for(uint ext = 0; ext < ascii_sample_contents.size(); ext++) {
-                    RocalTensorList ext_ascii_values_batch = ascii_sample_contents[ext];
+                for(uint ext = 0; ext < ascii_sample_contents->size(); ext++) {
+                    RocalTensorList ext_ascii_values_batch = ascii_sample_contents->at(ext);
                     std::vector<std::vector<uint8_t>> component_list;
                     std::vector<uint8_t> ascii_components_array;
                     for (uint i = 0; i < ext_ascii_values_batch->size(); i++) {
