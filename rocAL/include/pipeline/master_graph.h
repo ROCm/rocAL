@@ -55,7 +55,7 @@ THE SOFTWARE.
 #define MAX_SSD_ANCHORS 8732          // Num of bbox achors used in SSD training
 #define MAX_MASK_BUFFER 10000
 #define MAX_RETINANET_ANCHORS 120087  // Num of bbox achors used in Retinanet training
-#define MAX_ASCII_BUFFER 10000        // Max Number of ASCII characters that can be present in any particular extension file for webdataset reader
+#define MAX_ASCII_BUFFER 200        // Max Number of ASCII characters that can be present in any particular extension file for webdataset reader
 
 #if ENABLE_SIMD
 #if _WIN32
