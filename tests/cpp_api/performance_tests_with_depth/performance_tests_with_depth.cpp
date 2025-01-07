@@ -55,10 +55,10 @@ int main(int argc, const char** argv) {
     if (argc < MIN_ARG_COUNT)
         return -1;
 
-    int argIdx = 0;
-    const char* path = argv[++argIdx];
-    int width = atoi(argv[++argIdx]);
-    int height = atoi(argv[++argIdx]);
+    int argIdx = 1;
+    const char* path = argv[argIdx++];
+    int width = atoi(argv[argIdx++]);
+    int height = atoi(argv[argIdx++]);
 
     int rgb = 1;  // process color images
     bool gpu = 1;
@@ -66,20 +66,20 @@ int main(int argc, const char** argv) {
     int batch_size = 10;
     int graph_depth = 1;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        batch_size = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        batch_size = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        graph_depth = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        graph_depth = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        gpu = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        gpu = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
     test(test_case, path, rgb, gpu, width, height, batch_size, graph_depth);
 

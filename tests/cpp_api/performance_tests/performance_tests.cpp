@@ -56,10 +56,10 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
-    int argIdx = 0;
-    const char* path = argv[++argIdx];
-    int width = atoi(argv[++argIdx]);
-    int height = atoi(argv[++argIdx]);
+    int argIdx = 1;
+    const char* path = argv[argIdx++];
+    int width = atoi(argv[argIdx++]);
+    int height = atoi(argv[argIdx++]);
 
     int rgb = 1;  // process color images
     bool processing_device = 1;
@@ -68,23 +68,23 @@ int main(int argc, const char** argv) {
     int shards = 4;
     int shuffle = 0;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        batch_size = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        batch_size = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shards = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shards = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shuffle = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shuffle = atoi(argv[argIdx++]);
 
     test(test_case, path, rgb, processing_device, width, height, batch_size, shards, shuffle);
 
