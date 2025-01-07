@@ -41,7 +41,7 @@ COCOFileSourceReader::COCOFileSourceReader() {
 
 unsigned COCOFileSourceReader::count_items() {
     int size = get_max_size_of_shard(_batch_size, _loop);
-    int ret = (size - _read_counter);
+    int ret = _loop ? size : (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
     return ((ret < 0) ? 0 : ret);
@@ -287,7 +287,7 @@ Reader::Status COCOFileSourceReader::open_folder() {
             _last_file_name = file_path;
             _file_count_all_shards++;
         } else {
-            WRN("Skipping file," + _entity->d_name + " as it is not present in metadata reader")
+            WRN("Skipping file," + STR(_entity->d_name) + " as it is not present in metadata reader")
         }
     }
     if (_file_names.empty())
