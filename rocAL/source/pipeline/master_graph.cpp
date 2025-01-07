@@ -1443,16 +1443,14 @@ TensorList *MasterGraph::labels_meta_data() {
     return &_labels_tensor_list;
 }
 
-std::vector<rocalTensorList *> MasterGraph::ascii_values_meta_data() {
+TensorListVector *MasterGraph::ascii_values_meta_data() {
     if (_external_source_reader) {
-        std::vector<rocalTensorList *> result;
         for (auto &element : _ascii_tensor_list)
-            result.push_back(&element);
-        return result;
+            _webdataset_output_tensor_list.push_back(&element);
+        return &_webdataset_output_tensor_list;
     }
     if (_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
-    std::vector<rocalTensorList *> webdataset_output_tensor_list;
 
     for (uint ext = 0; ext < _ascii_tensor_list.size(); ext++) {
         auto meta_data_buffers = (uint8_t *)_ring_buffer.get_meta_read_buffers()[ext]; // Get ASCII buffer from ring buffer
@@ -1468,9 +1466,9 @@ std::vector<rocalTensorList *> MasterGraph::ascii_values_meta_data() {
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
             }
         }
-        webdataset_output_tensor_list.emplace_back(&_ascii_tensor_list[ext]);
+        _webdataset_output_tensor_list.emplace_back(&_ascii_tensor_list[ext]);
     }
-    return webdataset_output_tensor_list;
+    return &_webdataset_output_tensor_list;
 }
 
 TensorList *MasterGraph::bbox_meta_data() {

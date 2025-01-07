@@ -875,10 +875,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         return boxes_list;
     });
     m.def("getAsciiDatas", [](RocalContext context) {
-        std::vector<rocalTensorList* > ascii_sample_contents = rocalGetAsciiDatas(context);
+        rocalListOfTensorList *ascii_sample_contents = rocalGetAsciiDatas(context);
         py::list ext_componenet_list;
-        for(uint ext = 0; ext < ascii_sample_contents.size(); ext++) { // Number of components
-            rocalTensorList *ext_ascii_values_batch = ascii_sample_contents[ext];
+        for(uint ext = 0; ext < ascii_sample_contents->size(); ext++) { // Number of components
+            rocalTensorList *ext_ascii_values_batch = ascii_sample_contents->at(ext);
             py::list component_list;
             py::array_t<uint8_t> components_array;
             for (int i = 0; i < ext_ascii_values_batch->size(); i++) {

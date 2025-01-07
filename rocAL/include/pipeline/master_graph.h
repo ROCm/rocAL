@@ -127,10 +127,10 @@ class MasterGraph {
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
     const std::pair<ImageNameBatch, pMetaDataBatch> &meta_data();
     TensorList *labels_meta_data();
-    std::vector<rocalTensorList*> ascii_values_meta_data(); // Gets the pointer to a batch of ASCII values of all samples in the batch
     TensorList *bbox_meta_data();
     TensorList *mask_meta_data();
     TensorList *matched_index_meta_data();
+    TensorListVector * ascii_values_meta_data(); // Gets the pointer to a batch of ASCII values of all samples in the batch
     void set_loop(bool val) { _loop = val; }
     void set_output(Tensor *output_tensor);
     size_t calculate_cpu_num_threads(size_t shard_count);
@@ -176,6 +176,7 @@ class MasterGraph {
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
     TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder
+    TensorListVector _webdataset_output_tensor_list;                              //!< Keeps a list of ascii metadata TensorList for the Webdataset reader
     TensorList _labels_tensor_list;
     std::vector<TensorList> _ascii_tensor_list; // TensorList to store the ASCII values of all samples in a batch
     TensorList _bbox_tensor_list;
