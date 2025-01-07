@@ -1246,15 +1246,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_contex
  * \param [in] reference_power reference power that is used to convert the signal to dB
  * \param [in] reset_interval number of samples after which the moving mean average is recalculated to avoid loss of precision
  * \param [in] window_length size of the sliding window used to calculate of the short-term power of the signal
- * \return std::pair<RocalTensor, RocalTensor>
+ * \return RocalNSROutput
  */
-extern "C" std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL rocalNonSilentRegionDetection(RocalContext context,
-                                                                                   RocalTensor input,
-                                                                                   bool is_output,
-                                                                                   float cutoff_db,
-                                                                                   float reference_power,
-                                                                                   int reset_interval,
-                                                                                   int window_length);
+extern "C" RocalNSROutput ROCAL_API_CALL rocalNonSilentRegionDetection(RocalContext context,
+                                                                       RocalTensor input,
+                                                                       bool is_output,
+                                                                       float cutoff_db,
+                                                                       float reference_power,
+                                                                       int reset_interval,
+                                                                       int window_length);
 
 /*! \brief Extracts the sub-tensor from a given input tensor
  * \ingroup group_rocal_augmentations

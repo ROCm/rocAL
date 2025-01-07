@@ -36,7 +36,6 @@ class Graph {
     vx_graph get() { return _graph; }
 
    private:
-    RocalMemType _mem_type;
     vx_context _context = nullptr;
     vx_graph _graph = nullptr;
     RocalAffinity _affinity;
