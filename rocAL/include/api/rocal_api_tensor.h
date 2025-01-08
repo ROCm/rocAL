@@ -65,13 +65,32 @@ class rocalTensor {
  */
 class rocalTensorList {
    public:
+    virtual ~rocalTensorList() = default;
     virtual uint64_t size() = 0;
     virtual rocalTensor* at(size_t index) = 0;
     // isDenseTensor
 };
 
+/*!
+ * \brief class representing a list of rocal tensor list
+ */
+class rocalListOfTensorList {
+   public:
+    virtual ~rocalListOfTensorList() = default;
+    virtual uint64_t size() = 0;
+    virtual rocalTensorList* at(size_t index) = 0;
+};
+
+/*! 
+ * \brief  RocalNSROutput contains the anchor and shape tensor for NonSilentRegionDetection
+ */
+struct RocalNSROutput {
+    rocalTensor* anchor;
+    rocalTensor* shape;
+};
+
 typedef rocalTensor* RocalTensor;
 typedef rocalTensorList* RocalTensorList;
-typedef std::vector<rocalTensorList*> RocalMetaData;
+typedef rocalListOfTensorList* RocalMetaData;
 
 #endif  // MIVISIONX_ROCAL_API_TENSOR_H

@@ -31,15 +31,20 @@ class CropResizeNode : public CropNode {
     CropResizeNode() = delete;
     void init(float area, float aspect_ratio, float x_center_drift, float y_center_drift);
     void init(FloatParam *area, FloatParam *aspect_ratio, FloatParam *x_drift_factor, FloatParam *y_drift_factor);
+    void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift,
+              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
-    std::shared_ptr<RocalRandomCropParam> get_crop_param() { return _crop_param; }
+    std::shared_ptr<CropParam> get_crop_param() { return _is_random_crop ? std::static_pointer_cast<CropParam>(_crop_param) : std::static_pointer_cast<CropParam>(_crop_fixed_param); }
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    std::shared_ptr<RocalRandomCropParam> _crop_param;
+    std::shared_ptr<RocalRandomCropParam> _crop_param;  // For random crop generation
+    std::shared_ptr<RocalCropParam> _crop_fixed_param;  // For fixed crop generation
     vx_array _dst_roi_width, _dst_roi_height;
+    int _interpolation_type = 1;  // Linear interpolation by default
+    bool _is_random_crop = true;
 };

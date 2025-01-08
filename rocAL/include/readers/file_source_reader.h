@@ -93,6 +93,5 @@ class FileSourceReader : public Reader {
     int release();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
-    size_t _num_padded_samples = 0;                  //! Number of samples that are padded in the last batch which would differ for each shard.
     Reader::Status generate_file_names();         // Function that would generate _file_names containing all the samples in the dataset
 };

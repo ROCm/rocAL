@@ -308,7 +308,7 @@ class Tensor : public rocalTensor {
     const TensorInfo& info() { return _info; }
     //! Default constructor
     Tensor() = delete;
-    void* buffer() { return _mem_handle; }
+    void* buffer() override { return _mem_handle; }
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
     void set_mem_handle(void* buffer) override {
@@ -326,7 +326,7 @@ class Tensor : public rocalTensor {
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
     //! Copying the output buffer with specified max_cols and max_rows values for the 2D buffer of size batch_size
-    unsigned copy_data(void* user_buffer, uint x_offset, uint y_offset, uint max_rows, uint max_cols); 
+    unsigned copy_data(void* user_buffer, uint x_offset, uint y_offset, uint max_rows, uint max_cols) override;
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();
@@ -406,4 +406,25 @@ class TensorList : public rocalTensorList {
     std::vector<Tensor*> _tensor_list;
     std::vector<uint64_t> _tensor_data_size;
     std::vector<uint64_t> _tensor_roi_size;
+};
+
+/*! \brief Contains a list of rocalTensorList */
+class TensorListVector : public rocalListOfTensorList {
+   public:
+    uint64_t size() override { return _tensor_list_vector.size(); }
+    bool empty() { return _tensor_list_vector.empty(); }
+    TensorList* front() { return _tensor_list_vector.front(); }
+    void push_back(TensorList* tensor_list) {
+        _tensor_list_vector.push_back(tensor_list);
+    }
+    void emplace_back(TensorList* tensor_list) {
+        _tensor_list_vector.emplace_back(tensor_list);
+    }
+    void release() {
+        for (auto& tensor_list : _tensor_list_vector) tensor_list->release();
+    }
+    TensorList* operator[](size_t index) { return _tensor_list_vector[index]; }
+    TensorList* at(size_t index) override { return _tensor_list_vector[index]; }
+   private:
+    std::vector<TensorList*> _tensor_list_vector;
 };

@@ -69,7 +69,6 @@ class ImageLoader : public LoaderModule {
     Tensor* _output_tensor;
     std::vector<std::string> _output_names;  //!< image name/ids that are stores in the _output_image
     size_t _output_mem_size;
-    MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
     std::vector<std::vector<float>> _bbox_coords;
     bool _internal_thread_running;
     size_t _batch_size;
@@ -90,6 +89,4 @@ class ImageLoader : public LoaderModule {
     size_t _max_tensor_width, _max_tensor_height;
     bool _external_source_reader = false;  //!< Set to true if external source reader
     bool _external_input_eos = false;      //!< Set to true for last batch for the sequence
-    RocalBatchPolicy _last_batch_policy;   //!< Last batch policy used for the reader
-    bool _last_batch_padded;                //!< Used to decide whether to pad or wrap the last batch
 };
