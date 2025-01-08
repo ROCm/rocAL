@@ -1036,6 +1036,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("cropResize", &rocalCropResize,
           py::return_value_policy::reference);
+    m.def("roiResize", &rocalROIResize,
+          py::return_value_policy::reference);
     m.def("copy", &rocalCopy,
           py::return_value_policy::reference);
     m.def("nop", &rocalNop,
