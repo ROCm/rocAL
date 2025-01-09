@@ -223,10 +223,10 @@ class ROCALGenericIterator(object):
                 if (self.last_batch_size is None):
                     self.last_batch_size = self.batch_size - \
                         b.getLastBatchPaddedSize(self.loader._handle)
-                    if (self.loader._name == "WebDataset"):
-                        return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], [inner_list[0:self.last_batch_size] for inner_list in self.ascii_outputs]
-                    else:
-                        return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
+                if (self.loader._name == "WebDataset"):
+                    return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], [inner_list[0:self.last_batch_size] for inner_list in self.ascii_outputs]
+                else:
+                    return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list], self.labels_tensor[0:self.last_batch_size]
             else:
                 return self.output_list, self.ascii_outputs if (self.loader._name == "WebDataset") else self.labels_tensor
 

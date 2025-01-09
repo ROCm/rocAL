@@ -1168,7 +1168,7 @@ TensorListVector* MasterGraph::create_webdataset_reader(
 
     bool generate_index = (index_path[0] == '\0') ? true : false;
     if (generate_index)
-        std::cerr << "Index file is not provided, it may take some time to infer it from the tar file\n";
+        std::cerr << "Index file is not provided, it may take some time to infer it from the tar file";
 
     _ascii_tensor_list.resize(extensions[0].size() - 1);
     MetaDataConfig config(MetaDataType::AsciiValue, reader_type, source_path,
@@ -1189,6 +1189,7 @@ TensorListVector* MasterGraph::create_webdataset_reader(
             _ascii_tensor_list[ext_count].push_back(tensor);
         }
         _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[ext_count]);
+        _webdataset_output_tensor_list.emplace_back(&_ascii_tensor_list[ext_count]);
     }
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
@@ -1445,8 +1446,6 @@ TensorList *MasterGraph::labels_meta_data() {
 
 TensorListVector *MasterGraph::ascii_values_meta_data() {
     if (_external_source_reader) {
-        for (auto &element : _ascii_tensor_list)
-            _webdataset_output_tensor_list.push_back(&element);
         return &_webdataset_output_tensor_list;
     }
     if (_ring_buffer.level() == 0)
@@ -1466,7 +1465,6 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
             }
         }
-        _webdataset_output_tensor_list.emplace_back(&_ascii_tensor_list[ext]);
     }
     return &_webdataset_output_tensor_list;
 }
