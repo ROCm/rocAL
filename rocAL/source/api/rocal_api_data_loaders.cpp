@@ -2302,7 +2302,7 @@ rocalAudioFileSource(
 
 
 RocalTensor ROCAL_API_CALL
-rocALWebDatasetDecoderSingleShard(
+rocalWebDatasetSourceSingleShard(
     RocalContext p_context,
     const char* source_path,
     const char* index_path,

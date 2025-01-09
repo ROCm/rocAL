@@ -319,14 +319,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateMXNetReader(handle, path, true);
             decoded_output = rocalMXNetRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
-        case 12: {
+        case 12:  // web_dataset reader
+        {
             std::cout << "Running WEB DATASET READER" << std::endl;
             pipeline_type = 4;
             std::vector<std::set<std::string>> extensions = {
                 {"JPEG", "cls"},
             };
             rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
-            decoded_output = rocALWebDatasetDecoderSingleShard(handle, path, "", color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+            decoded_output = rocalWebDatasetSourceSingleShard(handle, path, "", color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;

@@ -41,9 +41,6 @@ inline std::tuple<std::string, std::string> split_name(const std::string& file_p
 }
 
 WebDatasetSourceReader::WebDatasetSourceReader() {
-    _src_dir = nullptr;
-    _sub_dir = nullptr;
-    _entity = nullptr;
     _curr_file_idx = 0;
     _current_file_size = 0;
     _loop = false;

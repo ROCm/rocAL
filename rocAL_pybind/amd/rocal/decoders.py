@@ -160,7 +160,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
-        decoded_image = b.webdatasetDecoderSingleShard(
+        decoded_image = b.webdatasetSourceSingleShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {

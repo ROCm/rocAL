@@ -40,12 +40,6 @@ constexpr int create_version_number(int major, int minor, int patch = 0) {
     return major * 1000 + minor * 10 + patch;
 }
 
-WebDataSetMetaDataReader::WebDataSetMetaDataReader() {
-    _src_dir = nullptr;
-    _entity = nullptr;
-    _sub_dir = nullptr;
-}
-
 void WebDataSetMetaDataReader::init(const MetaDataConfig &cfg,
                                     pMetaDataBatch meta_data_batch) {
     _paths = cfg.path();
