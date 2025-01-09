@@ -43,7 +43,6 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     get_map_content() override {
         return _map_content;
     }
-    WebDataSetMetaDataReader();
 
    private:
     bool exists(const std::string &image_name) override;
