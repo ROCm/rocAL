@@ -54,8 +54,8 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     std::vector<std::string> _index_name_list;
     MissingComponentsBehaviour _missing_component_behaviour;
     pMetaDataBatch _output;
-    DIR *_src_dir, *_sub_dir;
-    struct dirent *_entity;
+    DIR *_sub_dir = nullptr;
+    struct dirent *_entity = nullptr;
     std::vector<std::set<std::string>> _exts;
     std::unordered_map<std::string, uint> _ext_map;
     void parse_tar_files(std::vector<SampleDescription> &samples_container,

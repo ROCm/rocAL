@@ -65,9 +65,8 @@ class WebDatasetSourceReader : public Reader {
     std::string _folder_path;
     std::string _path;
     std::string _paths, _index_paths;
-    DIR *_src_dir;
-    DIR *_sub_dir;
-    struct dirent *_entity;
+    DIR *_sub_dir = nullptr;
+    struct dirent *_entity = nullptr;
     std::vector<std::string> _file_names, _all_shard_file_names_padded;
     std::map<std::string, unsigned int> _file_wds_shard_idx_mapping, _file_size, _file_offset;
     unsigned _current_file_size;
