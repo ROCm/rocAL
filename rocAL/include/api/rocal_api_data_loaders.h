@@ -956,7 +956,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocALWebDatasetDecoderSingleShard(RocalContext p_context,
+extern "C" RocalTensor ROCAL_API_CALL rocalWebDatasetSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,
                                                                         const char* index_path,
                                                                         RocalImageColor rocal_color_format,
