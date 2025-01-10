@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ENABLE_WDS
 #include "readers/webdataset_source_reader.h"
 #include <cassert>
 
@@ -406,3 +407,4 @@ Reader::Status WebDatasetSourceReader::read_web_dataset_at_offset(unsigned char*
     current_tar_file_stream->read(reinterpret_cast<char*>(buff), file_size);
     return ret;
 }
+#endif

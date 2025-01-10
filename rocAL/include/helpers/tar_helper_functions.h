@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ENABLE_WDS
 #include <fstream>
 #include <memory>
 #include <string>
@@ -75,3 +76,4 @@ private:
     void mark_end_of_file();
     void parse_current_header();
 };
+#endif

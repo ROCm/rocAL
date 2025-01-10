@@ -65,7 +65,6 @@ evaluate_audio_data_set(StorageType storage_type, DecoderType decoder_type,
 std::tuple<unsigned, unsigned>
 evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, StorageType storage_type,
                         DecoderType decoder_type, const std::string& source_path, const std::string& json_path) {
-
     auto translate_image_size_policy = [](RocalImageSizeEvaluationPolicy decode_size_policy) {
         switch (decode_size_policy) {
             case ROCAL_USE_MAX_SIZE:
@@ -2298,9 +2297,6 @@ rocalAudioFileSource(
     return output;
 }
 
-
-
-
 RocalTensor ROCAL_API_CALL
 rocalWebDatasetSourceSingleShard(
     RocalContext p_context,
@@ -2320,6 +2316,7 @@ rocalWebDatasetSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ENABLE_WDS
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
@@ -2360,7 +2357,9 @@ rocalWebDatasetSourceSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
-
+#else
+        THROW("Webdataset reader is not enabled since libtar is not present")
+#endif
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         std::cerr << e.what() << '\n';

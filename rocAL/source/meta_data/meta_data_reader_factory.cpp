@@ -151,6 +151,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
+#ifdef ENABLE_WDS
         case MetaDataReaderType::WEBDATASET_META_DATA_READER: {
             if (config.type() != MetaDataType::AsciiValue)
                 THROW("WEBDATASET_META_DATA_READER can only be used to load ascii values")
@@ -159,6 +160,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
+#endif
         default:
             THROW("MetaDataReader type is unsupported : " + TOSTR(config.reader_type()));
     }

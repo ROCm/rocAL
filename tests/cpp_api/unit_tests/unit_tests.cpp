@@ -722,7 +722,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
                 std::vector<char> img_name(img_size);
                 rocalGetImageName(handle, img_name.data());
-                std::cerr << "\n Image name: " << img_name.data() << "\n \n";
+                std::cout << "\n Image name: " << img_name.data() << "\n \n";
                 RocalMetaData ascii_sample_contents = rocalGetAsciiDatas(handle);
                 std::vector<std::vector<std::vector<uint8_t>>> ext_componenet_list;
                 for(uint ext = 0; ext < ascii_sample_contents->size(); ext++) {
