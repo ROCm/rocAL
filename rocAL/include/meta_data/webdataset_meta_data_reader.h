@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#ifdef ENABLE_WDS
 #include "meta_data/meta_data.h"
 #include "meta_data/meta_data_reader.h"
 #include "pipeline/commons.h"
@@ -71,3 +72,4 @@ class WebDataSetMetaDataReader : public MetaDataReader {
     void add(std::string image_name, AsciiValues ascii_value);
     std::vector<std::unique_ptr<std::ifstream>> _wds_shards;
 };
+#endif

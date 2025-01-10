@@ -939,6 +939,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       unsigned max_decoded_samples = 0,
                                                                       unsigned max_decoded_channels = 0,
                                                                       RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+
 /*! Creates WebDataset tar files reader and decoder. It allocates the resources and objects required to read and decode files in webdataset format stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location of files on the disk

@@ -345,12 +345,13 @@ if(${BUILD_ROCAL})
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
     endif()
     # LibTar
-    if(NOT LIBTAR_FOUND)
-        message("-- ${Yellow}NOTE: rocAL built without LibTar - WebDataset Functionalities will not be supported${ColourReset}")
-    else()
+    if(LIBTAR_FOUND)
         include_directories(${LIBTAR_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LIBTAR_LIBRARIES})
-        message("-- ${White}NOTE: rocAL built with LibTar support - WebDataset Functionalities enabled${ColourReset}")
+        message("-- ${White}NOTE: rocAL built with LibTar support - WebDataset reader enabled${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DENABLE_WDS)
+    else()
+        message("-- ${Yellow}NOTE: rocAL built without LibTar - WebDataset reader will not be supported${ColourReset}")
     endif()
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation

@@ -92,12 +92,14 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
                 throw std::runtime_error("ExternalSourceReader cannot access the storage");
             return ret;
         } break;
+#ifdef ENABLE_WDS
         case StorageType::WEBDATASET_RECORDS: {
             auto ret = std::make_shared<WebDatasetSourceReader>();
             if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("WebDatasetSourceReader cannot access the storage");
             return ret;
         } break;
+#endif
         default:
             throw std::runtime_error("Reader type is unsupported");
     }

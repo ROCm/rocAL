@@ -778,7 +778,9 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection, py::return_value_policy::reference);
     m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection, py::return_value_policy::reference);
     m.def("mxnetReader", &rocalCreateMXNetReader, py::return_value_policy::reference);
+#ifdef ENABLE_WDS
     m.def("webDatasetReader", &rocalCreateWebDatasetReader, py::return_value_policy::reference);
+#endif
     m.def("isEmpty", &rocalIsEmpty);
     m.def("getStatus", rocalGetStatus);
     m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
@@ -1019,8 +1021,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
+#ifdef ENABLE_WDS
     m.def("webdatasetSourceSingleShard", &rocalWebDatasetSourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
+#endif
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);

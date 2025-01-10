@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#ifdef ENABLE_WDS
 #include "meta_data/webdataset_meta_data_reader.h"
 #include "pipeline/timing_debug.h"
 #include "readers/image/image_reader.h"
@@ -97,3 +98,4 @@ class WebDatasetSourceReader : public Reader {
                                               uint wds_shard_index);
     void increment_shard_id();
 };
+#endif

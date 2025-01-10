@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ENABLE_WDS
 #include "meta_data/webdataset_meta_data_reader.h"
 #include <cassert>
 #include "pipeline/commons.h"
@@ -406,3 +407,4 @@ void WebDataSetMetaDataReader::read_all(const std::string &folder_path) {
         }
     }
 }
+#endif

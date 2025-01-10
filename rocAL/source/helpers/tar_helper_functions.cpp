@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ENABLE_WDS
 #include <mutex>
 #include <vector>
 #include <libtar.h>
@@ -265,3 +266,4 @@ std::unique_ptr<std::ifstream> TarArchive::release_file_stream() {
   _instance_handle = -1;
   return out;
 }
+#endif
