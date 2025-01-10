@@ -41,6 +41,8 @@ Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
 
 unsigned Caffe2LMDBRecordReader::count_items() {
     int size = get_max_size_of_shard(_batch_size, _loop);
+    if (_loop) return size;
+
     int ret = (size - _read_counter);
     if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
         ret -= _batch_size;
