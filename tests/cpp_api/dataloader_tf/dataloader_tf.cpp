@@ -52,8 +52,8 @@ int main(int argc, const char **argv) {
         printf("Usage: dataloader_tf <path-to-TFRecord-folder - required> <processing_device=1/cpu=0>  <decode_width> <decode_height> <batch_size> <gray_scale/rgb/rgbplanar> display_on_off \n");
         return -1;
     }
-    int argIdx = 0;
-    const char *folderPath1 = argv[++argIdx];
+    int argIdx = 1;
+    const char *folderPath1 = argv[argIdx++];
     bool display = 0;  // Display the images
     // int aug_depth = 1;// how deep is the augmentation tree
     int rgb = 0;            // process gray images
@@ -62,23 +62,23 @@ int main(int argc, const char **argv) {
     int inputBatchSize = 16;
     bool processing_device = 1;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        inputBatchSize = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        inputBatchSize = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display = atoi(argv[argIdx++]);
 
     std::cout << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
     RocalImageColor color_format = RocalImageColor::ROCAL_COLOR_U8;

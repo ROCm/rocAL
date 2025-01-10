@@ -193,8 +193,8 @@ int main(int argc, const char **argv) {
                     "num_shards decode_width decode_height batch_size shuffle display_on_off dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>" << std::endl;
         return -1;
     }
-    int argIdx = 0;
-    const char *path = argv[++argIdx];
+    int argIdx = 1;
+    const char *path = argv[argIdx++];
     bool display = 1;  // Display the images
     int decode_width = 1024;
     int decode_height = 1024;
@@ -204,29 +204,29 @@ int main(int argc, const char **argv) {
     int num_gpus = 0;
     int dec_mode = 0;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        num_gpus = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        num_gpus = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        num_shards = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        num_shards = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        inputBatchSize = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        inputBatchSize = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shuffle = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shuffle = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        dec_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        dec_mode = atoi(argv[argIdx++]);
 
     std::cout << "Number of GPUs: " << num_gpus << std::endl;
 

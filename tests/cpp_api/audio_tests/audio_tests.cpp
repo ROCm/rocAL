@@ -132,24 +132,24 @@ int main(int argc, const char **argv) {
         return -1;
     }
 
-    int argIdx = 0;
-    const char *path = argv[++argIdx];
+    int argIdx = 1;
+    const char *path = argv[argIdx++];
     int qa_mode = 0;
     unsigned test_case = 0;
     bool downmix = false;
     bool gpu = 0;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        downmix = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        downmix = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        gpu = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        gpu = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        qa_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        qa_mode = atoi(argv[argIdx++]);
 
     if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
         std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";

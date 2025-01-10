@@ -51,8 +51,8 @@ int main(int argc, const char** argv) {
               decode_width decode_height decoder_mode gray_scale/rgb display_on_off decode_shard_count  <shuffle:0/1> <jpeg_dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>\n");
         return -1;
     }
-    int argIdx = 0;
-    const char* folderPath1 = argv[++argIdx];
+    int argIdx = 1;
+    const char* folderPath1 = argv[argIdx++];
     int decoder_mode = 0;  // 0 means no video decode, 1 means hardware, 2 means software decoding
     bool display = 1;    // Display the images
     int aug_depth = 1;   // how deep is the augmentation tree
@@ -65,35 +65,35 @@ int main(int argc, const char** argv) {
     int decoder_type = 0;
     const char *outName = "image_augmentation_app.png";
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decoder_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decoder_mode = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shard_count = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shard_count = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shuffle = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shuffle = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decoder_type = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decoder_type = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        outName = argv[++argIdx];
+    if (argc > argIdx)
+        outName = argv[argIdx++];
 
     int inputBatchSize = 4;
 

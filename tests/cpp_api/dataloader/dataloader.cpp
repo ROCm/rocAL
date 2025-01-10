@@ -52,8 +52,8 @@ int main(int argc, const char **argv) {
         printf("Usage: image_augmentation <image_dataset_folder/video_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
         return -1;
     }
-    int argIdx = 0;
-    const char *folderPath1 = argv[++argIdx];
+    int argIdx = 1;
+    const char *folderPath1 = argv[argIdx++];
     bool display = 0;  // Display the images
     // int aug_depth = 1;// how deep is the augmentation tree
     int decode_width = 32;
@@ -61,20 +61,20 @@ int main(int argc, const char **argv) {
     int inputBatchSize = 4;
     bool processing_device = 1;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        inputBatchSize = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        inputBatchSize = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display = atoi(argv[argIdx++]);
 
     std::cout << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
     // The cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
