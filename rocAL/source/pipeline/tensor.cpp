@@ -29,7 +29,6 @@ THE SOFTWARE.
 
 #include <cstring>
 #include <stdexcept>
-
 #include "pipeline/commons.h"
 #include "pipeline/tensor.h"
 
@@ -314,14 +313,14 @@ int Tensor::create_from_handle(vx_context context) {
     _context = context;
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
     unsigned num_of_dims = _info.num_of_dims();
-    vx_size stride[num_of_dims];
+    std::vector<vx_size> stride(num_of_dims);
     void *ptr[1] = {nullptr};
 
     stride[0] = tensor_data_size(_info.data_type());
     for (unsigned i = 1; i < num_of_dims; i++)
         stride[i] = stride[i - 1] * _info.dims().at(i - 1);
 
-    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
+    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride.data(), ptr, vx_mem_type(_info._mem_type));
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
@@ -357,7 +356,7 @@ void Tensor::create_roi_tensor_from_handle(void **handle) {
         THROW("Empty ROI handle is passed")
     }
 
-    vx_size num_of_dims = 2;
+    const vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
     std::vector<size_t> roi_dims = {_info.batch_size(), 4};
     if (_info.layout() == RocalTensorlayout::NFCHW || _info.layout() == RocalTensorlayout::NFHWC)
@@ -413,14 +412,13 @@ unsigned Tensor::copy_data(hipStream_t stream, void *host_memory, bool sync) {
 
 unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_type) {
     if (_mem_handle == nullptr) return 0;
-
     if (external_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
 #if ENABLE_HIP
         if (_info._mem_type == RocalMemType::HIP) {
             // copy from device to device
             hipError_t status;
             if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
-                THROW("copy_data::hipMemcpyDtoD failed: " + TOSTR(status))
+                THROW("copy_data::hipMemcpyDtoD failed: " + hipGetErrorName(status))
         } else if (_info._mem_type == RocalMemType::HOST) {
             // copy from host to device
             hipError_t status;

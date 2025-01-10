@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 # Set Project Version and Language
 project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
@@ -188,7 +188,7 @@ if(NOT pybind11_FOUND)
     set(BUILD_ROCAL_PYBIND false)	
     message("-- ${Yellow}NOTE: rocAL requires pybind11, Not Found${ColourReset}")	
 endif()
-# PyBind11
+# Half
 if(NOT HALF_FOUND)	
     set(BUILD_ROCAL_PYBIND false)	
     message("-- ${Yellow}NOTE: rocAL requires Half, Not Found${ColourReset}")	
@@ -230,6 +230,16 @@ if(${BUILD_ROCAL_PYBIND})
     add_dependencies(rocal_pybind rocal)
     message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
     message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+
+    #DLPack
+    find_package(DLPACK QUIET)
+    if(DLPACK_FOUND)
+        include_directories(${DLPACK_INCLUDE_DIRS})
+        target_compile_definitions(rocal_pybind PUBLIC ENABLE_DLPACK=1)
+    else()
+        target_compile_definitions(rocal_pybind PUBLIC ENABLE_DLPACK=0)
+        message("-- ${Yellow}NOTE: DLPack Not Found - rocAL Tensorflow and Generic plugins built without GPU support!${ColourReset}")
+    endif()
 
     set_target_properties(rocal_pybind PROPERTIES
         PREFIX "${PYTHON_MODULE_PREFIX}"
