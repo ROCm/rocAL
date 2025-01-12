@@ -47,7 +47,7 @@ THE SOFTWARE.
     }                                                                     \
 }
 
-RocJpegDecoder::RocJpegDecoder() {
+HWRocJpegDecoder::HWRocJpegDecoder() {
 };
 
 /**
@@ -170,7 +170,7 @@ void GetChromaSubsamplingStr(RocJpegChromaSubsampling subsampling, std::string &
     }
 }
 
-void RocJpegDecoder::initialize(int device_id, unsigned batch_size) {
+void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     int num_devices;
     hipDeviceProp_t hip_dev_prop;
     CHECK_HIP(hipGetDeviceCount(&num_devices));
@@ -213,7 +213,7 @@ void RocJpegDecoder::initialize(int device_id, unsigned batch_size) {
 }
 
 // TODO - Max decoded width and height to be passed
-Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
+Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
@@ -286,7 +286,7 @@ Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t 
     return Status::OK;
 }
 
-Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
+Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
@@ -313,7 +313,7 @@ Decoder::Status RocJpegDecoder::decode_info(unsigned char *input_buffer, size_t 
     return Status::OK;
 }
 
-Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size,
+Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size,
                                        std::vector<unsigned char *> &output_buffer,
                                        size_t max_decoded_width, size_t max_decoded_height,
                                        std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
@@ -374,7 +374,7 @@ Decoder::Status RocJpegDecoder::decode_batch(std::vector<std::vector<unsigned ch
     return Status::OK;
 }
 
-RocJpegDecoder::~RocJpegDecoder() {
+HWRocJpegDecoder::~HWRocJpegDecoder() {
     CHECK_ROCJPEG(rocJpegDestroy(_rocjpeg_handle));
     for (auto j = 0; j < _batch_size; j++) {
         CHECK_ROCJPEG(rocJpegStreamDestroy(_rocjpeg_streams[j]));

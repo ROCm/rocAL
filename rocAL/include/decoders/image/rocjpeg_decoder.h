@@ -30,12 +30,12 @@ struct ScalingFactor {
   unsigned denom;
 };
 
-class RocJpegDecoder : public Decoder {
+class HWRocJpegDecoder : public Decoder {
    public:
     //! Default constructor
-    RocJpegDecoder();
+    HWRocJpegDecoder();
 #if ENABLE_HIP
-    RocJpegDecoder(hipStream_t &stream) { _hip_stream = stream; }
+    HWRocJpegDecoder(hipStream_t &stream) { _hip_stream = stream; }
 #endif
     //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
     /*!
@@ -71,7 +71,7 @@ class RocJpegDecoder : public Decoder {
                                          std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height,
                                          Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) override;
 
-    ~RocJpegDecoder() override;
+    ~HWRocJpegDecoder() override;
     void initialize(int device_id) override {}
     void initialize(int device_id, unsigned batch_size) override;
     bool is_partial_decoder() override { return _is_partial_decoder; }

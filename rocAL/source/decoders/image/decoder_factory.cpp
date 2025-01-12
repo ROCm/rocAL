@@ -51,7 +51,7 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
 #endif
 #if ENABLE_HIP
         case DecoderType::ROCJPEG_DEC:
-            return std::make_shared<RocJpegDecoder>(config.get_hip_stream());
+            return std::make_shared<HWRocJpegDecoder>(config.get_hip_stream());
             break;
 #endif
         default:
