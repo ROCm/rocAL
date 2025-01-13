@@ -1461,7 +1461,7 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
             } else { // To Handle Empty Case of Missing Behaviour Component
                 _ascii_tensor_list[ext][i]->set_dims({0});
-                _ascii_tensor_list[ext][i]->set_mem_handle((void *)nullptr);
+                _ascii_tensor_list[ext][i]->reset_mem_handle();
                 meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
             }
         }

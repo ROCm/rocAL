@@ -313,9 +313,10 @@ class Tensor : public rocalTensor {
         if (buffer)
             _mem_handle = buffer;
         else {
-            WRN("Invalid buffer pointer passed")
+            THROW("Invalid buffer pointer passed")
         }
     }
+    void reset_mem_handle() { _mem_handle = nullptr; }
 #if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
     unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);

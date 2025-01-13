@@ -516,14 +516,14 @@ void
 RocalMetaData
     ROCAL_API_CALL
     rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output) {
-    #ifdef ENABLE_WDS
+#ifdef ENABLE_WDS
         if (!p_context)
             THROW("Invalid rocal context passed to rocalCreateWebDatasetReader")
         auto context = static_cast<Context*>(p_context);
         return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, static_cast<MissingComponentsBehaviour>(missing_components_behavior));
-    #else
+#else
         THROW("Webdataset reader is not enabled since libtar is not present")
-    #endif
+#endif
 }
 
 RocalTensorList
