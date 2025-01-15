@@ -28,7 +28,7 @@ import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
 
 
-def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', shard_id=0, num_shards=1, random_shuffle=False,
+def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', index_path ='', shard_id=0, num_shards=1, random_shuffle=False,
           output_type=types.RGB, decoder_type=types.DECODER_TJPEG, device=None,
           decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000,
           last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1):
@@ -145,7 +145,23 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "sharding_info": sharding_info}
         decoded_image = b.mxnetDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-
+    elif reader == "WebDataset":
+        kwargs_pybind = {
+            "source_path": file_root,
+            "index_path": index_path,
+            "output_type": output_type,
+            "shard_id": shard_id,
+            "num_shards": num_shards,
+            'is_output': False,
+            "shuffle": random_shuffle,
+            "loop": False,
+            "decode_size_policy": decode_size_policy,
+            "max_width": max_decoded_width,
+            "max_height": max_decoded_height,
+            "dec_type": decoder_type,
+            "sharding_info": sharding_info}
+        decoded_image = b.webdatasetSourceSingleShard(
+            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {
             "source_path": file_root,
@@ -474,3 +490,4 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
+
