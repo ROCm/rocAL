@@ -53,7 +53,6 @@ docs_core.enable_api_reference()
 docs_core.setup()
 
 external_projects_current_project = "rocal"
-external_projects_remote_repository = ""
 
 for sphinx_var in ROCmDocs.SPHINX_VARS:
     globals()[sphinx_var] = getattr(docs_core, sphinx_var)

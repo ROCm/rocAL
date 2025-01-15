@@ -8,7 +8,7 @@
 rocAL documentation
 ********************************************************************
 
-The ROCm Augmentation Library (rocAL) provides C++ and Python APIs to create image and video processing pipelines that maximize throughput in machine learning applications. rocAL is implemented in the `HIP programming language <https://rocm.docs.amd.com/projects/HIP/>`_ and optimized for AMD GPUs.
+The ROCm Augmentation Library (rocAL) provides C++ and Python APIs to create image and video processing pipelines that maximize throughput in machine learning applications. rocAL is implemented using `HIP <https://rocm.docs.amd.com/projects/HIP/>`_ and optimized for AMD GPUs.
 
 The rocAL public repository is located at `https://github.com/ROCm/rocAL <https://github.com/ROCm/rocAL>`_.
 

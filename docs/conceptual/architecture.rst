@@ -8,7 +8,7 @@
 rocAL Architecture components
 ********************************************************************
 
-The rocAL architecture comprises rocAL Master-Graph and ROCm Performance Primitive (RPP) as major components.
+The rocAL architecture has rocAL Master-Graph and ROCm Performance Primitive (RPP) as its major components.
 
 rocAL Master-Graph
 ===================
