@@ -28,7 +28,6 @@ list(APPEND rocAL_HIP_SOURCES
 set (rocDecode_UTILS 
     ${ROCM_PATH}/share/rocdecode/utils/resize_kernels.cpp
     ${ROCM_PATH}/share/rocdecode/utils/colorspace_kernels.cpp
-    ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp
 )
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
@@ -38,7 +37,7 @@ set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
 set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_CXX_FLAGS}")
 
-add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_HIP_SOURCES})
+add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_UTILS})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
 target_link_libraries(${PROJECT_NAME} hip::device)
