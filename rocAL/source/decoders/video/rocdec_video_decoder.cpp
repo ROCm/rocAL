@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -74,7 +74,7 @@ VideoDecoder::Status RocDecVideoDecoder::Initialize(const char *src_filename, in
     _rocvid_decoder = std::make_shared<RocVideoDecoder>(device_id, mem_type, rocdec_codec_id, 0, nullptr, 0);
 
     if(!_rocvid_decoder->CodecSupported(device_id, rocdec_codec_id, _demuxer->GetBitDepth())) {
-        WRN("GPU doesn't support codec!")
+        ERR("GPU doesn't support codec!")
         return VideoDecoder::Status::FAILED;
     }
 
@@ -89,7 +89,7 @@ VideoDecoder::Status RocDecVideoDecoder::Initialize(const char *src_filename, in
 }
 
 // Seeks to the frame_number in the video file and decodes each frame in the sequence.
-VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_pix_format) {
+VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_pix_format) {
     
     VideoDecoder::Status status = Status::OK;
     VideoSeekContext video_seek_ctx;
@@ -102,11 +102,11 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
     reconfig_params.p_reconfig_user_struct = &reconfig_user_struct;
     _rocvid_decoder->SetReconfigParams(&reconfig_params);
 
-    if (!_demuxer || !_rocvid_decoder || !out_buffer) {
+    if (!_demuxer || !_rocvid_decoder || !output_buffer_ptr) {
         ERR("Decoder is not initialized");
         return Status::FAILED;        
     }
-    if (!out_buffer || !(sequence_length|stride)) {
+    if (!output_buffer_ptr || !(sequence_length|stride)) {
         ERR("Invalid parameter passed");
         return Status::FAILED;        
     }
@@ -152,8 +152,8 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
             uint8_t *pframe = _rocvid_decoder->GetFrame(&pts);
             if (dts >= requested_frame_dts) {
                 if (n_frame % stride == 0) {
-                    post_process.ColorConvertYUV2RGB(pframe, surf_info, out_buffer, _output_format, _rocvid_decoder->GetStream());
-                    out_buffer += image_size;
+                    post_process.ColorConvertYUV2RGB(pframe, surf_info, output_buffer_ptr, _output_format, _rocvid_decoder->GetStream());
+                    output_buffer_ptr += image_size;
                 }
                 n_frame++;
             }
