@@ -61,8 +61,8 @@ class VideoDecoder {
     };
     virtual VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) = 0;
     virtual VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) = 0;
-    virtual int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) = 0;
-    virtual void release() = 0;
+    virtual int SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) = 0;
+    virtual void Release() = 0;
     virtual ~VideoDecoder() = default;
 };
 #endif

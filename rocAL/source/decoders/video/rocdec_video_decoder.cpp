@@ -176,7 +176,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *out_buffer, unsig
 }
 
 RocDecVideoDecoder::~RocDecVideoDecoder() {
-    release();
+    Release();
 }
 
 #endif
