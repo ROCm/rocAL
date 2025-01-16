@@ -250,8 +250,8 @@ if(${BUILD_ROCAL})
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
     #rocDecode
     if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCDECODE_FOUND)
-        include_directories(${ROCDECODE_INCLUDE_DIRS} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARIES})
+        include_directories(${ROCDECODE_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
     endif()
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
@@ -265,7 +265,7 @@ if(${BUILD_ROCAL})
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
-    file(GLOB_RECURSE ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/*.cpp)
+    set(ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
                                 ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${ROCDECODE_SRCS})
 

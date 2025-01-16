@@ -25,7 +25,11 @@ list(APPEND rocAL_HIP_SOURCES
     rocal_hip_kernels.cpp
     box_encoder_hip.cpp
 )
-file (GLOB rocDecode_HIP_SOURCES ${ROCM_PATH}/share/rocdecode/utils/*.cpp )
+set (rocDecode_UTILS 
+    ${ROCM_PATH}/share/rocdecode/utils/resize_kernels.cpp
+    ${ROCM_PATH}/share/rocdecode/utils/colorspace_kernels.cpp
+    ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp
+)
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
 
