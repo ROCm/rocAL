@@ -98,6 +98,8 @@ class HWRocJpegDecoder : public Decoder {
     RocJpegDecodeParams _decode_params = {};
     uint32_t _num_channels = 0;
     bool _resize_batch = false;
+    bool _set_device_id = false;
+    int _device_id = 0;
 
 #if ENABLE_HIP
     hipStream_t _hip_stream;

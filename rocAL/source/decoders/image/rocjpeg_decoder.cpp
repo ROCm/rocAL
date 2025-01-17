@@ -197,6 +197,7 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
         CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_streams[i]));
     }
 
+    _device_id = device_id;
     _batch_size = batch_size;
     _output_images.resize(_batch_size);
     _src_hstride.resize(_batch_size);
@@ -214,6 +215,13 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
 
 // TODO - Max decoded width and height to be passed
 Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
+    
+    if (!_set_device_id) {
+        std::cerr << "Setting device ID\n";
+        CHECK_HIP(hipSetDevice(_device_id));
+        _set_device_id = true;
+    }
+    
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
