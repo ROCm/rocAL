@@ -1,14 +1,16 @@
 # Steps to create MXNet RecordIO files using MXNet's im2rec.py script
 
-https://github.com/apache/incubator-mxnet/blob/master/tools/im2rec.py
-
 ## MXNet Installation
 
-pip install mxnet
+```shell
+pip3 install mxnet
+```
 
 ## Step1 : to create .lst file
 
-python im2rec.py --list test Dataset_path --recursive
+```shell
+python3 im2rec.py --list test Dataset_path --recursive
+```
 
 test - name of your .lst file
 
@@ -18,8 +20,18 @@ Dataset_path - path to the list of image folders
 
 ## Step2 : to create RecordIO files
 
-python im2rec.py lst_file Dataset_path
+```shell
+python3 im2rec.py lst_file Dataset_path
+```
 
 lst_file - *.lst file created using Step1
 
 Dataset_path - path to the list of image folders
+
+# Steps to create index file for webdataset tar files
+
+```shell
+python3 tar2idx.py tar_file_path
+```
+
+tar_file_path - path to the folder containing tar files
