@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ import subprocess
 import sys
 from shutil import which
 
+
 class CreateIndexFiles:
 
     index_file_version = "v1.0"
@@ -48,9 +49,10 @@ class CreateIndexFiles:
     def reset(self):
         self.close()
         self.open()
+
     def split_filepath_name(path):
         dot_pos = path.find(".", path.rfind("/") + 1)
-        return path[:dot_pos], path[dot_pos + 1 :]
+        return path[:dot_pos], path[dot_pos + 1:]
 
     def get_tar_files_data(self):
         tar_blocks_process = subprocess.Popen(
@@ -73,18 +75,18 @@ class CreateIndexFiles:
             if not blocks_line or not types_sizes_line:
                 continue
 
-            name = str(blocks_line[blocks_line.find(b":") + 2 :], "ascii")
+            name = str(blocks_line[blocks_line.find(b":") + 2:], "ascii")
             entry_type = types_sizes_line[0:1]
 
             if entry_type != b"-":
                 continue
 
-            offset = int(blocks_line[blocks_line.find(b"block") + 6 : blocks_line.find(b":")])
+            offset = int(blocks_line[blocks_line.find(b"block") + 6: blocks_line.find(b":")])
             offset = (offset + 1) * 512
 
             size = types_sizes_line[: -len(name)]
             size = size[: size.rfind(b"-") - 8]
-            size = int(size[size.rfind(b" ") :])
+            size = int(size[size.rfind(b" "):])
 
             yield offset, name, size
 
@@ -99,7 +101,6 @@ class CreateIndexFiles:
 
     def create_index_from_tar(self):
         self.reset()
-
 
         # Aggregates extensions in samples
         aggregated_data = []
@@ -141,6 +142,7 @@ def parse_args():
     args.directory = os.path.abspath(args.directory)
     return args
 
+
 def main():
     args = parse_args()
     tar_files = [f for f in os.listdir(args.directory) if f.endswith('.tar')]
@@ -154,6 +156,7 @@ def main():
         print(f"Processing tar files {tar_path} to index files {index_path}")
         creator = CreateIndexFiles(tar_path, index_path)
         creator.create_index_from_tar()
+
 
 if __name__ == "__main__":
     main()

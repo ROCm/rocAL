@@ -8,6 +8,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Changed
 * AMD Clang is now the default CXX and C compiler.
+* Added webdataset reader support to rocAL.
 
 ### Removed
 

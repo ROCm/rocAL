@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -53,8 +53,7 @@ def main():
     device = "gpu" if args.rocal_gpu else "cpu"
     try:
         path = "output_folder/web_dataset_reader/"
-        isExist = os.path.exists(path)
-        if not isExist:
+        if not os.path.exists(path):
             os.makedirs(path)
     except OSError as error:
         print(error)
@@ -63,28 +62,24 @@ def main():
                     device_id=args.local_rank, seed=random_seed, rocal_cpu=rocal_cpu)
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
-        img_raw = fn.readers.webdataset(
-            path=image_path, ext=[{'JPEG', 'cls'}], index_paths=index_file, missing_components_behavior=types.MISSING_COMPONENT_ERROR,
-        )
+        img_raw = fn.readers.webdataset(path=image_path, ext=[{'JPEG', 'cls'}], index_paths=index_file, missing_components_behavior=types.MISSING_COMPONENT_ERROR)
         img = fn.decoders.image(img_raw, file_root=image_path,
                                 max_decoded_width=500, max_decoded_height=500, index_path=index_file)
         pipe.set_outputs(img)
     # Build the pipeline
     pipe.build()
     # Dataloader
-    data_loader = ROCALClassificationIterator(
-        pipe, display=0, device=device, device_id=args.local_rank)
+    data_loader = ROCALClassificationIterator(pipe, display=0, device=device, device_id=args.local_rank)
     # Training loop
     cnt = 0
     # Enumerate over the Dataloader
     for epoch in range(args.num_epochs):  # loop over the dataset multiple times
         print("epoch:: ", epoch)
         for i, ([image_batch], meta_data) in enumerate(data_loader, 0):
-            if i == 0:
-                if args.print_tensor:
-                    sys.stdout.write("\r Mini-batch " + str(i))
-                    print("Images", image_batch)
-                    print("Meta Data - ASCII", meta_data)
+            if i == 0 and args.print_tensor:
+                print("\r Mini-batch " + str(i))
+                print("Images", image_batch)
+                print("Meta Data - ASCII", meta_data)
             for element in list(range(batch_size)):
                 cnt += 1
                 draw_patches(image_batch[element],
