@@ -629,6 +629,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or RocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -644,6 +645,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                            bool is_output = false,
                                                            bool shuffle = false,
                                                            bool loop = false,
+                                                           RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                            unsigned step = 0,
                                                            unsigned stride = 0,
                                                            bool file_list_frame_num = true,
@@ -661,6 +663,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or RocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -677,6 +680,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
                                                                       bool shuffle = false,
                                                                       bool is_output = false,
                                                                       bool loop = false,
+                                                                      RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                                       unsigned step = 0,
                                                                       unsigned stride = 0,
                                                                       bool file_list_frame_num = true,
@@ -695,6 +699,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or RocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -712,6 +717,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
                                                            bool shuffle = false,
                                                            bool is_output = false,
                                                            bool loop = false,
+                                                           RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                            unsigned step = 0,
                                                            unsigned stride = 0,
                                                            bool file_list_frame_num = true,
@@ -736,6 +742,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or RocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -754,6 +761,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalConte
                                                                       bool shuffle = false,
                                                                       bool is_output = false,
                                                                       bool loop = false,
+                                                                      RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                                       unsigned step = 0,
                                                                       unsigned stride = 0,
                                                                       bool file_list_frame_num = true,
