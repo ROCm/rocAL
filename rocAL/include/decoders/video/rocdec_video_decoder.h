@@ -25,8 +25,7 @@ THE SOFTWARE.
 #include "video_decoder.h"
 
 #ifdef ROCAL_VIDEO
-#if ENABLE_HIP
-#if ENABLE_ROCDECODE
+#if ENABLE_HIP && ENABLE_ROCDECODE
 
 #include "video_demuxer.h"
 #include "video_post_process.h"
@@ -61,6 +60,5 @@ class RocDecVideoDecoder : public VideoDecoder {
         int _device_id;
 };
 
-#endif
 #endif
 #endif
