@@ -377,3 +377,17 @@ def webdataset(path, index_paths="", ext = None, missing_components_behavior = t
     webdata_metadata = b.webDatasetReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return webdata_metadata
+
+def cifar10(*inputs, file_root='', num_shards=1, image_type=types.RGB, filename_prefix='data_batch_',
+          random_shuffle=False, shard_id=0, stick_to_shard=True, shard_size=-1,
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, seed=0):
+
+    Pipeline._current_pipeline._reader = "CIFAR10Reader"
+    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+    # Output
+    kwargs_pybind = {"source_path": file_root, "color_format": image_type, "shard_id": shard_id, "shard_count": num_shards, "is_output": False, "shuffle": random_shuffle,
+                     "loop": False, "output_width": 32, "output_height": 32, "filename_prefix": filename_prefix, "sharding_info": sharding_info}
+    cifar10_reader_output = b.cifar10Reader(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (cifar10_reader_output)
