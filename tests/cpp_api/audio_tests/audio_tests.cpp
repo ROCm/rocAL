@@ -302,14 +302,14 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             break;
         }
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-        int file_name_length[input_batch_size];
-        int file_name_size = rocalGetImageNameLen(handle, file_name_length);
-        char audio_file_name[file_name_size];
+        std::vector<int> file_name_length(input_batch_size);
+        int file_name_size = rocalGetImageNameLen(handle, file_name_length.data());
+        std::vector<char> audio_file_name(file_name_size);
         std::vector<int> roi(4 * input_batch_size, 0);
-        rocalGetImageName(handle, audio_file_name);
+        rocalGetImageName(handle, audio_file_name.data());
         RocalTensorList labels = rocalGetImageLabels(handle);
         int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
-        std::cout << "Audio file : " << audio_file_name << "\n";
+        std::cout << "Audio file : " << audio_file_name.data() << "\n";
         std::cout << "Label : " << *label_id << "\n";
         if (test_case == 8) {  // Non silent region detection outputs
             nsr_begin = static_cast<int *>(output_tensor_list->at(0)->buffer());

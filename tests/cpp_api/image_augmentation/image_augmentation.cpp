@@ -63,7 +63,7 @@ int main(int argc, const char** argv) {
     size_t shard_count = 2;
     int shuffle = 0;
     int decoder_type = 0;
-    const char *outName = "image_augmentation_app.png";
+    const char *outName = "image_augmentation_app";
 
     if (argc > argIdx)
         processing_device = atoi(argv[argIdx++]);
@@ -173,7 +173,7 @@ int main(int argc, const char** argv) {
     // Creating successive blur nodes to simulate a deep branch of augmentations
     RocalTensor tensor2 = rocalCropResize(handle, tensor0, resize_w, resize_h, false, rand_crop_area);
     for (int i = 0; i < aug_depth; i++) {
-        tensor2 = rocalBlurFixed(handle, tensor2, 17.25, (i == (aug_depth - 1)) ? true : false);
+        tensor2 = rocalBlurFixed(handle, tensor2, 17, (i == (aug_depth - 1)) ? true : false);
     }
     // Commenting few augmentations out until tensor support is added in rpp
     // RocalTensor tensor4 = rocalColorTemp(handle, tensor0, true, color_temp_adj);
@@ -212,7 +212,7 @@ int main(int argc, const char** argv) {
     AMD_Epyc_Black_resize = cv::imread("../../../../docs/data/amd-epyc-black-resize.png");
     AMD_ROCm_Black_resize = cv::imread("../../../../docs/data/rocm-black-resize.png");
     int fontFace = CV_FONT_HERSHEY_DUPLEX;
-    int thickness = 1.3;
+    int thickness = 1;
     std::string bufferName = "rocAL Image Augmentation";
 
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;

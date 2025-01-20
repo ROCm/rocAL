@@ -49,7 +49,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: image_augmentation <image_dataset_folder/video_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
+        printf("Usage: datalaoder <image_dataset_folder/video_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
         return -1;
     }
     int argIdx = 1;
@@ -167,7 +167,7 @@ int main(int argc, const char **argv) {
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
     std::vector<std::string> names;
-    int image_name_length[inputBatchSize];
+    std::vector<int> image_name_length(inputBatchSize);
     names.resize(inputBatchSize);
     int iter_cnt = 0;
     while (!rocalIsEmpty(handle) && (iter_cnt < 100)) {
@@ -176,10 +176,10 @@ int main(int argc, const char **argv) {
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         counter += inputBatchSize;
         RocalTensorList labels = rocalGetImageLabels(handle);
-        unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length);
-        char img_name[img_name_size];
-        rocalGetImageName(handle, img_name);
-        std::string image_name(img_name);
+        unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
+        std::vector<char> img_name(img_name_size);
+        rocalGetImageName(handle, img_name.data());
+        std::string image_name(img_name.data());
         int pos = 0;
         int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
         for (int i = 0; i < inputBatchSize; i++) {
