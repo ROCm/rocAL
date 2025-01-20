@@ -383,7 +383,7 @@ else:
     elif "redhat" in platformInfo:
         # no package avialable -- using source
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm'))
+                        ' install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.6.x86_64.rpm'))
 
 
     # RapidJSON - Source TBD: Package install of RapidJSON has compile issues - https://github.com/Tencent/rapidjson.git -- master
