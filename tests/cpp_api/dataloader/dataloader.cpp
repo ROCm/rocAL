@@ -49,7 +49,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: datalaoder <image_dataset_folder/video_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
+        printf("Usage: datalaoder <image_dataset_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
         return -1;
     }
     int argIdx = 1;
