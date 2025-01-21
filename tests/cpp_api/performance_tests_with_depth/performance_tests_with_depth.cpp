@@ -51,7 +51,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
 int main(int argc, const char** argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 4;
-    printf("Usage: image_augmentation <image-dataset-folder - required> <width - required> <height - required> test_case batch_size graph_depth gpu=1/cpu=0 rgb=1/grayscale =0  \n");
+    printf("Usage: performance_tests_with_depth <image-dataset-folder - required> <width - required> <height - required> test_case batch_size graph_depth gpu=1/cpu=0 rgb=1/grayscale =0  \n");
     if (argc < MIN_ARG_COUNT)
         return -1;
 
