@@ -127,8 +127,8 @@ int main(int argc, const char** argv) {
     RocalTensor input1;
 
     if (decoder_mode >= 2) {
-        unsigned sequence_length = 3;
-        unsigned frame_step = 3;
+        unsigned sequence_length = 1;
+        unsigned frame_step = 1;
         unsigned frame_stride = 1;
         if (decode_height <= 0 || decode_width <= 0) {
             std::cout << "Output width and height is needed for video decode\n";
