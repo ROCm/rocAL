@@ -390,6 +390,12 @@ else:
     os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
             linuxCMake+' ../; make -j$(nproc); sudo make install)')
 
+    # libtar - https://github.com/tklauser/libtar.git 
+    ERROR_CHECK(os.system(
+        '(cd '+deps_dir+'; git clone https://github.com/tklauser/libtar.git )'))
+    ERROR_CHECK(os.system('(cd '+deps_dir+'/libtar; '+
+            ' autoreconf --force --install; CFLAGS="-fPIC" ./configure; make -j$(nproc); sudo make install )'))
+
     # Optional Deps
     if "Ubuntu" in platformInfo:
         for i in range(len(debianOptionalPackages)):
