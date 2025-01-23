@@ -266,7 +266,8 @@ coreDebianPackages = [
     'python3-protobuf',
     'libprotobuf-dev',
     'libprotoc-dev',
-    'protobuf-compiler'
+    'protobuf-compiler',
+    'libsndfile1-dev' # for audio features
 ]
 
 libPythonProto = "python3-protobuf"
@@ -299,7 +300,7 @@ debianOptionalPackages = [
     'libavformat-dev',
     'libavutil-dev',
     'libswscale-dev',
-    'libopencv-dev'
+    'libopencv-dev',
 ]
 
 # Install
@@ -390,9 +391,13 @@ else:
     os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
             linuxCMake+' ../; make -j$(nproc); sudo make install)')
 
-    # libtar - https://github.com/tklauser/libtar.git 
+    # libtar - https://repo.or.cz/libtar.git ; version - v1.2.20
+    libtar_version = 'v1.2.20'
+    if "Ubuntu-24" in platformInfo:
+        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install autoconf libtool'))
     ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; git clone https://github.com/tklauser/libtar.git )'))
+        '(cd '+deps_dir+'; git clone -b '+ libtar_version+' https://repo.or.cz/libtar.git )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/libtar; '+
             ' autoreconf --force --install; CFLAGS="-fPIC" ./configure; make -j$(nproc); sudo make install )'))
 
