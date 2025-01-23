@@ -20,6 +20,24 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+
 # Set Project Version and Language
 project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
 
@@ -34,7 +52,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
-set(CMAKE_CXX_STANDARD 17)
 set(BUILD_ROCAL_PYBIND true)
 set(CMAKE_SKIP_BUILD_RPATH TRUE)
 

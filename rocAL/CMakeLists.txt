@@ -22,6 +22,24 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
@@ -216,6 +234,7 @@ if(${BUILD_ROCAL})
     # OpenMP
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+    message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
     # Threads
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
     # TurboJPEG
@@ -235,8 +254,6 @@ if(${BUILD_ROCAL})
     # half
     include_directories(${HALF_INCLUDE_DIRS})
 
-    # rocAL uses C++ 17 features
-    set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
     include_directories(
