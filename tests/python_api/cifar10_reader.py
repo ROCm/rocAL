@@ -13,6 +13,7 @@ import os
 def draw_patches(img, idx):
     # image is expected as a numpy array
     import cv2
+    img = img.transpose([1, 2, 0])
     image = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     cv2.imwrite("output_folder/cifar10_reader/" + str(idx) +
                 "_" + "train" + ".png", image)
@@ -43,7 +44,7 @@ def main():
     pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=rocal_cpu)
 
     with pipeline:
-        cifar10_reader_output = fn.readers.cifar10(file_root=data_path, shard_id=local_rank, num_shards=world_size)
+        cifar10_reader_output = fn.readers.cifar10(file_root=data_path, shard_id=local_rank, num_shards=8)
         pipeline.set_outputs(cifar10_reader_output)
 
     pipeline.build()

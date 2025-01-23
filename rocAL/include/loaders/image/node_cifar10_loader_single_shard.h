@@ -45,5 +45,5 @@ class CIFAR10LoaderSingleShardNode : public Node {
     void update_node() override {};
 
    private:
-    std::shared_ptr<CIFAR10Loader> _loader_module = nullptr;
+    std::shared_ptr<CIFAR10LoaderSharded> _loader_module = nullptr;
 };

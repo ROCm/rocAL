@@ -790,6 +790,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("randomBBoxCrop", &rocalRandomBBoxCrop);
     m.def("boxEncoder", &rocalBoxEncoder);
     m.def("boxIouMatcher", &rocalBoxIouMatcher);
+    m.def("cifar10LabelReader", &rocalCreateTextCifar10LabelReader, py::return_value_policy::reference);
     m.def("getImgSizes", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.request();
         int *ptr = static_cast<int *>(buf.ptr);
