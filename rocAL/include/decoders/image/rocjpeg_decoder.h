@@ -78,7 +78,7 @@ class HWRocJpegDecoder : public Decoder {
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
-
+    void reset_device_id() override;
    private:
     bool _is_partial_decoder = true;
     std::vector<float> _bbox_coord;

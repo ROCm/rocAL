@@ -382,6 +382,10 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<std::vector<unsigned 
     return Status::OK;
 }
 
+void HWRocJpegDecoder::reset_device_id() {
+    _set_device_id = false;
+}
+
 HWRocJpegDecoder::~HWRocJpegDecoder() {
     CHECK_ROCJPEG(rocJpegDestroy(_rocjpeg_handle));
     for (auto j = 0; j < _batch_size; j++) {

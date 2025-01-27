@@ -134,6 +134,8 @@ void ImageReadAndDecode::feed_external_input(const std::vector<std::string>& inp
 void ImageReadAndDecode::reset() {
     // TODO: Reload images from the folder if needed
     _reader->reset();
+    if (_decoder_config._type == DecoderType::ROCJPEG_DEC)
+        _rocjpeg_decoder->reset_device_id();
 }
 
 size_t
