@@ -392,7 +392,7 @@ else:
 
     # libtar - https://repo.or.cz/libtar.git ; version - v1.2.20
     libtar_version = 'v1.2.20'
-    if "Ubuntu-24" in platformInfo:
+    if "Ubuntu-22" in platformInfo or "Ubuntu-24" in platformInfo:
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install autoconf libtool'))
     ERROR_CHECK(os.system(
