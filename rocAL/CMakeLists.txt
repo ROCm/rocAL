@@ -22,6 +22,24 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
@@ -34,8 +52,6 @@ find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
 find_package(Protobuf QUIET)
-find_package(FFmpeg QUIET)
-find_package(OpenCV QUIET)
 find_package(OpenMP QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
@@ -43,6 +59,9 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
+# optional packages
+find_package(FFmpeg QUIET)
+find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
 
@@ -189,18 +208,22 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
+# LMDB
 if(NOT LMDB_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires LMDB, Not Found ${ColourReset}")	
 endif()
+# RapidJSON
 if(NOT RapidJSON_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires RapidJSON, Not Found ${ColourReset}")	
 endif()
+# C++17 Filesystem
 if(NOT FILESYSTEM_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires FileSystem, Not Found ${ColourReset}")	
 endif()
+# Half.hpp
 if(NOT HALF_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
@@ -216,6 +239,7 @@ if(${BUILD_ROCAL})
     # OpenMP
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+    message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
     # Threads
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
     # TurboJPEG
@@ -235,8 +259,6 @@ if(${BUILD_ROCAL})
     # half
     include_directories(${HALF_INCLUDE_DIRS})
 
-    # rocAL uses C++ 17 features
-    set(CMAKE_CXX_STANDARD 17)
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
     include_directories(
@@ -297,10 +319,11 @@ if(${BUILD_ROCAL})
         endif()
     else()
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
+        message("-- ${Yellow}NOTE: rocAL built without OpenCV extension functionality${ColourReset}")
     endif()
     # FFMPEG
     if(NOT FFMPEG_FOUND)
-        message("-- ${Yellow}NOTE: rocAL built without FFmpeg Video Decode Functionality${ColourReset}")
+        message("-- ${Yellow}NOTE: rocAL built without FFmpeg video decode functionality${ColourReset}")
     else()
         if (FFMPEG_VERSION_4)
             target_compile_definitions(${PROJECT_NAME} PUBLIC USE_FFMPEG_VERSION_4=1)
@@ -309,7 +332,7 @@ if(${BUILD_ROCAL})
         endif()
         include_directories(${AVUTIL_INCLUDE_DIR} ${AVCODEC_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FFMPEG_LIBRARIES})
-        message("-- ${White}rocAL built with FFmpeg Video Decode Functionality${ColourReset}")
+        message("-- ${White}rocAL built with FFmpeg video decode functionality${ColourReset}")
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
     endif()
     # Filesystem
@@ -324,7 +347,7 @@ if(${BUILD_ROCAL})
     # Audio features for rocAL
     if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "0" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER "0")
         if(NOT SNDFILE_FOUND)
-            message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio Functionalities will not be supported${ColourReset}")
+            message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio functionalities will not be supported${ColourReset}")
             set(AUDIO_SUPPORT FALSE)
         else()
             set(AUDIO_SUPPORT TRUE)
