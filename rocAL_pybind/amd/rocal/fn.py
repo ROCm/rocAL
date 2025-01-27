@@ -494,6 +494,31 @@ def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None,
     return (crop_resized_image)
 
 
+def random_resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=[0.08, 1.0], crop_aspect_ratio=[0.75, 1.33333],
+                device=None, interpolation_type=types.LINEAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Fused function which crops a random portion of image and resize it to a given size.
+
+        @param inputs: the input image passed to the augmentation
+        @param resize_width (int, optional, default = 0)                                   The length of the X dimension of the resized image
+        @param resize_height (int, optional, default = 0)                                  The length of the Y dimension of the resized image
+        @param crop_area_factor (float, optional, default = None)                          area factor used for crop generation
+        @param crop_aspect_ratio (float, optional, default = None)                         aspect ratio used for crop generation
+        @param device (string, optional, default = None)                                   Parameter unused for augmentation
+        @param interpolation_type (int, optional, default = types.LINEAR_INTERPOLATION)    Type of interpolation to be used.
+        @param output_layout (int, optional, default = types.NHWC)                         tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                         tensor dtype for the augmentation output
+
+        @return    Resized and cropped Image
+    """
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
+                     "crop_aspect_ratio": crop_aspect_ratio, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
+    crop_resized_image = b.randomResizeCrop(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (crop_resized_image)
+
+
 def roi_resize(*inputs, resize_width=0, resize_height=0, roi_w=None, roi_h=None, roi_pos_x=None, roi_pos_y=None, device=None,
                       interpolation_type=types.LINEAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Function which resizes images based on ROI region.

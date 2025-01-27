@@ -23,5 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include "parameters/parameter_rocal_crop.h"
 #include "parameters/parameter_random_crop.h"
+#include "parameters/parameter_random_crop_decoder.h"
 
 //std::shared_ptr<CropParam> create_crop(CroopConfig config);

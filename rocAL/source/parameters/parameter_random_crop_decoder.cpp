@@ -27,14 +27,19 @@ THE SOFTWARE.
 // Initializing the random generator so all objects of the class can share it.
 thread_local std::mt19937 RocalRandomCropDecParam::_rand_gen(time(0));
 
-RocalRandomCropDecParam::RocalRandomCropDecParam(
-    AspectRatioRange aspect_ratio_range,
-    AreaRange area_range,
-    int64_t seed,
-    int num_attempts,
-    int batch_size)
-    : _aspect_ratio_range(aspect_ratio_range), _aspect_ratio_log_dis(std::log(aspect_ratio_range.first), std::log(aspect_ratio_range.second)), _area_dis(area_range.first, area_range.second), _num_attempts(num_attempts), _batch_size(batch_size) {
-    _seeds.resize(_batch_size);
+void RocalRandomCropDecParam::update_array() {
+    generate_random_seeds();
+    for (size_t i = 0; i < _batch_size; i++) {
+        Shape input_shape = {in_roi[i].xywh.h, in_roi[i].xywh.w};
+        auto crop_window = generate_crop_window(input_shape, i);
+        x1_arr_val[i] = crop_window.x;
+        y1_arr_val[i] = crop_window.y;
+        x2_arr_val[i] = x1_arr_val[i] + crop_window.W;
+        y2_arr_val[i] = y1_arr_val[i] + crop_window.H;
+        cropw_arr_val[i] = crop_window.W;
+        croph_arr_val[i] = crop_window.H;
+    }
+    update_crop_array();
 }
 
 CropWindow RocalRandomCropDecParam::generate_crop_window_implementation(const Shape& shape) {
