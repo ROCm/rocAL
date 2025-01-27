@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.7.0"
+__version__ = "2.8.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -381,9 +381,9 @@ else:
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install dlpack-devel'))
     elif "redhat" in platformInfo:
-        # no package avialable -- using source
+        # no package avialable -- using prebuilt RPM
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm'))
+                        ' install https://rpmfind.net/linux/opensuse/distribution/leap/16.0/repo/oss/x86_64/dlpack-devel-0.8-lp160.1.1.x86_64.rpm'))
 
 
     # RapidJSON - Source TBD: Package install of RapidJSON has compile issues - https://github.com/Tencent/rapidjson.git -- master
@@ -392,8 +392,7 @@ else:
 
     # libtar - https://repo.or.cz/libtar.git ; version - v1.2.20
     libtar_version = 'v1.2.20'
-    if "Ubuntu-24" in platformInfo:
-        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+    ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install autoconf libtool'))
     ERROR_CHECK(os.system(
         '(cd '+deps_dir+'; git clone -b '+ libtar_version+' https://repo.or.cz/libtar.git )'))

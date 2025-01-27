@@ -369,5 +369,6 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* rocAL Setup Script - `V2.7.0`
+* Libtar - [v1.2.20](https://repo.or.cz/libtar.git)
+* rocAL Setup Script - `V2.8.0`
 * Dependencies for all the above packages
