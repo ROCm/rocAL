@@ -20,6 +20,24 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+
 # Set Project Version and Language
 project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
 
@@ -34,8 +52,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
-set(CMAKE_CXX_STANDARD 17)
 set(BUILD_ROCAL_PYBIND true)
+set(CMAKE_SKIP_BUILD_RPATH TRUE)
 
 find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
@@ -48,6 +66,7 @@ else()
 endif()	
 find_package(pybind11 QUIET CONFIG)	
 find_package(HALF QUIET)
+find_package(OpenMP QUIET)
 
 # Backend
 if(BUILD_PYPACKAGE)
@@ -176,7 +195,7 @@ endif()
 # Turbo JPEG
 if(NOT TurboJpeg_FOUND)
     set(BUILD_ROCAL_PYBIND false)
-    message("-- ${Yellow}NOTE: rocAL PyBind requires TurboJpeg, Not Found${ColourReset}")
+    message("-- ${Yellow}NOTE: rocAL pybind requires TurboJpeg, Not Found${ColourReset}")
 endif()
 # Python3	
 if(NOT Python3_FOUND)	
@@ -185,13 +204,18 @@ if(NOT Python3_FOUND)
 endif()
 # PyBind11
 if(NOT pybind11_FOUND)	
-    set(BUILD_ROCAL_PYBIND false)	
-    message("-- ${Yellow}NOTE: rocAL requires pybind11, Not Found${ColourReset}")	
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11, Not Found${ColourReset}")
 endif()
 # Half
 if(NOT HALF_FOUND)	
-    set(BUILD_ROCAL_PYBIND false)	
-    message("-- ${Yellow}NOTE: rocAL requires Half, Not Found${ColourReset}")	
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind requires Half, Not Found${ColourReset}")
+endif()
+# OpenMP
+if(NOT OpenMP_FOUND)
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind library requires OpenMP, Not Found ${ColourReset}")
 endif()
 
 if(${BUILD_ROCAL_PYBIND})
@@ -221,6 +245,9 @@ if(${BUILD_ROCAL_PYBIND})
     include_directories(${pybind11_INCLUDE_DIRS})
     # half
     include_directories(${HALF_INCLUDE_DIRS})
+    # OpenMP
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
 
     file(GLOB_RECURSE pyfiles amd/*.py)
     file(GLOB_RECURSE sources *.cpp)
