@@ -17,6 +17,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
 cmake_minimum_required(VERSION 3.10)
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -211,18 +212,6 @@ set(ROCAL_RPM_PACKAGE_LIST     "rpp, mivisionx")
 # Set the dev dependent packages
 set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev")
 set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
-
-# Add rocDecode Deps for HW Decode - Exclude centos-7
-#if (EXISTS "/etc/os-release")
-  #file(READ "/etc/os-release" OS_RELEASE)
-  #string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
-  #if(NOT CENTOS_7_FOUND)
-    #set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
-    #set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
-    #set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
-    #set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
-  #endif()
-#endif()
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
 execute_process(
