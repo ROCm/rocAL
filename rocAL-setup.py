@@ -270,19 +270,21 @@ coreDebianPackages = [
     'protobuf-compiler'
 ]
 
+libsndFile = "libsndfile-devel"
 libPythonProto = "python3-protobuf"
 libProtoCompiler = "protobuf-compiler"
 if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
     libPythonProto = "protobuf-python"
 if "SLES" in os_info_data:
     libProtoCompiler = "libprotobuf-c-devel"
+    libsndFile = "cmake" # TBD - libsndfile-devel  fails to install in SLES
 coreRPMPackages = [
     'nasm',
     'yasm',
     'lmdb-devel',
     'jsoncpp-devel',
     #'rapidjson-devel',
-    'libsndfile-devel', # for audio features
+    str(libsndFile), # for audio features
     'python3-devel',
     'python3-pip',
     str(libPythonProto),
