@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 
 CIFAR10LoaderSingleShardNode::CIFAR10LoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
-    _loader_module = std::make_shared<CIFAR10LoaderSharded>(device_resources);
+    _loader_module = std::make_shared<CIFAR10Loader>(device_resources);
 }
 
 void CIFAR10LoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type,
