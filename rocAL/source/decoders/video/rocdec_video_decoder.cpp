@@ -26,8 +26,6 @@ THE SOFTWARE.
 #ifdef ROCAL_VIDEO
 #if ENABLE_HIP && ENABLE_ROCDECODE
 
-RocDecVideoDecoder::RocDecVideoDecoder(){};
-
 // callback function to flush last frames and save it to file when reconfigure happens
 int ReconfigureFlushCallback(void *p_viddec_obj, uint32_t flush_mode, void *p_user_struct) {
     int n_frames_flushed = 0;

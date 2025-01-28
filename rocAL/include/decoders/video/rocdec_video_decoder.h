@@ -45,7 +45,7 @@ typedef struct ReconfigDumpFileStruct_t {
 class RocDecVideoDecoder : public VideoDecoder {
     public:
         //! Default constructor
-        RocDecVideoDecoder();
+        RocDecVideoDecoder() {}
         VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) override;
         VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
         int SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override { return 0; }
