@@ -95,7 +95,6 @@ void CropResizeNode::update_node() {
         y1 = _crop_fixed_param->get_y1_arr_val();
     }
 
-    _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
     Roi2DCords *crop_dims = static_cast<Roi2DCords *>(_crop_coordinates);
     for (unsigned i = 0; i < _batch_size; i++) {
         crop_dims[i].xywh.x = x1[i];
