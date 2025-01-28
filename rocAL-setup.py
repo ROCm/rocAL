@@ -261,13 +261,13 @@ coreDebianPackages = [
     'yasm',
     'liblmdb-dev',
     #'rapidjson-dev',
+    'libsndfile1-dev', # for audio features
     'python3-dev',
     'python3-pip',
     'python3-protobuf',
     'libprotobuf-dev',
     'libprotoc-dev',
-    'protobuf-compiler',
-    'libsndfile1-dev' # for audio features
+    'protobuf-compiler'
 ]
 
 libPythonProto = "python3-protobuf"
@@ -282,6 +282,7 @@ coreRPMPackages = [
     'lmdb-devel',
     'jsoncpp-devel',
     #'rapidjson-devel',
+    'libsndfile-devel', # for audio features
     'python3-devel',
     'python3-pip',
     str(libPythonProto),
