@@ -2131,6 +2131,7 @@ rocalRawCIFAR10SourceSingleShard(
         auto [width, height] = std::make_tuple(out_width, out_height);
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
 
         auto info = TensorInfo(std::move(dims),
                                context->master_graph->mem_type(),
@@ -2139,7 +2140,7 @@ rocalRawCIFAR10SourceSingleShard(
                                color_format);
         output = context->master_graph->create_loader_output_tensor(info);
 
-        context->master_graph->add_node<CIFAR10LoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::UNCOMPRESSED_BINARY_DATA, shuffle, loop, context->master_graph->mem_type(), filename_prefix);
+        context->master_graph->add_node<CIFAR10LoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::UNCOMPRESSED_BINARY_DATA, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix, sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {

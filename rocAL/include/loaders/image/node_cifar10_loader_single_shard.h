@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "cifar10_loader_sharded.h"
+#include "cifar10_loader.h"
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
 
@@ -37,7 +37,7 @@ class CIFAR10LoaderSingleShardNode : public Node {
     /// \param load_batch_count Defines the quantum count of the images to be loaded. It's usually equal to the user's batch size.
     /// The loader will repeat images if necessary to be able to have images in multiples of the load_batch_count,
     /// for example if there are 10 images in the dataset and load_batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, bool shuffle, bool loop, RocalMemType mem_type, const std::string &file_prefix, const ShardingInfo& sharding_info = ShardingInfo());
+    void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix, const ShardingInfo& sharding_info = ShardingInfo());
     std::shared_ptr<LoaderModule> get_loader_module();
 
    protected:
