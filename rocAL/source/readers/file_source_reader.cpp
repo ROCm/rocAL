@@ -40,16 +40,6 @@ FileSourceReader::FileSourceReader() {
     _file_count_all_shards = 0;
 }
 
-unsigned FileSourceReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop);
-    if (_loop) return size;
-
-    int ret = (size - _read_counter);
-    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
-        ret -= _batch_size;
-    return ((ret < 0) ? 0 : ret);
-}
-
 Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _folder_path = desc.path();
