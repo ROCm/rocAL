@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 #include "numpy_loader_sharded.h"
-#include "pipeline/graph.h"
 #include "pipeline/node.h"
 
 class NumpyLoaderNode : public Node {
