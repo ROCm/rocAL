@@ -5,6 +5,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ## rocAL 2.2.0 (unreleased)
 
 ### Added
+* Extended support to rocAL's video decoder to use rocDecode hardware decoder.
 
 ### Changed
 * AMD Clang is now the default CXX and C compiler.
