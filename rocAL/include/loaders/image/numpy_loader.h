@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "loaders/circular_buffer.h"
 #include "pipeline/commons.h"
 
-// NumpyLoader runs an internal thread for loading an decoding of numpy arrays asynchronously
+// NumpyLoader runs an internal thread for loading numpy arrays asynchronously
 // it uses a circular buffer to store decoded numpy arrays for the user
 class NumpyLoader : public LoaderModule {
    public:

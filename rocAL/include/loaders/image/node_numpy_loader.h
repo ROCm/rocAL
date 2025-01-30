@@ -26,8 +26,6 @@ THE SOFTWARE.
 
 class NumpyLoaderNode : public Node {
    public:
-    /// \param device_resources shard count from user
-    /// internal_shard_count number of loader/decoders are created and each shard is loaded and decoded using separate and independent resources increasing the parallelism and performance.
     NumpyLoaderNode(Tensor *output, void *device_resources);
     ~NumpyLoaderNode() override;
     NumpyLoaderNode() = delete;
@@ -48,8 +46,8 @@ class NumpyLoaderNode : public Node {
     std::shared_ptr<LoaderModule> get_loader_module();
 
    protected:
-    void create_node() override {};
-    void update_node() override {};
+    void create_node() override {}
+    void update_node() override {}
 
    private:
     std::shared_ptr<NumpyLoaderSharded> _loader_module = nullptr;

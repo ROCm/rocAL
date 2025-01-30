@@ -108,7 +108,7 @@ struct ReaderConfig {
     void set_sharding_info(const ShardingInfo& sharding_info) {
         _sharding_info = sharding_info;
     }
-    void set_files(const std::vector<std::string> &files) { _files = files; }
+    void set_files_list(const std::vector<std::string> &files) { _files = files; }
     void set_seed(unsigned seed) { _seed = seed; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
@@ -181,7 +181,7 @@ struct NumpyHeaderData {
     bool fortran_order = false;
     int64_t data_offset = 0;
 
-    RocalTensorDataType type() const { return type_info; };
+    RocalTensorDataType type() const { return type_info; }
 
     size_t size() const {
         size_t num_elements = 1;

@@ -42,7 +42,7 @@ void NumpyLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, c
     reader_cfg.set_shard_count(shard_count);
     reader_cfg.set_shard_id(shard_id);
     reader_cfg.set_batch_count(load_batch_count);
-    reader_cfg.set_files(files);
+    reader_cfg.set_files_list(files);
     reader_cfg.set_seed(seed);
     reader_cfg.set_sharding_info(sharding_info);
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::SKIP_DECODE), mem_type, _batch_size);
