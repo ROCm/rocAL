@@ -156,9 +156,7 @@ void CircularBuffer::pop() {
         _circ_crop_image_info.pop();
 }
 void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, size_t buffer_depth, bool use_hip_memory) {
-    
-    // When using Hardware decoder, pinned memory is not allocated for HIP backend
-    _use_pinned_memory = !use_hip_memory;
+    _use_pinned_memory = !use_hip_memory; // When using Hardware decoder, pinned memory is not allocated for HIP backend
     _buff_depth = buffer_depth;
     _dev_buffer.reserve(_buff_depth);
     _host_buffer_ptrs.reserve(_buff_depth);

@@ -145,6 +145,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     size_t shard_count = reader_cfg.get_shard_count();
     int device_id = reader_cfg.get_shard_id();
 #if ENABLE_HIP
+    // Set stream in decoder config, to be used by rocJpeg decoder for scaling
     if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
         decoder_cfg.set_hip_stream(_hip_stream);
     }
@@ -167,10 +168,11 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
     _crop_image_info._crop_image_coords.resize(_batch_size);
-    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC)
+    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
         _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, true);
-    else
+    } else {
         _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    }
     _is_initialized = true;
     _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     LOG("Loader module initialized");
