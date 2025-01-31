@@ -93,4 +93,6 @@ class ImageReadAndDecode {
     pCropCord _CropCord;
     RocalRandomCropDecParam *_random_crop_dec_param = nullptr;
     bool _is_external_source = false;
+    int _device_id = 0;
+    bool _set_device_id = false;
 };

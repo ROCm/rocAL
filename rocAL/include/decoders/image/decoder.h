@@ -160,5 +160,4 @@ class Decoder {
     virtual void set_bbox_coords(std::vector<float> bbox_coords) = 0;
     virtual std::vector<float> get_bbox_coords() = 0;
     virtual void set_crop_window(CropWindow &crop_window) = 0;
-    virtual void reset_device_id() {}
 };

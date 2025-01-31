@@ -92,7 +92,6 @@ class HWRocJpegDecoder : public Decoder {
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
-    void reset_device_id() override;
    private:
     bool _is_partial_decoder = true;
     std::vector<float> _bbox_coord;
@@ -112,7 +111,6 @@ class HWRocJpegDecoder : public Decoder {
     RocJpegDecodeParams _decode_params = {};
     uint32_t _num_channels = 0;
     bool _resize_batch = false;
-    bool _set_device_id = false;
     int _device_id = 0;
 
 #if ENABLE_HIP

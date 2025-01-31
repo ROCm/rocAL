@@ -216,13 +216,6 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
 // Obtains the decode info of the image, and modifies width and height based on the max decode params after scaling
 Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, 
                                               int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
-    
-    if (!_set_device_id) {
-        std::cerr << "Setting device ID\n";
-        CHECK_HIP(hipSetDevice(_device_id));
-        _set_device_id = true;
-    }
-    
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
@@ -375,10 +368,6 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
     _resize_batch = false;  // Need to reset this value for every batch
 
     return Status::OK;
-}
-
-void HWRocJpegDecoder::reset_device_id() {
-    _set_device_id = false;
 }
 
 HWRocJpegDecoder::~HWRocJpegDecoder() {

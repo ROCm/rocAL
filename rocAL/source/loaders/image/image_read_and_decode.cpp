@@ -77,6 +77,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _original_width.resize(_batch_size);
     _decoder_config = decoder_config;
     _random_crop_dec_param = nullptr;
+    _device_id = device_id;
     if (_decoder_config._type == DecoderType::FUSED_TURBO_JPEG) {
         auto random_aspect_ratio = decoder_config.get_random_aspect_ratio();
         auto random_area = decoder_config.get_random_area();
@@ -134,8 +135,7 @@ void ImageReadAndDecode::feed_external_input(const std::vector<std::string>& inp
 void ImageReadAndDecode::reset() {
     // TODO: Reload images from the folder if needed
     _reader->reset();
-    if (_decoder_config._type == DecoderType::ROCJPEG_DEC)
-        _rocjpeg_decoder->reset_device_id();
+    _set_device_id = false;
 }
 
 size_t
@@ -339,6 +339,17 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_height[i] = scaledh;
             }
         } else if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
+#if ENABLE_HIP
+            // Set device ID for load routine thread once
+            if (!_set_device_id) {
+                hipError_t hip_status = hipSetDevice(_device_id);
+                if (hip_status != hipSuccess) {     
+                    std::cerr << "HIP failure : " << hipGetErrorName(hip_status) << "' at " << __FILE__ << ":" << __LINE__ << std::endl;
+                    exit(1);                                                      \
+                }
+                _set_device_id = true;
+            }
+#endif
             // Iterate through each image in the batch and obtain the decode info
             for (size_t i = 0; i < _batch_size; i++) {
                 _actual_decoded_width[i] = max_decoded_width;
