@@ -280,7 +280,11 @@ enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_AUDIO_GENERIC
      * Uses SndFile library to read audio files
      */
-    ROCAL_DECODER_AUDIO_GENERIC = 5
+    ROCAL_DECODER_AUDIO_GENERIC = 5,
+    /*! \brief AMD ROCAL_DECODER_ROCJPEG
+     * Uses rocJpeg library to decode images on hardware
+     */
+    ROCAL_DECODER_ROCJPEG = 6
 };
 
 enum RocalOutputMemType {
