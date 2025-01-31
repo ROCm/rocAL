@@ -153,12 +153,12 @@ int main(int argc, const char **argv) {
 
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
     size_t num_threads = 1;
-    const unsigned int input_batch_size = 8;
+    const unsigned int input_batch_size = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     int pipeline_type = -1;
     std::cout << "Test case " << test_case << std::endl;
-    std::cout << "Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") <<  input_batch_size << std::endl;
+    std::cout << "Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
 
     RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24
                                               : RocalImageColor::ROCAL_COLOR_U8;
@@ -336,9 +336,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
             else
-                decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, true, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, ROCAL_DECODER_HW_JPEG);
-                // decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, true, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-            // ROCAL_DECODER_HW_JPEG
+                decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
 
     }
@@ -358,7 +356,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
     }
-    /*
     switch (test_case) {
         case 0: {
             std::cout << "Running rocalResize" << std::endl;
@@ -611,7 +608,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
     }
-    */
+
     // Calling the API to verify and build the augmentation graph
     rocalVerify(handle);
     if (rocalGetStatus(handle) != ROCAL_OK) {
@@ -648,7 +645,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         if (rocalRun(handle) != 0)
             break;
         int image_name_length[input_batch_size];
-        /* switch (pipeline_type) {
+        switch (pipeline_type) {
             case 1: {   // classification pipeline
                 RocalTensorList labels = rocalGetImageLabels(handle);
                 int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
@@ -759,34 +756,34 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::cout << "Not a valid pipeline type ! Exiting!\n";
                 return -1;
             }
-        } */
+        }
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
 
-        // std::vector<int> compression_params;
-        // compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        // compression_params.push_back(9);
+        std::vector<int> compression_params;
+        compression_params.push_back(IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);
 
-        // mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
-        // std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
-        // if (display_all)
-        //     out_filename = std::string(outName) + std::to_string(index) + ".png";  // in case the user specifies non png filename
+        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+        std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
+        if (display_all)
+            out_filename = std::string(outName) + std::to_string(index) + ".png";  // in case the user specifies non png filename
 
-        // if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
-        //     cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-        //     if (DISPLAY)
-        //         cv::imshow("output", mat_output);
-        //     else
-        //         cv::imwrite(out_filename, mat_color, compression_params);
-        // } else {
-        //     if (DISPLAY)
-        //         cv::imshow("output", mat_output);
-        //     else
-        //         cv::imwrite(out_filename, mat_output, compression_params);
-        // }
-        // col_counter = (col_counter + 1) % number_of_cols;
+        if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
+            cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+            if (DISPLAY)
+                cv::imshow("output", mat_output);
+            else
+                cv::imwrite(out_filename, mat_color, compression_params);
+        } else {
+            if (DISPLAY)
+                cv::imshow("output", mat_output);
+            else
+                cv::imwrite(out_filename, mat_output, compression_params);
+        }
+        col_counter = (col_counter + 1) % number_of_cols;
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
