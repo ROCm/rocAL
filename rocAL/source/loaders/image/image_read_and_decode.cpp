@@ -85,18 +85,18 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         _random_crop_dec_param = new RocalRandomCropDecParam(aspect_ratio_range, area_range, (int64_t)decoder_config.get_seed(), decoder_config.get_num_attempts(), _batch_size);
     }
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
-        if (_decoder_config._type != DecoderType::ROCJPEG_DEC) {
-            for (int i = 0; i < batch_size; i++) {
-                _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
-                _decoder[i] = create_decoder(decoder_config);
-                _decoder[i]->initialize(device_id);
-            }
-        } else {
+        if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
             for (int i = 0; i < batch_size; i++) {
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             }
             _rocjpeg_decoder = create_decoder(decoder_config);
             _rocjpeg_decoder->initialize(device_id, batch_size);
+        } else {
+            for (int i = 0; i < batch_size; i++) {
+                _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
+                _decoder[i] = create_decoder(decoder_config);
+                _decoder[i]->initialize(device_id);
+            }
         }
     }
     _num_threads = reader_config.get_cpu_num_threads();
@@ -338,12 +338,12 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = scaledw;
                 _actual_decoded_height[i] = scaledh;
             }
-        } else {
-            int jpeg_sub_samp;
+        } else if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
+            // Iterate through each image in the batch and obtain the decode info
             for (size_t i = 0; i < _batch_size; i++) {
                 _actual_decoded_width[i] = max_decoded_width;
                 _actual_decoded_height[i] = max_decoded_height;
-                int original_width, original_height, jpeg_sub_samp, decoded_width, decoded_height;
+                int original_width, original_height, decoded_width, decoded_height;
                 if (_rocjpeg_decoder->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
                                             &decoded_width, &decoded_height, 
                                             max_decoded_width, max_decoded_height, decoder_color_format, i) != Decoder::Status::OK) {
