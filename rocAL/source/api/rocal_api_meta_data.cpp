@@ -288,6 +288,16 @@ RocalTensorList
     return context->master_graph->bbox_meta_data();
 }
 
+RocalMetaData
+    ROCAL_API_CALL
+    rocalGetAsciiDatas(RocalContext p_context) {
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalGetAsciiDatas")
+    auto context = static_cast<Context*>(p_context);
+    return context->master_graph->ascii_values_meta_data();
+}
+
+
 unsigned
     ROCAL_API_CALL
     rocalGetMaskCount(RocalContext p_context, int* buf) {
@@ -501,6 +511,19 @@ void
     context->master_graph->box_iou_matcher(anchors, high_threshold,
                                            low_threshold,
                                            allow_low_quality_matches);
+}
+
+RocalMetaData
+    ROCAL_API_CALL
+    rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output) {
+#ifdef ENABLE_WDS
+        if (!p_context)
+            THROW("Invalid rocal context passed to rocalCreateWebDatasetReader")
+        auto context = static_cast<Context*>(p_context);
+        return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, static_cast<MissingComponentsBehaviour>(missing_components_behavior));
+#else
+        THROW("Webdataset reader is not enabled since libtar is not present")
+#endif
 }
 
 RocalTensorList
