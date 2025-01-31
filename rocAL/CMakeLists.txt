@@ -64,15 +64,7 @@ find_package(FFmpeg QUIET)
 find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
-
-# find rocJPEG
-find_library(ROCJPEG_LIBRARY NAMES rocjpeg HINTS {ROCM_PATH}/lib)
-find_path(ROCJPEG_INCLUDE_DIR NAMES rocjpeg.h PATHS /opt/rocm/include/rocjpeg {ROCM_PATH}/include/rocjpeg)
-
-if(ROCJPEG_LIBRARY AND ROCJPEG_INCLUDE_DIR)
-    set(ROCJPEG_FOUND TRUE)
-    message("-- ${White}Using rocJPEG -- \n\tLibraries:${ROCJPEG_LIBRARY} \n\tIncludes:${ROCJPEG_INCLUDE_DIR}${ColourReset}")
-endif()
+find_package(rocJPEG QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -391,13 +383,6 @@ if(${BUILD_ROCAL})
         # HIP
         include_directories (${ROCJPEG_INCLUDE_DIR})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCJPEG_LIBRARY})
-    else()
-        if (NOT HIP_FOUND)
-            message(FATAL_ERROR "-- ERROR!: HIP Not Found! - please install ROCm and HIP!")
-        endif()
-        if (NOT ROCJPEG_FOUND)
-            message(FATAL_ERROR "-- ERROR!: rocJPEG Not Found! - please install rocJPEG!")
-        endif()
     endif()
 
     # -Wall -- Enable most warning messages
