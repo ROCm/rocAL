@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.7.0"
+__version__ = "2.8.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -261,6 +261,7 @@ coreDebianPackages = [
     'yasm',
     'liblmdb-dev',
     #'rapidjson-dev',
+    'libsndfile1-dev', # for audio features
     'python3-dev',
     'python3-pip',
     'python3-protobuf',
@@ -269,18 +270,21 @@ coreDebianPackages = [
     'protobuf-compiler'
 ]
 
+libsndFile = "libsndfile-devel"
 libPythonProto = "python3-protobuf"
 libProtoCompiler = "protobuf-compiler"
 if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
     libPythonProto = "protobuf-python"
 if "SLES" in os_info_data:
     libProtoCompiler = "libprotobuf-c-devel"
+    libsndFile = "cmake" # TBD - libsndfile-devel  fails to install in SLES
 coreRPMPackages = [
     'nasm',
     'yasm',
     'lmdb-devel',
     'jsoncpp-devel',
     #'rapidjson-devel',
+    str(libsndFile), # for audio features
     'python3-devel',
     'python3-pip',
     str(libPythonProto),
@@ -299,7 +303,7 @@ debianOptionalPackages = [
     'libavformat-dev',
     'libavutil-dev',
     'libswscale-dev',
-    'libopencv-dev'
+    'libopencv-dev',
 ]
 
 # Install
@@ -380,18 +384,21 @@ else:
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
                         ' install dlpack-devel'))
     elif "redhat" in platformInfo:
-        # no package avialable -- using source
+        # no package avialable -- using prebuilt RPM
         ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                        ' install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm'))
+                        ' install https://rpmfind.net/linux/opensuse/distribution/leap/16.0/repo/oss/x86_64/dlpack-devel-0.8-lp160.1.1.x86_64.rpm'))
 
 
     # RapidJSON - Source TBD: Package install of RapidJSON has compile issues - https://github.com/Tencent/rapidjson.git -- master
     os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
             linuxCMake+' ../; make -j$(nproc); sudo make install)')
 
-    # libtar - https://github.com/tklauser/libtar.git 
+    # libtar - https://repo.or.cz/libtar.git ; version - v1.2.20
+    libtar_version = 'v1.2.20'
+    ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install autoconf libtool'))
     ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; git clone https://github.com/tklauser/libtar.git )'))
+        '(cd '+deps_dir+'; git clone -b '+ libtar_version+' https://repo.or.cz/libtar.git )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/libtar; '+
             ' autoreconf --force --install; CFLAGS="-fPIC" ./configure; make -j$(nproc); sudo make install )'))
 
