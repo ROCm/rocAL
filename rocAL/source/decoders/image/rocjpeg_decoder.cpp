@@ -319,12 +319,10 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     return Status::OK;
 }
 
-Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<std::vector<unsigned char>> &input_buffer, std::vector<size_t> &input_size,
-                                       std::vector<unsigned char *> &output_buffer,
-                                       size_t max_decoded_width, size_t max_decoded_height,
-                                       std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
-                                       std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height,
-                                       Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original_size) {
+Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &output_buffer,
+                                               size_t max_decoded_width, size_t max_decoded_height,
+                                               std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
+                                               std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
 
 
     if (_resize_batch) {

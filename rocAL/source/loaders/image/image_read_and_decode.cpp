@@ -371,11 +371,10 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_height[i] = decoded_height;
             }
             
-            if (_rocjpeg_decoder->decode_batch(_compressed_buff, _compressed_image_size, _decompressed_buff_ptrs,
-                                         max_decoded_width, max_decoded_height,
-                                         _original_width, _original_height,
-                                         _actual_decoded_width, _actual_decoded_height,
-                                         decoder_color_format, _decoder_config, keep_original) != Decoder::Status::OK) {
+            if (_rocjpeg_decoder->decode_batch(_decompressed_buff_ptrs,
+                                               max_decoded_width, max_decoded_height,
+                                               _original_width, _original_height,
+                                               _actual_decoded_width, _actual_decoded_height) != Decoder::Status::OK) {
 
             }
         }
