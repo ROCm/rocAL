@@ -31,4 +31,6 @@ subtrees:
         title: rocAL Header files
   - file: examples/examples.rst
     title: rocAL examples
+  - file: reference/rocAL-and-RNNT.rst
+    title: rocAL RNNT dataloading
   - file: license.rst
