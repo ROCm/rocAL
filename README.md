@@ -148,6 +148,11 @@ rocAL can be currently used to perform the following operations either with rand
   * Source: `https://github.com/Tencent/rapidjson.git`
   * Tag: `master`
 
+* [rocDecode](https://github.com/ROCm/rocDecode) - Optional for source install, but required for package install
+  ```shell
+  sudo apt install rocdecode rocdecode-dev
+  ```
+
 > [!IMPORTANT]
 > * Required compiler support
 >   * C++17
