@@ -2,7 +2,24 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## rocAL 2.2.0 (unreleased)
+## rocAL 2.3.0 (unreleased)
+
+### Added
+* Extended support to rocAL's video decoder to use rocDecode hardware decoder.
+
+### Changed
+
+### Removed
+
+### Optimizations
+
+### Resolved issues
+
+### Known issues
+
+### Upcoming changes
+
+## rocAL 2.2.0
 
 ### Added
 * Extended support to rocAL's video decoder to use rocDecode hardware decoder.
