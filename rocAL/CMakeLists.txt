@@ -64,6 +64,7 @@ find_package(FFmpeg QUIET)
 find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
+find_package(rocDecode QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -268,7 +269,11 @@ if(${BUILD_ROCAL})
     )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
-
+    #rocDecode
+    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCDECODE_FOUND)
+        include_directories(${ROCDECODE_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
+    endif()
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} rocAL_hip)
@@ -281,7 +286,9 @@ if(${BUILD_ROCAL})
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
-    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS})
+    set(ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
+    add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
+                                ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${ROCDECODE_SRCS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         add_dependencies(${PROJECT_NAME} rocAL_hip)
@@ -289,6 +296,12 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=1)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
+        if(ROCDECODE_FOUND)
+            include_directories(${ROCM_PATH}/share/rocdecode/utils)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCDECODE=1)
+        else()
+            target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCDECODE=0)
+        endif()
         message("-- ${White}rocAL built with HIP Backend${ColourReset}")
     elseif("${BACKEND}" STREQUAL "OPENCL" AND OPENCL_FOUND)
         include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
@@ -321,6 +334,7 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
         message("-- ${Yellow}NOTE: rocAL built without OpenCV extension functionality${ColourReset}")
     endif()
+
     # FFMPEG
     if(NOT FFMPEG_FOUND)
         message("-- ${Yellow}NOTE: rocAL built without FFmpeg video decode functionality${ColourReset}")

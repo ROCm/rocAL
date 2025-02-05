@@ -149,6 +149,19 @@ auto convert_decoder_mode = [](RocalDecodeDevice decode_mode) {
     }
 };
 
+auto convert_video_decoder_type = [](RocalDecoderType decoder_type) {
+    switch (decoder_type) {
+        case ROCAL_DECODER_VIDEO_FFMPEG_SW:
+            return DecoderType::FFMPEG_SW_DECODE;
+        case ROCAL_DECODER_VIDEO_FFMPEG_HW:
+            return DecoderType::FFMPEG_HW_DECODE;
+        case ROCAL_DECODER_VIDEO_ROCDECODE:
+            return DecoderType::ROCDEC_VIDEO_DECODE;
+        default:
+            THROW("Unsupported video decoder type" + TOSTR(decoder_type))
+    }
+};
+
 auto convert_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
     switch (last_batch_policy) {
         case ROCAL_LAST_BATCH_FILL:
@@ -1621,6 +1634,7 @@ rocalVideoFileSource(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1641,12 +1655,8 @@ rocalVideoFileSource(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
@@ -1687,6 +1697,7 @@ rocalVideoFileSourceSingleShard(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1713,12 +1724,8 @@ rocalVideoFileSourceSingleShard(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
@@ -1760,6 +1767,7 @@ rocalVideoFileResize(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1786,12 +1794,8 @@ rocalVideoFileResize(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
@@ -1913,6 +1917,7 @@ rocalVideoFileResizeSingleShard(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1945,12 +1950,8 @@ rocalVideoFileResizeSingleShard(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
