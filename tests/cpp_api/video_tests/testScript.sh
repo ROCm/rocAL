@@ -37,7 +37,7 @@ make
 SAVE_FRAMES=1   # (save_frames:on/off)
 RGB=1           # (rgb:1/gray:0)
 DEVICE=0        # (cpu:0/gpu:1)
-HARDWARE_DECODE_MODE=0 # (hardware_decode_mode:on/off)
+DECODER_TYPE=0  # (ffmpeg_sw:0/ffmpeg_hw=1/rocDecode=2)
 SHUFFLE=0       # (shuffle:on/off)
 
 BATCH_SIZE=1         # Number of sequences per batch
@@ -53,10 +53,10 @@ ENABLE_FRAME_NUMBER=0        # outputs the starting frame numbers of the sequenc
 ENABLE_TIMESTAMPS=0          # outputs timestamps of the frames in the batch
 ENABLE_SEQUENCE_REARRANGE=0  # rearranges the frames in the sequence NOTE: The order needs to be set in the video_tests.cpp
 
-echo ./video_tests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
+echo ./video_tests "$INPUT_PATH" $READER_CASE $DEVICE $DECODER_TYPE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
 $RGB $SAVE_FRAMES $SHUFFLE $RESIZE_WIDTH $RESIZE_HEIGHT $FILELIST_FRAMENUM \
 $ENABLE_METADATA $ENABLE_FRAME_NUMBER $ENABLE_TIMESTAMPS $ENABLE_SEQUENCE_REARRANGE
 
-./video_tests "$INPUT_PATH" $READER_CASE $DEVICE $HARDWARE_DECODE_MODE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
+./video_tests "$INPUT_PATH" $READER_CASE $DEVICE $DECODER_TYPE $BATCH_SIZE $SEQUENCE_LENGTH $STEP $STRIDE \
 $RGB $SAVE_FRAMES $SHUFFLE $RESIZE_WIDTH $RESIZE_HEIGHT $FILELIST_FRAMENUM \
 $ENABLE_METADATA $ENABLE_FRAME_NUMBER $ENABLE_TIMESTAMPS $ENABLE_SEQUENCE_REARRANGE
