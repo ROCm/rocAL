@@ -48,6 +48,7 @@ class VideoLoader : public LoaderModule {
     void start_loading() override;
     LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
+    void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
     DecodedDataInfo get_decode_data_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
@@ -83,6 +84,7 @@ class VideoLoader : public LoaderModule {
     size_t _image_counter = 0;          //!< How many frames have been loaded already
     size_t _remaining_sequences_count;  //!< How many frames are there yet to be loaded
     bool _decoder_keep_original = false;
+    int _device_id = 0;         //!< device_id for this loader
     std::vector<std::vector<size_t>> _sequence_start_framenum_vec;
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;
     CropImageInfo _crop_img_info;

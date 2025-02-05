@@ -29,10 +29,10 @@ class HardWareVideoDecoder : public VideoDecoder {
    public:
     //! Default constructor
     HardWareVideoDecoder();
-    VideoDecoder::Status Initialize(const char *src_filename) override;
+    VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) override;
     VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
-    int seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override;
-    void release() override;
+    int SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override;
+    void Release() override;
     ~HardWareVideoDecoder() override;
 
    private:
