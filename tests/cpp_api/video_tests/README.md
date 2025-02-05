@@ -54,7 +54,7 @@ SAVE_FRAMES : Saves the output frames or avi files in the build/output_frames fo
 
 DEVICE : CPU:0/GPU:1 device is supported.
 
-HARDWARE_DECODE_MODE : Uses Hardware decoder if set to true.
+DECODER_TYPE : Determines type of decoder used for video decoding. Currently supports ffmpeg_sw:0/ffmpeg_hw:1/rocDecode:2.
 
 SHUFFLE : Shuffles the sequences if set to true.
 
@@ -104,6 +104,13 @@ To test with VideoReaderResize pass reader_case as 2:
 ```
 
 Also RESIZE_WIDTH and RESIZE_HEIGHT can be changed in testScript.sh
+
+**NOTE**:
+
+To run the Video reader with rocDecode decoder, the following arguments are to be modified in testScript.sh
+
+* DEVICE=1
+* DECODER_TYPE=2
 
 <br>
 
