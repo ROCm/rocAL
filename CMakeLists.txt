@@ -213,7 +213,7 @@ set(ROCAL_RPM_PACKAGE_LIST     "mivisionx")
 set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev")
 set(ROCAL_RPM_DEV_PACKAGE_LIST  "mivisionx-devel, lmdb-devel, protobuf-devel")
 
-Add rocDecode Deps for HW Decode - Exclude centos-7
+# Add rocDecode Deps for HW Decode - Exclude centos-7
 if (EXISTS "/etc/os-release")
   file(READ "/etc/os-release" OS_RELEASE)
   string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
