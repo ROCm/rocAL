@@ -197,7 +197,6 @@ libpkgConfig = "pkg-config"
 if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
     libpkgConfig = "pkgconfig"
 commonPackages = [
-    'gcc',
     'cmake',
     'git',
     'wget',
@@ -207,44 +206,20 @@ commonPackages = [
 
 rocmDebianPackages = [
     'half',
-    'rpp',
-    'rpp-dev',
-    'mivisionx',
     'mivisionx-dev'
 ]
 
 rocmRPMPackages = [
     'half',
-    'rpp',
-    'rpp-devel',
-    'mivisionx',
     'mivisionx-devel'
 ]
 
 rocdecodeDebianPackages = [
-    'rocdecode',
     'rocdecode-dev'
 ]
 
 rocdecodeRPMPackages = [
-    'rocdecode',
     'rocdecode-devel'
-]
-
-opencvDebianPackages = [
-    'build-essential',
-    'pkg-config',
-    'libgtk2.0-dev',
-    'libavcodec-dev',
-    'libavformat-dev',
-    'libswscale-dev',
-    'libtbb2',
-    'libtbb-dev',
-    'libjpeg-dev',
-    'libpng-dev',
-    'libtiff-dev',
-    'libdc1394-dev',
-    'unzip'
 ]
 
 opencvRPMPackages = [
@@ -454,7 +429,7 @@ else:
         for i in range(len(opencvRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ opencvRPMPackages[i]))
-        # OpenCV 4.6.0
+        # OpenCV 4.6.0 
         # Get Installation Source
         ERROR_CHECK(os.system(
             '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
