@@ -2,7 +2,7 @@
 # 
 # MIT License
 # 
-# Copyright (c) 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2024 Advanced Micro Devices, Inc.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -10,10 +10,10 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-#
+# 
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-#
+# 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,12 +21,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+# 
+################################################################################################################################################################
+# - Try to find rocDecode libraries and headers
+# Once done this will define
 #
+# ROCDECODE_FOUND - system has rocDecode
+# ROCDECODE_INCLUDE_DIR - the rocDecode include directory
+# ROCDECODE_LIBRARY - Link these to use rocDecode
+# ROCDECODE_VER_MAJOR - rocDecode version major
+# ROCDECODE_VER_MINOR - rocDecode version minor
+# ROCDECODE_VER_MICRO - rocDecode version micro
 ################################################################################
 
 # ROCM Path
-if(ROCM_PATH)
-    message("-- ${White}FindrocDecode: ROCM_PATH Set -- ${ROCM_PATH}${ColourReset}")
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()

@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.8.0"
+__version__ = "2.9.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -197,7 +197,6 @@ libpkgConfig = "pkg-config"
 if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
     libpkgConfig = "pkgconfig"
 commonPackages = [
-    'gcc',
     'cmake',
     'git',
     'wget',
@@ -207,44 +206,20 @@ commonPackages = [
 
 rocmDebianPackages = [
     'half',
-    'rpp',
-    'rpp-dev',
-    'mivisionx',
     'mivisionx-dev'
 ]
 
 rocmRPMPackages = [
     'half',
-    'rpp',
-    'rpp-devel',
-    'mivisionx',
     'mivisionx-devel'
 ]
 
 rocdecodeDebianPackages = [
-    'rocdecode',
     'rocdecode-dev'
 ]
 
 rocdecodeRPMPackages = [
-    'rocdecode',
     'rocdecode-devel'
-]
-
-opencvDebianPackages = [
-    'build-essential',
-    'pkg-config',
-    'libgtk2.0-dev',
-    'libavcodec-dev',
-    'libavformat-dev',
-    'libswscale-dev',
-    'libtbb2',
-    'libtbb-dev',
-    'libjpeg-dev',
-    'libpng-dev',
-    'libtiff-dev',
-    'libdc1394-dev',
-    'unzip'
 ]
 
 opencvRPMPackages = [
@@ -339,15 +314,15 @@ else:
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ rocmRPMPackages[i]))
             
-    # rocDecode - TBD: Revert when rocDecode is fully supported on all OS
-    # if "Ubuntu" in platformInfo:
-        # for i in range(len(rocdecodeDebianPackages)):
-            # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                        # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
-    # elif "redhat-7" not in platformInfo:
-        #for i in range(len(rocdecodeRPMPackages)):
-            # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                        # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
+    # rocDecode
+    if "Ubuntu" in platformInfo:
+        for i in range(len(rocdecodeDebianPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
+    elif "redhat" in platformInfo and "SLES" in platformInfo:
+        for i in range(len(rocdecodeRPMPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
 
     ERROR_CHECK(os.system(sudoValidate))
     # rocAL Core Packages
@@ -454,7 +429,7 @@ else:
         for i in range(len(opencvRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ opencvRPMPackages[i]))
-        # OpenCV 4.6.0
+        # OpenCV 4.6.0 
         # Get Installation Source
         ERROR_CHECK(os.system(
             '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
