@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.8.0"
+__version__ = "2.9.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -339,15 +339,15 @@ else:
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ rocmRPMPackages[i]))
             
-    # rocDecode - TBD: Revert when rocDecode is fully supported on all OS
-    # if "Ubuntu" in platformInfo:
-        # for i in range(len(rocdecodeDebianPackages)):
-            # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                        # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
-    # elif "redhat-7" not in platformInfo:
-        #for i in range(len(rocdecodeRPMPackages)):
-            # ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                        # ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
+    # rocDecode
+    if "Ubuntu" in platformInfo:
+        for i in range(len(rocdecodeDebianPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeDebianPackages[i]))
+    elif "redhat" in platformInfo and "SLES" in platformInfo:
+        for i in range(len(rocdecodeRPMPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
 
     ERROR_CHECK(os.system(sudoValidate))
     # rocAL Core Packages
