@@ -99,7 +99,7 @@ evaluate_numpy_data_set(StorageType storage_type, DecoderType decoder_type,
     source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
     auto reader_cfg = ReaderConfig(storage_type, source_path);
     if (!files.empty())
-        reader_cfg.set_files(files);
+        reader_cfg.set_files_list(files);
     if (source_evaluator.create_numpy_reader(reader_cfg) != ImageSourceEvaluatorStatus::OK)
         THROW("Initializing numpy source input evaluator failed ")
     auto max_dims = source_evaluator.max_numpy_dims();
