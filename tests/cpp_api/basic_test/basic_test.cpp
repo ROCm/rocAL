@@ -79,7 +79,7 @@ int main(int argc, const char **argv) {
     if (argc >= argIdx + MIN_ARG_COUNT)
         decode_shard_counts = atoi(argv[++argIdx]);
 
-    int inputBatchSize = 4;
+    const int inputBatchSize = 4;
 
     std::cout << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
 
@@ -169,9 +169,9 @@ int main(int argc, const char **argv) {
             RocalTensorList labels = rocalGetImageLabels(handle);
 
             unsigned imagename_size = rocalGetImageNameLen(handle, ImageNameLen);
-            char imageNames[imagename_size];
-            rocalGetImageName(handle, imageNames);
-            std::string imageNamesStr(imageNames);
+            std::vector<char> imageNames(imagename_size);
+            rocalGetImageName(handle, imageNames.data());
+            std::string imageNamesStr(imageNames.data());
 
             int pos = 0;
             int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());

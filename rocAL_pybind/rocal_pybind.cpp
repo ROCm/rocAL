@@ -22,10 +22,14 @@ THE SOFTWARE.
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/numpy.h>
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
+#if ENABLE_DLPACK
+    #include <dlpack/dlpack.h>
+#endif
 #include "rocal_api_types.h"
 #include "rocal_api.h"
 #include "rocal_api_tensor.h"
@@ -37,6 +41,7 @@ THE SOFTWARE.
 namespace py = pybind11;
 
 using float16 = half_float::half;
+#define TENSOR_MAX_RANK 4
 static_assert(sizeof(float16) == 2, "Bad size");
 namespace pybind11 {
 namespace detail {
@@ -156,6 +161,122 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {6, "int16"},
 };
 
+#if ENABLE_DLPACK
+    //dlpack functions
+    static bool supported_dl_device_type(const DLDeviceType &devType) {
+        switch (devType) {
+            case kDLROCM:
+            case kDLROCMHost:
+            case kDLCPU:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    static RocalTensorOutputType get_data_type(const DLDataType &dtype) {
+        if (dtype.lanes != 1) {
+            throw std::runtime_error("Data type lanes != 1 is not supported.");
+        }
+
+        switch (dtype.bits) {
+            case 8:
+                if (dtype.code ==  kDLInt) {
+                    return RocalTensorOutputType::ROCAL_INT8;
+                } else if (dtype.code == kDLUInt) {
+                    return RocalTensorOutputType::ROCAL_UINT8;
+                } else {
+                    throw std::runtime_error("Data type code for 8 bit type is not supported.");
+                }
+                break;
+            case 32:
+                if (dtype.code == kDLInt) {
+                    return RocalTensorOutputType::ROCAL_INT32;
+                } else if (dtype.code == kDLUInt) {
+                    return RocalTensorOutputType::ROCAL_UINT32;
+                } else if (dtype.code == kDLFloat) {
+                    return RocalTensorOutputType::ROCAL_FP32;
+                } else {
+                    throw std::runtime_error("Data type code for 32 bit type is not supported.");
+                }
+                break;
+            case 16:
+                if (dtype.code == kDLFloat) {
+                    return RocalTensorOutputType::ROCAL_FP16;
+                } else {
+                    throw std::runtime_error("Data type code for 16 bit type is not supported.");
+                }
+                break;
+            default:
+                throw std::runtime_error("Data type bits is not supporte by dlpack.");
+        }
+    }
+
+    static RocalOutputMemType get_data_location(const DLDeviceType &devType) {
+        switch (devType) {
+            case kDLROCM:
+                return RocalOutputMemType::ROCAL_MEMCPY_GPU;
+            case kDLROCMHost:
+            case kDLCPU:
+                return RocalOutputMemType::ROCAL_MEMCPY_HOST;
+            default:
+                throw std::runtime_error("Tensor device type is not supported.");
+        }
+    }
+
+    static DLDevice generate_dl_device(rocalTensor *rocal_tensor, int device_id) {
+        DLDevice dev;
+
+        dev.device_id = device_id;
+        switch (rocal_tensor->mem_type()) {
+            case RocalOutputMemType::ROCAL_MEMCPY_GPU:
+                dev.device_type = kDLROCM;
+                break;
+            case RocalOutputMemType::ROCAL_MEMCPY_HOST:
+                dev.device_type = kDLCPU;
+                break;
+            default:
+                throw std::runtime_error("Device type not supported - cannot generate dl device");
+        }
+        return dev;
+    }
+
+    static DLDataType get_dl_data_type(const RocalTensorOutputType &dtype) {
+        DLDataType out;
+        out.lanes = 1;
+
+        switch (dtype) {
+            case RocalTensorOutputType::ROCAL_UINT8:
+                out.bits = 8;
+                out.code = kDLUInt;
+                break;
+            case RocalTensorOutputType::ROCAL_INT8:
+                out.bits = 8;
+                out.code = kDLInt;
+                break;
+            case RocalTensorOutputType::ROCAL_UINT32:
+                out.bits = 32;
+                out.code = kDLUInt;
+                break;
+            case RocalTensorOutputType::ROCAL_INT32:
+                out.bits = 32;
+                out.code = kDLInt;
+                break;
+            case RocalTensorOutputType::ROCAL_FP32:
+                out.bits = 32;
+                out.code = kDLFloat;
+            case RocalTensorOutputType::ROCAL_FP16:
+                out.bits = 16;
+                out.code = kDLFloat;
+                break;
+            default:
+                throw std::runtime_error("Data type not supported - cannot generate dl data type");
+        }
+
+        return out;
+    }
+#endif
+
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
     // Bind the C++ structure
@@ -171,6 +292,158 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("process_time", &TimingInfo::process_time)
         .def_readwrite("transfer_time", &TimingInfo::transfer_time);
     py::class_<rocalTensor>(m, "rocalTensor")
+#if ENABLE_DLPACK
+            .def(
+                "__dlpack__",
+                [](rocalTensor *rocal_tensor, int device_id) {
+                    DLManagedTensor *dmtensor = new DLManagedTensor;
+                    dmtensor->deleter = [](DLManagedTensor *self) {
+                        delete[] self->dl_tensor.shape;
+                        delete[] self->dl_tensor.strides;
+                        delete self;
+                    };
+
+                    try {
+                        DLTensor &dtensor = dmtensor->dl_tensor;
+
+                        dtensor.device = generate_dl_device(rocal_tensor, device_id);
+
+                        // Set up ndim
+                        dtensor.ndim = rocal_tensor->num_of_dims();
+
+                        // Set up data
+                        dtensor.data = rocal_tensor->buffer();
+                        dtensor.byte_offset = 0;
+
+                        // Set up shape
+                        dtensor.shape = new int64_t[dtensor.ndim];
+                        std::vector<size_t> rocal_shape = rocal_tensor->dims();
+                        for (int32_t i = 0; i < dtensor.ndim; ++i) {
+                            dtensor.shape[i] = static_cast<int64_t>(rocal_shape[i]);
+                        }
+
+                        // Set up dtype
+                        dtensor.dtype = get_dl_data_type(rocal_tensor->data_type());
+
+                        // Set up strides
+                        dtensor.strides = new int64_t[dtensor.ndim];
+                        std::vector<size_t> rocal_strides = rocal_tensor->strides();
+                        for (int32_t i = 0; i < dtensor.ndim; i++) {
+                            dtensor.strides[i] = static_cast<int64_t>(rocal_strides[i]) / rocal_tensor->data_type_size();
+                        }
+                    } catch (...) {
+                        delete[] dmtensor->dl_tensor.shape;
+                        delete[] dmtensor->dl_tensor.strides;
+                        delete dmtensor;
+                    }
+
+                    py::capsule cap(dmtensor, "dltensor", [](PyObject *ptr) {
+                        if (PyCapsule_IsValid(ptr, "dltensor")) {
+                            // If consumer didn't delete the tensor,
+                            if (auto *dlTensor = static_cast<DLManagedTensor *>(
+                                    PyCapsule_GetPointer(ptr, "dltensor"))) {
+                                // Delete the tensor.
+                                if (dlTensor->deleter != nullptr) {
+                                    dlTensor->deleter(dlTensor);
+                                }
+                            }
+                        }
+                    });
+                    return cap;
+                }, 
+                R"code(
+                    Returns a dlpack tensor for rocalTensor
+                    )code"
+            )
+            .def("dlpack_device",
+                [] (rocalTensor *rocal_tensor, int device_id) {
+                    DLDevice dev = generate_dl_device(rocal_tensor, device_id);
+                    return py::make_tuple(py::int_(static_cast<int>(dev.device_type)),
+                                        py::int_(static_cast<int>(dev.device_id)));
+                },
+                R"code(
+                    Returns the dlpack device based on rocal tensor requested by user
+                    )code"
+            )
+            .def("from_dlpack",
+                [] (py::object src, RocalTensorLayout elayout, rocalTensor *output_tensor) {
+                    if (hasattr(src, "__dlpack__")) {
+                        // Quickly check if we support the device
+                        if (hasattr(src, "__dlpack_device__")) {
+                            py::tuple dlpackDevice =
+                                src.attr("__dlpack_device__")().cast<py::tuple>();
+                            auto devType =
+                                static_cast<DLDeviceType>(dlpackDevice[0].cast<int>());
+                            if (!supported_dl_device_type(devType)) {
+                                throw std::runtime_error(
+                                    "Tensor device type is not supported.");
+                            }
+                        }
+
+                        py::capsule cap = src.attr("__dlpack__")().cast<py::capsule>();
+
+                        if (DLManagedTensor *tensor =
+                                static_cast<DLManagedTensor *>(cap.get_pointer())) {
+                            // set up
+                            cap.set_name("used_dltensor");
+                            DLTensor dtensor = tensor->dl_tensor;
+
+                            //
+                            // do work
+                            //
+
+                            // device
+                            if (!supported_dl_device_type(dtensor.device.device_type)) {
+                                throw std::runtime_error(
+                                    "Tensor device type is not supported.");
+                            }
+                            RocalOutputMemType dloc = get_data_location(dtensor.device.device_type);
+
+                            // dtype
+                            RocalTensorOutputType dtype(get_data_type(dtensor.dtype));
+
+                            // layout
+                            RocalTensorLayout layout(elayout);
+                            output_tensor->set_tensor_layout(layout);
+
+                            // ndim
+                            unsigned ndim = output_tensor->num_of_dims();
+                            ndim = dtensor.ndim == 0 ? 1 : static_cast<unsigned>(dtensor.ndim);
+                            if (ndim < 1 || ndim > TENSOR_MAX_RANK) {
+                                throw std::runtime_error("Tensor ndim is invalid.");
+                            }
+
+                            // shape 
+                            if (!dtensor.shape) {
+                                throw std::runtime_error("Tensor shape is null.");
+                            }
+                            std::vector<size_t> dims;
+                            for (int i = 0; i < output_tensor->num_of_dims(); i++) {
+                                dims[i] = static_cast<size_t>(dtensor.shape[i]);
+                            }
+                            // calculates strides within this function
+                            output_tensor->set_dims(dims);
+
+                            // clean up - dlpack
+                            if (tensor->deleter) {
+                                tensor->deleter(tensor);
+                            }
+                        }
+
+                        return output_tensor;
+                    }
+                    throw std::runtime_error("Object does not contain a __dlpack__ attribute.");
+                }
+
+            )
+#else
+    .def(
+                "__dlpack__",
+                [](rocalTensor *rocal_tensor, int device_id) {
+                    throw std::runtime_error("Dlpack not installed. Please use CPU backend or try again after installing dlpack.");
+                }
+        )
+#endif
         .def(
             "__add__",
             [](rocalTensor *output_tensor, rocalTensor *output_tensor1) {
@@ -251,6 +524,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 auto ptr = ctypes_void_ptr(p);
                 output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
             },
+            py::return_value_policy::reference,
             R"code(
                 Copies the ring buffer data to python buffer pointers.
                 )code")
@@ -359,6 +633,16 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 Returns a rocal tensor at given position `i` in the rocalTensorlist.
                 )code",
             py::keep_alive<0, 1>());
+py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
+        .def(
+            "__getitem__",
+            [](rocalListOfTensorList &output_tensor_list, uint idx) {
+                return output_tensor_list.at(idx);
+            },
+            R"code(
+                Returns a TensorList at given position in the list.
+                )code",
+            py::return_value_policy::reference);
 
     py::module types_m = m.def_submodule("types");
     types_m.doc() = "Datatypes and options used by ROCAL";
@@ -431,6 +715,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("DECODER_HW_JEPG", ROCAL_DECODER_HW_JPEG)
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
+        .value("DECODER_VIDEO_ROCDECODE", ROCAL_DECODER_VIDEO_ROCDECODE)
         .export_values();
     py::enum_<RocalExternalSourceMode>(types_m, "RocalExternalSourceMode", "Rocal Extrernal Source Mode")
         .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
@@ -456,6 +741,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
         .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
         .export_values();
+    py::enum_<RocalMissingComponentsBehaviour>(types_m, "RocalMissingComponentsBehaviour", "Rocal Missing components behavior")
+        .value("MISSING_COMPONENT_ERROR", ROCAL_MISSING_COMPONENT_ERROR)
+        .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
+        .value("MISSING_COMPONENT_EMPTY", ROCAL_MISSING_COMPONENT_EMPTY)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -469,6 +759,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def_readwrite("pad_last_batch_repeated", &RocalShardingInfo::pad_last_batch_repeated)
         .def_readwrite("stick_to_shard", &RocalShardingInfo::stick_to_shard)
         .def_readwrite("shard_size", &RocalShardingInfo::shard_size);
+    py::class_<RocalNSROutput>(m, "RocalNSROutput")
+        .def(py::init<>())
+        .def_readonly("anchor", &RocalNSROutput::anchor)
+        .def_readonly("shape", &RocalNSROutput::shape);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
@@ -487,6 +781,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection, py::return_value_policy::reference);
     m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection, py::return_value_policy::reference);
     m.def("mxnetReader", &rocalCreateMXNetReader, py::return_value_policy::reference);
+    m.def("webDatasetReader", &rocalCreateWebDatasetReader, py::return_value_policy::reference);
     m.def("isEmpty", &rocalIsEmpty);
     m.def("getStatus", rocalGetStatus);
     m.def("rocalGetErrorMessage", &rocalGetErrorMessage);
@@ -582,6 +877,34 @@ PYBIND11_MODULE(rocal_pybind, m) {
         }
         return boxes_list;
     });
+    m.def("getAsciiDatas", [](RocalContext context) {
+        rocalListOfTensorList *ascii_sample_contents = rocalGetAsciiDatas(context);
+        py::list ext_componenet_list;
+        for(uint ext = 0; ext < ascii_sample_contents->size(); ext++) { // Number of components
+            rocalTensorList *ext_ascii_values_batch = ascii_sample_contents->at(ext);
+            py::list component_list;
+            py::array_t<uint8_t> components_array;
+            for (int i = 0; i < ext_ascii_values_batch->size(); i++) {
+                if (ext_ascii_values_batch->at(i)->buffer() !=  nullptr) {
+                components_array = py::array(py::buffer_info(
+                                             static_cast<uint8_t *>(ext_ascii_values_batch->at(i)->buffer()),
+                                             sizeof(uint8_t),
+                                             py::format_descriptor<uint8_t>::format(),
+                                             1,
+                                             {ext_ascii_values_batch->at(i)->dims().at(0)},
+                                             {sizeof(uint8_t)}));
+                } else {
+                        std::vector<size_t> shape = {0};  // Empty array with 0 elements
+                        // Create an empty NumPy array of type uint8_t (unsigned byte)
+                        py::array_t<uint8_t> empty_array(shape);
+                        components_array = empty_array;
+                }
+                component_list.append(components_array);
+            }
+            ext_componenet_list.append(component_list);
+        }
+        return ext_componenet_list;
+    });
     m.def("getMaskCount", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.mutable_data();
         unsigned count = rocalGetMaskCount(context, buf);  // total number of polygons in complete batch
@@ -631,8 +954,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
         py::return_value_policy::reference);
     m.def("rocalGetEncodedBoxesAndLables", [](RocalContext context, uint batch_size, uint num_anchors) {
         auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(context, batch_size * num_anchors);
-        auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes[0]->at(0)->buffer());
-        auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes[1]->at(0)->buffer());
+        auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes->at(0)->at(0)->buffer());
+        auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes->at(1)->at(0)->buffer());
 
         py::array_t<int> labels_array = py::array_t<int>(py::buffer_info(
             labels_buf_ptr,
@@ -699,7 +1022,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
           py::return_value_policy::reference);
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
-    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+    m.def("webdatasetSourceSingleShard", &rocalWebDatasetSourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
@@ -719,6 +1042,8 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("resizeCropMirrorFixed", &rocalResizeCropMirrorFixed,
           py::return_value_policy::reference);
     m.def("cropResize", &rocalCropResize,
+          py::return_value_policy::reference);
+    m.def("roiResize", &rocalROIResize,
           py::return_value_policy::reference);
     m.def("copy", &rocalCopy,
           py::return_value_policy::reference);

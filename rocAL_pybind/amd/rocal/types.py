@@ -78,6 +78,7 @@ from rocal_pybind.types import DECODER_OPENCV
 from rocal_pybind.types import DECODER_HW_JEPG
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
+from rocal_pybind.types import DECODER_VIDEO_ROCDECODE
 
 #     RocalResizeScalingMode
 from rocal_pybind.types import SCALING_MODE_DEFAULT
@@ -117,6 +118,11 @@ from rocal_pybind.types import MELSCALE_HTK
 from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
 from rocal_pybind.types import LAST_BATCH_PARTIAL
+
+#     RocalMissingComponentsBehaviour
+from rocal_pybind.types import MISSING_COMPONENT_ERROR
+from rocal_pybind.types import MISSING_COMPONENT_SKIP
+from rocal_pybind.types import MISSING_COMPONENT_EMPTY
 
 _known_types = {
 
@@ -196,6 +202,10 @@ _known_types = {
     LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
     LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
     LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
+
+    MISSING_COMPONENT_ERROR : ("MISSING_COMPONENT_ERROR", MISSING_COMPONENT_ERROR),
+    MISSING_COMPONENT_SKIP : ("MISSING_COMPONENT_SKIP", MISSING_COMPONENT_SKIP),
+    MISSING_COMPONENT_EMPTY : ("MISSING_COMPONENT_EMPTY", MISSING_COMPONENT_EMPTY),
 }
 
 def data_type_function(dtype):

@@ -44,14 +44,8 @@ SCALING_MODES = {
 }
 
 
-def draw_patches(img, idx, device, args=None):
+def draw_patches(img, idx, args=None):
     # image is expected as a tensor, bboxes as numpy
-    if device == "gpu":
-        try:
-            import cupy as cp
-            img = cp.asnumpy(img)
-        except ImportError:
-            pass
     if args.fp16:
         img = (img).astype('uint8')
     if not args.color_format:
@@ -67,13 +61,7 @@ def draw_patches(img, idx, device, args=None):
     cv2.imwrite(args.output_file_name + ".png", img,
                 [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
-def dump_meta_data(labels, device, args=None):
-    if device == "gpu":
-        try:
-            import cupy as cp
-            labels = cp.asnumpy(labels)
-        except ImportError:
-            pass
+def dump_meta_data(labels, args=None):
     labels_list = labels.tolist()
     with open(args.output_file_name, 'w') as file:
         for label in labels_list:
@@ -280,7 +268,17 @@ def main():
                                        shard_id=local_rank,
                                        num_shards=world_size,
                                        random_shuffle=False)
-
+        elif reader_type == "web_dataset":
+            jpegs = fn.readers.webdataset(path=data_path, ext=[{'jpg', 'cls'}])
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
+                                       device=decoder_device,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       output_type=color_format,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
         if augmentation_name == "resize":
             resize_w = 400
             resize_h = 400
@@ -520,9 +518,9 @@ def main():
                     print("**************ends*******************")
                     print("**************", i, "*******************")
                 if args.augmentation_name == "one_hot":
-                    dump_meta_data(labels, rocal_device, args=args)
+                    dump_meta_data(labels, args=args)
                 else:
-                    draw_patches(output_list[j], cnt, rocal_device, args=args)
+                    draw_patches(output_list[j], cnt, args=args)
                     cnt += len(output_list[j])
 
         data_loader.reset()

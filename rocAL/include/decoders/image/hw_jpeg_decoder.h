@@ -66,7 +66,7 @@ class HWJpegDecoder : public Decoder {
                            Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override;
 
     ~HWJpegDecoder() override;
-    void initialize(int device_id = 0);
+    void initialize(int device_id = 0) override;
     bool is_partial_decoder() override { return _is_partial_decoder; }
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
@@ -74,13 +74,16 @@ class HWJpegDecoder : public Decoder {
 
    private:
     void release();
-    const char *_src_filename = NULL;
     AVHWDeviceType _hw_type = AV_HWDEVICE_TYPE_NONE;
     AVBufferRef *_hw_device_ctx = NULL;
     AVIOContext *_io_ctx = NULL;
     AVFormatContext *_fmt_ctx = NULL;
     AVCodecContext *_video_dec_ctx = NULL;
+#if USE_FFMPEG_VERSION_4
     AVCodec *_decoder = NULL;
+#else
+    const AVCodec *_decoder = NULL;
+#endif
     AVStream *_video_stream = NULL;
     int _video_stream_idx = -1;
     AVPixelFormat _dec_pix_fmt;

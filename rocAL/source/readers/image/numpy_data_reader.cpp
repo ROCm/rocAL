@@ -177,7 +177,7 @@ void NumpyDataReader::skip_field(const char*& ptr, const char (&name)[N]) {
     skip_spaces(ptr);
 }
 
-template <typename T = int64_t>
+template <typename T>
 T NumpyDataReader::parse_int(const char*& ptr) {
     char* out_ptr = const_cast<char*>(ptr);  // strtol takes a non-const pointer
     T value = static_cast<T>(strtol(ptr, &out_ptr, 10));

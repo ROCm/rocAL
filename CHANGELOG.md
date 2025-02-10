@@ -2,11 +2,33 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## rocAL 2.2.0 (unreleased)
+## (Unreleased) rocAL 2.3.0 
 
 ### Added
+* Extended support to rocAL's video decoder to use rocDecode hardware decoder
+* Setup - installs rocdecode dev packages for Ubuntu, RedHat, and SLES
 
 ### Changed
+
+### Removed
+
+### Optimizations
+
+### Resolved issues
+
+### Known issues
+
+### Upcoming changes
+
+## rocAL 2.2.0
+
+### Added
+* Extended support to rocAL's video decoder to use rocDecode hardware decoder.
+
+### Changed
+* AMD Clang is now the default CXX and C compiler.
+* Added webdataset reader support to rocAL.
+* Setup - LibTar install support
 
 ### Removed
 
@@ -23,10 +45,11 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
   cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
   make -j8 && sudo make install
   ```
-* CentOS/RedHat/SLES requires additional the manual installation of the `FFMPEG Dev` package
+* CentOS/RedHat/SLES requires additional manual installation of the `FFMPEG Dev` package
 * Hardware decode requires installing ROCm with the `graphics` usecase
 
 ### Upcoming changes
+* Web dataset support
 
 ## rocAL 2.1.0 for ROCm 6.3.0
 

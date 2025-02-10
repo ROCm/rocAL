@@ -206,14 +206,12 @@ class TensorInfo {
         }
     }
     void set_dims(std::vector<size_t>& new_dims) {
-        if (_num_of_dims == new_dims.size()) {
-            _dims = new_dims;
-            modify_strides();
-            _data_size = _strides[0] * _dims[0];
-            set_max_shape();
-        } else {
+        if (_num_of_dims != new_dims.size())
             THROW("The size of number of dimensions does not match with the dimensions of existing tensor")
-        }
+        _dims = new_dims;
+        modify_strides();
+        _data_size = _strides[0] * _dims[0];
+        set_max_shape();
     }
     void modify_dims_width_and_height(RocalTensorlayout layout, size_t width, size_t height) {
         switch (_layout) {
@@ -314,7 +312,7 @@ class Tensor : public rocalTensor {
     const TensorInfo& info() { return _info; }
     //! Default constructor
     Tensor() = delete;
-    void* buffer() { return _mem_handle; }
+    void* buffer() override { return _mem_handle; }
     vx_tensor handle() { return _vx_handle; }
     vx_context context() { return _context; }
     void set_mem_handle(void* buffer) override {
@@ -324,6 +322,7 @@ class Tensor : public rocalTensor {
             THROW("Invalid buffer pointer passed")
         }
     }
+    void reset_mem_handle() { _mem_handle = nullptr; }
 #if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
     unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);
@@ -332,7 +331,7 @@ class Tensor : public rocalTensor {
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
     //! Copying the output buffer with specified max_cols and max_rows values for the 2D buffer of size batch_size
-    unsigned copy_data(void* user_buffer, uint x_offset, uint y_offset, uint max_rows, uint max_cols); 
+    unsigned copy_data(void* user_buffer, uint x_offset, uint y_offset, uint max_rows, uint max_cols) override;
     //! Default destructor
     /*! Releases the OpenVX Tensor object */
     ~Tensor();
@@ -362,7 +361,9 @@ class Tensor : public rocalTensor {
     std::vector<size_t> dims() override { return _info.dims(); }
     std::vector<size_t> strides() override { return _info.strides(); }
     RocalTensorLayout layout() override { return (RocalTensorLayout)_info.layout(); }
+    void set_tensor_layout(RocalTensorLayout layout) override { _info.set_tensor_layout((RocalTensorlayout)layout); }
     RocalTensorOutputType data_type() override { return (RocalTensorOutputType)_info.data_type(); }
+    RocalOutputMemType mem_type() override { return (_info.mem_type() == RocalMemType::HOST ? ROCAL_MEMCPY_HOST : ROCAL_MEMCPY_GPU); }
     size_t data_size() override { return _info.data_size(); }
     RocalROICordsType roi_type() override { return (RocalROICordsType)_info.roi_type(); }
     std::vector<size_t> shape() override { return _info.max_shape(); }
@@ -370,6 +371,7 @@ class Tensor : public rocalTensor {
     RocalTensorBackend backend() override {
         return (_info.mem_type() == RocalMemType::HOST ? ROCAL_CPU : ROCAL_GPU);
     }
+    uint64_t data_type_size() override { return _info.data_type_size(); }
 
    private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
@@ -410,4 +412,25 @@ class TensorList : public rocalTensorList {
     std::vector<Tensor*> _tensor_list;
     std::vector<uint64_t> _tensor_data_size;
     std::vector<uint64_t> _tensor_roi_size;
+};
+
+/*! \brief Contains a list of rocalTensorList */
+class TensorListVector : public rocalListOfTensorList {
+   public:
+    uint64_t size() override { return _tensor_list_vector.size(); }
+    bool empty() { return _tensor_list_vector.empty(); }
+    TensorList* front() { return _tensor_list_vector.front(); }
+    void push_back(TensorList* tensor_list) {
+        _tensor_list_vector.push_back(tensor_list);
+    }
+    void emplace_back(TensorList* tensor_list) {
+        _tensor_list_vector.emplace_back(tensor_list);
+    }
+    void release() {
+        for (auto& tensor_list : _tensor_list_vector) tensor_list->release();
+    }
+    TensorList* operator[](size_t index) { return _tensor_list_vector[index]; }
+    TensorList* at(size_t index) override { return _tensor_list_vector[index]; }
+   private:
+    std::vector<TensorList*> _tensor_list_vector;
 };

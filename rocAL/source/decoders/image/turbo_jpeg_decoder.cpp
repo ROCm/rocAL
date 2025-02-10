@@ -81,7 +81,9 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
         actual_decoded_height = max_decoded_height;
         // todo:: if the scaling factor requested is more that what the decoder can support, do cropped decoding
         if (original_image_width > (_max_scaling_factor * max_decoded_width) || original_image_height > (_max_scaling_factor * max_decoded_height)) {
-            unsigned int crop_width, crop_height;
+            // Initializing the crop width and height to the original width and height of image to avoid cropping
+            unsigned int crop_width = original_image_width;
+            unsigned int crop_height = original_image_height;
             float in_ratio = static_cast<float>(original_image_width) / original_image_height;
             if (original_image_width > (_max_scaling_factor * max_decoded_width)) {
                 crop_width = _max_scaling_factor * max_decoded_width;
@@ -159,7 +161,9 @@ Decoder::Status TJDecoder::decode(unsigned char* input_buffer, size_t input_size
             actual_decoded_height = max_decoded_height;
 
         if (original_image_width > (_max_scaling_factor * max_decoded_width) || original_image_height > (_max_scaling_factor * max_decoded_height)) {
-            unsigned int crop_width, crop_height;
+            // Initializing the crop width and height to the original width and height of image to avoid cropping
+            unsigned int crop_width = original_image_width;
+            unsigned int crop_height = original_image_height;
             float in_ratio = static_cast<float>(original_image_width) / original_image_height;
             if (original_image_width > (_max_scaling_factor * max_decoded_width)) {
                 crop_width = _max_scaling_factor * max_decoded_width;

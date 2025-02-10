@@ -130,6 +130,5 @@ class NumpyDataReader : public Reader {
     void incremenet_read_ptr();
     int release();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
-    size_t _num_padded_samples = 0;                  // Number of samples that are padded in the last batch which would differ for each shard.
     Reader::Status generate_file_names();            // Function that would generate _file_names containing all the samples in the dataset
 };

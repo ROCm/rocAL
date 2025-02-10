@@ -92,13 +92,13 @@ int main(int argc, const char **argv) {
     bool enable_timestamps = true;
     bool enable_sequence_rearrange = false;
     bool is_output = true;
-    unsigned hardware_decode_mode = 0;
+    unsigned decoder_type = 0;
     if (argc >= argIdx + MIN_ARG_COUNT)
         reader_case = atoi(argv[++argIdx]);
     if (argc >= argIdx + MIN_ARG_COUNT)
         processing_device = atoi(argv[++argIdx]);
     if (argc >= argIdx + MIN_ARG_COUNT)
-        hardware_decode_mode = atoi(argv[++argIdx]);
+        decoder_type = atoi(argv[++argIdx]);
     if (argc >= argIdx + MIN_ARG_COUNT)
         input_batch_size = atoi(argv[++argIdx]);
     if (argc >= argIdx + MIN_ARG_COUNT)
@@ -128,7 +128,18 @@ int main(int argc, const char **argv) {
     if (argc >= argIdx + MIN_ARG_COUNT)
         enable_sequence_rearrange = atoi(argv[++argIdx]) ? true : false;
 
-    auto decoder_mode = ((hardware_decode_mode == 1) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE);
+    auto decoder_mode = ((decoder_type > 0) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE);
+    RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW;
+    if (decoder_type == 1) {
+        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_HW;
+    } else if (decoder_type == 2) {
+        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_ROCDECODE;
+        if (processing_device != 1) {
+            std::cerr << "Setting the processing device to GPU for rocDecode decoder\n";
+            processing_device = 1;
+        }
+    }
+
     if (!IsPathExist(source_path)) {
         std::cout << "\nThe folder/file path does not exist\n";
         return -1;
@@ -174,7 +185,7 @@ int main(int argc, const char **argv) {
     switch (reader_case) {
         default: {
             std::cout << "\nVIDEO READER\n";
-            input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
+            input1 = rocalVideoFileSource(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
             break;
         }
         case 2: {
@@ -183,7 +194,7 @@ int main(int argc, const char **argv) {
                 std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
                 return -1;
             }
-            input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, shuffle, is_output, false, frame_step, frame_stride, file_list_frame_num);
+            input1 = rocalVideoFileResize(handle, source_path, color_format, decoder_mode, shard_count, sequence_length, resize_width, resize_height, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
             break;
         }
         case 3: {
@@ -282,13 +293,13 @@ int main(int argc, const char **argv) {
             }
         }
         if (enable_metadata) {
-            int image_name_length[input_batch_size];
+            std::vector<int> image_name_length(input_batch_size);
             RocalTensorList labels = rocalGetImageLabels(handle);
-            int img_size = rocalGetImageNameLen(handle, image_name_length);
-            char img_name[img_size];
-            rocalGetImageName(handle, img_name);
+            int img_size = rocalGetImageNameLen(handle, image_name_length.data());
+            std::vector<char> img_name(img_size);
+            rocalGetImageName(handle, img_name.data());
 
-            std::cout << "\nImage names: " << img_name << "\n";
+            std::cout << "\nImage names: " << img_name.data() << "\n";
             std::cout << "Label id: ";
             int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());
             for (unsigned i = 0; i < input_batch_size; i++) {
@@ -297,11 +308,11 @@ int main(int argc, const char **argv) {
             std::cout << std::endl;
         }
         if (enable_framenumbers || enable_timestamps) {
-            unsigned int start_frame_num[input_batch_size];
-            float frame_timestamps[input_batch_size * sequence_length];
-            rocalGetSequenceStartFrameNumber(handle, start_frame_num);
+            std::vector<unsigned int> start_frame_num(input_batch_size);
+            std::vector<float> frame_timestamps(input_batch_size * sequence_length);
+            rocalGetSequenceStartFrameNumber(handle, start_frame_num.data());
             if (enable_timestamps) {
-                rocalGetSequenceFrameTimestamps(handle, frame_timestamps);
+                rocalGetSequenceFrameTimestamps(handle, frame_timestamps.data());
             }
             for (unsigned i = 0; i < input_batch_size; i++) {
                 if (enable_framenumbers)
