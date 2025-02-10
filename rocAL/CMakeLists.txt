@@ -19,7 +19,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 cmake_minimum_required(VERSION 3.10)
 
 # ROCM Path
@@ -259,6 +258,12 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
     # half
     include_directories(${HALF_INCLUDE_DIRS})
+    #rocDecode
+    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCDECODE_FOUND)
+        include_directories(${ROCDECODE_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+        include_directories(${ROCM_PATH}/share/rocdecode/utils)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
+    endif()
 
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
@@ -269,11 +274,6 @@ if(${BUILD_ROCAL})
     )
 
     link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
-    #rocDecode
-    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCDECODE_FOUND)
-        include_directories(${ROCDECODE_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
-    endif()
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} rocAL_hip)
@@ -297,8 +297,8 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=1)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
         if(ROCDECODE_FOUND)
-            include_directories(${ROCM_PATH}/share/rocdecode/utils)
             target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCDECODE=1)
+            message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
         else()
             target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCDECODE=0)
         endif()
