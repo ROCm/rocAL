@@ -332,8 +332,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 13:  // Numpy reader
         {
             std::cout << "Running Numpy reader" << std::endl;
-            pipeline_type = 4;
-            decoded_output = rocalNumpyFileSource(handle, path, num_threads);
+            pipeline_type = 5;
+            decoded_output = rocalNumpyFileSource(handle, path, num_threads, RocalTensorLayout::ROCAL_NHWC);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;

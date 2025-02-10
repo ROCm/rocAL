@@ -137,7 +137,6 @@ void NumpyLoaderSharded::increment_loader_idx() {
 
 Timing NumpyLoaderSharded::timing() {
     Timing t;
-    long long unsigned max_decode_time = 0;
     long long unsigned max_read_time = 0;
     long long unsigned swap_handle_time = 0;
 
@@ -148,7 +147,6 @@ Timing NumpyLoaderSharded::timing() {
         max_read_time = (info.read_time > max_read_time) ? info.read_time : max_read_time;
         swap_handle_time += info.process_time;
     }
-    t.decode_time = max_decode_time;
     t.read_time = max_read_time;
     t.process_time = swap_handle_time;
     return t;

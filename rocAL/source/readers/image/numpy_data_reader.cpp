@@ -327,6 +327,10 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     auto shape = _curr_file_header.shape();
 
     size_t actual_read_size = 0;
+
+    if (strides_in_dims[0] == _curr_file_header.size())
+        return std::fread((unsigned char*)buf, sizeof(unsigned char), _curr_file_header.nbytes(), _current_fPtr);
+
     if (_curr_file_header.type() == RocalTensorDataType::UINT8)
         actual_read_size = parse_numpy_data<u_int8_t>((u_int8_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::UINT32)
@@ -472,16 +476,21 @@ Reader::Status NumpyDataReader::generate_file_names() {
         for (unsigned file_count = 0; file_count < _files.size(); file_count++) {
             std::string file_path = _files[file_count];
             filesys::path pathObj(file_path);
-            if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj)) {
-                // ignore files with extensions .tar, .zip, .7z
-                auto file_extension_idx = file_path.find_last_of(".");
-                if (file_extension_idx != std::string::npos) {
-                    std::string file_extension = file_path.substr(file_extension_idx + 1);
-                    std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
-                                   [](unsigned char c) { return std::tolower(c); });
-                    if (file_extension != "npy")
-                        continue;
-                    else {
+            // ignore files with extensions .tar, .zip, .7z
+            auto file_extension_idx = file_path.find_last_of(".");
+            if (file_extension_idx != std::string::npos) {
+                std::string file_extension = file_path.substr(file_extension_idx + 1);
+                std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
+                                [](unsigned char c) { return std::tolower(c); });
+                if (file_extension != "npy")
+                    continue;
+                else {
+                    if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
+                        if (!filesys::exists(_folder_path))
+                            THROW("File list contains relative paths but root path doesn't exists");
+                        file_path = _folder_path + "/" + file_path;
+                    }
+                    if (filesys::exists(file_path) && filesys::is_regular_file(file_path)) {
                         _last_file_name = file_path;
                         _file_names.push_back(file_path);
                         _file_count_all_shards++;

@@ -203,6 +203,8 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case 16:
                 if (dtype.code == kDLFloat) {
                     return RocalTensorOutputType::ROCAL_FP16;
+                } else if (dtype.code == kDLInt) {
+                    return RocalTensorOutputType::ROCAL_INT16;
                 } else {
                     throw std::runtime_error("Data type code for 16 bit type is not supported.");
                 }
@@ -265,6 +267,11 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case RocalTensorOutputType::ROCAL_FP32:
                 out.bits = 32;
                 out.code = kDLFloat;
+                break;
+            case RocalTensorOutputType::ROCAL_INT16:
+                out.bits = 16;
+                out.code = kDLInt;
+                break;
             case RocalTensorOutputType::ROCAL_FP16:
                 out.bits = 16;
                 out.code = kDLFloat;
@@ -661,6 +668,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("FLOAT", ROCAL_FP32)
         .value("FLOAT16", ROCAL_FP16)
         .value("UINT8", ROCAL_UINT8)
+        .value("INT16", ROCAL_INT16)
         .export_values();
     py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
         .value("HOST_MEMORY", ROCAL_MEMCPY_HOST)
