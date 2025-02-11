@@ -134,7 +134,8 @@ int main(int argc, const char** argv) {
             std::cout << "Output width and height is needed for video decode\n";
             return -1;
         }
-        input1 = rocalVideoFileSource(handle, folderPath1, color_format, (decoder_mode == 2)? ROCAL_SW_DECODE: ROCAL_HW_DECODE, shard_count, sequence_length, frame_step, frame_stride, shuffle, true, false);
+        input1 = rocalVideoFileSource(handle, folderPath1, color_format, (dec_type == 2) ? ROCAL_HW_DECODE : ROCAL_SW_DECODE, shard_count, sequence_length, shuffle, 
+                                      true, false, (dec_type == 2) ? ROCAL_DECODER_VIDEO_FFMPEG_HW : ROCAL_DECODER_VIDEO_FFMPEG_SW, frame_step, frame_stride);
     } else if (decoder_mode == 1) {
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
