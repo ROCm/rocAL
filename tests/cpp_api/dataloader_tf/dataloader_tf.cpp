@@ -184,7 +184,7 @@ int main(int argc, const char **argv) {
     int counter = 0;
     std::vector<std::string> names;
     names.resize(inputBatchSize);
-    int ImageNameLen[inputBatchSize];
+    std::vector<int> image_name_len(inputBatchSize);
 
     int iter_cnt = 0;
     while (!rocalIsEmpty(handle) && (iter_cnt < 100)) {
@@ -199,15 +199,15 @@ int main(int argc, const char **argv) {
         counter += inputBatchSize;
 
         RocalTensorList labels = rocalGetImageLabels(handle);
-        unsigned img_name_size = rocalGetImageNameLen(handle, ImageNameLen);
-        char img_name[img_name_size];
-        rocalGetImageName(handle, img_name);
-        std::string imageNamesStr(img_name);
+        unsigned img_name_size = rocalGetImageNameLen(handle, image_name_len.data());
+        std::vector<char> img_name(img_name_size);
+        rocalGetImageName(handle, img_name.data());
+        std::string imageNamesStr(img_name.data());
         int pos = 0;
         int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
         for (int i = 0; i < inputBatchSize; i++) {
-            names[i] = imageNamesStr.substr(pos, ImageNameLen[i]);
-            pos += ImageNameLen[i];
+            names[i] = imageNamesStr.substr(pos, image_name_len[i]);
+            pos += image_name_len[i];
             std::cout << "\n name: " << names[i] << " label: " << labels_buffer[i] << std::endl;
         }
         std::cout << std::endl;
