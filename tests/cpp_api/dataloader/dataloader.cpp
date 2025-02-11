@@ -171,8 +171,11 @@ int main(int argc, const char **argv) {
     names.resize(inputBatchSize);
     int iter_cnt = 0;
     while (!rocalIsEmpty(handle) && (iter_cnt < 100)) {
-        if (rocalRun(handle) != 0)
+        auto status = rocalRun(handle);
+        if (status != 0) {
+            if (status == ROCAL_THROW_EXCEPTION) return -1;
             break;
+        }
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         counter += inputBatchSize;
         RocalTensorList labels = rocalGetImageLabels(handle);

@@ -298,7 +298,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     while (rocalGetRemainingImages(handle) >= static_cast<size_t>(input_batch_size)) {
         std::cout << "\n Iteration:: " << iteration << "\n";
         iteration++;
-        if (rocalRun(handle) != 0) {
+        auto status = rocalRun(handle);
+        if (status != 0) {
+            if (status == ROCAL_THROW_EXCEPTION) return -1;
             break;
         }
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);

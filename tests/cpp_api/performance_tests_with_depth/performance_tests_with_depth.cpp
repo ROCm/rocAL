@@ -81,9 +81,7 @@ int main(int argc, const char** argv) {
     if (argc > argIdx)
         rgb = atoi(argv[argIdx++]);
 
-    test(test_case, path, rgb, gpu, width, height, batch_size, graph_depth);
-
-    return 0;
+    return test(test_case, path, rgb, gpu, width, height, batch_size, graph_depth);
 }
 
 int test(int test_case, const char* path, int rgb, int gpu, int width, int height, int batch_size, int graph_depth) {
@@ -529,8 +527,11 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
 
     int i = 0;
     while (i++ < 1000) {
-        if (rocalRun(handle) != 0)
+        auto status = rocalRun(handle);
+        if (status != 0) {
+            if (status == ROCAL_THROW_EXCEPTION) return -1;
             break;
+        }
 
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
