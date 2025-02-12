@@ -372,7 +372,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                         } else
                             j--;
                         if (j < 0) {
-                            THROW("All images in the batch failed decoding\n");
+                            THROW("All images in the batch failed decoding with rocJpeg decoder\n");
                         }
                     }
                 }
