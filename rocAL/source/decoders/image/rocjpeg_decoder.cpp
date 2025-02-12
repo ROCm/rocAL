@@ -26,7 +26,8 @@ THE SOFTWARE.
 #include <string.h>
 #include "decoders/image/rocjpeg_decoder.h"
 
-#if ENABLE_HIP
+#if ENABLE_ROCJPEG
+
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
 #include "rocal_hip_kernels.h"

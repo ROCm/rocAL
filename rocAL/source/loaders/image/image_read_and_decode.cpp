@@ -390,8 +390,6 @@ ImageReadAndDecode::load(unsigned char *buff,
             }
         }
 
-
-
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _image_names[i];
             roi_width[i] = _actual_decoded_width[i];

@@ -22,8 +22,10 @@ THE SOFTWARE.
 
 #pragma once
 #include "decoders/image/decoder.h"
+
+#if ENABLE_ROCJPEG
+
 #include "rocjpeg.h"
-#include "decoders/image/rocjpeg_decoder.h"
 
 struct ScalingFactor {
   unsigned num;
@@ -34,9 +36,7 @@ class HWRocJpegDecoder : public Decoder {
    public:
     //! Default constructor
     HWRocJpegDecoder();
-#if ENABLE_HIP
     HWRocJpegDecoder(hipStream_t &stream) { _hip_stream = stream; }
-#endif
     //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
     /*!
      \param input_buffer  User provided buffer containig the encoded image
@@ -72,7 +72,7 @@ class HWRocJpegDecoder : public Decoder {
 
     //! Decodes a batch of actual image data
     /*!
-      \param output_buffer User provided buffer used to write the decoded image into
+      \param output_buffer User provided HIP buffer used to write the decoded image into
       \param max_decoded_width The maximum width user wants the decoded image to be. Image will be downscaled if bigger.
       \param max_decoded_height The maximum height user wants the decoded image to be. Image will be downscaled if bigger.
       \param original_image_width The actual width of the compressed image. decoded width will be equal to this if this is smaller than max_decoded_width
@@ -112,11 +112,7 @@ class HWRocJpegDecoder : public Decoder {
     uint32_t _num_channels = 0;
     bool _resize_batch = false;
     int _device_id = 0;
-
-#if ENABLE_HIP
     hipStream_t _hip_stream;
-#endif
-
     unsigned _num_scaling_factors = 16;
     ScalingFactor _scaling_factors[16] = {
       { 2, 1 },
@@ -137,3 +133,4 @@ class HWRocJpegDecoder : public Decoder {
       { 1, 8 }
     };
 };
+#endif

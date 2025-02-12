@@ -264,6 +264,12 @@ if(${BUILD_ROCAL})
         include_directories(${ROCDECODE_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
         include_directories(${ROCM_PATH}/share/rocdecode/utils)
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
+        set(ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
+    endif()
+    # rocJPEG
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCJPEG_FOUND)
+        include_directories (${ROCJPEG_INCLUDE_DIR})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCJPEG_LIBRARY})
     endif()
 
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
@@ -287,7 +293,6 @@ if(${BUILD_ROCAL})
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
-    set(ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
                                 ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${ROCDECODE_SRCS})
 
@@ -302,6 +307,12 @@ if(${BUILD_ROCAL})
             message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
         else()
             target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCDECODE=0)
+        endif()
+        if(ROCJPEG_FOUND)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCJPEG=1)
+            message("-- ${White}rocAL built with rocJpeg hardware decoder${ColourReset}")
+        else()
+            target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCJPEG=0)
         endif()
         message("-- ${White}rocAL built with HIP Backend${ColourReset}")
     elseif("${BACKEND}" STREQUAL "OPENCL" AND OPENCL_FOUND)
@@ -390,13 +401,6 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DENABLE_WDS)
     else()
         message("-- ${Yellow}NOTE: rocAL built without LibTar - WebDataset reader will not be supported${ColourReset}")
-    endif()
-
-    # rocJPEG
-    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCJPEG_FOUND)
-        # HIP
-        include_directories (${ROCJPEG_INCLUDE_DIR})
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCJPEG_LIBRARY})
     endif()
 
     # -Wall -- Enable most warning messages
