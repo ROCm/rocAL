@@ -86,7 +86,9 @@ int main(int argc, const char** argv) {
     if (argc > argIdx)
         shuffle = atoi(argv[argIdx++]);
 
-    return test(test_case, path, rgb, processing_device, width, height, batch_size, shards, shuffle);
+    test(test_case, path, rgb, processing_device, width, height, batch_size, shards, shuffle);
+
+    return 0;
 }
 
 int test(int test_case, const char* path, int rgb, int processing_device, int width, int height, int batch_size, int shards, int shuffle) {
@@ -280,11 +282,9 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
 
     int i = 0;
     while (i++ < 100 && !rocalIsEmpty(handle)) {
-        auto status = rocalRun(handle);
-        if (status != 0) {
-            if (status == ROCAL_THROW_EXCEPTION) return -1;
+        if (rocalRun(handle) != 0)
             break;
-        }
+
         // auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         // rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 

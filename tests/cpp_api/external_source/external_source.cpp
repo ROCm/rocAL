@@ -305,9 +305,8 @@ int main(int argc, const char **argv) {
                                              RocalTensorLayout(0), eos);
             }
         }
-        auto status = rocalRun(handle);
-        if (status != 0) {
-            if (status == ROCAL_THROW_EXCEPTION) return -1;
+        if (rocalRun(handle) != 0) {
+            std::cerr << "rocalRun Failed!";
             break;
         }
 

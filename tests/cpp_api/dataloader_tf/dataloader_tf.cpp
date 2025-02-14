@@ -189,9 +189,8 @@ int main(int argc, const char **argv) {
     int iter_cnt = 0;
     while (!rocalIsEmpty(handle) && (iter_cnt < 100)) {
         printf("Processing iter: %d\n", iter_cnt);
-        auto status = rocalRun(handle);
-        if (status != 0) {
-            if (status == ROCAL_THROW_EXCEPTION) return -1;
+        if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed" << std::endl;
             break;
         }
 

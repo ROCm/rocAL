@@ -124,10 +124,7 @@ enum RocalStatus {
     ROCAL_UPDATE_PARAMETER_FAILED,
     /*! \brief AMD ROCAL_INVALID_PARAMETER_TYPE
      */
-    ROCAL_INVALID_PARAMETER_TYPE,
-    /*! \brief AMD ROCAL_THROW_EXCEPTION
-     */
-    ROCAL_THROW_EXCEPTION
+    ROCAL_INVALID_PARAMETER_TYPE
 };
 
 /*! \brief rocAL Image Color enum
