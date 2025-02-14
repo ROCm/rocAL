@@ -113,6 +113,8 @@ class HWRocJpegDecoder : public Decoder {
     bool _resize_batch = false;
     int _device_id = 0;
     hipStream_t _hip_stream;
+
+    // Using the Scaling factors from TurboJpeg decoder
     unsigned _num_scaling_factors = 16;
     ScalingFactor _scaling_factors[16] = {
       { 2, 1 },
