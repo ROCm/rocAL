@@ -160,8 +160,10 @@ int main(int argc, const char **argv) {
         int counter = 0;
 
         while ((test_case == 0) ? !rocalIsEmpty(handle) : (counter < run_len[test_id])) {
-            if (rocalRun(handle) != 0)
-                break;
+            if (rocalRun(handle) != 0) {
+                rocalRelease(handle);
+                return -1;
+            }
 
             rocalCopyToOutput(handle, mat_input.data, h * w * p);
 

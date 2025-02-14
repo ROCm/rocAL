@@ -242,8 +242,10 @@ int main(int argc, const char** argv) {
     int counter = 0;
     int color_temp_increment = 1;
     while (!rocalIsEmpty(handle)) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            rocalRelease(handle);
+            return -1;
+        }
 
         if (rocalGetIntValue(color_temp_adj) <= -99 || rocalGetIntValue(color_temp_adj) >= 99)
             color_temp_increment *= -1;

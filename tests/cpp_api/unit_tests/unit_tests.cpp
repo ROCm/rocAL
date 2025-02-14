@@ -642,8 +642,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     while (rocalGetRemainingImages(handle) >= input_batch_size) {
         index++;
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            rocalRelease(handle);
+            return -1;
+        }
         int image_name_length[input_batch_size];
         switch (pipeline_type) {
             case 1: {   // classification pipeline

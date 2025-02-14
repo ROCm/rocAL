@@ -299,7 +299,8 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         std::cout << "\n Iteration:: " << iteration << "\n";
         iteration++;
         if (rocalRun(handle) != 0) {
-            break;
+            rocalRelease(handle);
+            return -1;
         }
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
         std::vector<int> file_name_length(input_batch_size);

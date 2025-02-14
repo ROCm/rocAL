@@ -191,7 +191,8 @@ int main(int argc, const char **argv) {
         printf("Processing iter: %d\n", iter_cnt);
         if (rocalRun(handle) != 0) {
             std::cout << "rocalRun Failed" << std::endl;
-            break;
+            rocalRelease(handle);
+            return -1;
         }
 
         rocalCopyToOutput(handle, mat_input.data, h * w * p);

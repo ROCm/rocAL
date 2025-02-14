@@ -981,10 +981,9 @@ void MasterGraph::output_routine() {
             _ring_buffer.push();  // The data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
     } catch (const std::exception &e) {
+        ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
-        release();
-        THROW("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
     }
 }
 

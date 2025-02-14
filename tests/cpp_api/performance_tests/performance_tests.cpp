@@ -282,8 +282,10 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
 
     int i = 0;
     while (i++ < 100 && !rocalIsEmpty(handle)) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            rocalRelease(handle);
+            return -1;
+        }
 
         // auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         // rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);

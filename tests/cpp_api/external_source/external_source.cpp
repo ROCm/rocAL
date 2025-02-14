@@ -307,7 +307,8 @@ int main(int argc, const char **argv) {
         }
         if (rocalRun(handle) != 0) {
             std::cerr << "rocalRun Failed!";
-            break;
+            rocalRelease(handle);
+            return -1;
         }
 
         if (!display) continue;

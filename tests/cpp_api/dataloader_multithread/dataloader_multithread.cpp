@@ -134,8 +134,10 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
 
     while (!rocalIsEmpty(handle)) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            rocalRelease(handle);
+            return -1;
+        }
         // copy output to host as image
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
