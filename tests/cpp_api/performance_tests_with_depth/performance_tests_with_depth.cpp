@@ -127,9 +127,9 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
     if (decode_max_height <= 0 || decode_max_width <= 0)
-        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
+        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, true);
     else
-        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, false,
+        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, true,
                                           ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
