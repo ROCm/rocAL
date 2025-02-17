@@ -306,7 +306,7 @@ int main(int argc, const char **argv) {
             }
         }
         if (rocalRun(handle) != 0) {
-            std::cerr << "rocalRun Failed!";
+            std::cerr << "rocalRun Failed with runtime error!";
             rocalRelease(handle);
             return -1;
         }

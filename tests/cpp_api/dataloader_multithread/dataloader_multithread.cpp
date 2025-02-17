@@ -135,6 +135,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
 
     while (!rocalIsEmpty(handle)) {
         if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
             return -1;
         }

@@ -172,6 +172,7 @@ int main(int argc, const char **argv) {
     int iter_cnt = 0;
     while (!rocalIsEmpty(handle) && (iter_cnt < 100)) {
         if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
             return -1;
         }

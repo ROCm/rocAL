@@ -643,6 +643,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     while (rocalGetRemainingImages(handle) >= input_batch_size) {
         index++;
         if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
             return -1;
         }

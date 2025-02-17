@@ -161,6 +161,7 @@ int main(int argc, const char **argv) {
 
         while ((test_case == 0) ? !rocalIsEmpty(handle) : (counter < run_len[test_id])) {
             if (rocalRun(handle) != 0) {
+                std::cout << "rocalRun Failed with runtime error" << std::endl;
                 rocalRelease(handle);
                 return -1;
             }

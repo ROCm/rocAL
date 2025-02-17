@@ -283,6 +283,7 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     int i = 0;
     while (i++ < 100 && !rocalIsEmpty(handle)) {
         if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
             return -1;
         }

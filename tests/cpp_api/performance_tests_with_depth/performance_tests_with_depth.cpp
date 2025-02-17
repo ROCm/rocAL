@@ -530,6 +530,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     int i = 0;
     while (i++ < 1000) {
         if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
             return -1;
         }
