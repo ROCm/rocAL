@@ -125,7 +125,12 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   sudo apt install rocdecode-dev
   ```
-  
+
+* [rocJPEG](https://github.com/ROCm/rocJPEG) - **Optional** for source install, but required for package install
+  ```shell
+  sudo apt install rocjpeg-dev
+  ```
+
 * [FFMPEG](https://www.ffmpeg.org) - **Optional** for source install, but required for package install
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
