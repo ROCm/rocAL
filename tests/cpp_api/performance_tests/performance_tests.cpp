@@ -86,9 +86,7 @@ int main(int argc, const char** argv) {
     if (argc > argIdx)
         shuffle = atoi(argv[argIdx++]);
 
-    test(test_case, path, rgb, processing_device, width, height, batch_size, shards, shuffle);
-
-    return 0;
+    return test(test_case, path, rgb, processing_device, width, height, batch_size, shards, shuffle);
 }
 
 int test(int test_case, const char* path, int rgb, int processing_device, int width, int height, int batch_size, int shards, int shuffle) {

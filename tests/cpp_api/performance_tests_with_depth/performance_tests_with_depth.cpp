@@ -81,9 +81,7 @@ int main(int argc, const char** argv) {
     if (argc > argIdx)
         rgb = atoi(argv[argIdx++]);
 
-    test(test_case, path, rgb, gpu, width, height, batch_size, graph_depth);
-
-    return 0;
+    return test(test_case, path, rgb, gpu, width, height, batch_size, graph_depth);
 }
 
 int test(int test_case, const char* path, int rgb, int gpu, int width, int height, int batch_size, int graph_depth) {

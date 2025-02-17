@@ -146,9 +146,7 @@ int main(int argc, const char **argv) {
     if (argc > argIdx)
         resize_scaling_mode = atoi(argv[argIdx++]);
 
-    test(test_case, reader_type, path, outName, rgb, gpu, width, height, num_of_classes, display_all, resize_interpolation_type, resize_scaling_mode);
-
-    return 0;
+    return test(test_case, reader_type, path, outName, rgb, gpu, width, height, num_of_classes, display_all, resize_interpolation_type, resize_scaling_mode);
 }
 
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
