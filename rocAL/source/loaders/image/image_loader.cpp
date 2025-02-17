@@ -168,10 +168,12 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
     _crop_image_info._crop_image_coords.resize(_batch_size);
-    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC)
+    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
+        // Initialize circular buffer with HIP memory for rocJPEG hardware decoder
         _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, true);
-    else
+    } else {
         _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    }
     _is_initialized = true;
     _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     LOG("Loader module initialized");
