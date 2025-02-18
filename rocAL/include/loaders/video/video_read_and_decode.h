@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <map>
 #include <tuple>
 #include "pipeline/commons.h"
-#include "decoders/video/ffmpeg_video_decoder.h"
+#include "decoders/video/video_decoder.h"
 #include "readers/video/video_reader_factory.h"
 #include "pipeline/timing_debug.h"
 #include "loaders/loader_module.h"
@@ -48,7 +48,7 @@ class VideoReadAndDecode {
     ~VideoReadAndDecode();
     size_t count();
     void reset();
-    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size);
+    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id = 0);
     void set_video_process_count(size_t video_count) {
         _video_process_count = (video_count <= _max_video_count) ? video_count : _max_video_count;
     }
@@ -110,5 +110,6 @@ class VideoReadAndDecode {
     size_t _max_decoded_stride;
     AVPixelFormat _out_pix_fmt;
     DecoderConfig _video_decoder_config;
+    int _device_id = 0;
 };
 #endif

@@ -207,6 +207,9 @@ class Pipeline(object):
 
     def get_bounding_box_cords(self):
         return b.getBoundingBoxCords(self._handle)
+    
+    def get_ascii_datas(self):
+        return b.getAsciiDatas(self._handle)
 
     def get_mask_count(self, array):
         return b.getMaskCount(self._handle, array)

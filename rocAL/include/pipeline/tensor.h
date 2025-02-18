@@ -200,14 +200,12 @@ class TensorInfo {
         _layout = layout;
     }
     void set_dims(std::vector<size_t>& new_dims) {
-        if (_num_of_dims == new_dims.size()) {
-            _dims = new_dims;
-            modify_strides();
-            _data_size = _strides[0] * _dims[0];
-            set_max_shape();
-        } else {
+        if (_num_of_dims != new_dims.size())
             THROW("The size of number of dimensions does not match with the dimensions of existing tensor")
-        }
+        _dims = new_dims;
+        modify_strides();
+        _data_size = _strides[0] * _dims[0];
+        set_max_shape();
     }
     void modify_dims_width_and_height(RocalTensorlayout layout, size_t width, size_t height) {
         switch (_layout) {
@@ -318,6 +316,7 @@ class Tensor : public rocalTensor {
             THROW("Invalid buffer pointer passed")
         }
     }
+    void reset_mem_handle() { _mem_handle = nullptr; }
 #if ENABLE_OPENCL
     unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
     unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);

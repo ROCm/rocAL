@@ -134,5 +134,10 @@ def parse_args():
                                 help='video path')
     video_pipeline.add_argument('--sequence-length', '-sequence-length', type=int,
                                 help='video path')
+    # web_dataset_reader.py related options
+    web_dataset_reader = parser.add_argument_group(
+        'webdataset-pipeline', 'webdataset-pipeline-related options')
+    web_dataset_reader.add_argument('--index-path', '-index-path', type=str,
+                               help='web dataset index path')
 
     return parser.parse_args()

@@ -27,6 +27,7 @@ caffe2_detection_path=${ROCAL_DATA_PATH}/rocal_data/caffe2/detection/
 mxnet_path=${ROCAL_DATA_PATH}/rocal_data/mxnet/
 output_path=../rocal_unittest_output_folder_$(date +%Y-%m-%d_%H-%M-%S)/
 golden_output_path=${ROCAL_DATA_PATH}/rocal_data/GoldenOutputsTensor/
+webdataset_tar_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/tar_file/
 
 display=0
 device=0
@@ -144,6 +145,7 @@ do
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_caffe2Classification" $width $height 25 $device $rgb 0 $display
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_caffe2Detection" $width $height 25 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 25 $device $rgb 0 $display
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_web_dataset" $width $height 25 $device $rgb 0 $display
 
         # crop
         ./unit_tests 0 "$image_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_FileReader" $width $height 51 $device $rgb 0 $display
@@ -155,6 +157,7 @@ do
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_caffe2Classification" $width $height 51 $device $rgb 0 $display
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_caffe2Detection" $width $height 51 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 51 $device $rgb 0 $display
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_web_dataset" $width $height 51 $device $rgb 0 $display
 
         # resize
         # Last two parameters are interpolation type and scaling mode
@@ -166,7 +169,9 @@ do
         # ./unit_tests 7 "$caffe_detection_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_nearestneighbor_default_caffeDetection" $width $height 0 $device $rgb 0 $display 0 0
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_lanczos_default_caffe2Classification" $width $height 0 $device $rgb 0 $display 3 0
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_default_caffe2Detection" $width $height 0 $device $rgb 0 $display 5 0
-        ./unit_tests 11 "$mxnet_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_gaussian_default_mxnet" $width $height 0 $device $rgb 0 $display 4 0 
+        ./unit_tests 11 "$mxnet_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_gaussian_default_mxnet" $width $height 0 $device $rgb 0 $display 4 0
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_notsmaller_web_dataset" $width $height 0 $device $rgb 0 $display 5 2
+
 
     done
 done

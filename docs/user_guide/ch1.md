@@ -79,5 +79,6 @@ rocAL operators offer the flexibility to run on CPU or GPU for building hybrid p
 | Image_raw         | Decodes images in raw format           |
 | Image_random_crop | Decodes and randomly crops JPEG images |
 | Image_slice       | Decodes and slices JPEG images         |
+| Video             | Decodes videos using FFmpeg/[rocDecode](https://github.com/ROCm/rocDecode)  |
 
 To see examples demonstrating the usage of decoders and readers, [click here](https://github.com/ROCm/rocAL/tree/master/docs/examples)

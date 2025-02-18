@@ -149,6 +149,19 @@ auto convert_decoder_mode = [](RocalDecodeDevice decode_mode) {
     }
 };
 
+auto convert_video_decoder_type = [](RocalDecoderType decoder_type) {
+    switch (decoder_type) {
+        case ROCAL_DECODER_VIDEO_FFMPEG_SW:
+            return DecoderType::FFMPEG_SW_DECODE;
+        case ROCAL_DECODER_VIDEO_FFMPEG_HW:
+            return DecoderType::FFMPEG_HW_DECODE;
+        case ROCAL_DECODER_VIDEO_ROCDECODE:
+            return DecoderType::ROCDEC_VIDEO_DECODE;
+        default:
+            THROW("Unsupported video decoder type" + TOSTR(decoder_type))
+    }
+};
+
 auto convert_last_batch_policy = [](RocalLastBatchPolicy last_batch_policy) {
     switch (last_batch_policy) {
         case ROCAL_LAST_BATCH_FILL:
@@ -184,7 +197,8 @@ rocalJpegFileSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -246,7 +260,8 @@ rocalJpegFileSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -446,7 +461,8 @@ rocalJpegCaffe2LMDBRecordSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -506,7 +522,8 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -569,7 +586,8 @@ rocalJpegCaffeLMDBRecordSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -631,7 +649,8 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -886,7 +905,8 @@ rocalMXNetRecordSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -952,7 +972,8 @@ rocalMXNetRecordSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1016,7 +1037,8 @@ rocalJpegCOCOFileSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1080,7 +1102,8 @@ rocalJpegCOCOFileSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1333,7 +1356,8 @@ rocalJpegTFRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -1394,7 +1418,8 @@ rocalJpegTFRecordSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1621,6 +1646,7 @@ rocalVideoFileSource(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1641,12 +1667,8 @@ rocalVideoFileSource(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
@@ -1687,6 +1709,7 @@ rocalVideoFileSourceSingleShard(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1713,12 +1736,8 @@ rocalVideoFileSourceSingleShard(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
@@ -1760,6 +1779,7 @@ rocalVideoFileResize(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1786,12 +1806,8 @@ rocalVideoFileResize(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
@@ -1913,6 +1929,7 @@ rocalVideoFileResizeSingleShard(
     bool shuffle,
     bool is_output,
     bool loop,
+    RocalDecoderType rocal_decoder_type,
     unsigned step,
     unsigned stride,
     bool file_list_frame_num,
@@ -1945,12 +1962,8 @@ rocalVideoFileResizeSingleShard(
         stride = (stride == 0) ? 1 : stride;
 
         VideoProperties video_prop;
-        DecoderType decoder_type;
+        DecoderType decoder_type = convert_video_decoder_type(rocal_decoder_type);
         find_video_properties(video_prop, source_path, file_list_frame_num);
-        if (rocal_decode_device == RocalDecodeDevice::ROCAL_HW_DECODE)
-            decoder_type = DecoderType::FFMPEG_HARDWARE_DECODE;
-        else
-            decoder_type = DecoderType::FFMPEG_SOFTWARE_DECODE;
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format_sequence(rocal_color_format, context->user_batch_size(),
                                                                                                 video_prop.height, video_prop.width, sequence_length);
         auto decoder_mode = convert_decoder_mode(rocal_decode_device);
@@ -2289,6 +2302,76 @@ rocalAudioFileSource(
         }
 #else
         THROW("Audio decoder is not enabled since sndfile is not present")
+#endif
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalWebDatasetSourceSingleShard(
+    RocalContext p_context,
+    const char* source_path,
+    const char* index_path,
+    RocalImageColor rocal_color_format,
+    unsigned shard_id,
+    unsigned shard_count,
+    bool is_output,
+    bool shuffle,
+    bool loop,
+    RocalImageSizeEvaluationPolicy decode_size_policy,
+    unsigned max_width,
+    unsigned max_height,
+    RocalDecoderType dec_type,
+    RocalShardingInfo rocal_sharding_info) {
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try {
+#ifdef ENABLE_WDS
+        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
+        bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
+        DecoderType decType = DecoderType::TURBO_JPEG;  // default
+        if (dec_type == ROCAL_DECODER_OPENCV) {
+            decType = DecoderType::OPENCV_DEC;
+        } else if (dec_type == ROCAL_DECODER_HW_JPEG) {
+            decType = DecoderType::HW_JPEG_DEC;
+        }
+
+        if (shard_count < 1) {
+            THROW("Shard count should be bigger than 0");
+        } else if (shard_id >= shard_count) {
+            THROW("Shard id should be smaller than shard count");
+        }
+
+        if (use_input_dimension && (max_width == 0 || max_height == 0)) {
+            THROW("Invalid input max width and height");
+        } else {
+            LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
+        }
+        auto [width, height] = evaluate_image_data_set(decode_size_policy, StorageType::WEBDATASET_RECORDS, decType, source_path, index_path);
+        auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
+        INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
+
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::WEBDATASET_RECORDS, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, 
+                                                                                        std::map<std::string, std::string>(), 0, 0, 0, ExternalSourceFileMode::NONE, index_path);
+        context->master_graph->set_loop(loop);
+
+        if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+#else
+        THROW("Webdataset reader is not enabled since libtar is not present")
 #endif
     } catch (const std::exception& e) {
         context->capture_error(e.what());

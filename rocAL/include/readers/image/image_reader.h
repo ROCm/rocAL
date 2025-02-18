@@ -48,6 +48,7 @@ enum class StorageType {
     MXNET_RECORDIO = 7,
     VIDEO_FILE_SYSTEM = 8,
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
+    WEBDATASET_RECORDS = 10, // tar files - webdataset format
 };
 
 enum class ExternalSourceFileMode {
@@ -81,13 +82,14 @@ struct ShardingInfo {
 struct ReaderConfig {
     explicit ReaderConfig(StorageType type, std::string path = "", std::string json_path = "",
                           const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(),
-                          bool shuffle = false, bool loop = false) : _type(type), _path(path), _json_path(json_path), _feature_key_map(feature_key_map), _shuffle(shuffle), _loop(loop) {}
+                          bool shuffle = false, bool loop = false, std::string index_path = "") : _type(type), _path(path), _json_path(json_path), _feature_key_map(feature_key_map), _shuffle(shuffle), _loop(loop), _index_path(index_path) {}
     virtual StorageType type() { return _type; };
     void set_path(const std::string &path) { _path = path; }
     void set_shard_id(size_t shard_id) { _shard_id = shard_id; }
     void set_shard_count(size_t shard_count) { _shard_count = shard_count; }
     void set_cpu_num_threads(size_t cpu_num_threads) { _cpu_num_threads = cpu_num_threads; }
     void set_json_path(const std::string &json_path) { _json_path = json_path; }
+    void set_index_path(const std::string &index_path) { _index_path = index_path; } // Index path - optional arg for webdataset reader - corresponding to each tar archive files
     /// \param read_batch_count Tells the reader it needs to read the images in multiples of load_batch_count. If available images not divisible to load_batch_count,
     /// the reader will repeat images to make available images an even multiple of this load_batch_count
     void set_batch_count(size_t read_batch_count) { _batch_count = read_batch_count; }
@@ -117,6 +119,7 @@ struct ReaderConfig {
     VideoProperties get_video_properties() { return _video_prop; }
 #endif
     std::string json_path() { return _json_path; }
+    std::string index_path() { return _index_path; }
     std::map<std::string, std::string> feature_key_map() { return _feature_key_map; }
     void set_file_prefix(const std::string &prefix) { _file_prefix = prefix; }
     std::string file_prefix() { return _file_prefix; }
@@ -148,6 +151,8 @@ struct ReaderConfig {
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
+    std::string _index_path = "";
+
 };
 
 // MXNet image recordio struct - used to read the contents from the MXNet recordIO files.
@@ -161,6 +166,53 @@ struct ImageRecordIOHeader {
                            */
 };
 
+// The VectorView Class - to refer to a portion of a vector and avoiding copies of the data.
+template <typename T>
+class VectorView {
+    private:
+    std::vector<T>* _data = nullptr;
+    
+    public:
+    size_t start = 0;
+    size_t num = 0;
+    VectorView() = default;
+
+    explicit inline VectorView(std::vector<T>& data, size_t start_idx = 0, size_t count = 0)
+        : _data(&data), start(start_idx), num(count) {}
+
+    inline T* begin() {
+        return _data->data() + start;
+    }
+
+    inline T* end() {
+        return begin() + num;
+    }
+
+    // Operator[] overload to access elements within the view
+    T& operator[](size_t index) {
+        if (index >= num) {
+            throw std::out_of_range("Index out of range in VectorView");
+        }
+        return (*_data)[start + index];
+    }
+};
+
+// The contents of the component of a tar file
+struct ComponentDescription {
+    std::string filename, ext;
+    size_t size = 0;
+    int64_t offset = 0;
+    VectorView<size_t> outputs;
+    ComponentDescription() = default;
+};
+
+// The contents of the sample of a tar file
+struct SampleDescription {
+    VectorView<ComponentDescription> components;
+    VectorView<size_t> empty_outputs;
+    size_t wds_shard_index;
+    int64_t line_number;
+};
 
 class Reader {
    public:

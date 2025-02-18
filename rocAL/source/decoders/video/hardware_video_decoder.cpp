@@ -21,19 +21,18 @@ THE SOFTWARE.
 */
 
 #include "decoders/video/hardware_video_decoder.h"
-
 #include "pipeline/commons.h"
 #include <stdio.h>
 
 #ifdef ROCAL_VIDEO
 HardWareVideoDecoder::HardWareVideoDecoder(){};
 
-int HardWareVideoDecoder::seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) {
+int HardWareVideoDecoder::SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) {
     auto seek_time = av_rescale_q((int64_t)frame_number, av_inv_q(avg_frame_rate), AV_TIME_BASE_Q);
     int64_t select_frame_pts = av_rescale_q((int64_t)frame_number, av_inv_q(avg_frame_rate), time_base);
     int ret = av_seek_frame(_fmt_ctx, -1, seek_time, AVSEEK_FLAG_BACKWARD);
     if (ret < 0) {
-        ERR("HardWareVideoDecoder::seek_frame Error in seeking frame. Unable to seek the given frame in a video");
+        ERR("HardWareVideoDecoder::SeekFrame Error in seeking frame. Unable to seek the given frame in a video");
         return ret;
     }
     return select_frame_pts;
@@ -61,7 +60,7 @@ VideoDecoder::Status HardWareVideoDecoder::Decode(unsigned char *out_buffer, uns
             return Status::FAILED;
         }
     }
-    int select_frame_pts = seek_frame(_video_stream->avg_frame_rate, _video_stream->time_base, seek_frame_number);
+    int select_frame_pts = SeekFrame(_video_stream->avg_frame_rate, _video_stream->time_base, seek_frame_number);
     if (select_frame_pts < 0) {
         ERR("HardWareVideoDecoder::Decode Error in seeking frame. Unable to seek the given frame in a video");
         return Status::FAILED;
@@ -149,7 +148,7 @@ VideoDecoder::Status HardWareVideoDecoder::Decode(unsigned char *out_buffer, uns
 }
 
 // Initialize will open a new decoder and initialize the context
-VideoDecoder::Status HardWareVideoDecoder::Initialize(const char *src_filename) {
+VideoDecoder::Status HardWareVideoDecoder::Initialize(const char *src_filename, int device_id) {
     VideoDecoder::Status status = Status::OK;
     int ret;
     AVDictionary *opts = NULL;
@@ -242,7 +241,7 @@ VideoDecoder::Status HardWareVideoDecoder::Initialize(const char *src_filename) 
     return status;
 }
 
-void HardWareVideoDecoder::release() {
+void HardWareVideoDecoder::Release() {
     if (_video_dec_ctx)
         avcodec_free_context(&_video_dec_ctx);
     if (_fmt_ctx)
@@ -250,6 +249,6 @@ void HardWareVideoDecoder::release() {
 }
 
 HardWareVideoDecoder::~HardWareVideoDecoder() {
-    release();
+    Release();
 }
 #endif

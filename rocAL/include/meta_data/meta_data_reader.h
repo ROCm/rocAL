@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <map>
 #include <memory>
 #include <string>
-
+#include <set>
 #include "meta_data/meta_data.h"
 
 enum class MetaDataReaderType {
@@ -41,7 +41,8 @@ enum class MetaDataReaderType {
     CAFFE2_DETECTION_META_DATA_READER,
     TF_DETECTION_META_DATA_READER,
     VIDEO_LABEL_READER,
-    MXNET_META_DATA_READER
+    MXNET_META_DATA_READER,
+    WEBDATASET_META_DATA_READER
 };
 
 struct MetaDataConfig {
@@ -58,14 +59,20 @@ struct MetaDataConfig {
     unsigned _out_img_height;
     bool _avoid_class_remapping;
     bool _aspect_ratio_grouping;
+    std::string _index_path;
+    MissingComponentsBehaviour _missing_component_behaviour;
+    std::vector<std::set<std::string>>_exts;
 
    public:
-    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1)
-        : _type(type), _reader_type(reader_type), _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride) {}
+    MetaDataConfig(const MetaDataType& type, const MetaDataReaderType& reader_type, const std::string& path, const std::map<std::string, std::string>& feature_key_map = std::map<std::string, std::string>(), const std::string file_prefix = std::string(), const unsigned& sequence_length = 3, const unsigned& frame_step = 3, const unsigned& frame_stride = 1, const std::string index_path = std::string(), const MissingComponentsBehaviour& missing_component_behaviour = MissingComponentsBehaviour::MISSING_COMPONENT_SKIP, const std::vector<std::set<std::string>> &exts  = std::vector<std::set<std::string>>())
+        : _type(type), _reader_type(reader_type), _path(path), _feature_key_map(feature_key_map), _file_prefix(file_prefix), _sequence_length(sequence_length), _frame_step(frame_step), _frame_stride(frame_stride), _index_path(index_path), _missing_component_behaviour(missing_component_behaviour), _exts(exts){}
     MetaDataConfig() = delete;
     MetaDataType type() const { return _type; }
     MetaDataReaderType reader_type() const { return _reader_type; }
     std::string path() const { return _path; }
+    std::string index_path() const { return _index_path; }
+    std::vector<std::set<std::string>> exts() const { return _exts; }
+    MissingComponentsBehaviour get_missing_component_behaviour() const { return _missing_component_behaviour; }
     std::map<std::string, std::string> feature_key_map() const { return _feature_key_map; }
     std::string file_prefix() const { return _file_prefix; }
     bool class_remapping() const { return _avoid_class_remapping; }

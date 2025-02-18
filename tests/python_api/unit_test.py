@@ -268,7 +268,17 @@ def main():
                                        shard_id=local_rank,
                                        num_shards=world_size,
                                        random_shuffle=False)
-
+        elif reader_type == "web_dataset":
+            jpegs = fn.readers.webdataset(path=data_path, ext=[{'jpg', 'cls'}])
+            images = fn.decoders.image(jpegs,
+                                       path=data_path,
+                                       device=decoder_device,
+                                       max_decoded_width=max_width,
+                                       max_decoded_height=max_height,
+                                       output_type=color_format,
+                                       shard_id=local_rank,
+                                       num_shards=world_size,
+                                       random_shuffle=False)
         if augmentation_name == "resize":
             resize_w = 400
             resize_h = 400

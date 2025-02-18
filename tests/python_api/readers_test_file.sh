@@ -101,6 +101,7 @@ caffe2_reader=1
 tf_classification_reader=1
 tf_detection_reader=1
 video_pipeline=1
+web_dataset_reader=1
 ####################################################################################################################################
 
 
@@ -341,6 +342,30 @@ if [[ video_pipeline -eq 1 ]]; then
         --$display_arg \
         --$print_tensor_arg \
         --sequence-length 3 \
+        --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_log.${CURRENTDATE}.txt
+fi
+####################################################################################################################################
+
+####################################################################################################################################
+if [[ web_dataset_reader -eq 1 ]]; then
+
+    # Mention tar data path and index file path
+    data_dir=$ROCAL_DATA_PATH/rocal_data/web_dataset/tar_file/
+    index_path=$ROCAL_DATA_PATH/rocal_data/web_dataset/idx_file/
+    # web_dataset_reader.py
+    # By default : cpu backend, NCHW format , fp32
+    python"$ver" web_dataset_reader.py \
+        --image-dataset-path $data_dir \
+        --index-path "" \
+        --classification \
+        --batch-size $batch_size \
+        --$display_arg \
+        --$backend_arg \
+        --NHWC \
+        --local-rank 0 \
+        --$print_tensor_arg \
+        --world-size $gpus_per_node \
+        --num-threads 1 \
         --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_log.${CURRENTDATE}.txt
 fi
 ####################################################################################################################################
