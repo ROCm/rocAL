@@ -59,30 +59,36 @@ rocAL can be currently used to perform the following operations either with rand
 
 ## Prerequisites
 
+### Operating Systems
+
 * Linux distribution
   + Ubuntu - `22.04` / `24.04`
   + RedHat - `8` / `9`
   + SLES - `15-SP5`
 
-* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
-> [!IMPORTANT] 
-> `gfx908` or higher GPU required
+### Hardware
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): Required usecase - rocm
+* **CPU**: [AMD64](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+* **GPU**: [AMD Radeon&trade; Graphics](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) / [AMD Instinct&trade; Accelerators](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+
+> [!IMPORTANT] 
+> * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+> * `gfx908` or higher GPU required
+
+* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
+
+### Compiler
+
+* AMD Clang++ Version 18.0.0 or later - installed with ROCm
+
+### Libraries
 
 * CMake Version `3.10` or later
 
   ```shell
   sudo apt install cmake
-  ```
-
-* AMD Clang++ Version `18.0.0` or later - installed with ROCm
-
-* [HIP](https://github.com/ROCm/HIP)
-  ```shell
-  sudo apt install rocm-hip-runtime-dev
   ```
 
 * [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
@@ -110,17 +116,22 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install python3-dev python3-pip
   ```
 
-* Python Wheel
+* Python3 Wheel
   ```shell
-  pip3 install wheel
+  sudo apt install python3-wheel
+  ```
+
+* rocDecode - **Optional** for source install, but required for package install
+  ```shell
+  sudo apt install rocdecode-dev
   ```
   
-* [FFMPEG](https://www.ffmpeg.org) - Optional for source install, but required for package install
+* [FFMPEG](https://www.ffmpeg.org) - **Optional** for source install, but required for package install
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
   ```
 
-* [OpenCV](https://docs.opencv.org/4.6.0/index.html) -  Optional for source install, but required for package install
+* [OpenCV](https://docs.opencv.org/4.6.0/index.html) -  **Optional** for source install, but required for package install
   ```shell
   sudo apt install libopencv-dev
   ```
@@ -137,15 +148,15 @@ rocAL can be currently used to perform the following operations either with rand
   * Source: `https://github.com/Tencent/rapidjson.git`
   * Tag: `master`
 
-> [!IMPORTANT] 
-> * Compiler features required
+> [!IMPORTANT]
+> * Required compiler support
 >   * C++17
->     ```shell
->     sudo apt install libstdc++-12-dev
 >   * OpenMP
->     ```shell
->     sudo apt install libomp-dev
->     ```
+>   * Threads
+> * On Ubuntu 22.04 - Additional package required: libstdc++-12-dev
+>  ```shell
+>  sudo apt install libstdc++-12-dev
+>  `````
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
@@ -350,7 +361,8 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
 * ROCm: rocm-core - `6.3.0`+
-* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
+* MIVisionX - `mivisionx-dev`/`mivisionx-devel`
+* rocDecode - `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
 * Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
@@ -358,5 +370,6 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
-* rocAL Setup Script - `V2.7.0`
+* Libtar - [v1.2.20](https://repo.or.cz/libtar.git)
+* rocAL Setup Script - `V2.9.0`
 * Dependencies for all the above packages

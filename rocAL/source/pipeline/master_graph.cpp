@@ -1137,8 +1137,7 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
         THROW("A metadata reader has already been created")
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
-    if (strlen(source_path) == 0)
-        THROW("Source path needs to be provided")
+
     MetaDataConfig config(MetaDataType::Label, reader_type, source_path);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
@@ -1154,6 +1153,46 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+
+    return &_metadata_output_tensor_list;
+}
+
+TensorListVector* MasterGraph::create_webdataset_reader(
+    const char *source_path, const char *index_path,
+    std::vector<std::set<std::string>> extensions,
+    MetaDataReaderType reader_type, MissingComponentsBehaviour missing_component_behaviour) {
+    if (_meta_data_reader)
+        THROW("A metadata reader has already been created")
+    if (_augmented_meta_data)
+        THROW("Metadata can only have a single output")
+
+    bool generate_index = (index_path[0] == '\0') ? true : false;
+    if (generate_index)
+        std::cerr << "Index file is not provided, it may take some time to infer it from the tar file";
+
+    _ascii_tensor_list.resize(extensions[0].size() - 1);
+    MetaDataConfig config(MetaDataType::AsciiValue, reader_type, source_path,
+                          std::map<std::string, std::string>(), std::string(),
+                          0, 0, 0, index_path, missing_component_behaviour,
+                          extensions);
+    _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
+    _meta_data_reader->read_all(source_path);
+    std::vector<size_t> dims;
+    dims = {MAX_ASCII_BUFFER};
+    auto default_ascii_values_info = TensorInfo(std::move(dims), _mem_type,RocalTensorDataType::UINT8); // Create default ascii values Info
+    default_ascii_values_info.set_metadata();
+    for (uint ext_count = 0; ext_count < _ascii_tensor_list.size(); ext_count++) {
+        for (unsigned i = 0; i < _user_batch_size; i++) {
+            _meta_data_buffer_size.emplace_back(_user_batch_size * default_ascii_values_info.data_size());
+            auto info = default_ascii_values_info;
+            auto tensor = new Tensor(info);
+            _ascii_tensor_list[ext_count].push_back(tensor);
+        }
+        _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[ext_count]);
+        _webdataset_output_tensor_list.emplace_back(&_ascii_tensor_list[ext_count]);
+    }
+
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
     return &_metadata_output_tensor_list;
 }
@@ -1404,6 +1443,31 @@ TensorList *MasterGraph::labels_meta_data() {
         meta_data_buffers += _labels_tensor_list[i]->info().data_size();
     }
     return &_labels_tensor_list;
+}
+
+TensorListVector *MasterGraph::ascii_values_meta_data() {
+    if (_external_source_reader) {
+        return &_webdataset_output_tensor_list;
+    }
+    if (_ring_buffer.level() == 0)
+        THROW("No meta data has been loaded")
+
+    for (uint ext = 0; ext < _ascii_tensor_list.size(); ext++) {
+        auto meta_data_buffers = (uint8_t *)_ring_buffer.get_meta_read_buffers()[ext]; // Get ASCII buffer from ring buffer
+        auto ascii_values = _ring_buffer.get_meta_data().second->get_ascii_values_batch();
+        for (unsigned i = 0; i < _ascii_tensor_list[ext].size(); i++) {
+            if (ascii_values[i][ext]) {
+                _ascii_tensor_list[ext][i]->set_dims({ascii_values[i][ext]->size()});
+                _ascii_tensor_list[ext][i]->set_mem_handle((void *)meta_data_buffers);
+                meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
+            } else { // To Handle Empty Case of Missing Behaviour Component
+                _ascii_tensor_list[ext][i]->set_dims({0});
+                _ascii_tensor_list[ext][i]->reset_mem_handle();
+                meta_data_buffers += _ascii_tensor_list[ext][i]->info().data_size();
+            }
+        }
+    }
+    return &_webdataset_output_tensor_list;
 }
 
 TensorList *MasterGraph::bbox_meta_data() {
