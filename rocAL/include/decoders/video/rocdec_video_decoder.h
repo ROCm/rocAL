@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-
+#include "pipeline/exception.h"
 #include "video_decoder.h"
 
 #ifdef ROCAL_VIDEO
