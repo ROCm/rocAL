@@ -28,12 +28,12 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 ${enableSCL}
                 echo Build rocAL - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
-                sudo python rocAL-setup.py --backend ${backend}
+                python rocAL-setup.py --backend ${backend}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
-                sudo cmake --build . --target PyPackageInstall
-                sudo make install
+                cmake --build . --target PyPackageInstall
+                make install
                 ldd -v /opt/rocm/lib/librocal.so
                 """
 
