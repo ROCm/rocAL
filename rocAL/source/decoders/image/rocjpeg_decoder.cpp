@@ -76,6 +76,12 @@ int GetChannelPitchAndSizes(RocJpegOutputFormat output_format, RocJpegChromaSubs
                     output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = widths[0];
                     channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * heights[0];
                     break;
+                case ROCJPEG_CSS_440:
+                    num_channels = 3;
+                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = widths[0];
+                    channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    channel_sizes[2] = channel_sizes[1] = output_image.pitch[0] * (heights[0] >> 1);
+                    break;
                 case ROCJPEG_CSS_422:
                     num_channels = 1;
                     output_image.pitch[0] = widths[0] * 2;
@@ -307,7 +313,7 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
 
     std::string chroma_sub_sampling = "";
     GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
-    if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
+    if (subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
         return Status::UNSUPPORTED;
     }
     return Status::OK;
