@@ -329,6 +329,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
             decoded_output = rocalWebDatasetSourceSingleShard(handle, path, "", color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         } break;
+        case 13:  // Numpy reader
+        {
+            std::cout << "Running Numpy reader" << std::endl;
+            pipeline_type = 5;
+            decoded_output = rocalNumpyFileSource(handle, path, num_threads, RocalTensorLayout::ROCAL_NHWC);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -751,6 +757,28 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                         std::cout << std::endl;
                     }
                 }
+            } break;
+            case 5: {  // numpy reader pipeline
+                RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
+                void *out_buffer = nullptr;
+                for (uint64_t idx = 0; idx < output_tensor_list->size(); idx++) {
+                    std::cout << "Creating output buffer of ";
+                    for (auto x : output_tensor_list->at(idx)->shape())
+                        std::cout << x << " x ";
+                    std::cout << "shape\n";
+                    if (output_tensor_list->at(idx)->data_type() == RocalTensorOutputType::ROCAL_FP32) {
+                        if (!out_buffer) out_buffer = (float *)malloc(output_tensor_list->at(idx)->data_size());
+                        output_tensor_list->at(idx)->copy_data((void *)out_buffer);
+                    } else if (output_tensor_list->at(idx)->data_type() == RocalTensorOutputType::ROCAL_FP16) {
+                        if (!out_buffer) out_buffer = (half *)malloc(output_tensor_list->at(idx)->data_size());
+                        output_tensor_list->at(idx)->copy_data(out_buffer);
+                    } else {
+                        if (!out_buffer) out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->data_size());
+                        output_tensor_list->at(idx)->copy_data(out_buffer);
+                    }
+                }
+                free(out_buffer);
+                std::cout << "Copied numpy data to output buffers\n";
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";
