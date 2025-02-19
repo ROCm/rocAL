@@ -149,7 +149,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
             uint8_t *pframe = _rocvid_decoder->GetFrame(&pts);
             if (dts >= requested_frame_dts) {
                 if (n_frame % stride == 0) {
-                    post_process.ColorConvertYUV2RGB(pframe, surf_info, output_buffer_ptr, _output_format, _rocvid_decoder->GetStream());
+                    post_process.ColorConvertYUV2RGB(pframe, surf_info, output_buffer_ptr, _output_format, _hip_stream);
                     output_buffer_ptr += image_size;
                 }
                 n_frame++;
@@ -163,7 +163,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
         }
 
         if (sequence_decoded) {
-            if (hipStreamSynchronize(_rocvid_decoder->GetStream()) != hipSuccess)
+            if (hipStreamSynchronize(_hip_stream) != hipSuccess)
                 THROW("hipStreamSynchronize failed: ")
             break;
         }

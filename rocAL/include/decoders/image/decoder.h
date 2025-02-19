@@ -28,6 +28,11 @@ THE SOFTWARE.
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_random_crop_decoder.h"
 
+#if ENABLE_HIP
+#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#endif
+
 enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode
     FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
@@ -54,11 +59,18 @@ class DecoderConfig {
     unsigned get_num_attempts() { return _num_attempts; }
     void set_seed(int seed) { _seed = seed; }
     int get_seed() { return _seed; }
+#if ENABLE_HIP
+    hipStream_t &get_hip_stream() { return _hip_stream; }
+    void set_hip_stream(hipStream_t &stream) { _hip_stream = stream; }
+#endif
 
    private:
     std::vector<float> _random_area, _random_aspect_ratio;
     unsigned _num_attempts = 10;
     int _seed = std::time(0);  // seed for decoder random crop
+#if ENABLE_HIP
+    hipStream_t _hip_stream;
+#endif
 };
 
 class Decoder {
