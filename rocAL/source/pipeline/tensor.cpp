@@ -265,8 +265,8 @@ void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) 
         THROW("The batch size of actual Tensor shape different from Tensor batch size " + TOSTR(shape.size()) + " != " + TOSTR(info().batch_size()))
 
     for (unsigned i = 0; i < info().batch_size(); i++) {
-        if (shape[i].size() != (info().num_of_dims() - 1))
-            THROW("The number of dims to be updated and the num of dims of tensor info does not match")
+        if (shape[i].size() != max_shape.size())
+            THROW("The ROI shape must match the max_shape of the tensor")
 
         unsigned *tensor_shape = _info.roi()[i].end;
         for (unsigned d = 0; d < shape[i].size(); d++) {
