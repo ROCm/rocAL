@@ -759,26 +759,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 }
             } break;
             case 5: {  // numpy reader pipeline
-                RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-                void *out_buffer = nullptr;
-                for (uint64_t idx = 0; idx < output_tensor_list->size(); idx++) {
-                    std::cout << "Creating output buffer of ";
-                    for (auto x : output_tensor_list->at(idx)->shape())
-                        std::cout << x << " x ";
-                    std::cout << "shape\n";
-                    if (output_tensor_list->at(idx)->data_type() == RocalTensorOutputType::ROCAL_FP32) {
-                        if (!out_buffer) out_buffer = (float *)malloc(output_tensor_list->at(idx)->data_size());
-                        output_tensor_list->at(idx)->copy_data((void *)out_buffer);
-                    } else if (output_tensor_list->at(idx)->data_type() == RocalTensorOutputType::ROCAL_FP16) {
-                        if (!out_buffer) out_buffer = (half *)malloc(output_tensor_list->at(idx)->data_size());
-                        output_tensor_list->at(idx)->copy_data(out_buffer);
-                    } else {
-                        if (!out_buffer) out_buffer = (unsigned char *)malloc(output_tensor_list->at(idx)->data_size());
-                        output_tensor_list->at(idx)->copy_data(out_buffer);
-                    }
-                }
-                free(out_buffer);
-                std::cout << "Copied numpy data to output buffers\n";
+                int img_size = rocalGetImageNameLen(handle, image_name_length);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\nNumpy array name:" << img_name.data() << "\n";
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";
