@@ -7,7 +7,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Added
 * Extended support to rocAL's video decoder to use rocDecode hardware decoder
 * Setup - installs rocdecode dev packages for Ubuntu, RedHat, and SLES
-* Extended support to rocAL's image decoder to use rocJpeg hardware decoder
+* rocAL's image decoder has been extended to support the rocJPEG hardware decoder
 
 ### Changed
 
