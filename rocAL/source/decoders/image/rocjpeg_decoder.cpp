@@ -179,7 +179,6 @@ void GetChromaSubsamplingStr(RocJpegChromaSubsampling subsampling, std::string &
 
 void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     int num_devices;
-    hipDeviceProp_t hip_dev_prop;
     CHECK_HIP(hipGetDeviceCount(&num_devices));
     if (num_devices < 1) {
         std::cerr << "ERROR: didn't find any GPU!" << std::endl;
@@ -190,12 +189,6 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
         return;
     }
     CHECK_HIP(hipSetDevice(device_id));
-    CHECK_HIP(hipGetDeviceProperties(&hip_dev_prop, device_id));
-
-    std::cout << "Using GPU device " << device_id << ": " << hip_dev_prop.name << "[" << hip_dev_prop.gcnArchName << "] on PCI bus " <<
-    std::setfill('0') << std::setw(2) << std::right << std::hex << hip_dev_prop.pciBusID << ":" << std::setfill('0') << std::setw(2) <<
-    std::right << std::hex << hip_dev_prop.pciDomainID << "." << hip_dev_prop.pciDeviceID << std::dec << std::endl;
-
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
     // Create stream and handle
     CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
@@ -262,8 +255,8 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
         return Status::UNSUPPORTED;
     }
 
-    *width = widths[0];
-    *height = heights[0];
+    if (width) *width = widths[0];
+    if (height) *height = heights[0];
     uint scaledw = widths[0], scaledh = heights[0];
     // Scaling to be performed if width/height is less than max decode width/height
     if (widths[0] > max_decoded_width || heights[0] > max_decoded_height) {
@@ -284,8 +277,8 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     if (GetChannelPitchAndSizes(_decode_params.output_format, subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
         return Status::HEADER_DECODE_FAILED;
     }
-    *actual_width = scaledw;
-    *actual_height = scaledh;
+    if (actual_width) *actual_width = scaledw;
+    if (actual_height) *actual_height = scaledh;
 
     _rocjpeg_image_buff_size += max_widths[0] * max_heights[0];
 
