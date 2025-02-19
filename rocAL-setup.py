@@ -336,9 +336,8 @@ else:
                         ' '+linuxSystemInstall_check+' install -y '+ coreRPMPackages[i]))
 
     #pip3 packages
-    breakSystemPackages = "--break-system-packages" if "Ubuntu-24" in platformInfo else ""
     for i in range(len(pip3Packages)):
-        ERROR_CHECK(os.system('pip3 install '+ pip3Packages[i] + breakSystemPackages))
+        ERROR_CHECK(os.system('pip3 install '+ pip3Packages[i]))
 
     # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
     turboJpegVersion = '3.0.2'
