@@ -91,11 +91,6 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install cmake
   ```
 
-* [HIP](https://github.com/ROCm/HIP)
-  ```shell
-  sudo apt install rocm-hip-runtime-dev
-  ```
-
 * [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
   ```shell
   sudo apt install mivisionx-dev
@@ -121,17 +116,22 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install python3-dev python3-pip
   ```
 
-* Python Wheel
+* Python3 Wheel
   ```shell
-  pip3 install wheel
+  sudo apt install python3-wheel
+  ```
+
+* rocDecode - **Optional** for source install, but required for package install
+  ```shell
+  sudo apt install rocdecode-dev
   ```
   
-* [FFMPEG](https://www.ffmpeg.org) - Optional for source install, but required for package install
+* [FFMPEG](https://www.ffmpeg.org) - **Optional** for source install, but required for package install
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
   ```
 
-* [OpenCV](https://docs.opencv.org/4.6.0/index.html) -  Optional for source install, but required for package install
+* [OpenCV](https://docs.opencv.org/4.6.0/index.html) -  **Optional** for source install, but required for package install
   ```shell
   sudo apt install libopencv-dev
   ```
@@ -361,7 +361,8 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
 * ROCm: rocm-core - `6.3.0`+
-* MIVisionX - `mivisionx` & `mivisionx-dev`/`mivisionx-devel`
+* MIVisionX - `mivisionx-dev`/`mivisionx-devel`
+* rocDecode - `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
 * Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
@@ -370,5 +371,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
 * Libtar - [v1.2.20](https://repo.or.cz/libtar.git)
-* rocAL Setup Script - `V2.8.0`
+* rocAL Setup Script - `V2.9.0`
 * Dependencies for all the above packages

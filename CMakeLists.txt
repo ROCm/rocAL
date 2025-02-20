@@ -38,7 +38,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 # rocAL Version
-set(VERSION "2.2.0")
+set(VERSION "2.3.0")
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
@@ -207,11 +207,24 @@ if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 # Set the dependent packages
-set(ROCAL_DEBIAN_PACKAGE_LIST  "rpp, mivisionx")
-set(ROCAL_RPM_PACKAGE_LIST     "rpp, mivisionx")
+set(ROCAL_DEBIAN_PACKAGE_LIST  "mivisionx")
+set(ROCAL_RPM_PACKAGE_LIST     "mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "rpp-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "rpp-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "mivisionx-devel, lmdb-devel, protobuf-devel")
+
+# Add rocDecode Deps for HW Decode - Exclude centos-7
+if (EXISTS "/etc/os-release")
+  file(READ "/etc/os-release" OS_RELEASE)
+  string(REGEX MATCH "CentOS-7" CENTOS_7_FOUND ${OS_RELEASE})
+  string(REGEX MATCH "Mariner" MARINER_FOUND ${OS_RELEASE})
+  if((NOT CENTOS_7_FOUND) OR (NOT MARINER_FOUND))
+    set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
+    set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
+    set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
+    set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
+  endif()
+endif()
 
 # '%{?dist}' breaks manual builds on debian systems due to empty Provides
 execute_process(

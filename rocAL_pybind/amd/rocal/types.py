@@ -77,6 +77,7 @@ from rocal_pybind.types import DECODER_OPENCV
 from rocal_pybind.types import DECODER_HW_JEPG
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
+from rocal_pybind.types import DECODER_VIDEO_ROCDECODE
 
 #     RocalResizeScalingMode
 from rocal_pybind.types import SCALING_MODE_DEFAULT

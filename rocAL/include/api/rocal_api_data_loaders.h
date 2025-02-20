@@ -623,12 +623,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk. source_path can be a video file, folder containing videos or a text file
  * \param [in] color_format The color format the frames will be decoded to.
- * \param [in] rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+ * \param [in] rocal_decode_device Enables software decoding(using FFmpeg) or hardware decoding(using FFmepg/rocDecode hardware decoder).
  * \param [in] internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
  * \param [in] sequence_length: The number of frames in a sequence.
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or rocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -644,6 +645,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                            bool is_output = false,
                                                            bool shuffle = false,
                                                            bool loop = false,
+                                                           RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                            unsigned step = 0,
                                                            unsigned stride = 0,
                                                            bool file_list_frame_num = true,
@@ -654,13 +656,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk. source_path can be a video file, folder containing videos or a text file
  * \param [in] color_format The color format the frames will be decoded to.
- * \param [in] rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+ * \param [in] rocal_decode_device Enables software decoding(using FFmpeg) or hardware decoding(using FFmepg/rocDecode hardware decoder).
  * \param [in] shard_id Shard id for this loader.
  * \param [in] shard_count Total shard count.
  * \param [in] sequence_length: The number of frames in a sequence.
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or rocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -677,6 +680,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
                                                                       bool shuffle = false,
                                                                       bool is_output = false,
                                                                       bool loop = false,
+                                                                      RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                                       unsigned step = 0,
                                                                       unsigned stride = 0,
                                                                       bool file_list_frame_num = true,
@@ -687,7 +691,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk. source_path can be a video file, folder containing videos or a text file
  * \param [in] color_format The color format the frames will be decoded to.
- * \param [in] rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+ * \param [in] rocal_decode_device Enables software decoding(using FFmpeg) or hardware decoding(using FFmepg/rocDecode hardware decoder).
  * \param [in] internal_shard_count Defines the parallelism level by internally sharding the input dataset and load/decode using multiple decoder/loader instances.
  * \param [in] sequence_length: The number of frames in a sequence.
  * \param [in] dest_width The output width of frames.
@@ -695,6 +699,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or rocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -712,6 +717,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
                                                            bool shuffle = false,
                                                            bool is_output = false,
                                                            bool loop = false,
+                                                           RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                            unsigned step = 0,
                                                            unsigned stride = 0,
                                                            bool file_list_frame_num = true,
@@ -727,7 +733,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk. source_path can be a video file, folder containing videos or a text file
  * \param [in] color_format The color format the frames will be decoded to.
- * \param [in] rocal_decode_device Enables software or hardware decoding. Currently only software decoding is supported.
+ * \param [in] rocal_decode_device Enables software decoding(using FFmpeg) or hardware decoding(using FFmepg/rocDecode hardware decoder).
  * \param [in] shard_id Shard id for this loader.
  * \param [in] shard_count Total shard count.
  * \param [in] sequence_length: The number of frames in a sequence.
@@ -736,6 +742,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
  * \param [in] shuffle: to shuffle sequences.
  * \param [in] is_output Determines if the user wants the loaded sequence of frames to be part of the output or not.
  * \param [in] loop: repeat data loading.
+ * \param [in] rocal_decoder_type Determines the decoder_type, FFmepg or rocDecode
  * \param [in] step: Frame interval between each sequence.
  * \param [in] stride: Frame interval between frames in a sequence.
  * \param [in] file_list_frame_num: Determines if the user wants to read frame number or timestamps if a text file is passed in the source_path.
@@ -754,6 +761,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalConte
                                                                       bool shuffle = false,
                                                                       bool is_output = false,
                                                                       bool loop = false,
+                                                                      RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW,
                                                                       unsigned step = 0,
                                                                       unsigned stride = 0,
                                                                       bool file_list_frame_num = true,
