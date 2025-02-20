@@ -37,7 +37,7 @@ std::shared_ptr<VideoDecoder> create_video_decoder(DecoderConfig config) {
             return std::make_shared<HardWareVideoDecoder>();
 #if ENABLE_ROCDECODE
         case DecoderType::ROCDEC_VIDEO_DECODE:
-            return std::make_shared<RocDecVideoDecoder>();
+            return std::make_shared<RocDecVideoDecoder>(config.get_hip_stream());
 #endif
         default:
             THROW("Unsupported decoder type " + TOSTR(config.type()));
