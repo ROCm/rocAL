@@ -33,10 +33,12 @@ list(APPEND rocAL_HIP_SOURCES
     rocal_hip_kernels.cpp
     box_encoder_hip.cpp
 )
-set (rocDecode_UTIL_SOURCES
-    ${ROCM_PATH}/share/rocdecode/utils/resize_kernels.cpp
-    ${ROCM_PATH}/share/rocdecode/utils/colorspace_kernels.cpp
-)
+if (ROCDECODE_FOUND)
+    set (rocDecode_UTIL_SOURCES
+        ${ROCM_PATH}/share/rocdecode/utils/resize_kernels.cpp
+        ${ROCM_PATH}/share/rocdecode/utils/colorspace_kernels.cpp
+    )
+endif()
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
 

@@ -89,5 +89,8 @@ class VideoLoader : public LoaderModule {
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;
     CropImageInfo _crop_img_info;
     size_t _max_tensor_width, _max_tensor_height;
+#if ENABLE_HIP
+    hipStream_t _hip_stream = nullptr;
+#endif
 };
 #endif
