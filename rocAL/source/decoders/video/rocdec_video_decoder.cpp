@@ -75,13 +75,6 @@ VideoDecoder::Status RocDecVideoDecoder::Initialize(const char *src_filename, in
         return VideoDecoder::Status::FAILED;
     }
 
-    std::string device_name, gcn_arch_name;
-    int pci_bus_id, pci_domain_id, pci_device_id;
-    _rocvid_decoder->GetDeviceinfo(device_name, gcn_arch_name, pci_bus_id, pci_domain_id, pci_device_id);
-    std::cout << "info: Using GPU device " << device_id << " - " << device_name << "[" << gcn_arch_name << "] on PCI bus " <<
-    std::setfill('0') << std::setw(2) << std::right << std::hex << pci_bus_id << ":" << std::setfill('0') << std::setw(2) <<
-    std::right << std::hex << pci_domain_id << "." << pci_device_id << std::dec << std::endl;
-
     return status;
 }
 
@@ -149,7 +142,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
             uint8_t *pframe = _rocvid_decoder->GetFrame(&pts);
             if (dts >= requested_frame_dts) {
                 if (n_frame % stride == 0) {
-                    post_process.ColorConvertYUV2RGB(pframe, surf_info, output_buffer_ptr, _output_format, _rocvid_decoder->GetStream());
+                    post_process.ColorConvertYUV2RGB(pframe, surf_info, output_buffer_ptr, _output_format, _hip_stream);
                     output_buffer_ptr += image_size;
                 }
                 n_frame++;
@@ -163,7 +156,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
         }
 
         if (sequence_decoded) {
-            if (hipStreamSynchronize(_rocvid_decoder->GetStream()) != hipSuccess)
+            if (hipStreamSynchronize(_hip_stream) != hipSuccess)
                 THROW("hipStreamSynchronize failed: ")
             break;
         }
