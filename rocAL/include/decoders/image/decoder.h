@@ -34,6 +34,11 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #endif
 
+#if ENABLE_HIP
+#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#endif
+
 enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode
     FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
