@@ -76,9 +76,20 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
     # Set supported GPU Targets
-    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx950;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_GPU_TARGETS ${DEFAULT_GPU_TARGETS} "gfx1200;gfx1201")
+    if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
+        find_package(ROCmCMakeBuildTools QUIET)
+        if(NOT ROCmCMakeBuildTools_FOUND)
+            find_package(ROCM QUIET)
+        endif()
+        include(ROCMCheckTargetIds OPTIONAL RESULT_VARIABLE HAS_ROCM_CHECK_TARGET_IDS)
+
+        set(OPTIONAL_GPU_TARGETS "gfx950;gfx1200;gfx1201")
+        if(HAS_ROCM_CHECK_TARGET_IDS)
+            rocm_check_target_ids(OPTIONAL_GPU_TARGETS_AVAILABLE TARGETS ${OPTIONAL_GPU_TARGETS})
+        else() # if we don't have rocm_check_target_ids, just assume the targets are available
+            set(OPTIONAL_GPU_TARGETS_AVAILABLE "${OPTIONAL_GPU_TARGETS}")
+        endif()
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;${OPTIONAL_GPU_TARGETS_AVAILABLE}")
     endif()
 
     # Set AMD GPU_TARGETS
