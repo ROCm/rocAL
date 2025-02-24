@@ -258,7 +258,7 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     if (width) *width = widths[0];
     if (height) *height = heights[0];
     uint scaledw = widths[0], scaledh = heights[0];
-    // Scaling to be performed if width/height is less than max decode width/height
+    // Scaling to be performed if width/height is greater than max decode width/height
     if (widths[0] > max_decoded_width || heights[0] > max_decoded_height) {
         for (unsigned j = 0; j < _num_scaling_factors; j++) {
             scaledw = (((widths[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
