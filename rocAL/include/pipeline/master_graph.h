@@ -37,6 +37,8 @@ THE SOFTWARE.
 #include "loaders/image/node_image_loader_single_shard.h"
 #include "loaders/video/node_video_loader.h"
 #include "loaders/video/node_video_loader_single_shard.h"
+#include "loaders/image/node_numpy_loader.h"
+#include "loaders/image/node_numpy_loader_single_shard.h"
 #ifdef ROCAL_AUDIO
 #include "loaders/audio/node_audio_loader.h"
 #include "loaders/audio/node_audio_loader_single_shard.h"
@@ -439,3 +441,42 @@ template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_n
     return node;
 }
 #endif
+
+/*
+ * Explicit specialization for NumpyLoaderNode
+ */
+template <>
+inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
+    if (_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<NumpyLoaderNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<NumpyLoaderNode>(outputs[0], nullptr);
+#endif
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for (auto &output : outputs)
+        _tensor_map.insert(std::make_pair(output, node));
+
+    return node;
+}
+
+template <>
+inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
+    if (_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<NumpyLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<NumpyLoaderSingleShardNode>(outputs[0], nullptr);
+#endif
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for (auto &output : outputs)
+        _tensor_map.insert(std::make_pair(output, node));
+
+    return node;
+}

@@ -713,6 +713,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("DECODER_HW_JEPG", ROCAL_DECODER_HW_JPEG)
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
+	    .value("DECODER_AUDIO_GENERIC", ROCAL_DECODER_AUDIO_GENERIC)
+        .value("DECODER_VIDEO_ROCDECODE", ROCAL_DECODER_VIDEO_ROCDECODE)
         .export_values();
     py::enum_<RocalExternalSourceMode>(types_m, "RocalExternalSourceMode", "Rocal Extrernal Source Mode")
         .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)

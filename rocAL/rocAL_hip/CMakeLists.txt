@@ -33,12 +33,18 @@ list(APPEND rocAL_HIP_SOURCES
     rocal_hip_kernels.cpp
     box_encoder_hip.cpp
 )
+if (ROCDECODE_FOUND)
+    set (rocDecode_UTIL_SOURCES
+        ${ROCM_PATH}/share/rocdecode/utils/resize_kernels.cpp
+        ${ROCM_PATH}/share/rocdecode/utils/colorspace_kernels.cpp
+    )
+endif()
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 
-add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES})
+add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_UTIL_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
 target_link_libraries(${PROJECT_NAME} hip::device)
