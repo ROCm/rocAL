@@ -29,9 +29,8 @@ THE SOFTWARE.
 
 #include <cstring>
 #include <stdexcept>
-
-#include "commons.h"
-#include "tensor.h"
+#include "pipeline/commons.h"
+#include "pipeline/tensor.h"
 
 vx_enum vx_mem_type(RocalMemType mem) {
     switch (mem) {
@@ -77,6 +76,8 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -119,8 +120,18 @@ void TensorInfo::reset_tensor_roi_buffers() {
             roi[i].xywh.h = _max_shape.at(1);
         }
     } else {
-        // TODO - For other tensor types
+        for (unsigned i = 0; i < _batch_size; i++) {
+            unsigned *tensor_shape = _roi[i].end;
+            for (unsigned j = 0; j < _max_shape.size(); j++)
+                tensor_shape[j] = _max_shape[j];
+        }
     }
+}
+
+void TensorInfo::reallocate_tensor_sample_rate_buffers() {
+    if (_is_image)
+        THROW("Sample rate not available for Image data")
+    _sample_rates = std::make_shared<std::vector<float>>(_batch_size);
 }
 
 TensorInfo::TensorInfo()
@@ -201,6 +212,44 @@ void Tensor::update_tensor_roi(const std::vector<uint32_t> &width,
                 roi[i].xywh.h = height[i];
             }
         }
+    } else if (!_info.is_metadata()) {  // Audio - Data
+        auto max_dims = _info.max_shape();
+        unsigned max_samples = max_dims.at(0);
+        unsigned max_channels = max_dims.at(1);
+        auto samples = width;
+        auto channels = height;
+
+        if (samples.size() != channels.size())
+            THROW("Size of tensor's samples and channels info does not match")
+        if (samples.size() != info().batch_size())
+            THROW("The size of actual tensor's samples and channels are different from tensor batch size " + TOSTR(samples.size()) + " != " + TOSTR(info().batch_size()))
+        
+        // Update the ROI with the samples and channels of the audio files
+        for (unsigned i = 0; i < info().batch_size(); i++) {
+            unsigned *tensor_shape = _info.roi()[i].end;
+            if (samples[i] > max_samples) {
+                ERR("Given ROI samples is larger than buffer samples for tensor[" + TOSTR(i) + "] " + TOSTR(samples[i]) + " > " + TOSTR(max_samples))
+                tensor_shape[0] = max_samples;
+            } else {
+                tensor_shape[0] = samples[i];
+            }
+            if (channels[i] > max_channels) {
+                ERR("Given ROI channels is larger than buffer channels for tensor[" + TOSTR(i) + "] " + TOSTR(channels[i]) + " > " + TOSTR(max_channels))
+                tensor_shape[1] = max_channels;
+            } else {
+                tensor_shape[1] = channels[i];
+            }
+        }
+    }
+}
+
+void Tensor::update_audio_tensor_sample_rate(const std::vector<float> &sample_rate) {
+    if (_info.is_image()) {
+        THROW("No sample rate available for Image data")
+    } else if (!_info.is_metadata()) {
+        for (unsigned i = 0; i < info().batch_size(); i++) {
+            _info.get_sample_rates()->at(i) = sample_rate[i];
+        }
     }
 }
 
@@ -264,14 +313,14 @@ int Tensor::create_from_handle(vx_context context) {
     _context = context;
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
     unsigned num_of_dims = _info.num_of_dims();
-    vx_size stride[num_of_dims];
+    std::vector<vx_size> stride(num_of_dims);
     void *ptr[1] = {nullptr};
 
     stride[0] = tensor_data_size(_info.data_type());
     for (unsigned i = 1; i < num_of_dims; i++)
         stride[i] = stride[i - 1] * _info.dims().at(i - 1);
 
-    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
+    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride.data(), ptr, vx_mem_type(_info._mem_type));
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
@@ -307,7 +356,7 @@ void Tensor::create_roi_tensor_from_handle(void **handle) {
         THROW("Empty ROI handle is passed")
     }
 
-    vx_size num_of_dims = 2;
+    const vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
     std::vector<size_t> roi_dims = {_info.batch_size(), 4};
     if (_info.layout() == RocalTensorlayout::NFCHW || _info.layout() == RocalTensorlayout::NFHWC)
@@ -363,14 +412,13 @@ unsigned Tensor::copy_data(hipStream_t stream, void *host_memory, bool sync) {
 
 unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_type) {
     if (_mem_handle == nullptr) return 0;
-
     if (external_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
 #if ENABLE_HIP
         if (_info._mem_type == RocalMemType::HIP) {
             // copy from device to device
             hipError_t status;
             if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
-                THROW("copy_data::hipMemcpyDtoD failed: " + TOSTR(status))
+                THROW("copy_data::hipMemcpyDtoD failed: " + hipGetErrorName(status))
         } else if (_info._mem_type == RocalMemType::HOST) {
             // copy from host to device
             hipError_t status;
@@ -395,6 +443,28 @@ unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_ty
         }
     } else {
         THROW("copy_data requested mem type not supported")
+    }
+    return 0;
+}
+
+unsigned Tensor::copy_data(void *user_buffer, uint x_offset, uint y_offset, uint roi_width, uint roi_height) {
+    if (_mem_handle == nullptr) return 0;
+    // TODO : Handle this case for HIP buffer
+    auto max_shape_rows = _info.max_shape().at(1);
+    auto dtype_size = _info.data_type_size();
+    auto num_of_bytes_max_rows = max_shape_rows * dtype_size;
+    auto src_stride = (_info.max_shape().at(0) * num_of_bytes_max_rows);
+    auto num_of_bytes_rows = roi_width * dtype_size;
+    auto dst_stride = (roi_height * num_of_bytes_rows);
+
+    for (uint i = 0; i < _info._batch_size; i++) {
+        auto temp_src_ptr = static_cast<unsigned char *>(_mem_handle) + i * src_stride + _info.max_shape().at(0) * y_offset + x_offset;
+        auto temp_dst_ptr = static_cast<unsigned char *>(user_buffer) + i * dst_stride;
+        for (uint height = 0; height < roi_height; height++) {
+            memcpy(temp_dst_ptr, temp_src_ptr, num_of_bytes_rows);
+            temp_src_ptr += num_of_bytes_max_rows;
+            temp_dst_ptr += num_of_bytes_rows;
+        }
     }
     return 0;
 }

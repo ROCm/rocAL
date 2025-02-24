@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_loader_sharded.h"
+#include "loaders/video/video_loader_sharded.h"
 #ifdef ROCAL_VIDEO
 
 VideoLoaderSharded::VideoLoaderSharded(void *dev_resources) : _dev_resources(dev_resources) {
@@ -39,8 +39,8 @@ std::vector<std::string> VideoLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info VideoLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+DecodedDataInfo VideoLoaderSharded::get_decode_data_info() {
+    return _loaders[_loader_idx]->get_decode_data_info();
 }
 
 VideoLoaderSharded::~VideoLoaderSharded() {
@@ -83,6 +83,7 @@ void VideoLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decod
     // Initialize loader modules
     for (size_t idx = 0; idx < _shard_count; idx++) {
         _loaders[idx]->set_output(_output_tensor);
+        _loaders[idx]->set_gpu_device_id(idx);
         reader_cfg.set_shard_count(_shard_count);
         reader_cfg.set_shard_id(idx);
         _loaders[idx]->initialize(reader_cfg, decoder_cfg, mem_type, batch_size, keep_orig_size);

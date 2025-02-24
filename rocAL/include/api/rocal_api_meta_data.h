@@ -23,6 +23,7 @@ THE SOFTWARE.
 #ifndef MIVISIONX_ROCAL_API_META_DATA_H
 #define MIVISIONX_ROCAL_API_META_DATA_H
 #include "rocal_api_types.h"
+#include <set>
 
 /*!
  * \file
@@ -36,9 +37,10 @@ THE SOFTWARE.
  * \ingroup group_rocal_meta_data
  * \param [in] rocal_context rocal context
  * \param [in] source_path path to the folder that contains the dataset or metadata file
+ * \param file_list_path is the path to file list that contains the file names and its corresponding labels
  * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
  */
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateLabelReader(RocalContext rocal_context, const char* source_path, const char* file_list_path = "");
 
 /*! \brief creates video label reader
  * \ingroup group_rocal_meta_data
@@ -238,7 +240,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalC
  * \param [out] buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
  * \param [in] dest destination can be host=0 / device=1
  */
-extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context, void* buf, int numOfClasses, int dest);
+extern "C" void ROCAL_API_CALL rocalGetOneHotImageLabels(RocalContext rocal_context, void* buf, int numOfClasses, RocalOutputMemType output_mem_type);
 
 extern "C" void ROCAL_API_CALL rocalRandomBBoxCrop(RocalContext p_context, bool all_boxes_overlap, bool no_crop, RocalFloatParam aspect_ratio = NULL, bool has_shape = false, int crop_width = 0, int crop_height = 0, int num_attempts = 1, RocalFloatParam scaling = NULL, int total_num_attempts = 0, int64_t seed = 0);
 
@@ -314,5 +316,25 @@ extern "C" void ROCAL_API_CALL rocalBoxIouMatcher(RocalContext p_context, std::v
  * \return RocalTensorList of matched indices
  */
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_context);
+
+/*! \brief creates webdataset reader
+ * \ingroup group_rocal_meta_data
+ * \param [in] p_context rocal context
+ * \param [in] source_path path to the folder that contains the dataset
+ * \param [in] index_path path to the folder that contains the index files
+ * \param extensions [in] the extensions used in the tar files for parsing them
+ * \param missing_components_behavior [in] The behaviour that determines what happens when any component in the sample is missing.
+ * \param is_output [in] The output is set or not.
+ * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
+ */
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path,
+                                                                    std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output);
+
+/*! \brief get joints data pointer
+ * \ingroup group_rocal_meta_data
+ * \param [in] rocal_context rocal context
+ * \param [out] ascii_data The user's AsciiDatas pointer that will be pointed to AsciiDataBatch pointer
+ */
+RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
 
 #endif  // MIVISIONX_ROCAL_API_META_DATA_H

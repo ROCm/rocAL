@@ -26,10 +26,10 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
-#include "circular_buffer.h"
-#include "commons.h"
+#include "loaders/circular_buffer.h"
+#include "pipeline/commons.h"
 #include "image_read_and_decode.h"
-#include "meta_data_reader.h"
+#include "meta_data/meta_data_reader.h"
 //
 // ImageLoader runs an internal thread for loading an decoding of images asynchronously
 // it uses a circular buffer to store decoded frames and images for the user
@@ -49,12 +49,13 @@ class ImageLoader : public LoaderModule {
     LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
-    crop_image_info get_crop_image_info() override;
+    DecodedDataInfo get_decode_data_info() override;
+    CropImageInfo get_crop_image_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
+    size_t last_batch_padded_size() override;
 
    private:
     bool is_out_of_data();
@@ -68,18 +69,15 @@ class ImageLoader : public LoaderModule {
     Tensor* _output_tensor;
     std::vector<std::string> _output_names;  //!< image name/ids that are stores in the _output_image
     size_t _output_mem_size;
-    MetaDataBatch* _meta_data = nullptr;  //!< The output of the meta_data_graph,
     std::vector<std::vector<float>> _bbox_coords;
     bool _internal_thread_running;
     size_t _batch_size;
     std::thread _load_thread;
     RocalMemType _mem_type;
-    decoded_image_info _decoded_img_info;
-    crop_image_info _crop_image_info;
-    decoded_image_info _output_decoded_img_info;
-    crop_image_info _output_cropped_img_info;
+    CropImageInfo _crop_image_info;
+    CropImageInfo _output_cropped_img_info;
     CircularBuffer _circ_buff;
-    TimingDBG _swap_handle_time;
+    TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop

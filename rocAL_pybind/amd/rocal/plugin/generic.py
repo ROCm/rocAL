@@ -23,7 +23,6 @@
 #
 # @brief File containing iterators for generic use case
 
-import cupy as cp
 import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
@@ -122,43 +121,24 @@ class ROCALGenericIterator(object):
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
-                if self.device == "cpu":
-                    self.dtype = self.output_tensor_list[i].dtype()
-                    self.output = np.empty(self.dimensions, dtype=self.dtype)
-                    self.labels = np.empty(self.labels_size, dtype=self.dtype)
-                else:
-                    self.dtype = self.output_tensor_list[i].dtype()
-                    with cp.cuda.Device(device=self.device_id):
-                        self.output = cp.empty(
-                            self.dimensions, dtype=self.dtype)
-                        self.labels = cp.empty(
-                            self.labels_size, dtype=self.dtype)
-
-                if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data(self.output)
-                else:
-                    self.output_tensor_list[i].copy_data(self.output.data.ptr)
+                self.dtype = self.output_tensor_list[i].dtype()
+                self.output = np.empty(self.dimensions, dtype=self.dtype)
+                # returned as numpy always - no ROCM CuPy support available
+                self.output_tensor_list[i].copy_data(self.output)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
-                if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data(self.output_list[i])
-                else:
-                    self.output_tensor_list[i].copy_data(
-                        self.output_list[i].data.ptr)
+                self.output_tensor_list[i].copy_data(self.output_list[i])
         if (self.loader._is_external_source_operator):
             self.labels = self.loader.get_image_labels()
-            if self.device == "cpu":
-                self.labels_tensor = self.labels.astype(dtype=np.int_)
-            else:
-                with cp.cuda.Device(device=self.device_id):
-                    self.labels_tensor = self.labels.astype(dtype=cp.int_)
+            self.labels_tensor = self.labels.astype(dtype=np.int_)
             return self.output_list, self.labels_tensor
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:
+                self.labels = np.empty(self.labels_size, dtype="int32")
                 self.loader.get_one_hot_encoded_labels(
-                    self.labels, self.device)
+                        self.labels.ctypes.data, self.loader._output_memory_type)
                 self.labels_tensor = self.labels.reshape(
                     -1, self.batch_size, self.loader._num_classes)
             else:
@@ -167,11 +147,7 @@ class ROCALGenericIterator(object):
                         for i in range(self.batch_size):
                             draw_patches(output[i], i)
                 self.labels = self.loader.get_image_labels()
-                if self.device == "cpu":
-                    self.labels_tensor = self.labels.astype(dtype=np.int_)
-                else:
-                    with cp.cuda.Device(device=self.device_id):
-                        self.labels_tensor = self.labels.astype(dtype=cp.int_)
+                self.labels_tensor = self.labels.astype(dtype=np.int_)
 
         return self.output_list, self.labels_tensor
 
@@ -190,7 +166,7 @@ class ROCALGenericIterator(object):
 
 class ROCALClassificationIterator(ROCALGenericIterator):
     """!ROCAL iterator for classification tasks for generic use case. It returns 2 outputs
-    (data and label) in the form of numpy/cupy Tensor.
+    (data and label) in the form of numpy Tensor.
 
     Calling
 

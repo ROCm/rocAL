@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "parameter_random_crop_decoder.h"
+#include "parameters/parameter_random_crop_decoder.h"
 
 #include <cassert>
 
@@ -33,7 +33,7 @@ RocalRandomCropDecParam::RocalRandomCropDecParam(
     int64_t seed,
     int num_attempts,
     int batch_size)
-    : _aspect_ratio_range(aspect_ratio_range), _aspect_ratio_log_dis(std::log(aspect_ratio_range.first), std::log(aspect_ratio_range.second)), _area_dis(area_range.first, area_range.second), _seed(seed), _num_attempts(num_attempts), _batch_size(batch_size) {
+    : _aspect_ratio_range(aspect_ratio_range), _aspect_ratio_log_dis(std::log(aspect_ratio_range.first), std::log(aspect_ratio_range.second)), _area_dis(area_range.first, area_range.second), _num_attempts(num_attempts), _batch_size(batch_size) {
     _seeds.resize(_batch_size);
 }
 

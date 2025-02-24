@@ -62,6 +62,10 @@ from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
+from rocal_pybind.types import NHW
+#     RocalSpectrogramLayout
+from rocal_pybind.types import NFT
+from rocal_pybind.types import NTF
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -73,6 +77,8 @@ from rocal_pybind.types import DECODER_OPENCV
 from rocal_pybind.types import DECODER_HW_JEPG
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
+from rocal_pybind.types import DECODER_AUDIO_GENERIC
+from rocal_pybind.types import DECODER_VIDEO_ROCDECODE
 
 #     RocalResizeScalingMode
 from rocal_pybind.types import SCALING_MODE_DEFAULT
@@ -89,10 +95,34 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
-# Rocal External Source Mode
+#     Rocal External Source Mode
 from rocal_pybind.types import EXTSOURCE_FNAME
 from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
 from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
+
+#     RocalAudioBorderType
+from rocal_pybind.types import ZERO
+from rocal_pybind.types import CLAMP
+from rocal_pybind.types import REFLECT
+
+#     RocalOutOfBoundsPolicy
+from rocal_pybind.types import PAD
+from rocal_pybind.types import TRIMTOSHAPE
+from rocal_pybind.types import ERROR
+
+#     RocalMelScaleFormula
+from rocal_pybind.types import MELSCALE_SLANEY
+from rocal_pybind.types import MELSCALE_HTK
+
+#     RocalLastBatchPolicy
+from rocal_pybind.types import LAST_BATCH_FILL
+from rocal_pybind.types import LAST_BATCH_DROP
+from rocal_pybind.types import LAST_BATCH_PARTIAL
+
+#     RocalMissingComponentsBehaviour
+from rocal_pybind.types import MISSING_COMPONENT_ERROR
+from rocal_pybind.types import MISSING_COMPONENT_SKIP
+from rocal_pybind.types import MISSING_COMPONENT_EMPTY
 
 _known_types = {
 
@@ -122,6 +152,7 @@ _known_types = {
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
+    NHW: ("NHW", NHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -135,6 +166,8 @@ _known_types = {
     DECODER_HW_JEPG: ("DECODER_HW_JEPG", DECODER_HW_JEPG),
     DECODER_VIDEO_FFMPEG_SW: ("DECODER_VIDEO_FFMPEG_SW", DECODER_VIDEO_FFMPEG_SW),
     DECODER_VIDEO_FFMPEG_HW: ("DECODER_VIDEO_FFMPEG_HW", DECODER_VIDEO_FFMPEG_HW),
+    DECODER_AUDIO_GENERIC: ("DECODER_AUDIO_GENERIC", DECODER_AUDIO_GENERIC),
+    DECODER_VIDEO_ROCDECODE : ("DECODER_VIDEO_ROCDECODE", DECODER_VIDEO_ROCDECODE),
 
     NEAREST_NEIGHBOR_INTERPOLATION: ("NEAREST_NEIGHBOR_INTERPOLATION", NEAREST_NEIGHBOR_INTERPOLATION),
     LINEAR_INTERPOLATION: ("LINEAR_INTERPOLATION", LINEAR_INTERPOLATION),
@@ -152,6 +185,28 @@ _known_types = {
     EXTSOURCE_FNAME: ("EXTSOURCE_FNAME", EXTSOURCE_FNAME),
     EXTSOURCE_RAW_COMPRESSED: ("EXTSOURCE_RAW_COMPRESSED", EXTSOURCE_RAW_COMPRESSED),
     EXTSOURCE_RAW_UNCOMPRESSED: ("EXTSOURCE_RAW_UNCOMPRESSED", EXTSOURCE_RAW_UNCOMPRESSED),
+
+    ZERO: ("ZERO", ZERO),
+    CLAMP: ("CLAMP", CLAMP),
+    REFLECT: ("REFLECT", REFLECT),
+
+    PAD: ("PAD", PAD),
+    TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
+    ERROR: ("ERROR", ERROR),
+
+    NTF: ("NTF", NTF),
+    NFT: ("NFT", NFT),
+
+    MELSCALE_SLANEY: ("MELSCALE_SLANEY", MELSCALE_SLANEY),
+    MELSCALE_HTK: ("MELSCALE_HTK", MELSCALE_HTK),
+
+    LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
+    LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
+    LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
+
+    MISSING_COMPONENT_ERROR : ("MISSING_COMPONENT_ERROR", MISSING_COMPONENT_ERROR),
+    MISSING_COMPONENT_SKIP : ("MISSING_COMPONENT_SKIP", MISSING_COMPONENT_SKIP),
+    MISSING_COMPONENT_EMPTY : ("MISSING_COMPONENT_EMPTY", MISSING_COMPONENT_EMPTY),
 }
 
 def data_type_function(dtype):

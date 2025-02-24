@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "circular_buffer.h"
+#include "loaders/circular_buffer.h"
 
-#include "log.h"
+#include "pipeline/log.h"
 
 CircularBuffer::CircularBuffer(void *devres) : _write_ptr(0),
                                                _read_ptr(0),
@@ -40,8 +40,8 @@ void CircularBuffer::reset() {
     _write_ptr = 0;
     _read_ptr = 0;
     _level = 0;
-    while (!_circ_image_info.empty())
-        _circ_image_info.pop();
+    while (!_circ_buff_data_info.empty())
+        _circ_buff_data_info.pop();
     if (random_bbox_crop_flag == true) {
         while (!_circ_crop_image_info.empty())
             _circ_crop_image_info.pop();
@@ -135,7 +135,7 @@ void CircularBuffer::push() {
     sync();
     // Pushing to the _circ_buff and _circ_buff_names must happen all at the same time
     std::unique_lock<std::mutex> lock(_names_buff_lock);
-    _circ_image_info.push(_last_image_info);
+    _circ_buff_data_info.push(_last_data_info);
     if (random_bbox_crop_flag == true)
         _circ_crop_image_info.push(_last_crop_image_info);
     increment_write_ptr();
@@ -147,7 +147,7 @@ void CircularBuffer::pop() {
     // Pushing to the _circ_buff and _circ_buff_names must happen all at the same time
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     increment_read_ptr();
-    _circ_image_info.pop();
+    _circ_buff_data_info.pop();
     if (random_bbox_crop_flag == true)
         _circ_crop_image_info.pop();
 }
@@ -338,15 +338,15 @@ CircularBuffer::~CircularBuffer() {
     _initialized = false;
 }
 
-decoded_image_info &CircularBuffer::get_image_info() {
+DecodedDataInfo &CircularBuffer::get_decoded_data_info() {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
-    if (_level != _circ_image_info.size())
-        THROW("CircularBuffer internals error, image and image info sizes not the same " + TOSTR(_level) + " != " + TOSTR(_circ_image_info.size()))
-    return _circ_image_info.front();
+    if (_level != _circ_buff_data_info.size())
+        THROW("CircularBuffer internals error, data and data info sizes not the same " + TOSTR(_level) + " != " + TOSTR(_circ_buff_data_info.size()))
+    return _circ_buff_data_info.front();
 }
 
-crop_image_info &CircularBuffer::get_cropped_image_info() {
+CropImageInfo &CircularBuffer::get_cropped_image_info() {
     block_if_empty();
     std::unique_lock<std::mutex> lock(_names_buff_lock);
     if (_level != _circ_crop_image_info.size())

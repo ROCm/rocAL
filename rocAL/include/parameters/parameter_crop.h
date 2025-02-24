@@ -23,7 +23,7 @@ THE SOFTWARE.
 #pragma once
 #include <VX/vx_types.h>
 
-#include "parameter_factory.h"
+#include "parameters/parameter_factory.h"
 enum class RocalCropType {
     ROCALCROP = 0,
     RANDOMCROP,
@@ -44,6 +44,7 @@ class CropParam {
     // V Y directoin
    public:
     CropParam() = delete;
+    virtual ~CropParam() = default;
     CropParam(unsigned int batch_size) : batch_size(batch_size), _random(false), _is_fixed_crop(false) {
         x_drift_factor = default_x_drift_factor();
         y_drift_factor = default_y_drift_factor();

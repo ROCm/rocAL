@@ -26,7 +26,6 @@
 import rocal_pybind as b
 import amd.rocal.types as types
 import numpy as np
-#import cupy as cp
 import ctypes
 import functools
 import inspect
@@ -39,7 +38,7 @@ class Pipeline(object):
 
     @param batch_size (int, optional, default = -1)                                                       Batch size of the pipeline. Negative values for this parameter are invalid - the default value may only be used with serialized pipeline (the value stored in serialized pipeline is used instead).
     @param num_threads (int, optional, default = -1)                                                      Number of CPU threads used by the pipeline. Negative values for this parameter are invalid - the default value may only be used with serialized pipeline (the value stored in serialized pipeline is used instead).
-    @param device_id (int, optional, default = -1)                                                        Id of GPU used by the pipeline. Negative values for this parameter are invalid - the default value may only be used with serialized pipeline (the value stored in serialized pipeline is used instead).
+    @param device_id (int, optional, default = 0)                                                         Id of GPU used by the pipeline. Negative values for this parameter are invalid
     @param seed (int, optional, default = -1)                                                             Seed used for random number generation. Leaving the default value for this parameter results in random seed.
     @param exec_pipelined (bool, optional, default = True)                                                Whether to execute the pipeline in a way that enables overlapping CPU and GPU computation, typically resultingin faster execution speed, but larger memory consumption.
     @param prefetch_queue_depth (int or {"cpu_size": int, "gpu_size": int}, optional, default = 2)        Depth of the executor pipeline. Deeper pipeline makes ROCAL more resistant to uneven execution time of each batch, but it also consumes more memory for internal buffers. Specifying a dict: ``{ "cpu_size": x, "gpu_size": y }`` instead of an integer will cause the pipeline to use separated queues executor, with buffer queue size `x` for cpu stage and `y` for mixed and gpu stages. It is not supported when both `exec_async` and `exec_pipelined` are set to `False`. Executor will buffer cpu and gpu stages separatelly, and will fill the buffer queues when the first :meth:`amd.rocal.pipeline.Pipeline.run` is issued.
@@ -64,10 +63,10 @@ class Pipeline(object):
     _handle = None
     _current_pipeline = None
 
-    def __init__(self, batch_size=-1, num_threads=0, device_id=-1, seed=1,
+    def __init__(self, batch_size=-1, num_threads=0, device_id=0, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None):
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None): 
         if (rocal_cpu):
             self._handle = b.rocalCreate(
                 batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
@@ -123,6 +122,7 @@ class Pipeline(object):
         self._is_external_source_operator = False
         self._external_source = None
         self._external_source_mode = None
+        self._last_batch_policy = None
 
     def build(self):
         """!Build the pipeline using rocalVerify call
@@ -153,22 +153,9 @@ class Pipeline(object):
         b.rocalToTensor(self._handle, ctypes.c_void_p(array.data_ptr()), tensor_format, tensor_dtype,
                         multiplier[0], multiplier[1], multiplier[2], offset[0], offset[1], offset[2], (1 if reverse_channels else 0), self._output_memory_type, max_roi_height, max_roi_width)
 
-    """
-    NOTE: getOneHotEncodedLabels is not defined. This function does not have a cpp equivalent. Bring back once cupy/fucntion is fixed
-    def get_one_hot_encoded_labels(self, array, device):
-        if device == "cpu":
-            if (isinstance(array, np.ndarray)):
-                b.getOneHotEncodedLabels(self._handle, array.ctypes.data_as(
-                    ctypes.c_void_p), self._num_classes, 0)
-            else:  # torch tensor
-                return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 0)
-        else:
-            if (isinstance(array, cp.ndarray)):
-                b.getCupyOneHotEncodedLabels(
-                    self._handle, array.data.ptr, self._num_classes, 1)
-            else:  # torch tensor
-                return b.getOneHotEncodedLabels(self._handle, ctypes.c_void_p(array.data_ptr()), self._num_classes, 1)
-    """
+    def get_one_hot_encoded_labels(self, array_ptr, dest_device_type):
+            b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, dest_device_type)
+
     def set_outputs(self, *output_list):
         b.setOutputs(self._handle, len(output_list), output_list)
 
@@ -220,6 +207,9 @@ class Pipeline(object):
 
     def get_bounding_box_cords(self):
         return b.getBoundingBoxCords(self._handle)
+    
+    def get_ascii_datas(self):
+        return b.getAsciiDatas(self._handle)
 
     def get_mask_count(self, array):
         return b.getMaskCount(self._handle, array)
@@ -265,6 +255,9 @@ class Pipeline(object):
 
     def get_output_tensors(self):
         return b.getOutputTensors(self._handle)
+    
+    def get_last_batch_padded_size(self):
+        return b.getLastBatchPaddedSize(self._handle)
 
     def run(self):
         """

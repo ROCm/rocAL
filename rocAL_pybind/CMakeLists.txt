@@ -18,10 +18,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.5)
-project(rocAL_pybind)
+cmake_minimum_required(VERSION 3.10)
 
-set(TARGET_NAME rocAL_pybind)
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+
+# Set Project Version and Language
+project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
+
+set(TARGET_NAME rocal_pybind)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -31,22 +51,22 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
-set(ROCM_PATH /opt/rocm CACHE PATH "Deafult ROCm Installation Path")
 
-set(CMAKE_CXX_STANDARD 17)
 set(BUILD_ROCAL_PYBIND true)
+set(CMAKE_SKIP_BUILD_RPATH TRUE)
 
 find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
-if (PYTHONVERSION)
-    find_package(Python3 "${PYTHONVERSION}" EXACT QUIET COMPONENTS Interpreter Development)
+if (PYTHON_VERSION_SUGGESTED)
+    find_package(Python3 "${PYTHON_VERSION_SUGGESTED}" EXACT QUIET COMPONENTS Interpreter Development)
 else()
     set(Python3_FIND_VIRTUALENV FIRST)
     find_package(Python3 QUIET COMPONENTS Interpreter Development)
-endif()
-find_package(pybind11 QUIET CONFIG)
+endif()	
+find_package(pybind11 QUIET CONFIG)	
 find_package(HALF QUIET)
+find_package(OpenMP QUIET)
 
 # Backend
 if(BUILD_PYPACKAGE)
@@ -175,7 +195,7 @@ endif()
 # Turbo JPEG
 if(NOT TurboJpeg_FOUND)
     set(BUILD_ROCAL_PYBIND false)
-    message("-- ${Yellow}NOTE: rocAL PyBind requires TurboJpeg, Not Found${ColourReset}")
+    message("-- ${Yellow}NOTE: rocAL pybind requires TurboJpeg, Not Found${ColourReset}")
 endif()
 # Python3	
 if(NOT Python3_FOUND)	
@@ -184,13 +204,18 @@ if(NOT Python3_FOUND)
 endif()
 # PyBind11
 if(NOT pybind11_FOUND)	
-    set(BUILD_ROCAL_PYBIND false)	
-    message("-- ${Yellow}NOTE: rocAL requires pybind11, Not Found${ColourReset}")	
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11, Not Found${ColourReset}")
 endif()
-# PyBind11
+# Half
 if(NOT HALF_FOUND)	
-    set(BUILD_ROCAL_PYBIND false)	
-    message("-- ${Yellow}NOTE: rocAL requires Half, Not Found${ColourReset}")	
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind requires Half, Not Found${ColourReset}")
+endif()
+# OpenMP
+if(NOT OpenMP_FOUND)
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind library requires OpenMP, Not Found ${ColourReset}")
 endif()
 
 if(${BUILD_ROCAL_PYBIND})
@@ -220,6 +245,9 @@ if(${BUILD_ROCAL_PYBIND})
     include_directories(${pybind11_INCLUDE_DIRS})
     # half
     include_directories(${HALF_INCLUDE_DIRS})
+    # OpenMP
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
 
     file(GLOB_RECURSE pyfiles amd/*.py)
     file(GLOB_RECURSE sources *.cpp)
@@ -229,6 +257,16 @@ if(${BUILD_ROCAL_PYBIND})
     add_dependencies(rocal_pybind rocal)
     message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
     message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+
+    #DLPack
+    find_package(DLPACK QUIET)
+    if(DLPACK_FOUND)
+        include_directories(${DLPACK_INCLUDE_DIRS})
+        target_compile_definitions(rocal_pybind PUBLIC ENABLE_DLPACK=1)
+    else()
+        target_compile_definitions(rocal_pybind PUBLIC ENABLE_DLPACK=0)
+        message("-- ${Yellow}NOTE: DLPack Not Found - rocAL Tensorflow and Generic plugins built without GPU support!${ColourReset}")
+    endif()
 
     set_target_properties(rocal_pybind PROPERTIES
         PREFIX "${PYTHON_MODULE_PREFIX}"
@@ -278,8 +316,12 @@ if(${BUILD_ROCAL_PYBIND})
     add_dependencies(PyPackageInstall PyPackageBuild)
         
     #install rocAL pybind libs
-    install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX_PYTHON})
+    install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
+    install(DIRECTORY amd DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
     message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
+
+    # PyBind Test - Installed
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
 else()
     message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
 endif()

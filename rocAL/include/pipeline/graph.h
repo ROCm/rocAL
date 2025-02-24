@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <VX/vx.h>
 #include <VX/vx_types.h>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 class Graph {
    public:
@@ -36,7 +36,6 @@ class Graph {
     vx_graph get() { return _graph; }
 
    private:
-    RocalMemType _mem_type;
     vx_context _context = nullptr;
     vx_graph _graph = nullptr;
     RocalAffinity _affinity;

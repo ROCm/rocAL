@@ -20,9 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "ring_buffer.h"
-
-#include <device_manager.h>
+#include "pipeline/ring_buffer.h"
+#include "device/device_manager.h"
 
 RingBuffer::RingBuffer(unsigned buffer_depth) : BUFF_DEPTH(buffer_depth),
                                                 _dev_sub_buffer(buffer_depth),
@@ -389,9 +388,9 @@ void RingBuffer::increment_write_ptr() {
 
 void RingBuffer::set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data) {
     if (meta_data == nullptr)
-        _last_image_meta_data = std::move(std::make_pair(std::move(names), pMetaDataBatch()));
+        _last_image_meta_data = std::make_pair(std::move(names), pMetaDataBatch());
     else {
-        _last_image_meta_data = std::move(std::make_pair(std::move(names), meta_data));
+        _last_image_meta_data = std::make_pair(std::move(names), meta_data);
         if (!_box_encoder) {
             auto actual_buffer_size = meta_data->get_buffer_size();
             for (unsigned i = 0; i < actual_buffer_size.size(); i++) {

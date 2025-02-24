@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_loader_sharded.h"
+#include "loaders/image/image_loader_sharded.h"
 
 ImageLoaderSharded::ImageLoaderSharded(void* dev_resources) : _dev_resources(dev_resources) {
     _loader_idx = 0;
@@ -38,11 +38,11 @@ std::vector<std::string> ImageLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info ImageLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+DecodedDataInfo ImageLoaderSharded::get_decode_data_info() {
+    return _loaders[_loader_idx]->get_decode_data_info();
 }
 
-crop_image_info ImageLoaderSharded::get_crop_image_info() {
+CropImageInfo ImageLoaderSharded::get_crop_image_info() {
     return _loaders[_loader_idx]->get_crop_image_info();
 }
 
@@ -160,6 +160,17 @@ Timing ImageLoaderSharded::timing() {
     t.read_time = max_read_time;
     t.process_time = swap_handle_time;
     return t;
+}
+
+size_t ImageLoaderSharded::last_batch_padded_size() {
+    size_t last_batch_padded_size = 0;
+    for (auto& loader : _loaders) {
+        if (last_batch_padded_size == 0)
+            last_batch_padded_size = loader->last_batch_padded_size();
+        if (last_batch_padded_size != loader->last_batch_padded_size())
+            THROW("All loaders must have the same last batch padded size");
+    }
+    return last_batch_padded_size;
 }
 
 void ImageLoaderSharded::feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer, const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) {

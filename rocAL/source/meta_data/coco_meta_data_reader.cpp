@@ -20,14 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "coco_meta_data_reader.h"
+#include "meta_data/coco_meta_data_reader.h"
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <utility>
 
-#include "lookahead_parser.h"
+#include "meta_data/lookahead_parser.h"
 
 using namespace std;
 
@@ -172,10 +172,10 @@ void COCOMetaDataReader::read_all(const std::string &path) {
     parser.EnterObject();
     while (const char *key = parser.NextObjectKey()) {
         if (0 == std::strcmp(key, "images")) {
-            int image_id;
             RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
             parser.EnterArray();
             while (parser.NextArrayValue()) {
+                int image_id = -1;
                 string image_name;
                 if (parser.PeekType() != kObjectType) {
                     continue;

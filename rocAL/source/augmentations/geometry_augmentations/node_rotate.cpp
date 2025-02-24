@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_rotate.h"
-#include "exception.h"
+#include "augmentations/geometry_augmentations/node_rotate.h"
+#include "pipeline/exception.h"
 
 RotateNode::RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                     _angle(ROTATE_ANGLE_RANGE[0], ROTATE_ANGLE_RANGE[1]) {}

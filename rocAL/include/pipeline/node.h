@@ -24,9 +24,9 @@ THE SOFTWARE.
 #include <memory>
 #include <set>
 
-#include "graph.h"
-#include "meta_data_graph.h"
-#include "tensor.h"
+#include "pipeline/graph.h"
+#include "meta_data/meta_data_graph.h"
+#include "pipeline/tensor.h"
 class Node {
    public:
     Node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : _inputs(inputs),

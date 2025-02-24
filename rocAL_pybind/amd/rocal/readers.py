@@ -78,7 +78,7 @@ def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_l
     Pipeline._current_pipeline._reader = "labelReader"
     # Output
     labels = []
-    kwargs_pybind = {"source_path": file_root}
+    kwargs_pybind = {"source_path": file_root, "file_list": file_list}
     label_reader_meta_data = b.labelReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (label_reader_meta_data, labels)
@@ -189,7 +189,8 @@ def caffe2(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
 def video(sequence_length, file_list_frame_num=False, file_root="", image_type=types.RGB, num_shards=1,
           random_shuffle=False, step=1, stride=1, decoder_mode=types.SOFTWARE_DECODE, enable_frame_num=False,
           enable_timestamps=False, file_list="", stick_to_shard=False, pad_last_batch=False,
-          file_list_include_preceding_frame=False, normalized=False, skip_vfr_check=False):
+          file_list_include_preceding_frame=False, normalized=False, skip_vfr_check=False, 
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False, shard_size=-1, decoder_type=types.DECODER_VIDEO_FFMPEG_SW):
     """!Creates a VideoDecoder node for loading video sequences.
 
         @param sequence_length                      Number of frames in video sequence.
@@ -209,6 +210,7 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         @param file_list_include_preceding_frame    Changes the behavior how file_list start and end frame timestamps are translated to a frame number.
         @param normalized                           Gets the output as normalized data.
         @param skip_vfr_check                       Skips the check for the variable frame rate (VFR) videos.
+        @param decoder_type                         Type of decoder used for video decoding, Currently supports FFmpeg/rocDecode
 
         @return   list of loaded video sequences.
     """
@@ -223,7 +225,7 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         "file_list_frame_num": file_list_frame_num}  # VideoMetaDataReader
     b.videoMetaDataReader(Pipeline._current_pipeline._handle,
                           *(kwargs_pybind_reader.values()))
-
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
     kwargs_pybind_decoder = {
         "source_path": file_root,
         "color_format": image_type,
@@ -233,9 +235,11 @@ def video(sequence_length, file_list_frame_num=False, file_root="", image_type=t
         "shuffle": random_shuffle,
         "is_output": False,
         "loop": False,
+        "rocal_decoder_type": decoder_type,
         "frame_step": step,
         "frame_stride": stride,
-        "file_list_frame_num": file_list_frame_num}  # VideoDecoder
+        "file_list_frame_num": file_list_frame_num,
+        "sharding_info": sharding_info}  # VideoDecoder
     videos = b.videoDecoder(
         Pipeline._current_pipeline._handle, *(kwargs_pybind_decoder.values()))
     return (videos)
@@ -247,8 +251,10 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
                  stride=3, decoder_mode=types.SOFTWARE_DECODE,
                  scaling_mode=types.SCALING_MODE_DEFAULT, interpolation_type=types.LINEAR_INTERPOLATION,
                  resize_longer=0, resize_shorter=0, max_size=[], enable_frame_num=False,
-                 enable_timestamps=False, file_list="", stick_to_shard=False, pad_last_batch=False,
-                 file_list_include_preceding_frame=False, normalized=False, skip_vfr_check=False):
+                 enable_timestamps=False, file_list="", stick_to_shard=True, pad_last_batch=False,
+                 file_list_include_preceding_frame=False, normalized=False, skip_vfr_check=False, 
+                 last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False, shard_size=-1,
+                 decoder_type=types.DECODER_VIDEO_FFMPEG_SW):
     """!Creates a VideoDecoderResize node in the pipeline for loading and resizing video sequences.
 
         @param sequence_length                      Number of frames in video sequence.
@@ -275,6 +281,7 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
         @param file_list_include_preceding_frame    Specifies if file list includes preceding frames.
         @param normalized                           Gets the output as normalized data.
         @param skip_vfr_check                       Skips the check for the variable frame rate (VFR) videos.
+        @param decoder_type                         Type of decoder used for video decoding, Currently supports FFmpeg/rocDecode
 
         @returns   loaded and resized video sequences and meta data.
     """
@@ -289,18 +296,18 @@ def video_resize(sequence_length, resize_width, resize_height, file_list_frame_n
         "file_list_frame_num": file_list_frame_num}  # VideoMetaDataReader
     meta_data = b.videoMetaDataReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind_reader.values()))
-
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     kwargs_pybind_decoder = {"source_path": file_root, "color_format": image_type, "decoder_mode": decoder_mode, "shard_count": num_shards,
                              "sequence_length": sequence_length, "resize_width": resize_width, "resize_height": resize_height,
-                             "shuffle": random_shuffle, "is_output": False, "loop": False, "frame_step": step, "frame_stride": stride,
+                             "shuffle": random_shuffle, "is_output": False, "loop": False, "rocal_decoder_type": decoder_type, "frame_step": step, "frame_stride": stride,
                              "file_list_frame_num": file_list_frame_num, "scaling_mode": scaling_mode, "max_size": max_size,
-                             "resize_shorter": resize_shorter, "resize_longer": resize_longer, "interpolation_type": interpolation_type}
+                             "resize_shorter": resize_shorter, "resize_longer": resize_longer, "interpolation_type": interpolation_type, "sharding_info": sharding_info}
     videos = b.videoDecoderResize(
         Pipeline._current_pipeline._handle, *(kwargs_pybind_decoder.values()))
     return (videos, meta_data)
 
 
-def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards=1, random_shuffle=False, step=3, stride=1, stick_to_shard=False, pad_last_batch=False):
+def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards=1, random_shuffle=False, step=3, stride=1, stick_to_shard=False, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False, shard_size=-1):
     """!Creates a SequenceReader node for loading image sequences.
 
         @param file_root            Root directory containing image sequences.
@@ -316,7 +323,9 @@ def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards
         @return    list of loaded image sequences.
     """
     Pipeline._current_pipeline._reader = "SequenceReader"
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     # Output
+    
     kwargs_pybind = {
         "source_path": file_root,
         "color_format": image_type,
@@ -326,7 +335,8 @@ def sequence_reader(file_root, sequence_length, image_type=types.RGB, num_shards
         "shuffle": random_shuffle,
         "loop": False,
         "frame_step": step,
-        "frame_stride": stride}
+        "frame_stride": stride,
+        "sharding_info": sharding_info}
     frames = b.sequenceReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (frames)
@@ -350,3 +360,25 @@ def mxnet(path, stick_to_shard=False, pad_last_batch=False):
     mxnet_metadata = b.mxnetReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return mxnet_metadata
+
+def webdataset(path, index_paths="", ext = None, missing_components_behavior = types.MISSING_COMPONENT_ERROR):
+    """!Creates an WebDataset node for reading data from tar files.
+
+        @param path                         Path to the tar files.
+        @param index_paths                  Index Path to index files
+        @param missing_components_behavior  Tells what to do with output tensor data when any compoenet is missing - THROW_ERROR, SKIP, EMPTY_OUTPUT
+
+        @return    Metadata and loaded data from the tar file.
+    """
+    Pipeline._current_pipeline._reader = "WebDataset"
+     # Output
+    kwargs_pybind = {
+        "source_path": path,
+        "index_path": index_paths,
+        "ext": ext,
+        "missing_components_behavior": missing_components_behavior,
+        "is_output": True
+    }
+    webdata_metadata = b.webDatasetReader(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return webdata_metadata

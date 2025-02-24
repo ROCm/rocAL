@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_ssd_random_crop.h"
+#include "augmentations/node_ssd_random_crop.h"
 
-#include <graph.h>
+#include "pipeline/graph.h"
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 SSDRandomCropNode::SSDRandomCropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs),
                                                                                                                   _dest_width(_outputs[0]->info().max_shape()[0]),
@@ -129,7 +129,7 @@ void SSDRandomCropNode::update_node() {
                 crop_box.b = 1;
                 break;
             }
-            float aspect_ratio;
+            float aspect_ratio = 0.0f;
             for (int j = 0; j < _num_of_attempts; j++) {
                 // Setting width and height factor btw 0.3 and 1.0";
                 float w_factor = _float_dis(_rngs[sample]);

@@ -26,12 +26,12 @@ THE SOFTWARE.
 #include <memory>
 #include <vector>
 
-#include "commons.h"
-#include "loader_module.h"
-#include "parameter_random_crop_decoder.h"
-#include "reader_factory.h"
-#include "timing_debug.h"
-#include "turbo_jpeg_decoder.h"
+#include "pipeline/commons.h"
+#include "loaders/loader_module.h"
+#include "parameters/parameter_random_crop_decoder.h"
+#include "readers/image/reader_factory.h"
+#include "pipeline/timing_debug.h"
+#include "decoders/image/turbo_jpeg_decoder.h"
 
 
 class ImageReadAndDecode {
@@ -48,7 +48,7 @@ class ImageReadAndDecode {
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos);
     //! Loads a decompressed batch of images into the buffer indicated by buff
-    /// \param buff User's buffer provided to be filled with decoded image samples
+    /// \param buff User's buffer provided to be filled with decoded image data
     /// \param names User's buffer provided to be filled with name of the images decoded
     /// \param max_decoded_width User's buffer maximum width per decoded image. User expects the decoder to downscale the image if image's original width is bigger than max_width
     /// \param max_decoded_height user's buffer maximum height per decoded image. User expects the decoder to downscale the image if image's original height is bigger than max_height
@@ -69,6 +69,7 @@ class ImageReadAndDecode {
 
     //! returns timing info or other status information
     Timing timing();
+    size_t last_batch_padded_size();
 
    private:
     std::vector<std::shared_ptr<Decoder>> _decoder;
@@ -83,10 +84,9 @@ class ImageReadAndDecode {
     std::vector<size_t> _original_width;
     std::vector<size_t> _original_height;
     static const size_t MAX_COMPRESSED_SIZE = 1 * 1024 * 1024;  // 1 Meg
-    TimingDBG _file_load_time, _decode_time;
-    size_t _batch_size, _shard_count, _num_threads;
+    TimingDbg _file_load_time, _decode_time;
+    size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;
-    bool decoder_keep_original;
     std::vector<std::vector<float>> _bbox_coords, _crop_coords_batch;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     pCropCord _CropCord;

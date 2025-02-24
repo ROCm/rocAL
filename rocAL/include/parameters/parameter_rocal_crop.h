@@ -21,11 +21,12 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "parameter_crop.h"
+#include "parameters/parameter_crop.h"
 
 class RocalCropParam : public CropParam {
    public:
     RocalCropParam() = delete;
+    ~RocalCropParam() = default;
     RocalCropParam(unsigned int batch_size) : CropParam(batch_size) {
         crop_height_factor = default_crop_height_factor();
         crop_width_factor = default_crop_width_factor();

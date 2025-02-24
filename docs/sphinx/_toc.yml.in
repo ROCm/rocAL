@@ -1,23 +1,54 @@
-# Anywhere {branch} is used, the branch name will be substituted.
-# These comments will also be removed.
 defaults:
   numbered: False
-root: doxygen/html/index
+#root: doxygen/html/index
+root: index
 subtrees:
-- caption: User Guide
+
+- caption: Installation
   entries:
-    - file: README
-      subtrees:
-        - entries:
-          - file: user_guide/ch1
-          - file: user_guide/ch2
-          - file: user_guide/ch3
-          - file: user_guide/ch4
-          - file: user_guide/ch5
-          - file: user_guide/ch6
+  - file: install/install.rst
+    title: Installing rocAL
+
+- caption: Conceptual
+  entries:
+  - file: conceptual/overview.rst
+    title: rocAL Overview
+  - file: conceptual/architecture.rst
+    title: Architecture components
+
+- caption: How to
+  entries:
+  - file: how-to/using-with-cpp.rst
+    title: Use the rocAL C++ API
+  - file: how-to/using-with-python.rst
+    title: Use the rocAL Python API
+  - file: how-to/framework.rst
+    title: Use ML framework integration
+
 - caption: Examples
   entries:
-    - file: examples
-- caption: About
+  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/image_processing
+    title: Image processing examples
+  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch
+    title: Pytorch examples
+  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/tf
+    title: Tensorflow examples
+  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/notebooks
+    title: Jupyter notebooks
+  
+- caption: Reference
   entries:
-    - file: license
+  - file: reference/rocAL-and-RNNT.rst
+    title: rocAL RNNT dataloading
+  - file: doxygen/html/group__group__rocal
+  - file: doxygen/html/group__group__rocal__types
+  - file: doxygen/html/group__group__rocal__augmentations
+  - file: doxygen/html/group__group__rocal__data__loaders
+  - file: doxygen/html/group__group__rocal__data__transfer
+  - file: doxygen/html/group__group__rocal__info
+  - file: doxygen/html/group__group__rocal__meta__data
+  - file: doxygen/html/group__group__rocal__parameters
+  - file: doxygen/html/files
+    title: rocAL Header files
+
+  - file: license.rst

@@ -24,11 +24,11 @@ THE SOFTWARE.
 #include <memory>
 #include <set>
 
-#include "bounding_box_graph.h"
-#include "meta_data.h"
-#include "node.h"
-#include "node_crop_resize.h"
-#include "parameter_vx.h"
+#include "meta_data/bounding_box_graph.h"
+#include "meta_data/meta_data.h"
+#include "pipeline/node.h"
+#include "augmentations/geometry_augmentations/node_crop_resize.h"
+#include "parameters/parameter_vx.h"
 class CropResizeMetaNode : public MetaNode {
    public:
     CropResizeMetaNode(){};
@@ -37,7 +37,7 @@ class CropResizeMetaNode : public MetaNode {
 
    private:
     void initialize();
-    std::shared_ptr<RocalRandomCropParam> _meta_crop_param;
+    std::shared_ptr<CropParam> _meta_crop_param;  // CropResize node returns either RocalRandomCropParam or RocalCropParam so using the base class shared ptr
     vx_array _x1, _y1, _x2, _y2;
     std::vector<uint> _x1_val, _y1_val, _x2_val, _y2_val;
 };

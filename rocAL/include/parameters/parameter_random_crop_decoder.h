@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <random>
 #include <thread>
 
-#include "parameter_factory.h"
+#include "parameters/parameter_factory.h"
 
 struct CropWindow {
     unsigned x, y, H, W;
@@ -62,7 +62,6 @@ class RocalRandomCropDecParam {
     std::uniform_real_distribution<float> _area_dis;
     // thread_local is needed to call it from multiple threads async, so each thread will have its own copy
     static thread_local std::mt19937 _rand_gen;
-    int64_t _seed;
     std::vector<int> _seeds;
     int _num_attempts;
     int _batch_size;

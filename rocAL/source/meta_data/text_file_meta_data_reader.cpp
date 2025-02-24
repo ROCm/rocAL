@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "text_file_meta_data_reader.h"
+#include "meta_data/text_file_meta_data_reader.h"
 
 #include <string.h>
 
@@ -29,8 +29,8 @@ THE SOFTWARE.
 #include <sstream>
 #include <utility>
 
-#include "commons.h"
-#include "exception.h"
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
 
 void TextFileMetaDataReader::init(const MetaDataConfig &cfg, pMetaDataBatch meta_data_batch) {
     _path = cfg.path();
@@ -69,15 +69,20 @@ void TextFileMetaDataReader::lookup(const std::vector<std::string> &image_names)
 void TextFileMetaDataReader::read_all(const std::string &path) {
     std::ifstream text_file(path.c_str());
     if (text_file.good()) {
-        //_text_file.open(path.c_str(), std::ifstream::in);
         std::string line;
         while (std::getline(text_file, line)) {
             std::istringstream line_ss(line);
             int label;
-            std::string image_name;
-            if (!(line_ss >> image_name >> label))
+            std::string file_name;
+            if (!(line_ss >> file_name >> label))
                 continue;
-            add(image_name, label);
+            _relative_file_path.push_back(file_name); // to be used in file source reader to reduce I/O operations
+            auto last_id = file_name;
+            auto last_slash_idx = last_id.find_last_of("\\/");
+            if (std::string::npos != last_slash_idx) {
+                last_id.erase(0, last_slash_idx + 1);
+            }
+            add(last_id, label);
         }
     } else {
         THROW("Can't open the metadata file at " + path)
