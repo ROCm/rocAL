@@ -93,7 +93,7 @@ class HWRocJpegDecoder : public Decoder {
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
    private:
-    bool _is_partial_decoder = true;
+    bool _is_partial_decoder = false;
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;
     RocJpegHandle _rocjpeg_handle;
