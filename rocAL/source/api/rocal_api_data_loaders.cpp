@@ -1727,9 +1727,7 @@ rocalNumpyFileSource(
             dims[i + 1] = max_dimensions[i];
         auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
                                context->master_graph->mem_type(),
-                               tensor_data_type);
-        info.set_tensor_layout(op_tensor_layout);
-        info.set_max_shape();
+                               tensor_data_type, op_tensor_layout);
         output = context->master_graph->create_loader_output_tensor(info);
 
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
@@ -1780,9 +1778,7 @@ rocalNumpyFileSourceSingleShard(
             dims[i + 1] = max_dimensions[i];
         auto info = TensorInfo(std::vector<size_t>(std::move(dims)),
                                context->master_graph->mem_type(),
-                               tensor_data_type);
-        info.set_tensor_layout(op_tensor_layout);
-        info.set_max_shape();
+                               tensor_data_type, op_tensor_layout);
         output = context->master_graph->create_loader_output_tensor(info);
 
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);

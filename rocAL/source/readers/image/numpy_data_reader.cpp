@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <math.h>
-
 #include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <numeric>
 #include <random>
-
+#include <math.h>
 #include "pipeline/commons.h"
 #include "pipeline/filesystem.h"
 #include "readers/image/numpy_data_reader.h"
@@ -38,7 +36,7 @@ NumpyDataReader::NumpyDataReader() {
     _entity = nullptr;
     _curr_file_idx = 0;
     _current_file_size = 0;
-    _current_fPtr = nullptr;
+    _current_file_ptr = nullptr;
     _loop = false;
     _shuffle = false;
     _file_count_all_shards = 0;
@@ -99,11 +97,11 @@ size_t NumpyDataReader::open() {
         parse_header(_curr_file_header, file_path);
         update_header_cache(file_path, _curr_file_header);
     } else {
-        _current_fPtr = std::fopen(file_path.c_str(), "rb");
-        if (_current_fPtr == nullptr)
+        _current_file_ptr = std::fopen(file_path.c_str(), "rb");
+        if (_current_file_ptr == nullptr)
             THROW("Could not open file " + file_path + ": " + std::strerror(errno));
     }
-    fseek(_current_fPtr, 0, SEEK_SET);  // Take the file pointer back to the start
+    fseek(_current_file_ptr, 0, SEEK_SET);  // Take the file pointer back to the start
 
     return _curr_file_header.nbytes();
 }
@@ -269,10 +267,10 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
 void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string file_path) {
     // check if the file is actually a numpy file
     std::vector<char> token(128);
-    _current_fPtr = std::fopen(file_path.c_str(), "rb");
-    if (_current_fPtr == nullptr)
+    _current_file_ptr = std::fopen(file_path.c_str(), "rb");
+    if (_current_file_ptr == nullptr)
         THROW("Could not open file " + file_path + ": " + std::strerror(errno));
-    int64_t n_read = std::fread(token.data(), 1, 10, _current_fPtr);
+    int64_t n_read = std::fread(token.data(), 1, 10, _current_file_ptr);
     if (n_read != 10)
         THROW("Can not read header.");
     token[n_read] = '\0';
@@ -294,12 +292,12 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
     if ((header_len + 10) % 16 != 0)
         THROW("Error extracting header length.");
 
-    // read header: the offset is a magic number
+    // read header: the offset is a magic number - the first 10 bytes store info about numpy version and header len
     int64_t offset = 10;
     token.resize(header_len + 1);
-    if (std::fseek(_current_fPtr, offset, SEEK_SET))
+    if (std::fseek(_current_file_ptr, offset, SEEK_SET))
         THROW("Seek operation failed: " + std::strerror(errno));
-    n_read = std::fread(token.data(), 1, header_len, _current_fPtr);
+    n_read = std::fread(token.data(), 1, header_len, _current_file_ptr);
     if (n_read != header_len)
         THROW("Can not read header.");
     token[header_len] = '\0';
@@ -307,7 +305,7 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
     if (header.find('{') == std::string::npos)
         THROW("Header is corrupted.");
     offset += header_len;
-    if (std::fseek(_current_fPtr, offset, SEEK_SET))
+    if (std::fseek(_current_file_ptr, offset, SEEK_SET))
         THROW("Seek operation failed: " + std::strerror(errno));
 
     parse_header_data(parsed_header, header);
@@ -315,13 +313,13 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
 }
 
 size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector<unsigned>& strides_in_dims) {
-    if (!_current_fPtr)
+    if (!_current_file_ptr)
         THROW("Null file pointer");
 
     // Requested read size bigger than the file size? just read as many bytes as the file size
     read_size = (read_size > _current_file_size) ? _current_file_size : read_size;
 
-    if (std::fseek(_current_fPtr, _curr_file_header.data_offset, SEEK_SET))
+    if (std::fseek(_current_file_ptr, _curr_file_header.data_offset, SEEK_SET))
         THROW("Seek operation failed: " + std::strerror(errno));
 
     auto shape = _curr_file_header.shape();
@@ -329,12 +327,12 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     size_t actual_read_size = 0;
 
     if (strides_in_dims[0] == _curr_file_header.size())
-        return std::fread((unsigned char*)buf, sizeof(unsigned char), _curr_file_header.nbytes(), _current_fPtr);
+        return std::fread((unsigned char*)buf, sizeof(unsigned char), _curr_file_header.nbytes(), _current_file_ptr);
 
     if (_curr_file_header.type() == RocalTensorDataType::UINT8)
-        actual_read_size = parse_numpy_data<u_int8_t>((u_int8_t*)buf, strides_in_dims, shape);
+        actual_read_size = parse_numpy_data<uint8_t>((uint8_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::UINT32)
-        actual_read_size = parse_numpy_data<u_int32_t>((u_int32_t*)buf, strides_in_dims, shape);
+        actual_read_size = parse_numpy_data<uint32_t>((uint32_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::INT8)
         actual_read_size = parse_numpy_data<int8_t>((int8_t*)buf, strides_in_dims, shape);
     else if (_curr_file_header.type() == RocalTensorDataType::INT16)
@@ -356,7 +354,7 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
 template <typename T>
 size_t NumpyDataReader::parse_numpy_data(T* buf, std::vector<unsigned>& strides_in_dims, std::vector<unsigned>& shapes, unsigned dim) {
     if (dim == (shapes.size() - 1)) {
-        auto actual_read_size = std::fread(buf, sizeof(T), shapes[dim], _current_fPtr);
+        auto actual_read_size = std::fread(buf, sizeof(T), shapes[dim], _current_file_ptr);
         return actual_read_size;
     }
     T* startPtr = buf;
@@ -373,13 +371,13 @@ const NumpyHeaderData NumpyDataReader::get_numpy_header_data() {
 }
 
 size_t NumpyDataReader::read_data(unsigned char* buf, size_t read_size) {
-    if (!_current_fPtr)
+    if (!_current_file_ptr)
         return 0;
 
     // Requested read size bigger than the file size? just read as many bytes as the file size
     read_size = (read_size > _current_file_size) ? _current_file_size : read_size;
 
-    size_t actual_read_size = fread(buf, sizeof(unsigned char), read_size, _current_fPtr);
+    size_t actual_read_size = fread(buf, sizeof(unsigned char), read_size, _current_file_ptr);
     return actual_read_size;
 }
 
@@ -392,10 +390,10 @@ NumpyDataReader::~NumpyDataReader() {
 }
 
 int NumpyDataReader::release() {
-    if (!_current_fPtr)
+    if (!_current_file_ptr)
         return 0;
-    fclose(_current_fPtr);
-    _current_fPtr = nullptr;
+    fclose(_current_file_ptr);
+    _current_file_ptr = nullptr;
     return 0;
 }
 
@@ -472,7 +470,7 @@ Reader::Status NumpyDataReader::generate_file_names() {
                 }
             }
         }
-    } else if (!_files.empty()) {
+    } else if (!_files.empty()) { // If the user passes a list of filenames, use them instead of reading from folder
         for (unsigned file_count = 0; file_count < _files.size(); file_count++) {
             std::string file_path = _files[file_count];
             filesys::path pathObj(file_path);
