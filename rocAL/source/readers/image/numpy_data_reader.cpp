@@ -98,8 +98,10 @@ size_t NumpyDataReader::open() {
         update_header_cache(file_path, _curr_file_header);
     } else {
         _current_file_ptr = std::fopen(file_path.c_str(), "rb");
-        if (_current_file_ptr == nullptr)
-            THROW("Could not open file " + file_path + ": " + std::strerror(errno));
+        if (_current_file_ptr == nullptr) {
+            ERR("Could not open file " + file_path + ": " + std::strerror(errno));
+            return 0;
+        }
     }
     fseek(_current_file_ptr, 0, SEEK_SET);  // Take the file pointer back to the start
 
