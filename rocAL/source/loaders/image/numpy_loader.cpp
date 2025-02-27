@@ -182,8 +182,10 @@ NumpyLoader::load_routine() {
                     continue;
                 }
                 auto fsize = _reader->read_numpy_data(read_ptr, read_size, strides_in_dims);
-                ERR("Opened file " + _reader->id() + " of size 0");
-                continue;
+                if (fsize == 0) {
+                    ERR("Cannot read numpy data from " + _reader->id());
+                    continue;
+                }
                 _decoded_data_info._data_names[file_counter] = _reader->id();
                 auto original_roi = _reader->get_numpy_header_data().shape();
                 // The numpy header data contains the full array shape. We require only width and height for ROI updation

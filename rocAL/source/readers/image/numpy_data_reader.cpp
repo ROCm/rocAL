@@ -164,7 +164,7 @@ inline void NumpyDataReader::skip_spaces(const char*& ptr) {
 template <size_t N>
 void NumpyDataReader::skip_char(const char*& ptr, const char (&what)[N]) {
     if (strncmp(ptr, what, N - 1)) {
-        ERR("Found wrong symbol during parsing");
+        ERR("Found wrong symbol during parsing, expected symbol: " + std::string(what));
         _header_parsing_failed = true;
         return;
     }
@@ -184,12 +184,15 @@ bool NumpyDataReader::try_skip_char(const char*& ptr, const char (&what)[N]) {
 template <size_t N>
 void NumpyDataReader::skip_field(const char*& ptr, const char (&name)[N]) {
     skip_spaces(ptr);
-    skip_char(ptr, "'");
-    skip_char(ptr, name);
-    skip_char(ptr, "'");
+    CALL_AND_CHECK_FLAG(skip_char(ptr, "'"));
+    CALL_AND_CHECK_FLAG(skip_char(ptr, name));
+    CALL_AND_CHECK_FLAG(skip_char(ptr, "'"));
     skip_spaces(ptr);
-    skip_char(ptr, ":");
+    CALL_AND_CHECK_FLAG(skip_char(ptr, ":"));
     skip_spaces(ptr);
+
+    error:
+        return;
 }
 
 template <typename T>
@@ -275,7 +278,9 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
     } else if (try_skip_char(hdr, "False")) {
         target.fortran_order = false;
     } else {
-        THROW("Failed to parse fortran_order field.");
+        ERR("Failed to parse fortran_order field.");
+        _header_parsing_failed = true;
+        return;
     }
     skip_spaces(hdr);
     CALL_AND_CHECK_FLAG(skip_char(hdr, ","));
@@ -289,8 +294,11 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
         if(_header_parsing_failed) return;
         target.array_shape.push_back(static_cast<unsigned>(shape));
         skip_spaces(hdr);
-        if (!(try_skip_char(hdr, ",")) && (target.array_shape.size() <= 1))
-            THROW("The first number in a tuple must be followed by a comma.");
+        if (!(try_skip_char(hdr, ",")) && (target.array_shape.size() <= 1)) {
+            ERR("The first number in a tuple must be followed by a comma.");
+            _header_parsing_failed = true;
+            return;
+        }
     }
     if (target.fortran_order) {
         // cheapest thing to do is to define the tensor in an reversed way
@@ -509,8 +517,10 @@ Reader::Status NumpyDataReader::generate_file_names() {
             auto vec_rel_file_path = _meta_data_reader->get_relative_file_path();  // Get the relative file path's from meta_data_reader
             for (auto file_path : vec_rel_file_path) {
                 if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
-                    if (!filesys::exists(_folder_path))
-                        THROW("File list contains relative paths but root path doesn't exists");
+                    if (!filesys::exists(_folder_path)) {
+                        ERR(file_path + " is a relative path but root path doesn't exist");
+                        continue;
+                    }
                     _absolute_file_path = _folder_path + "/" + file_path;
                 }
                 if (filesys::is_regular_file(_absolute_file_path)) {
@@ -529,8 +539,10 @@ Reader::Status NumpyDataReader::generate_file_names() {
                     std::string file_path;
                     std::getline(ss, file_path, ' ');
                     if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
-                        if (!filesys::exists(_folder_path))
-                            THROW("File list contains relative paths but root path doesn't exists");
+                        if (!filesys::exists(_folder_path)) {
+                            ERR("File list contains relative paths but root path doesn't exists");
+                            continue;
+                        }
                         file_path = _folder_path + "/" + file_path;
                     }
                     std::string file_name = file_path.substr(file_path.find_last_of("/\\") + 1);
@@ -557,8 +569,10 @@ Reader::Status NumpyDataReader::generate_file_names() {
                     continue;
                 else {
                     if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
-                        if (!filesys::exists(_folder_path))
-                            THROW("File list contains relative paths but root path doesn't exists");
+                        if (!filesys::exists(_folder_path)) {
+                            ERR(file_path + " is a relative path but root path doesn't exist");
+                            continue;
+                        }
                         file_path = _folder_path + "/" + file_path;
                     }
                     if (filesys::exists(file_path) && filesys::is_regular_file(file_path)) {
