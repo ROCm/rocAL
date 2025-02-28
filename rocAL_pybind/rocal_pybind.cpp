@@ -1034,9 +1034,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
             py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
-    m.def("numpyReaderSource", &rocalNumpyFileSource, "Reads data from numpy files",
-          py::return_value_policy::reference);
-    m.def("numpyReaderSourceShard", &rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
+    m.def("numpyReader", &rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
           py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);

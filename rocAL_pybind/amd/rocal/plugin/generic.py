@@ -219,10 +219,8 @@ class ROCALClassificationIterator(ROCALGenericIterator):
 
 
 class ROCALNumpyIterator(object):
-    def __init__(self, pipeline, device="cpu", device_id=0):
+    def __init__(self, pipeline):
         self.loader = pipeline
-        self.device = device
-        self.device_id = device_id
         self.output_list = None
         self.batch_size = self.loader._batch_size
         self.len = b.getRemainingImages(self.loader._handle)
