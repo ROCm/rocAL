@@ -90,8 +90,10 @@ void ImageSourceEvaluator::find_max_numpy_dimensions() {
 
     while (_reader->count_items()) {
         size_t fsize = _reader->open();
-        if (fsize == 0)
-            THROW("Numpy arrays must contain readable data")
+        if (fsize == 0) {
+            _reader->close();
+            continue;
+        }
         const NumpyHeaderData numpy_header = _reader->get_numpy_header_data();
         _reader->close();
 

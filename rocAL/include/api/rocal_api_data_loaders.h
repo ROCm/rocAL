@@ -626,12 +626,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
  * \param [in] files Contains a list of file paths to read the data from.
  * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
- * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
+ * \param [in] loop Determines if the user wants to indefinitely loop through images or not.
  * \param [in] seed Determines the seed used by RNG for shuffling data between shards.
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalNumpyFileSource(RocalContext p_context,
+extern "C" RocalTensor ROCAL_API_CALL rocalNumpyFileSource(RocalContext context,
                                                            const char* source_path,
                                                            unsigned internal_shard_count,
                                                            RocalTensorLayout output_layout = RocalTensorLayout::ROCAL_NONE,
@@ -650,14 +650,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalNumpyFileSource(RocalContext p_contex
  * \param [in] files Contains a list of file paths to read the data from.
  * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
  * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
- * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
+ * \param [in] loop Determines if the user wants to indefinitely loop through images or not.
  * \param [in] shard_id Shard id for this loader
  * \param [in] shard_count Total shard count
  * \param [in] seed Determines the seed used by RNG for shuffling data between shards.
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
-extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext p_context,
+extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext context,
                                                        const char* source_path,
                                                        RocalTensorLayout output_layout = RocalTensorLayout::ROCAL_NONE,
                                                        std::vector<std::string> files = {},
