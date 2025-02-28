@@ -58,8 +58,6 @@ class COCOFileSourceReader : public Reader {
     //! Returns the name of the latest file opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~COCOFileSourceReader() override;
 
     int close() override;
@@ -83,10 +81,6 @@ class COCOFileSourceReader : public Reader {
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     void incremenet_read_ptr();
     int release();

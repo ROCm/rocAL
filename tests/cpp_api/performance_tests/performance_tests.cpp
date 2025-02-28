@@ -56,10 +56,10 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
-    int argIdx = 0;
-    const char* path = argv[++argIdx];
-    int width = atoi(argv[++argIdx]);
-    int height = atoi(argv[++argIdx]);
+    int argIdx = 1;
+    const char* path = argv[argIdx++];
+    int width = atoi(argv[argIdx++]);
+    int height = atoi(argv[argIdx++]);
 
     int rgb = 1;  // process color images
     bool processing_device = 1;
@@ -68,27 +68,25 @@ int main(int argc, const char** argv) {
     int shards = 4;
     int shuffle = 0;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        batch_size = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        batch_size = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shards = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shards = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shuffle = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shuffle = atoi(argv[argIdx++]);
 
-    test(test_case, path, rgb, processing_device, width, height, batch_size, shards, shuffle);
-
-    return 0;
+    return test(test_case, path, rgb, processing_device, width, height, batch_size, shards, shuffle);
 }
 
 int test(int test_case, const char* path, int rgb, int processing_device, int width, int height, int batch_size, int shards, int shuffle) {
@@ -133,8 +131,8 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     if (decode_max_height <= 0 || decode_max_width <= 0)
         tensor0 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, true);
     else
-        tensor0 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, false,
-                                      ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+        tensor0 = rocalJpegFileSource(handle, path, color_format, num_threads, false, shuffle, true,
+                                      ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "JPEG source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
@@ -282,8 +280,11 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
 
     int i = 0;
     while (i++ < 100 && !rocalIsEmpty(handle)) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
 
         // auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         // rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);

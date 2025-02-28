@@ -59,8 +59,6 @@ class FileSourceReader : public Reader {
     //! Returns the name of the latest file_path opened
     const std::string file_path() override { return _last_file_path; }
 
-    unsigned count_items() override;
-
     ~FileSourceReader() override;
 
     int close() override;
@@ -84,10 +82,6 @@ class FileSourceReader : public Reader {
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     //!< _file_count_all_shards total_number of files in to figure out the max_batch_size (usually needed for distributed training).
     void incremenet_read_ptr();
     int release();
