@@ -51,8 +51,8 @@ int main(int argc, const char** argv) {
               decode_width decode_height decoder_mode gray_scale/rgb display_on_off decode_shard_count  <shuffle:0/1> <jpeg_dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>\n");
         return -1;
     }
-    int argIdx = 0;
-    const char* folderPath1 = argv[++argIdx];
+    int argIdx = 1;
+    const char* folderPath1 = argv[argIdx++];
     int decoder_mode = 0;  // 0 means no video decode, 1 means hardware, 2 means software decoding
     bool display = 1;    // Display the images
     int aug_depth = 1;   // how deep is the augmentation tree
@@ -63,37 +63,37 @@ int main(int argc, const char** argv) {
     size_t shard_count = 2;
     int shuffle = 0;
     int decoder_type = 0;
-    const char *outName = "image_augmentation_app.png";
+    const char *outName = "image_augmentation_app";
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decoder_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decoder_mode = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shard_count = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shard_count = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shuffle = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shuffle = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decoder_type = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decoder_type = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        outName = argv[++argIdx];
+    if (argc > argIdx)
+        outName = argv[argIdx++];
 
     int inputBatchSize = 4;
 
@@ -127,14 +127,15 @@ int main(int argc, const char** argv) {
     RocalTensor input1;
 
     if (decoder_mode >= 2) {
-        unsigned sequence_length = 3;
-        unsigned frame_step = 3;
+        unsigned sequence_length = 1;
+        unsigned frame_step = 1;
         unsigned frame_stride = 1;
         if (decode_height <= 0 || decode_width <= 0) {
             std::cout << "Output width and height is needed for video decode\n";
             return -1;
         }
-        input1 = rocalVideoFileSource(handle, folderPath1, color_format, (decoder_mode == 2)? ROCAL_SW_DECODE: ROCAL_HW_DECODE, shard_count, sequence_length, frame_step, frame_stride, shuffle, true, false);
+        input1 = rocalVideoFileSource(handle, folderPath1, color_format, (dec_type == 2) ? ROCAL_HW_DECODE : ROCAL_SW_DECODE, shard_count, sequence_length, shuffle, 
+                                      true, false, (dec_type == 2) ? ROCAL_DECODER_VIDEO_FFMPEG_HW : ROCAL_DECODER_VIDEO_FFMPEG_SW, frame_step, frame_stride);
     } else if (decoder_mode == 1) {
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
@@ -173,7 +174,7 @@ int main(int argc, const char** argv) {
     // Creating successive blur nodes to simulate a deep branch of augmentations
     RocalTensor tensor2 = rocalCropResize(handle, tensor0, resize_w, resize_h, false, rand_crop_area);
     for (int i = 0; i < aug_depth; i++) {
-        tensor2 = rocalBlurFixed(handle, tensor2, 17.25, (i == (aug_depth - 1)) ? true : false);
+        tensor2 = rocalBlurFixed(handle, tensor2, 17, (i == (aug_depth - 1)) ? true : false);
     }
     // Commenting few augmentations out until tensor support is added in rpp
     // RocalTensor tensor4 = rocalColorTemp(handle, tensor0, true, color_temp_adj);
@@ -212,7 +213,7 @@ int main(int argc, const char** argv) {
     AMD_Epyc_Black_resize = cv::imread("../../../../docs/data/amd-epyc-black-resize.png");
     AMD_ROCm_Black_resize = cv::imread("../../../../docs/data/rocm-black-resize.png");
     int fontFace = CV_FONT_HERSHEY_DUPLEX;
-    int thickness = 1.3;
+    int thickness = 1;
     std::string bufferName = "rocAL Image Augmentation";
 
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
@@ -241,8 +242,11 @@ int main(int argc, const char** argv) {
     int counter = 0;
     int color_temp_increment = 1;
     while (!rocalIsEmpty(handle)) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
 
         if (rocalGetIntValue(color_temp_adj) <= -99 || rocalGetIntValue(color_temp_adj) >= 99)
             color_temp_increment *= -1;
