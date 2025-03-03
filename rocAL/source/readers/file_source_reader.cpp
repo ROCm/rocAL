@@ -40,14 +40,6 @@ FileSourceReader::FileSourceReader() {
     _file_count_all_shards = 0;
 }
 
-unsigned FileSourceReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop);
-    int ret = (size - _read_counter);
-    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
-        ret -= _batch_size;
-    return ((ret < 0) ? 0 : ret);
-}
-
 Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _folder_path = desc.path();
@@ -63,6 +55,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
     _stick_to_shard = _sharding_info.stick_to_shard;
     _shard_size = _sharding_info.shard_size;
     ret = subfolder_reading();
+    _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle)
         std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
