@@ -27,6 +27,12 @@ THE SOFTWARE.
 #include <vector>
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_random_crop_decoder.h"
+#include "pipeline/commons.h"
+
+#if ENABLE_HIP
+#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#endif
 
 #if ENABLE_HIP
 #include "hip/hip_runtime_api.h"
@@ -42,7 +48,8 @@ enum class DecoderType {
     FFMPEG_SW_DECODE = 5,   //!< for video decoding using CPU and FFMPEG
     FFMPEG_HW_DECODE = 6,   //!< for video decoding using HW via FFMPEG
     ROCDEC_VIDEO_DECODE = 7, //!< for video decoding using HW via rocDecode
-    AUDIO_SOFTWARE_DECODE = 8   //!< Uses sndfile to decode audio files
+    AUDIO_SOFTWARE_DECODE = 8,  //!< Uses sndfile to decode audio files
+    ROCJPEG_DEC = 9             //!< rocJpeg hardware decoder for decoding jpeg files
 };
 
 class DecoderConfig {
@@ -101,6 +108,24 @@ class Decoder {
                                int *width,
                                int *height,
                                int *color_comps) = 0;
+    
+    //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
+    //! It also scales the width and height wrt max decoded width and height
+    /*!
+     \param input_buffer  User provided buffer containig the encoded image
+     \param input_size Size of the compressed data provided in the input_buffer
+     \param width pointer to the user's buffer to write the width of the compressed image/scaled width based on max_decoded_width
+     \param height pointer to the user's buffer to write the height of the compressed image/scaled height based on max_decoded_height
+     \param actual_width pointer to the user's buffer to write the width of the compressed image
+     \param actual_height pointer to the user's buffer to write the height of the compressed image
+     \param max_decoded_width maximum width of the decoded image
+     \param max_decoded_height maximum height of the decoded image
+     \param desired_decoded_color_format user provided color format of the decoded image
+     \param index index of the image in the batch for which decode info must be fetched
+    */
+    virtual Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, 
+                               int *actual_width, int *actual_height, int max_decoded_width, 
+                               int max_decoded_height, ColorFormat desired_decoded_color_format, int index) { return Status::UNSUPPORTED; }
 
     // TODO: Extend the decode API if needed, color format and order can be passed to the function
     //! Decodes the actual image data
@@ -118,8 +143,24 @@ class Decoder {
                                    size_t &actual_decoded_width, size_t &actual_decoded_height,
                                    Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original) = 0;
 
+    //! Decodes a batch of actual image data
+    /*!
+      \param output_buffer User provided buffer used to write the decoded image into
+      \param max_decoded_width The maximum width user wants the decoded image to be. Image will be downscaled if bigger.
+      \param max_decoded_height The maximum height user wants the decoded image to be. Image will be downscaled if bigger.
+      \param original_image_width The actual width of the compressed image. decoded width will be equal to this if this is smaller than max_decoded_width
+      \param original_image_height The actual height of the compressed image. decoded height will be equal to this if this is smaller than max_decoded_height
+      \param actual_decoded_width The width of the image after decoding and scaling if original width is greater than max decoded width
+      \param actual_decoded_height The height of the image after decoding and scaling if original height is greater than max decoded height
+    */
+    virtual Decoder::Status decode_batch(std::vector<unsigned char *> &output_buffer,
+                                         size_t max_decoded_width, size_t max_decoded_height,
+                                         std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
+                                         std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) { return Status::UNSUPPORTED; }
+
     virtual ~Decoder() = default;
     virtual void initialize(int device_id) = 0;
+    virtual void initialize(int device_id, unsigned batch_size) { THROW("Initialize not implemented") }
     virtual bool is_partial_decoder() = 0;
     virtual void set_bbox_coords(std::vector<float> bbox_coords) = 0;
     virtual std::vector<float> get_bbox_coords() = 0;

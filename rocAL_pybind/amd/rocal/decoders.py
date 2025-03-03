@@ -56,7 +56,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
 
     if (device == "gpu"):
-        decoder_type = types.DECODER_HW_JEPG
+        decoder_type = types.DECODER_ROCJPEG
     else:
         decoder_type = types.DECODER_TJPEG
     if (reader == 'COCOReader'):
