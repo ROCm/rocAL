@@ -54,8 +54,6 @@ class CIFAR10DataReader : public Reader {
     //! Returns the name of the latest data_id opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~CIFAR10DataReader() override;
 
     int close() override;
@@ -86,10 +84,6 @@ class CIFAR10DataReader : public Reader {
     //!< _raw_file_size of each file to read
     const size_t _raw_file_size = (32 * 32 * 3 + 1);  // todo:: need to add an option in reader config to take this.
     size_t _total_file_size;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     void incremenet_read_ptr();
     int release();
 };
