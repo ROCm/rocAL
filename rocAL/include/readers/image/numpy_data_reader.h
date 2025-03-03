@@ -75,8 +75,6 @@ class NumpyDataReader : public Reader {
     //! Returns the name of the latest file_path opened
     const std::string file_path() override { return _last_file_path; }
 
-    unsigned count_items() override;
-
     ~NumpyDataReader() override;
 
     int close() override;
@@ -103,10 +101,6 @@ class NumpyDataReader : public Reader {
     NumpyHeaderData _curr_file_header;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     unsigned _seed = 0;
     std::mutex _cache_mutex;
     std::map<std::string, NumpyHeaderData> _header_cache;
