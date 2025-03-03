@@ -40,14 +40,6 @@ TFRecordReader::TFRecordReader() {
     _file_count_all_shards = 0;
 }
 
-unsigned TFRecordReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop);
-    int ret = (size - _read_counter);
-    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
-        ret -= _batch_size;
-    return ((ret < 0) ? 0 : ret);
-}
-
 Reader::Status TFRecordReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _file_id = 0;

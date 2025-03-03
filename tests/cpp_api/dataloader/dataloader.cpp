@@ -49,11 +49,11 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: image_augmentation <image_dataset_folder/video_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
+        printf("Usage: datalaoder <image_dataset_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
         return -1;
     }
-    int argIdx = 0;
-    const char *folderPath1 = argv[++argIdx];
+    int argIdx = 1;
+    const char *folderPath1 = argv[argIdx++];
     bool display = 0;  // Display the images
     // int aug_depth = 1;// how deep is the augmentation tree
     int decode_width = 32;
@@ -61,20 +61,20 @@ int main(int argc, const char **argv) {
     int inputBatchSize = 4;
     bool processing_device = 1;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        inputBatchSize = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        inputBatchSize = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display = atoi(argv[argIdx++]);
 
     std::cout << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
     // The cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
@@ -167,19 +167,22 @@ int main(int argc, const char **argv) {
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
     std::vector<std::string> names;
-    int image_name_length[inputBatchSize];
+    std::vector<int> image_name_length(inputBatchSize);
     names.resize(inputBatchSize);
     int iter_cnt = 0;
     while (!rocalIsEmpty(handle) && (iter_cnt < 100)) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         counter += inputBatchSize;
         RocalTensorList labels = rocalGetImageLabels(handle);
-        unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length);
-        char img_name[img_name_size];
-        rocalGetImageName(handle, img_name);
-        std::string image_name(img_name);
+        unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
+        std::vector<char> img_name(img_name_size);
+        rocalGetImageName(handle, img_name.data());
+        std::string image_name(img_name.data());
         int pos = 0;
         int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
         for (int i = 0; i < inputBatchSize; i++) {
