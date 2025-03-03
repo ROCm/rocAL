@@ -101,7 +101,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
         return Status::FAILED;        
     }
 
-    int64_t pts = 0, dts = 0, requested_frame_dts = 0;
+    int64_t pts = 0, requested_frame_pts = 0;
     int n_video_bytes = 0, n_frame_returned = 0, n_frame = 0, pkg_flags = 0;
     OutputSurfaceInfo *surf_info;
     uint8_t *pvideo = nullptr;
@@ -120,12 +120,11 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
             video_seek_ctx.seek_mode_ = SEEK_MODE_PREV_KEY_FRAME;
             _demuxer->Seek(video_seek_ctx, &pvideo, &n_video_bytes);
             pts = video_seek_ctx.out_frame_pts_;
-            dts = video_seek_ctx.out_frame_dts_;
-            requested_frame_dts = video_seek_ctx.requested_frame_dts_;
+            requested_frame_pts = video_seek_ctx.requested_frame_pts_;
             b_seek = false;
             _rocvid_decoder->FlushAndReconfigure();
         } else {
-            _demuxer->Demux(&pvideo, &n_video_bytes, &pts, &dts);
+            _demuxer->Demux(&pvideo, &n_video_bytes, &pts);
         }
         // Treat 0 bitstream size as end of stream indicator
         if (n_video_bytes == 0) {
@@ -140,7 +139,7 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
         int required_n_frames = std::min(static_cast<int>(sequence_length), n_frame_returned);
         for (int i = 0; i < required_n_frames; i++) {
             uint8_t *pframe = _rocvid_decoder->GetFrame(&pts);
-            if (dts >= requested_frame_dts) {
+            if (pts >= requested_frame_pts) {
                 if (n_frame % stride == 0) {
                     post_process.ColorConvertYUV2RGB(pframe, surf_info, output_buffer_ptr, _output_format, _hip_stream);
                     output_buffer_ptr += image_size;
@@ -158,6 +157,8 @@ VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr
         if (sequence_decoded) {
             if (hipStreamSynchronize(_hip_stream) != hipSuccess)
                 THROW("hipStreamSynchronize failed: ")
+            // needed to flush the frames of the decoder before the start of a new sequence by passing EOS to parser
+            n_frame_returned = _rocvid_decoder->DecodeFrame(nullptr, 0, ROCDEC_PKT_ENDOFSTREAM, -1);
             break;
         }
     } while (n_video_bytes);
