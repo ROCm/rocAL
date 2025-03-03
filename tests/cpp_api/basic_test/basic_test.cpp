@@ -46,14 +46,14 @@ using namespace cv;
 #define DISPLAY 0
 int main(int argc, const char **argv) {
     // check command-line usage
-    const int MIN_ARG_COUNT = 2;
+    const int MIN_ARG_COUNT = 3;
     if (argc < MIN_ARG_COUNT) {
         std::cout << "Usage: basic_test <image_dataset_folder - required> <label_text_file_path - required> <test_case:0/1> <processing_device=1/cpu=0>  decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts \n";
         return -1;
     }
-    int argIdx = 0;
-    const char *folderPath1 = argv[++argIdx];
-    const char *label_text_file_path = argv[++argIdx];
+    int argIdx = 1;
+    const char *folderPath1 = argv[argIdx++];
+    const char *label_text_file_path = argv[argIdx++];
     int rgb = 1;  // process color images
     int decode_width = 0;
     int decode_height = 0;
@@ -61,23 +61,23 @@ int main(int argc, const char **argv) {
     bool processing_device = 0;
     size_t decode_shard_counts = 1;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_shard_counts = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_shard_counts = atoi(argv[argIdx++]);
 
     const int inputBatchSize = 4;
 
@@ -160,8 +160,11 @@ int main(int argc, const char **argv) {
         int counter = 0;
 
         while ((test_case == 0) ? !rocalIsEmpty(handle) : (counter < run_len[test_id])) {
-            if (rocalRun(handle) != 0)
-                break;
+            if (rocalRun(handle) != 0) {
+                std::cout << "rocalRun Failed with runtime error" << std::endl;
+                rocalRelease(handle);
+                return -1;
+            }
 
             rocalCopyToOutput(handle, mat_input.data, h * w * p);
 

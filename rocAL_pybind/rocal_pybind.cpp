@@ -713,6 +713,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("DECODER_HW_JEPG", ROCAL_DECODER_HW_JPEG)
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
+	    .value("DECODER_AUDIO_GENERIC", ROCAL_DECODER_AUDIO_GENERIC)
         .value("DECODER_VIDEO_ROCDECODE", ROCAL_DECODER_VIDEO_ROCDECODE)
         .export_values();
     py::enum_<RocalExternalSourceMode>(types_m, "RocalExternalSourceMode", "Rocal Extrernal Source Mode")
@@ -1021,6 +1022,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
     m.def("webdatasetSourceSingleShard", &rocalWebDatasetSourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
+    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);

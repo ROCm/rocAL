@@ -51,14 +51,14 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
 int main(int argc, const char** argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 4;
-    printf("Usage: image_augmentation <image-dataset-folder - required> <width - required> <height - required> test_case batch_size graph_depth gpu=1/cpu=0 rgb=1/grayscale =0  \n");
+    printf("Usage: performance_tests_with_depth <image-dataset-folder - required> <width - required> <height - required> test_case batch_size graph_depth gpu=1/cpu=0 rgb=1/grayscale =0  \n");
     if (argc < MIN_ARG_COUNT)
         return -1;
 
-    int argIdx = 0;
-    const char* path = argv[++argIdx];
-    int width = atoi(argv[++argIdx]);
-    int height = atoi(argv[++argIdx]);
+    int argIdx = 1;
+    const char* path = argv[argIdx++];
+    int width = atoi(argv[argIdx++]);
+    int height = atoi(argv[argIdx++]);
 
     int rgb = 1;  // process color images
     bool gpu = 1;
@@ -66,24 +66,22 @@ int main(int argc, const char** argv) {
     int batch_size = 10;
     int graph_depth = 1;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        batch_size = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        batch_size = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        graph_depth = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        graph_depth = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        gpu = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        gpu = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    test(test_case, path, rgb, gpu, width, height, batch_size, graph_depth);
-
-    return 0;
+    return test(test_case, path, rgb, gpu, width, height, batch_size, graph_depth);
 }
 
 int test(int test_case, const char* path, int rgb, int gpu, int width, int height, int batch_size, int graph_depth) {
@@ -129,9 +127,9 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
     if (decode_max_height <= 0 || decode_max_width <= 0)
-        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
+        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, true);
     else
-        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, false,
+        input_image = rocalJpegFileSource(handle, path, color_format, num_threads, false, true, true,
                                           ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
@@ -529,8 +527,11 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
 
     int i = 0;
     while (i++ < 1000) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
 
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
