@@ -102,6 +102,7 @@ tf_classification_reader=1
 tf_detection_reader=1
 video_pipeline=1
 web_dataset_reader=1
+numpy_reader=1
 ####################################################################################################################################
 
 
@@ -367,5 +368,26 @@ if [[ web_dataset_reader -eq 1 ]]; then
         --world-size $gpus_per_node \
         --num-threads 1 \
         --num-epochs 1 2>&1 | tee -a run.log.rocAL_api_log.${CURRENTDATE}.txt
+fi
+####################################################################################################################################
+
+####################################################################################################################################
+if [[ numpy_reader -eq 1 ]]; then
+
+    # Mention numpy data file path
+    data_dir=$ROCAL_DATA_PATH/rocal_data/numpy/
+    # numpy_reader.py
+    # Only supports NHWC layout
+    python"$ver" numpy_reader.py \
+        --image-dataset-path $data_dir \
+        --batch-size $batch_size \
+        --$display_arg \
+        --$backend_arg \
+        --NHWC \
+        --local-rank 0 \
+        --$print_tensor_arg \
+        --world-size $gpus_per_node \
+        --num-threads 1 \
+        --num-epochs 2 2>&1 | tee -a run.log.rocAL_api_log.${CURRENTDATE}.txt
 fi
 ####################################################################################################################################

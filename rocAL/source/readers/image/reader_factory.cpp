@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "readers/video/sequence_file_source_reader.h"
 #include "readers/image/tf_record_reader.h"
 #include "readers/webdataset_source_reader.h"
+#include "readers/image/numpy_data_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch (config.type()) {
@@ -100,6 +101,12 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             return ret;
         } break;
 #endif
+        case StorageType::NUMPY_DATA: {
+            auto ret = std::make_shared<NumpyDataReader>();
+            if (ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("NumpyDataReader cannot access the storage");
+            return ret;
+        } break;
         default:
             throw std::runtime_error("Reader type is unsupported");
     }

@@ -218,6 +218,55 @@ class ROCALClassificationIterator(ROCALGenericIterator):
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
 
+class ROCALNumpyIterator(object):
+    def __init__(self, pipeline):
+        self.loader = pipeline
+        self.output_list = None
+        self.batch_size = self.loader._batch_size
+        self.len = b.getRemainingImages(self.loader._handle)
+        self.last_batch_policy = self.loader._last_batch_policy
+        self.last_batch_size = None
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self.loader.rocal_run() != 0:
+            raise StopIteration
+        self.output_tensor_list = self.loader.get_output_tensors()
+
+        if self.output_list is None:  # Checking if output_list is empty and initializing the buffers
+            self.output_list = []
+            for i in range(len(self.output_tensor_list)):
+                dimensions = self.output_tensor_list[i].dimensions()
+                dtype = self.output_tensor_list[i].dtype()
+                output = np.empty(dimensions, dtype=dtype)
+                # returned as numpy always - no ROCM CuPy support available
+                self.output_tensor_list[i].copy_data(output)
+                self.output_list.append(output)
+        else:
+            for i in range(len(self.output_tensor_list)):
+                self.output_tensor_list[i].copy_data(self.output_list[i])
+        # Check if last batch policy is partial and only return the valid images in last batch
+        if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
+            if (self.last_batch_size is None):
+                self.last_batch_size = self.batch_size - \
+                    b.getLastBatchPaddedSize(self.loader._handle)
+            return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list]
+        return self.output_list
+
+    def reset(self):
+        b.rocalResetLoaders(self.loader._handle)
+
+    def __iter__(self):
+        return self
+
+    def __len__(self):
+        return self.len // self.batch_size
+
+    def __del__(self):
+        b.rocalRelease(self.loader._handle)
+
 def draw_patches(img, idx):
     # image is expected as an array
     """!Writes images to disk as a PNG file.
