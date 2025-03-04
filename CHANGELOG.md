@@ -2,32 +2,17 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## rocAL 2.2.0 (unreleased)
-
-### Added
+## rocAL 2.2.0 for ROCm 6.4.0
 
 ### Changed
+
 * AMD Clang is now the default CXX and C compiler.
-
-### Removed
-
-### Optimizations
-
-### Resolved issues
 
 ### Known issues
 
-* The package installation requires manual installation of `TurboJPEG`
-  ```
-  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  mkdir tj-build && cd tj-build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
-  make -j8 && sudo make install
-  ```
-* CentOS/RedHat/SLES requires additional the manual installation of the `FFMPEG Dev` package
+* The package installation requires manually installing `TurboJPEG`
+* CentOS/RedHat/SLES requires manually installing the `FFMPEG Dev` package
 * Hardware decode requires installing ROCm with the `graphics` usecase
-
-### Upcoming changes
 
 ## rocAL 2.1.0 for ROCm 6.3.0
 
