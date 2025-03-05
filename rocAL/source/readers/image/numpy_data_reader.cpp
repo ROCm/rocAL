@@ -34,17 +34,11 @@ THE SOFTWARE.
     do { \
         func; \
         if (_header_parsing_failed) { \
-            goto error; \
+            return; \
         } \
     } while (0)
 
 NumpyDataReader::NumpyDataReader() {
-    _src_dir = nullptr;
-    _sub_dir = nullptr;
-    _entity = nullptr;
-    _curr_file_idx = 0;
-    _current_file_size = 0;
-    _current_file_ptr = nullptr;
     _loop = false;
     _shuffle = false;
     _file_count_all_shards = 0;
@@ -175,16 +169,13 @@ bool NumpyDataReader::try_skip_char(const char*& ptr, const char (&what)[N]) {
 
 template <size_t N>
 void NumpyDataReader::skip_field(const char*& ptr, const char (&name)[N]) {
-    skip_spaces(ptr);
+    while (std::isspace(*ptr)) ptr++;
     CALL_AND_CHECK_FLAG(skip_char(ptr, "'"));
     CALL_AND_CHECK_FLAG(skip_char(ptr, name));
     CALL_AND_CHECK_FLAG(skip_char(ptr, "'"));
-    skip_spaces(ptr);
+    while (std::isspace(*ptr)) ptr++;
     CALL_AND_CHECK_FLAG(skip_char(ptr, ":"));
-    skip_spaces(ptr);
-
-    error:
-        return;
+    while (std::isspace(*ptr)) ptr++;
 }
 
 template <typename T>
@@ -246,15 +237,13 @@ std::string NumpyDataReader::parse_string(const char*& input, char delim_start, 
 
 void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::string& header) {
     const char* hdr = header.c_str();
-    bool little_endian;
-    std::string typestr;
-    skip_spaces(hdr);
+    while (std::isspace(*hdr)) hdr++;
     CALL_AND_CHECK_FLAG(skip_char(hdr, "{"));
     CALL_AND_CHECK_FLAG(skip_field(hdr, "descr"));
-    typestr = parse_string(hdr);
+    auto typestr = parse_string(hdr);
     if (_header_parsing_failed) return;
     // < means LE, | means N/A, = means native. In all those cases, we can read
-    little_endian = (typestr[0] == '<' || typestr[0] == '|' || typestr[0] == '=');
+    bool little_endian = (typestr[0] == '<' || typestr[0] == '|' || typestr[0] == '=');
     if (!little_endian) {
         ERR("Big Endian files are not supported.");
         _header_parsing_failed = true;
@@ -262,7 +251,7 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
     }
     target.type_info = get_dtype(typestr.substr(1));
 
-    skip_spaces(hdr);
+    while (std::isspace(*hdr)) hdr++;
     CALL_AND_CHECK_FLAG(skip_char(hdr, ","));
     CALL_AND_CHECK_FLAG(skip_field(hdr, "fortran_order"));
     if (try_skip_char(hdr, "True")) {
@@ -274,18 +263,18 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
         _header_parsing_failed = true;
         return;
     }
-    skip_spaces(hdr);
+    while (std::isspace(*hdr)) hdr++;
     CALL_AND_CHECK_FLAG(skip_char(hdr, ","));
     CALL_AND_CHECK_FLAG(skip_field(hdr, "shape"));
     CALL_AND_CHECK_FLAG(skip_char(hdr, "("));
-    skip_spaces(hdr);
+    while (std::isspace(*hdr)) hdr++;
     target.array_shape.clear();
     while (*hdr != ')') {
         // parse_int already skips the leading spaces (strtol does).
         auto shape = parse_int<int64_t>(hdr);
         if(_header_parsing_failed) return;
         target.array_shape.push_back(static_cast<unsigned>(shape));
-        skip_spaces(hdr);
+        while (std::isspace(*hdr)) hdr++;
         if (!(try_skip_char(hdr, ",")) && (target.array_shape.size() <= 1)) {
             ERR("The first number in a tuple must be followed by a comma.");
             _header_parsing_failed = true;
@@ -296,9 +285,6 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
         // cheapest thing to do is to define the tensor in an reversed way
         std::reverse(target.array_shape.begin(), target.array_shape.end());
     }
-    
-    error:
-        return;
 }
 
 void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string file_path) {
@@ -335,7 +321,7 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
 
     // check if header is too short
     std::string header = std::string(token.data());
-    if (header.find_first_of("NUMPY") == std::string::npos) {
+    if (header.find("NUMPY") == std::string::npos) {
         ERR("File is not a numpy file");
         _header_parsing_failed = true;
         return;
@@ -386,9 +372,6 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
         ERR("Null file pointer");
         return 0;
     }
-
-    // Requested read size bigger than the file size? just read as many bytes as the file size
-    read_size = (read_size > _current_file_size) ? _current_file_size : read_size;
 
     if (std::fseek(_current_file_ptr, _curr_file_header.data_offset, SEEK_SET)) {
         ERR("Seek operation failed for " + _last_file_path + ": " + std::strerror(errno));
@@ -446,9 +429,6 @@ const NumpyHeaderData NumpyDataReader::get_numpy_header_data() {
 size_t NumpyDataReader::read_data(unsigned char* buf, size_t read_size) {
     if (!_current_file_ptr)
         return 0;
-
-    // Requested read size bigger than the file size? just read as many bytes as the file size
-    read_size = (read_size > _current_file_size) ? _current_file_size : read_size;
 
     size_t actual_read_size = fread(buf, sizeof(unsigned char), read_size, _current_file_ptr);
     return actual_read_size;
