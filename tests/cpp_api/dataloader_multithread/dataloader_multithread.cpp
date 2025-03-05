@@ -134,8 +134,11 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
 
     while (!rocalIsEmpty(handle)) {
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
         // copy output to host as image
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
@@ -189,12 +192,12 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: dataloader_multithread <image_dataset_folder/video_folder - required> <num_gpus - 1 (gpu)/cpu=0> " <<
+        std::cout << "Usage: dataloader_multithread <image_dataset_folder - required> <num_gpus - 1 (gpu)/cpu=0> " <<
                     "num_shards decode_width decode_height batch_size shuffle display_on_off dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>" << std::endl;
         return -1;
     }
-    int argIdx = 0;
-    const char *path = argv[++argIdx];
+    int argIdx = 1;
+    const char *path = argv[argIdx++];
     bool display = 1;  // Display the images
     int decode_width = 1024;
     int decode_height = 1024;
@@ -204,29 +207,29 @@ int main(int argc, const char **argv) {
     int num_gpus = 0;
     int dec_mode = 0;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        num_gpus = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        num_gpus = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        num_shards = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        num_shards = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        inputBatchSize = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        inputBatchSize = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        shuffle = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        shuffle = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        dec_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        dec_mode = atoi(argv[argIdx++]);
 
     std::cout << "Number of GPUs: " << num_gpus << std::endl;
 

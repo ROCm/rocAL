@@ -53,7 +53,7 @@ find_package(OpenCV QUIET)
 
 # Application Includes & Libraries
 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
-link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
+link_directories(${ROCM_PATH}/lib)
 
 add_executable(${PROJECT_NAME} image_augmentation.cpp)
 

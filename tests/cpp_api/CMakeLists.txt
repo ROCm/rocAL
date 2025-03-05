@@ -88,7 +88,7 @@ add_test(
 # 2 - basic_test_gpu
 add_test(NAME basic_test_gpu 
               COMMAND basic_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
 # 3 - basic_test_gray
 add_test(NAME basic_test_gray 
