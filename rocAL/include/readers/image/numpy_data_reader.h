@@ -90,14 +90,13 @@ class NumpyDataReader : public Reader {
     Reader::Status subfolder_reading();
     std::string _folder_path;
     std::string _file_list_path;
-    DIR *_src_dir;
-    DIR *_sub_dir;
-    struct dirent *_entity;
+    DIR *_src_dir = nullptr;
+    DIR *_sub_dir = nullptr;
+    struct dirent *_entity = nullptr;
+    FILE *_current_file_ptr = nullptr;
     std::vector<std::string> _file_names;
     std::vector<std::string> _files;
     std::vector<NumpyHeaderData> _file_headers;
-    FILE *_current_file_ptr;
-    unsigned _current_file_size;
     NumpyHeaderData _curr_file_header;
     std::string _last_id;
     std::string _last_file_name, _last_file_path, _absolute_file_path;
