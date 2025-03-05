@@ -79,10 +79,10 @@ class HWJpegDecoder : public Decoder {
     AVIOContext *_io_ctx = NULL;
     AVFormatContext *_fmt_ctx = NULL;
     AVCodecContext *_video_dec_ctx = NULL;
-#if USE_FFMPEG_VERSION_4
-    AVCodec *_decoder = NULL;
-#else
+#if USE_AVCODEC_GREATER_THAN_58_134
     const AVCodec *_decoder = NULL;
+#else
+    AVCodec *_decoder = NULL;
 #endif
     AVStream *_video_stream = NULL;
     int _video_stream_idx = -1;
