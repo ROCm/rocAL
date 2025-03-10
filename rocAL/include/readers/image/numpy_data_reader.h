@@ -107,8 +107,6 @@ class NumpyDataReader : public Reader {
     bool _header_parsing_failed = false;
     //! Converts the dtype string to RocalTensorDataType format
     const RocalTensorDataType get_dtype(const std::string& format);
-    //! Skips spaces in a char array
-    inline void skip_spaces(const char*& ptr);
     //! Parse the header data and save header metadata info
     void parse_header_data(NumpyHeaderData& target, const std::string& header);
     //! Skips the specific character(s) in a char array

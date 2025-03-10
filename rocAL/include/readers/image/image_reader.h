@@ -191,7 +191,7 @@ struct NumpyHeaderData {
     };
 
     // Returns the entire data size of the numpy array in bytes
-    size_t nbytes() const { return tensor_data_size(type_info) * size(); }
+    size_t numpy_data_nbytes() const { return tensor_data_size(type_info) * size(); }
     
     // Returns the shape of the numpy array
     std::vector<unsigned> shape() const { return array_shape; }
