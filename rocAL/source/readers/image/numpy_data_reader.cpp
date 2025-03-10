@@ -30,6 +30,13 @@ THE SOFTWARE.
 #include "pipeline/filesystem.h"
 #include "readers/image/numpy_data_reader.h"
 
+// the HEADER_OFFSET is a magic number - the first 10 bytes store info about numpy version and header len
+// The first 6 bytes are a magic string: exactly \x93NUMPY.
+// The next 1 byte is an unsigned byte: the major version number of the file format, e.g. \x01.
+// The next 1 byte is an unsigned byte: the minor version number of the file format, e.g. \x00
+// The next 2 bytes form a little-endian unsigned short int: the length of the header data HEADER_LEN.
+#define HEADER_OFFSET 10
+#define HEADER_TOKEN_SIZE 128
 #define CALL_AND_CHECK_FLAG(func) \
     do { \
         func; \
@@ -103,7 +110,7 @@ size_t NumpyDataReader::open() {
         }
     }
     fseek(_current_file_ptr, 0, SEEK_SET);  // Take the file pointer back to the start
-    return _curr_file_header.nbytes();
+    return _curr_file_header.numpy_data_nbytes();  // Returns the numpy array data size (in bytes)
 }
 
 bool NumpyDataReader::get_header_from_cache(const std::string& file_name, NumpyHeaderData& header) {
@@ -140,11 +147,6 @@ const RocalTensorDataType NumpyDataReader::get_dtype(const std::string& format) 
     if (format == "f4") return RocalTensorDataType::FP32;
     if (format == "f8") THROW("double dtype not supported in rocAL");
     THROW("Unknown Numpy dtype string");
-}
-
-inline void NumpyDataReader::skip_spaces(const char*& ptr) {
-    while (::isspace(*ptr))
-        ptr++;
 }
 
 template <size_t N>
@@ -289,19 +291,15 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
 
 void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string file_path) {
     // check if the file is actually a numpy file
-    std::vector<char> token(128);
+    std::vector<char> token(HEADER_TOKEN_SIZE);
     _current_file_ptr = std::fopen(file_path.c_str(), "rb");
     if (_current_file_ptr == nullptr) {
         ERR("Could not open file " + file_path + ": " + std::strerror(errno));
         _header_parsing_failed = true;
         return;
     }
-    // the offset is a magic number - the first 10 bytes store info about numpy version and header len
-    // The first 6 bytes are a magic string: exactly \x93NUMPY.
-    // The next 1 byte is an unsigned byte: the major version number of the file format, e.g. \x01.
-    // The next 1 byte is an unsigned byte: the minor version number of the file format, e.g. \x00
-    // The next 2 bytes form a little-endian unsigned short int: the length of the header data HEADER_LEN.
-    int64_t offset = 10;
+
+    int64_t offset = HEADER_OFFSET;
     int64_t n_read = std::fread(token.data(), 1, offset, _current_file_ptr);
     if (n_read != offset) {
         ERR("Can not read numpy header file contents");
@@ -383,7 +381,7 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     size_t actual_read_size = 0;
 
     if (strides_in_dims[0] == _curr_file_header.size())
-        return std::fread((unsigned char*)buf, sizeof(unsigned char), _curr_file_header.nbytes(), _current_file_ptr);
+        return std::fread((unsigned char*)buf, sizeof(unsigned char), _curr_file_header.numpy_data_nbytes(), _current_file_ptr);
 
     if (_curr_file_header.type() == RocalTensorDataType::UINT8)
         actual_read_size = parse_numpy_data<uint8_t>((uint8_t*)buf, strides_in_dims, shape);
