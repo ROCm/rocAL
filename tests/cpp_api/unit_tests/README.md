@@ -29,7 +29,7 @@ Usage: ./unit_tests reader-type pipeline-type=1(classification)2(detection)3(key
 ```
 
 > [!NOTE]
-* Please use appropriate image dataset as per the reader being tested.
+* Use the appropriate image dataset as per the reader being tested.
 * For example: the coco reader needs images from the coco dataset.
 
 ## Output Verification
