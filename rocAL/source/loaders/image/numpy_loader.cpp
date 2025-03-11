@@ -154,10 +154,11 @@ NumpyLoader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
     // Initially record number of all the numpy arrays that are going to be loaded, this is used to know how many still there
-    auto max_shape = _output_tensor->info().dims();
+    const std::vector<size_t> tensor_dims = _output_tensor->info().dims();
+    auto num_dims = tensor_dims.size() - 1;
     auto data_layout = _output_tensor->info().layout();
-    max_shape.erase(max_shape.begin());  // Tensor dims contains the batch dimension so removing it to get max_shape
-    auto num_dims = max_shape.size();
+    std::vector<size_t> max_shape(num_dims);
+    std::copy(tensor_dims.begin() + 1, tensor_dims.end(), max_shape.begin());
     std::vector<unsigned> strides_in_dims(num_dims + 1);
     strides_in_dims[num_dims] = 1;
     for (int i = num_dims - 1; i >= 0; i--) {
@@ -179,11 +180,13 @@ NumpyLoader::load_routine() {
                 size_t read_size = _reader->open();
                 if (read_size == 0) {
                     ERR("Opened file " + _reader->id() + " of size 0");
+                    _reader->close();
                     continue;
                 }
                 auto fsize = _reader->read_numpy_data(read_ptr, read_size, strides_in_dims);
                 if (fsize == 0) {
                     ERR("Cannot read numpy data from " + _reader->id());
+                    _reader->close();
                     continue;
                 }
                 _decoded_data_info._data_names[file_counter] = _reader->id();

@@ -21,13 +21,10 @@ THE SOFTWARE.
 */
 
 #include <assert.h>
-#ifdef ROCAL_VIDEO
-#include "loaders/video/node_video_loader.h"
-#include "loaders/video/node_video_loader_single_shard.h"
-#endif
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
 #include "loaders/image_source_evaluator.h"
+#include "loaders/numpy_source_evaluator.h"
 #include "loaders/image/node_cifar10_loader.h"
 #include "augmentations/node_copy.h"
 #include "loaders/image/node_fused_jpeg_crop.h"
@@ -41,6 +38,10 @@ THE SOFTWARE.
 #include "loaders/audio/node_audio_loader.h"
 #include "loaders/audio/node_audio_loader_single_shard.h"
 #include "augmentations/audio_augmentations/node_downmix.h"
+#endif
+#ifdef ROCAL_VIDEO
+#include "loaders/video/node_video_loader.h"
+#include "loaders/video/node_video_loader_single_shard.h"
 #endif
 #include "augmentations/geometry_augmentations/node_resize.h"
 #include "rocal_api.h"
@@ -93,15 +94,12 @@ evaluate_image_data_set(RocalImageSizeEvaluationPolicy decode_size_policy, Stora
 };
 
 std::tuple<std::vector<size_t>, RocalTensorDataType>
-evaluate_numpy_data_set(StorageType storage_type, DecoderType decoder_type,
-                        const std::string& source_path, const std::vector<std::string>& files) {
-    ImageSourceEvaluator source_evaluator;
-    source_evaluator.set_size_evaluation_policy(MaxSizeEvaluationPolicy::MAXIMUM_FOUND_SIZE);
+evaluate_numpy_data_set(StorageType storage_type, const std::string& source_path, const std::vector<std::string>& files) {
+    NumpySourceEvaluator source_evaluator;
     auto reader_cfg = ReaderConfig(storage_type, source_path);
     if (!files.empty())
         reader_cfg.set_files_list(files);
-    if (source_evaluator.create_numpy_reader(reader_cfg) != ImageSourceEvaluatorStatus::OK)
-        THROW("Initializing numpy source input evaluator failed ")
+    source_evaluator.create(reader_cfg);
     auto max_dims = source_evaluator.max_numpy_dims();
     auto data_type = source_evaluator.get_numpy_dtype();
     return std::make_tuple(max_dims, data_type);
@@ -1717,8 +1715,7 @@ rocalNumpyFileSource(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
-        auto [max_dimensions, tensor_data_type] = evaluate_numpy_data_set(StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
-                                                      source_path, files);
+        auto [max_dimensions, tensor_data_type] = evaluate_numpy_data_set(StorageType::NUMPY_DATA, source_path, files);
 
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         std::vector<size_t> dims(max_dimensions.size() + 1);
@@ -1768,8 +1765,7 @@ rocalNumpyFileSourceSingleShard(
         if (shard_id >= shard_count)
             THROW("Shard id should be smaller than shard count")
 
-        auto [max_dimensions, tensor_data_type] = evaluate_numpy_data_set(StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE,
-                                                      source_path, files);
+        auto [max_dimensions, tensor_data_type] = evaluate_numpy_data_set(StorageType::NUMPY_DATA, source_path, files);
 
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         std::vector<size_t> dims(max_dimensions.size() + 1);
