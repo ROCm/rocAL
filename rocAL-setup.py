@@ -265,7 +265,8 @@ coreRPMPackages = [
     'python3-pip',
     str(libPythonProto),
     'protobuf-devel',
-    str(libProtoCompiler)
+    str(libProtoCompiler),
+    'turbojpeg-devel'
 ]
 
 pip3Packages = [
