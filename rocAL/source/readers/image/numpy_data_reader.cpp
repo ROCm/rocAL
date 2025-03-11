@@ -38,12 +38,12 @@ THE SOFTWARE.
 #define HEADER_OFFSET 10
 #define HEADER_TOKEN_SIZE 128
 #define CALL_AND_CHECK_FLAG(func) \
-    do { \
-        func; \
-        if (_header_parsing_failed) { \
-            return; \
-        } \
-    } while (0)
+    { \
+    func; \
+    if (_header_parsing_failed) { \
+        return; \
+    } \
+    }
 
 NumpyDataReader::NumpyDataReader() {
     _loop = false;
@@ -202,26 +202,12 @@ std::string NumpyDataReader::parse_string(const char*& input, char delim_start, 
     std::string out;
     for (; *input != '\0'; input++) {
         if (*input == '\\') {
-            switch (*++input) {
-                case '\\':
-                    out += '\\';
-                    break;
-                case '\'':
-                    out += '\'';
-                    break;
-                case '\t':
-                    out += '\t';
-                    break;
-                case '\n':
-                    out += '\n';
-                    break;
-                case '\"':
-                    out += '\"';
-                    break;
-                default:
-                    out += '\\';
-                    out += *input;
-                    break;
+            char c = *++input;
+            if ((c == '\\') || (c == '\'') || (c == '\t') || (c == '\n') || (c == '\"')) {
+                out += c;
+            } else {
+                out += '\\';
+                out += *input;
             }
         } else if (*input == delim_end) {
             break;
@@ -308,7 +294,7 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
     }
     token[n_read] = '\0';
 
-    // rocAL does not support numpy V2 headers
+    // rocAL only supports numpy V1 headers
     // https://numpy.org/neps/nep-0001-npy-format.html
     int np_api_version = token[6];
     if (np_api_version != 1) {
