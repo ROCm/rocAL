@@ -108,7 +108,7 @@ class HWRocJpegDecoder : public Decoder {
     std::vector<size_t> _src_hstride;
     std::vector<size_t> _src_img_offset;
     std::vector<RocJpegImage> _output_images = {};
-    RocJpegDecodeParams _decode_params = {};
+    std::vector<RocJpegDecodeParams> _decode_params = {};
     uint32_t _num_channels = 0;
     bool _resize_batch = false;
     int _device_id = 0;

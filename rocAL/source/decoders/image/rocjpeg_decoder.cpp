@@ -66,9 +66,9 @@ HWRocJpegDecoder::HWRocJpegDecoder() {
  * @param channel_sizes The array to store the channel sizes.
  * @return The channel pitch.
  */
-int GetChannelPitchAndSizes(RocJpegOutputFormat output_format, RocJpegChromaSubsampling subsampling, uint32_t *widths, uint32_t *heights,
+int GetChannelPitchAndSizes(RocJpegDecodeParams decode_params, RocJpegChromaSubsampling subsampling, uint32_t *widths, uint32_t *heights,
                             uint32_t &num_channels, RocJpegImage &output_image, uint32_t *channel_sizes) {
-    switch (output_format) {
+    switch (decode_params.output_format) {
         case ROCJPEG_OUTPUT_NATIVE:
             switch (subsampling) {
                 case ROCJPEG_CSS_444:
@@ -202,6 +202,7 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _output_images.resize(_batch_size);
     _src_hstride.resize(_batch_size);
     _src_img_offset.resize(_batch_size);
+    _decode_params.resize(_batch_size);
 
     // Allocate mem for width and height arrays for src and dst
     if (!_dev_src_width) CHECK_HIP(hipMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
@@ -228,12 +229,12 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
 
     switch(desired_decoded_color_format) {
         case Decoder::ColorFormat::GRAY:
-            _decode_params.output_format = ROCJPEG_OUTPUT_Y;
+            _decode_params[index].output_format = ROCJPEG_OUTPUT_Y;
             _num_channels = 1;
             break;
         case Decoder::ColorFormat::RGB:
         case Decoder::ColorFormat::BGR:
-            _decode_params.output_format = ROCJPEG_OUTPUT_RGB;
+            _decode_params[index].output_format = ROCJPEG_OUTPUT_RGB;
             _num_channels = 3;
             break;
     };
@@ -274,7 +275,7 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
         max_heights[0] = (heights[0] + 8) &~ 7;
     }
 
-    if (GetChannelPitchAndSizes(_decode_params.output_format, subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
+    if (GetChannelPitchAndSizes(_decode_params[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
         return Status::HEADER_DECODE_FAILED;
     }
     if (actual_width) *actual_width = scaledw;
@@ -357,7 +358,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
         }
     }
 
-    CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, &_decode_params, _output_images.data()));
+    CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params.data(), _output_images.data()));
 
     if (_resize_batch) {
         HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0], 
