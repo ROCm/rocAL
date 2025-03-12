@@ -68,35 +68,42 @@ HWRocJpegDecoder::HWRocJpegDecoder() {
  */
 int GetChannelPitchAndSizes(RocJpegDecodeParams decode_params, RocJpegChromaSubsampling subsampling, uint32_t *widths, uint32_t *heights,
                             uint32_t &num_channels, RocJpegImage &output_image, uint32_t *channel_sizes) {
+    bool is_roi_valid = false;
+    uint32_t roi_width = decode_params.crop_rectangle.right - decode_params.crop_rectangle.left;
+    uint32_t roi_height = decode_params.crop_rectangle.bottom - decode_params.crop_rectangle.top;
+    if (roi_width > 0 && roi_height > 0 && roi_width <= widths[0] && roi_height <= heights[0]) {
+        is_roi_valid = true; 
+    }
+
     switch (decode_params.output_format) {
         case ROCJPEG_OUTPUT_NATIVE:
             switch (subsampling) {
                 case ROCJPEG_CSS_444:
                     num_channels = 3;
-                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = widths[0];
-                    channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+                    channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
                     break;
                 case ROCJPEG_CSS_440:
                     num_channels = 3;
-                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = widths[0];
-                    channel_sizes[0] = output_image.pitch[0] * heights[0];
-                    channel_sizes[2] = channel_sizes[1] = output_image.pitch[0] * (heights[0] >> 1);
+                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
+                    channel_sizes[2] = channel_sizes[1] = output_image.pitch[0] * ((is_roi_valid ? roi_height : heights[0]) >> 1);
                     break;
                 case ROCJPEG_CSS_422:
                     num_channels = 1;
-                    output_image.pitch[0] = widths[0] * 2;
-                    channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    output_image.pitch[0] = (is_roi_valid ? roi_width : widths[0]) * 2;
+                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
                     break;
                 case ROCJPEG_CSS_420:
                     num_channels = 2;
-                    output_image.pitch[1] = output_image.pitch[0] = widths[0];
-                    channel_sizes[0] = output_image.pitch[0] * heights[0];
-                    channel_sizes[1] = output_image.pitch[1] * (heights[0] >> 1);
+                    output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
+                    channel_sizes[1] = output_image.pitch[1] * ((is_roi_valid ? roi_height : heights[0]) >> 1);
                     break;
                 case ROCJPEG_CSS_400:
                     num_channels = 1;
-                    output_image.pitch[0] = widths[0];
-                    channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
                     break;
                 default:
                     std::cout << "Unknown chroma subsampling!" << std::endl;
@@ -106,32 +113,32 @@ int GetChannelPitchAndSizes(RocJpegDecodeParams decode_params, RocJpegChromaSubs
         case ROCJPEG_OUTPUT_YUV_PLANAR:
             if (subsampling == ROCJPEG_CSS_400) {
                 num_channels = 1;
-                output_image.pitch[0] = widths[0];
-                channel_sizes[0] = output_image.pitch[0] * heights[0];
+                output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+                channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
             } else {
                 num_channels = 3;
-                output_image.pitch[0] = widths[0];
-                output_image.pitch[1] = widths[1];
-                output_image.pitch[2] = widths[2];
-                channel_sizes[0] = output_image.pitch[0] * heights[0];
-                channel_sizes[1] = output_image.pitch[1] * heights[1];
-                channel_sizes[2] = output_image.pitch[2] * heights[2];
+                output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+                output_image.pitch[1] = is_roi_valid ? roi_width : widths[1];
+                output_image.pitch[2] = is_roi_valid ? roi_width : widths[2];
+                channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
+                channel_sizes[1] = output_image.pitch[1] * (is_roi_valid ? roi_height : heights[1]);
+                channel_sizes[2] = output_image.pitch[2] * (is_roi_valid ? roi_height : heights[2]);
             }
             break;
         case ROCJPEG_OUTPUT_Y:
             num_channels = 1;
-            output_image.pitch[0] = widths[0];
-            channel_sizes[0] = output_image.pitch[0] * heights[0];
+            output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+            channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
             break;
         case ROCJPEG_OUTPUT_RGB:
             num_channels = 1;
-            output_image.pitch[0] = widths[0] * 3;
-            channel_sizes[0] = output_image.pitch[0] * heights[0];
+            output_image.pitch[0] = (is_roi_valid ? roi_width : widths[0]) * 3;
+            channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
             break;
         case ROCJPEG_OUTPUT_RGB_PLANAR:
             num_channels = 3;
-            output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = widths[0];
-            channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * heights[0];
+            output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
+            channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
             break;
         default:
             std::cout << "Unknown output format!" << std::endl;
