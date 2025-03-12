@@ -36,7 +36,6 @@ THE SOFTWARE.
 // The next 1 byte is an unsigned byte: the minor version number of the file format, e.g. \x00
 // The next 2 bytes form a little-endian unsigned short int: the length of the header data HEADER_LEN.
 #define HEADER_OFFSET 10
-#define HEADER_TOKEN_SIZE 128
 #define CALL_AND_CHECK_FLAG(func) \
     { \
     func; \
@@ -276,8 +275,7 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
 }
 
 void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string file_path) {
-    // check if the file is actually a numpy file
-    std::vector<char> token(HEADER_TOKEN_SIZE);
+    std::vector<char> token(HEADER_OFFSET + 1);  // Need to store 10 bytes of numpy header info and null termination character
     _current_file_ptr = std::fopen(file_path.c_str(), "rb");
     if (_current_file_ptr == nullptr) {
         ERR("Could not open file " + file_path + ": " + std::strerror(errno));
@@ -287,6 +285,7 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
 
     int64_t offset = HEADER_OFFSET;
     int64_t n_read = std::fread(token.data(), 1, offset, _current_file_ptr);
+    // check if header is too short
     if (n_read != offset) {
         ERR("Can not read numpy header file contents");
         _header_parsing_failed = true;
@@ -303,7 +302,7 @@ void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string f
         return;
     }
 
-    // check if header is too short
+    // check if the file is actually a numpy file
     std::string header = std::string(token.data());
     if (header.find("NUMPY") == std::string::npos) {
         ERR("File is not a numpy file");
