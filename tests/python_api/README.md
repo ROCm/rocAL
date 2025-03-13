@@ -48,7 +48,7 @@ golden_output_path (contains augmented images to cross verify correctness of eac
 
 `export ROCAL_DATA_PATH=<absolute_path_to_data_directory>`
 
-### NOTE: Refer parse_config.py for more info on other args. This script is used with the `readers_test_file.sh` and `unit_tests.sh`
+### NOTE: Refer to parse_config.py for more info on other args. This script is used with the `readers_test_file.sh` and `unit_tests.sh`
 
 ## Reader Pipeline Tests
 
@@ -94,11 +94,11 @@ tf_detection_reader=0
 
 ## Augmentation + Reader Tests
 
-* This runs all augmentations and readers and compare them with golden outputs for both backends (HIP/HOST)
+* This runs all augmentations and readers and compares them with golden outputs for both backends (HIP/HOST)
 
 `./unit_tests.sh`
 
-* This test also runs the `image_comaprison.py` script at the end to compare the results with the golden outputs.
+* This test also runs the `image_comparison.py` script at the end to compare the results with the golden outputs.
 ### Command line for individual files
 
 * Test a single reader pipeline
@@ -133,7 +133,7 @@ tf_detection_reader=0
 
 ## Decoder Test
 
-This test runs a simple decoder pipeline making use of a image file reader and resizing the given input images to 300x300.
+This test runs a simple decoder pipeline making use of an image file reader and resizing the given input images to 300x300.
 
 It uses the [AMD-TinyDataSet](../../data/images/AMD-tinyDataSet/) by default, unless otherwise specified by user.
 
@@ -177,7 +177,7 @@ The data needs to be organized in a separate `audio` folder under `rocal_data` d
 mkdir rocal_data/
 cd rocal_data
 
-audio_path (.wav files and corresponding .wav_file_list.txt file)  : ${ROCAL_DATA_PATH}/rocal_data/audio/
+audio_path (.wav files and corresponding .wav_file_list.txt file) : ${ROCAL_DATA_PATH}/rocal_data/audio/
 ```
 
 * Golden output:
@@ -190,7 +190,7 @@ golden_output_path (contains augmented .bin to cross verify correctness of each 
 
 
 ```bash
-export ROCAL_DATA_PATH=<Absolute_path_to_data_directory>
+export ROCAL_DATA_PATH=<absolute_path_to_data_directory>
 ```
 
 To run the audio unit test and verify the correctness of the outputs

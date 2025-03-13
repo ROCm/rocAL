@@ -4,7 +4,7 @@ This application can be used to verify the functionality of the API offered by r
 
 ## Pre-requisites
 
-* Ubuntu Linux, [version `16.04` or later](https://www.microsoft.com/software-download/windows10)
+* Ubuntu Linux, version `22.04` or later
 * rocAL library
 * [OpenCV 3.4+](https://github.com/opencv/opencv/releases/tag/3.4.0)
 * ROCm Performance Primitives (RPP)
@@ -29,7 +29,7 @@ Usage: ./unit_tests reader-type pipeline-type=1(classification)2(detection)3(key
 ```
 
 > [!NOTE]
-* Please use apppropriate image dataset as per the reader being tested. 
+* Use the appropriate image dataset as per the reader being tested.
 * For example: the coco reader needs images from the coco dataset.
 
 ## Output Verification
@@ -38,7 +38,7 @@ Usage: ./unit_tests reader-type pipeline-type=1(classification)2(detection)3(key
 
 ### Prepare dataset
 * If the user has a dataset with golden outputs, please use the `testAllScripts.sh` script to provide the input and golden ouputs. 
-* This test also runs the `image_comaprison.py` script at the end to compare the results with the golden outputs.
+* This test also runs the `image_comparison.py` script at the end to compare the results with the golden outputs.
 * The data needs to be organized in separate folders under `rocal_data` directory for each reader and a golden output directory for the verification.
 
 ```
