@@ -354,6 +354,20 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlipFixed(RocalContext context, Rocal
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Transposes the tensors by reordering the dimensions based on the perm parameter.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] perm Permutation of the dimensions of the input
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalTranspose(RocalContext context, RocalTensor input, std::vector<unsigned> perm, bool is_output,
+                                                RocalTensorLayout output_layout = ROCAL_NONE,
+                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Applies blur effect to images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context

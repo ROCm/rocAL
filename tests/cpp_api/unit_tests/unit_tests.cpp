@@ -607,6 +607,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalResizeMirrorNormalize(handle, input, 400, 400, mean, std_dev, true, ROCAL_SCALING_MODE_DEFAULT,
                                                 {}, 0, 0, ROCAL_LINEAR_INTERPOLATION, mirror);
         } break;
+        case 57: {
+            std::vector<float> mean = {128, 128, 128};
+            std::vector<float> std_dev = {1.2, 1.2, 1.2};
+            std::vector<unsigned int> axes = {0, 1};
+            std::cout << "Running Normalize" << std::endl;
+            output = rocalNormalize(handle, input, axes, mean, std_dev, true, 1.0f, 0.0f, ROCAL_UINT8);
+        } break;
+        case 58: {
+            std::cout << "Running Transpose" << std::endl;
+            output = rocalTranspose(handle, input, {1, 0, 2}, true, ROCAL_NHWC, ROCAL_UINT8);
+        } break;
 
         default:
             std::cout << "Not a valid option! Exiting!\n";
