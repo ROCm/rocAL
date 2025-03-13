@@ -126,8 +126,7 @@ class NumpyDataReader : public Reader {
     //! Reads the npy file, parses the numpy header data and stores the metadata info
     void parse_header(NumpyHeaderData& parsed_header, std::string file_path);
     //! Reads the numpy data present in the npy array and stores the data in the circular buffer
-    template <typename T>
-    size_t parse_numpy_data(T* buf, std::vector<unsigned>& strides, std::vector<unsigned>& shapes, unsigned dim = 0);
+    size_t parse_numpy_data(unsigned char* buf, std::vector<unsigned>& strides, std::vector<unsigned>& shapes, size_t dtype_size, unsigned dim = 0);
     //! Fetches cached header data if its already parsed before
     bool get_header_from_cache(const std::string& file_name, NumpyHeaderData& target);
     //! Stores parsed header data for a specific npy file
