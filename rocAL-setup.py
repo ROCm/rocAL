@@ -242,7 +242,8 @@ coreDebianPackages = [
     'python3-protobuf',
     'libprotobuf-dev',
     'libprotoc-dev',
-    'protobuf-compiler'
+    'protobuf-compiler',
+    'libturbojpeg0-dev'
 ]
 
 libsndFile = "libsndfile-devel"
@@ -264,7 +265,8 @@ coreRPMPackages = [
     'python3-pip',
     str(libPythonProto),
     'protobuf-devel',
-    str(libProtoCompiler)
+    str(libProtoCompiler),
+    'turbojpeg-devel'
 ]
 
 pip3Packages = [
@@ -338,13 +340,6 @@ else:
     #pip3 packages
     for i in range(len(pip3Packages)):
         ERROR_CHECK(os.system('pip3 install '+ pip3Packages[i]))
-
-    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
-    turboJpegVersion = '3.0.2'
-    ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; git clone -b '+turboJpegVersion+' https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
-            ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
 
     # PyBind11 - https://github.com/pybind/pybind11 -- v2.11.1
     pybind11Version = 'v2.11.1'

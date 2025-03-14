@@ -190,7 +190,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jpegwidth = cinfo.image_width;  jpegheight = cinfo.image_height;
     if (width == 0) width = jpegwidth;
     if (height == 0) height = jpegheight;
-    if ((scalingFactors = tj3GetScalingFactors(&numScalingFactors)) == NULL)
+    if ((scalingFactors = tjGetScalingFactors(&numScalingFactors)) == NULL)
         THROW("tjDecompress2_partial_scale(): error getting scaling factors");
 
     for (i = 0; i < numScalingFactors; i++) {
