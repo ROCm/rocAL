@@ -36,12 +36,12 @@ void TransposeNode::create_node() {
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
-    _perm_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _perm.size());
+    _perm_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _perm.size());
     vx_status status = VX_SUCCESS;
-    status |= vxAddArrayItems(_perm_array, _perm.size(), _perm.data(), sizeof(vx_uint32));
+    status |= vxAddArrayItems(_perm_array_vx, _perm.size(), _perm.data(), sizeof(vx_uint32));
 
     _node = vxExtRppTranspose(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                         _perm_array, input_layout_vx, output_layout_vx, roi_type_vx);
+                         _perm_array_vx, input_layout_vx, output_layout_vx, roi_type_vx);
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the transpose (vxExtRppTranspose) node failed: " + TOSTR(status))
 }

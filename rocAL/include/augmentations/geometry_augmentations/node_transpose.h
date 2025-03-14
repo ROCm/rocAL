@@ -36,5 +36,5 @@ class TransposeNode : public Node {
 
    private:
     std::vector<unsigned> _perm;
-    vx_array _perm_array;
+    vx_array _perm_array_vx;
 };

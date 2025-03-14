@@ -365,8 +365,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlipFixed(RocalContext context, Rocal
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalTranspose(RocalContext context, RocalTensor input, std::vector<unsigned> perm, bool is_output,
-                                                RocalTensorLayout output_layout = ROCAL_NONE,
-                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
+                                                     RocalTensorLayout output_layout = ROCAL_NONE,
+                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Applies blur effect to images.
  * \ingroup group_rocal_augmentations

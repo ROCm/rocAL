@@ -1231,7 +1231,12 @@ def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_
     return mel_filter_bank_output
 
 def transpose(*inputs, perm=[], output_layout=types.NHWC, output_dtype=types.UINT8):
-    # pybind call arguments
+    """
+    Transposes the input according to the permutation passed from user.
+    @param perm            Transpose permutation passed from the user
+    @param output_layout   Output Layout of the Tensor
+    @param output_dtype    Output DataType of the Tensor
+    """
     kwargs_pybind = {"input_image": inputs[0], "perm": perm, "is_output": False, "output_layout": output_layout, "output_dtype": output_dtype}
     transposed_image = b.transpose(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (transposed_image)
