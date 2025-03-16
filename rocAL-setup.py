@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.9.0"
+__version__ = "3.0.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 

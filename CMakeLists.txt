@@ -208,8 +208,8 @@ endif()
 set(ROCAL_DEBIAN_PACKAGE_LIST  "mivisionx")
 set(ROCAL_RPM_PACKAGE_LIST     "mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "mivisionx-devel, lmdb-devel, protobuf-devel")
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "mivisionx-devel, lmdb-devel, protobuf-devel, turbojpeg-devel")
 
 # Add rocDecode Deps for HW Decode - Exclude centos-7
 if (EXISTS "/etc/os-release")

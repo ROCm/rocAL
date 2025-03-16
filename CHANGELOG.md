@@ -2,7 +2,7 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## (Unreleased) rocAL 2.3.0 
+## rocAL 2.3.0 for ROCm 6.5.0
 
 ### Added
 * Extended support to rocAL's video decoder to use rocDecode hardware decoder
@@ -16,41 +16,24 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Optimizations
 
 ### Resolved issues
+* The package installation will bring `TurboJPEG` dependencies
+* Hardware decode requiring ROCm with the `graphics` usecase resolved
 
 ### Known issues
 
 ### Upcoming changes
 
-## rocAL 2.2.0
-
-### Added
-* Extended support to rocAL's video decoder to use rocDecode hardware decoder.
+## rocAL 2.2.0 for ROCm 6.4.0
 
 ### Changed
+
 * AMD Clang is now the default CXX and C compiler.
-* Added webdataset reader support to rocAL.
-* Setup - LibTar install support
-
-### Removed
-
-### Optimizations
-
-### Resolved issues
 
 ### Known issues
 
-* The package installation requires manual installation of `TurboJPEG`
-  ```
-  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  mkdir tj-build && cd tj-build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
-  make -j8 && sudo make install
-  ```
-* CentOS/RedHat/SLES requires additional manual installation of the `FFMPEG Dev` package
+* The package installation requires manually installing `TurboJPEG`
+* CentOS/RedHat/SLES requires manually installing the `FFMPEG Dev` package
 * Hardware decode requires installing ROCm with the `graphics` usecase
-
-### Upcoming changes
-* Web dataset support
 
 ## rocAL 2.1.0 for ROCm 6.3.0
 
