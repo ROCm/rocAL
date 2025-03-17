@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "pipeline/commons.h"
@@ -105,8 +106,16 @@ class NumpyDataReader : public Reader {
     std::map<std::string, NumpyHeaderData> _header_cache;
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     bool _header_parsing_failed = false;
-    //! Converts the dtype string to RocalTensorDataType format
-    const RocalTensorDataType get_dtype(const std::string& format);
+    std::unordered_map<std::string, RocalTensorDataType> _numpy_str_to_rocal_dtype =
+    {
+        {"u1", RocalTensorDataType::UINT8},
+        {"u4", RocalTensorDataType::UINT32},
+        {"i1", RocalTensorDataType::INT8},
+        {"i2", RocalTensorDataType::INT16},
+        {"i4", RocalTensorDataType::INT32},
+        {"f2", RocalTensorDataType::FP16},
+        {"f4", RocalTensorDataType::FP32}
+    };
     //! Parse the header data and save header metadata info
     void parse_header_data(NumpyHeaderData& target, const std::string& header);
     //! Skips the specific character(s) in a char array

@@ -157,8 +157,7 @@ NumpyLoader::load_routine() {
     const std::vector<size_t> tensor_dims = _output_tensor->info().dims();
     auto num_dims = tensor_dims.size() - 1;
     auto data_layout = _output_tensor->info().layout();
-    std::vector<size_t> max_shape(num_dims);
-    std::copy(tensor_dims.begin() + 1, tensor_dims.end(), max_shape.begin());
+    std::vector<size_t> max_shape(tensor_dims.begin() + 1, tensor_dims.end());
     std::vector<unsigned> strides_in_dims(num_dims + 1);
     strides_in_dims[num_dims] = 1;
     for (int i = num_dims - 1; i >= 0; i--) {

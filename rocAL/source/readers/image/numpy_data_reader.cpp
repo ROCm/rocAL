@@ -128,26 +128,6 @@ void NumpyDataReader::update_header_cache(const std::string& file_name, const Nu
     _header_cache[file_name] = value;
 }
 
-const RocalTensorDataType NumpyDataReader::get_dtype(const std::string& format) {
-    if (format == "u1") return RocalTensorDataType::UINT8;
-    if (format == "u2") THROW("uint16_t dtype not supported in rocAL");
-    if (format == "u4") return RocalTensorDataType::UINT32;
-    if (format == "u8") THROW("uint64_t dtype not supported in rocAL");
-    if (format == "i1") return RocalTensorDataType::INT8;
-    if (format == "i2") return RocalTensorDataType::INT16;
-    if (format == "i4") return RocalTensorDataType::INT32;
-    if (format == "i8") THROW("int64_t dtype not supported in rocAL");
-    if (format == "f2")
-#if defined(AMD_FP16_SUPPORT)
-        return RocalTensorDataType::FP16;
-#else
-        THROW("FLOAT16 type tensor not supported")
-#endif
-    if (format == "f4") return RocalTensorDataType::FP32;
-    if (format == "f8") THROW("double dtype not supported in rocAL");
-    THROW("Unknown Numpy dtype string");
-}
-
 template <size_t N>
 void NumpyDataReader::skip_char(const char*& ptr, const char (&what)[N]) {
     if (strncmp(ptr, what, N - 1)) {
@@ -236,8 +216,12 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
         _header_parsing_failed = true;
         return;
     }
-    target.type_info = get_dtype(typestr.substr(1));
-
+    if(_numpy_str_to_rocal_dtype.find(typestr.substr(1)) == _numpy_str_to_rocal_dtype.end()) {
+        ERR(typestr.substr(1) + " numpy dtype not supported in rocAL");
+        _header_parsing_failed = true;
+        return;
+    }
+    target.type_info = _numpy_str_to_rocal_dtype[typestr.substr(1)];
     while (std::isspace(*hdr)) hdr++;
     CALL_AND_CHECK_FLAG(skip_char(hdr, ","));
     CALL_AND_CHECK_FLAG(skip_field(hdr, "fortran_order"));
