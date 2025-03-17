@@ -145,9 +145,10 @@ rocAL can be currently used to perform the following operations either with rand
   * Source: `https://github.com/pybind/pybind11`
   * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
 
-* [Turbo JPEG](https://libjpeg-turbo.org/) - Manual install
-  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
+* [Turbo JPEG](https://libjpeg-turbo.org/)
+  ```shell
+  sudo apt install libturbojpeg0-dev
+  ``` 
 
 * [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
   * Source: `https://github.com/Tencent/rapidjson.git`
