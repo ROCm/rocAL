@@ -212,6 +212,13 @@ Install rocAL runtime, development, and test packages.
   ```
 
 >[!IMPORTANT]
+> * `SLES` package install requires `TurboJPEG` manual install
+>   ```
+>   git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
+>   mkdir tj-build && cd tj-build
+>   cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
+>   make -j8 && sudo make install
+>   ```
 > * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 > * rocAL Python module: To use python module, you can set PYTHONPATH:
 >   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`

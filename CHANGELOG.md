@@ -9,19 +9,16 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Setup - installs rocdecode dev packages for Ubuntu, RedHat, and SLES
 * Setup - installs turbojpeg dev package for Ubuntu and Redhat
 
-### Changed
-
-### Removed
-
-### Optimizations
-
 ### Resolved issues
 * `TurboJPEG` no longer needs to be installed manually. It is now installed by the package installer.
 * Hardware decode no longer requires that ROCm be installed with the `graphics` usecase```
 
 ### Known issues
+* `SLES` package installation requires manually installing `TurboJPEG`
+* `CentOS`/`RedHat`/`SLES` requires manually installing the `FFMPEG Dev` package
 
 ### Upcoming changes
+* rocJPEG support for JPEG decode
 
 ## rocAL 2.2.0 for ROCm 6.4.0
 
