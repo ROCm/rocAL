@@ -16,7 +16,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Optimizations
 
 ### Resolved issues
-* The package installation will bring `TurboJPEG` dependencies
+* `TurboJPEG` no longer needs to be installed manually. It is now installed by the package installer.
 * Hardware decode no longer requires that ROCm be installed with the `graphics` usecase```
 
 ### Known issues
