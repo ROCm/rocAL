@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #if ENABLE_ROCJPEG
 
-#include "rocjpeg.h"
+#include "rocjpeg/rocjpeg.h"
 
 struct ScalingFactor {
   unsigned num;

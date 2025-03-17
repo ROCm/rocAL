@@ -45,6 +45,7 @@ project(rocal VERSION ${VERSION} LANGUAGES CXX)
 set(BUILD_ROCAL true)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 
 # Find Dependency
 find_package(AMDRPP QUIET)
@@ -64,7 +65,7 @@ find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
 find_package(rocDecode QUIET)
-find_package(rocJPEG QUIET)
+find_package(ROCJPEG QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
