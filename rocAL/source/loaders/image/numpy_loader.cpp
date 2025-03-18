@@ -154,8 +154,10 @@ NumpyLoader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
     // Initially record number of all the numpy arrays that are going to be loaded, this is used to know how many still there
-    auto max_shape = _output_tensor->info().max_shape();
-    auto num_dims = max_shape.size();
+    const std::vector<size_t> tensor_dims = _output_tensor->info().dims();
+    auto num_dims = tensor_dims.size() - 1;
+    auto data_layout = _output_tensor->info().layout();
+    std::vector<size_t> max_shape(tensor_dims.begin() + 1, tensor_dims.end());
     std::vector<unsigned> strides_in_dims(num_dims + 1);
     strides_in_dims[num_dims] = 1;
     for (int i = num_dims - 1; i >= 0; i--) {
@@ -176,14 +178,26 @@ NumpyLoader::load_routine() {
                 auto read_ptr = data + _tensor_size * file_counter;
                 size_t read_size = _reader->open();
                 if (read_size == 0) {
-                    WRN("Opened file " + _reader->id() + " of size 0");
+                    ERR("Opened file " + _reader->id() + " of size 0");
+                    _reader->close();
                     continue;
                 }
                 auto fsize = _reader->read_numpy_data(read_ptr, read_size, strides_in_dims);
-                if (fsize == 0)
-                    THROW("Numpy arrays must contain readable data")
+                if (fsize == 0) {
+                    ERR("Cannot read numpy data from " + _reader->id());
+                    _reader->close();
+                    continue;
+                }
                 _decoded_data_info._data_names[file_counter] = _reader->id();
-                _tensor_roi[file_counter] = _reader->get_numpy_header_data().shape();
+                auto original_roi = _reader->get_numpy_header_data().shape();
+                // The numpy header data contains the full array shape. We require only width and height for ROI updation
+                if (data_layout == RocalTensorlayout::NHWC) {
+                    _tensor_roi[file_counter] = {original_roi[1], original_roi[0]};
+                } else if (data_layout == RocalTensorlayout::NCHW) {
+                    _tensor_roi[file_counter] = {original_roi[2], original_roi[1]};
+                } else {
+                    _tensor_roi[file_counter] = original_roi;
+                }
                 _reader->close();
                 file_counter++;
             }
