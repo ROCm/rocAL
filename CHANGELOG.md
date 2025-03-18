@@ -14,7 +14,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Hardware decode no longer requires that ROCm be installed with the `graphics` usecase```
 
 ### Known issues
-* `SLES` package installation requires manually installing `TurboJPEG`
+* Package installation on SLES requires manually installing `TurboJPEG`.
 * `CentOS`/`RedHat`/`SLES` requires manually installing the `FFMPEG Dev` package
 
 ### Upcoming changes
