@@ -482,9 +482,7 @@ Reader::Status NumpyDataReader::generate_file_names() {
                 std::string file_extension = file_path.substr(file_extension_idx + 1);
                 std::transform(file_extension.begin(), file_extension.end(), file_extension.begin(),
                                 [](unsigned char c) { return std::tolower(c); });
-                if (file_extension != "npy")
-                    continue;
-                else {
+                if (file_extension == "npy") {
                     if (filesys::path(file_path).is_relative()) {  // Only add root path if the file list contains relative file paths
                         if (!filesys::exists(_folder_path)) {
                             ERR(file_path + " is a relative path but root path doesn't exist");

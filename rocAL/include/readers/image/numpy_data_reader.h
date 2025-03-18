@@ -113,7 +113,9 @@ class NumpyDataReader : public Reader {
         {"i1", RocalTensorDataType::INT8},
         {"i2", RocalTensorDataType::INT16},
         {"i4", RocalTensorDataType::INT32},
+#if defined(AMD_FP16_SUPPORT)
         {"f2", RocalTensorDataType::FP16},
+#endif
         {"f4", RocalTensorDataType::FP32}
     };
     //! Parse the header data and save header metadata info
