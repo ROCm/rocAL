@@ -29,7 +29,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Known issues
 
 * The package installation requires manually installing `TurboJPEG`
-* CentOS/RedHat/SLES requires manually installing the `FFMPEG Dev` package
+* Package installation on CentOS, RedHat, SLES requires manually installing the `FFMPEG Dev` package.
 * Hardware decode requires installing ROCm with the `graphics` usecase
 
 ## rocAL 2.1.0 for ROCm 6.3.0
