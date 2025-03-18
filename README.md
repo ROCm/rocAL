@@ -75,7 +75,7 @@ rocAL can be currently used to perform the following operations either with rand
 > * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 > * `gfx908` or higher GPU required
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
+* Install ROCm `6.4.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
@@ -111,6 +111,11 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install liblmdb-dev
   ```
 
+* [Turbo JPEG](https://libjpeg-turbo.org/)
+  ```shell
+  sudo apt install libturbojpeg0-dev
+  ```
+
 * Python3 and Python3 PIP
   ```shell
   sudo apt install python3-dev python3-pip
@@ -130,7 +135,7 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   sudo apt install rocjpeg-dev
   ```
-
+ 
 * [FFMPEG](https://www.ffmpeg.org) - **Optional** for source install, but required for package install
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
@@ -144,11 +149,6 @@ rocAL can be currently used to perform the following operations either with rand
 * [PyBind11](https://github.com/pybind/pybind11) - Manual install
   * Source: `https://github.com/pybind/pybind11`
   * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
-
-* [Turbo JPEG](https://libjpeg-turbo.org/)
-  ```shell
-  sudo apt install libturbojpeg0-dev
-  ``` 
 
 * [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
   * Source: `https://github.com/Tencent/rapidjson.git`
@@ -185,7 +185,7 @@ The installation process uses the following steps:
 
 * [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
+* Install ROCm `6.4.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 
 >[!IMPORTANT]
 > Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
@@ -217,7 +217,7 @@ Install rocAL runtime, development, and test packages.
   ```
 
 >[!IMPORTANT]
-> * Package install requires `TurboJPEG` manual install
+> * `SLES` package install requires `TurboJPEG` manual install
 >   ```
 >   git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
 >   mkdir tj-build && cd tj-build
@@ -227,7 +227,6 @@ Install rocAL runtime, development, and test packages.
 > * `CentOS`/`RedHat`/`SLES` requires additional `FFMPEG Dev` package manual install
 > * rocAL Python module: To use python module, you can set PYTHONPATH:
 >   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
-
 
 ### Source install
 
@@ -366,16 +365,16 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.3.0`+
+* ROCm: rocm-core - `6.4.0`+
 * MIVisionX - `mivisionx-dev`/`mivisionx-devel`
 * rocDecode - `rocdecode-dev`/`rocdecode-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
+* TurboJPEG - `libturbojpeg0-dev`/`turbojpeg-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
-* Turbo JPEG - [Version 3.0.2](https://libjpeg-turbo.org/)
 * PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
 * FFMPEG - `ffmpeg` dev package
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
 * Libtar - [v1.2.20](https://repo.or.cz/libtar.git)
-* rocAL Setup Script - `V2.9.0`
+* rocAL Setup Script - `V3.0.0`
 * Dependencies for all the above packages
