@@ -30,7 +30,7 @@ else:
 
 __copyright__ = "Copyright 2022 - 2024, AMD ROCm Augmentation Library"
 __license__ = "MIT"
-__version__ = "2.9.0"
+__version__ = "3.0.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -141,11 +141,7 @@ if "centos" in os_info_data or "redhat" in os_info_data or "Oracle" in os_info_d
     linuxSystemInstall = 'yum -y'
     linuxSystemInstall_check = '--nogpgcheck'
     osUpdate = 'makecache'
-    if "VERSION_ID=7" in os_info_data:
-        linuxCMake = 'cmake3'
-        sudoValidate = 'sudo -k'
-        platformInfo = platformInfo+'-redhat-7'
-    elif "VERSION_ID=8" in os_info_data:
+    if "VERSION_ID=8" in os_info_data:
         platformInfo = platformInfo+'-redhat-8'
     elif "VERSION_ID=9" in os_info_data:
         platformInfo = platformInfo+'-redhat-9'
@@ -156,9 +152,7 @@ elif "Ubuntu" in os_info_data:
     linuxSystemInstall_check = '--allow-unauthenticated'
     linuxFlag = '-S'
     osUpdate = 'update'
-    if "VERSION_ID=20" in os_info_data:
-        platformInfo = platformInfo+'-Ubuntu-20'
-    elif "VERSION_ID=22" in os_info_data:
+    if "VERSION_ID=22" in os_info_data:
         platformInfo = platformInfo+'-Ubuntu-22'
     elif "VERSION_ID=24" in os_info_data:
         platformInfo = platformInfo+'-Ubuntu-24'
@@ -242,17 +236,18 @@ coreDebianPackages = [
     'python3-protobuf',
     'libprotobuf-dev',
     'libprotoc-dev',
-    'protobuf-compiler'
+    'protobuf-compiler',
+    'libturbojpeg0-dev'
 ]
 
 libsndFile = "libsndfile-devel"
 libPythonProto = "python3-protobuf"
 libProtoCompiler = "protobuf-compiler"
-if "centos" in os_info_data and "VERSION_ID=7" in os_info_data:
-    libPythonProto = "protobuf-python"
+libTurboJPEG = "turbojpeg-devel"
 if "SLES" in os_info_data:
     libProtoCompiler = "libprotobuf-c-devel"
     libsndFile = "cmake" # TBD - libsndfile-devel  fails to install in SLES
+    libTurboJPEG = "cmake" # TBD libturbojpeg0 dev/devel package unavailable in SLES
 coreRPMPackages = [
     'nasm',
     'yasm',
@@ -264,7 +259,8 @@ coreRPMPackages = [
     'python3-pip',
     str(libPythonProto),
     'protobuf-devel',
-    str(libProtoCompiler)
+    str(libProtoCompiler),
+    str(libTurboJPEG)
 ]
 
 pip3Packages = [
@@ -334,17 +330,18 @@ else:
         for i in range(len(coreRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ coreRPMPackages[i]))
+    
+    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
+    if "SLES" in platformInfo:
+        turboJpegVersion = '3.0.2'
+        ERROR_CHECK(os.system(
+                    '(cd '+deps_dir+'; git clone -b '+turboJpegVersion+' https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
+                    ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
 
     #pip3 packages
     for i in range(len(pip3Packages)):
         ERROR_CHECK(os.system('pip3 install '+ pip3Packages[i]))
-
-    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
-    turboJpegVersion = '3.0.2'
-    ERROR_CHECK(os.system(
-        '(cd '+deps_dir+'; git clone -b '+turboJpegVersion+' https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
-            ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
 
     # PyBind11 - https://github.com/pybind/pybind11 -- v2.11.1
     pybind11Version = 'v2.11.1'
