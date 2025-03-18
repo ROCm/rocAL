@@ -15,7 +15,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Known issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
-* `CentOS`/`RedHat`/`SLES` requires manually installing the `FFMPEG Dev` package
+* Package installation on CentOS, RedHat, and SLES requires manually installing the `FFMPEG Dev` package.
 
 ### Upcoming changes
 * rocJPEG support for JPEG decode
