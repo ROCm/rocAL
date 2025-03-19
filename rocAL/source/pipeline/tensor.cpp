@@ -62,6 +62,8 @@ vx_size tensor_data_size(RocalTensorDataType data_type) {
             return sizeof(vx_uint32);
         case RocalTensorDataType::INT32:
             return sizeof(vx_int32);
+        case RocalTensorDataType::INT16:
+            return sizeof(vx_int16);
         default:
             throw std::runtime_error("tensor data_type not valid");
     }
@@ -76,8 +78,12 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
+        case RocalTensorDataType::UINT32:
+            return VX_TYPE_UINT32;
         case RocalTensorDataType::INT32:
             return VX_TYPE_INT32;
+        case RocalTensorDataType::INT16:
+            return VX_TYPE_INT16;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -259,8 +265,8 @@ void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) 
         THROW("The batch size of actual Tensor shape different from Tensor batch size " + TOSTR(shape.size()) + " != " + TOSTR(info().batch_size()))
 
     for (unsigned i = 0; i < info().batch_size(); i++) {
-        if (shape[i].size() != (info().num_of_dims() - 1))
-            THROW("The number of dims to be updated and the num of dims of tensor info does not match")
+        if (shape[i].size() != max_shape.size())
+            THROW("The ROI shape must match the max_shape of the tensor")
 
         unsigned *tensor_shape = _info.roi()[i].end;
         for (unsigned d = 0; d < shape[i].size(); d++) {

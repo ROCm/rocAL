@@ -327,6 +327,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
             decoded_output = rocalWebDatasetSourceSingleShard(handle, path, "", color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         } break;
+        case 13:  // Numpy reader
+        {
+            std::cout << "Running Numpy reader" << std::endl;
+            pipeline_type = 5;
+            decoded_output = rocalNumpyFileSource(handle, path, num_threads, RocalTensorLayout::ROCAL_NHWC);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -752,6 +758,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                         std::cout << std::endl;
                     }
                 }
+            } break;
+            case 5: {  // numpy reader pipeline
+                int img_size = rocalGetImageNameLen(handle, image_name_length);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\nNumpy array name:" << img_name.data() << "\n";
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";

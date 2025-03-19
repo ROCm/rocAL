@@ -137,8 +137,9 @@ class TensorInfo {
         if (_data_type == data_type)
             return;
         _data_type = data_type;
-        _data_size = (_data_size / _data_type_size);
-        _data_size *= data_type_size();
+        _data_type_size = tensor_data_size(_data_type);
+        modify_strides();
+        _data_size = _strides[0] * _dims[0];
     }
     void get_modified_dims_from_layout(RocalTensorlayout input_layout, RocalTensorlayout output_layout, std::vector<size_t>& new_dims) {
         std::vector<size_t> dims_mapping;
