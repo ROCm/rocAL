@@ -216,6 +216,14 @@ rocdecodeRPMPackages = [
     'rocdecode-devel'
 ]
 
+rocJpegDebianPackages = [
+    'rocjpeg-dev'
+]
+
+rocJpegRPMPackages = [
+    'rocjpeg-devel'
+]
+
 opencvRPMPackages = [
     'gtk2-devel',
     'libjpeg-devel',
@@ -319,6 +327,16 @@ else:
         for i in range(len(rocdecodeRPMPackages)):
             ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
                         ' '+linuxSystemInstall_check+' install -y '+ rocdecodeRPMPackages[i]))
+
+    # rocJpeg
+    if "Ubuntu" in platformInfo:
+        for i in range(len(rocJpegDebianPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocJpegDebianPackages[i]))
+    elif "redhat" in platformInfo and "SLES" in platformInfo:
+        for i in range(len(rocJpegRPMPackages)):
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
+                        ' '+linuxSystemInstall_check+' install -y '+ rocJpegRPMPackages[i]))
 
     ERROR_CHECK(os.system(sudoValidate))
     # rocAL Core Packages
