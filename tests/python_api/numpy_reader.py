@@ -46,6 +46,7 @@ def main():
     random_seed = args.seed
     local_rank = args.local_rank
     world_size = args.world_size
+    output_layout = types.NHWC if args.NHWC else types.NCHW
 
     try:
         path = "output_folder/numpy_reader/"
@@ -61,14 +62,13 @@ def main():
         numpy_reader_output = fn.readers.numpy(
             file_root=data_path, shard_id=local_rank, num_shards=world_size, output_layout=types.NHWC)
         resize_output = fn.resize(
-            numpy_reader_output, resize_width=400, resize_height=400)
+            numpy_reader_output, resize_width=400, resize_height=400, output_layout=output_layout)
         pipeline.set_outputs(resize_output)
 
     pipeline.build()
 
     cnt = 0
     numpyIteratorPipeline = ROCALNumpyIterator(pipeline)
-    print(len(numpyIteratorPipeline))
     for epoch in range(args.num_epochs):
         print("epoch:: ", epoch)
         for i, [batch] in enumerate(numpyIteratorPipeline):
