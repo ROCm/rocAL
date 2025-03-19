@@ -151,7 +151,8 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_data_info._roi_width.resize(_batch_size);
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
-    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, 
+                    decoder_cfg._type == DecoderType::ROCDEC_VIDEO_DECODE ? true : false);  // Use HIP memory for rocDecode
     _is_initialized = true;
     LOG("Loader module initialized");
 }
