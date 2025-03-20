@@ -616,7 +616,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 58: {
             std::cout << "Running Transpose" << std::endl;
-            output = rocalTranspose(handle, input, {1, 0, 2}, true, ROCAL_NHWC, ROCAL_UINT8);
+            output = rocalTranspose(handle, input, {1, 0, 2}, true, ROCAL_NHWC);
         } break;
 
         default:

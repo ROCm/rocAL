@@ -1237,6 +1237,6 @@ def transpose(*inputs, perm=[], output_layout=types.NHWC, output_dtype=types.UIN
     @param output_layout   Output Layout of the Tensor
     @param output_dtype    Output DataType of the Tensor
     """
-    kwargs_pybind = {"input_image": inputs[0], "perm": perm, "is_output": False, "output_layout": output_layout, "output_dtype": output_dtype}
+    kwargs_pybind = {"input_image": inputs[0], "perm": perm, "is_output": False, "output_layout": output_layout}
     transposed_image = b.transpose(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (transposed_image)
