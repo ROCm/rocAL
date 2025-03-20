@@ -225,3 +225,14 @@ add_test(
             --test-command "video_tests"
             ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
 )
+
+# 16 - basic_test_rocjpeg -- basic test with rocJpeg
+find_package(HIP QUIET)
+if(HIP_FOUND)
+  if(${HIP_VERSION} VERSION_GREATER_EQUAL 6.5.0)
+    add_test(NAME basic_test_rocjpeg 
+                  COMMAND basic_test 
+                  ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  endif()
+endif()
