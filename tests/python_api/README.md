@@ -60,6 +60,9 @@ golden_output_path (contains augmented images to cross verify correctness of eac
   * caffe2 reader
   * tf classification reader
   * tf detection reader
+  * video reader
+  * webdataset reader
+  * numpy reader
 * The default value of number of gpu's is "1" & display is "ON" by default
 `./readers_test_file.sh`
 
