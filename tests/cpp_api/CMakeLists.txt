@@ -239,9 +239,10 @@ if(HIP_FOUND)
 endif()
 
 # 16 - basic_test_rocjpeg -- basic test with rocJpeg
-find_package(HIP QUIET)
-if(HIP_FOUND)
-  if(${HIP_VERSION} VERSION_GREATER_EQUAL 6.5.0)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+find_package(ROCJPEG QUIET)
+if(ROCJPEG_FOUND)
+  if(${ROCJPEG_VERSION_MAJOR} VERSION_GREATER_EQUAL "0" AND ${ROCJPEG_VERSION_MINOR} VERSION_GREATER_EQUAL "11" AND ${ROCJPEG_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
     add_test(NAME basic_test_rocjpeg 
                   COMMAND basic_test 
                   ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
