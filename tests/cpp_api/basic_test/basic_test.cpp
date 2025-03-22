@@ -48,7 +48,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 3;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: basic_test <image_dataset_folder - required> <label_text_file_path - required> <test_case:0/1> <processing_device=1/cpu=0>  decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts \n";
+        std::cout << "Usage: basic_test <image_dataset_folder - required> <label_text_file_path - required> <test_case:0/1> <processing_device=1/cpu=0>  decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts decoder_type \n";
         return -1;
     }
     int argIdx = 1;
@@ -60,6 +60,7 @@ int main(int argc, const char **argv) {
     int test_case = 0;
     bool processing_device = 0;
     size_t decode_shard_counts = 1;
+    int decoder_type = 0;   // Set to default TurboJpeg decoder
 
     if (argc > argIdx)
         test_case = atoi(argv[argIdx++]);
@@ -79,7 +80,19 @@ int main(int argc, const char **argv) {
     if (argc > argIdx)
         decode_shard_counts = atoi(argv[argIdx++]);
 
+    if (argc > argIdx)
+        decoder_type = atoi(argv[argIdx++]);
+
     const int inputBatchSize = 4;
+
+    // Set the rocAL decoder type
+    RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG;
+    if (decoder_type == 1) {
+        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_OPENCV;
+    } else if (decoder_type == 2) {
+        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_ROCJPEG;
+        processing_device = 1;  // Requires GPU backend for rocJpeg decoder
+    }
 
     std::cout << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
 
@@ -101,7 +114,7 @@ int main(int argc, const char **argv) {
         decoded_output = rocalJpegFileSource(handle, folderPath1, color_format, decode_shard_counts, false, false);
     else
         decoded_output = rocalJpegFileSource(handle, folderPath1, color_format, decode_shard_counts, false, false, false,
-                                             ROCAL_USE_USER_GIVEN_SIZE, decode_width, decode_height);
+                                             ROCAL_USE_USER_GIVEN_SIZE, decode_width, decode_height, rocal_decoder_type);
     if (strcmp(label_text_file_path, "") == 0)
         rocalCreateLabelReader(handle, folderPath1);
     else

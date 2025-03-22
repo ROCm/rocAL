@@ -287,7 +287,11 @@ enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_VIDEO_ROCDECODE
      * Uses rocDecode library to decode videos on hardware
      */
-    ROCAL_DECODER_VIDEO_ROCDECODE = 6
+    ROCAL_DECODER_VIDEO_ROCDECODE = 6,
+    /*! \brief AMD ROCAL_DECODER_ROCJPEG
+     * Uses rocJpeg library to decode images on hardware
+     */
+    ROCAL_DECODER_ROCJPEG = 7
 };
 
 enum RocalOutputMemType {
