@@ -213,6 +213,7 @@ rocalJpegFileSourceSingleShard(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -275,6 +276,7 @@ rocalJpegFileSource(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -475,6 +477,7 @@ rocalJpegCaffe2LMDBRecordSource(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -535,6 +538,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -598,6 +602,7 @@ rocalJpegCaffeLMDBRecordSource(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -660,6 +665,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -915,6 +921,7 @@ rocalMXNetRecordSource(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -981,6 +988,7 @@ rocalMXNetRecordSourceSingleShard(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1045,6 +1053,7 @@ rocalJpegCOCOFileSource(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1109,6 +1118,7 @@ rocalJpegCOCOFileSourceSingleShard(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1362,6 +1372,7 @@ rocalJpegTFRecordSource(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -1423,6 +1434,7 @@ rocalJpegTFRecordSourceSingleShard(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
         if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
