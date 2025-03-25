@@ -15,7 +15,7 @@ then
     exit
 fi
 
-# Path to inputs and outputs available in MIVisionX-data
+# Path to inputs and outputs
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/

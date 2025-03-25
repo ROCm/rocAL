@@ -22,13 +22,7 @@ The arguments passed to the Video Pipeline can be modified in the bash script [t
 
 The outputs will be dumped inside the build/output_frames folder.
 
-The sample video files and folder are available in the In the following path : [video and sequence samples](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data/video_and_sequence_samples).
-
-The data samples can be downloaded from the MIVisionX-data repository.
-
-```bash
-git clone https://github.com/ROCm/MIVisionX-data.git
-```
+The sample video files and folder are available in the : [video and sequence samples](https://github.com/ROCm/rocAL/data/videos/video_and_sequence_samples).
 
 ## Description
 
@@ -46,7 +40,7 @@ INPUT_PATH : Input passed by the user. It can be a video file path, folder path 
   NOTE:
 
   * Inputs for cases 1 and 2 - Video file / folder containing videos
-  * Input for case 3 - Folder containing sequence of images [sample folder](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data/video_and_sequence_samples/sequence)
+  * Input for case 3 - Folder containing sequence of images [sample folder](https://github.com/ROCm/rocAL/data/videos/video_and_sequence_samples/sequence)
 
 READER_CASE : Value passed can be 1/2/3 depending upon the selected reader (default value : 1).
 
@@ -85,7 +79,8 @@ ENABLE_SEQUENCE_REARRANGE : If set to true, the frames in each sequence will be 
 **Example 1: Video Reader**
 
 ```bash
-./testScript.sh <[path/to/test_frame_num.mp4](https://github.com/ROCm/MIVisionX-data/blob/main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.mp4)> 1
+./testScript.sh <[path/to/test_frame_num.mp4] 
+(https://github.com/ROCm/rocAL/data/videos/video_and_sequence_samples/test_frame/test_frame_num.mp4)> 1
 ```
 
 Arguments to be modified in testScript.sh to get the following output:
@@ -117,7 +112,8 @@ To run the Video reader with rocDecode decoder, the following arguments are to b
 **Example 2: Sequence Reader**
 
 ```bash
-./testScript.sh <[path/to/sequence_folder](https://github.com/ROCm/MIVisionX-data/tree/main/rocal_data/video_and_sequence_samples/sequence)> 3 
+./testScript.sh <[path/to/sequence_folder]
+(https://github.com/ROCm/rocAL/data/videos/video_and_sequence_samples/sequence)> 3 
 ```
 
 ![sequence_reader.png](./samples/sequence_reader.png)

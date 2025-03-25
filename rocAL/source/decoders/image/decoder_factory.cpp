@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "decoders/image/hw_jpeg_decoder.h"
 #include "decoders/image/open_cv_decoder.h"
 #include "decoders/image/turbo_jpeg_decoder.h"
+#include "decoders/image/rocjpeg_decoder.h"
 
 #include "pipeline/commons.h"
 
@@ -46,6 +47,11 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
 #if ROCAL_VIDEO
         case DecoderType::HW_JPEG_DEC:
             return std::make_shared<HWJpegDecoder>();
+            break;
+#endif
+#if ENABLE_ROCJPEG
+        case DecoderType::ROCJPEG_DEC:
+            return std::make_shared<HWRocJpegDecoder>(config.get_hip_stream());
             break;
 #endif
         default:

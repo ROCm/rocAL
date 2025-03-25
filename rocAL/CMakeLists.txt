@@ -45,6 +45,7 @@ project(rocal VERSION ${VERSION} LANGUAGES CXX)
 set(BUILD_ROCAL true)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 
 # Find Dependency
 find_package(AMDRPP QUIET)
@@ -64,6 +65,7 @@ find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
 find_package(rocDecode QUIET)
+find_package(ROCJPEG QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -276,6 +278,11 @@ if(${BUILD_ROCAL})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
         set(ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
     endif()
+    # rocJPEG
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCJPEG_FOUND)
+        include_directories (${ROCJPEG_INCLUDE_DIR})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCJPEG_LIBRARY})
+    endif()
 
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
@@ -313,6 +320,15 @@ if(${BUILD_ROCAL})
                 message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
             else()
                 message("-- ${Yellow}rocAL -- Requires rocDecode version > 0.10.0${ColourReset}")
+            endif()
+        endif()
+        if(ROCJPEG_FOUND)
+            if(${ROCJPEG_VERSION_MAJOR} VERSION_GREATER_EQUAL "0" AND ${ROCJPEG_VERSION_MINOR} VERSION_GREATER_EQUAL "11" AND ${ROCJPEG_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
+                target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCJPEG=1)
+                message("-- ${White}rocAL built with rocJpeg hardware decoder${ColourReset}")
+            else()
+                target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCJPEG=0)
+                message("-- ${Yellow}rocAL -- Requires rocJpeg version >= 0.11.0${ColourReset}")
             endif()
         endif()
         message("-- ${White}rocAL built with HIP Backend${ColourReset}")
@@ -394,6 +410,7 @@ if(${BUILD_ROCAL})
     else()
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
     endif()
+
     # LibTar
     if(LIBTAR_FOUND)
         include_directories(${LIBTAR_INCLUDE_DIRS})
@@ -403,6 +420,7 @@ if(${BUILD_ROCAL})
     else()
         message("-- ${Yellow}NOTE: rocAL built without LibTar - WebDataset reader will not be supported${ColourReset}")
     endif()
+
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation

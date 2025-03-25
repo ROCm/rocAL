@@ -170,7 +170,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>> Getting the path for MIVisionX-data  <<<<<<<<<<<<<<<<*/
+    /*>>>>>>>>>>>>>>>> Getting the path for data  <<<<<<<<<<<<<<<<*/
 
     std::string rocal_data_path;
     if (std::getenv("ROCAL_DATA_PATH"))

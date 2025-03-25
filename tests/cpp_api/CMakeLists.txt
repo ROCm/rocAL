@@ -213,10 +213,10 @@ add_test(NAME unit_tests_gray
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 
-# 14 - video_tests
+# 14 - video_tests -- video reader with ffmpeg decoder
 add_test(
   NAME
-  video_tests
+  video_tests_ffmpeg
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
@@ -225,3 +225,27 @@ add_test(
             --test-command "video_tests"
             ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
 )
+
+# 15 - video_tests -- video reader with rocDecode
+find_package(HIP QUIET)
+if(HIP_FOUND)
+  if(${HIP_VERSION} VERSION_GREATER_EQUAL 6.5.0)
+    add_test(
+      NAME video_tests_rocdecode
+      COMMAND video_tests
+                ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 2
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+  endif()
+endif()
+
+# 16 - basic_test_rocjpeg -- basic test with rocJpeg
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+find_package(ROCJPEG QUIET)
+if(ROCJPEG_FOUND)
+  if(${ROCJPEG_VERSION_MAJOR} VERSION_GREATER_EQUAL "0" AND ${ROCJPEG_VERSION_MINOR} VERSION_GREATER_EQUAL "11" AND ${ROCJPEG_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
+    add_test(NAME basic_test_rocjpeg 
+                  COMMAND basic_test 
+                  ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  endif()
+endif()
