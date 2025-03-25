@@ -616,7 +616,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 58: {
             std::cout << "Running Transpose" << std::endl;
-            output = rocalTranspose(handle, input, {1, 0, 2}, true, ROCAL_NHWC);
+            // Transpose permutation needs to be changed according to input layout
+            std::vector<unsigned> perm = rgb ? std::vector<unsigned>{1, 0, 2} : std::vector<unsigned>{2, 1, 0};
+            output = rocalTranspose(handle, input, perm, true, ROCAL_NHWC);
         } break;
 
         default:

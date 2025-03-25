@@ -32,7 +32,7 @@ class TransposeNode : public Node {
 
    protected:
     void create_node() override;
-    void update_node() override {};
+    void update_node() override;
 
    private:
     std::vector<unsigned> _perm;
