@@ -9,6 +9,8 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Setup - installs rocdecode dev packages for Ubuntu, RedHat, and SLES
 * Setup - installs turbojpeg dev package for Ubuntu and Redhat
 * rocAL's image decoder has been extended to support the rocJPEG hardware decoder
+* Added numpy reader support for reading npy files in rocAL
+* Added test case for numpy reader in C++ and python tests
 
 ### Resolved issues
 * `TurboJPEG` no longer needs to be installed manually. It is now installed by the package installer.
