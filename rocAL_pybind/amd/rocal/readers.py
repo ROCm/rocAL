@@ -382,3 +382,17 @@ def webdataset(path, index_paths="", ext = None, missing_components_behavior = t
     webdata_metadata = b.webDatasetReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return webdata_metadata
+
+def numpy(*inputs, file_root='', files=[], num_shards=1, output_layout=types.NONE, 
+          random_shuffle=False, shard_id=0, stick_to_shard=True, shard_size=-1,
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, seed=0):
+
+    Pipeline._current_pipeline._reader = "NumpyReader"
+    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+    # Output
+    kwargs_pybind = {"source_path": file_root, "output_layout": output_layout, "files": files, "is_output": False, "shuffle": random_shuffle,
+                     "loop": False, "shard_id": shard_id, "shard_count": num_shards, "seed": seed, "sharding_info": sharding_info}
+    numpy_reader_output = b.numpyReader(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (numpy_reader_output)
