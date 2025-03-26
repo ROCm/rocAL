@@ -37,7 +37,7 @@ from rocal_pybind.types import CPU
 from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
-from rocal_pybind.types import UINT8
+from rocal_pybind.types import INT16
 
 #  RocalOutputMemType
 from rocal_pybind.types import HOST_MEMORY
@@ -58,6 +58,7 @@ from rocal_pybind.types import GRAY
 from rocal_pybind.types import RGB_PLANAR
 
 #     RocalTensorLayout
+from rocal_pybind.types import NONE
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
@@ -138,7 +139,7 @@ _known_types = {
     UINT8: ("UINT8", UINT8),
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
-    UINT8: ("UINT8", UINT8),
+    INT16: ("INT16", INT16),
     HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
     DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
@@ -149,6 +150,7 @@ _known_types = {
     MAX_SIZE_ORIG: ("MAX_SIZE_ORIG", MAX_SIZE_ORIG),
     USER_GIVEN_SIZE_ORIG: ("USER_GIVEN_SIZE_ORIG", USER_GIVEN_SIZE_ORIG),
 
+    NONE: ("NONE", NONE),
     NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),

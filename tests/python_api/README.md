@@ -38,6 +38,7 @@ caffe2_classification_path (caffe2 .mdb for classification) : ${ROCAL_DATA_PATH}
 caffe2_detection_path (caffe2 .mdb for classification) : ${ROCAL_DATA_PATH}/rocal_data/caffe2/detection/
 mxnet_path (mxnet .idx, .lst and .rec files) : ${ROCAL_DATA_PATH}/rocal_data/mxnet/
 webdataset_tar_path (web dataset .tar file) : ${ROCAL_DATA_PATH}/rocal_data/web_dataset/tar_file
+numpy_data_path (numpy .npy file) : ${ROCAL_DATA_PATH}/rocal_data/numpy/
 ```
 
 * Golden output:
@@ -59,6 +60,9 @@ golden_output_path (contains augmented images to cross verify correctness of eac
   * caffe2 reader
   * tf classification reader
   * tf detection reader
+  * video reader
+  * webdataset reader
+  * numpy reader
 * The default value of number of gpu's is "1" & display is "ON" by default
 `./readers_test_file.sh`
 
