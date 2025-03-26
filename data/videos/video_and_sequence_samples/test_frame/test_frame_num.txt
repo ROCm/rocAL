@@ -1,3 +1,0 @@
-test_frame_num.mp4 0 0 10
-test_frame_num.mp4 1 27 50
-test_frame_num.mp4 2 70
