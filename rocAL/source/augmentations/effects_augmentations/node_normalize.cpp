@@ -49,34 +49,26 @@ void NormalizeNode::create_node() {
         for (unsigned i = 0; i < _batch_size; i++) {
             int totalElements = 1;
             unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
-            axis[0] = ((_axis_mask & (int)(pow(2, 0))) >= 1) ? 1 : 0;
-            totalElements *= !axis[0] ? tensor_shape[1] : 1;
-            axis[1] = ((_axis_mask & (int)(pow(2, 1))) >= 1) ? 1 : 0;
-            totalElements *= !axis[1] ? tensor_shape[0] : 1;
-            axis[2] = ((_axis_mask & (int)(pow(2, 2))) >= 1) ? 1 : 0;
-            totalElements *= !axis[2] ? tensor_dims[nDim] : 1;
+            totalElements *= ((_axis_mask & (1 << 0)) >= 1) ? 1 : tensor_shape[1];
+            totalElements *= ((_axis_mask & (1 << 1)) >= 1) ? 1 : tensor_shape[0];
+            totalElements *= ((_axis_mask & (1 << 2)) >= 1) ? 1 : tensor_dims[nDim];
             mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
         }
     } else if (data_layout == RocalTensorlayout::NCHW) {
         for (unsigned i = 0; i < _batch_size; i++) {
             int totalElements = 1;
             unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
-            axis[0] = ((_axis_mask & (int)(pow(2, 0))) >= 1) ? 1 : 0;
-            totalElements *= !axis[0] ? tensor_dims[1] : 1;
-            axis[1] = ((_axis_mask & (int)(pow(2, 1))) >= 1) ? 1 : 0;
-            totalElements *= !axis[1] ? tensor_shape[1] : 1;
-            axis[2] = ((_axis_mask & (int)(pow(2, 2))) >= 1) ? 1 : 0;
-            totalElements *= !axis[2] ? tensor_shape[0] : 1;
+            totalElements *= ((_axis_mask & (1 << 0)) >= 1) ? 1 : tensor_dims[1];
+            totalElements *= ((_axis_mask & (1 << 1)) >= 1) ? 1 : tensor_shape[1];
+            totalElements *= ((_axis_mask & (1 << 2)) >= 1) ? 1 : tensor_shape[0];
             mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
         }
     } else {
         for (unsigned i = 0; i < _batch_size; i++) {
             int totalElements = 1;
             unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
-            for (uint j = 0; j < nDim; j++) {
-                axis[j] = ((_axis_mask & (int)(pow(2, j))) >= 1) ? 1 : 0;
-                totalElements *= !axis[j] ? tensor_shape[j] : 1;
-            }
+            for (uint j = 0; j < nDim; j++)
+                totalElements *= ((_axis_mask & (1 << j)) >= 1) ? 1 : tensor_shape[j];
             mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
         }
     }
