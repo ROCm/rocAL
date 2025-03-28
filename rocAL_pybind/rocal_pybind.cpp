@@ -1141,5 +1141,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("melFilterBank", &rocalMelFilterBank,
           py::return_value_policy::reference);
+    m.def("transpose", &rocalTranspose,
+          py::return_value_policy::reference);
 }
 }  // namespace rocal
