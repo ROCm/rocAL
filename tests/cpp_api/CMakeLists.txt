@@ -237,3 +237,16 @@ if(HIP_FOUND)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
   endif()
 endif()
+
+# 16 - basic_test_rocjpeg -- basic test with rocJpeg
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+find_package(ROCJPEG QUIET)
+if(ROCJPEG_FOUND)
+  if(${ROCJPEG_VERSION_MAJOR} VERSION_GREATER "0" OR
+     ${ROCJPEG_VERSION_MAJOR} VERSION_EQUAL "0" AND ${ROCJPEG_VERSION_MINOR} VERSION_GREATER_EQUAL "11" AND ${ROCJPEG_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
+    add_test(NAME basic_test_rocjpeg 
+                  COMMAND basic_test 
+                  ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  endif()
+endif()

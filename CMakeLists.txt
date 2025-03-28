@@ -211,17 +211,17 @@ set(ROCAL_RPM_PACKAGE_LIST     "mivisionx")
 set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
 set(ROCAL_RPM_DEV_PACKAGE_LIST  "mivisionx-devel, lmdb-devel, protobuf-devel")
 
-# Add rocDecode Deps for HW Decode - Exclude centos-7
+# Add rocDecode and rocJpeg Deps for HW Decode - Exclude centos-7
 if (EXISTS "/etc/os-release")
   file(READ "/etc/os-release" OS_RELEASE)
   string(REGEX MATCH "rhel" RHEL_FOUND ${OS_RELEASE})
   string(REGEX MATCH "Mariner" MARINER_FOUND ${OS_RELEASE})
-  # Add rocDecode deps for Non-Mariner
+  # Add rocDecode and rocJpeg deps for Non-Mariner
   if(NOT MARINER_FOUND)
-    set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode")
-    set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode")
-    set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev")
-    set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel")
+    set(ROCAL_DEBIAN_PACKAGE_LIST  "${ROCAL_DEBIAN_PACKAGE_LIST}, rocdecode, rocjpeg")
+    set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, rocdecode, rocjpeg")
+    set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "${ROCAL_DEBIAN_DEV_PACKAGE_LIST}, rocdecode-dev, rocjpeg-dev")
+    set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, rocdecode-devel, rocjpeg-devel")
   endif()
   # Add TurboJPEG for RHEL
   if(RHEL_FOUND)

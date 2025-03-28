@@ -158,6 +158,7 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {3, "int8"},
     {4, "uint32"},
     {5, "int32"},
+    {6, "int16"},
 };
 
 #if ENABLE_DLPACK
@@ -202,6 +203,8 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case 16:
                 if (dtype.code == kDLFloat) {
                     return RocalTensorOutputType::ROCAL_FP16;
+                } else if (dtype.code == kDLInt) {
+                    return RocalTensorOutputType::ROCAL_INT16;
                 } else {
                     throw std::runtime_error("Data type code for 16 bit type is not supported.");
                 }
@@ -264,6 +267,11 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case RocalTensorOutputType::ROCAL_FP32:
                 out.bits = 32;
                 out.code = kDLFloat;
+                break;
+            case RocalTensorOutputType::ROCAL_INT16:
+                out.bits = 16;
+                out.code = kDLInt;
+                break;
             case RocalTensorOutputType::ROCAL_FP16:
                 out.bits = 16;
                 out.code = kDLFloat;
@@ -660,6 +668,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("FLOAT", ROCAL_FP32)
         .value("FLOAT16", ROCAL_FP16)
         .value("UINT8", ROCAL_UINT8)
+        .value("INT16", ROCAL_INT16)
         .export_values();
     py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
         .value("HOST_MEMORY", ROCAL_MEMCPY_HOST)
@@ -695,6 +704,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("RGB_PLANAR", ROCAL_COLOR_RGB_PLANAR)
         .export_values();
     py::enum_<RocalTensorLayout>(types_m, "RocalTensorLayout", "Tensor layout type")
+        .value("NONE", ROCAL_NONE)
         .value("NHWC", ROCAL_NHWC)
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
@@ -713,8 +723,9 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("DECODER_HW_JEPG", ROCAL_DECODER_HW_JPEG)
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
         .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
-	    .value("DECODER_AUDIO_GENERIC", ROCAL_DECODER_AUDIO_GENERIC)
+        .value("DECODER_AUDIO_GENERIC", ROCAL_DECODER_AUDIO_GENERIC)
         .value("DECODER_VIDEO_ROCDECODE", ROCAL_DECODER_VIDEO_ROCDECODE)
+        .value("DECODER_ROCJPEG", ROCAL_DECODER_ROCJPEG)
         .export_values();
     py::enum_<RocalExternalSourceMode>(types_m, "RocalExternalSourceMode", "Rocal Extrernal Source Mode")
         .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
@@ -1027,6 +1038,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
             py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
+    m.def("numpyReader", &rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
+          py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
@@ -1127,6 +1140,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("normalize", &rocalNormalize,
           py::return_value_policy::reference);
     m.def("melFilterBank", &rocalMelFilterBank,
+          py::return_value_policy::reference);
+    m.def("transpose", &rocalTranspose,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

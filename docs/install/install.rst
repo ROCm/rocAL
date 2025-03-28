@@ -36,6 +36,8 @@ Prerequisites
 
 * rocDecode
 
+* rocJPEG
+
 * Half-precision floating-point (HALF) library
 
 * Google Protobuf
