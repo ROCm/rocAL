@@ -49,7 +49,8 @@ libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually
 
 `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ is required and must be installed manually.
 
-`FFMPEG <https://www.ffmpeg.org>`_ is not required, but is installed by the package installer. It can also be installed with the setup script by using the ``--ffmpeg`` option. [*]_
+`FFMPEG <https://www.ffmpeg.org>`_ is not required, but is installed by the package installer. It can also be installed with the setup script using the ``--ffmpeg`` option. [*]_
+
 
 `rocDecode <https://rocm.docs.amd.com/projects/rocDecode/en/latest/index.html>`_ and `OpenCV <https://docs.opencv.org/4.6.0/index.html>`_ are not required, but are installed by the package installer and the setup script.
 
