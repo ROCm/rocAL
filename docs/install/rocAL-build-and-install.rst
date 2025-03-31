@@ -15,7 +15,8 @@ The rocAL source code is available from `https://github.com/ROCmSoftwarePlatform
 
 rocAL supports both the HIP and OpenCL backends. 
 
-rocAL is installed in the ROCm installation directory by default. If rocAL for both HIP and OpenCL backends will be installed on the system, each version must be installed in its own custom folder and not in the default directory. 
+rocAL is installed in the ROCm installation directory by default. If rocAL for both HIP and OpenCL backends will be installed on the system, each version must be installed in its own custom directory and not in the default directory. 
+
 
 ``rocAL_pybind`` is not supported on the OpenCL backend.
 
