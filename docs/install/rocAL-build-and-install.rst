@@ -65,7 +65,8 @@ The instructions to install rocAL for the OpenCL backend are similar to those fo
   make
   sudo make install
 
-After the installation, the rocAL files will be installed under ``/opt/rocm/`` unless ``-DCMAKE_INSTALL_PREFIX`` was specified. If ``-DCMAKE_INSTALL_PREFIX`` was specified, then the rocAL files will be installed under the specified directory.
+After the installation, the rocAL files will be installed under ``/opt/rocm/`` unless ``-DCMAKE_INSTALL_PREFIX`` was specified. If ``-DCMAKE_INSTALL_PREFIX`` was specified, the rocAL files will be installed under the specified directory.
+
 
 To make and run the tests, use ``make test``.
 
