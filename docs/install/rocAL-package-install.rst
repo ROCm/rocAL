@@ -10,7 +10,8 @@ Installing rocAL with the package installer
 
 Three rocAL packages are available:
 
-* ``rocAL``: The rocAL runtime package. This is the basic rocAL package that provides only the dynamic libraries. It must always be installed.
+* ``rocAL``: The rocAL runtime package. This is the basic rocAL package that only provides dynamic libraries. It must always be installed.
+
 * ``rocAL-dev``: The rocAL development package. This package installs a full suite of libraries, header files, and samples. This package needs to be installed to use samples.
 * ``rocAL-test``: A test package that provides a CTest to verify the installation. 
 
