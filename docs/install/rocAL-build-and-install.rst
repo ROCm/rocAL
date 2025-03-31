@@ -8,9 +8,10 @@
 Building and installing rocAL from source code
 ********************************************************************
 
-Before building and installing rocAL, ensure that ROCm has been installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ and the ``rocm`` usecase.
+Before building and installing rocAL, ensure ROCm has been installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ and the ``rocm`` usecase.
 
-The rocAL source code is available from `https://github.com/ROCmSoftwarePlatform/rocAL <https://github.com/ROCmSoftwarePlatform/rocAL>`_. Use the version of rocAL that corresponds to the installed version of ROCm.
+The rocAL source code is available from `https://github.com/ROCmSoftwarePlatform/rocAL <https://github.com/ROCmSoftwarePlatform/rocAL>`_. Use the rocAL version that corresponds to the installed version of ROCm.
+
 
 rocAL supports both the HIP and OpenCL backends. 
 
