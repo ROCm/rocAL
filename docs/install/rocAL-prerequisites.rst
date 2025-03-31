@@ -40,7 +40,7 @@ The following prerequisites are required and are installed with both the package
 * `The half-precision floating-point library <https://half.sourceforge.net>`_ version 1.12.0 or later
 * `Google Protobuf <https://developers.google.com/protocol-buffers>`_ version 3.12.4 or later
 * `LMBD Library <http://www.lmdb.tech/doc/>`_
-* `TurboJPEG <https://libjpeg-turbo.org/>`_ [*]_
+* `TurboJPEG <https://libjpeg-turbo.org/>`_
 * `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v2.11.1>`_ version 2.11.1
 * `RapidJSON <https://github.com/Tencent/rapidjson>`_
 * Python3, Python3 pip, and  Python3 wheel
@@ -49,14 +49,15 @@ libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually
 
 `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ is required and must be installed manually.
 
-`FFMPEG <https://www.ffmpeg.org>`_ is not required, but is installed by the package installer. It can also be installed with the setup script using the ``--ffmpeg`` option. [*]_
+`FFMPEG <https://www.ffmpeg.org>`_ is not required, but is installed by the package installer. It can also be installed with the setup script using the ``--ffmpeg`` option. 
 
 
 `rocDecode <https://rocm.docs.amd.com/projects/rocDecode/en/latest/index.html>`_ and `OpenCV <https://docs.opencv.org/4.6.0/index.html>`_ are not required, but are installed by the package installer and the setup script.
 
-
-.. [*] On SLES, TurboJPEG must be installed manually.
-.. [*] On SLES and RedHat, the FFMPeg dev package must be installed manually.
+.. important::
+  
+  | TurboJPEG must be installed manually on SLES. 
+  | To use FFMPeg on SLES and RedHat, the ``FFMPeg-dev`` package must be installed manually.
 
 
 .. |trade| raw:: html
