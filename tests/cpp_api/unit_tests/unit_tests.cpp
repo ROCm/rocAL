@@ -104,18 +104,18 @@ std::string get_scaling_mode(unsigned int val, RocalResizeScalingMode &scale_mod
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode);
 int main(int argc, const char **argv) {
     // check command-line usage
-    const int MIN_ARG_COUNT = 2;
+    const int MIN_ARG_COUNT = 6;
     if (argc < MIN_ARG_COUNT) {
         printf("Usage: unit_tests reader-type <image-dataset-folder> output_image_name <width> <height> test_case gpu=1/cpu=0 rgb=1/grayscale=0 one_hot_labels=num_of_classes/0  display_all=0(display_last_only)1(display_all)\n");
         return -1;
     }
 
-    int argIdx = 0;
-    int reader_type = atoi(argv[++argIdx]);
-    const char *path = argv[++argIdx];
-    const char *outName = argv[++argIdx];
-    int width = atoi(argv[++argIdx]);
-    int height = atoi(argv[++argIdx]);
+    int argIdx = 1;
+    int reader_type = atoi(argv[argIdx++]);
+    const char *path = argv[argIdx++];
+    const char *outName = argv[argIdx++];
+    int width = atoi(argv[argIdx++]);
+    int height = atoi(argv[argIdx++]);
     int display_all = 0;
 
     int rgb = 1;  // process color images
@@ -125,35 +125,33 @@ int main(int argc, const char **argv) {
     int resize_interpolation_type = 1;  // For Bilinear interpolations
     int resize_scaling_mode = 0;        // For Default scaling mode
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        gpu = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        gpu = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        num_of_classes = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        num_of_classes = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display_all = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display_all = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        resize_interpolation_type = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        resize_interpolation_type = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        resize_scaling_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        resize_scaling_mode = atoi(argv[argIdx++]);
 
-    test(test_case, reader_type, path, outName, rgb, gpu, width, height, num_of_classes, display_all, resize_interpolation_type, resize_scaling_mode);
-
-    return 0;
+    return test(test_case, reader_type, path, outName, rgb, gpu, width, height, num_of_classes, display_all, resize_interpolation_type, resize_scaling_mode);
 }
 
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
     size_t num_threads = 1;
-    unsigned int input_batch_size = 2;
+    const unsigned int input_batch_size = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     int pipeline_type = -1;
@@ -172,7 +170,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>> Getting the path for MIVisionX-data  <<<<<<<<<<<<<<<<*/
+    /*>>>>>>>>>>>>>>>> Getting the path for data  <<<<<<<<<<<<<<<<*/
 
     std::string rocal_data_path;
     if (std::getenv("ROCAL_DATA_PATH"))
@@ -319,6 +317,22 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateMXNetReader(handle, path, true);
             decoded_output = rocalMXNetRecordSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
+        case 12:  // web_dataset reader
+        {
+            std::cout << "Running WEB DATASET READER" << std::endl;
+            pipeline_type = 4;
+            std::vector<std::set<std::string>> extensions = {
+                {"JPEG", "cls"},
+            };
+            rocalCreateWebDatasetReader(handle, path, "", extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
+            decoded_output = rocalWebDatasetSourceSingleShard(handle, path, "", color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+        } break;
+        case 13:  // Numpy reader
+        {
+            std::cout << "Running Numpy reader" << std::endl;
+            pipeline_type = 5;
+            decoded_output = rocalNumpyFileSource(handle, path, num_threads, RocalTensorLayout::ROCAL_NHWC);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -328,6 +342,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             else
                 decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
+
     }
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
@@ -592,6 +607,19 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalResizeMirrorNormalize(handle, input, 400, 400, mean, std_dev, true, ROCAL_SCALING_MODE_DEFAULT,
                                                 {}, 0, 0, ROCAL_LINEAR_INTERPOLATION, mirror);
         } break;
+        case 57: {
+            std::vector<float> mean = {128, 128, 128};
+            std::vector<float> std_dev = {1.2, 1.2, 1.2};
+            std::vector<unsigned int> axes = {0, 1};
+            std::cout << "Running Normalize" << std::endl;
+            output = rocalNormalize(handle, input, axes, mean, std_dev, true, 1.0f, 0.0f, ROCAL_UINT8);
+        } break;
+        case 58: {
+            std::cout << "Running Transpose" << std::endl;
+            // Transpose permutation needs to be changed according to input layout
+            std::vector<unsigned> perm = rgb ? std::vector<unsigned>{1, 0, 2} : std::vector<unsigned>{0, 2, 1};
+            output = rocalTranspose(handle, input, perm, true, output_tensor_layout);
+        } break;
 
         default:
             std::cout << "Not a valid option! Exiting!\n";
@@ -631,21 +659,24 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     while (rocalGetRemainingImages(handle) >= input_batch_size) {
         index++;
-        if (rocalRun(handle) != 0)
-            break;
+        if (rocalRun(handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
         int image_name_length[input_batch_size];
         switch (pipeline_type) {
             case 1: {   // classification pipeline
                 RocalTensorList labels = rocalGetImageLabels(handle);
                 int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
-                char img_name[img_size];
-                int label_one_hot_encoded[input_batch_size * num_of_classes];
-                rocalGetImageName(handle, img_name);
+                std::vector<char> img_name(img_size);
+                std::vector<int> label_one_hot_encoded(input_batch_size * num_of_classes);
+                rocalGetImageName(handle, img_name.data());
                 if (num_of_classes != 0) {
-                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded, num_of_classes, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+                    rocalGetOneHotImageLabels(handle, label_one_hot_encoded.data(), num_of_classes, RocalOutputMemType::ROCAL_MEMCPY_HOST);
                 }
-                std::cerr << "\nImage name:" << img_name << "\n";
+                std::cerr << "\nImage name:" << img_name.data() << "\n";
                 for (unsigned int i = 0; i < input_batch_size; i++) {
                     std::cerr << "Label id: " << label_id[i] << std::endl;
                     if(num_of_classes != 0)
@@ -667,9 +698,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             } break;
             case 2: {   // detection pipeline
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
-                char img_name[img_size];
-                rocalGetImageName(handle, img_name);
-                std::cerr << "\nImage name:" << img_name;
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\nImage name:" << img_name.data();
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
                 for (unsigned i = 0; i < bbox_labels->size(); i++) {
@@ -706,6 +737,46 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                         std::cout << "x : " << joints_data->joints_batch[i][k][0] << " , y : " << joints_data->joints_batch[i][k][1] << " , v : " << joints_data->joints_visibility_batch[i][k][0] << std::endl;
                     }
                 }
+            } break;
+            case 4: {   // webdataset pipeline
+                int img_size = rocalGetImageNameLen(handle, image_name_length);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cout << "\n Image name: " << img_name.data() << "\n \n";
+                RocalMetaData ascii_sample_contents = rocalGetAsciiDatas(handle);
+                std::vector<std::vector<std::vector<uint8_t>>> ext_componenet_list;
+                for(uint ext = 0; ext < ascii_sample_contents->size(); ext++) {
+                    RocalTensorList ext_ascii_values_batch = ascii_sample_contents->at(ext);
+                    std::vector<std::vector<uint8_t>> component_list;
+                    std::vector<uint8_t> ascii_components_array;
+                    for (uint i = 0; i < ext_ascii_values_batch->size(); i++) {
+                        if (ext_ascii_values_batch->at(i)->buffer() !=  nullptr) {
+                            uint8_t* buffer = reinterpret_cast<uint8_t*>(ext_ascii_values_batch->at(i)->buffer());
+                            size_t length = ext_ascii_values_batch->at(i)->dims().at(0);
+                            ascii_components_array.assign(buffer, buffer + length);
+                        } else {
+                            ascii_components_array = std::vector<uint8_t>{};
+                        }
+                        component_list.push_back(ascii_components_array);
+                    }
+                    ext_componenet_list.push_back(component_list);
+                }
+                for (size_t i = 0; i < ext_componenet_list.size(); ++i) {
+                    std::cout << " Meta Data Component " << i + 1 << ":" << std::endl;
+                    for (size_t j = 0; j < ext_componenet_list[i].size(); ++j) {
+                        std::cout << "  Value " << j + 1 << ": ";
+                        for (const auto& value : ext_componenet_list[i][j]) {
+                            std::cout << static_cast<uint8_t>(value) << " ";
+                        }
+                        std::cout << std::endl;
+                    }
+                }
+            } break;
+            case 5: {  // numpy reader pipeline
+                int img_size = rocalGetImageNameLen(handle, image_name_length);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\nNumpy array name:" << img_name.data() << "\n";
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";

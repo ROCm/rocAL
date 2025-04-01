@@ -427,6 +427,51 @@ rocalCropResizeFixed(
 }
 
 RocalTensor ROCAL_API_CALL
+rocalROIResize(
+    RocalContext p_context,
+    RocalTensor p_input,
+    unsigned dest_width,
+    unsigned dest_height,
+    bool is_output,
+    unsigned roi_h,
+    unsigned roi_w,
+    float roi_pos_x,
+    float roi_pos_y,
+    RocalResizeInterpolationType interpolation_type,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        if (dest_width == 0 || dest_height == 0)
+            THROW("ROI Resize needs to receive non-zero destination dimensions")
+
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+
+        // For the ROI resize augmentation, user can create an image with a different width and height
+        output_info.modify_dims_width_and_height(op_tensor_layout, dest_width, dest_height);
+        output = context->master_graph->create_tensor(output_info, is_output);
+
+        std::shared_ptr<CropResizeNode> roi_resize_node = context->master_graph->add_node<CropResizeNode>({input}, {output});
+        roi_resize_node->init(roi_h, roi_w, roi_pos_x, roi_pos_y, interpolation_type);
+        if (context->master_graph->meta_data_graph())
+            context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(roi_resize_node);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
 rocalResize(
     RocalContext p_context,
     RocalTensor p_input,
@@ -2235,7 +2280,7 @@ rocalSpectrogram(
                                             context->master_graph->mem_type(),
                                             op_tensor_data_type,
                                             spectrogram_layout);
-        if(power != 1 || power != 2) {
+        if(power != 1 && power != 2) {
             WRN("rocalSpectrogram power value can be 1 or 2, setting it to default 2")
             power = 2;
         }
@@ -2438,7 +2483,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
     return output;
 }
 
-std::pair<RocalTensor, RocalTensor> ROCAL_API_CALL
+RocalNSROutput ROCAL_API_CALL
 rocalNonSilentRegionDetection(
     RocalContext p_context,
     RocalTensor p_input,
@@ -2449,6 +2494,7 @@ rocalNonSilentRegionDetection(
     int window_length) {
     Tensor* anchor_output = nullptr;
     Tensor* shape_output = nullptr;
+    RocalNSROutput output;
     if ((p_context == nullptr) || (p_input == nullptr))
         ERR("Invalid ROCAL context or invalid input tensor")
     auto context = static_cast<Context*>(p_context);
@@ -2467,12 +2513,14 @@ rocalNonSilentRegionDetection(
         anchor_output = context->master_graph->create_tensor(info1, is_output);
         shape_output = context->master_graph->create_tensor(info2, is_output);
         context->master_graph->add_node<NonSilentRegionDetectionNode>({input}, {anchor_output, shape_output})->init(cutoff_db, reference_power, window_length, reset_interval);
+        output.anchor = anchor_output;
+        output.shape = shape_output;
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
 
-    return std::make_pair(anchor_output, shape_output);
+    return output;
 }
 
 RocalTensor ROCAL_API_CALL
@@ -2566,6 +2614,41 @@ rocalMelFilterBank(
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, mel_formula, nfilter, normalize, sample_rate);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalTranspose(
+    RocalContext p_context,
+    RocalTensor p_input,
+    std::vector<unsigned> perm,
+    bool is_output,
+    RocalTensorLayout output_layout) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        TensorInfo output_info = input->info();
+        if (perm.size() != (output_info.num_of_dims() - 1)) {
+            THROW("Transpose permutation must match with the input dims")
+        }
+        std::vector<size_t> dims = output_info.dims();
+        for (int i = 1; i < dims.size(); i++)
+            dims[i] = output_info.dims()[perm[i - 1] + 1];  // Perm contains permutation without batch dimension so adding +1
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_dims(dims);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        std::shared_ptr<TransposeNode> transpose_node = context->master_graph->add_node<TransposeNode>({input}, {output});
+        transpose_node->init(perm);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

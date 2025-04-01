@@ -73,6 +73,7 @@ class ImageReadAndDecode {
 
    private:
     std::vector<std::shared_ptr<Decoder>> _decoder;
+    std::shared_ptr<Decoder> _rocjpeg_decoder;
     std::shared_ptr<Reader> _reader;
     std::vector<std::vector<unsigned char>> _compressed_buff;
     std::vector<size_t> _actual_read_size;
@@ -85,12 +86,13 @@ class ImageReadAndDecode {
     std::vector<size_t> _original_height;
     static const size_t MAX_COMPRESSED_SIZE = 1 * 1024 * 1024;  // 1 Meg
     TimingDbg _file_load_time, _decode_time;
-    size_t _batch_size, _shard_count, _num_threads;
+    size_t _batch_size, _num_threads;
     DecoderConfig _decoder_config;
-    bool decoder_keep_original;
     std::vector<std::vector<float>> _bbox_coords, _crop_coords_batch;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     pCropCord _CropCord;
     RocalRandomCropDecParam *_random_crop_dec_param = nullptr;
     bool _is_external_source = false;
+    int _device_id = 0;
+    bool _set_device_id = false;
 };

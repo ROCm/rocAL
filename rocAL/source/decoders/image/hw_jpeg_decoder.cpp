@@ -70,7 +70,7 @@ static enum AVPixelFormat get_vaapi_format(AVCodecContext *ctx, const enum AVPix
 // ffmpeg helper functions for custom AVIOContex for bitstream reading
 static int ReadFunc(void *ptr, uint8_t *buf, int buf_size) {
     struct buffer_data *bd = (struct buffer_data *)ptr;
-    buf_size = FFMIN(buf_size, bd->size);
+    buf_size = FFMIN(buf_size, static_cast<int>(bd->size));
 
     if (!buf_size)
         return AVERROR_EOF;
@@ -244,7 +244,6 @@ Decoder::Status HWJpegDecoder::decode(unsigned char *input_buffer, size_t input_
         return Status::NO_MEMORY;
     }
 
-    unsigned frame_count = 0;
     bool end_of_stream = false;
     AVPacket pkt;
     uint8_t *dst_data[4] = {0};
@@ -300,7 +299,6 @@ Decoder::Status HWJpegDecoder::decode(unsigned char *input_buffer, size_t input_
             }
             av_packet_unref(&pkt);
             output_buffer += image_size;
-            frame_count++;
         }
     } while (!end_of_stream);
 

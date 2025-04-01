@@ -83,7 +83,7 @@ class Pipeline(object):
         self._check_ops_decoder = [
             "ImageDecoder", "ImageDecoderSlice", "ImageDecoderRandomCrop", "ImageDecoderRaw"]
         self._check_ops_reader = ["labelReader", "TFRecordReaderClassification", "TFRecordReaderDetection",
-                                  "COCOReader", "Caffe2Reader", "Caffe2ReaderDetection", "CaffeReader", "CaffeReaderDetection"]
+                                  "COCOReader", "Caffe2Reader", "Caffe2ReaderDetection", "CaffeReader", "CaffeReaderDetection", "NumpyReader"]
         self._batch_size = batch_size
         self._num_threads = num_threads
         self._device_id = device_id
@@ -207,6 +207,9 @@ class Pipeline(object):
 
     def get_bounding_box_cords(self):
         return b.getBoundingBoxCords(self._handle)
+    
+    def get_ascii_datas(self):
+        return b.getAsciiDatas(self._handle)
 
     def get_mask_count(self, array):
         return b.getMaskCount(self._handle, array)

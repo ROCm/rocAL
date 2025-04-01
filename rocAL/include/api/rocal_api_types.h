@@ -255,7 +255,10 @@ enum RocalTensorOutputType {
     ROCAL_UINT32 = 4,
     /*! \brief AMD ROCAL_INT32
      */
-    ROCAL_INT32 = 5
+    ROCAL_INT32 = 5,
+    /*! \brief AMD ROCAL_INT16
+     */
+    ROCAL_INT16 = 6
 };
 
 /*! \brief rocAL Decoder Type enum
@@ -280,7 +283,15 @@ enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_AUDIO_GENERIC
      * Uses SndFile library to read audio files
      */
-    ROCAL_DECODER_AUDIO_GENERIC = 5
+    ROCAL_DECODER_AUDIO_GENERIC = 5,
+    /*! \brief AMD ROCAL_DECODER_VIDEO_ROCDECODE
+     * Uses rocDecode library to decode videos on hardware
+     */
+    ROCAL_DECODER_VIDEO_ROCDECODE = 6,
+    /*! \brief AMD ROCAL_DECODER_ROCJPEG
+     * Uses rocJpeg library to decode images on hardware
+     */
+    ROCAL_DECODER_ROCJPEG = 7
 };
 
 enum RocalOutputMemType {
@@ -481,6 +492,21 @@ struct RocalShardingInfo {
           pad_last_batch_repeated(pad_last_batch_repeated),
           stick_to_shard(stick_to_shard),
           shard_size(shard_size) {}
+};
+
+/*! \brief Missing components behaviour for Webdataset
+ *  \ingroup group_rocal_types
+ */
+enum RocalMissingComponentsBehaviour {
+    /*! \brief ROCAL_MISSING_COMPONENT_ERROR
+     */
+    ROCAL_MISSING_COMPONENT_ERROR = 0,
+    /*! \brief ROCAL_MISSING_COMPONENT_SKIP
+     */
+    ROCAL_MISSING_COMPONENT_SKIP = 1,
+    /*! \brief ROCAL_MISSING_COMPONENT_EMPTY
+     */
+    ROCAL_MISSING_COMPONENT_EMPTY = 2
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

@@ -2,31 +2,38 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## rocAL 2.2.0 (unreleased)
+## rocAL 2.3.0 for ROCm 6.5.0
 
 ### Added
+* Extended support to rocAL's video decoder to use rocDecode hardware decoder
+* Setup - installs rocdecode dev packages for Ubuntu, RedHat, and SLES
+* Setup - installs turbojpeg dev package for Ubuntu and Redhat
+* rocAL's image decoder has been extended to support the rocJPEG hardware decoder
+* Added numpy reader support for reading npy files in rocAL
+* Added test case for numpy reader in C++ and python tests
+
+### Resolved issues
+* `TurboJPEG` no longer needs to be installed manually. It is now installed by the package installer.
+* Hardware decode no longer requires that ROCm be installed with the `graphics` usecase
+
+### Known issues
+* Package installation on SLES requires manually installing `TurboJPEG`.
+* Package installation on CentOS, RedHat, and SLES requires manually installing the `FFMPEG Dev` package.
+
+### Upcoming changes
+* rocJPEG support for JPEG decode
+
+## rocAL 2.2.0 for ROCm 6.4.0
 
 ### Changed
 
-### Removed
-
-### Optimizations
-
-### Resolved issues
+* AMD Clang is now the default CXX and C compiler.
 
 ### Known issues
 
-* The package installation requires manual installation of `TurboJPEG`
-  ```
-  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  mkdir tj-build && cd tj-build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ../libjpeg-turbo/
-  make -j8 && sudo make install
-  ```
-* CentOS/RedHat/SLES requires additional the manual installation of the `FFMPEG Dev` package
+* The package installation requires manually installing `TurboJPEG`
+* Package installation on CentOS, RedHat, SLES requires manually installing the `FFMPEG Dev` package.
 * Hardware decode requires installing ROCm with the `graphics` usecase
-
-### Upcoming changes
 
 ## rocAL 2.1.0 for ROCm 6.3.0
 

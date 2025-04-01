@@ -1,8 +1,55 @@
-## Set environmental variables
+## To test pybind with GPU backend, `dlpack` is required.
 
-``export ROCAL_DATA_PATH=/Absolute/Path/Of/MIVisionX-data/``
+### Install dlpack
 
-### NOTE: Refer parse_config.py for more info on other args. This script is used with the `readers_test_file.sh` and `unit_tests.sh`
+* Ubuntu:
+
+```
+sudo apt install libdlpack-dev
+```
+
+* SLES:
+
+```
+sudo zypper install dlpack-devel
+```
+
+* Redhat:
+
+```
+sudo yum install https://rpmfind.net/linux/opensuse/tumbleweed/repo/oss/x86_64/dlpack-devel-0.8-1.5.x86_64.rpm
+```
+
+## Prepare dataset and Set environmental variables
+
+* The data needs to be organized in separate folders under `rocal_data` directory for each reader and a golden output directory for the verification.
+
+```
+mkdir rocal_data/
+cd rocal_data
+
+image_path (TurboJPEG image decoding)  : ${ROCAL_DATA_PATH}/rocal_data/images/
+coco_detection_path (COCO Dataset)     : ${ROCAL_DATA_PATH}/rocal_data/coco/images/
+tf_classification_path (TF records Dataset for classification) : ${ROCAL_DATA_PATH}/rocal_data/tf/classification/
+tf_detection_path (TF records Dataset for detection) : ${ROCAL_DATA_PATH}/rocal_data/tf/detection/
+caffe_classification_path (caffe .mdb for classification) : ${ROCAL_DATA_PATH}/rocal_data/caffe/classification/
+caffe_detection_path  (caffe .mdb for detetction) : ${ROCAL_DATA_PATH}/rocal_data/caffe/detection/
+caffe2_classification_path (caffe2 .mdb for classification) : ${ROCAL_DATA_PATH}/rocal_data/caffe2/classification/
+caffe2_detection_path (caffe2 .mdb for classification) : ${ROCAL_DATA_PATH}/rocal_data/caffe2/detection/
+mxnet_path (mxnet .idx, .lst and .rec files) : ${ROCAL_DATA_PATH}/rocal_data/mxnet/
+webdataset_tar_path (web dataset .tar file) : ${ROCAL_DATA_PATH}/rocal_data/web_dataset/tar_file
+numpy_data_path (numpy .npy file) : ${ROCAL_DATA_PATH}/rocal_data/numpy/
+```
+
+* Golden output:
+
+```
+golden_output_path (contains augmented images to cross verify correctness of each reader) : ${ROCAL_DATA_PATH}/rocal_data/GoldenOutputsTensor/
+```
+
+`export ROCAL_DATA_PATH=<absolute_path_to_data_directory>`
+
+### NOTE: Refer to parse_config.py for more info on other args. This script is used with the `readers_test_file.sh` and `unit_tests.sh`
 
 ## Reader Pipeline Tests
 
@@ -13,6 +60,9 @@
   * caffe2 reader
   * tf classification reader
   * tf detection reader
+  * video reader
+  * webdataset reader
+  * numpy reader
 * The default value of number of gpu's is "1" & display is "ON" by default
 `./readers_test_file.sh`
 
@@ -48,12 +98,11 @@ tf_detection_reader=0
 
 ## Augmentation + Reader Tests
 
-* This runs all augmentations and readers and compare them with golden outputs for both backends (HIP/HOST)
+* This runs all augmentations and readers and compares them with golden outputs for both backends (HIP/HOST)
 
 `./unit_tests.sh`
 
-* This test also runs the `image_comaprison.py` script at the end to compare the results with the golden outputs from [MIVisionX-data](https://www.github.com/ROCm/MIVisionX-data).
-
+* This test also runs the `image_comparison.py` script at the end to compare the results with the golden outputs.
 ### Command line for individual files
 
 * Test a single reader pipeline
@@ -88,7 +137,7 @@ tf_detection_reader=0
 
 ## Decoder Test
 
-This test runs a simple decoder pipeline making use of a image file reader and resizing the given input images to 300x300.
+This test runs a simple decoder pipeline making use of an image file reader and resizing the given input images to 300x300.
 
 It uses the [AMD-TinyDataSet](../../data/images/AMD-tinyDataSet/) by default, unless otherwise specified by user.
 
@@ -122,11 +171,32 @@ python3 external_source_reader.py
 
 ## Audio Unit Test
 
-To run the Audio unit test with all test cases. Follow the steps below
+To run the Audio unit test with all test cases. Follow the steps below:
+
+### Prepare dataset
+
+The data needs to be organized in a separate `audio` folder under `rocal_data` directory.
+
+```
+mkdir rocal_data/
+cd rocal_data
+
+audio_path (.wav files and corresponding .wav_file_list.txt file) : ${ROCAL_DATA_PATH}/rocal_data/audio/
+```
+
+* Golden output:
+
+```
+mkdir GoldenOutputsTensor/reference_outputs_audio/
+
+golden_output_path (contains augmented .bin to cross verify correctness of each augmentation) : ${ROCAL_DATA_PATH}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/
+```
+
 
 ```bash
-export ROCAL_DATA_PATH=<Absolute_path_to_MIVisionX-data>
+export ROCAL_DATA_PATH=<absolute_path_to_data_directory>
 ```
+
 To run the audio unit test and verify the correctness of the outputs
 
 ```bash

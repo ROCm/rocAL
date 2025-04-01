@@ -37,7 +37,7 @@ from rocal_pybind.types import CPU
 from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
-from rocal_pybind.types import UINT8
+from rocal_pybind.types import INT16
 
 #  RocalOutputMemType
 from rocal_pybind.types import HOST_MEMORY
@@ -58,6 +58,7 @@ from rocal_pybind.types import GRAY
 from rocal_pybind.types import RGB_PLANAR
 
 #     RocalTensorLayout
+from rocal_pybind.types import NONE
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
@@ -77,6 +78,9 @@ from rocal_pybind.types import DECODER_OPENCV
 from rocal_pybind.types import DECODER_HW_JEPG
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
+from rocal_pybind.types import DECODER_AUDIO_GENERIC
+from rocal_pybind.types import DECODER_VIDEO_ROCDECODE
+from rocal_pybind.types import DECODER_ROCJPEG
 
 #     RocalResizeScalingMode
 from rocal_pybind.types import SCALING_MODE_DEFAULT
@@ -117,6 +121,11 @@ from rocal_pybind.types import LAST_BATCH_FILL
 from rocal_pybind.types import LAST_BATCH_DROP
 from rocal_pybind.types import LAST_BATCH_PARTIAL
 
+#     RocalMissingComponentsBehaviour
+from rocal_pybind.types import MISSING_COMPONENT_ERROR
+from rocal_pybind.types import MISSING_COMPONENT_SKIP
+from rocal_pybind.types import MISSING_COMPONENT_EMPTY
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -130,7 +139,7 @@ _known_types = {
     UINT8: ("UINT8", UINT8),
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
-    UINT8: ("UINT8", UINT8),
+    INT16: ("INT16", INT16),
     HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
     DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
@@ -141,6 +150,7 @@ _known_types = {
     MAX_SIZE_ORIG: ("MAX_SIZE_ORIG", MAX_SIZE_ORIG),
     USER_GIVEN_SIZE_ORIG: ("USER_GIVEN_SIZE_ORIG", USER_GIVEN_SIZE_ORIG),
 
+    NONE: ("NONE", NONE),
     NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
@@ -159,6 +169,9 @@ _known_types = {
     DECODER_HW_JEPG: ("DECODER_HW_JEPG", DECODER_HW_JEPG),
     DECODER_VIDEO_FFMPEG_SW: ("DECODER_VIDEO_FFMPEG_SW", DECODER_VIDEO_FFMPEG_SW),
     DECODER_VIDEO_FFMPEG_HW: ("DECODER_VIDEO_FFMPEG_HW", DECODER_VIDEO_FFMPEG_HW),
+    DECODER_AUDIO_GENERIC: ("DECODER_AUDIO_GENERIC", DECODER_AUDIO_GENERIC),
+    DECODER_VIDEO_ROCDECODE: ("DECODER_VIDEO_ROCDECODE", DECODER_VIDEO_ROCDECODE),
+    DECODER_ROCJPEG: ("DECODER_ROCJPEG", DECODER_ROCJPEG),
 
     NEAREST_NEIGHBOR_INTERPOLATION: ("NEAREST_NEIGHBOR_INTERPOLATION", NEAREST_NEIGHBOR_INTERPOLATION),
     LINEAR_INTERPOLATION: ("LINEAR_INTERPOLATION", LINEAR_INTERPOLATION),
@@ -194,6 +207,10 @@ _known_types = {
     LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
     LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
     LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
+
+    MISSING_COMPONENT_ERROR : ("MISSING_COMPONENT_ERROR", MISSING_COMPONENT_ERROR),
+    MISSING_COMPONENT_SKIP : ("MISSING_COMPONENT_SKIP", MISSING_COMPONENT_SKIP),
+    MISSING_COMPONENT_EMPTY : ("MISSING_COMPONENT_EMPTY", MISSING_COMPONENT_EMPTY),
 }
 
 def data_type_function(dtype):

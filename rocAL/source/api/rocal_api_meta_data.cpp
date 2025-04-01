@@ -254,8 +254,7 @@ void
     if (context->user_batch_size() != meta_data_batch_size)
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
 
-    int one_hot_encoded[meta_data_batch_size * num_of_classes];
-    memset(one_hot_encoded, 0, sizeof(int) * meta_data_batch_size * num_of_classes);
+    std::vector<int> one_hot_encoded(meta_data_batch_size * num_of_classes, 0);
     auto labels = meta_data.second->get_labels_batch();
     for (uint i = 0; i < meta_data_batch_size; i++) {
         int label_index = labels[i][0];
@@ -266,10 +265,10 @@ void
         }
     }
     if (output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST)
-        memcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * num_of_classes);
+        memcpy(buf, one_hot_encoded.data(), sizeof(int) * meta_data_batch_size * num_of_classes);
     else {
 #if ENABLE_HIP
-        hipError_t err = hipMemcpy(buf, one_hot_encoded, sizeof(int) * meta_data_batch_size * num_of_classes, hipMemcpyHostToDevice);
+        hipError_t err = hipMemcpy(buf, one_hot_encoded.data(), sizeof(int) * meta_data_batch_size * num_of_classes, hipMemcpyHostToDevice);
         if (err != hipSuccess)
             THROW("Invalid Data Pointer: Error copying to device memory")
 #elif ENABLE_OPENCL
@@ -288,6 +287,16 @@ RocalTensorList
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->bbox_meta_data();
 }
+
+RocalMetaData
+    ROCAL_API_CALL
+    rocalGetAsciiDatas(RocalContext p_context) {
+    if (!p_context)
+        THROW("Invalid rocal context passed to rocalGetAsciiDatas")
+    auto context = static_cast<Context*>(p_context);
+    return context->master_graph->ascii_values_meta_data();
+}
+
 
 unsigned
     ROCAL_API_CALL
@@ -445,7 +454,7 @@ void
         return;
     }
     unsigned sum = 0;
-    unsigned bb_offset[meta_data_batch_size];
+    std::vector<unsigned> bb_offset(meta_data_batch_size);
     for (unsigned i = 0; i < meta_data_batch_size; i++) {
         bb_offset[i] = sum;
         sum += meta_data.second->get_labels_batch()[i].size();
@@ -502,6 +511,19 @@ void
     context->master_graph->box_iou_matcher(anchors, high_threshold,
                                            low_threshold,
                                            allow_low_quality_matches);
+}
+
+RocalMetaData
+    ROCAL_API_CALL
+    rocalCreateWebDatasetReader(RocalContext p_context, const char* source_path, const char* index_path, std::vector<std::set<std::string>> extensions, RocalMissingComponentsBehaviour missing_components_behavior, bool is_output) {
+#ifdef ENABLE_WDS
+        if (!p_context)
+            THROW("Invalid rocal context passed to rocalCreateWebDatasetReader")
+        auto context = static_cast<Context*>(p_context);
+        return context->master_graph->create_webdataset_reader(source_path, index_path, extensions , MetaDataReaderType::WEBDATASET_META_DATA_READER, static_cast<MissingComponentsBehaviour>(missing_components_behavior));
+#else
+        THROW("Webdataset reader is not enabled since libtar is not present")
+#endif
 }
 
 RocalTensorList

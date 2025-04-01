@@ -42,15 +42,35 @@ void NormalizeNode::create_node() {
 
     int mean_stddev_array_size = 1;
     auto nDim = _inputs[0]->info().num_of_dims() - 1;
-    uint axis[nDim];
-    for (unsigned i = 0; i < _batch_size; i++) {
-        int totalElements = 1;
-        unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
-        for (uint j = 0; j < nDim; j++) {
-            axis[j] = ((_axis_mask & (int)(pow(2, j))) >= 1) ? 1 : 0;
-            totalElements *= !axis[j] ? tensor_shape[j] : 1;
+    std::vector<unsigned> axis(nDim);
+    auto data_layout = _inputs[0]->info().layout();
+    auto tensor_dims = _inputs[0]->info().dims();
+    if (data_layout == RocalTensorlayout::NHWC) {
+        for (unsigned i = 0; i < _batch_size; i++) {
+            int totalElements = 1;
+            unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
+            totalElements *= ((_axis_mask & (1 << 0)) >= 1) ? 1 : tensor_shape[1];
+            totalElements *= ((_axis_mask & (1 << 1)) >= 1) ? 1 : tensor_shape[0];
+            totalElements *= ((_axis_mask & (1 << 2)) >= 1) ? 1 : tensor_dims[nDim];
+            mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
         }
-        mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
+    } else if (data_layout == RocalTensorlayout::NCHW) {
+        for (unsigned i = 0; i < _batch_size; i++) {
+            int totalElements = 1;
+            unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
+            totalElements *= ((_axis_mask & (1 << 0)) >= 1) ? 1 : tensor_dims[1];
+            totalElements *= ((_axis_mask & (1 << 1)) >= 1) ? 1 : tensor_shape[1];
+            totalElements *= ((_axis_mask & (1 << 2)) >= 1) ? 1 : tensor_shape[0];
+            mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
+        }
+    } else {
+        for (unsigned i = 0; i < _batch_size; i++) {
+            int totalElements = 1;
+            unsigned *tensor_shape = _inputs[0]->info().roi()[i].end;
+            for (uint j = 0; j < nDim; j++)
+                totalElements *= ((_axis_mask & (1 << j)) >= 1) ? 1 : tensor_shape[j];
+            mean_stddev_array_size = std::max(mean_stddev_array_size, totalElements);
+        }
     }
     std::vector<float> mean_vec, stddev_vec;
     mean_vec.resize(_batch_size * mean_stddev_array_size, 0);

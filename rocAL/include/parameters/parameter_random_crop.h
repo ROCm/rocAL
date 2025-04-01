@@ -26,6 +26,7 @@ THE SOFTWARE.
 class RocalRandomCropParam : public CropParam {
    public:
     RocalRandomCropParam() = delete;
+    ~RocalRandomCropParam() = default;
     RocalRandomCropParam(unsigned int batch_size) : CropParam(batch_size) {
         area_factor = default_area_factor();
         aspect_ratio = default_aspect_ratio();

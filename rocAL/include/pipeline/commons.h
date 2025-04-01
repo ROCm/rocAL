@@ -63,7 +63,8 @@ enum class RocalTensorDataType {
     UINT8,
     INT8,
     UINT32,
-    INT32
+    INT32,
+    INT16
 };
 
 enum class RocalAffinity {
@@ -203,4 +204,13 @@ class BatchRNG {
    private:
     int64_t _seed;
     std::vector<RNG> _rngs;
+};
+
+/*! \brief MissingComponentsBehaviour for Webdataset
+ *
+ */
+enum MissingComponentsBehaviour {
+    MISSING_COMPONENT_ERROR = 0,
+    MISSING_COMPONENT_SKIP,
+    MISSING_COMPONENT_EMPTY
 };
