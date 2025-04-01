@@ -54,7 +54,7 @@ libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually
 
 `rocDecode <https://rocm.docs.amd.com/projects/rocDecode/en/latest/index.html>`_ and `OpenCV <https://docs.opencv.org/4.6.0/index.html>`_ are not required, but are installed by the package installer and the setup script.
 
-.. important::
+.. note::
   
   | TurboJPEG must be installed manually on SLES. 
   | To use FFMPeg on SLES and RedHat, the ``FFMPeg-dev`` package must be installed manually.
