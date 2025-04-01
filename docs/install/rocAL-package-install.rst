@@ -17,7 +17,7 @@ Three rocAL packages are available:
 
 All the required prerequisites are installed when the package installation method is used.
 
-.. important::
+.. note::
   
   | TurboJPEG must be installed manually on SLES. 
   | To use FFMPeg on SLES and RedHat, the ``FFMPeg-dev`` package must be installed manually.
