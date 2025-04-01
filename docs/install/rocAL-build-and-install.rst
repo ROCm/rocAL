@@ -23,7 +23,7 @@ rocAL is installed in the ROCm installation directory by default. If rocAL for b
 You can choose to use the |setup| setup script to install most :doc:`prerequisites <./rocAL-prerequisites>`
 
 
-.. important::
+.. note::
   
   | TurboJPEG must be installed manually on SLES. 
   | To use FFMPeg on SLES and RedHat, the ``FFMPeg-dev`` package must be installed manually.
