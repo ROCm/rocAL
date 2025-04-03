@@ -227,9 +227,10 @@ add_test(
 )
 
 # 15 - video_tests -- video reader with rocDecode
-find_package(HIP QUIET)
-if(HIP_FOUND)
-  if(${HIP_VERSION} VERSION_GREATER_EQUAL 6.5.0)
+find_package(rocDecode QUIET)
+if(ROCDECODE_FOUND)
+  if(${ROCDECODE_VER_MAJOR} VERSION_GREATER "0" OR
+    (${ROCDECODE_VER_MAJOR} VERSION_EQUAL "0" AND ${ROCDECODE_VER_MINOR} VERSION_GREATER_EQUAL "10" AND ${ROCDECODE_VER_MICRO} VERSION_GREATER_EQUAL "0"))
     add_test(
       NAME video_tests_rocdecode
       COMMAND video_tests
