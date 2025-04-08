@@ -227,9 +227,11 @@ add_test(
 )
 
 # 15 - video_tests -- video reader with rocDecode
-find_package(HIP QUIET)
-if(HIP_FOUND)
-  if(${HIP_VERSION} VERSION_GREATER_EQUAL 6.5.0)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+find_package(ROCDECODE QUIET)
+if(ROCDECODE_FOUND)
+  if(${ROCDECODE_VERSION_MAJOR} VERSION_GREATER "0" OR
+    (${ROCDECODE_VERSION_MAJOR} VERSION_EQUAL "0" AND ${ROCDECODE_VERSION_MINOR} VERSION_GREATER_EQUAL "12" AND ${ROCDECODE_VERSION_PATCH} VERSION_GREATER_EQUAL "0"))
     add_test(
       NAME video_tests_rocdecode
       COMMAND video_tests
