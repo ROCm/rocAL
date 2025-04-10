@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 TJDecoder::TJDecoder() {
     m_jpegDecompressor = tjInitDecompress();
-    if ((_scaling_factors = tj3GetScalingFactors(&_num_scaling_factors)) == NULL)
+    if ((_scaling_factors = tjGetScalingFactors(&_num_scaling_factors)) == NULL)
         THROW("tjDecompress2_partial_scale(): error getting scaling factors");
     for(int i = 0; i < _num_scaling_factors; i++) {
         if(_scaling_factors[i].num < _scaling_factors[i].denom) {

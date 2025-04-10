@@ -39,6 +39,10 @@ VideoLoader::VideoLoader(void *dev_resources) : _circ_buff(dev_resources),
     _batch_size = 1;
     _is_initialized = false;
     _remaining_sequences_count = 0;
+#if ENABLE_HIP
+    DeviceResourcesHip *hipres = static_cast<DeviceResourcesHip *>(dev_resources);
+    _hip_stream = hipres->hip_stream;
+#endif
 }
 
 VideoLoader::~VideoLoader() {
@@ -129,6 +133,11 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _sequence_length = reader_cfg.get_sequence_length();
     _decoder_keep_original = decoder_keep_original;
     _video_loader = std::make_shared<VideoReadAndDecode>();
+#if ENABLE_HIP
+    if (decoder_cfg._type == DecoderType::ROCDEC_VIDEO_DECODE) {
+        decoder_cfg.set_hip_stream(_hip_stream);
+    }
+#endif
     try {
         _video_loader->create(reader_cfg, decoder_cfg, _batch_size, _device_id);
     } catch (const std::exception &e) {
@@ -142,7 +151,8 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_data_info._roi_width.resize(_batch_size);
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
-    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, 
+                    decoder_cfg._type == DecoderType::ROCDEC_VIDEO_DECODE ? true : false);  // Use HIP memory for rocDecode
     _is_initialized = true;
     LOG("Loader module initialized");
 }

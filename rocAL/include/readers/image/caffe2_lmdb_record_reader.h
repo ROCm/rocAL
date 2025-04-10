@@ -60,8 +60,6 @@ class Caffe2LMDBRecordReader : public Reader {
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~Caffe2LMDBRecordReader() override;
 
     int close() override;
@@ -84,10 +82,6 @@ class Caffe2LMDBRecordReader : public Reader {
     std::string _last_file_name;
     unsigned int _last_file_size;
     bool _last_rec;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     uint _file_byte_size;
     void incremenet_read_ptr();
     int release();

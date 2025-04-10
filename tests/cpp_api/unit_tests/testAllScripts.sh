@@ -15,7 +15,7 @@ then
     exit
 fi
 
-# Path to inputs and outputs available in MIVisionX-data
+# Path to inputs and outputs
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/
@@ -134,6 +134,10 @@ do
         # ./unit_tests 11 "$mxnet_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display
         # ./unit_tests 11 "$mxnet_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 25 $device $rgb 0 $display
+
+        # Webdataset
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Normalize_${rgb_name[$rgb]}_${device_name}" $width $height 57 $device $rgb 0 $display
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Transpose_${rgb_name[$rgb]}_${device_name}" $width $height 58 $device $rgb 0 $display
 
         # CMN 
         ./unit_tests 0 "$image_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_FileReader" $width $height 25 $device $rgb 0 $display

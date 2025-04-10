@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,20 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include "pipeline/node.h"
+#include "parameters/parameter_vx.h"
 
-#include "video_decoder.h"
-
-#ifdef ROCAL_VIDEO
-class FFmpegVideoDecoder : public VideoDecoder {
+class TransposeNode : public Node {
    public:
-    //! Default constructor
-    FFmpegVideoDecoder();
-    VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) override;
-    VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
-    int SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override;
-    void Release() override;
-    ~FFmpegVideoDecoder() override;
+    TransposeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    TransposeNode() = delete;
+    void init(std::vector<unsigned> perm);
+
+   protected:
+    void create_node() override;
+    void update_node() override;
 
    private:
-    const char *_src_filename = NULL;
-    AVFormatContext *_fmt_ctx = NULL;
-    AVCodecContext *_video_dec_ctx = NULL;
-#if USE_AVCODEC_GREATER_THAN_58_134
-    const AVCodec *_decoder = NULL;
-#else
-    AVCodec *_decoder = NULL;
-#endif
-    AVStream *_video_stream = NULL;
-    int _video_stream_idx = -1;
-    AVPixelFormat _dec_pix_fmt;
-    int _codec_width, _codec_height;
+    std::vector<unsigned> _perm;
+    vx_array _perm_array_vx;
 };
-#endif
