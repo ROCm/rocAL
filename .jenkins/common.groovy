@@ -73,7 +73,7 @@ def runTestCommand (platform, project) {
                     mkdir -p test && cd test
                     export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rocal-%p.profraw\"
                     echo \$LLVM_PROFILE_FILE
-                    cmake /opt/rocm/share/rocal/tests/
+                    cmake /opt/rocm/share/rocal/test/
                     LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} ctest -VV --rerun-failed --output-on-failure
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
