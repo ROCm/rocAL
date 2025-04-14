@@ -26,7 +26,7 @@ You can choose to use the |setup| setup script to install most :doc:`prerequisit
 .. note::
   
   | TurboJPEG must be installed manually on SLES. 
-  | To use FFMPeg on SLES and RedHat, the ``FFMPeg-dev`` package must be installed manually.
+  | To use FFmpeg on SLES and RedHat, the ``FFmpeg-dev`` package must be installed manually.
 
 
 To build and install rocAL for the HIP backend, create the ``build_hip`` directory under the ``rocAL`` root directory. Change directory to ``build_hip``:
