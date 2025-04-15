@@ -17,7 +17,9 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
 
   .. grid-item-card:: Installation
 
-    * :ref:`install`
+      * :doc:`rocAL prerequisites <./install/rocAL-prerequisites>`
+      * :doc:`Installing rocAL with the package installer <./install/rocAL-package-install>`
+      * :doc:`Building and installing rocAL from source <./install/rocAL-build-and-install>`
 
 .. grid:: 2
   :gutter: 3
@@ -35,10 +37,10 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
 
   .. grid-item-card:: Examples
     
-    * `Image processing examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/image_processing>`_ 
-    * `Pytorch examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch>`_ 
-    * `Tensorflow examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/tf>`_
-    * `Jupyter notebooks <https://github.com/ROCm/rocAL/tree/master/docs/examples/notebooks>`_ 
+    * `rocAL image processing examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/image_processing>`_ 
+    * `rocAL PyTorch examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch>`_ 
+    * `rocAL TensorFlow examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/tf>`_
+    * `rocAL Jupyter notebooks <https://github.com/ROCm/rocAL/tree/master/docs/examples/notebooks>`_ 
 
   .. grid-item-card:: Reference
 
