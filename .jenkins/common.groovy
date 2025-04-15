@@ -75,6 +75,12 @@ def runTestCommand (platform, project) {
                     echo \$LLVM_PROFILE_FILE
                     cmake /opt/rocm/share/rocal/test/
                     LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} ctest -VV --rerun-failed --output-on-failure
+                    cd ../ && mkdir rocal-unit-tests && cd rocal-unit-tests
+                    wget http://math-ci.amd.com/userContent/computer-vision/MIVisionX-data/MIVisionX-data-main.zip
+                    unzip MIVisionX-data-main.zip
+                    export ROCAL_DATA_PATH=${project.paths.project_build_prefix}/build/rocal-unit-tests/MIVisionX-data-main/
+                    python3 -m pip install Pillow
+                    sh /opt/rocm/share/rocal/test/unit_tests/testAllScripts.sh
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
                     ${llvmLocation}/llvm-cov export -object ../release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
