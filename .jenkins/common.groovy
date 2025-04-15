@@ -30,7 +30,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 cd ${project.paths.project_build_prefix}
                 sudo python rocAL-setup.py --backend ${backend}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                cmake -DBACKEND=${backend} ${buildTypeArg} ../..
+                cmake -DBACKEND=${backend} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" ../..
                 make -j\$(nproc)
                 sudo cmake --build . --target PyPackageInstall
                 sudo make install
@@ -43,20 +43,51 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 def runTestCommand (platform, project) {
 
     String libLocation = ''
-    if (platform.jenkinsLabel.contains('rhel') || platform.jenkinsLabel.contains('sles')) {
-        libLocation = ':/usr/local/lib'
+    String packageManager = 'apt -y'
+    String toolsPackage = 'llvm-amdgpu-dev'
+    String llvmLocation = '/opt/amdgpu/lib/x86_64-linux-gnu/llvm-20.1/bin'
+    
+    if (platform.jenkinsLabel.contains('rhel')) {
+        libLocation = ':/usr/local/lib:/usr/local/lib/x86_64-linux-gnu'
+        packageManager = 'yum -y'
+        toolsPackage = 'llvm-amdgpu-devel'
+        llvmLocation = '/opt/amdgpu/lib64/llvm-20.1/bin'
+    }
+    else if (platform.jenkinsLabel.contains('sles')) {
+        libLocation = ':/usr/local/lib:/usr/local/lib/x86_64-linux-gnu'
+        packageManager = 'zypper -n'
+        toolsPackage = 'llvm-amdgpu-devel'
+        llvmLocation = '/opt/amdgpu/lib64/llvm-20.1/bin'
     }
 
-    def command = """#!/usr/bin/env bash
-                set -x
-                export HOME=/home/jenkins
-                echo Make Test
-                cd ${project.paths.project_build_prefix}/build/release
-                LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} make test ARGS="-VV --rerun-failed --output-on-failure"
-                ldd -v /opt/rocm/lib/librocal.so
-                """
+    String commitSha
+    String repoUrl
+    (commitSha, repoUrl) = util.getGitHubCommitInformation(project.paths.project_src_prefix)
 
-    platform.runCommand(this, command)
+    withCredentials([string(credentialsId: "mathlibs-codecov-token-rocal", variable: 'CODECOV_TOKEN')])
+    {
+        def command = """#!/usr/bin/env bash
+                    export HOME=/home/jenkins
+                    set -x
+                    cd ${project.paths.project_build_prefix}/build
+                    mkdir -p test && cd test
+                    export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rocal-%p.profraw\"
+                    echo \$LLVM_PROFILE_FILE
+                    cmake /opt/rocm/share/rocal/test/
+                    LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} ctest -VV --rerun-failed --output-on-failure
+                    sudo ${packageManager} install lcov ${toolsPackage}
+                    ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
+                    ${llvmLocation}/llvm-cov export -object ../release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
+                    lcov --remove coverage.info '/opt/*' --output-file coverage.info
+                    lcov --list coverage.info
+                    lcov --summary  coverage.info
+                    curl -Os https://uploader.codecov.io/latest/linux/codecov
+                    chmod +x codecov
+                    ./codecov -v -U \$http_proxy -t ${CODECOV_TOKEN} --file coverage.info --name rocAL --sha ${commitSha}
+                    """
+
+        platform.runCommand(this, command)
+    }
 // Unit tests - TBD
 }
 
