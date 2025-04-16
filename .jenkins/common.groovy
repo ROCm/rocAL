@@ -91,7 +91,7 @@ def runTestCommand (platform, project) {
                     make -j
                     ./external_source ../MIVisionX-data-main/rocal_data/coco/coco_10_img/images/
                     ./external_source ../MIVisionX-data-main/rocal_data/coco/coco_10_img/images/ 1
-                    cd ../
+                    cd ../../
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
                     ${llvmLocation}/llvm-cov export -object release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
