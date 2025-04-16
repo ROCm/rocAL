@@ -80,7 +80,10 @@ def runTestCommand (platform, project) {
                     unzip MIVisionX-data-main.zip
                     export ROCAL_DATA_PATH=${project.paths.project_build_prefix}/build/rocal-unit-tests/MIVisionX-data-main/
                     python3 -m pip install Pillow
-                    sh /opt/rocm/share/rocal/test/unit_tests/testAllScripts.sh
+                    cp -r /opt/rocm/share/rocal/test/unit_tests/ .
+                    cd unit_tests/
+                    ./testAllScripts.sh
+                    cd ../../
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
                     ${llvmLocation}/llvm-cov export -object ../release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
