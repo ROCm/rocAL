@@ -84,7 +84,7 @@ def runTestCommand (platform, project) {
                     cd unit_tests/
                     chmod +x -R testAllScripts.sh
                     ./testAllScripts.sh
-                    cd ../../
+                    cd ../../test
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
                     ${llvmLocation}/llvm-cov export -object ../release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
