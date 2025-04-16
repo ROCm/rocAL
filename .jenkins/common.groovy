@@ -82,6 +82,7 @@ def runTestCommand (platform, project) {
                     python3 -m pip install Pillow
                     cp -r /opt/rocm/share/rocal/test/unit_tests/ .
                     cd unit_tests/
+                    chmod +x -R testAllScripts.sh
                     ./testAllScripts.sh
                     cd ../../
                     sudo ${packageManager} install lcov ${toolsPackage}
