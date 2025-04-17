@@ -93,7 +93,7 @@ def runTestCommand (platform, project) {
                     ./external_source ../MIVisionX-data-main/rocal_data/coco/coco_10_img/images/ 1
                     cd ../../ && mkdir -p audio-tests && cd audio-tests
                     python3 /opt/rocm/share/rocal/test/audio_tests/audio_tests.py
-                    cd ../../
+                    cd ../
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
                     ${llvmLocation}/llvm-cov export -object release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
