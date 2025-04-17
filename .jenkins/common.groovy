@@ -70,14 +70,31 @@ def runTestCommand (platform, project) {
                     export HOME=/home/jenkins
                     set -x
                     cd ${project.paths.project_build_prefix}/build
-                    mkdir -p test && cd test
                     export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rocal-%p.profraw\"
                     echo \$LLVM_PROFILE_FILE
+                    cd release
+                    mkdir -p test && cd test
                     cmake /opt/rocm/share/rocal/test/
                     LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib${libLocation} ctest -VV --rerun-failed --output-on-failure
+                    cd ../
+                    wget http://math-ci.amd.com/userContent/computer-vision/MIVisionX-data/MIVisionX-data-main.zip
+                    unzip MIVisionX-data-main.zip
+                    export ROCAL_DATA_PATH=\$(pwd)/MIVisionX-data-main/
+                    mkdir -p rocal-unit-tests && cd rocal-unit-tests
+                    python3 -m pip install Pillow
+                    cp -r /opt/rocm/share/rocal/test/unit_tests/ .
+                    cd unit_tests/
+                    chmod +x -R testAllScripts.sh
+                    ./testAllScripts.sh
+                    cd ../../ && mkdir -p external-source-reader-test && cd external-source-reader-test
+                    cmake /opt/rocm/share/rocal/test/external_source/
+                    make -j
+                    ./external_source ../MIVisionX-data-main/rocal_data/coco/coco_10_img/images/
+                    ./external_source ../MIVisionX-data-main/rocal_data/coco/coco_10_img/images/ 1
+                    cd ../../
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
-                    ${llvmLocation}/llvm-cov export -object ../release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
+                    ${llvmLocation}/llvm-cov export -object release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
                     lcov --remove coverage.info '/opt/*' --output-file coverage.info
                     lcov --list coverage.info
                     lcov --summary  coverage.info
