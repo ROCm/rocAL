@@ -356,7 +356,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || reader_type == 13) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
     }
