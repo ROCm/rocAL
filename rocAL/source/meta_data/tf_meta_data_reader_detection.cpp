@@ -127,12 +127,12 @@ void TFMetaDataReaderDetection::read_record(std::ifstream &file_contents, uint f
     file_contents.read(data, data_length);
     if (!file_contents)
         THROW("TFMetaDataReaderDetection: Error in reading TF records")
-    tensorflow::Example single_example;
+    rocal::tensorflow::Example single_example;
     single_example.ParseFromArray(data, data_length);
-    tensorflow::Features features = single_example.features();
+    rocal::tensorflow::Features features = single_example.features();
 
     auto feature = features.feature();
-    tensorflow::Feature single_feature, sf_xmin, sf_ymin, sf_xmax, sf_ymax, sf_fname, sf_label, sf_height, sf_width;
+    rocal::tensorflow::Feature single_feature, sf_xmin, sf_ymin, sf_xmax, sf_ymax, sf_fname, sf_label, sf_height, sf_width;
 
     single_feature = feature.at(user_filename_key);
     std::string fname = single_feature.bytes_list().value()[0];
