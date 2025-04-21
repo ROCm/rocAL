@@ -15,9 +15,10 @@ then
     exit
 fi
 
-# Path to inputs and outputs available in MIVisionX-data
+# Path to inputs and outputs
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
+coco_keypoints_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/
 tf_detection_path=${ROCAL_DATA_PATH}/rocal_data/tf/detection/
 caffe_classification_path=${ROCAL_DATA_PATH}/rocal_data/caffe/classification/
@@ -28,6 +29,7 @@ mxnet_path=${ROCAL_DATA_PATH}/rocal_data/mxnet/
 output_path=../rocal_unittest_output_folder_$(date +%Y-%m-%d_%H-%M-%S)/
 golden_output_path=${ROCAL_DATA_PATH}/rocal_data/GoldenOutputsTensor/
 webdataset_tar_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/tar_file/
+numpy_data_path=${ROCAL_DATA_PATH}/rocal_data/numpy/
 
 display=0
 device=0
@@ -130,10 +132,19 @@ do
         # ./unit_tests 9 "$caffe2_detection_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}CropCenterCMN_${rgb_name[$rgb]}_${device_name}" $width $height 55 $device $rgb 0 $display
 
+        # COCO Keypoints
+        ./unit_tests 10 "$coco_keypoints_path" "${output_path}SNP_${rgb_name[$rgb]}_${device_name}" 640 480 14 $device $rgb 0 $display
+        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" 640 480 15 $device $rgb 0 $display
+        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" 640 480 17 $device $rgb 0 $display
+
         # mxnet 
         # ./unit_tests 11 "$mxnet_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display
         # ./unit_tests 11 "$mxnet_path" "${output_path}Pixelate_${rgb_name[$rgb]}_${device_name}" $width $height 19 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 25 $device $rgb 0 $display
+
+        # Webdataset
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Normalize_${rgb_name[$rgb]}_${device_name}" $width $height 57 $device $rgb 0 $display
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Transpose_${rgb_name[$rgb]}_${device_name}" $width $height 58 $device $rgb 0 $display
 
         # CMN 
         ./unit_tests 0 "$image_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_FileReader" $width $height 25 $device $rgb 0 $display
@@ -146,6 +157,7 @@ do
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_caffe2Detection" $width $height 25 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 25 $device $rgb 0 $display
         ./unit_tests 12 "$webdataset_tar_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_web_dataset" $width $height 25 $device $rgb 0 $display
+        ./unit_tests 13 "$numpy_data_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_numpy" $width $height 25 $device $rgb 0 $display
 
         # crop
         ./unit_tests 0 "$image_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_FileReader" $width $height 51 $device $rgb 0 $display
@@ -158,6 +170,7 @@ do
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_caffe2Detection" $width $height 51 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 51 $device $rgb 0 $display
         ./unit_tests 12 "$webdataset_tar_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_web_dataset" $width $height 51 $device $rgb 0 $display
+        ./unit_tests 13 "$numpy_data_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_numpy" $width $height 51 $device $rgb 0 $display
 
         # resize
         # Last two parameters are interpolation type and scaling mode

@@ -63,7 +63,8 @@ enum class RocalTensorDataType {
     UINT8,
     INT8,
     UINT32,
-    INT32
+    INT32,
+    INT16
 };
 
 enum class RocalAffinity {

@@ -60,8 +60,6 @@ class TFRecordReader : public Reader {
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~TFRecordReader() override;
 
     int close() override;
@@ -87,17 +85,13 @@ class TFRecordReader : public Reader {
     std::string _last_file_name;
     unsigned int _last_file_size;
     bool _last_rec;
-    size_t _batch_size = 1;
     size_t _file_id = 0;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     //!< _record_name_prefix tells the reader to read only files with the prefix
     std::string _record_name_prefix;
     // protobuf message objects
-    tensorflow::Example _single_example;
-    tensorflow::Features _features;
-    tensorflow::Feature _single_feature;
+    rocal::tensorflow::Example _single_example;
+    rocal::tensorflow::Features _features;
+    rocal::tensorflow::Feature _single_feature;
     void incremenet_read_ptr();
     int release();
     Reader::Status read_image(unsigned char *buff, std::string record_file_name, uint file_size);
