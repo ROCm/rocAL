@@ -97,6 +97,7 @@ def runTestCommand (platform, project) {
                     export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib/
                     export PATH=\$PATH:/opt/rocm/bin
                     export PYTHONPATH=/opt/rocm/lib:\$PYTHONPATH
+                    python3 -m pip install opencv-python
                     python3 /opt/rocm/share/rocal/test/python_api/prefetch_queue_depth/prefetch_queue_depth.py /opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet cpu 128 8
                     python3 /opt/rocm/share/rocal/test/python_api/prefetch_queue_depth/prefetch_queue_depth.py /opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet gpu 128 8
                     python3 /opt/rocm/share/rocal/test/python_api/external_source_reader.py cpu 128
