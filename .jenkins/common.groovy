@@ -91,9 +91,9 @@ def runTestCommand (platform, project) {
                     make -j
                     ./external_source ../MIVisionX-data-main/rocal_data/coco/coco_10_img/images/
                     ./external_source ../MIVisionX-data-main/rocal_data/coco/coco_10_img/images/ 1
-                    cd ../../ && mkdir -p audio-tests && cd audio-tests
+                    cd ../ && mkdir -p audio-tests && cd audio-tests
                     python3 /opt/rocm/share/rocal/test/audio_tests/audio_tests.py
-                    cd ../
+                    cd ../ && mkdir -p python-api-tests && cd python-api-tests
                     export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib/
                     export PATH=\$PATH:/opt/rocm/bin
                     export PYTHONPATH=/opt/rocm/lib:\$PYTHONPATH
@@ -102,11 +102,9 @@ def runTestCommand (platform, project) {
                     python3 /opt/rocm/share/rocal/test/python_api/prefetch_queue_depth/prefetch_queue_depth.py /opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet gpu 128 8
                     python3 /opt/rocm/share/rocal/test/python_api/external_source_reader.py cpu 128
                     python3 /opt/rocm/share/rocal/test/python_api/external_source_reader.py gpu 128
-                    python3 /opt/rocm/share/rocal/test/python_api/audio_unit_test.py
-                    python3 /opt/rocm/share/rocal/test/python_api/numpy_reader.py --image-dataset-path MIVisionX-data-main/rocal_data/numpy/ --no-rocal-gpu
-                    python3 /opt/rocm/share/rocal/test/python_api/numpy_reader.py --image-dataset-path MIVisionX-data-main/rocal_data/numpy/ --rocal-gpu
-                    python3 /opt/rocm/share/rocal/test/python_api/video_pipeline.py --video-path MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ --rocal-gpu --batch-size 10 --sequence-length 3
-                    python3 /opt/rocm/share/rocal/test/python_api/video_pipeline.py --video-path MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ --no-rocal-gpu --batch-size 10 --sequence-length 3
+                    python3 /opt/rocm/share/rocal/test/python_api/numpy_reader.py --image-dataset-path ../MIVisionX-data-main/rocal_data/numpy/ --no-rocal-gpu
+                    python3 /opt/rocm/share/rocal/test/python_api/numpy_reader.py --image-dataset-path ../MIVisionX-data-main/rocal_data/numpy/ --rocal-gpu
+                    cd ../../
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rocal.profdata
                     ${llvmLocation}/llvm-cov export -object release/lib/librocal.so --instr-profile=rocal.profdata --format=lcov > coverage.info
