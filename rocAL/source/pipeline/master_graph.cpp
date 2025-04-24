@@ -471,19 +471,24 @@ MasterGraph::mem_type() {
 
 size_t
 MasterGraph::last_batch_padded_size() {
-    return _loader_module->last_batch_padded_size();
+    size_t max_last_batch_padded_size = 0;
+    for (auto loader_module : _loader_modules)
+        max_last_batch_padded_size = (loader_module->last_batch_padded_size() > max_last_batch_padded_size) ? loader_module->last_batch_padded_size() : max_last_batch_padded_size;
+    return max_last_batch_padded_size;
 }
 
 Timing
 MasterGraph::timing() {
     Timing t;
     // Accumulate the timings from each loader
-    for (auto &loader_module : _loader_modules) {
-        t = loader_module->timing();
-        t.process_time += _process_time.get_timing();
-        t.copy_to_output += _convert_time.get_timing();
-        t.bb_process_time += _bencode_time.get_timing();
+    for (auto loader_module : _loader_modules) {
+        Timing loader_time = loader_module->timing();
+        t.read_time = (t.read_time > loader_time.read_time) ? t.read_time : loader_time.read_time;
+        t.process_time += loader_time.process_time;
     }
+    t.process_time += _process_time.get_timing();
+    t.copy_to_output += _convert_time.get_timing();
+    t.bb_process_time += _bencode_time.get_timing();
     return t;
 }
 
@@ -921,8 +926,8 @@ MasterGraph::get_output_tensors() {
 }
 
 bool MasterGraph::is_out_of_data() {
-    // If any of the loader module's remaining count is less than the batch size, return true
-    for (auto loader_module : _loader_modules) {
+    // If any of the loader module's remaining count is less than the batch size, return loader out of data
+    for (auto& loader_module : _loader_modules) {
         if (loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
             return true;
         }
@@ -1055,16 +1060,16 @@ void MasterGraph::output_routine_multiple_loaders() {
             for (auto loader_module : _loader_modules) {
                 auto load_ret = loader_module->load_next();
                 if (load_ret != LoaderModuleStatus::OK)
-                    THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))                
+                    THROW("Loader module failed to load next batch of images, status " + TOSTR(load_ret))
             }
 
             if (!_processing)
                 break;
+            
+            // Currently the data of the first loader module alone is returned
             auto full_batch_image_names = _loader_modules[0]->get_id();
-            /*  TODO - Will be fixed with multiple readers changes
-            auto decode_image_info = _loader_modules[0]->get_decode_image_info();
+            auto decode_image_info = _loader_modules[0]->get_decode_data_info();
             auto crop_image_info = _loader_modules[0]->get_crop_image_info();
-            */
 
             if (full_batch_image_names.size() != _user_batch_size)
                 WRN("Internal problem: names count " + TOSTR(full_batch_image_names.size()))
@@ -1145,9 +1150,10 @@ void MasterGraph::output_routine_multiple_loaders() {
 
 void MasterGraph::start_processing() {
     _processing = true;
-    for (auto &loader_module : _loader_modules) {
+    _remaining_count = _loader_modules[0]->remaining_count();
+    for (int i = 1; i < _loaders_count; i++) {
         // Stores the least remaining count value of all loaders
-        _remaining_count = std::min(_remaining_count, static_cast<int>(loader_module->remaining_count()));
+        _remaining_count = std::min(_remaining_count, static_cast<int>(_loader_modules[i]->remaining_count()));
     }
     if (_loaders_count == 1) {
         _output_thread = std::thread(&MasterGraph::output_routine, this);
