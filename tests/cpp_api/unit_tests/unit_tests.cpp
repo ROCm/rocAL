@@ -356,7 +356,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || reader_type == 13) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || reader_type == 13) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         return -1;
     }
@@ -619,6 +619,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             // Transpose permutation needs to be changed according to input layout
             std::vector<unsigned> perm = rgb ? std::vector<unsigned>{1, 0, 2} : std::vector<unsigned>{0, 2, 1};
             output = rocalTranspose(handle, input, perm, true, output_tensor_layout);
+        } break;
+        case 59: {
+            std::cout << "Running rocalRandomCrop" << std::endl;
+            output = rocalRandomCrop(handle, input, true);
         } break;
 
         default:
