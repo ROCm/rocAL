@@ -23,5 +23,5 @@ This application demonstrates a basic usage of rocAL's C API to use sharded data
 ### running the application
 
   ````shell
-  ./dataloader_multithread <image_dataset_folder/video_folder - required> <num_gpus(gpu:>=1)/(cpu:0)>  <num_shards> <decode_width> <decode_height> <batch_size> <shuffle> <display>
+  ./dataloader_multithread <image_dataset_folder - required> <num_gpus(gpu:>=1)/(cpu:0)>  <num_shards> <decode_width> <decode_height> <batch_size> <shuffle> <display>
   ````

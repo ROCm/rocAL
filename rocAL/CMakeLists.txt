@@ -45,6 +45,7 @@ project(rocal VERSION ${VERSION} LANGUAGES CXX)
 set(BUILD_ROCAL true)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 
 # Find Dependency
 find_package(AMDRPP QUIET)
@@ -63,7 +64,8 @@ find_package(FFmpeg QUIET)
 find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
-find_package(rocDecode QUIET)
+find_package(ROCDECODE QUIET)
+find_package(ROCJPEG QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -76,9 +78,20 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
     # Set supported GPU Targets
-    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_GPU_TARGETS ${DEFAULT_GPU_TARGETS} "gfx1200;gfx1201")
+    if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
+        find_package(ROCmCMakeBuildTools QUIET)
+        if(NOT ROCmCMakeBuildTools_FOUND)
+            find_package(ROCM QUIET)
+        endif()
+        include(ROCMCheckTargetIds OPTIONAL RESULT_VARIABLE HAS_ROCM_CHECK_TARGET_IDS)
+
+        set(OPTIONAL_GPU_TARGETS "gfx950;gfx1200;gfx1201")
+        if(HAS_ROCM_CHECK_TARGET_IDS)
+            rocm_check_target_ids(OPTIONAL_GPU_TARGETS_AVAILABLE TARGETS ${OPTIONAL_GPU_TARGETS})
+        else() # if we don't have rocm_check_target_ids, just assume the targets are available
+            set(OPTIONAL_GPU_TARGETS_AVAILABLE "${OPTIONAL_GPU_TARGETS}")
+        endif()
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;${OPTIONAL_GPU_TARGETS_AVAILABLE}")
     endif()
 
     # Set AMD GPU_TARGETS
@@ -265,6 +278,11 @@ if(${BUILD_ROCAL})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
         set(ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
     endif()
+    # rocJPEG
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCJPEG_FOUND)
+        include_directories (${ROCJPEG_INCLUDE_DIR})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCJPEG_LIBRARY})
+    endif()
 
     message("-- ${Green}ROCm Augmentation Library -- rocAL dependencies found${ColourReset}")
 
@@ -297,11 +315,22 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=1)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
         if(ROCDECODE_FOUND)
-            if(${ROCDECODE_VER_MAJOR} VERSION_GREATER_EQUAL "0" AND ${ROCDECODE_VER_MINOR} VERSION_GREATER_EQUAL "10" AND ${ROCDECODE_VER_MICRO} VERSION_GREATER_EQUAL "0")
+            if(${ROCDECODE_VERSION_MAJOR} VERSION_GREATER "0" OR
+               (${ROCDECODE_VERSION_MAJOR} VERSION_EQUAL "0" AND ${ROCDECODE_VERSION_MINOR} VERSION_GREATER_EQUAL "12" AND ${ROCDECODE_VERSION_PATCH} VERSION_GREATER_EQUAL "0"))
                 target_compile_definitions(${PROJECT_NAME} PUBLIC -DENABLE_ROCDECODE)
                 message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
             else()
-                message("-- ${Yellow}rocAL -- Requires rocDecode version > 0.10.0${ColourReset}")
+                message("-- ${Yellow}rocAL -- Requires rocDecode version >= 0.12.0${ColourReset}")
+            endif()
+        endif()
+        if(ROCJPEG_FOUND)
+            if(${ROCJPEG_VERSION_MAJOR} VERSION_GREATER "0" OR
+               (${ROCJPEG_VERSION_MAJOR} VERSION_EQUAL "0" AND ${ROCJPEG_VERSION_MINOR} VERSION_GREATER_EQUAL "11" AND ${ROCJPEG_VERSION_PATCH} VERSION_GREATER_EQUAL "0"))
+                target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCJPEG=1)
+                message("-- ${White}rocAL built with rocJpeg hardware decoder${ColourReset}")
+            else()
+                target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_ROCJPEG=0)
+                message("-- ${Yellow}rocAL -- Requires rocJpeg version >= 0.11.0${ColourReset}")
             endif()
         endif()
         message("-- ${White}rocAL built with HIP Backend${ColourReset}")
@@ -341,10 +370,11 @@ if(${BUILD_ROCAL})
     if(NOT FFMPEG_FOUND)
         message("-- ${Yellow}NOTE: rocAL built without FFmpeg video decode functionality${ColourReset}")
     else()
-        if (FFMPEG_VERSION_4)
-            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_FFMPEG_VERSION_4=1)
+        # FFMPEG multi-version support
+        if(_FFMPEG_AVCODEC_VERSION VERSION_LESS_EQUAL 58.134.100)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_AVCODEC_GREATER_THAN_58_134=0)
         else()
-            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_FFMPEG_VERSION_4=0)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_AVCODEC_GREATER_THAN_58_134=1)
         endif()
         include_directories(${AVUTIL_INCLUDE_DIR} ${AVCODEC_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FFMPEG_LIBRARIES})
@@ -382,6 +412,7 @@ if(${BUILD_ROCAL})
     else()
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
     endif()
+
     # LibTar
     if(LIBTAR_FOUND)
         include_directories(${LIBTAR_INCLUDE_DIRS})
@@ -391,6 +422,7 @@ if(${BUILD_ROCAL})
     else()
         message("-- ${Yellow}NOTE: rocAL built without LibTar - WebDataset reader will not be supported${ColourReset}")
     endif()
+
     # -Wall -- Enable most warning messages
     # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation

@@ -191,7 +191,7 @@ struct NumpyHeaderData {
     };
 
     // Returns the entire data size of the numpy array in bytes
-    size_t nbytes() const { return tensor_data_size(type_info) * size(); }
+    size_t numpy_data_nbytes() const { return tensor_data_size(type_info) * size(); }
     
     // Returns the shape of the numpy array
     std::vector<unsigned> shape() const { return array_shape; }
@@ -293,7 +293,7 @@ class Reader {
      //! Returns the path of the last item opened in this resource
     virtual const std::string file_path() { THROW("File path is not set by the reader") }
 
-    virtual unsigned count_items() = 0;
+    virtual unsigned count_items();
 
     virtual ~Reader() = default;
 
@@ -315,6 +315,10 @@ class Reader {
     bool _stick_to_shard = false;   // Determines whether the reader should stick to a data shard instead of going through the entire dataset.
     bool _pad_last_batch_repeated = false;  // Determines if last file is to be repeated for padding the batch.
     int32_t _shard_size = -1;   // Size of the shard
+    size_t _batch_size = 1;
+    bool _loop;
+    bool _shuffle;
+    int _read_counter = 0;
 
     //! Modified the file idx, and sets the current file idx to be processed
     void increment_curr_file_idx(size_t dataset_size);

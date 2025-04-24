@@ -2620,3 +2620,38 @@ rocalMelFilterBank(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalTranspose(
+    RocalContext p_context,
+    RocalTensor p_input,
+    std::vector<unsigned> perm,
+    bool is_output,
+    RocalTensorLayout output_layout) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input image")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        TensorInfo output_info = input->info();
+        if (perm.size() != (output_info.num_of_dims() - 1)) {
+            THROW("Transpose permutation must match with the input dims")
+        }
+        std::vector<size_t> dims = output_info.dims();
+        for (int i = 1; i < dims.size(); i++)
+            dims[i] = output_info.dims()[perm[i - 1] + 1];  // Perm contains permutation without batch dimension so adding +1
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_dims(dims);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        std::shared_ptr<TransposeNode> transpose_node = context->master_graph->add_node<TransposeNode>({input}, {output});
+        transpose_node->init(perm);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
