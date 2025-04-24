@@ -291,6 +291,7 @@ MasterGraph::build() {
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
     if (_loaders_count > 1) {
+        _meta_data_reader = nullptr; // Disable metadata reader for multiple loaders pipeline, support not enabled
         create_multiple_graphs();
     } else {
         _loader_module = _loader_modules[0];
@@ -1066,19 +1067,6 @@ void MasterGraph::output_routine_multiple_loaders() {
             if (!_processing)
                 break;
             
-            // Currently the data of the first loader module alone is returned
-            auto full_batch_image_names = _loader_modules[0]->get_id();
-            auto decode_image_info = _loader_modules[0]->get_decode_data_info();
-            auto crop_image_info = _loader_modules[0]->get_crop_image_info();
-
-            if (full_batch_image_names.size() != _user_batch_size)
-                WRN("Internal problem: names count " + TOSTR(full_batch_image_names.size()))
-            
-            /*  TODO - Will be fixed with multiple readers changes
-            // meta_data lookup is done before _meta_data_graph->process() is called to have the new meta_data ready for processing
-            if (_meta_data_reader)
-                _meta_data_reader->lookup(full_batch_image_names);
-            */
 
             if (!_processing)
                 break;
@@ -1090,26 +1078,7 @@ void MasterGraph::output_routine_multiple_loaders() {
             if (!_processing)
                 break;
 
-            for (auto node : _nodes) {
-                if (node->_is_ssd) {
-                    node->set_meta_data(_augmented_meta_data);
-                }
-            }
-
             update_node_parameters();
-            pMetaDataBatch output_meta_data = nullptr;
-            /* TODO - Will be fixed with multiple readers changes
-            if (_augmented_meta_data) {
-                output_meta_data = _augmented_meta_data->clone(!_augmentation_metanode);  // copy the data if metadata is not processed by the nodes, else create an empty instance
-                if (_meta_data_graph) {
-                    if (_is_random_bbox_crop) {
-                        _meta_data_graph->update_random_bbox_meta_data(_augmented_meta_data, output_meta_data, decode_image_info, crop_image_info);
-                    } else {
-                        _meta_data_graph->update_meta_data(_augmented_meta_data, decode_image_info);
-                    }
-                    _meta_data_graph->process(_augmented_meta_data, output_meta_data);
-                }
-            }*/
             _process_time.start();
             for (auto& graph : _graphs) {
                 graph->process();
@@ -1120,25 +1089,6 @@ void MasterGraph::output_routine_multiple_loaders() {
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
                 _internal_tensor_list[idx]->copy_roi(write_roi_buffers[idx]);   // Copy ROI from internal tensor's buffer to ring buffer
 
-            /* TODO - Will be fixed with multiple readers changes
-            _bencode_time.start();
-            if (_is_box_encoder) {
-                auto bbox_encode_write_buffers = _ring_buffer.get_box_encode_write_buffers();
-#if ENABLE_HIP
-                if (_mem_type == RocalMemType::HIP) {
-                    // get bbox encoder read buffers
-                    if (_box_encoder_gpu) _box_encoder_gpu->Run(output_meta_data, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
-                } else
-#endif
-                    _meta_data_graph->update_box_encoder_meta_data(&_anchors, output_meta_data, _criteria, _offset, _scale, _means, _stds, (float *)bbox_encode_write_buffers.first, (int *)bbox_encode_write_buffers.second);
-            }
-            _bencode_time.end();
-#ifdef ROCAL_VIDEO
-            // _sequence_start_framenum_vec.insert(_sequence_start_framenum_vec.begin(), _loader_module->get_sequence_start_frame_number());
-            // _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
-#endif
-            */
-            _ring_buffer.set_meta_data(full_batch_image_names, output_meta_data);
             _ring_buffer.push();  // Image data and metadata is now stored in output the ring_buffer, increases it's level by 1
         }
     } catch (const std::exception &e) {
@@ -1602,6 +1552,10 @@ size_t MasterGraph::bounding_box_batch_count(pMetaDataBatch meta_data_batch) {
 TensorList *MasterGraph::labels_meta_data() {
     if (_external_source_reader)
         return &_labels_tensor_list;
+
+    if (!_meta_data_reader && _loaders_count > 1)
+        THROW("Metadata reader is not compatible with multiple loaders")
+
     if (_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[0];  // Get labels buffer from ring buffer
@@ -1615,6 +1569,9 @@ TensorList *MasterGraph::labels_meta_data() {
 }
 
 TensorListVector *MasterGraph::ascii_values_meta_data() {
+    if (!_meta_data_reader && _loaders_count > 1)
+        THROW("Metadata reader is not compatible with multiple loaders")
+
     if (_external_source_reader) {
         return &_webdataset_output_tensor_list;
     }
@@ -1640,6 +1597,8 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
 }
 
 TensorList *MasterGraph::bbox_meta_data() {
+    if (!_meta_data_reader && _loaders_count > 1)
+        THROW("Metadata reader is not compatible with multiple loaders")
     if (_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[1];  // Get bbox buffer from ring buffer
@@ -1654,6 +1613,8 @@ TensorList *MasterGraph::bbox_meta_data() {
 }
 
 TensorList *MasterGraph::mask_meta_data() {
+    if (!_meta_data_reader && _loaders_count > 1)
+        THROW("Metadata reader is not compatible with multiple loaders")
     if (_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = (unsigned char *)_ring_buffer.get_meta_read_buffers()[2];  // Get mask buffer from ring buffer
@@ -1668,6 +1629,9 @@ TensorList *MasterGraph::mask_meta_data() {
 }
 
 TensorList *MasterGraph::matched_index_meta_data() {
+    if (!_meta_data_reader && _loaders_count > 1)
+        THROW("Metadata reader is not compatible with multiple loaders")
+
     if (_ring_buffer.level() == 0)
         THROW("No meta data has been loaded")
     auto meta_data_buffers = reinterpret_cast<unsigned char *>(_ring_buffer.get_meta_read_buffers()[2]);  // Get matches buffer from ring buffer
@@ -1839,6 +1803,9 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, flo
 
 TensorListVector*
 MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes) {
+    if (!_meta_data_reader && _loaders_count > 1)
+        THROW("Metadata reader is not compatible with multiple loaders")
+
     if (_is_box_encoder) {
         if (num_encoded_boxes != _user_batch_size * _num_anchors) {
             THROW("num_encoded_boxes is not correct");
