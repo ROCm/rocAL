@@ -23,29 +23,34 @@
 # SOFTWARE.
 #
 ################################################################################
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
-project (rocal_multiple_loaders_test)
-set(CMAKE_CXX_STANDARD 14)
+project (multiple_dataloaders_test)
 
-# ROCm Path
-set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
-
-# avoid setting the default installation path to /usr/local
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "rocAL default installation path" FORCE)
-endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# Add Default libdir
-set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
-include(GNUInstallDirs)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
-include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
+
+include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
 link_directories(${ROCM_PATH}/lib)
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
@@ -56,9 +61,9 @@ if(OpenCV_FOUND)
         include_directories(${OpenCV_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
         if(${OpenCV_VERSION_MAJOR} EQUAL 4)
-	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
         else()
-	        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
+            target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
         endif()
     else()
         message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
@@ -67,7 +72,5 @@ else()
     message(FATAL_ERROR "OpenCV Not Found -- No Display Support")
 endif()
 
-target_link_libraries(${PROJECT_NAME} rocal)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
-
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+target_link_libraries(${PROJECT_NAME} rocal)

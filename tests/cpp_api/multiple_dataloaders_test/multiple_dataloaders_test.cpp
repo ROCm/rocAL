@@ -25,9 +25,7 @@ THE SOFTWARE.
 #include <unistd.h>
 
 #include <chrono>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -50,48 +48,39 @@ using namespace cv;
 
 using namespace std::chrono;
 
-int test(const char *path, const char *outName, int rgb, int gpu, int width, int height, int display_all);
+int test(const char *path, const char *outName, int gpu, int display_all);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: rocal_multiple_loaders_test <image-dataset-folder> output_image_name <width> <height> gpu=1/cpu=0 rgb=1/grayscale=0 display_all=0(display_last_only)1(display_all)\n");
+        printf("Usage: multiple_dataloaders_test <numpy-dataset-folder> output_image_name gpu=1/cpu=0 display_all=0(display_last_only)1(display_all)\n");
         return -1;
     }
 
     int argIdx = 0;
     const char *path = argv[++argIdx];
     const char *outName = argv[++argIdx];
-    int width = atoi(argv[++argIdx]);
-    int height = atoi(argv[++argIdx]);
     int display_all = 0;
-    int rgb = 1;  // process color images
     bool gpu = 1;
 
     if (argc >= argIdx + MIN_ARG_COUNT)
         gpu = atoi(argv[++argIdx]);
 
     if (argc >= argIdx + MIN_ARG_COUNT)
-        rgb = atoi(argv[++argIdx]);
-
-    if (argc >= argIdx + MIN_ARG_COUNT)
         display_all = atoi(argv[++argIdx]);
 
-    test(path, outName, rgb, gpu, width, height, display_all);
+    test(path, outName, gpu, display_all);
 
     return 0;
 }
 
-int test(const char *path, const char *outName, int rgb, int gpu, int width, int height, int display_all) {
+int test(const char *path, const char *outName, int gpu, int display_all) {
     size_t num_threads = 1;
     unsigned int inputBatchSize = 2;
-    int decode_max_width = width;
-    int decode_max_height = height;
 
-    std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
+    std::cout << ">>> Running on " << (gpu ? "GPU" : "CPU") << std::endl;
 
-    RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24
-                                              : RocalImageColor::ROCAL_COLOR_U8;
+    RocalImageColor color_format = RocalImageColor::ROCAL_COLOR_RGB24;  // By default setting it to RGB
 
     auto handle = rocalCreate(inputBatchSize,
                               gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0,
@@ -106,21 +95,13 @@ int test(const char *path, const char *outName, int rgb, int gpu, int width, int
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
 
     RocalTensor decoded_output, decoded_output1;
-    // The jpeg file loader can automatically select the best size to decode all images to that size
-    // User can alternatively set the size or change the policy that is used to automatically find the size
 
-    std::cout << ">>>>>>> Running IMAGE READERS" << std::endl;
-    rocalCreateLabelReader(handle, path);
-    if (decode_max_height <= 0 || decode_max_width <= 0) {
-        decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
-        decoded_output1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, true);
-    } else {
-        decoded_output = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-        decoded_output1 = rocalJpegFileSource(handle, path, color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-    }
+    std::cout << ">>>>>>> Running NUMPY READERS" << std::endl;
+    decoded_output = rocalNumpyFileSource(handle, path, num_threads, RocalTensorLayout::ROCAL_NHWC);
+    decoded_output1 = rocalNumpyFileSource(handle, path, num_threads, RocalTensorLayout::ROCAL_NHWC);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
-        std::cout << "JPEG source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
+        std::cout << "Numpy file source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
     }
 
@@ -128,6 +109,7 @@ int test(const char *path, const char *outName, int rgb, int gpu, int width, int
 
     std::cout << ">>>>>>> Running rocalBrightness" << std::endl;
     output = rocalBrightness(handle, decoded_output, true);
+    
     std::cout << ">>>>>>> Running rocalGamma" << std::endl;
     output = rocalGamma(handle, decoded_output1, true);
 
@@ -144,8 +126,8 @@ int test(const char *path, const char *outName, int rgb, int gpu, int width, int
     cv::Mat mat_color;
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
-    printf("Going to process images\n");
-    printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
+    std::cerr << "Going to process images\n";
+    std::cerr << "Remaining images " <<  rocalGetRemainingImages(handle) << "\n";
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
     bool first_run = true;

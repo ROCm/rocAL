@@ -1,5 +1,5 @@
-# rocal_multiple_loaders application
-This application demonstrates a basic usage of rocAL's C API to read image files from disk and decode them using different loaders and apply different augmentation in each pipeline.
+# multiple_dataloaders_test application
+This application demonstrates a basic usage of rocAL's C API to read numpy files from disk and decode them using multiple dataloaders and apply different augmentation in each pipeline.
 
 ## Build Instructions
 
@@ -19,5 +19,5 @@ This application demonstrates a basic usage of rocAL's C API to read image files
   ````
 ### Running the application
   ````
-./rocAL_multiple_loaders_test <image-dataset-folder> output_image_name <width> <height> gpu=1/cpu=0 rgb=1/grayscale=0 display_all=0(display_last_only)1(display_all)
+./multiple_dataloaders_test <numpy-dataset-folder> output_image_name gpu=1/cpu=0 display_all=0(display_last_only)1(display_all)
   ````
