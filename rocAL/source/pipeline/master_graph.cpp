@@ -473,7 +473,7 @@ size_t
 MasterGraph::last_batch_padded_size() {
     size_t max_last_batch_padded_size = 0;
     for (auto loader_module : _loader_modules)
-        max_last_batch_padded_size = (loader_module->last_batch_padded_size() > max_last_batch_padded_size) ? loader_module->last_batch_padded_size() : max_last_batch_padded_size;
+        max_last_batch_padded_size = std::max(loader_module->last_batch_padded_size(), max_last_batch_padded_size);
     return max_last_batch_padded_size;
 }
 
@@ -1868,6 +1868,8 @@ void MasterGraph::feed_external_input(const std::vector<std::string>& input_imag
                                       const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels,
                                       ExternalSourceFileMode mode, RocalTensorlayout layout, bool eos) {
     _external_source_eos = eos;
+    if (!_loader_module)
+        THROW("Loader module does not exist")
     _loader_module->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);
 
     if (is_labels) {

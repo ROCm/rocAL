@@ -200,7 +200,7 @@ class MasterGraph {
     size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
     const int _gpu_id;                                                            //!< Defines the device id used for processing
     pLoaderModule _loader_module;                                                 //!< Keeps the loader module used to feed the input the tensors of the graph
-    std::vector<pLoaderModule> _loader_modules;                                   //!< Keeps the list of loader modules used to feed the input the tensors of the graph
+    std::vector<pLoaderModule> _loader_modules;                                   //!< Keeps the list of loader modules used to feed the input tensors of the graph
     TimingDbg _convert_time, _process_time, _bencode_time;
     const size_t _user_batch_size;                                                //!< Batch size provided by the user
     unsigned _loaders_count = 0;                                                  //!< Number of loader modules present in the pipeline
@@ -212,7 +212,7 @@ class MasterGraph {
     bool _first_run = true;
     bool _processing;                                                             //!< Indicates if internal processing thread should keep processing or not
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
-    int _remaining_count;                                                         //!< Keeps the count of remaining batches yet to be processed
+    int _remaining_count;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
     bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
     bool _output_routine_finished_processing = false;
@@ -420,8 +420,8 @@ template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const s
 #else
     auto node = std::make_shared<AudioLoaderNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->GetLoaderModule();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_id(_loaders_count++);
     _root_nodes.push_back(node);
@@ -437,8 +437,8 @@ template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_n
 #else
     auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->GetLoaderModule();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_id(_loaders_count++);
     _root_nodes.push_back(node);
@@ -459,8 +459,8 @@ inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<
 #else
     auto node = std::make_shared<NumpyLoaderNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_id(_loaders_count++);
     _root_nodes.push_back(node);
@@ -477,8 +477,8 @@ inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const s
 #else
     auto node = std::make_shared<NumpyLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_id(_loaders_count++);
     _root_nodes.push_back(node);
