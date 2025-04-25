@@ -179,10 +179,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     /*>>>>>>>>>>>>>>>> Creating Rocal parameters  <<<<<<<<<<<<<<<<*/
 
     rocalSetSeed(0);
+    auto seed = rocalGetSeed();
+    std::cout << "Seed set for rocAL pipeline: " << seed << "\n";
 
     // Creating uniformly distributed random objects to override some of the default augmentation parameters
     RocalIntParam color_temp_adj = rocalCreateIntParameter(-50);
     RocalIntParam mirror = rocalCreateIntParameter(1);
+    std::vector<int> values = {0, 1};
+    std::vector<double> frequencies = {0.5, 0.5};
+    RocalIntParam rand_prob = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
 
