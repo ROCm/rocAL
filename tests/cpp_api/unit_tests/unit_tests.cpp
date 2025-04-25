@@ -358,6 +358,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
     if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || reader_type == 13) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
+        rocalRelease(handle);
         return -1;
     }
     switch (test_case) {

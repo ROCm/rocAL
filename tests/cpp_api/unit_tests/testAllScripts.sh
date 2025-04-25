@@ -103,9 +103,9 @@ do
         ./unit_tests 3 "$coco_detection_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}_coco_partial" $width $height 40 $device $rgb 0 $display
 
         # tf classification
-        ./unit_tests 4 "$tf_classification_path" "${output_path}Blend_${rgb_name[$rgb]}_${device_name}" $width $height 36 $device $rgb 0 $display
-        ./unit_tests 4 "$tf_classification_path" "${output_path}WarpAffine_${rgb_name[$rgb]}_${device_name}" $width $height 37 $device $rgb 0 $display
-        ./unit_tests 4 "$tf_classification_path" "${output_path}Blur_${rgb_name[$rgb]}_${device_name}" $width $height 35 $device $rgb 0 $display
+        ./unit_tests 4 "$tf_classification_path" "${output_path}Hue_${rgb_name[$rgb]}_${device_name}" $width $height 48 $device $rgb 0 $display
+        ./unit_tests 4 "$tf_classification_path" "${output_path}Saturation_${rgb_name[$rgb]}_${device_name}" $width $height 49 $device $rgb 0 $display
+        ./unit_tests 4 "$tf_classification_path" "${output_path}ColorTwist_${rgb_name[$rgb]}_${device_name}" $width $height 50 $device $rgb 0 $display
 
         # tf detection
         ./unit_tests 5 "$tf_detection_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 40 $device $rgb 0 $display
@@ -115,11 +115,11 @@ do
         # caffe classification
         ./unit_tests 6 "$caffe_classification_path" "${output_path}Rotate_${rgb_name[$rgb]}_${device_name}" $width $height 31 $device $rgb 0 $display
         ./unit_tests 6 "$caffe_classification_path" "${output_path}Brightness_${rgb_name[$rgb]}_${device_name}" $width $height 32 $device $rgb 0 $display
-        ./unit_tests 6 "$caffe_classification_path" "${output_path}Hue_${rgb_name[$rgb]}_${device_name}" $width $height 48 $device $rgb 0 $display
+        ./unit_tests 6 "$caffe_classification_path" "${output_path}Blend_${rgb_name[$rgb]}_${device_name}" $width $height 36 $device $rgb 0 $display
 
         # caffe detection
-        ./unit_tests 7 "$caffe_detection_path" "${output_path}Saturation_${rgb_name[$rgb]}_${device_name}" $width $height 49 $device $rgb 0 $display
-        ./unit_tests 7 "$caffe_detection_path" "${output_path}ColorTwist_${rgb_name[$rgb]}_${device_name}" $width $height 50 $device $rgb 0 $display
+        ./unit_tests 7 "$caffe_detection_path" "${output_path}WarpAffine_${rgb_name[$rgb]}_${device_name}" $width $height 37 $device $rgb 0 $display
+        ./unit_tests 7 "$caffe_detection_path" "${output_path}Blur_${rgb_name[$rgb]}_${device_name}" $width $height 35 $device $rgb 0 $display
         ./unit_tests 7 "$caffe_detection_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 42 $device $rgb 0 $display
 
         # caffe2 classification
