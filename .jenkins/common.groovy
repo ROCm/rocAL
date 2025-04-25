@@ -108,8 +108,8 @@ def runTestCommand (platform, project) {
                     ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1 1 1 1 1 1 1 0 0 0 0 1
                     cd ..
                     chmod a+x ./testScript.sh
-                    ./testScript.sh /data/MIVisionX-data/rocal_data/video_and_sequence_samples/labelled_videos/ 2
-                    ./testScript.sh /data/MIVisionX-data/rocal_data/video_and_sequence_samples/sequence/ 3
+                    ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 2
+                    ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/sequence/ 3
                     cd ../ && mkdir -p image-augmentation-app && cd image-augmentation-app
                     cmake /opt/rocm/share/rocal/test/image_augmentation/
                     make -j
