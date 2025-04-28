@@ -847,8 +847,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext context
  * \ingroup group_rocal_data_loaders
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk
- * \param [in] rocal_color_format The color format the images will be decoded to.
+ * \param [in] color_format The color format the images will be decoded to.
+ * \param [in] shard_id Shard id for this loader
+ * \param [in] shard_count Total shard count
  * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
+ * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
+ * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
  * \param [in] out_width output width
  * \param [in] out_height output_height
  * \param [in] filename_prefix if set loader will only load files with the given prefix name
@@ -856,15 +860,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext context
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawCIFAR10SourceSingleShard(RocalContext context,
-                                                            const char* source_path,
-                                                            RocalImageColor color_format,
-                                                            unsigned shard_id,
-                                                            unsigned shard_count,
-                                                            bool is_output,
-                                                            bool shuffle,
-                                                            bool loop,
-                                                            unsigned out_width, unsigned out_height, const char* filename_prefix = "",
-                                                            RocalShardingInfo rocal_sharding_info = RocalShardingInfo());                                                            
+                                                                       const char* source_path,
+                                                                       RocalImageColor color_format,
+                                                                       unsigned shard_id,
+                                                                       unsigned shard_count,
+                                                                       bool is_output,
+                                                                       bool shuffle,
+                                                                       bool loop,
+                                                                       unsigned out_width, unsigned out_height, const char* filename_prefix = "",
+                                                                       RocalShardingInfo rocal_sharding_info = RocalShardingInfo());                                                            
 
 /*! \brief reset Loaders
  * \ingroup group_rocal_data_loaders

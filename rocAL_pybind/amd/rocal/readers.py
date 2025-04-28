@@ -399,8 +399,20 @@ def numpy(*inputs, file_root='', files=[], num_shards=1, output_layout=types.NON
 
 def cifar10(*inputs, file_root='', num_shards=1, image_type=types.RGB_PLANAR, filename_prefix='data_batch_',
           random_shuffle=False, shard_id=0, stick_to_shard=True, shard_size=-1,
-          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, seed=0):
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True):
+    """!Creates an CIFAR10Reader node for reading data from CIFAR10 binary files.
 
+        @param file_root            Root directory containing CIFAR10 binary files.
+        @param num_shards           Number of shards for data parallelism.
+        @param image_type           Color format of the images.
+        @param filename_prefix      Filename prefix used for reading binary files.
+        @param random_shuffle       Whether to shuffle images randomly.
+        @param shard_id             Shard ID for the current reader.
+        @param stick_to_shard       Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch       If set to True, pads the shard by repeating the last sample.
+
+        @return    Loaded data from the CIFAR10 binary files.
+    """
     Pipeline._current_pipeline._reader = "labelReader"
     # Output
     labels = []

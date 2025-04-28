@@ -56,7 +56,6 @@ Reader::Status CIFAR10DataReader::initialize(ReaderConfig desc) {
     _shard_size = _sharding_info.shard_size;
     _shuffle = desc.shuffle();
     ret = subfolder_reading();
-    // _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle) {
         std::mt19937 rng1(_shard_id);

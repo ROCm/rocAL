@@ -2242,7 +2242,7 @@ rocalRawCIFAR10SourceSingleShard(
     auto context = static_cast<Context*>(p_context);
     try {
         if (out_width == 0 || out_height == 0) {
-            THROW("Invalid video input width and height");
+            THROW("Invalid input width and height");
         } else {
             LOG("User input size " + TOSTR(out_width) + " x " + TOSTR(out_height));
         }
