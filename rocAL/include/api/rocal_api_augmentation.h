@@ -132,6 +132,31 @@ extern "C" RocalTensor ROCAL_API_CALL rocalCropResize(RocalContext context, Roca
                                                       RocalTensorLayout output_layout = ROCAL_NONE,
                                                       RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Fused function which perrforms crop and resize on images.
+ * \ingroup group_rocal_augmentations
+ * \note Accepts U8 and RGB24 input.
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal Tensor
+ * \param [in] dest_width output width
+ * \param [in] dest_height output height
+ * \param [in] is_output True: the output image is needed by user and will be copied to output buffers using the data transfer API calls. False: the output image is just an intermediate image, user is not interested in using it directly. This option allows certain optimizations to be achieved.
+ * \param [in] area Target area for the crop
+ * \param [in] aspect_ratio specifies the aspect ratio of the cropped region
+ * \param [in] x_center_drift Horizontal shift of the crop center from its original position in the input image
+ * \param [in] y_center_drift Vertical shift of the crop center from its original position in the input image
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalRandomResizedCrop(RocalContext context, RocalTensor input,
+                                                      unsigned dest_width, unsigned dest_height,
+                                                      bool is_output,
+                                                      std::vector<float>& area_factor,
+                                                      std::vector<float>& aspect_ratio,
+                                                      RocalResizeInterpolationType interpolation_type,
+                                                      RocalTensorLayout output_layout = ROCAL_NONE,
+                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Fused function which perrforms crop and resize on images with fixed crop coordinates.
  * \ingroup group_rocal_augmentations
  * \note Accepts U8 and RGB24 input.
