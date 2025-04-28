@@ -383,6 +383,50 @@ rocalCropResize(
 }
 
 RocalTensor ROCAL_API_CALL
+rocalRandomResizedCrop(
+    RocalContext p_context,
+    RocalTensor p_input,
+    unsigned dest_width, unsigned dest_height,
+    bool is_output,
+    std::vector<float>& area_factor,
+    std::vector<float>& aspect_ratio,
+    RocalResizeInterpolationType interpolation_type,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        if (dest_width == 0 || dest_height == 0)
+            THROW("rocalRandomResizedCrop node needs to receive non-zero destination dimensions")
+
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+
+        // For the crop resize node, user can create an image with a different width and height
+        output_info.modify_dims_width_and_height(op_tensor_layout, dest_width, dest_height);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+
+        std::shared_ptr<CropResizeNode> random_resize_crop_node = context->master_graph->add_node<CropResizeNode>({input}, {output});
+        random_resize_crop_node->init(area_factor, aspect_ratio, interpolation_type);
+        if (context->master_graph->meta_data_graph())
+            context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(random_resize_crop_node);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
 rocalCropResizeFixed(
     RocalContext p_context,
     RocalTensor p_input,
