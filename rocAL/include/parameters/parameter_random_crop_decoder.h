@@ -23,7 +23,8 @@ THE SOFTWARE.
 #pragma once
 #include <random>
 #include <thread>
-#include "parameters/parameter_crop.h"
+
+#include "parameters/parameter_factory.h"
 
 struct CropWindow {
     unsigned x, y, H, W;
@@ -41,24 +42,16 @@ typedef std::vector<size_t> Shape;
 using AspectRatioRange = std::pair<float, float>;
 using AreaRange = std::pair<float, float>;
 
-class RocalRandomCropDecParam : public CropParam {
+class RocalRandomCropDecParam {
    public:
-    RocalRandomCropDecParam(
+    explicit RocalRandomCropDecParam(
         AspectRatioRange aspect_ratio_range = {3.0f / 4, 4.0f / 3},
         AreaRange area_range = {0.08, 1},
         int64_t seed = time(0),
         int num_attempts = 10,
-        int batch_size = 256) : CropParam(batch_size) {
-        _aspect_ratio_range = aspect_ratio_range;
-        _aspect_ratio_log_dis = std::uniform_real_distribution<float>(std::log(aspect_ratio_range.first), std::log(aspect_ratio_range.second));
-        _area_dis = std::uniform_real_distribution<float>(area_range.first, area_range.second);
-        _num_attempts = num_attempts;
-        _batch_size = batch_size;
-        _seeds.resize(_batch_size);
-    }
+        int batch_size = 256);
     CropWindow generate_crop_window(const Shape& shape, const int instance);
     void generate_random_seeds();
-    void update_array() override;
 
    private:
     CropWindow generate_crop_window_implementation(const Shape& shape);
