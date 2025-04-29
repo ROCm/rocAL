@@ -843,7 +843,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext context
                                                             unsigned out_width, unsigned out_height, const char* filename_prefix = "",
                                                             bool loop = false);
 
-/*! \brief Creates CIFAR10 raw data reader and loader. It allocates the resources and objects required to read raw data stored on the file systems.
+/*! \brief Creates CIFAR10 raw data reader and loader. It allocates the resources and objects required to read raw data stored on the file systems. It accepts external sharding information to load a singe shard only.
  * \ingroup group_rocal_data_loaders
  * \param [in] context Rocal context
  * \param [in] source_path A NULL terminated char string pointing to the location on the disk

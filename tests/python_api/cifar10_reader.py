@@ -1,14 +1,13 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import random
 
 from amd.rocal.pipeline import Pipeline
 from amd.rocal.plugin.generic import ROCALGenericIterator
 import amd.rocal.fn as fn
-import amd.rocal.types as types
 import sys
 import os
+import random
 
 def draw_patches(img, idx):
     # image is expected as a numpy array

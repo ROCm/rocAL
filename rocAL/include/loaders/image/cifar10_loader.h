@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -77,7 +77,6 @@ class CIFAR10Loader : public LoaderModule {
     size_t _prefetch_queue_depth;
     TimingDbg _file_load_time, _swap_handle_time;
     size_t _loader_idx;
-    size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();
     bool _is_initialized;
     bool _stopped = false;
