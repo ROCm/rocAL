@@ -43,7 +43,7 @@ def main():
     pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=rocal_cpu)
 
     with pipeline:
-        cifar10_reader_output = fn.readers.cifar10(file_root=data_path, shard_id=local_rank, num_shards=8)
+        cifar10_reader_output = fn.readers.cifar10(file_root=data_path, shard_id=local_rank, num_shards=world_size)
         pipeline.set_outputs(cifar10_reader_output)
 
     pipeline.build()
