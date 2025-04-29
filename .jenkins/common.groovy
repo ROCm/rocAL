@@ -106,6 +106,7 @@ def runTestCommand (platform, project) {
                     cmake ..
                     make -j
                     ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 0 0 1 3 3 1 1 1 0 1280 720 1 1 0 0 1
+                    ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
                     cd ..
                     chmod a+x ./testScript.sh
                     ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 2

@@ -186,15 +186,15 @@ do
         ./unit_tests 12 "$webdataset_tar_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_notsmaller_web_dataset" $width $height 0 $device $rgb 0 $display 5 2
 
         # code coverage tests
-        ./unit_tests 2 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}BrightnessRandom_${rgb_name[$rgb]}_${device_name}" $width $height 3 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}GammaRandom_${rgb_name[$rgb]}_${device_name}" $width $height 4 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}ContrastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 5 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}FlipRandom_${rgb_name[$rgb]}_${device_name}" $width $height 6 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}BlurRandom_${rgb_name[$rgb]}_${device_name}" $width $height 7 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}BlendRandom_${rgb_name[$rgb]}_${device_name}" $width $height 8 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}WarpAffineRandom_${rgb_name[$rgb]}_${device_name}" $width $height 9 $device $rgb 1 $display
+        ./unit_tests 14 "$image_path" "${output_path}BrightnessRandom_${rgb_name[$rgb]}_${device_name}" $width $height 3 $device $rgb 1 $display
+        ./unit_tests 15 "$coco_detection_path" "${output_path}FlipRandom_${rgb_name[$rgb]}_${device_name}" $width $height 6 $device $rgb 1 $display
+        ./unit_tests 16 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
+        ./unit_tests 16 "$coco_detection_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
+        ./unit_tests 17 "$caffe_classification_path" "${output_path}GammaRandom_${rgb_name[$rgb]}_${device_name}" $width $height 4 $device $rgb 1 $display
+        ./unit_tests 18 "$caffe2_classification_path" "${output_path}ContrastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 5 $device $rgb 1 $display
+        ./unit_tests 19 "$mxnet_path" "${output_path}BlurRandom_${rgb_name[$rgb]}_${device_name}" $width $height 7 $device $rgb 1 $display
+        ./unit_tests 20 "$numpy_data_path" "${output_path}BlendRandom_${rgb_name[$rgb]}_${device_name}" $width $height 8 $device $rgb 1 $display
+        ./unit_tests 21 "$image_path" "${output_path}WarpAffineRandom_${rgb_name[$rgb]}_${device_name}" $width $height 9 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 13 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" $width $height 14 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 15 $device $rgb 1 $display
