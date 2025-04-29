@@ -378,6 +378,8 @@ void MasterGraph::release() {
 
     if (_graph != nullptr)
         _graph->release();
+
+    // Release the graph created for each loader module, in case of multiple loaders
     for (auto& graph : _graphs) {
         if (graph != nullptr)
             graph->release();
@@ -1067,7 +1069,6 @@ void MasterGraph::output_routine_multiple_loaders() {
             if (!_processing)
                 break;
             
-
             if (!_processing)
                 break;
 

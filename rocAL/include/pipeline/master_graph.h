@@ -195,7 +195,7 @@ class MasterGraph {
     DeviceManager _device;                                                        //!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
-    std::vector<std::shared_ptr<Graph>> _graphs;                                 //!<Keeps a list of the Graph instances, a graph is created for each loader
+    std::vector<std::shared_ptr<Graph>> _graphs;                                  //!< Keeps a list of the Graph instances, a graph is created for each loader
     RocalAffinity _affinity;
     size_t _cpu_num_threads;                                                      //!< Defines the number of CPU threads used for processing
     const int _gpu_id;                                                            //!< Defines the device id used for processing
