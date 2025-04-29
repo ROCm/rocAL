@@ -75,7 +75,6 @@ from rocal_pybind.types import SOFTWARE_DECODE
 #     RocalDecodeDevice
 from rocal_pybind.types import DECODER_TJPEG
 from rocal_pybind.types import DECODER_OPENCV
-from rocal_pybind.types import DECODER_HW_JEPG
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
 from rocal_pybind.types import DECODER_AUDIO_GENERIC
@@ -166,7 +165,6 @@ _known_types = {
 
     DECODER_TJPEG: ("DECODER_TJPEG", DECODER_TJPEG),
     DECODER_OPENCV: ("DECODER_OPENCV", DECODER_OPENCV),
-    DECODER_HW_JEPG: ("DECODER_HW_JEPG", DECODER_HW_JEPG),
     DECODER_VIDEO_FFMPEG_SW: ("DECODER_VIDEO_FFMPEG_SW", DECODER_VIDEO_FFMPEG_SW),
     DECODER_VIDEO_FFMPEG_HW: ("DECODER_VIDEO_FFMPEG_HW", DECODER_VIDEO_FFMPEG_HW),
     DECODER_AUDIO_GENERIC: ("DECODER_AUDIO_GENERIC", DECODER_AUDIO_GENERIC),
