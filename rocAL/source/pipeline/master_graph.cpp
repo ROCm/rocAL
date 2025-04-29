@@ -486,7 +486,8 @@ MasterGraph::timing() {
     // Accumulate the timings from each loader
     for (auto loader_module : _loader_modules) {
         Timing loader_time = loader_module->timing();
-        t.read_time = (t.read_time > loader_time.read_time) ? t.read_time : loader_time.read_time;
+        t.decode_time += loader_time.decode_time;
+        t.read_time += loader_time.read_time;
         t.process_time += loader_time.process_time;
     }
     t.process_time += _process_time.get_timing();
