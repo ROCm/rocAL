@@ -229,9 +229,15 @@ enum RocalTensorLayout {
      * Spectrogram Layout TF
      */
     ROCAL_NTF = 6,
+    /*! \brief AMD ROCAL_NDHWC
+     */
+    ROCAL_NDHWC = 7,
+    /*! \brief AMD ROCAL_NCDHW
+     */
+    ROCAL_NCDHW = 8,
     /*! \brief AMD ROCAL_NONE
      */
-    ROCAL_NONE = 7  // Layout for generic tensors (Non-Image or Non-Video)
+    ROCAL_NONE = 9  // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 /*! \brief rocAL Tensor Output Type enum

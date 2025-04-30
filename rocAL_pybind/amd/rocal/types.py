@@ -64,6 +64,8 @@ from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
 from rocal_pybind.types import NHW
+from rocal_pybind.types import NDHWC
+from rocal_pybind.types import NCDHW
 #     RocalSpectrogramLayout
 from rocal_pybind.types import NFT
 from rocal_pybind.types import NTF
@@ -155,6 +157,8 @@ _known_types = {
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
     NHW: ("NHW", NHW),
+    NDHWC: ("NDHWC", NDHWC),
+    NCDHW: ("NCDHW", NCDHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
