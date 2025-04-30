@@ -311,9 +311,10 @@ int main(int argc, const char **argv) {
             return -1;
         }
 
+        output_tensor_list = rocalGetOutputTensors(handle);
+
         if (!display) continue;
         // Dump the output image
-        output_tensor_list = rocalGetOutputTensors(handle);
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
