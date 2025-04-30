@@ -1146,7 +1146,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("transpose", &rocalTranspose,
           py::return_value_policy::reference);
-    m.def("tensorLog1p", &rocalTensorLog1p,
+    m.def("log1p", &rocalLog1p,
     py::return_value_policy::reference);
 }
 }  // namespace rocal

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,21 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "augmentations/arithmetic_augmentations/node_tensor_log1p.h"
+#pragma once
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
+#include "rocal_api_types.h"
 
-#include <vx_ext_rpp.h>
+class Log1pNode : public Node {
+   public:
+    Log1pNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    Log1pNode() = delete;
 
-#include "pipeline/exception.h"
-
-TensorLog1pNode::TensorLog1pNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
-
-void TensorLog1pNode::create_node() {
-    if (_node)
-        return;
-    int input_layout = static_cast<int>(_inputs[0]->info().layout());
-    vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
-    _node = vxExtRppTensorLog1p(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), input_layout_vx);
-    vx_status status;
-    if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the (vxExtRppTensorLog1p) node failed: " + TOSTR(status))
-}
+   protected:
+    void create_node() override;
+    void update_node() override {};
+};

@@ -2656,7 +2656,7 @@ rocalTranspose(
     return output;
 }
 
-RocalTensor rocalTensorLog1p(RocalContext p_context,
+RocalTensor rocalLog1p(RocalContext p_context,
                              RocalTensor p_input,
                              bool is_output) {
     Tensor* output = nullptr;
@@ -2675,7 +2675,7 @@ RocalTensor rocalTensorLog1p(RocalContext p_context,
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<TensorLog1pNode>({input}, {output});
+        context->master_graph->add_node<Log1pNode>({input}, {output});
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

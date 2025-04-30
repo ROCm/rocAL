@@ -1246,5 +1246,5 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     Computes the natural logarithm of 1 + input element-wise.
     """
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
-    log_output = b.tensorLog1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return log_output

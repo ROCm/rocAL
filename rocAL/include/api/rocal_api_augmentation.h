@@ -1367,10 +1367,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTranspose(RocalContext context, Rocal
 /*! \brief Computes the natural logarithm of 1 + input element-wise and returns the output
  * \param [in] p_context Rocal context
  * \param [in] p_input Input Rocal tensor
- * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] is_output is the output tensor part of the graph output
  * \return RocalTensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalTensorLog1p(RocalContext p_context,
+extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
 
