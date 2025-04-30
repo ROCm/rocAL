@@ -258,11 +258,11 @@ int main(int argc, const char **argv) {
             if (mode == 0) {
                 input_images.push_back(file_names.back());
                 file_names.pop_back();
-                if ((file_names.size()) == 0) {
-                    eos = true;
-                }
                 label_buffer.push_back(labels.back());
                 labels.pop_back();
+                if ((file_names.size()) < input_batch_size) {
+                    eos = true;
+                }
             } else {
                 if (mode == 1) {
                     input_batch_buffer.push_back(input_buffer.back());
@@ -281,12 +281,12 @@ int main(int argc, const char **argv) {
                     label_buffer.push_back(labels.back());
                     labels.pop_back();
                 }
-                if ((file_names.size()) == 0 || input_buffer.size() == 0) {
+                if ((file_names.size()) < input_batch_size || input_buffer.size() < input_batch_size) {
                     eos = true;
                 }
             }
         }
-        if (index + 1 <= (total_images / input_batch_size)) {
+        if (index + 1 <= std::floor(total_images / input_batch_size)) {
             std::cerr << "\n Processing Batch: " << index << "\n Mode: " << mode;
             if (mode == 0) {
                 rocalExternalSourceFeedInput(handle, input_images, set_labels, {}, ROI_xywh,
@@ -392,7 +392,7 @@ int main(int argc, const char **argv) {
                     int *labels_ptr = static_cast<int *>(label_buffer.data());
                     for (size_t i = 0; i < label_buffer.size(); i++) {
                         labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
-                        std::cerr << "\nLabels[" << i << "]: " << labels_ptr[i] << "\t";
+                        std::cerr << "\nLabels[" << i << "]: " << *labels_ptr << "\t";
                         labels_ptr++;
                     }
                 }
