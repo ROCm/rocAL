@@ -130,6 +130,12 @@ int main(int argc, const char **argv) {
         file_path.append(_entity->d_name);
         file_names.push_back(file_path);
     }
+
+    if (file_names.empty()) {
+        std::cerr << "[ERR] No files detected in the given path, Pass a folder with images\n";
+        return -1;
+    }
+
     if (mode != 0) {
         if (mode == 1) {
             // Mode 1 is Raw compressed
