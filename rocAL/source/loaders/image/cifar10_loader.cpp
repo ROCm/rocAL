@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "vx_ext_amd.h"
 
+#define NEAREST_MULTIPLE_OF_8(size) (((size) + 8) & ~7)
+
 CIFAR10Loader::CIFAR10Loader(void* dev_resources) : _circ_buff(dev_resources),
                                                             _file_load_time("file load time", DBG_TIMING),
                                                             _swap_handle_time("Swap_handle_time", DBG_TIMING) {
@@ -46,7 +48,7 @@ CIFAR10Loader::~CIFAR10Loader() {
 
 void CIFAR10Loader::set_prefetch_queue_depth(size_t prefetch_queue_depth) {
     if (prefetch_queue_depth <= 0)
-        THROW("Prefetch quque depth value cannot be zero or negative");
+        THROW("Prefetch queue depth value cannot be zero or negative");
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
@@ -105,7 +107,8 @@ CIFAR10Loader::load_next() {
 
 void CIFAR10Loader::set_output(Tensor* output_tensor) {
     _output_tensor = output_tensor;
-    _output_mem_size = ((_output_tensor->info().data_size() + 8) & ~7);
+    // Align the output memory size to the nearest multiple of 8 bytes for efficient memory access
+    _output_mem_size = NEAREST_MULTIPLE_OF_8(_output_tensor->info().data_size());
 }
 
 void CIFAR10Loader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size) {

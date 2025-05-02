@@ -50,7 +50,7 @@ class CIFAR10Loader : public LoaderModule {
     void set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> batch_crop_coords);
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {
-        THROW("external source reader is not supported for numpy loader")
+        THROW("external source reader is not supported for CIFAR10 loader")
     };
     size_t last_batch_padded_size() override;
 

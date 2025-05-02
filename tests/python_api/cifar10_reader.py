@@ -18,7 +18,7 @@ def draw_patches(img, idx):
                 "_" + "train" + ".png", image)
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print('Please pass cifar10_folder cpu/gpu batch_size')
         exit(0)
     try:
