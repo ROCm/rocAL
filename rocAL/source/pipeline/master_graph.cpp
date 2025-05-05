@@ -1069,9 +1069,6 @@ void MasterGraph::output_routine_multiple_loaders() {
 
             if (!_processing)
                 break;
-            
-            if (!_processing)
-                break;
 
             // Swap handles on the output tensor, so that new processed tensor will be written to the a new buffer
             for (size_t idx = 0; idx < _internal_tensor_list.size(); idx++)
