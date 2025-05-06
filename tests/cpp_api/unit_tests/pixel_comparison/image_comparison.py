@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -94,7 +94,7 @@ def main():
             golden_file_path = aug_name
 
         # For randomized augmentation
-        if file_name_split[0] in randomized_augmentation:
+        if file_name_split[0] in randomized_augmentation or "Random" in file_name_split[0]:
             total_case_count = total_case_count + 1
             augmentation_name = aug_name.split(".")[0]
             logging.info("Running %s", augmentation_name)

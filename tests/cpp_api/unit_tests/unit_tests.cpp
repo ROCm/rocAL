@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -179,10 +179,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     /*>>>>>>>>>>>>>>>> Creating Rocal parameters  <<<<<<<<<<<<<<<<*/
 
     rocalSetSeed(0);
+    auto seed = rocalGetSeed();
+    std::cout << "Seed set for rocAL pipeline: " << seed << "\n";
 
     // Creating uniformly distributed random objects to override some of the default augmentation parameters
     RocalIntParam color_temp_adj = rocalCreateIntParameter(-50);
     RocalIntParam mirror = rocalCreateIntParameter(1);
+    std::vector<int> values = {0, 1};
+    std::vector<double> frequencies = {0.5, 0.5};
+    RocalIntParam rand_prob = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
 
@@ -333,6 +338,85 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             pipeline_type = 5;
             decoded_output = rocalNumpyFileSource(handle, path, num_threads, RocalTensorLayout::ROCAL_NHWC);
         } break;
+        case 14:  // image_partial decode
+        {
+            std::cout << "Running PARTIAL DECODE - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateLabelReader(handle, path);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            decoded_output = rocalFusedJpegCropSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 15:  // coco detection
+        {
+            std::cout << "Running COCO READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 2;
+            if (strcmp(rocal_data_path.c_str(), "") == 0) {
+                std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+                exit(0);
+            }
+            // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
+            rocalCreateCOCOReader(handle, json_path.c_str(), true);
+            if (decode_max_height <= 0 || decode_max_width <= 0)
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
+            else
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 16:  // coco detection partial
+        {
+            std::cout << "Running COCO READER PARTIAL - SINGLE SHARD" << std::endl;
+            pipeline_type = 2;
+            if (strcmp(rocal_data_path.c_str(), "") == 0) {
+                std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+                exit(0);
+            }
+            // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
+            rocalCreateCOCOReader(handle, json_path.c_str(), true);
+#if defined RANDOMBBOXCROP
+            rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
+#endif
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            decoded_output = rocalJpegCOCOFileSourcePartialSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 17:  // caffe classification
+        {
+            std::cout << "Running CAFFE CLASSIFICATION READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateCaffeLMDBLabelReader(handle, path);
+            decoded_output = rocalJpegCaffeLMDBRecordSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 18:  // caffe2 classification
+        {
+            std::cout << "Running CAFFE2 CLASSIFICATION READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateCaffe2LMDBLabelReader(handle, path, true);
+            decoded_output = rocalJpegCaffe2LMDBRecordSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 19:  // mxnet reader
+        {
+            std::cout << "Running MXNET READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateMXNetReader(handle, path, true);
+            decoded_output = rocalMXNetRecordSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 20:  // Numpy reader
+        {
+            std::cout << "Running Numpy reader - SINGLE SHARD" << std::endl;
+            pipeline_type = 5;
+            decoded_output = rocalNumpyFileSourceSingleShard(handle, path, RocalTensorLayout::ROCAL_NHWC, {}, false, false, false, 0, 1);
+        } break;
+        case 21: {
+            std::cout << "Running IMAGE READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateLabelReader(handle, path);
+            if (decode_max_height <= 0 || decode_max_width <= 0)
+                decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, true);
+            else
+                decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -356,8 +440,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || reader_type == 13) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || reader_type == 13 || reader_type == 21) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
+        rocalRelease(handle);
         return -1;
     }
     switch (test_case) {
@@ -619,6 +704,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             // Transpose permutation needs to be changed according to input layout
             std::vector<unsigned> perm = rgb ? std::vector<unsigned>{1, 0, 2} : std::vector<unsigned>{0, 2, 1};
             output = rocalTranspose(handle, input, perm, true, output_tensor_layout);
+        } break;
+        case 59: {
+            std::cout << "Running rocalRandomCrop" << std::endl;
+            output = rocalRandomCrop(handle, input, true);
         } break;
 
         default:
