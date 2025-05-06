@@ -290,6 +290,11 @@ MasterGraph::build() {
     _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #endif
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
+    
+    // Check if atleast one loader module is created
+    if (_loader_modules.size() < 1)
+        THROW("Atleast one loader needs to be created in the pipeline")
+
     if (_loaders_count > 1) {
         _meta_data_reader = nullptr; // Disable metadata reader for multiple loaders pipeline, support not enabled
         create_multiple_graphs();
