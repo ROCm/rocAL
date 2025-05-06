@@ -269,10 +269,10 @@ void MasterGraph::create_multiple_graphs() {
         // Any tensor not yet created can be created as virtual tensor
         for (auto &tensor : node->output())
             if (tensor->info().type() == TensorInfo::Type::UNKNOWN) {
-                tensor->create_virtual(_context, _graphs[node->get_id()]->get());
+                tensor->create_virtual(_context, _graphs[node->get_graph_id()]->get());
                 _internal_tensors.push_back(tensor);
             }
-        node->create(_graphs[node->get_id()]);
+        node->create(_graphs[node->get_graph_id()]);
     }
 
     for (auto &graph : _graphs)
