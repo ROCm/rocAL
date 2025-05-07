@@ -709,6 +709,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalRandomCrop" << std::endl;
             output = rocalRandomCrop(handle, input, true);
         } break;
+        case 60: {
+            std::cout << "Running rocalROIResize" << std::endl;
+            output = rocalROIResize(handle, input, 384, 384, true, 416, 416);
+        } break;
 
         default:
             std::cout << "Not a valid option! Exiting!\n";
