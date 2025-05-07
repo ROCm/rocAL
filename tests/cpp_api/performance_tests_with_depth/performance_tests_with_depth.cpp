@@ -268,11 +268,11 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
             }
         } break;
         case 14: {
-            std::cout << "Running rocalBlurFixed" << std::endl;
+            std::cout << "Running rocalBlur" << std::endl;
             for (int j = 0; j < batch_size; j++) {
                 tensor0 = input_image;
                 for (int k = 0; k < graph_depth; k++) {
-                    tensor0 = rocalBlurFixed(handle, tensor0, 17, true);
+                    tensor0 = rocalBlur(handle, tensor0, true);
                 }
             }
         } break;
@@ -449,7 +449,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
             for (int j = 0; j < batch_size; j++) {
                 tensor0 = input_image;
                 for (int k = 0; k < graph_depth; k++) {
-                    tensor0 = rocalFogFixed(handle, tensor0, 2.5, true);
+                    tensor0 = rocalFogFixed(handle, tensor0, 0.1, 0.3, true);
                 }
             }
         } break;

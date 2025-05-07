@@ -174,7 +174,7 @@ int main(int argc, const char** argv) {
     // Creating successive blur nodes to simulate a deep branch of augmentations
     RocalTensor tensor2 = rocalCropResize(handle, tensor0, resize_w, resize_h, false, rand_crop_area);
     for (int i = 0; i < aug_depth; i++) {
-        tensor2 = rocalBlurFixed(handle, tensor2, 17, (i == (aug_depth - 1)) ? true : false);
+        tensor2 = rocalBlur(handle, tensor2, (i == (aug_depth - 1)) ? true : false);
     }
     // Commenting few augmentations out until tensor support is added in rpp
     // RocalTensor tensor4 = rocalColorTemp(handle, tensor0, true, color_temp_adj);

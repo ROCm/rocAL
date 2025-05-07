@@ -29,16 +29,16 @@ class LensCorrectionNode : public Node {
    public:
     LensCorrectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     LensCorrectionNode() = delete;
-    void init(float strength, float zoom);
-    void init(FloatParam *strength, FloatParam *zoom);
+    void init(std::vector<CameraMatrix> camera_matrix, std::vector<DistortionCoeffs> distortion_coeffs);
+    // void init(FloatParam *strength, FloatParam *zoom);
 
    protected:
     void create_node() override;
-    void update_node() override;
+    void update_node() override {};
 
    private:
-    ParameterVX<float> _strength;
-    ParameterVX<float> _zoom;
-    constexpr static float STRENGTH_RANGE[2] = {0.05, 3.0};
-    constexpr static float ZOOM_RANGE[2] = {1.0, 1.3};
+    std::vector<std::vector<float>> _camera_matrix;
+    std::vector<std::vector<float>> _distortion_coeffs;
+    vx_array _camera_matrix_vx_array, _distortion_coeffs_vx_array;
+
 };

@@ -366,24 +366,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlipFixed(RocalContext context, Rocal
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalBlur(RocalContext context, RocalTensor input,
                                                 bool is_output,
-                                                RocalIntParam kernel_size = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
-/*! \brief Applies blur effect to images with fixed parameters.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] kernel_size size of the kernel used for blurring
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalBlurFixed(RocalContext context, RocalTensor input,
-                                                     int kernel_size, bool is_output,
-                                                     RocalTensorLayout output_layout = ROCAL_NONE,
-                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Blends two input images given the ratio: output = input1*ratio + input2*(1-ratio)
  * \ingroup group_rocal_augmentations
@@ -638,9 +622,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnowFixed(RocalContext context, Rocal
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRain(RocalContext context, RocalTensor input,
                                                 bool is_output,
-                                                RocalFloatParam rain_value = NULL,
-                                                RocalIntParam rain_width = NULL,
-                                                RocalIntParam rain_height = NULL,
+                                                float rain_percentage,
+                                                int rain_width,
+                                                int rain_height,
+                                                float rain_slant_angle,
                                                 RocalFloatParam rain_transparency = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
@@ -659,9 +644,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRain(RocalContext context, RocalTenso
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRainFixed(RocalContext context, RocalTensor input,
-                                                     float rain_value,
+                                                     float rain_percentage,
                                                      int rain_width,
                                                      int rain_height,
+                                                     float rain_slant_angle,
                                                      float rain_transparency,
                                                      bool is_output,
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
@@ -710,7 +696,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTempFixed(RocalContext context, 
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFog(RocalContext context, RocalTensor input,
                                                bool is_output,
-                                               RocalFloatParam fog_value = NULL,
+                                               RocalFloatParam intensity_value = NULL,
+                                               RocalFloatParam gray_value = NULL,
                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -725,26 +712,26 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFog(RocalContext context, RocalTensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFogFixed(RocalContext context, RocalTensor input,
-                                                    float fog_value, bool is_output,
+                                                    float fog_value, float gray_value, bool is_output,
                                                     RocalTensorLayout output_layout = ROCAL_NONE,
                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-/*! \brief Applies lens correction effect on images.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] strength parameter representing the strength of the lens correction.
- * \param [in] zoom parameter representing the zoom factor of the lens correction.
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(RocalContext context, RocalTensor input, bool is_output,
-                                                          RocalFloatParam strength = NULL,
-                                                          RocalFloatParam zoom = NULL,
-                                                          RocalTensorLayout output_layout = ROCAL_NONE,
-                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+// /*! \brief Applies lens correction effect on images.
+//  * \ingroup group_rocal_augmentations
+//  * \param [in] context Rocal context
+//  * \param [in] input Input Rocal tensor
+//  * \param [in] is_output is the output tensor part of the graph output
+//  * \param [in] strength parameter representing the strength of the lens correction.
+//  * \param [in] zoom parameter representing the zoom factor of the lens correction.
+//  * \param [in] output_layout the layout of the output tensor
+//  * \param [in] output_datatype the data type of the output tensor
+//  * \return RocalTensor
+//  */
+// extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(RocalContext context, RocalTensor input, bool is_output,
+//                                                           RocalFloatParam strength = NULL,
+//                                                           RocalFloatParam zoom = NULL,
+//                                                           RocalTensorLayout output_layout = ROCAL_NONE,
+//                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Applies lens correction effect on images with fixed parameters.
  * \ingroup group_rocal_augmentations
@@ -757,9 +744,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(RocalContext context, 
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrectionFixed(RocalContext context, RocalTensor input,
-                                                               float strength, float zoom, bool is_output,
-                                                               RocalTensorLayout output_layout = ROCAL_NONE,
+extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(RocalContext context, RocalTensor input,
+                                                               std::vector<CameraMatrix> camera_matrix, std::vector<DistortionCoeffs> distortion_coeffs,
+                                                               bool is_output, RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Applies pixelate effect on images.

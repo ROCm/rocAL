@@ -121,7 +121,7 @@ int main(int argc, const char **argv) {
     RocalTensor input2 = rocalCropResize(handle, decoded_output, resize_w, resize_h, false, rand_crop_area);;
     for(int i = 0 ; i < aug_depth; i++)
     {
-        input2 = rocalBlurFixed(handle, input2, 17.25, (i == (aug_depth -1)) ? true:false );
+        input2 = rocalBlur(handle, input2, (i == (aug_depth -1)) ? true:false );
     }
 
 
