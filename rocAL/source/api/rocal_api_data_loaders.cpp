@@ -154,7 +154,7 @@ auto convert_color_format_sequence = [](RocalImageColor color_format, size_t n, 
 auto convert_decoder_mode = [](RocalDecodeDevice decode_mode) {
     switch (decode_mode) {
         case ROCAL_HW_DECODE:
-            return DecodeMode::HW_VAAPI;
+            return DecodeMode::ROCDECODE;
 
         case ROCAL_SW_DECODE:
             return DecodeMode::CPU;
@@ -168,8 +168,6 @@ auto convert_video_decoder_type = [](RocalDecoderType decoder_type) {
     switch (decoder_type) {
         case ROCAL_DECODER_VIDEO_FFMPEG_SW:
             return DecoderType::FFMPEG_SW_DECODE;
-        case ROCAL_DECODER_VIDEO_FFMPEG_HW:
-            return DecoderType::FFMPEG_HW_DECODE;
         case ROCAL_DECODER_VIDEO_ROCDECODE:
             return DecoderType::ROCDEC_VIDEO_DECODE;
         default:

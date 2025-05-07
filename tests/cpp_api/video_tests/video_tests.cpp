@@ -131,8 +131,6 @@ int main(int argc, const char **argv) {
     auto decoder_mode = ((decoder_type > 0) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE);
     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW;
     if (decoder_type == 1) {
-        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_HW;
-    } else if (decoder_type == 2) {
         rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_ROCDECODE;
         if (processing_device != 1) {
             std::cerr << "Setting the processing device to GPU for rocDecode decoder\n";
