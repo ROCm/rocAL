@@ -417,6 +417,34 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             else
                 decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
+        case 22:  // caffe classification
+        {
+            std::cout << "Running CAFFE CLASSIFICATION PARTIAL READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateCaffeLMDBLabelReader(handle, path);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            decoded_output = rocalJpegCaffeLMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 23:  // caffe2 classification
+        {
+            std::cout << "Running CAFFE2 CLASSIFICATION PARTIAL READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateCaffe2LMDBLabelReader(handle, path, true);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            decoded_output = rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 24:  // tf classification
+        {
+            std::cout << "Running TF CLASSIFICATION READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            char key1[25] = "image/encoded";
+            char key2[25] = "image/class/label";
+            char key8[25] = "image/filename";
+            rocalCreateTFReader(handle, path, true, key2, key8);
+            decoded_output = rocalJpegTFRecordSourceSingleShard(handle, path, color_format, 0, 1, false, key1, key8, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;

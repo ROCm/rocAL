@@ -201,6 +201,26 @@ int main(int argc, const char **argv) {
             input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
             break;
         }
+        case 4: {
+            std::cout << "\nSEQUENCE READER - Single Shard\n";
+            enable_framenumbers = enable_timestamps = 0;
+            input1 = rocalSequenceReaderSingleShard(handle, source_path, color_format, 0, 1, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            break;
+        }
+        case 5: {
+            std::cout << "\nVIDEO READER RESIZE - SINGLE SHARD\n";
+            if (resize_width == 0 || resize_height == 0) {
+                std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
+                return -1;
+            }
+            input1 = rocalVideoFileResizeSingleShard(handle, source_path, color_format, decoder_mode, 0, 1, sequence_length, resize_width, resize_height, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
+            break;
+        }
+        case 6: {
+            std::cout << "\nVIDEO READER - SINGLE SHARD\n";
+            input1 = rocalVideoFileSourceSingleShard(handle, source_path, color_format, decoder_mode, 0, 1, sequence_length, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
+            break;
+        }
     }
     if (enable_sequence_rearrange) {
         std::cout << "\nENABLE SEQUENCE REARRANGE\n";
