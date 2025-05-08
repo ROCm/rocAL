@@ -198,7 +198,7 @@ do
         ./unit_tests 22 "$caffe_classification_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 13 $device $rgb 1 $display
         ./unit_tests 23 "$caffe2_classification_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" $width $height 14 $device $rgb 1 $display
         ./unit_tests 24 "$tf_classification_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 15 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}FogRandom_${rgb_name[$rgb]}_${device_name}" $width $height 17 $device $rgb 1 $display
+        ./unit_tests 25 "$webdataset_tar_path" "${output_path}FogRandom_${rgb_name[$rgb]}_${device_name}" $width $height 17 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}LensCorrectionRandom_${rgb_name[$rgb]}_${device_name}" $width $height 18 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}ExposureRandom_${rgb_name[$rgb]}_${device_name}" $width $height 20 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}HueRandom_${rgb_name[$rgb]}_${device_name}" $width $height 21 $device $rgb 1 $display

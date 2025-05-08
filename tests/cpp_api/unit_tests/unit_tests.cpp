@@ -452,6 +452,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateTFReader(handle, path, true, key2, key8);
             decoded_output = rocalJpegTFRecordSourceSingleShard(handle, path, color_format, 0, 1, false, key1, key8, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
+        case 25:  // web_dataset reader
+        {
+            std::cout << "Running WEB DATASET READER - WITH IDX FILE" << std::endl;
+            pipeline_type = 4;
+            std::vector<std::set<std::string>> extensions = {
+                {"JPEG", "cls"},
+            };
+            std::string idx_file_path = rocal_data_path + "/rocal_data/web_dataset/idx_file/";
+            rocalCreateWebDatasetReader(handle, path, idx_file_path.c_str(), extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
+            decoded_output = rocalWebDatasetSourceSingleShard(handle, path, idx_file_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
