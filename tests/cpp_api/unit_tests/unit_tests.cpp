@@ -188,7 +188,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::vector<int> values = {0, 1};
     std::vector<double> frequencies = {0.5, 0.5};
     RocalIntParam rand_prob = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
+    auto status = rocalUpdateIntRand(values.data(), frequencies.data(), values.size(), rand_prob);
 
+    RocalFloatParam float_param = rocalCreateFloatParameter(1.0f);
+    status = rocalUpdateFloatParameter(2.0f, float_param);
+    auto float_param_value = rocalGetFloatValue(float_param);
+
+    RocalIntParam uniform_int_param = rocalCreateIntUniformRand(0, 1);
+    status = rocalUpdateIntUniformRand(0, 2, uniform_int_param);
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
 
 #if defined RANDOMBBOXCROP
