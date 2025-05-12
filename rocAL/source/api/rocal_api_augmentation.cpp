@@ -2671,7 +2671,7 @@ RocalTensor rocalLog1p(RocalContext p_context,
         if (op_tensor_data_type != RocalTensorDataType::INT16) {
             THROW("Log1p augmentation only supported for int16 inputs")
         }
-        op_tensor_data_type = RocalTensorDataType::FP32;
+        op_tensor_data_type = RocalTensorDataType::FP32;  // Log1p only supports F32 outputs so setting output dtype to F32
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
