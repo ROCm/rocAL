@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "loaders/image_source_evaluator.h"
 #include "loaders/numpy_source_evaluator.h"
 #include "loaders/image/node_cifar10_loader.h"
+#include "loaders/image/node_cifar10_loader_single_shard.h"
 #include "augmentations/node_copy.h"
 #include "loaders/image/node_fused_jpeg_crop.h"
 #include "loaders/image/node_fused_jpeg_crop_single_shard.h"
@@ -2197,6 +2198,58 @@ rocalRawCIFAR10Source(
         output = context->master_graph->create_loader_output_tensor(info);
 
         context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "", StorageType::UNCOMPRESSED_BINARY_DATA, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix);
+        context->master_graph->set_loop(loop);
+
+        if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        std::cerr << e.what() << '\n';
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalRawCIFAR10SourceSingleShard(
+    RocalContext p_context,
+    const char* source_path,
+    RocalImageColor rocal_color_format,
+    unsigned shard_id,
+    unsigned shard_count,
+    bool is_output,
+    bool shuffle,
+    bool loop,
+    unsigned out_width,
+    unsigned out_height,
+    const char* filename_prefix,
+    RocalShardingInfo rocal_sharding_info) {
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try {
+        if (out_width == 0 || out_height == 0) {
+            THROW("Invalid input width and height");
+        } else {
+            LOG("User input size " + TOSTR(out_width) + " x " + TOSTR(out_height));
+        }
+        if (shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count");
+
+        auto [width, height] = std::make_tuple(out_width, out_height);
+        auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
+        INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+
+        context->master_graph->add_node<CIFAR10LoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::UNCOMPRESSED_BINARY_DATA, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix, sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {

@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "meta_data/meta_data_reader.h"
 #include "pipeline/node.h"
 #include "loaders/image/node_cifar10_loader.h"
+#include "loaders/image/node_cifar10_loader_single_shard.h"
 #include "loaders/image/node_fused_jpeg_crop.h"
 #include "loaders/image/node_fused_jpeg_crop_single_shard.h"
 #include "loaders/image/node_image_loader.h"
@@ -358,6 +359,23 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
     _root_nodes.push_back(node);
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
+
+    return node;
+}
+
+template<> inline std::shared_ptr<CIFAR10LoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
+    if(_loader_module)
+        THROW("A loader already exists, cannot have more than one loader")
+#if ENABLE_HIP || ENABLE_OPENCL
+    auto node = std::make_shared<CIFAR10LoaderSingleShardNode>(outputs[0], (void *)_device.resources());
+#else
+    auto node = std::make_shared<CIFAR10LoaderSingleShardNode>(outputs[0], nullptr);
+#endif
+    _loader_module = node->get_loader_module();
+    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _root_nodes.push_back(node);
+    for(auto& output: outputs)
+        _tensor_map.insert(make_pair(output, node));
 
     return node;
 }
