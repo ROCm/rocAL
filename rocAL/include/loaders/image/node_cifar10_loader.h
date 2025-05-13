@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "cifar10_data_loader.h"
+#include "cifar10_loader.h"
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
 
@@ -48,5 +48,5 @@ class Cifar10LoaderNode : public Node {
     void update_node() override{};
 
    private:
-    std::shared_ptr<CIFAR10DataLoader> _loader_module = nullptr;
+    std::shared_ptr<CIFAR10Loader> _loader_module = nullptr;
 };
