@@ -221,3 +221,23 @@ python3 audio_unit_test.py --audio_path=<path_to_data> --test_case <case(0-11)> 
 * Case 9 - Slice
 * Case 10 - MelFilterBank
 * Case 11 - Normalize
+
+## CIFAR10 Reader Test
+
+To run the CIFAR10 reader test, follow the steps below:
+
+### Prepare dataset
+
+Download and extract the CIFAR10 binary tar file.
+
+```
+wget https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
+tar xvf cifar-10-binary.tar.gz
+```
+
+To run the cifar10 reader test
+
+```bash
+python cifar10_reader.py cifar-10-batches-bin/ <cpu/gpu> <batch_size>
+```
+The reader outputs will be saved to the output_folder/cifar10_reader path
