@@ -20,40 +20,50 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "loaders/image/cifar10_data_loader.h"
+#include "loaders/image/cifar10_loader.h"
 
 #include <chrono>
 #include <thread>
 
 #include "vx_ext_amd.h"
 
-CIFAR10DataLoader::CIFAR10DataLoader(void* dev_resources) : _circ_buff(dev_resources),
+#define NEAREST_MULTIPLE_OF_8(size) (((size) + 8) & ~7)
+
+CIFAR10Loader::CIFAR10Loader(void* dev_resources) : _circ_buff(dev_resources),
                                                             _file_load_time("file load time", DBG_TIMING),
                                                             _swap_handle_time("Swap_handle_time", DBG_TIMING) {
     _output_tensor = nullptr;
     _mem_type = RocalMemType::HOST;
+    _internal_thread_running = false;
     _output_mem_size = 0;
     _batch_size = 1;
     _is_initialized = false;
     _remaining_image_count = 0;
+    _device_id = 0;
 }
 
-CIFAR10DataLoader::~CIFAR10DataLoader() {
+CIFAR10Loader::~CIFAR10Loader() {
     de_init();
 }
 
-void CIFAR10DataLoader::set_prefetch_queue_depth(size_t prefetch_queue_depth) {
+void CIFAR10Loader::set_prefetch_queue_depth(size_t prefetch_queue_depth) {
     if (prefetch_queue_depth <= 0)
-        THROW("Prefetch quque depth value cannot be zero or negative");
+        THROW("Prefetch queue depth value cannot be zero or negative");
     _prefetch_queue_depth = prefetch_queue_depth;
 }
 
+void CIFAR10Loader::set_gpu_device_id(int device_id) {
+    if (device_id < 0)
+        THROW("invalid device_id passed to loader");
+    _device_id = device_id;
+}
+
 size_t
-CIFAR10DataLoader::remaining_count() {
+CIFAR10Loader::remaining_count() {
     return _remaining_image_count;
 }
 
-void CIFAR10DataLoader::reset() {
+void CIFAR10Loader::reset() {
     // stop the writer thread and empty the internal circular buffer
     _internal_thread_running = false;
     _circ_buff.unblock_writer();
@@ -72,7 +82,7 @@ void CIFAR10DataLoader::reset() {
     start_loading();
 }
 
-void CIFAR10DataLoader::de_init() {
+void CIFAR10Loader::de_init() {
     stop_internal_thread();
     _output_mem_size = 0;
     _batch_size = 1;
@@ -80,7 +90,7 @@ void CIFAR10DataLoader::de_init() {
     _remaining_image_count = 0;
 }
 
-void CIFAR10DataLoader::stop_internal_thread() {
+void CIFAR10Loader::stop_internal_thread() {
     _internal_thread_running = false;
     _stopped = true;
     _circ_buff.unblock_reader();
@@ -91,16 +101,17 @@ void CIFAR10DataLoader::stop_internal_thread() {
 }
 
 LoaderModuleStatus
-CIFAR10DataLoader::load_next() {
+CIFAR10Loader::load_next() {
     return update_output_image();
 }
 
-void CIFAR10DataLoader::set_output(Tensor* output_tensor) {
+void CIFAR10Loader::set_output(Tensor* output_tensor) {
     _output_tensor = output_tensor;
-    _output_mem_size = _output_tensor->info().data_size();
+    // Align the output memory size to the nearest multiple of 8 bytes for efficient memory access
+    _output_mem_size = NEAREST_MULTIPLE_OF_8(_output_tensor->info().data_size());
 }
 
-void CIFAR10DataLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size) {
+void CIFAR10Loader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size) {
     if (_is_initialized)
         WRN("initialize() function is already called and loader module is initialized")
 
@@ -110,7 +121,7 @@ void CIFAR10DataLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decode
     _mem_type = mem_type;
     _batch_size = batch_size;
     _loop = reader_cfg.loop();
-    _image_size = _output_mem_size / batch_size;
+    _image_size = _output_tensor->info().data_size() / batch_size;
     _output_names.resize(batch_size);
     try {
         _reader = create_reader(reader_cfg);
@@ -130,34 +141,36 @@ void CIFAR10DataLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decode
     LOG("Loader module initialized");
 }
 
-void CIFAR10DataLoader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) {
+void CIFAR10Loader::set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) {
     _randombboxcrop_meta_data_reader = randombboxcrop_meta_data_reader;
 }
 
 std::vector<std::vector<float>>&
-CIFAR10DataLoader::get_batch_random_bbox_crop_coords() {
+CIFAR10Loader::get_batch_random_bbox_crop_coords() {
     return _crop_coords_batch;
 }
 
-void CIFAR10DataLoader::set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> crop_coords) {
+void CIFAR10Loader::set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> crop_coords) {
     _crop_coords_batch = crop_coords;
 }
 
-void CIFAR10DataLoader::shut_down() {
+void CIFAR10Loader::shut_down() {
+    if (_internal_thread_running)
+        stop_internal_thread();
     _circ_buff.release();
 }
 
-void CIFAR10DataLoader::start_loading() {
+void CIFAR10Loader::start_loading() {
     if (!_is_initialized)
         THROW("start_loading() should be called after initialize() function is called")
 
     _remaining_image_count = _reader->count_items();
     _internal_thread_running = true;
-    _load_thread = std::thread(&CIFAR10DataLoader::load_routine, this);
+    _load_thread = std::thread(&CIFAR10Loader::load_routine, this);
 }
 
 LoaderModuleStatus
-CIFAR10DataLoader::load_routine() {
+CIFAR10Loader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
     // Initially record number of all the images that are going to be loaded, this is used to know how many still there
@@ -178,7 +191,7 @@ CIFAR10DataLoader::load_routine() {
                 auto read_ptr = data + _image_size * file_counter;
                 size_t readSize = _reader->open();
                 if (readSize == 0) {
-                    WRN("Opened file " + _reader->id() + " of size 0");
+                    ERR("Opened file " + _reader->id() + " of size 0");
                     continue;
                 }
                 _actual_read_size[file_counter] = _reader->read_data(read_ptr, readSize);
@@ -225,11 +238,16 @@ CIFAR10DataLoader::load_routine() {
     return LoaderModuleStatus::OK;
 }
 
-bool CIFAR10DataLoader::is_out_of_data() {
+bool CIFAR10Loader::is_out_of_data() {
     return (remaining_count() < _batch_size);
 }
+
+size_t CIFAR10Loader::last_batch_padded_size() {
+    return _reader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
-CIFAR10DataLoader::update_output_image() {
+CIFAR10Loader::update_output_image() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;
 
     if (is_out_of_data())
@@ -238,7 +256,7 @@ CIFAR10DataLoader::update_output_image() {
         return LoaderModuleStatus::OK;
 
     // _circ_buff.get_read_buffer_x() is blocking and puts the caller on sleep until new images are written to the _circ_buff
-    if (_mem_type == RocalMemType::OCL) {
+    if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP)) {
         auto data_buffer = _circ_buff.get_read_buffer_dev();
         _swap_handle_time.start();
         if (_output_tensor->swap_handle(data_buffer) != 0)
@@ -268,21 +286,21 @@ CIFAR10DataLoader::update_output_image() {
     return status;
 }
 
-Timing CIFAR10DataLoader::timing() {
+Timing CIFAR10Loader::timing() {
     Timing t;
     t.read_time = _file_load_time.get_timing();
     t.process_time = _swap_handle_time.get_timing();
     return t;
 }
 
-std::vector<std::string> CIFAR10DataLoader::get_id() {
+std::vector<std::string> CIFAR10Loader::get_id() {
     return _output_names;
 }
 
-DecodedDataInfo CIFAR10DataLoader::get_decode_data_info() {
+DecodedDataInfo CIFAR10Loader::get_decode_data_info() {
     return _output_decoded_data_info;
 }
 
-CropImageInfo CIFAR10DataLoader::get_crop_image_info() {
+CropImageInfo CIFAR10Loader::get_crop_image_info() {
     return _output_cropped_image_info;
 }
