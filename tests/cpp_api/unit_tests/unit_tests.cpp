@@ -926,6 +926,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        
+        // Testing the rocalToTensor API for copy augmentation
         if ((test_case == 23) && (gpu == 0)) {
             float *f32_batch_output = (float *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
             rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
