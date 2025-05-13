@@ -802,6 +802,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("randomBBoxCrop", &rocalRandomBBoxCrop);
     m.def("boxEncoder", &rocalBoxEncoder);
     m.def("boxIouMatcher", &rocalBoxIouMatcher);
+    m.def("cifar10LabelReader", &rocalCreateTextCifar10LabelReader, py::return_value_policy::reference);
     m.def("getImgSizes", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.request();
         int *ptr = static_cast<int *>(buf.ptr);
@@ -1034,6 +1035,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("webdatasetSourceSingleShard", &rocalWebDatasetSourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
     m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
+    m.def("cifar10Reader", &rocalRawCIFAR10SourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);

@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 
 Cifar10LoaderNode::Cifar10LoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
-    _loader_module = std::make_shared<CIFAR10DataLoader>(device_resources);
+    _loader_module = std::make_shared<CIFAR10Loader>(device_resources);
 }
 
 void Cifar10LoaderNode::init(const std::string &source_path, const std::string &json_path, StorageType storage_type,

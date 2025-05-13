@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include <cstring>
 #include <algorithm>
+#include <random>
 #include "readers/image/cifar10_data_reader.h"
 #include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
@@ -45,6 +46,8 @@ Reader::Status CIFAR10DataReader::initialize(ReaderConfig desc) {
     auto ret = Reader::Status::OK;
     _folder_path = desc.path();
     _batch_size = desc.get_batch_size();
+    _shard_id = desc.get_shard_id();
+    _shard_count = desc.get_shard_count();
     _loop = desc.loop();
     _file_name_prefix = desc.file_prefix();
     _sharding_info = desc.get_sharding_info();
@@ -53,11 +56,18 @@ Reader::Status CIFAR10DataReader::initialize(ReaderConfig desc) {
     _shard_size = _sharding_info.shard_size;
     _shuffle = desc.shuffle();
     ret = subfolder_reading();
-    _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
-    if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+    if (ret == Reader::Status::OK && _shuffle) {
+        std::mt19937 rng1(_shard_id);
+        auto rng2 = rng1;
+        auto rng3 = rng1;
+        std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id], rng1);
+        std::shuffle(_file_offsets.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_offsets.begin() + _shard_end_idx_vector[_shard_id], rng2);
+        std::shuffle(_file_idx.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_idx.begin() + _shard_end_idx_vector[_shard_id], rng3);
+    }
     return ret;
 
 }
@@ -141,9 +151,17 @@ int CIFAR10DataReader::release() {
 }
 
 void CIFAR10DataReader::reset() {
-    if (_shuffle)
-        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+    if (_shuffle) {
+        std::mt19937 rng1(_shard_id);
+        auto rng2 = rng1;
+        auto rng3 = rng1;
+        std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), rng1);
+        std::shuffle(_file_offsets.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_offsets.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), rng2);
+        std::shuffle(_file_idx.begin() + _shard_start_idx_vector[_shard_id],
+                            _file_idx.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), rng3);
+    }
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();      // Should work for both single and multiple shards
     _read_counter = 0;
@@ -216,7 +234,6 @@ Reader::Status CIFAR10DataReader::subfolder_reading() {
             }
         }
     }
-    _last_file_name = _file_names[_file_names.size() - 1];
     compute_start_and_end_idx_of_all_shards();
     closedir(_sub_dir);
     return ret;
