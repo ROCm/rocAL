@@ -292,7 +292,7 @@ int main(int argc, const char **argv) {
                 }
             }
         }
-        if (index + 1 <= std::floor(total_images / input_batch_size)) {
+        if (index + 1 <= total_images / input_batch_size) {
             std::cerr << "\n Processing Batch: " << index << "\n Mode: " << mode;
             if (mode == 0) {
                 rocalExternalSourceFeedInput(handle, input_images, set_labels, {}, ROI_xywh,
