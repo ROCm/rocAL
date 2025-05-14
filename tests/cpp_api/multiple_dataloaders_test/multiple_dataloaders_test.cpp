@@ -51,23 +51,23 @@ using namespace std::chrono;
 int test(const char *path, const char *outName, int gpu, int display_all);
 int main(int argc, const char **argv) {
     // check command-line usage
-    const int MIN_ARG_COUNT = 2;
+    const int MIN_ARG_COUNT = 3;
     if (argc < MIN_ARG_COUNT) {
         printf("Usage: multiple_dataloaders_test <numpy-dataset-folder> output_image_name gpu=1/cpu=0 display_all=0(display_last_only)1(display_all)\n");
         return -1;
     }
 
-    int argIdx = 0;
-    const char *path = argv[++argIdx];
-    const char *outName = argv[++argIdx];
+    int argIdx = 1;
+    const char *path = argv[argIdx++];
+    const char *outName = argv[argIdx++];
     int display_all = 0;
     bool gpu = 1;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        gpu = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        gpu = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        display_all = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        display_all = atoi(argv[argIdx++]);
 
     test(path, outName, gpu, display_all);
 
