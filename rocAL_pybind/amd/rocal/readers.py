@@ -396,3 +396,34 @@ def numpy(*inputs, file_root='', files=[], num_shards=1, output_layout=types.NON
     numpy_reader_output = b.numpyReader(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (numpy_reader_output)
+
+def cifar10(*inputs, file_root='', num_shards=1, image_type=types.RGB_PLANAR, filename_prefix='data_batch_',
+          random_shuffle=False, shard_id=0, stick_to_shard=True, shard_size=-1,
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True):
+    """!Creates an CIFAR10Reader node for reading data from CIFAR10 binary files.
+
+        @param file_root            Root directory containing CIFAR10 binary files.
+        @param num_shards           Number of shards for data parallelism.
+        @param image_type           Color format of the images.
+        @param filename_prefix      Filename prefix used for reading binary files.
+        @param random_shuffle       Whether to shuffle images randomly.
+        @param shard_id             Shard ID for the current reader.
+        @param stick_to_shard       Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch       If set to True, pads the shard by repeating the last sample.
+
+        @return    Loaded data from the CIFAR10 binary files.
+    """
+    Pipeline._current_pipeline._reader = "labelReader"
+    # Output
+    labels = []
+    kwargs_pybind = {"source_path": file_root, "filename_prefix": filename_prefix}
+    label_reader_meta_data = b.cifar10LabelReader(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+    # Output
+    kwargs_pybind = {"source_path": file_root, "color_format": image_type, "shard_id": shard_id, "shard_count": num_shards, "is_output": False, "shuffle": random_shuffle,
+                     "loop": False, "output_width": 32, "output_height": 32, "filename_prefix": filename_prefix, "sharding_info": sharding_info}
+    cifar10_reader_output = b.cifar10Reader(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (cifar10_reader_output)

@@ -28,10 +28,10 @@ THE SOFTWARE.
 #include "readers/image/reader_factory.h"
 #include "pipeline/timing_debug.h"
 
-class CIFAR10DataLoader : public LoaderModule {
+class CIFAR10Loader : public LoaderModule {
    public:
-    explicit CIFAR10DataLoader(void *dev_resources);
-    ~CIFAR10DataLoader() override;
+    explicit CIFAR10Loader(void *dev_resources);
+    ~CIFAR10Loader() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = true) override;
     void set_output(Tensor *output_tensor) override;
@@ -39,6 +39,7 @@ class CIFAR10DataLoader : public LoaderModule {
     size_t remaining_count() override;
     void reset() override;
     void start_loading() override;
+    void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
     DecodedDataInfo get_decode_data_info() override;
     CropImageInfo get_crop_image_info() override;
@@ -47,8 +48,11 @@ class CIFAR10DataLoader : public LoaderModule {
     void shut_down() override;
     std::vector<std::vector<float>> &get_batch_random_bbox_crop_coords();
     void set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> batch_crop_coords);
-    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
-                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {}
+    void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
+                             const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override {
+        THROW("external source reader is not supported for CIFAR10 loader")
+    };
+    size_t last_batch_padded_size() override;
 
    private:
     void increment_loader_idx();
@@ -73,11 +77,12 @@ class CIFAR10DataLoader : public LoaderModule {
     size_t _prefetch_queue_depth;
     TimingDbg _file_load_time, _swap_handle_time;
     size_t _loader_idx;
-    size_t _shard_count = 1;
     void fast_forward_through_empty_loaders();
     bool _is_initialized;
     bool _stopped = false;
-    bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop
+    bool _loop;   
+    int _device_id;
+                      //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop
     size_t _image_counter = 0;      //!< How many images have been loaded already
     size_t _remaining_image_count;  //!< How many images are there yet to be loaded
     Tensor *_output_tensor;
