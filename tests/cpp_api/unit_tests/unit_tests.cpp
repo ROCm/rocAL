@@ -525,7 +525,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 15: {
             std::cout << "Running rocalRain" << std::endl;
-            output = rocalRain(handle, input, true, 7, 2, 16, 0);
+            output = rocalRain(handle, input, true);
         } break;
         case 16: {
             std::cout << "Running rocalColorTemp" << std::endl;
@@ -534,6 +534,18 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 17: {
             std::cout << "Running rocalFog" << std::endl;
             output = rocalFog(handle, input, true);
+        } break;
+        case 18: {
+            std::cout << "Running rocalLensCorrection" << std::endl;
+            CameraMatrix sampleCameraMatrix = {534.07088364, 341.53407554, 534.11914595, 232.94565259};
+            DistortionCoeffs sampleDistortionCoeffs = {-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798};
+            std::vector<CameraMatrix> cameraMatrixVector;
+            std::vector<DistortionCoeffs> distortionCoeffsVector;
+            for (unsigned i = 0; i < input_batch_size; i++) {
+                cameraMatrixVector.push_back(sampleCameraMatrix);
+                distortionCoeffsVector.push_back(sampleDistortionCoeffs);
+            }
+            output = rocalLensCorrection(handle, input, cameraMatrixVector, distortionCoeffsVector, true);
         } break;
         case 19: {
             std::cout << "Running rocalPixelate" << std::endl;

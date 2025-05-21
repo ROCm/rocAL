@@ -83,7 +83,7 @@ do
     for ((rgb=rgb_start;rgb<=rgb_end;rgb++))
     do 
         # FileSource Reader
-        ./unit_tests 0 "$image_path" "${output_path}LensCorrection_${rgb_name[$rgb]}_${device_name}" $width $height 45 $device $rgb 0 $display
+        ./unit_tests 0 "$image_path" "${output_path}LensCorrection_${rgb_name[$rgb]}_${device_name}" $width $height 18 $device $rgb 0 $display
         ./unit_tests 0 "$image_path" "${output_path}Exposure_${rgb_name[$rgb]}_${device_name}" $width $height 46 $device $rgb 0 $display
         ./unit_tests 0 "$image_path" "${output_path}Flip_${rgb_name[$rgb]}_${device_name}" $width $height 47 $device $rgb 0 $display
 
@@ -134,7 +134,7 @@ do
 
         # COCO Keypoints
         ./unit_tests 10 "$coco_keypoints_path" "${output_path}SNP_${rgb_name[$rgb]}_${device_name}" 640 480 14 $device $rgb 0 $display
-        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" 640 480 15 $device $rgb 0 $display
+        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" 640 480 15 $device $rgb 0 $display
         ./unit_tests 10 "$coco_keypoints_path" "${output_path}Fog_${rgb_name[$rgb]}_${device_name}" 640 480 17 $device $rgb 0 $display
 
         # mxnet 
