@@ -342,11 +342,12 @@ def jitter(*inputs, kernel_size=None, seed=0, fill_value=0.0, device=None, outpu
     return (jitter_image)
 
 
-def pixelate(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def pixelate(*inputs, device=None, pixelate_percent=50.0, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies pixelate effect on images
 
         @param inputs                                                                 the input image passed to the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param pixelate_percent (float, optional, default = 50.0)                     Controls how much pixelation is applied to images
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
 
@@ -354,7 +355,7 @@ def pixelate(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.
     """
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0],
-                     "is_output": False, "output_layout": output_layout, "output_dtype": output_dtype}
+                     "is_output": False, "output_layout": output_layout, "pixelate_percent": pixelate_percent, "output_dtype": output_dtype}
     pixelate_image = b.pixelate(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (pixelate_image)

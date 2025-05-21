@@ -440,7 +440,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || reader_type == 13 || reader_type == 21) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -535,18 +535,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalFog" << std::endl;
             output = rocalFog(handle, input, true);
         } break;
-        case 18: {
-            std::cout << "Running rocalLensCorrection" << std::endl;
-            CameraMatrix sampleCameraMatrix = {534.07088364, 341.53407554, 534.11914595, 232.94565259};
-            DistortionCoeffs sampleDistortionCoeffs = {-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798};
-            std::vector<CameraMatrix> cameraMatrixVector;
-            std::vector<DistortionCoeffs> distortionCoeffsVector;
-            for (unsigned i = 0; i < input_batch_size; i++) {
-                cameraMatrixVector.push_back(sampleCameraMatrix);
-                distortionCoeffsVector.push_back(sampleDistortionCoeffs);
-            }
-            output = rocalLensCorrection(handle, input, cameraMatrixVector, distortionCoeffsVector, true);
-        } break;
         case 19: {
             std::cout << "Running rocalPixelate" << std::endl;
             output = rocalPixelate(handle, input, true);
@@ -633,7 +621,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 42: {
             std::cout << "Running rocalRainFixed" << std::endl;
-            output = rocalRainFixed(handle, input, 7, 2, 16, 0, 0.4, true);
+            output = rocalRainFixed(handle, input, true, 7, 2, 16, 0, 0.4);
         } break;
         case 43: {
             std::cout << "Running rocalColorTempFixed" << std::endl;

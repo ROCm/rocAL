@@ -124,9 +124,7 @@ int main(int argc, const char **argv) {
 
     RocalTensor input9 = rocalBlend(handle, input7, input8, false);
 
-    RocalTensor input10 = rocalLensCorrection(handle, input9, false);
-
-    rocalExposure(handle, input10, true);
+    rocalExposure(handle, input9, true);
 #else
     // uncomment the following to add augmentation if needed
     // just do one augmentation to test

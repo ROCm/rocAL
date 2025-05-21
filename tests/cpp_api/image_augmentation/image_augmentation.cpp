@@ -189,9 +189,7 @@ int main(int argc, const char** argv) {
 
     RocalTensor tensor9 = rocalBlend(handle, tensor0, tensor8, true);
 
-    RocalTensor tensor10 = rocalLensCorrection(handle, tensor9, true);
-
-    rocalExposure(handle, tensor10, true);
+    rocalExposure(handle, tensor9, true);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Error while adding the augmentation nodes " << std::endl;
