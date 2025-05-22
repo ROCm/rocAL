@@ -37,8 +37,8 @@ class LensCorrectionNode : public Node {
     void update_node() override {};
 
    private:
-    std::vector<std::vector<float>> _camera_matrix;
-    std::vector<std::vector<float>> _distortion_coeffs;
+    std::vector<float> _camera_matrix;
+    std::vector<float> _distortion_coeffs;
     vx_array _camera_matrix_vx_array, _distortion_coeffs_vx_array;
 
 };
