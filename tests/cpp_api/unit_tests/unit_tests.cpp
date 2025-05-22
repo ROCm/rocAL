@@ -633,7 +633,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 42: {
             std::cout << "Running rocalRainFixed" << std::endl;
-            output = rocalRainFixed(handle, input, true, 7, 2, 16, 0, 0.4);
+            output = rocalRainFixed(handle, input, true, 7, 1, 6, 0, 0.4);
         } break;
         case 43: {
             std::cout << "Running rocalColorTempFixed" << std::endl;
