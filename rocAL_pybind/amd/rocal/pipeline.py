@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -208,6 +208,9 @@ class Pipeline(object):
 
     def get_bounding_box_cords(self):
         return b.getBoundingBoxCords(self._handle)
+    
+    def get_ascii_datas(self):
+        return b.getAsciiDatas(self._handle)
 
     def get_mask_count(self, array):
         return b.getMaskCount(self._handle, array)

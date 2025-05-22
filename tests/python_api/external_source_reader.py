@@ -40,10 +40,7 @@ def main():
     except OSError as error:
         print(error)
 
-    def image_dump(img, idx, device="cpu", mode=0):
-        if device == "gpu":
-            import cupy as cp
-            img = cp.asnumpy(img)
+    def image_dump(img, idx, mode=0):
         img = img.transpose([1, 2, 0])  # NCHW
         img = (img).astype('uint8')
         if mode!=2:
@@ -111,7 +108,7 @@ def main():
         print("**************", i, "*******************")
         for img in output_list[0][0]:
             cnt = cnt + 1
-            image_dump(img, cnt, device=device, mode=0)
+            image_dump(img, cnt, mode=0)
 
     ##################### MODE 0 #########################
     
@@ -181,7 +178,7 @@ def main():
         print("**************", i, "*******************")
         for img in output_list[0][0]:
             cnt = cnt + 1
-            image_dump(img, cnt, device=device, mode=1)
+            image_dump(img, cnt, mode=1)
     ##################### MODE 1 #########################
     
     ##################### MODE 2 #########################
@@ -277,7 +274,7 @@ def main():
         print("**************", i, "*******************")
         for img in output_list[0][0]:
             cnt = cnt+1
-            image_dump(img, cnt, device=device, mode=2)
+            image_dump(img, cnt, mode=2)
     ##################### MODE 2 #########################
 if __name__ == '__main__':
     main()

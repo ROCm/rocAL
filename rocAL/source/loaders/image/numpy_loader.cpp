@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ NumpyLoader::NumpyLoader(void *dev_resources) : _circ_buff(dev_resources),
     _output_mem_size = 0;
     _batch_size = 1;
     _is_initialized = false;
-    _remaining_image_count = 0;
+    _remaining_file_count = 0;
     _device_id = 0;
 }
 
@@ -64,7 +64,7 @@ void NumpyLoader::set_gpu_device_id(int device_id) {
 
 size_t
 NumpyLoader::remaining_count() {
-    return _remaining_image_count;
+    return _remaining_file_count;
 }
 
 void NumpyLoader::reset() {
@@ -79,7 +79,7 @@ void NumpyLoader::reset() {
     _circ_buff.reset();
 
     // resetting the reader thread to the start of the media
-    _image_counter = 0;
+    _file_counter = 0;
     _reader->reset();
 
     // Start loading (writer thread) again
@@ -92,17 +92,17 @@ void NumpyLoader::de_init() {
     _output_mem_size = 0;
     _batch_size = 1;
     _is_initialized = false;
-    _remaining_image_count = 0;
+    _remaining_file_count = 0;
 }
 
 LoaderModuleStatus
 NumpyLoader::load_next() {
-    return update_output_image();
+    return update_output_tensor();
 }
 
 void NumpyLoader::set_output(Tensor *output_tensor) {
     _output_tensor = output_tensor;
-    _output_mem_size = ((_output_tensor->info().data_size() / 8) * 8 + 8);
+    _output_mem_size = ((_output_tensor->info().data_size() + 8) & ~7);
 }
 
 void NumpyLoader::stop_internal_thread() {
@@ -120,12 +120,12 @@ void NumpyLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         WRN("initialize() function is already called and loader module is initialized")
 
     if (_output_mem_size == 0)
-        THROW("output image size is 0, set_output() should be called before initialize for loader modules")
+        THROW("output tensor size is 0, set_output() should be called before initialize for loader modules")
 
     _mem_type = mem_type;
     _batch_size = batch_size;
     _loop = reader_cfg.loop();
-    _image_size = _output_tensor->info().data_size() / batch_size;
+    _tensor_size = _output_tensor->info().data_size() / batch_size;
     _output_names.resize(batch_size);
     try {
         _reader = create_reader(reader_cfg);
@@ -144,7 +144,7 @@ void NumpyLoader::start_loading() {
     if (!_is_initialized)
         THROW("start_loading() should be called after initialize() function is called")
 
-    _remaining_image_count = _reader->count_items();
+    _remaining_file_count = _reader->count_items();
     _internal_thread_running = true;
     _load_thread = std::thread(&NumpyLoader::load_routine, this);
 }
@@ -153,7 +153,16 @@ LoaderModuleStatus
 NumpyLoader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
-    // Initially record number of all the images that are going to be loaded, this is used to know how many still there
+    // Initially record number of all the numpy arrays that are going to be loaded, this is used to know how many still there
+    const std::vector<size_t> tensor_dims = _output_tensor->info().dims();
+    auto num_dims = tensor_dims.size() - 1;
+    auto data_layout = _output_tensor->info().layout();
+    std::vector<size_t> max_shape(tensor_dims.begin() + 1, tensor_dims.end());
+    std::vector<unsigned> strides_in_dims(num_dims + 1);
+    strides_in_dims[num_dims] = 1;
+    for (int i = num_dims - 1; i >= 0; i--) {
+        strides_in_dims[i] = strides_in_dims[i + 1] * max_shape[i];
+    }
 
     while (_internal_thread_running) {
         auto data = _circ_buff.get_write_buffer();
@@ -166,34 +175,45 @@ NumpyLoader::load_routine() {
             _file_load_time.start();  // Debug timing
 
             while ((file_counter != _batch_size) && _reader->count_items() > 0) {
-                auto read_ptr = data + _image_size * file_counter;
-                auto max_shape = _output_tensor->info().max_shape();
-                size_t readSize = _reader->open();
-                if (readSize == 0) {
-                    WRN("Opened file " + _reader->id() + " of size 0");
+                auto read_ptr = data + _tensor_size * file_counter;
+                size_t read_size = _reader->open();
+                if (read_size == 0) {
+                    ERR("Opened file " + _reader->id() + " of size 0");
+                    _reader->close();
                     continue;
                 }
-                auto fsize = _reader->read_numpy_data(read_ptr, readSize, max_shape);
-                if (fsize == 0)
-                    THROW("Numpy arrays must contain readable data")
+                auto fsize = _reader->read_numpy_data(read_ptr, read_size, strides_in_dims);
+                if (fsize == 0) {
+                    ERR("Cannot read numpy data from " + _reader->id());
+                    _reader->close();
+                    continue;
+                }
                 _decoded_data_info._data_names[file_counter] = _reader->id();
-                _tensor_roi[file_counter] = _reader->get_numpy_header_data().shape();
+                auto original_roi = _reader->get_numpy_header_data().shape();
+                // The numpy header data contains the full array shape. We require only width and height for ROI updation
+                if (data_layout == RocalTensorlayout::NHWC) {
+                    _tensor_roi[file_counter] = {original_roi[1], original_roi[0]};
+                } else if (data_layout == RocalTensorlayout::NCHW) {
+                    _tensor_roi[file_counter] = {original_roi[2], original_roi[1]};
+                } else {
+                    _tensor_roi[file_counter] = original_roi;
+                }
                 _reader->close();
                 file_counter++;
             }
             _file_load_time.end();  // Debug timing
             _circ_buff.set_decoded_data_info(_decoded_data_info);
             _circ_buff.push();
-            _image_counter += _output_tensor->info().batch_size();
+            _file_counter += _output_tensor->info().batch_size();
             load_status = LoaderModuleStatus::OK;
         }
         if (load_status != LoaderModuleStatus::OK) {
             if (last_load_status != load_status) {
                 if (load_status == LoaderModuleStatus::NO_MORE_DATA_TO_READ ||
                     load_status == LoaderModuleStatus::NO_FILES_TO_READ) {
-                    LOG("Cycled through all images, count " + TOSTR(_image_counter));
+                    LOG("Cycled through all numpy files, count " + TOSTR(_file_counter));
                 } else {
-                    ERR("ERROR: Detected error in reading the images");
+                    ERR("ERROR: Detected error in reading the numpy files");
                 }
                 last_load_status = load_status;
             }
@@ -220,7 +240,7 @@ size_t NumpyLoader::last_batch_padded_size() {
 }
 
 LoaderModuleStatus
-NumpyLoader::update_output_image() {
+NumpyLoader::update_output_tensor() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;
 
     if (is_out_of_data())
@@ -228,12 +248,12 @@ NumpyLoader::update_output_image() {
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    // _circ_buff.get_read_buffer_x() is blocking and puts the caller on sleep until new images are written to the _circ_buff
+    // _circ_buff.get_read_buffer_x() is blocking and puts the caller on sleep until new output is written to the _circ_buff
     if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP)) {
         auto data_buffer = _circ_buff.get_read_buffer_dev();
         _swap_handle_time.start();
         if (_output_tensor->swap_handle(data_buffer) != 0)
-            return LoaderModuleStatus ::DEVICE_BUFFER_SWAP_FAILED;
+            return LoaderModuleStatus::DEVICE_BUFFER_SWAP_FAILED;
         _swap_handle_time.end();
     } else {
         auto data_buffer = _circ_buff.get_read_buffer_host();
@@ -250,7 +270,7 @@ NumpyLoader::update_output_image() {
     _output_tensor->update_tensor_roi(_tensor_roi);
     _circ_buff.pop();
     if (!_loop)
-        _remaining_image_count -= _batch_size;
+        _remaining_file_count -= _batch_size;
 
     return status;
 }

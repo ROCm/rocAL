@@ -1,125 +1,85 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-import random
-import numpy as np
+# Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
 from amd.rocal.pipeline import Pipeline
 from amd.rocal.plugin.generic import ROCALNumpyIterator
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-import sys
-import os, glob
 
-val_cases_list = ['00000', '00003', '00005', '00006', '00012', '00024', '00034', '00041', '00044', '00049', '00052', '00056', '00061', '00065', '00066', '00070', '00076', '00078', '00080', '00084',
-                  '00086', '00087', '00092', '00111', '00112', '00125', '00128', '00138', '00157', '00160', '00161', '00162', '00169', '00171', '00176', '00185', '00187', '00189', '00198', '00203', '00206', '00207']
+import os
+import cv2
+from parse_config import parse_args
 
-def load_data(path, files_pattern):
-    data = sorted(glob.glob(os.path.join(path, files_pattern)))
-    assert len(data) > 0, f"Found no data at {path}"
-    return data
 
-def get_data_split(path: str):
-    imgs = load_data(path, "*_x.npy")
-    lbls = load_data(path, "*_y.npy")
-    assert len(imgs) == len(lbls), f"Found {len(imgs)} volumes but {len(lbls)} corresponding masks"
-    imgs_train, lbls_train, imgs_val, lbls_val = [], [], [], []
-    for (case_img, case_lbl) in zip(imgs, lbls):
-        if case_img.split("_")[-2] in val_cases_list:
-            imgs_val.append(case_img)
-            lbls_val.append(case_lbl)
-        else:
-            imgs_train.append(case_img)
-            lbls_train.append(case_lbl)
+def draw_patches(image, idx, args=None):
+    # image is expected as a numpy array
+    if not args.NHWC:
+        image = image.transpose([1, 2, 0])
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("output_folder/numpy_reader/" + str(idx) + ".png", image)
 
-    return imgs_train, imgs_val, lbls_train, lbls_val
 
 def main():
-    if  len(sys.argv) < 3:
-        print ('Please pass numpy_folder cpu/gpu batch_size')
-        exit(0)
+    args = parse_args()
+    # Args
+    data_path = args.image_dataset_path
+    rocal_cpu = False if args.rocal_gpu else True
+    batch_size = args.batch_size
+    num_threads = args.num_threads
+    random_seed = args.seed
+    local_rank = args.local_rank
+    world_size = args.world_size
+    output_layout = types.NHWC if args.NHWC else types.NCHW
+
     try:
-        path= "OUTPUT_IMAGES_PYTHON/NEW_API/NUMPY_READER/"
-        isExist = os.path.exists(path)
-        if not isExist:
+        path = "output_folder/numpy_reader/"
+        if not os.path.exists(path):
             os.makedirs(path)
     except OSError as error:
         print(error)
-    data_path = sys.argv[1]
-    if(sys.argv[2] == "cpu"):
-        rocal_cpu = True
-    else:
-        rocal_cpu = False
-    batch_size = int(sys.argv[3])
-    num_threads = 8
-    device_id = 0
-    local_rank = 0
-    world_size = 1
-    random_seed = random.SystemRandom().randint(0, 2**32 - 1)
-    x_train, x_val, y_train, y_val = get_data_split(data_path)
 
-    import time
-    start = time.time()
-    pipeline = Pipeline(batch_size=batch_size, num_threads=8, device_id=device_id, seed=device_id, rocal_cpu=rocal_cpu, prefetch_queue_depth=6 if not rocal_cpu else 2, output_memory_type = types.DEVICE_MEMORY)
+    pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads,
+                        device_id=local_rank, seed=random_seed, rocal_cpu=rocal_cpu)
 
     with pipeline:
-        numpy_reader_output = fn.readers.numpy(file_root=data_path, files=x_train, shard_id=local_rank, num_shards=world_size, random_shuffle=True, seed=random_seed+local_rank)
-        numpy_reader_output1 = fn.readers.numpy(file_root=data_path, files=y_train, shard_id=local_rank, num_shards=world_size, random_shuffle=True, seed=random_seed+local_rank)
-        data_output = fn.set_layout(numpy_reader_output, output_layout=types.NCDHW)
-        label_output = fn.set_layout(numpy_reader_output1, output_layout=types.NCDHW)
-        [roi_start, roi_end] = fn.random_object_bbox(label_output, format="start_end", k_largest=2, foreground_prob=0.4, cache_objects=False)
-        anchor = fn.roi_random_crop(label_output, roi_start=roi_start, roi_end=roi_end, crop_shape=(1, 128, 128, 128))
-        data_sliced_output = fn.slice(data_output, anchor=anchor, shape=(1,128,128,128), output_layout=types.NCDHW, output_dtype=types.FLOAT)
-        label_sliced_output = fn.slice(label_output, anchor=anchor, shape=(1,128,128,128), output_layout=types.NCDHW, output_dtype=types.UINT8)       
-        hflip = fn.random.coin_flip(probability=0.33)
-        vflip = fn.random.coin_flip(probability=0.33)
-        dflip = fn.random.coin_flip(probability=0.33)
-        data_flip_output = fn.flip(data_sliced_output, horizontal=hflip, vertical=vflip, depth=dflip, output_layout=types.NCDHW, output_dtype=types.FLOAT)
-        label_flip_output = fn.flip(label_sliced_output, horizontal=hflip, vertical=vflip, depth=dflip, output_layout=types.NCDHW, output_dtype=types.UINT8)
-        brightness = fn.random.uniform_rand(range=[0.7, 1.3])
-        add_brightness = fn.random.coin_flip(probability=0.1)
-        brightness_output = fn.brightness(data_flip_output, brightness=brightness, brightness_shift=0.0, conditional_execution=add_brightness, output_layout=types.NCDHW, output_dtype=types.FLOAT)
-        add_noise = fn.random.coin_flip(probability=0.1)
-        std_dev = fn.random.uniform_rand(range=[0.0, 0.1])
-        noise_output = fn.gaussian_noise(brightness_output, mean=0.0, std_dev=std_dev, conditional_execution=add_noise, output_layout=types.NCDHW, output_dtype=types.FLOAT)
-        pipeline.set_outputs(noise_output, label_flip_output)
+        numpy_reader_output = fn.readers.numpy(
+            file_root=data_path, shard_id=local_rank, num_shards=world_size, output_layout=types.NHWC)
+        resize_output = fn.resize(
+            numpy_reader_output, resize_width=400, resize_height=400, output_layout=output_layout)
+        pipeline.set_outputs(resize_output)
 
     pipeline.build()
 
-    val_pipeline = Pipeline(batch_size=1, num_threads=8, device_id=device_id, seed=device_id, rocal_cpu=rocal_cpu, prefetch_queue_depth=2, output_memory_type = types.DEVICE_MEMORY)
-
-    with val_pipeline:
-        numpy_reader_output = fn.readers.numpy(file_root=data_path, files=x_val, shard_id=local_rank, num_shards=world_size)
-        numpy_reader_output1 = fn.readers.numpy(file_root=data_path, files=y_val, shard_id=local_rank, num_shards=world_size)
-        data_output = fn.set_layout(numpy_reader_output, output_layout=types.NCDHW)
-        label_output = fn.set_layout(numpy_reader_output1, output_layout=types.NCDHW)
-        val_pipeline.set_outputs(data_output, label_output)
-
-    val_pipeline.build()
-    
-    numpyIteratorPipeline = ROCALNumpyIterator(pipeline, device='cpu' if rocal_cpu else 'gpu', device_id=device_id)
-    print(len(numpyIteratorPipeline))
-    valNumpyIteratorPipeline = ROCALNumpyIterator(val_pipeline, device='cpu' if rocal_cpu else 'gpu', return_max_roi=True, device_id=device_id)
-    print(len(valNumpyIteratorPipeline))
     cnt = 0
-    for epoch in range(1):
-        print("+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++",epoch)
-        for i , it in enumerate(numpyIteratorPipeline):
-            print(i, it[0].shape, it[1].shape)
-            for j in range(len(it[0])):
-                print(it[0][j].shape, it[1][j].shape)
+    numpyIteratorPipeline = ROCALNumpyIterator(pipeline)
+    for epoch in range(args.num_epochs):
+        print("epoch:: ", epoch)
+        for i, [batch] in enumerate(numpyIteratorPipeline):
+            if i == 0 and args.print_tensor:
+                print(batch)
+            for img in batch:
+                draw_patches(img, cnt, args)
                 cnt += 1
-            print("************************************** i *************************************",i)
         numpyIteratorPipeline.reset()
-        for i , it in enumerate(valNumpyIteratorPipeline):
-            print(i, it[0].shape, it[1].shape)
-            for j in range(len(it[0])):
-                print(it[0][j].shape, it[1][j].shape)
-                cnt += 1
-            print("************************************** i *************************************",i)
-        valNumpyIteratorPipeline.reset()
-    print("*********************************************************************")
-    print(f'Took {time.time() - start} seconds')
+    print("##############################  NUMPY READER SUCCESS  ############################")
+
 
 if __name__ == '__main__':
     main()

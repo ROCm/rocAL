@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -62,24 +62,6 @@ class FusedCropTJDecoder : public Decoder {
 
    private:
     tjhandle m_jpegDecompressor;
-    const static unsigned SCALING_FACTORS_COUNT = 16;
-    const tjscalingfactor SCALING_FACTORS[SCALING_FACTORS_COUNT] = {
-        {2, 1},
-        {15, 8},
-        {7, 4},
-        {13, 8},
-        {3, 2},
-        {11, 8},
-        {5, 4},
-        {9, 8},
-        {1, 1},
-        {7, 8},
-        {3, 4},
-        {5, 8},
-        {1, 2},
-        {3, 8},
-        {1, 4},
-        {1, 8}};
     bool _is_partial_decoder = true;
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;

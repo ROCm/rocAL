@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -54,8 +54,6 @@ class CIFAR10DataReader : public Reader {
     //! Returns the name of the latest data_id opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~CIFAR10DataReader() override;
 
     int close() override;
@@ -75,7 +73,6 @@ class CIFAR10DataReader : public Reader {
     std::vector<std::string> _file_names;
     std::vector<unsigned> _file_offsets;
     std::vector<unsigned> _file_idx;
-    unsigned _curr_file_idx;
     FILE *_current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
@@ -87,15 +84,6 @@ class CIFAR10DataReader : public Reader {
     //!< _raw_file_size of each file to read
     const size_t _raw_file_size = (32 * 32 * 3 + 1);  // todo:: need to add an option in reader config to take this.
     size_t _total_file_size;
-    //!< _batch_count Defines the quantum count of the images to be read. It's usually equal to the user's batch size.
-    /// The loader will repeat images if necessary to be able to have images available in multiples of the load_batch_count,
-    /// for instance if there are 10 images in the dataset and _batch_count is 3, the loader repeats 2 images as if there are 12 images available.
-    size_t _batch_count = 1;
-    size_t _file_id = 0;
-    size_t _in_batch_read_count = 0;
-    bool _loop;
-    int _read_counter = 0;
     void incremenet_read_ptr();
     int release();
-    void incremenet_file_id() { _file_id++; }
 };

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,5 @@ class FlipMetaNode : public MetaNode {
 
    private:
     void initialize();
-    vx_array _src_width, _src_height;
     std::vector<int> _h_flip_val, _v_flip_val;
 };

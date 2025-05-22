@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ THE SOFTWARE.
 class RocalCropParam : public CropParam {
    public:
     RocalCropParam() = delete;
+    ~RocalCropParam() = default;
     RocalCropParam(unsigned int batch_size) : CropParam(batch_size) {
         crop_height_factor = default_crop_height_factor();
         crop_width_factor = default_crop_width_factor();

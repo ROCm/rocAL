@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ class ResizeMirrorNormalizeNode : public Node {
     void update_node() override;
 
    private:
-    vx_array _mean_vx_array, _std_dev_vx_array, _mirror_vx_array, _dst_roi_width, _dst_roi_height;
+    vx_array _mean_vx_array, _std_dev_vx_array, _dst_roi_width, _dst_roi_height;
     std::vector<float> _mean, _std_dev;
     int _interpolation_type;
     ParameterVX<int> _mirror;

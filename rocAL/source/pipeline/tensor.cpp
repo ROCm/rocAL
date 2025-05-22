@@ -1,6 +1,6 @@
 
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@ THE SOFTWARE.
 
 #include <cstring>
 #include <stdexcept>
-
 #include "pipeline/commons.h"
 #include "pipeline/tensor.h"
 
@@ -63,6 +62,8 @@ vx_size tensor_data_size(RocalTensorDataType data_type) {
             return sizeof(vx_uint32);
         case RocalTensorDataType::INT32:
             return sizeof(vx_int32);
+        case RocalTensorDataType::INT16:
+            return sizeof(vx_int16);
         default:
             throw std::runtime_error("tensor data_type not valid");
     }
@@ -77,10 +78,12 @@ vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
             return VX_TYPE_FLOAT16;
         case RocalTensorDataType::UINT8:
             return VX_TYPE_UINT8;
-        case RocalTensorDataType::INT32:
-            return VX_TYPE_INT32;
         case RocalTensorDataType::UINT32:
             return VX_TYPE_UINT32;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
+        case RocalTensorDataType::INT16:
+            return VX_TYPE_INT16;
         default:
             THROW("Unsupported Tensor type " + TOSTR(data_type))
     }
@@ -267,9 +270,9 @@ void Tensor::update_tensor_roi(const std::vector<std::vector<uint32_t>> &shape) 
         THROW("The batch size of actual Tensor shape different from Tensor batch size " + TOSTR(shape.size()) + " != " + TOSTR(info().batch_size()))
 
     for (unsigned i = 0; i < info().batch_size(); i++) {
-        if (shape[i].size() != (info().num_of_dims() - 1))
-            THROW("The number of dims to be updated and the num of dims of tensor info does not match")
-        
+        if (shape[i].size() != max_shape.size())
+            THROW("The ROI shape must match the max_shape of the tensor")
+
         unsigned *tensor_shape = _info.roi()[i].end;
         if (_info.layout() == RocalTensorlayout::NCDHW || _info.layout() == RocalTensorlayout::NDHWC) {
             for (unsigned j = 0; j < max_shape.size(); j++) {
@@ -318,14 +321,14 @@ int Tensor::create_from_handle(vx_context context) {
     _context = context;
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
     unsigned num_of_dims = _info.num_of_dims();
-    vx_size stride[num_of_dims];
+    std::vector<vx_size> stride(num_of_dims);
     void *ptr[1] = {nullptr};
 
     stride[0] = tensor_data_size(_info.data_type());
     for (unsigned i = 1; i < num_of_dims; i++)
         stride[i] = stride[i - 1] * _info.dims().at(i - 1);
 
-    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride, ptr, vx_mem_type(_info._mem_type));
+    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride.data(), ptr, vx_mem_type(_info._mem_type));
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
@@ -385,7 +388,7 @@ void Tensor::create_roi_tensor_from_handle(void **handle) {
         THROW("Empty ROI handle is passed")
     }
 
-    vx_size num_of_dims = 2;
+    const vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
     std::vector<size_t> roi_dims = {_info.batch_size(), 4};
     if (_info.layout() == RocalTensorlayout::NFCHW || _info.layout() == RocalTensorlayout::NFHWC)
@@ -441,14 +444,13 @@ unsigned Tensor::copy_data(hipStream_t stream, void *host_memory, bool sync) {
 
 unsigned Tensor::copy_data(void *user_buffer, RocalOutputMemType external_mem_type) {
     if (_mem_handle == nullptr) return 0;
-
     if (external_mem_type == RocalOutputMemType::ROCAL_MEMCPY_GPU) {
 #if ENABLE_HIP
         if (_info._mem_type == RocalMemType::HIP) {
             // copy from device to device
             hipError_t status;
             if ((status = hipMemcpyDtoD((void *)user_buffer, _mem_handle, _info.data_size())))
-                THROW("copy_data::hipMemcpyDtoD failed: " + TOSTR(status))
+                THROW("copy_data::hipMemcpyDtoD failed: " + hipGetErrorName(status))
         } else if (_info._mem_type == RocalMemType::HOST) {
             // copy from host to device
             hipError_t status;

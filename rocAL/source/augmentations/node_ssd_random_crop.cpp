@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -129,7 +129,7 @@ void SSDRandomCropNode::update_node() {
                 crop_box.b = 1;
                 break;
             }
-            float aspect_ratio;
+            float aspect_ratio = 0.0f;
             for (int j = 0; j < _num_of_attempts; j++) {
                 // Setting width and height factor btw 0.3 and 1.0";
                 float w_factor = _float_dis(_rngs[sample]);

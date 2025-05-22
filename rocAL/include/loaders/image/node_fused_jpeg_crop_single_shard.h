@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,5 +50,4 @@ class FusedJpegCropSingleShardNode : public Node {
    private:
     std::shared_ptr<ImageLoader> _loader_module = nullptr;
     std::vector<float> _random_area, _random_aspect_ratio;
-    unsigned _num_attempts;
 };

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -99,7 +99,7 @@ void CropNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatP
 
 // Create vx_tensor for the crop coordinates
 void CropNode::create_crop_tensor() {
-    vx_size num_of_dims = 2;
+    const vx_size num_of_dims = 2;
     vx_size stride[num_of_dims];
     std::vector<size_t> _crop_tensor_dims = {_batch_size, 4};
     if (_inputs[0]->info().layout() == RocalTensorlayout::NFCHW || _inputs[0]->info().layout() == RocalTensorlayout::NFHWC)

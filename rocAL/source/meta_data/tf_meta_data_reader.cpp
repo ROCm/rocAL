@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -100,12 +100,12 @@ void TFMetaDataReader::read_record(std::ifstream &file_contents, uint file_size,
     file_contents.read(data, data_length);
     if (!file_contents)
         THROW("TFMetaDataReader: Error in reading TF records")
-    tensorflow::Example single_example;
+    rocal::tensorflow::Example single_example;
     single_example.ParseFromArray(data, data_length);
-    tensorflow::Features features = single_example.features();
+    rocal::tensorflow::Features features = single_example.features();
     // features.PrintDebugString();
     auto feature = features.feature();
-    tensorflow::Feature single_feature;
+    rocal::tensorflow::Feature single_feature;
     std::string fname;
     if (!user_filename_key.empty()) {
         single_feature = feature.at(user_filename_key);

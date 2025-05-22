@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "cifar10_data_loader.h"
+#include "cifar10_loader.h"
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
 
@@ -48,5 +48,5 @@ class Cifar10LoaderNode : public Node {
     void update_node() override{};
 
    private:
-    std::shared_ptr<CIFAR10DataLoader> _loader_module = nullptr;
+    std::shared_ptr<CIFAR10Loader> _loader_module = nullptr;
 };

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -40,5 +40,4 @@ class CropMetaNode : public MetaNode {
     std::shared_ptr<RocalCropParam> _meta_crop_param;
     vx_array _crop_width, _crop_height, _x1, _y1;
     std::vector<uint> _crop_width_val, _crop_height_val, _x1_val, _y1_val, _input_width_val, _input_height_val;
-    unsigned int _dst_width, _dst_height;
 };

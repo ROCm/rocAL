@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -68,8 +68,8 @@ int main(int argc, const char **argv) {
             "gray_scale/rgb/rgbplanar display_on_off external_source_mode<external_file_mode=0/raw_compressed_mode=1/raw_uncompresses_mode=2>\n");
         return -1;
     }
-    int argIdx = 0;
-    const char *folder_path = argv[++argIdx];
+    int argIdx = 1;
+    const char *folder_path = argv[argIdx++];
     bool display = 1;            // Display the images
     int rgb = 1;                 // process color images
     int decode_width = 224;      // Decoding width
@@ -78,19 +78,19 @@ int main(int argc, const char **argv) {
     bool processing_device = 0;  // CPU Processing
     int mode = 0;                // File mode
 
-    if (argc >= argIdx + MIN_ARG_COUNT) processing_device = atoi(argv[++argIdx]);
+    if (argc > argIdx) processing_device = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT) decode_width = atoi(argv[++argIdx]);
+    if (argc > argIdx) decode_width = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT) decode_height = atoi(argv[++argIdx]);
+    if (argc > argIdx) decode_height = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT) input_batch_size = atoi(argv[++argIdx]);
+    if (argc > argIdx) input_batch_size = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT) rgb = atoi(argv[++argIdx]);
+    if (argc > argIdx) rgb = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT) display = atoi(argv[++argIdx]);
+    if (argc > argIdx) display = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT) mode = atoi(argv[++argIdx]);
+    if (argc > argIdx) mode = atoi(argv[argIdx++]);
 
     std::cerr << "\n Mode:: " << mode << std::endl;
     std::cerr << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
@@ -306,8 +306,9 @@ int main(int argc, const char **argv) {
             }
         }
         if (rocalRun(handle) != 0) {
-            std::cerr << "rocalRun Failed!";
-            break;
+            std::cerr << "rocalRun Failed with runtime error!";
+            rocalRelease(handle);
+            return -1;
         }
 
         if (!display) continue;

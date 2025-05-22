@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,11 +37,14 @@ class BinaryDistribution(Distribution):
     def has_ext_modules(self):
         return True
 
+# Version updates - IMP: Change in version requires to match top level CMakeLists.txt
+## * getrocALWheelname.py
+## * setup.py
 setup(
     name='amd-rocal',
     description='AMD ROCm Augmentation Library Python Bindings',
     url='https://github.com/ROCm/rocAL',
-    version='2.0.0',
+    version='2.3.0',
     author='AMD',
     license='MIT',
     packages=find_packages(where='@TARGET_NAME@'),

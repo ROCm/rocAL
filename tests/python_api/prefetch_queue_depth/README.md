@@ -13,7 +13,7 @@ This  test  aims to evaluate the prefetch queue depth support and the perfomance
 
 ## Running the app
 
-`python3 ./prefetch_queue_depth.py  <path to the dataset> <cpu/gpu> <batch_size> <prefetch_queue_depth>`
+`python3 prefetch_queue_depth.py  <path to the dataset> <cpu/gpu> <batch_size> <prefetch_queue_depth>`
 
 ## Example
 

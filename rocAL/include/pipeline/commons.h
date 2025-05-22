@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -65,7 +65,8 @@ enum class RocalTensorDataType {
     UINT8,
     INT8,
     UINT32,
-    INT32
+    INT32,
+    INT16
 };
 
 enum class RocalAffinity {
@@ -214,4 +215,13 @@ class BatchRNG {
    private:
     int64_t _seed;
     std::vector<RNG> _rngs;
+};
+
+/*! \brief MissingComponentsBehaviour for Webdataset
+ *
+ */
+enum MissingComponentsBehaviour {
+    MISSING_COMPONENT_ERROR = 0,
+    MISSING_COMPONENT_SKIP,
+    MISSING_COMPONENT_EMPTY
 };

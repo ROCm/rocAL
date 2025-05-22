@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -77,7 +77,6 @@ class RingBuffer {
     bool full();
     const unsigned BUFF_DEPTH;
     std::vector<size_t> _sub_buffer_size;
-    unsigned _sub_buffer_count;
     std::vector<std::vector<size_t>> _meta_data_sub_buffer_size;
     unsigned _meta_data_sub_buffer_count;
     std::mutex _lock;

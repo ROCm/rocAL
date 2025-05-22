@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -48,6 +48,7 @@ class rocalTensor {
     virtual RocalTensorLayout layout() = 0;
     virtual RocalTensorBackend backend() = 0;
     virtual RocalTensorOutputType data_type() = 0;
+    virtual RocalOutputMemType mem_type() = 0;
     virtual size_t data_size() = 0;
     virtual RocalROICordsType roi_type() = 0;
     virtual size_t get_roi_dims_size() = 0;
@@ -55,6 +56,8 @@ class rocalTensor {
     virtual std::vector<size_t> shape() = 0;
     virtual void set_dims(std::vector<size_t> dims) = 0;
     virtual void set_mem_handle(void* buffer) = 0;
+    virtual void set_tensor_layout(RocalTensorLayout layout) = 0;
+    virtual uint64_t data_type_size() = 0;
 };
 
 /*!
@@ -62,13 +65,32 @@ class rocalTensor {
  */
 class rocalTensorList {
    public:
+    virtual ~rocalTensorList() = default;
     virtual uint64_t size() = 0;
     virtual rocalTensor* at(size_t index) = 0;
     // isDenseTensor
 };
 
+/*!
+ * \brief class representing a list of rocal tensor list
+ */
+class rocalListOfTensorList {
+   public:
+    virtual ~rocalListOfTensorList() = default;
+    virtual uint64_t size() = 0;
+    virtual rocalTensorList* at(size_t index) = 0;
+};
+
+/*! 
+ * \brief  RocalNSROutput contains the anchor and shape tensor for NonSilentRegionDetection
+ */
+struct RocalNSROutput {
+    rocalTensor* anchor;
+    rocalTensor* shape;
+};
+
 typedef rocalTensor* RocalTensor;
 typedef rocalTensorList* RocalTensorList;
-typedef std::vector<rocalTensorList*> RocalMetaData;
+typedef rocalListOfTensorList* RocalMetaData;
 
 #endif  // MIVISIONX_ROCAL_API_TENSOR_H

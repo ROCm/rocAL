@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -83,6 +83,7 @@ void VideoLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decod
     // Initialize loader modules
     for (size_t idx = 0; idx < _shard_count; idx++) {
         _loaders[idx]->set_output(_output_tensor);
+        _loaders[idx]->set_gpu_device_id(idx);
         reader_cfg.set_shard_count(_shard_count);
         reader_cfg.set_shard_id(idx);
         _loaders[idx]->initialize(reader_cfg, decoder_cfg, mem_type, batch_size, keep_orig_size);

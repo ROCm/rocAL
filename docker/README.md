@@ -10,14 +10,14 @@ sudo docker build --build-arg {ARG_1_NAME}={ARG_1_VALUE} [--build-arg {ARG_2_NAM
 
 ## ARG options
 
-* Pytorch docker: 
+* [Pytorch docker](https://hub.docker.com/r/rocm/pytorch/tags): 
 
 ```
 PYTORCH_VERSION:                    rocm/pytorch docker tag
 ROCAL_PYTHON_VERSION_SUGGESTED:     Python version if required for rocal_pybind
 ```
 
-* Tensorflow docker: 
+* [Tensorflow docker](https://hub.docker.com/r/rocm/tensorflow/tags): 
 
 ```
 TENSORFLOW_VERSION:                 rocm/tensorflow docker tag

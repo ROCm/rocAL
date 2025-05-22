@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -125,7 +125,6 @@ void RandomBBoxCropReader::read_all() {
     release();
     const std::vector<float> sample_options = {-1.0f, 0.1f, 0.3f, 0.5f, 0.7f, 0.9f, 0.0f};
     int sample_option;
-    std::pair<bool, float> option;
     float min_iou;
     bool invalid_bboxes;
     bool crop_success;
@@ -225,7 +224,6 @@ RandomBBoxCropReader::get_batch_crop_coords(const std::vector<std::string> &imag
     }
     const std::vector<float> sample_options = {-1.0f, 0.1f, 0.3f, 0.5f, 0.7f, 0.9f, 0.0f};
     std::vector<float> coords_buf(4);
-    std::pair<bool, float> option;
     bool invalid_bboxes;
     bool crop_success;
     BoundingBoxCord crop_box;

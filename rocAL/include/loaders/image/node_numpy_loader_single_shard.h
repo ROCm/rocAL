@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 #include "numpy_loader_sharded.h"
-#include "pipeline/graph.h"
 #include "pipeline/node.h"
 
 class NumpyLoaderSingleShardNode : public Node {
@@ -32,18 +31,19 @@ class NumpyLoaderSingleShardNode : public Node {
 
     /// \param shard_id shard id from user
     /// \param shard_count shard count from user
-    /// \param source_path Defines the path that includes the image dataset
+    /// \param source_path Defines the path that includes the numpy dataset
+    /// \param files Contains a list of file paths to read the data from.
     /// \param storage_type Determines the storage type
     /// \param decoder_type Determines the decoder_type
     /// \param shuffle Determines if the user wants to shuffle the dataset or not.
-    /// \param loop Determines if the user wants to indefinitely loops through audios or not.
-    /// \param load_batch_count Defines the quantum count of the Audios to be loaded. It's usually equal to the user's batch size.
+    /// \param loop Determines if the user wants to indefinitely loops through numpy files or not.
+    /// \param load_batch_count Defines the quantum count of the numpy files to be loaded. It's usually equal to the user's batch size.
     /// \param mem_type Memory type, host or device
+    /// \param seed Determines the seed used by RNG for shuffling data between shards.
     /// \param sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::vector<std::string> &files,
               StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
               size_t load_batch_count, RocalMemType mem_type, unsigned seed = 0, const ShardingInfo& sharding_info = ShardingInfo());
-
     std::shared_ptr<LoaderModule> get_loader_module();
 
    protected:

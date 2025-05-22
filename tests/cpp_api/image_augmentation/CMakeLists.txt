@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2023 Advanced Micro Devices, Inc.
+# Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,34 +24,37 @@
 #
 ################################################################################
 
-cmake_minimum_required(VERSION 3.5)
-
-project(image_augmentation)
-
-set(CMAKE_CXX_STANDARD 14)
-
+cmake_minimum_required(VERSION 3.10)
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+# Set AMD Clang as default compiler
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS ON)
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
 
-# Add Default libdir
-set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
-include(GNUInstallDirs)
+project(image_augmentation)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 
-find_package(AMDRPP REQUIRED)
-find_package(MIVisionX REQUIRED)
+find_package(AMDRPP QUIET)
 find_package(OpenCV QUIET)
 
 # Application Includes & Libraries
-include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR} ${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR}/rocal)
-link_directories(${ROCM_PATH}/${CMAKE_INSTALL_LIBDIR})
+include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
+link_directories(${ROCM_PATH}/lib)
 
 add_executable(${PROJECT_NAME} image_augmentation.cpp)
 

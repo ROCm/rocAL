@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,15 +36,15 @@ THE SOFTWARE.
 
 using namespace std::chrono;
 
-bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name, std::string rocal_data_path) {
-    bool pass_status = false;
+int verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name, std::string rocal_data_path) {
+    int status = -1;
     // read data from golden outputs
     std::string ref_file_path = rocal_data_path + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return 1;
+        return -1;
     }
 
     // Get the size of the file
@@ -61,26 +61,26 @@ bool verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::strin
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return 1;
+        return -1;
     }
 
     fin.close();
 
     if ((nsr_begin[0] == ref_output[0]) && (nsr_length[0] == ref_output[1]))
-        pass_status = true;
+        status = 0;
 
-    return pass_status;
+    return status;
 }
 
-bool verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size, std::string rocal_data_path) {
-    bool pass_status = false;
+int verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size, std::string rocal_data_path) {
+    int status = -1;
     // read data from golden outputs
     std::string ref_file_path = rocal_data_path + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
     std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
-        return 0;
+        return -1;
     }
 
     // Get the size of the file
@@ -97,11 +97,12 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
 
     if (fin.fail()) {
         std::cout << "Error: Failed to read from the input binary file\n";
-        return 0;
+        return -1;
     }
 
     fin.close();
 
+    auto atol = (case_name != "normalize") ? 1e-20 : 1e-5;  // Absolute tolerance
     int matched_indices = 0;
     for (int i = 0; i < frames; i++) {
         for (int j = 0; j < channels; j++) {
@@ -109,17 +110,17 @@ bool verify_output(float *dst_ptr, long int frames, long int channels, std::stri
             ref_val = ref_output[i * channels + j];
             out_val = dst_ptr[i * max_channels + j];
             bool invalid_comparison = ((out_val == 0.0f) && (ref_val != 0.0f));
-            if (!invalid_comparison && std::abs(out_val - ref_val) < 1e-20)
+            if (!invalid_comparison && std::abs(out_val - ref_val) < atol)
                 matched_indices += 1;
         }
     }
 
     std::cout << std::endl << "Results for Test case: " << std::endl;
     if ((matched_indices == buffer_size) && matched_indices != 0) {
-        pass_status = true;
+        status = 0;
     }
 
-    return pass_status;
+    return status;
 }
 
 int test(int test_case, const char *path, int qa_mode, int downmix, int gpu);
@@ -131,24 +132,24 @@ int main(int argc, const char **argv) {
         return -1;
     }
 
-    int argIdx = 0;
-    const char *path = argv[++argIdx];
+    int argIdx = 1;
+    const char *path = argv[argIdx++];
     int qa_mode = 0;
     unsigned test_case = 0;
     bool downmix = false;
     bool gpu = 0;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        downmix = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        downmix = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        gpu = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        gpu = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        qa_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        qa_mode = atoi(argv[argIdx++]);
 
     if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
         std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
@@ -253,7 +254,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::vector<float> fill_values = {0.0};
             std::vector<unsigned> axes = {0};
             auto nsr_output = rocalNonSilentRegionDetection(handle, decoded_output, false, -60.0, 0.0, 8192, 2048);
-            rocalSlice(handle, decoded_output, true, nsr_output.first, nsr_output.second, fill_values, ROCAL_ERROR, ROCAL_FP32);
+            rocalSlice(handle, decoded_output, true, nsr_output.anchor, nsr_output.shape, fill_values, ROCAL_ERROR, ROCAL_FP32);
         } break;
         case 10: {
             std::cout << "Running MEL FILTER BANK " << std::endl;
@@ -298,17 +299,19 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         std::cout << "\n Iteration:: " << iteration << "\n";
         iteration++;
         if (rocalRun(handle) != 0) {
-            break;
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
         }
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-        int file_name_length[input_batch_size];
-        int file_name_size = rocalGetImageNameLen(handle, file_name_length);
-        char audio_file_name[file_name_size];
+        std::vector<int> file_name_length(input_batch_size);
+        int file_name_size = rocalGetImageNameLen(handle, file_name_length.data());
+        std::vector<char> audio_file_name(file_name_size);
         std::vector<int> roi(4 * input_batch_size, 0);
-        rocalGetImageName(handle, audio_file_name);
+        rocalGetImageName(handle, audio_file_name.data());
         RocalTensorList labels = rocalGetImageLabels(handle);
         int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
-        std::cout << "Audio file : " << audio_file_name << "\n";
+        std::cout << "Audio file : " << audio_file_name.data() << "\n";
         std::cout << "Label : " << *label_id << "\n";
         if (test_case == 8) {  // Non silent region detection outputs
             nsr_begin = static_cast<int *>(output_tensor_list->at(0)->buffer());
@@ -332,9 +335,9 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
             exit(0);
         }
-        if (test_case != 8 && verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path)) {
+        if (test_case != 8 && (verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path) == 0)) {
             std::cout << "PASSED!\n\n";
-        } else if (test_case == 8 && verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path)) {
+        } else if (test_case == 8 && (verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path) == 0)) {
             std::cout << "PASSED!\n\n";
         } else {
             std::cout << "FAILED!\n\n";

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,6 @@ class COCOMetaDataReaderKeyPoints : public MetaDataReader {
     std::string _path;
     unsigned _out_img_width;
     unsigned _out_img_height;
-    int meta_data_reader_type;
     void add(std::string image_name, ImgSize image_size, JointsData* joints_data);
     bool exists(const std::string& image_name) override;
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;

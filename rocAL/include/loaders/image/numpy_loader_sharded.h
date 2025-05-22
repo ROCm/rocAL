@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,8 +25,8 @@ THE SOFTWARE.
 
 #include "numpy_loader.h"
 //
-// NumpyLoaderSharded Can be used to run load and decode in multiple shards, each shard by a single loader instance,
-// It improves load and decode performance since each loader loads the images in parallel using an internal thread
+// NumpyLoaderSharded Can be used to run load in multiple shards, each shard by a single loader instance,
+// It improves load performance since each loader loads the numpy files in parallel using an internal thread
 //
 class NumpyLoaderSharded : public LoaderModule {
    public:
@@ -34,7 +34,7 @@ class NumpyLoaderSharded : public LoaderModule {
     ~NumpyLoaderSharded() override;
     LoaderModuleStatus load_next() override;
     void initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg, RocalMemType mem_type, unsigned batch_size, bool keep_orig_size = false) override;
-    void set_output(Tensor *output_image) override;
+    void set_output(Tensor *output_tensor) override;
     size_t remaining_count() override;
     void reset() override;
     void start_loading() override;

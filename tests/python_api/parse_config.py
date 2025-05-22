@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -134,5 +134,10 @@ def parse_args():
                                 help='video path')
     video_pipeline.add_argument('--sequence-length', '-sequence-length', type=int,
                                 help='video path')
+    # web_dataset_reader.py related options
+    web_dataset_reader = parser.add_argument_group(
+        'webdataset-pipeline', 'webdataset-pipeline-related options')
+    web_dataset_reader.add_argument('--index-path', '-index-path', type=str,
+                               help='web dataset index path')
 
     return parser.parse_args()

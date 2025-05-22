@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -499,6 +499,32 @@ def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None,
     crop_resized_image = b.cropResize(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (crop_resized_image)
+
+
+def roi_resize(*inputs, resize_width=0, resize_height=0, roi_w=None, roi_h=None, roi_pos_x=None, roi_pos_y=None, device=None,
+                      interpolation_type=types.LINEAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Function which resizes images based on ROI region.
+
+        @param inputs: the input image passed to the augmentation
+        @param resize_width (int, optional, default = 0)                                   The length of the X dimension of the resized image
+        @param resize_height (int, optional, default = 0)                                  The length of the Y dimension of the resized image
+        @param roi_w (float, optional, default = None)                                     ROI width
+        @param roi_h (float, optional, default = None)                                     ROI height
+        @param roi_pos_x (float, optional, default = None)                                 roi_pos_x used for crop generation
+        @param roi_pos_y (float, optional, default = None)                                 roi_pos_y used for crop generation
+        @param device (string, optional, default = None)                                   Parameter unused for augmentation
+        @param interpolation_type (int, optional, default = types.LINEAR_INTERPOLATION)    Type of interpolation to be used.
+        @param output_layout (int, optional, default = types.NHWC)                         tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                         tensor dtype for the augmentation output
+
+        @return    ROI resized image
+    """
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "roi_h": roi_h,
+                     "roi_w": roi_w, "roi_pos_x": roi_pos_x, "roi_pos_y": roi_pos_y, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
+    roi_resized_image = b.roiResize(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (roi_resized_image)
 
 
 def resize_mirror_normalize(*inputs, max_size=[], resize_longer=0, resize_shorter=0, resize_width=0, resize_height=0, scaling_mode=types.SCALING_MODE_DEFAULT,
@@ -1089,7 +1115,7 @@ def box_iou_matcher(*inputs, anchors, high_threshold=0.5,
     return (box_iou_matcher, [])
 
 
-def external_source(source, device=None, color_format=types.RGB, random_shuffle=False, mode=types.EXTSOURCE_FNAME, max_width=2000, max_height=2000, last_batch_policy=types.LAST_BATCH_FILL, last_batch_padded=True):
+def external_source(source, device=None, color_format=types.RGB, random_shuffle=False, mode=types.EXTSOURCE_FNAME, max_width=2000, max_height=2000, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False, stick_to_shard=True, shard_size=-1):
     """
     External Source Reader - User can pass a iterator or callable source.
     @param source (iterator or callable)                                 The source iterator or callable object.
@@ -1106,8 +1132,9 @@ def external_source(source, device=None, color_format=types.RGB, random_shuffle=
     Pipeline._current_pipeline._external_source_mode = mode
     Pipeline._current_pipeline._external_source_user_given_width = max_width
     Pipeline._current_pipeline._external_source_user_given_height = max_height
+    sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     kwargs_pybind = {"rocal_color_format": color_format, "is_output": False, "shuffle": random_shuffle, "loop": False, "decode_size_policy": types.USER_GIVEN_SIZE,
-                     "max_width": max_width, "max_height": max_height, "dec_type": types.DECODER_TJPEG, "external_source_mode": mode, "last_batch_info": (last_batch_policy, last_batch_padded)}
+                     "max_width": max_width, "max_height": max_height, "dec_type": types.DECODER_TJPEG, "external_source_mode": mode, "sharding_info": sharding_info}
     external_source_operator = b.externalFileSource(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (external_source_operator, [])  # Labels is Empty
@@ -1196,7 +1223,7 @@ def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_inte
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
     non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return non_silent_region_output
+    return non_silent_region_output.anchor, non_silent_region_output.shape
 
 def set_layout(*inputs, output_layout=types.NHWC):
     """!Adjusts brightness of the image.
@@ -1280,3 +1307,14 @@ def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_
                      "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "output_datatype": output_datatype}
     mel_filter_bank_output = b.melFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return mel_filter_bank_output
+
+def transpose(*inputs, perm=[], output_layout=types.NHWC, output_dtype=types.UINT8):
+    """
+    Transposes the input according to the permutation passed from user.
+    @param perm            Transpose permutation passed from the user
+    @param output_layout   Output Layout of the Tensor
+    @param output_dtype    Output DataType of the Tensor
+    """
+    kwargs_pybind = {"input_image": inputs[0], "perm": perm, "is_output": False, "output_layout": output_layout}
+    transposed_image = b.transpose(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (transposed_image)

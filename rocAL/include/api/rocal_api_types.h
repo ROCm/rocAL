@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -261,7 +261,10 @@ enum RocalTensorOutputType {
     ROCAL_UINT32 = 4,
     /*! \brief AMD ROCAL_INT32
      */
-    ROCAL_INT32 = 5
+    ROCAL_INT32 = 5,
+    /*! \brief AMD ROCAL_INT16
+     */
+    ROCAL_INT16 = 6
 };
 
 /*! \brief rocAL Decoder Type enum
@@ -274,19 +277,24 @@ enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_OPENCV
      */
     ROCAL_DECODER_OPENCV = 1,
-    /*! \brief AMD ROCAL_DECODER_HW_JPEG
-     */
-    ROCAL_DECODER_HW_JPEG = 2,
     /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_SW
      */
-    ROCAL_DECODER_VIDEO_FFMPEG_SW = 3,
+    ROCAL_DECODER_VIDEO_FFMPEG_SW = 2,
     /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_HW
      */
-    ROCAL_DECODER_VIDEO_FFMPEG_HW = 4,
+    ROCAL_DECODER_VIDEO_FFMPEG_HW = 3,
     /*! \brief AMD ROCAL_DECODER_AUDIO_GENERIC
      * Uses SndFile library to read audio files
      */
-    ROCAL_DECODER_AUDIO_GENERIC = 5
+    ROCAL_DECODER_AUDIO_GENERIC = 4,
+    /*! \brief AMD ROCAL_DECODER_VIDEO_ROCDECODE
+     * Uses rocDecode library to decode videos on hardware
+     */
+    ROCAL_DECODER_VIDEO_ROCDECODE = 5,
+    /*! \brief AMD ROCAL_DECODER_ROCJPEG
+     * Uses rocJpeg library to decode images on hardware
+     */
+    ROCAL_DECODER_ROCJPEG = 6
 };
 
 enum RocalOutputMemType {
@@ -474,6 +482,33 @@ struct RocalShardingInfo {
           stick_to_shard(true),
           shard_size(-1)
     {}
+
+    // Constructor that initializes all members
+    RocalShardingInfo(
+        RocalLastBatchPolicy last_batch_policy,
+        bool pad_last_batch_repeated,
+        bool stick_to_shard,
+        int shard_size
+    )
+        : last_batch_policy(last_batch_policy),
+          pad_last_batch_repeated(pad_last_batch_repeated),
+          stick_to_shard(stick_to_shard),
+          shard_size(shard_size) {}
+};
+
+/*! \brief Missing components behaviour for Webdataset
+ *  \ingroup group_rocal_types
+ */
+enum RocalMissingComponentsBehaviour {
+    /*! \brief ROCAL_MISSING_COMPONENT_ERROR
+     */
+    ROCAL_MISSING_COMPONENT_ERROR = 0,
+    /*! \brief ROCAL_MISSING_COMPONENT_SKIP
+     */
+    ROCAL_MISSING_COMPONENT_SKIP = 1,
+    /*! \brief ROCAL_MISSING_COMPONENT_EMPTY
+     */
+    ROCAL_MISSING_COMPONENT_EMPTY = 2
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
