@@ -40,15 +40,14 @@ void Node::update_parameters() {
 }
 
 void Node::add_next(const std::shared_ptr<Node> &node) {
-    
-    if (node->get_id() < 0)
-        node->set_id(_graph_id);
+    // Set graph ID to the Node, to denote the graph to which it belongs to
+    if (node->get_graph_id() < 0) node->set_graph_id(_graph_id);
     _next.emplace_back(node);
 }
 
 void Node::add_previous(const std::shared_ptr<Node> &node) {
-    for (auto prev_node : _prev) {
-        if (prev_node->get_id() != node->get_id())
+    for (auto& prev_node : _prev) {
+        if (prev_node->get_graph_id() != node->get_graph_id())
             THROW("The nodes are interdependent between 2 graphs")
     }
     _prev.emplace_back(node);

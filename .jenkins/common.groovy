@@ -115,6 +115,10 @@ def runTestCommand (platform, project) {
                     cmake /opt/rocm/share/rocal/test/image_augmentation/
                     make -j
                     ./image_augmentation /opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet/ 0 416 416 0 1 1 1 0 1
+                    cd ../ && mkdir -p multiple-dataloaders-test && cd multiple-dataloaders-test
+                    cmake /opt/rocm/share/rocal/test/multiple_dataloaders_test/
+                    make -j
+                    ./multiple_dataloaders_test ../MIVisionX-data-main/rocal_data/numpy/ dataloader_op 
                     cd ../ && mkdir -p python-api-tests && cd python-api-tests
                     export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm/lib/
                     export PATH=\$PATH:/opt/rocm/bin
