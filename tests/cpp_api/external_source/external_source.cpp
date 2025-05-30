@@ -130,6 +130,12 @@ int main(int argc, const char **argv) {
         file_path.append(_entity->d_name);
         file_names.push_back(file_path);
     }
+
+    if (file_names.empty()) {
+        std::cerr << "[ERR] No files detected in the given path, Pass a folder with images\n";
+        return -1;
+    }
+
     if (mode != 0) {
         if (mode == 1) {
             // Mode 1 is Raw compressed
@@ -258,11 +264,11 @@ int main(int argc, const char **argv) {
             if (mode == 0) {
                 input_images.push_back(file_names.back());
                 file_names.pop_back();
-                if ((file_names.size()) == 0) {
-                    eos = true;
-                }
                 label_buffer.push_back(labels.back());
                 labels.pop_back();
+                if ((file_names.size()) < input_batch_size) {
+                    eos = true;
+                }
             } else {
                 if (mode == 1) {
                     input_batch_buffer.push_back(input_buffer.back());
@@ -281,12 +287,12 @@ int main(int argc, const char **argv) {
                     label_buffer.push_back(labels.back());
                     labels.pop_back();
                 }
-                if ((file_names.size()) == 0 || input_buffer.size() == 0) {
+                if ((file_names.size()) < input_batch_size || input_buffer.size() < input_batch_size) {
                     eos = true;
                 }
             }
         }
-        if (index + 1 <= (total_images / input_batch_size)) {
+        if (index + 1 <= total_images / input_batch_size) {
             std::cerr << "\n Processing Batch: " << index << "\n Mode: " << mode;
             if (mode == 0) {
                 rocalExternalSourceFeedInput(handle, input_images, set_labels, {}, ROI_xywh,
@@ -311,9 +317,10 @@ int main(int argc, const char **argv) {
             return -1;
         }
 
+        output_tensor_list = rocalGetOutputTensors(handle);
+
         if (!display) continue;
         // Dump the output image
-        output_tensor_list = rocalGetOutputTensors(handle);
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
@@ -392,7 +399,7 @@ int main(int argc, const char **argv) {
                     int *labels_ptr = static_cast<int *>(label_buffer.data());
                     for (size_t i = 0; i < label_buffer.size(); i++) {
                         labels_tensor_list->at(i)->set_mem_handle(labels_ptr);
-                        std::cerr << "\nLabels[" << i << "]: " << labels_ptr[i] << "\t";
+                        std::cerr << "\nLabels[" << i << "]: " << *labels_ptr << "\t";
                         labels_ptr++;
                     }
                 }
