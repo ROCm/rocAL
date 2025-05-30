@@ -195,10 +195,10 @@ do
         ./unit_tests 19 "$mxnet_path" "${output_path}BlurRandom_${rgb_name[$rgb]}_${device_name}" $width $height 7 $device $rgb 1 $display
         ./unit_tests 20 "$numpy_data_path" "${output_path}BlendRandom_${rgb_name[$rgb]}_${device_name}" $width $height 8 $device $rgb 1 $display
         ./unit_tests 21 "$image_path" "${output_path}WarpAffineRandom_${rgb_name[$rgb]}_${device_name}" $width $height 9 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 13 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" $width $height 14 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 15 $device $rgb 1 $display
-        ./unit_tests 0 "$image_path" "${output_path}FogRandom_${rgb_name[$rgb]}_${device_name}" $width $height 17 $device $rgb 1 $display
+        ./unit_tests 22 "$caffe_classification_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 13 $device $rgb 1 $display
+        ./unit_tests 23 "$caffe2_classification_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" $width $height 14 $device $rgb 1 $display
+        ./unit_tests 24 "$tf_classification_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 15 $device $rgb 1 $display
+        ./unit_tests 25 "$webdataset_tar_path" "${output_path}FogRandom_${rgb_name[$rgb]}_${device_name}" $width $height 17 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}LensCorrectionRandom_${rgb_name[$rgb]}_${device_name}" $width $height 18 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}ExposureRandom_${rgb_name[$rgb]}_${device_name}" $width $height 20 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}HueRandom_${rgb_name[$rgb]}_${device_name}" $width $height 21 $device $rgb 1 $display
@@ -211,6 +211,7 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}SSDRandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 54 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}RandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 59 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}ROIResize_${rgb_name[$rgb]}_${device_name}" $width $height 60 $device $rgb 1 $display
 
     done
 done

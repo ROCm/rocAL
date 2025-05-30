@@ -37,7 +37,7 @@ make
 SAVE_FRAMES=1   # (save_frames:on/off)
 RGB=1           # (rgb:1/gray:0)
 DEVICE=0        # (cpu:0/gpu:1)
-DECODER_TYPE=0  # (ffmpeg_sw:0/ffmpeg_hw=1/rocDecode=2)
+DECODER_TYPE=0  # (ffmpeg_sw:0/rocDecode=1)
 SHUFFLE=0       # (shuffle:on/off)
 
 BATCH_SIZE=1         # Number of sequences per batch

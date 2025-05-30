@@ -99,7 +99,7 @@ enum class RocalMemType {
  *  Currently supports Software decoding, will support Hardware decoding in future
  */
 enum class DecodeMode {
-    HW_VAAPI = 0,
+    ROCDECODE = 0,
     CPU
 };
 

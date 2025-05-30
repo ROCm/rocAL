@@ -45,10 +45,9 @@ enum class DecoderType {
     OPENCV_DEC = 2,        //!< for back_up decoding
     SKIP_DECODE = 3,       //!< For skipping decoding in case of uncompressed data from reader
     FFMPEG_SW_DECODE = 4,   //!< for video decoding using CPU and FFMPEG
-    FFMPEG_HW_DECODE = 5,   //!< for video decoding using HW via FFMPEG
-    ROCDEC_VIDEO_DECODE = 6, //!< for video decoding using HW via rocDecode
-    AUDIO_SOFTWARE_DECODE = 7,  //!< Uses sndfile to decode audio files
-    ROCJPEG_DEC = 8             //!< rocJpeg hardware decoder for decoding jpeg files
+    ROCDEC_VIDEO_DECODE = 5, //!< for video decoding using HW via rocDecode
+    AUDIO_SOFTWARE_DECODE = 6,  //!< Uses sndfile to decode audio files
+    ROCJPEG_DEC = 7             //!< rocJpeg hardware decoder for decoding jpeg files
 };
 
 class DecoderConfig {

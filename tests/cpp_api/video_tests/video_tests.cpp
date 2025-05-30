@@ -131,8 +131,6 @@ int main(int argc, const char **argv) {
     auto decoder_mode = ((decoder_type > 0) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE);
     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW;
     if (decoder_type == 1) {
-        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_HW;
-    } else if (decoder_type == 2) {
         rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_ROCDECODE;
         if (processing_device != 1) {
             std::cerr << "Setting the processing device to GPU for rocDecode decoder\n";
@@ -201,6 +199,26 @@ int main(int argc, const char **argv) {
             std::cout << "\nSEQUENCE READER\n";
             enable_framenumbers = enable_timestamps = 0;
             input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            break;
+        }
+        case 4: {
+            std::cout << "\nSEQUENCE READER - Single Shard\n";
+            enable_framenumbers = enable_timestamps = 0;
+            input1 = rocalSequenceReaderSingleShard(handle, source_path, color_format, 0, 1, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            break;
+        }
+        case 5: {
+            std::cout << "\nVIDEO READER RESIZE - SINGLE SHARD\n";
+            if (resize_width == 0 || resize_height == 0) {
+                std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
+                return -1;
+            }
+            input1 = rocalVideoFileResizeSingleShard(handle, source_path, color_format, decoder_mode, 0, 1, sequence_length, resize_width, resize_height, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
+            break;
+        }
+        case 6: {
+            std::cout << "\nVIDEO READER - SINGLE SHARD\n";
+            input1 = rocalVideoFileSourceSingleShard(handle, source_path, color_format, decoder_mode, 0, 1, sequence_length, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
             break;
         }
     }

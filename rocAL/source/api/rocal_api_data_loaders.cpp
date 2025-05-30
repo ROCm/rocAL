@@ -155,7 +155,7 @@ auto convert_color_format_sequence = [](RocalImageColor color_format, size_t n, 
 auto convert_decoder_mode = [](RocalDecodeDevice decode_mode) {
     switch (decode_mode) {
         case ROCAL_HW_DECODE:
-            return DecodeMode::HW_VAAPI;
+            return DecodeMode::ROCDECODE;
 
         case ROCAL_SW_DECODE:
             return DecodeMode::CPU;
@@ -169,8 +169,6 @@ auto convert_video_decoder_type = [](RocalDecoderType decoder_type) {
     switch (decoder_type) {
         case ROCAL_DECODER_VIDEO_FFMPEG_SW:
             return DecoderType::FFMPEG_SW_DECODE;
-        case ROCAL_DECODER_VIDEO_FFMPEG_HW:
-            return DecoderType::FFMPEG_HW_DECODE;
         case ROCAL_DECODER_VIDEO_ROCDECODE:
             return DecoderType::ROCDEC_VIDEO_DECODE;
         default:
@@ -832,69 +830,6 @@ rocalMXNetRecordSource(
     RocalContext p_context,
     const char* source_path,
     RocalImageColor rocal_color_format,
-    unsigned shard_id,
-    unsigned shard_count,
-    bool is_output,
-    std::vector<float>& area_factor,
-    std::vector<float>& aspect_ratio,
-    unsigned num_attempts,
-    bool shuffle,
-    bool loop,
-    RocalImageSizeEvaluationPolicy decode_size_policy,
-    unsigned max_width,
-    unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
-    Tensor* output = nullptr;
-    auto context = static_cast<Context*>(p_context);
-    try {
-        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
-
-        if (shard_count < 1)
-            THROW("Shard count should be bigger than 0")
-
-        if (shard_id >= shard_count)
-            THROW("Shard id should be smaller than shard count")
-
-        if (use_input_dimension && (max_width == 0 || max_height == 0)) {
-            THROW("Invalid input max width and height");
-        } else {
-            LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
-        }
-
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, source_path, "");
-        auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
-        INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
-        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
-
-        auto info = TensorInfo(std::move(dims),
-                               context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8,
-                               tensor_layout,
-                               color_format);
-        output = context->master_graph->create_loader_output_tensor(info);
-        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-
-        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
-
-        context->master_graph->set_loop(loop);
-
-        if (is_output) {
-            auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_node<CopyNode>({output}, {actual_output});
-        }
-
-    } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
-    }
-    return output;
-}
-
-RocalTensor ROCAL_API_CALL
-rocalMXNetRecordSource(
-    RocalContext p_context,
-    const char* source_path,
-    RocalImageColor rocal_color_format,
     unsigned internal_shard_count,
     bool is_output,
     bool shuffle,
@@ -1409,6 +1344,8 @@ rocalJpegTFRecordSourceSingleShard(
     unsigned shard_id,
     unsigned shard_count,
     bool is_output,
+    const char* user_key_for_encoded,
+    const char* user_key_for_filename,
     bool shuffle,
     bool loop,
     RocalImageSizeEvaluationPolicy decode_size_policy,
@@ -1419,6 +1356,13 @@ rocalJpegTFRecordSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+        std::string user_key_for_encoded_str(user_key_for_encoded);
+        std::string user_key_for_filename_str(user_key_for_filename);
+
+        std::map<std::string, std::string> feature_key_map = {
+            {"image/encoded", user_key_for_encoded_str},
+            {"image/filename", user_key_for_filename_str},
+        };
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
@@ -1450,7 +1394,7 @@ rocalJpegTFRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, feature_key_map);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
