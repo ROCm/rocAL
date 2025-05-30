@@ -114,6 +114,7 @@ int main(int argc, const char** argv) {
 
     // Creating uniformly distributed random objects to override some of the default augmentation parameters
     RocalFloatParam rand_crop_area = rocalCreateFloatUniformRand(0.3, 0.5);
+    auto status = rocalUpdateFloatUniformRand(0.2, 0.5, rand_crop_area);
     RocalIntParam color_temp_adj = rocalCreateIntParameter(0);
 
     // Creating a custom random object to set a limited number of values to randomize the rotation angle
@@ -122,6 +123,7 @@ int main(int argc, const char** argv) {
     double frequencies[num_values] = {1, 5, 5};
 
     RocalFloatParam rand_angle = rocalCreateFloatRand(values, frequencies, num_values);
+    status = rocalUpdateFloatRand(values, frequencies, num_values, rand_angle);
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
     RocalTensor input1;
@@ -135,7 +137,7 @@ int main(int argc, const char** argv) {
             return -1;
         }
         input1 = rocalVideoFileSource(handle, folderPath1, color_format, (dec_type == 2) ? ROCAL_HW_DECODE : ROCAL_SW_DECODE, shard_count, sequence_length, shuffle, 
-                                      true, false, (dec_type == 2) ? ROCAL_DECODER_VIDEO_FFMPEG_HW : ROCAL_DECODER_VIDEO_FFMPEG_SW, frame_step, frame_stride);
+                                      true, false, (dec_type == 2) ? ROCAL_DECODER_VIDEO_ROCDECODE : ROCAL_DECODER_VIDEO_FFMPEG_SW, frame_step, frame_stride);
     } else if (decoder_mode == 1) {
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
