@@ -558,6 +558,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalCo
                                                                          unsigned shard_id,
                                                                          unsigned shard_count,
                                                                          bool is_output,
+                                                                         const char* user_key_for_encoded,
+                                                                         const char* user_key_for_filename,
                                                                          bool shuffle = false,
                                                                          bool loop = false,
                                                                          RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,

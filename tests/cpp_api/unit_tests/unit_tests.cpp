@@ -188,7 +188,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::vector<int> values = {0, 1};
     std::vector<double> frequencies = {0.5, 0.5};
     RocalIntParam rand_prob = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
+    auto status = rocalUpdateIntRand(values.data(), frequencies.data(), values.size(), rand_prob);
 
+    RocalFloatParam float_param = rocalCreateFloatParameter(1.0f);
+    status = rocalUpdateFloatParameter(2.0f, float_param);
+    auto float_param_value = rocalGetFloatValue(float_param);
+
+    RocalIntParam uniform_int_param = rocalCreateIntUniformRand(0, 1);
+    status = rocalUpdateIntUniformRand(0, 2, uniform_int_param);
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
 
 #if defined RANDOMBBOXCROP
@@ -416,6 +423,45 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, true);
             else
                 decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 22:  // caffe classification
+        {
+            std::cout << "Running CAFFE CLASSIFICATION PARTIAL READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateCaffeLMDBLabelReader(handle, path);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            decoded_output = rocalJpegCaffeLMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 23:  // caffe2 classification
+        {
+            std::cout << "Running CAFFE2 CLASSIFICATION PARTIAL READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            rocalCreateCaffe2LMDBLabelReader(handle, path, true);
+            std::vector<float> area = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            decoded_output = rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 24:  // tf classification
+        {
+            std::cout << "Running TF CLASSIFICATION READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            char key1[25] = "image/encoded";
+            char key2[25] = "image/class/label";
+            char key8[25] = "image/filename";
+            rocalCreateTFReader(handle, path, true, key2, key8);
+            decoded_output = rocalJpegTFRecordSourceSingleShard(handle, path, color_format, 0, 1, false, key1, key8, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 25:  // web_dataset reader
+        {
+            std::cout << "Running WEB DATASET READER - WITH IDX FILE" << std::endl;
+            pipeline_type = 4;
+            std::vector<std::set<std::string>> extensions = {
+                {"JPEG", "cls"},
+            };
+            std::string idx_file_path = rocal_data_path + "/rocal_data/web_dataset/idx_file/";
+            rocalCreateWebDatasetReader(handle, path, idx_file_path.c_str(), extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
+            decoded_output = rocalWebDatasetSourceSingleShard(handle, path, idx_file_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
@@ -709,6 +755,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalRandomCrop" << std::endl;
             output = rocalRandomCrop(handle, input, true);
         } break;
+        case 60: {
+            std::cout << "Running rocalROIResize" << std::endl;
+            output = rocalROIResize(handle, input, 384, 384, true, 416, 416);
+        } break;
 
         default:
             std::cout << "Not a valid option! Exiting!\n";
@@ -876,6 +926,23 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        
+        // Testing the rocalToTensor API for copy augmentation
+        if ((test_case == 23) && (gpu == 0)) {
+            float *f32_batch_output = (float *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+
+            half *f16_batch_output = (half *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            free(f32_batch_output);
+            free(f16_batch_output);
+        }
 
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
