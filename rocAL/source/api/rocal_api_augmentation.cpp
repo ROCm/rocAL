@@ -2601,3 +2601,30 @@ rocalTranspose(
     }
     return output;
 }
+
+RocalTensor rocalLog1p(RocalContext p_context,
+                             RocalTensor p_input,
+                             bool is_output) {
+    Tensor* output = nullptr;
+    if ((p_context == nullptr) || (p_input == nullptr)) {
+        ERR("Invalid ROCAL context or invalid input tensor")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(input->data_type());
+        if (op_tensor_data_type != RocalTensorDataType::INT16) {
+            THROW("Log1p augmentation only supported for int16 inputs")
+        }
+        op_tensor_data_type = RocalTensorDataType::FP32;  // Log1p only supports F32 outputs so setting output dtype to F32
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_data_type);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<Log1pNode>({input}, {output});
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+    }
+    return output;
+}
