@@ -68,3 +68,4 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_normalize.h"
 #include "augmentations/audio_augmentations/node_mel_filter_bank.h"
 #include "augmentations/geometry_augmentations/node_transpose.h"
+#include "augmentations/arithmetic_augmentations/node_log1p.h"
