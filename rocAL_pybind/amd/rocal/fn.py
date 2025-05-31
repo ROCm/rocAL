@@ -1240,3 +1240,11 @@ def transpose(*inputs, perm=[], output_layout=types.NHWC, output_dtype=types.UIN
     kwargs_pybind = {"input_image": inputs[0], "perm": perm, "is_output": False, "output_layout": output_layout}
     transposed_image = b.transpose(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (transposed_image)
+
+def log1p(*inputs, output_datatype = types.FLOAT):
+    """
+    Computes the natural logarithm of 1 + input element-wise.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
+    log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return log_output

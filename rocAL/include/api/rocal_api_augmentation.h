@@ -1364,4 +1364,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
 extern "C" RocalTensor ROCAL_API_CALL rocalTranspose(RocalContext context, RocalTensor input, std::vector<unsigned> perm, bool is_output,
                                                      RocalTensorLayout output_layout = ROCAL_NONE);
 
+/*! \brief Computes the natural logarithm of 1 + input element-wise and returns the output
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
+                                                       RocalTensor p_input,
+                                                       bool is_output);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H
