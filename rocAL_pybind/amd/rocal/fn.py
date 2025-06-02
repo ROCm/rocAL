@@ -202,7 +202,7 @@ def lens_correction(*inputs, camera_matrix=None, distortion_coeffs=None, device=
         cameraMatrix.fy = camera_matrix[2]
         cameraMatrix.cy = camera_matrix[3]
     if isinstance(distortion_coeffs, list):
-        distortionCoeffs = b.CameraMatrix()
+        distortionCoeffs = b.DistortionCoeffs()
         distortionCoeffs.k1 = distortion_coeffs[0]
         distortionCoeffs.k2 = distortion_coeffs[1]
         distortionCoeffs.p1 = distortion_coeffs[2]
@@ -210,7 +210,7 @@ def lens_correction(*inputs, camera_matrix=None, distortion_coeffs=None, device=
         distortionCoeffs.k3 = distortion_coeffs[4]
 
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "camera_matrix": cameraMatrix, "distortion_coeffs": distortion_coeffs, "is_output": False,
+    kwargs_pybind = {"input_image": inputs[0], "camera_matrix": cameraMatrix, "distortion_coeffs": distortionCoeffs, "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     len_corrected_image = b.lensCorrection(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
