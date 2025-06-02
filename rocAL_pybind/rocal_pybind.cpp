@@ -781,7 +781,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .def_readwrite("cx", &CameraMatrix::cx)
         .def_readwrite("fy", &CameraMatrix::fy)
         .def_readwrite("cy", &CameraMatrix::cy);
-    py::class_<DistortionCoeffs>(m, "CameraMatrix")
+    py::class_<DistortionCoeffs>(m, "DistortionCoeffs")
         .def(py::init<>())
         .def_readwrite("k1", &DistortionCoeffs::k1)
         .def_readwrite("k2", &DistortionCoeffs::k2)
