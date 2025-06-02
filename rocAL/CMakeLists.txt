@@ -393,7 +393,7 @@ if(${BUILD_ROCAL})
     endif()
     
     # Audio features for rocAL
-    if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "0" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
+    if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "1" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
         if(NOT SNDFILE_FOUND)
             message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio functionalities will not be supported${ColourReset}")
             set(AUDIO_SUPPORT FALSE)
@@ -402,7 +402,7 @@ if(${BUILD_ROCAL})
         endif()
     else()
         set(AUDIO_SUPPORT FALSE)
-        message("-- ${Yellow}rocAL -- Requires MIVisionX vx_rpp version > 3.0.0 for audio${ColourReset}")
+        message("-- ${Yellow}rocAL -- Requires MIVisionX vx_rpp version >= 3.1.0 for rocAL${ColourReset}")
     endif()
 
     # SndFile
