@@ -188,8 +188,8 @@ do
         # code coverage tests
         ./unit_tests 14 "$image_path" "${output_path}BrightnessRandom_${rgb_name[$rgb]}_${device_name}" $width $height 3 $device $rgb 1 $display
         ./unit_tests 15 "$coco_detection_path" "${output_path}FlipRandom_${rgb_name[$rgb]}_${device_name}" $width $height 6 $device $rgb 1 $display
-        ./unit_tests 16 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
-        ./unit_tests 16 "$coco_detection_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
+        ./unit_tests 15 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
+        ./unit_tests 15 "$coco_detection_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
         ./unit_tests 17 "$caffe_classification_path" "${output_path}GammaRandom_${rgb_name[$rgb]}_${device_name}" $width $height 4 $device $rgb 1 $display
         ./unit_tests 18 "$caffe2_classification_path" "${output_path}ContrastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 5 $device $rgb 1 $display
         ./unit_tests 19 "$mxnet_path" "${output_path}BlurRandom_${rgb_name[$rgb]}_${device_name}" $width $height 7 $device $rgb 1 $display
@@ -209,7 +209,7 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeCropMirrorRandom_${rgb_name[$rgb]}_${device_name}" $width $height 27 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}CropResize_${rgb_name[$rgb]}_${device_name}" $width $height 30 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}SSDRandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 54 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
+        ./unit_tests 16 "$coco_keypoints_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}RandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 59 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ROIResize_${rgb_name[$rgb]}_${device_name}" $width $height 60 $device $rgb 1 $display
 

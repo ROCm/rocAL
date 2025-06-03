@@ -101,6 +101,81 @@ std::string get_scaling_mode(unsigned int val, RocalResizeScalingMode &scale_mod
     }
 }
 
+std::vector<float> generate_coco_anchors() {
+    const float fig_size = 300.0f;
+    const std::vector<int> feat_size = {38, 19, 10, 5, 3, 1};
+    const std::vector<float> steps = {8.0f, 16.0f, 32.0f, 64.0f, 100.0f, 300.0f};
+    const std::vector<float> scales = {21.0f, 45.0f, 99.0f, 153.0f, 207.0f, 261.0f, 315.0f};
+    const std::vector<std::vector<float>> aspect_ratios = {{2.0f}, {2.0f, 3.0f}, {2.0f, 3.0f}, {2.0f, 3.0f}, {2.0f}, {2.0f}};
+
+    std::vector<std::vector<float>> default_boxes_cxcywh;
+    default_boxes_cxcywh.reserve(8732);
+
+    std::vector<float> fk(steps.size());
+    for (size_t i = 0; i < steps.size(); ++i) {
+        fk[i] = fig_size / steps[i];
+    }
+
+    for (size_t idx = 0; idx < feat_size.size(); ++idx) {
+        int sfeat = feat_size[idx];
+        float sk1 = scales[idx] / fig_size;
+        float sk2 = scales[idx + 1] / fig_size;
+        float sk3 = std::sqrt(sk1 * sk2);
+
+        std::vector<std::pair<float, float>> all_sizes;
+        all_sizes.push_back({sk1, sk1});
+        all_sizes.push_back({sk3, sk3});
+
+        for (float alpha : aspect_ratios[idx]) {
+            float sqrt_alpha = std::sqrt(alpha);
+            float w_ar = sk1 * sqrt_alpha;
+            float h_ar = sk1 / sqrt_alpha;
+            all_sizes.push_back({w_ar, h_ar});
+            all_sizes.push_back({h_ar, w_ar});
+        }
+
+        for (const auto& size_pair : all_sizes) {
+            float w = size_pair.first;
+            float h = size_pair.second;
+
+            for (int i = 0; i < sfeat; ++i) {
+                for (int j = 0; j < sfeat; ++j) {
+                    float cx = (static_cast<float>(j) + 0.5f) / fk[idx];
+                    float cy = (static_cast<float>(i) + 0.5f) / fk[idx];
+                    default_boxes_cxcywh.push_back({cx, cy, w, h});
+                }
+            }
+        }
+    }
+
+    for (auto& box : default_boxes_cxcywh) {
+        for (float& val : box) {
+            val = std::max(0.0f, std::min(val, 1.0f));
+        }
+    }
+
+    std::vector<std::vector<float>> dboxes_ltrb = default_boxes_cxcywh;
+    for (auto& box : dboxes_ltrb) {
+        float cx = box[0];
+        float cy = box[1];
+        float w  = box[2];
+        float h  = box[3];
+        box[0] = cx - 0.5f * w;
+        box[1] = cy - 0.5f * h;
+        box[2] = cx + 0.5f * w;
+        box[3] = cy + 0.5f * h;
+    }
+
+    std::vector<float> flattened_boxes;
+    flattened_boxes.reserve(dboxes_ltrb.size() * 4); 
+    for (const auto& box : dboxes_ltrb) {
+        for (float coord : box) {
+            flattened_boxes.push_back(coord);
+        }
+    }
+    return flattened_boxes;
+}
+
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode);
 int main(int argc, const char **argv) {
     // check command-line usage
@@ -373,20 +448,22 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 16:  // coco detection partial
         {
             std::cout << "Running COCO READER PARTIAL - SINGLE SHARD" << std::endl;
-            pipeline_type = 2;
+            pipeline_type = 6;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
                 exit(0);
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
-            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true);
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/annotations/person_keypoints_val2017.json";
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, true, true, false, true, false, true);
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
             decoded_output = rocalJpegCOCOFileSourcePartialSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            auto coco_anchors = generate_coco_anchors();
+            rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
         } break;
         case 17:  // caffe classification
         {
@@ -916,6 +993,47 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::vector<char> img_name(img_size);
                 rocalGetImageName(handle, img_name.data());
                 std::cerr << "\nNumpy array name:" << img_name.data() << "\n";
+            } break;
+            case 6: {   // segmentation pipeline
+                int img_size = rocalGetImageNameLen(handle, image_name_length);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\nImage name:" << img_name.data();
+                RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
+                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                int img_sizes_batch[input_batch_size * 2];
+                rocalGetImageSizes(handle, img_sizes_batch);
+                for (int i = 0; i < (int)input_batch_size; i++) {
+                    std::cout << "\nwidth:" << img_sizes_batch[i * 2];
+                    std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
+                }
+                int bb_label_count[input_batch_size];
+                int size = rocalGetBoundingBoxCount(handle);
+                std::cerr << "\nBBox size: " << size << "\n";
+                rocalTensorList *matches = rocalGetMatchedIndices(handle);
+                int mask_count[size];
+                int mask_size = rocalGetMaskCount(handle, mask_count);
+                int polygon_size[mask_size];
+                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size);
+                for (int i = 0; i < size; i++)
+                    std::cerr << "\n Number of polygons per object:  " << mask_count[i];
+                std::cerr << "\nMask Size:: " << mask_size;
+                for (int i = 0; i < mask_size; i++)
+                    std::cerr << "\nPolygon size : " << polygon_size[i];
+                int poly_cnt = 0;
+                int prev_object_cnt = 0;
+                std::cerr << "\nMask values:: \n";
+                for (int i = 0; i < bbox_labels->size(); i++) {  // For each image in a batch, parse through the mask metadata buffers and convert them to polygons format
+                    float *mask_buffer = static_cast<float *>(mask_data->at(i)->buffer());
+                    for (unsigned j = prev_object_cnt; j < bbox_labels->at(i)->dims().at(0) + prev_object_cnt; j++) {
+                        for (int k = 0; k < mask_count[j]; k++) {
+                            for (int l = 0; l < polygon_size[poly_cnt]; l++)
+                                std::cerr << mask_buffer[l] << " ";
+                            mask_buffer += polygon_size[poly_cnt++];
+                        }
+                    }
+                    prev_object_cnt += bbox_labels->at(i)->dims().at(0);
+                }
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";
