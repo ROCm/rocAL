@@ -103,11 +103,10 @@ std::string get_scaling_mode(unsigned int val, RocalResizeScalingMode &scale_mod
 }
 
 // Introduce function to generate Bbox anchors for Box IOU matcher
-int get_anchors(std::vector<float>& anchors) {
+int get_anchors(std::vector<float>& anchors, std::string anchors_file_path) {
     int status = -1;
 
-    std::string ref_file_path = "../retinanet_anchors.bin"; // Path to the anchors file
-    std::ifstream fin(ref_file_path, std::ios::binary);  // Open the binary file for reading
+    std::ifstream fin(anchors_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
         std::cout << "Error: Unable to open the input binary file\n";
@@ -483,7 +482,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
             // Box IOU matcher - used for Retinanet training
             std::vector<float> coco_anchors;
-            if (get_anchors(coco_anchors) != 0)
+            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/retinanet_anchors.bin";
+            if (get_anchors(coco_anchors, anchors_path) != 0)
                 return -1;
             enable_iou_matcher = true;
             rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
@@ -1056,7 +1056,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 int bb_label_count[input_batch_size];
                 int size = rocalGetBoundingBoxCount(handle);
                 std::cerr << "\nBBox size: " << size << "\n";
-                rocalTensorList *matches = rocalGetMatchedIndices(handle);
                 int mask_count[size];
                 int mask_size = rocalGetMaskCount(handle, mask_count);
                 int polygon_size[mask_size];
