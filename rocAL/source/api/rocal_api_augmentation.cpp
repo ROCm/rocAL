@@ -755,39 +755,6 @@ rocalBlur(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
-    RocalIntParam p_kernel_size,
-    RocalTensorLayout output_layout,
-    RocalTensorOutputType output_datatype) {
-    Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input tensor")
-        return output;
-    }
-
-    auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
-    auto kernel_size = static_cast<IntParam*>(p_kernel_size);
-    try {
-        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
-        TensorInfo output_info = input->info();
-        output_info.set_tensor_layout(op_tensor_layout);
-        output_info.set_data_type(op_tensor_datatype);
-        output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<BlurNode>({input}, {output})->init(kernel_size);
-    } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        ERR(e.what())
-    }
-    return output;
-}
-
-RocalTensor ROCAL_API_CALL
-rocalBlurFixed(
-    RocalContext p_context,
-    RocalTensor p_input,
-    int kernel_size,
-    bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -805,13 +772,14 @@ rocalBlurFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<BlurNode>({input}, {output})->init(kernel_size);
+        context->master_graph->add_node<BlurNode>({input}, {output});
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
     }
     return output;
 }
+
 
 RocalTensor ROCAL_API_CALL
 rocalBlend(
@@ -1404,9 +1372,10 @@ rocalRain(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
-    RocalFloatParam p_rain_value,
-    RocalIntParam p_rain_width,
-    RocalIntParam p_rain_height,
+    float rain_percentage,
+    int rain_width,
+    int rain_height,
+    float rain_slant_angle,
     RocalFloatParam p_rain_transparency,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -1417,10 +1386,7 @@ rocalRain(
     }
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto rain_width = static_cast<IntParam*>(p_rain_width);
-    auto rain_height = static_cast<IntParam*>(p_rain_height);
     auto rain_transparency = static_cast<FloatParam*>(p_rain_transparency);
-    auto rain_value = static_cast<FloatParam*>(p_rain_value);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -1428,7 +1394,7 @@ rocalRain(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<RainNode>({input}, {output})->init(rain_value, rain_width, rain_height, rain_transparency);
+        context->master_graph->add_node<RainNode>({input}, {output})->init(rain_percentage, rain_width, rain_height, rain_slant_angle, rain_transparency);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1440,11 +1406,12 @@ RocalTensor ROCAL_API_CALL
 rocalRainFixed(
     RocalContext p_context,
     RocalTensor p_input,
-    float rain_value,
+    bool is_output,
+    float rain_percentage,
     int rain_width,
     int rain_height,
+    float rain_slant_angle,
     float rain_transparency,
-    bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1461,7 +1428,7 @@ rocalRainFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<RainNode>({input}, {output})->init(rain_value, rain_width, rain_height, rain_transparency);
+        context->master_graph->add_node<RainNode>({input}, {output})->init(rain_percentage, rain_width, rain_height, rain_slant_angle, rain_transparency);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1537,7 +1504,8 @@ rocalFog(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
-    RocalFloatParam p_fog_param,
+    RocalFloatParam p_intensity_param,
+    RocalFloatParam p_gray_param,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1548,7 +1516,8 @@ rocalFog(
 
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto fog_param = static_cast<FloatParam*>(p_fog_param);
+    auto intensity_param = static_cast<FloatParam*>(p_intensity_param);
+    auto gray_param = static_cast<FloatParam*>(p_gray_param);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -1556,7 +1525,7 @@ rocalFog(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<FogNode>({input}, {output})->init(fog_param);
+        context->master_graph->add_node<FogNode>({input}, {output})->init(intensity_param, gray_param);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1568,7 +1537,8 @@ RocalTensor ROCAL_API_CALL
 rocalFogFixed(
     RocalContext p_context,
     RocalTensor p_input,
-    float fog_param,
+    float intensity_param,
+    float gray_param,
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -1587,7 +1557,7 @@ rocalFogFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<FogNode>({input}, {output})->init(fog_param);
+        context->master_graph->add_node<FogNode>({input}, {output})->init(intensity_param, gray_param);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1600,6 +1570,7 @@ rocalPixelate(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
+    float pixelate_percent,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1617,7 +1588,7 @@ rocalPixelate(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<PixelateNode>({input}, {output});
+        context->master_graph->add_node<PixelateNode>({input}, {output})->init(pixelate_percent);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -1629,41 +1600,8 @@ RocalTensor ROCAL_API_CALL
 rocalLensCorrection(
     RocalContext p_context,
     RocalTensor p_input,
-    bool is_output,
-    RocalFloatParam p_strength,
-    RocalFloatParam p_zoom,
-    RocalTensorLayout output_layout,
-    RocalTensorOutputType output_datatype) {
-    Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
-    auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
-    auto strength = static_cast<FloatParam*>(p_strength);
-    auto zoom = static_cast<FloatParam*>(p_zoom);
-    try {
-        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
-        TensorInfo output_info = input->info();
-        output_info.set_tensor_layout(op_tensor_layout);
-        output_info.set_data_type(op_tensor_datatype);
-        output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<LensCorrectionNode>({input}, {output})->init(strength, zoom);
-    } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        ERR(e.what())
-    }
-    return output;
-}
-
-RocalTensor ROCAL_API_CALL
-rocalLensCorrectionFixed(
-    RocalContext p_context,
-    RocalTensor p_input,
-    float strength,
-    float zoom,
+    std::vector<CameraMatrix> camera_matrix,
+    std::vector<DistortionCoeffs> distortion_coeffs,
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -1677,11 +1615,19 @@ rocalLensCorrectionFixed(
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        if (camera_matrix.size() != context->user_batch_size()) {
+            ERR("User should pass camera matrix for all images in a batch")
+            return output;
+        }
+        if (distortion_coeffs.size() != context->user_batch_size()) {
+            ERR("User should pass distortion coefficients for all images in a batch")
+            return output;
+        }
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<LensCorrectionNode>({input}, {output})->init(strength, zoom);
+        context->master_graph->add_node<LensCorrectionNode>({input}, {output})->init(camera_matrix, distortion_coeffs);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())

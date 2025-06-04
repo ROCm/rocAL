@@ -486,7 +486,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || reader_type == 13 || reader_type == 21) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -583,7 +583,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 18: {
             std::cout << "Running rocalLensCorrection" << std::endl;
-            output = rocalLensCorrection(handle, input, true);
+            CameraMatrix sampleCameraMatrix = {534.07088364, 341.53407554, 534.11914595, 232.94565259};
+            DistortionCoeffs sampleDistortionCoeffs = {-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798};
+            std::vector<CameraMatrix> cameraMatrixVector;
+            std::vector<DistortionCoeffs> distortionCoeffsVector;
+            for (unsigned i = 0; i < input_batch_size; i++) {
+                cameraMatrixVector.push_back(sampleCameraMatrix);
+                distortionCoeffsVector.push_back(sampleDistortionCoeffs);
+            }
+            output = rocalLensCorrection(handle, input, cameraMatrixVector, distortionCoeffsVector, true);
         } break;
         case 19: {
             std::cout << "Running rocalPixelate" << std::endl;
@@ -644,10 +652,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalContrastFixed" << std::endl;
             output = rocalContrastFixed(handle, input, 30, 80, true);
         } break;
-        case 35: {
-            std::cout << "Running rocalBlurFixed" << std::endl;
-            output = rocalBlurFixed(handle, input, 5, true);
-        } break;
         case 36: {
             std::cout << "Running rocalBlendFixed" << std::endl;
             RocalTensor output_1 = rocalRotateFixed(handle, input, 45, false);
@@ -675,7 +679,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 42: {
             std::cout << "Running rocalRainFixed" << std::endl;
-            output = rocalRainFixed(handle, input, 0.5, 2, 16, 0.25, true);
+            output = rocalRainFixed(handle, input, true, 7, 1, 6, 0, 0.4);
         } break;
         case 43: {
             std::cout << "Running rocalColorTempFixed" << std::endl;
@@ -683,11 +687,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 44: {
             std::cout << "Running rocalFogFixed" << std::endl;
-            output = rocalFogFixed(handle, input, 0.5, true);
-        } break;
-        case 45: {
-            std::cout << "Running rocalLensCorrectionFixed" << std::endl;
-            output = rocalLensCorrectionFixed(handle, input, 2.9, 1.2, true);
+            output = rocalFogFixed(handle, input, 0.1, 0.3, true);
         } break;
         case 46: {
             std::cout << "Running rocalExposureFixed" << std::endl;
