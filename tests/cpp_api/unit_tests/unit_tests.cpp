@@ -312,6 +312,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     bool all_boxes_overlap = true;
     bool no_crop = false;
 #endif
+    bool enable_iou_matcher = false;
 
     RocalTensor decoded_output;
     RocalTensorLayout output_tensor_layout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC : RocalTensorLayout::ROCAL_NCHW;
@@ -484,6 +485,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> coco_anchors;
             if (get_anchors(coco_anchors) != 0)
                 return -1;
+            enable_iou_matcher = true;
             rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
         } break;
         case 16:  // coco detection partial
@@ -973,6 +975,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 for (int i = 0; i < (int)input_batch_size; i++) {
                     std::cout << "\nwidth:" << img_sizes_batch[i * 2];
                     std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
+                }
+
+                // Get output matched indices
+                if (enable_iou_matcher) {
+                    rocalGetMatchedIndices(handle); // TODO - To verify the output
                 }
             } break;
             case 3: {   // keypoints pipeline
