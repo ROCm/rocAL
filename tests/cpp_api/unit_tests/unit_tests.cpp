@@ -104,8 +104,6 @@ std::string get_scaling_mode(unsigned int val, RocalResizeScalingMode &scale_mod
 
 // Introduce function to generate Bbox anchors for Box IOU matcher
 int get_anchors(std::vector<float>& anchors, std::string anchors_file_path) {
-    int status = -1;
-
     std::ifstream fin(anchors_file_path, std::ios::binary);  // Open the binary file for reading
 
     if (!fin.is_open()) {
@@ -222,14 +220,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::vector<int> values = {0, 1};
     std::vector<double> frequencies = {0.5, 0.5};
     RocalIntParam rand_prob = rocalCreateIntRand(values.data(), frequencies.data(), values.size());
-    auto status = rocalUpdateIntRand(values.data(), frequencies.data(), values.size(), rand_prob);
+    rocalUpdateIntRand(values.data(), frequencies.data(), values.size(), rand_prob);
 
     RocalFloatParam float_param = rocalCreateFloatParameter(1.0f);
-    status = rocalUpdateFloatParameter(2.0f, float_param);
-    auto float_param_value = rocalGetFloatValue(float_param);
+    rocalUpdateFloatParameter(2.0f, float_param);
+    rocalGetFloatValue(float_param);
 
     RocalIntParam uniform_int_param = rocalCreateIntUniformRand(0, 1);
-    status = rocalUpdateIntUniformRand(0, 2, uniform_int_param);
+    rocalUpdateIntUniformRand(0, 2, uniform_int_param);
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
 
 #if defined RANDOMBBOXCROP
@@ -971,20 +969,18 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 rocalGetImageName(handle, img_name.data());
                 std::cerr << "\nImage name:" << img_name.data();
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
-                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
-                int img_sizes_batch[input_batch_size * 2];
-                rocalGetImageSizes(handle, img_sizes_batch);
-                for (int i = 0; i < (int)input_batch_size; i++) {
+                std::vector<int> img_sizes_batch(input_batch_size * 2);
+                rocalGetImageSizes(handle, img_sizes_batch.data());
+                for (unsigned i = 0; i < input_batch_size; i++) {
                     std::cout << "\nwidth:" << img_sizes_batch[i * 2];
                     std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
-                int bb_label_count[input_batch_size];
                 int size = rocalGetBoundingBoxCount(handle);
                 std::cerr << "\nBBox size: " << size << "\n";
-                int mask_count[size];
-                int mask_size = rocalGetMaskCount(handle, mask_count);
-                int polygon_size[mask_size];
-                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size);
+                std::vector<int> mask_count(size);
+                int mask_size = rocalGetMaskCount(handle, mask_count.data());
+                std::vector<int> polygon_size(mask_size);
+                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
                 for (int i = 0; i < size; i++)
                     std::cerr << "\n Number of polygons per object:  " << mask_count[i];
                 std::cerr << "\nMask Size:: " << mask_size;
