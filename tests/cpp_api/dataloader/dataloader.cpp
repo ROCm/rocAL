@@ -110,7 +110,7 @@ int main(int argc, const char **argv) {
     RocalTensor input2 = rocalCropResize(handle, input0, resize_w, resize_h, false, rand_crop_area);
     for(int i = 0 ; i < aug_depth; i++)
     {
-        input2 = rocalBlurFixed(handle, input2, 17.25, (i == (aug_depth -1)) ? true:false );
+        input2 = rocalBlur(handle, input2, (i == (aug_depth -1)) ? true:false );
     }
 
     RocalTensor input4 = rocalColorTemp(handle, input0, false, color_temp_adj);
@@ -127,9 +127,7 @@ int main(int argc, const char **argv) {
 
     RocalTensor input9 = rocalBlend(handle, input7, input8, false);
 
-    RocalTensor input10 = rocalLensCorrection(handle, input9, false);
-
-    rocalExposure(handle, input10, true);
+    rocalExposure(handle, input9, true);
 #else
     // uncomment the following to add augmentation if needed
     // just do one augmentation to test

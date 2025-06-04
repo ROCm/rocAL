@@ -775,6 +775,19 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .def(py::init<>())
         .def_readonly("anchor", &RocalNSROutput::anchor)
         .def_readonly("shape", &RocalNSROutput::shape);
+    py::class_<CameraMatrix>(m, "CameraMatrix")
+        .def(py::init<>())
+        .def_readwrite("fx", &CameraMatrix::fx)
+        .def_readwrite("cx", &CameraMatrix::cx)
+        .def_readwrite("fy", &CameraMatrix::fy)
+        .def_readwrite("cy", &CameraMatrix::cy);
+    py::class_<DistortionCoeffs>(m, "DistortionCoeffs")
+        .def(py::init<>())
+        .def_readwrite("k1", &DistortionCoeffs::k1)
+        .def_readwrite("k2", &DistortionCoeffs::k2)
+        .def_readwrite("p1", &DistortionCoeffs::p1)
+        .def_readwrite("p2", &DistortionCoeffs::p2)
+        .def_readwrite("k3", &DistortionCoeffs::k3);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);

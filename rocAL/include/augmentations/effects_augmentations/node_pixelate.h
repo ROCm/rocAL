@@ -22,18 +22,20 @@ THE SOFTWARE.
 
 #pragma once
 
+#include "parameters/parameter_factory.h"
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
 
 class PixelateNode : public Node {
    public:
     PixelateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     PixelateNode() = delete;
+    void init(float pixelatePercent);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
+    float _pixelatePercent;
 };

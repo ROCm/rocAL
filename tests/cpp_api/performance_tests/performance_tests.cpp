@@ -215,10 +215,6 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
             std::cout << "Running rocalFog" << std::endl;
             rocalFog(handle, tensor0, true);
         } break;
-        case 18: {
-            std::cout << "Running rocalLensCorrection" << std::endl;
-            rocalLensCorrection(handle, tensor0, true);
-        } break;
         case 19: {
             std::cout << "Running rocalPixelate" << std::endl;
             rocalPixelate(handle, tensor0, true);
