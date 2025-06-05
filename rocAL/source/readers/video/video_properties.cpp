@@ -39,7 +39,7 @@ void substring_extraction(std::string const &str, const char delim, std::vector<
 
 // Opens the context of the Video file to obtain the width, heigh and frame rate info.
 void open_video_context(const char *video_file_path, Properties &props) {
-    AVFormatContext *pFormatCtx = NULL;
+    AVFormatContext *pFormatCtx = avformat_alloc_context();
     int videoStream = -1;
     unsigned int i = 0;
 
@@ -88,6 +88,14 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
             std::istringstream line_ss(line);
             if (!(line_ss >> video_file_name >> label))
                 continue;
+
+            std::filesystem::path video_path(video_file_name);
+            if (!video_path.is_absolute()) {
+                std::filesystem::path path(file_path);
+                std::filesystem::path parent = path.parent_path();
+                video_file_name = parent.string() + "/" + video_file_name;
+            }
+
             open_video_context(video_file_name.c_str(), props);
             if (max_width == props.width || max_width == 0)
                 max_width = props.width;
