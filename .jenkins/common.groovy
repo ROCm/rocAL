@@ -105,12 +105,13 @@ def runTestCommand (platform, project) {
                     mkdir -p build && cd build
                     cmake ..
                     make -j
-                    ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 0 0 1 3 3 1 1 1 0 1280 720 1 1 0 0 1
+                    ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 0 0 1 3 3 1 1 1 1 1280 720 0 1 1 1 1
+                    ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 2 1 1
+                    ./video_tests ../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.txt 1 0 0 1 3 3 1 1 0 0 1280 720 1 0 1 0 0
+                    ./video_tests ../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/test_timestamps/test_timestamps.txt 1 0 0 1 3 3 1 1 0 0 1280 720 0 0 0 1 0
+                    ./video_tests ../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 1 0 0 1 3 3 1 1 1 0 640 480 0 0 0 0 0
+                    ./video_tests ../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/sequence/ 3 0 0 1 3 3 1 1 1 0 1280 720 0 0 0 0 0
                     ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
-                    ./video_tests ../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 2 0 0 1 3 3 1 1 1 0 640 480 1 0 0 0 0
-                    ./video_tests ../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/sequence/ 4 0 0 1 3 3 1 1 1 0 1280 720 1 0 0 0 0
-                    ./video_tests ../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 5 0 0 1 3 3 1 1 1 0 640 480 1 0 0 0 0
-                    ./video_tests /opt/rocm/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 6 1 1
                     cd ..
                     chmod a+x ./testScript.sh
                     ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 2
