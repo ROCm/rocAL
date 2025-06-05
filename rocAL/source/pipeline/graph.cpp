@@ -103,6 +103,16 @@ Graph::process() {
 }
 
 Graph::Status
+Graph::release() {
+    vx_status status = VX_SUCCESS;
+
+    if (_graph && (status = vxReleaseGraph(&_graph)) != VX_SUCCESS)
+        LOG("Failed to call vxReleaseGraph " + TOSTR(status))
+
+    return Status::OK;
+}
+
+Graph::Status
 Graph::schedule() {
     vx_status status;
     if ((status = vxScheduleGraph(_graph)) != VX_SUCCESS)
@@ -116,16 +126,6 @@ Graph::wait() {
     vx_status status;
     if ((status = vxWaitGraph(_graph)) != VX_SUCCESS)
         THROW("ERROR: vxScheduleGraph failed " + TOSTR(status))
-
-    return Status::OK;
-}
-
-Graph::Status
-Graph::release() {
-    vx_status status = VX_SUCCESS;
-
-    if (_graph && (status = vxReleaseGraph(&_graph)) != VX_SUCCESS)
-        LOG("Failed to call vxReleaseGraph " + TOSTR(status))
 
     return Status::OK;
 }
