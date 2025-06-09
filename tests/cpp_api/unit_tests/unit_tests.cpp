@@ -390,7 +390,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 15:  // coco detection with Box IOU matcher
         {
             std::cout << "Running COCO READER - SINGLE SHARD" << std::endl;
-            pipeline_type = 7;
+            pipeline_type = 2;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
                 exit(0);
