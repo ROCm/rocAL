@@ -235,6 +235,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     bool no_crop = false;
 #endif
     bool enable_iou_matcher = false;
+    bool enable_box_encoder = false;
 
     RocalTensor decoded_output;
     RocalTensorLayout output_tensor_layout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC : RocalTensorLayout::ROCAL_NCHW;
@@ -387,29 +388,31 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
             decoded_output = rocalFusedJpegCropSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
-        case 15:  // coco detection
+        case 15:  // coco detection with Box encoder
         {
             std::cout << "Running COCO READER - SINGLE SHARD" << std::endl;
-            pipeline_type = 2;
+            pipeline_type = 7;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
                 exit(0);
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, false, false, false, true);
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, true);  // Enable Box encoder
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
             else
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
 
-            // Box IOU matcher - used for Retinanet training
+            // Box Encoder - used for SSD training
             std::vector<float> coco_anchors;
-            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/retinanet_anchors.bin";
+            std::vector<float> mean = {0.0, 0.0, 0.0};
+            std::vector<float> stddev = {1.0, 1.0, 1.0};
+            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/coco_anchors.bin";
             if (get_anchors(coco_anchors, anchors_path) != 0)
                 return -1;
-            enable_iou_matcher = true;
-            rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
+            enable_box_encoder = true;
+            rocalBoxEncoder(handle, coco_anchors, 0.5, mean, stddev);
         } break;
         case 16:  // coco detection partial
         {
@@ -503,6 +506,30 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::string idx_file_path = rocal_data_path + "/rocal_data/web_dataset/idx_file/";
             rocalCreateWebDatasetReader(handle, path, idx_file_path.c_str(), extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
             decoded_output = rocalWebDatasetSourceSingleShard(handle, path, idx_file_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+        } break;
+        case 26:  // coco detection with Box IOU matcher
+        {
+            std::cout << "Running COCO READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 2;
+            if (strcmp(rocal_data_path.c_str(), "") == 0) {
+                std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+                exit(0);
+            }
+            // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, false, false, false, true);  // Enable IOU matcher
+            if (decode_max_height <= 0 || decode_max_width <= 0)
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
+            else
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+
+            // Box IOU matcher - used for Retinanet training
+            std::vector<float> coco_anchors;
+            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/retinanet_anchors.bin";
+            if (get_anchors(coco_anchors, anchors_path) != 0)
+                return -1;
+            enable_iou_matcher = true;
+            rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
@@ -999,6 +1026,28 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                         }
                     }
                     prev_object_cnt += bbox_labels->at(i)->dims().at(0);
+                }
+            } break;
+            case 7: // Box encoder
+            {
+                int img_size = rocalGetImageNameLen(handle, image_name_length);
+                std::vector<char> img_name(img_size);
+                rocalGetImageName(handle, img_name.data());
+                std::cerr << "\nImage name:" << img_name.data();
+                auto num_anchors = 8732;
+                auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(handle, input_batch_size * num_anchors);
+                for (int i = 0; i < input_batch_size; i++) {
+                    auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes->at(0)->at(i)->buffer());
+                    auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes->at(1)->at(i)->buffer());
+                    // for (int d = 0; d < vec_pair_labels_boxes->at(1)->at(i)->num_of_dims(); d++) {
+                    //     std::cerr << "DIM -> : " << d << " - " <<  vec_pair_labels_boxes->at(1)->at(i)->dims()[d] << "\n";
+                    // }
+                }
+                int img_sizes_batch[input_batch_size * 2];
+                rocalGetImageSizes(handle, img_sizes_batch);
+                for (int i = 0; i < (int)input_batch_size; i++) {
+                    std::cout << "\nwidth:" << img_sizes_batch[i * 2];
+                    std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
             } break;
             default: {
