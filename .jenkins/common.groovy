@@ -23,9 +23,13 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
         backend = 'OCL'
     }
 
+    def getMIVisionX = auxiliary.getLibrary('MIVisionX', platform.jenkinsLabel, null, true)
+
     def command = """#!/usr/bin/env bash
                 set -x
                 ${enableSCL}
+                echo get latest MIVisionX
+                ${getMIVisionX}
                 echo Build rocAL - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 sudo python rocAL-setup.py --backend ${backend}
