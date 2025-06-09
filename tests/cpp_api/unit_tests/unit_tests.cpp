@@ -522,8 +522,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             
             // Box Encoder - used for SSD training
             std::vector<float> coco_anchors;
-            std::vector<float> mean = {0.0, 0.0, 0.0};
-            std::vector<float> stddev = {1.0, 1.0, 1.0};
+            std::vector<float> mean = {0.0, 0.0, 0.0, 0.0};
+            std::vector<float> stddev = {1.0, 1.0, 1.0, 1.0};
             std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/coco_anchors.bin";
             if (get_anchors(coco_anchors, anchors_path) != 0)
                 return -1;
@@ -1034,16 +1034,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::cerr << "\nImage name:" << img_name.data();
                 auto num_anchors = 8732;
                 auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(handle, input_batch_size * num_anchors);
-                for (int i = 0; i < input_batch_size; i++) {
-                    auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes->at(0)->at(i)->buffer());
-                    auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes->at(1)->at(i)->buffer());
-                }
+                float *boxes_buffer = new float[input_batch_size * num_anchors * 4];
+                int *labels_buffer = new int[input_batch_size * num_anchors];
+                rocalCopyEncodedBoxesAndLables(handle, boxes_buffer, labels_buffer);
                 int img_sizes_batch[input_batch_size * 2];
                 rocalGetImageSizes(handle, img_sizes_batch);
                 for (int i = 0; i < (int)input_batch_size; i++) {
                     std::cout << "\nwidth:" << img_sizes_batch[i * 2];
                     std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
+                delete boxes_buffer;
+                delete labels_buffer;
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";
