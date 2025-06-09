@@ -89,11 +89,17 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
             if (!(line_ss >> video_file_name >> label))
                 continue;
 
-            std::filesystem::path video_path(video_file_name);
-            if (!video_path.is_absolute()) {
-                std::filesystem::path path(file_path);
-                std::filesystem::path parent = path.parent_path();
+            // Check if the path specified in the text file is relative
+            if (filesys::path(video_file_name).is_relative()) {
+                filesys::path path(file_path);
+                filesys::path parent = path.parent_path();
                 video_file_name = parent.string() + "/" + video_file_name;
+            }
+
+            // Check if the video file exists
+            if (!filesys::exists(video_file_name)) {
+                ERR(video_file_name + " path does not exist");
+                continue;
             }
 
             open_video_context(video_file_name.c_str(), props);
