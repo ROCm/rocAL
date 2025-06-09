@@ -509,4 +509,19 @@ enum RocalMissingComponentsBehaviour {
     ROCAL_MISSING_COMPONENT_EMPTY = 2
 };
 
+struct CameraMatrix {
+    float fx;
+    float cx;
+    float fy;
+    float cy;
+};
+
+struct DistortionCoeffs {
+    float k1;
+    float k2;
+    float p1;
+    float p2;
+    float k3;
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

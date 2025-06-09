@@ -387,7 +387,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
             decoded_output = rocalFusedJpegCropSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
-        case 15:  // coco detection with Box encoder
+        case 15:  // coco detection with Box IOU matcher
         {
             std::cout << "Running COCO READER - SINGLE SHARD" << std::endl;
             pipeline_type = 7;
@@ -397,20 +397,19 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, true);  // Enable Box encoder
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, false, false, false, true);  // Enable Box IOU matcher
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
             else
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
 
-            // Box Encoder - used for SSD training
+            // Box IOU matcher - used for Retinanet training
             std::vector<float> coco_anchors;
-            std::vector<float> mean = {0.0, 0.0, 0.0};
-            std::vector<float> stddev = {1.0, 1.0, 1.0};
-            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/coco_anchors.bin";
+            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/retinanet_anchors.bin";
             if (get_anchors(coco_anchors, anchors_path) != 0)
                 return -1;
-            rocalBoxEncoder(handle, coco_anchors, 0.5, mean, stddev);
+            enable_iou_matcher = true;
+            rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
         } break;
         case 16:  // coco detection partial
         {
@@ -505,29 +504,30 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateWebDatasetReader(handle, path, idx_file_path.c_str(), extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
             decoded_output = rocalWebDatasetSourceSingleShard(handle, path, idx_file_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
         } break;
-        case 26:  // coco detection with Box IOU matcher
+        case 26:  // coco detection with Box encoder
         {
             std::cout << "Running COCO READER - SINGLE SHARD" << std::endl;
-            pipeline_type = 2;
+            pipeline_type = 7;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
                 exit(0);
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, false, false, false, true);  // Enable IOU matcher
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, true);  // Enable IOU matcher
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
             else
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
-
-            // Box IOU matcher - used for Retinanet training
+            
+            // Box Encoder - used for SSD training
             std::vector<float> coco_anchors;
-            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/retinanet_anchors.bin";
+            std::vector<float> mean = {0.0, 0.0, 0.0};
+            std::vector<float> stddev = {1.0, 1.0, 1.0};
+            std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/coco_anchors.bin";
             if (get_anchors(coco_anchors, anchors_path) != 0)
                 return -1;
-            enable_iou_matcher = true;
-            rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
+            rocalBoxEncoder(handle, coco_anchors, 0.5, mean, stddev);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
@@ -552,7 +552,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || reader_type == 13 || reader_type == 21) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -649,7 +649,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 18: {
             std::cout << "Running rocalLensCorrection" << std::endl;
-            output = rocalLensCorrection(handle, input, true);
+            CameraMatrix sampleCameraMatrix = {534.07088364, 341.53407554, 534.11914595, 232.94565259};
+            DistortionCoeffs sampleDistortionCoeffs = {-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798};
+            std::vector<CameraMatrix> cameraMatrixVector;
+            std::vector<DistortionCoeffs> distortionCoeffsVector;
+            for (unsigned i = 0; i < input_batch_size; i++) {
+                cameraMatrixVector.push_back(sampleCameraMatrix);
+                distortionCoeffsVector.push_back(sampleDistortionCoeffs);
+            }
+            output = rocalLensCorrection(handle, input, cameraMatrixVector, distortionCoeffsVector, true);
         } break;
         case 19: {
             std::cout << "Running rocalPixelate" << std::endl;
@@ -710,10 +718,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalContrastFixed" << std::endl;
             output = rocalContrastFixed(handle, input, 30, 80, true);
         } break;
-        case 35: {
-            std::cout << "Running rocalBlurFixed" << std::endl;
-            output = rocalBlurFixed(handle, input, 5, true);
-        } break;
         case 36: {
             std::cout << "Running rocalBlendFixed" << std::endl;
             RocalTensor output_1 = rocalRotateFixed(handle, input, 45, false);
@@ -741,7 +745,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 42: {
             std::cout << "Running rocalRainFixed" << std::endl;
-            output = rocalRainFixed(handle, input, 0.5, 2, 16, 0.25, true);
+            output = rocalRainFixed(handle, input, true, 7, 1, 6, 0, 0.4);
         } break;
         case 43: {
             std::cout << "Running rocalColorTempFixed" << std::endl;
@@ -749,11 +753,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 44: {
             std::cout << "Running rocalFogFixed" << std::endl;
-            output = rocalFogFixed(handle, input, 0.5, true);
-        } break;
-        case 45: {
-            std::cout << "Running rocalLensCorrectionFixed" << std::endl;
-            output = rocalLensCorrectionFixed(handle, input, 2.9, 1.2, true);
+            output = rocalFogFixed(handle, input, 0.1, 0.3, true);
         } break;
         case 46: {
             std::cout << "Running rocalExposureFixed" << std::endl;
