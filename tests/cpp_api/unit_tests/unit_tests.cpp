@@ -235,7 +235,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     bool no_crop = false;
 #endif
     bool enable_iou_matcher = false;
-    bool enable_box_encoder = false;
 
     RocalTensor decoded_output;
     RocalTensorLayout output_tensor_layout = (rgb != 0) ? RocalTensorLayout::ROCAL_NHWC : RocalTensorLayout::ROCAL_NCHW;
@@ -411,7 +410,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::string anchors_path = rocal_data_path + "/rocal_data/coco/coco_anchors/coco_anchors.bin";
             if (get_anchors(coco_anchors, anchors_path) != 0)
                 return -1;
-            enable_box_encoder = true;
             rocalBoxEncoder(handle, coco_anchors, 0.5, mean, stddev);
         } break;
         case 16:  // coco detection partial
@@ -1039,9 +1037,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 for (int i = 0; i < input_batch_size; i++) {
                     auto labels_buf_ptr = static_cast<int *>(vec_pair_labels_boxes->at(0)->at(i)->buffer());
                     auto bboxes_buf_ptr = static_cast<float *>(vec_pair_labels_boxes->at(1)->at(i)->buffer());
-                    // for (int d = 0; d < vec_pair_labels_boxes->at(1)->at(i)->num_of_dims(); d++) {
-                    //     std::cerr << "DIM -> : " << d << " - " <<  vec_pair_labels_boxes->at(1)->at(i)->dims()[d] << "\n";
-                    // }
                 }
                 int img_sizes_batch[input_batch_size * 2];
                 rocalGetImageSizes(handle, img_sizes_batch);
