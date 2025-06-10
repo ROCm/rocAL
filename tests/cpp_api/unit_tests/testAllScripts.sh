@@ -135,7 +135,7 @@ do
         # COCO Keypoints
         ./unit_tests 10 "$coco_keypoints_path" "${output_path}SNP_${rgb_name[$rgb]}_${device_name}" 640 480 14 $device $rgb 0 $display
         ./unit_tests 10 "$coco_keypoints_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" 640 480 15 $device $rgb 0 $display
-        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Fog_${rgb_name[$rgb]}_${device_name}" 640 480 17 $device $rgb 0 $display
+        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" 640 480 41 $device $rgb 0 $display
 
         # mxnet 
         ./unit_tests 11 "$mxnet_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display
