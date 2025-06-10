@@ -990,15 +990,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             } break;
             case 6: {   // segmentation pipeline
                 int img_size = rocalGetImageNameLen(handle, image_name_length);
-                std::vector<char> img_name(img_size);
-                rocalGetImageName(handle, img_name.data());
-                std::cerr << "\nImage name:" << img_name.data();
+                std::vector<int> img_id_batch(input_batch_size);
+                rocalGetImageId(handle, img_id_batch.data());
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
                 std::vector<int> img_sizes_batch(input_batch_size * 2);
-                rocalGetImageSizes(handle, img_sizes_batch.data());
+                rocalGetROIImageSizes(handle, img_sizes_batch.data());
                 for (unsigned i = 0; i < input_batch_size; i++) {
-                    std::cout << "\nwidth:" << img_sizes_batch[i * 2];
-                    std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
+                    std::cerr << "\nImage ID:" << img_id_batch[i];
+                    std::cout << "\twidth:" << img_sizes_batch[i * 2];
+                    std::cout << ",\tHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
                 int size = rocalGetBoundingBoxCount(handle);
                 std::cerr << "\nBBox size: " << size << "\n";
