@@ -175,7 +175,6 @@ For your convenience, we provide the setup script,[rocAL-setup.py](https://githu
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
                       --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
-                      --ffmpeg    [FFMPEG Installation - optional (default:OFF)[options:ON/OFF]]
                       --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 
@@ -368,6 +367,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * ROCm: rocm-core - `6.4.0`+
 * MIVisionX - `mivisionx-dev`/`mivisionx-devel`
 * rocDecode - `rocdecode-dev`/`rocdecode-devel`
+* rocJPEG - `rocjpeg-dev`/`rocjpeg-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * TurboJPEG - `libturbojpeg0-dev`/`turbojpeg-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
