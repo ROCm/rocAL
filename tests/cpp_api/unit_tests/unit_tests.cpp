@@ -989,7 +989,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::cerr << "\nNumpy array name:" << img_name.data() << "\n";
             } break;
             case 6: {   // segmentation pipeline
-                int img_size = rocalGetImageNameLen(handle, image_name_length);
                 std::vector<int> img_id_batch(input_batch_size);
                 rocalGetImageId(handle, img_id_batch.data());
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
@@ -1033,7 +1032,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 rocalGetImageName(handle, img_name.data());
                 std::cerr << "\nImage name:" << img_name.data();
                 auto num_anchors = 8732;
-                auto vec_pair_labels_boxes = rocalGetEncodedBoxesAndLables(handle, input_batch_size * num_anchors);
+                rocalGetEncodedBoxesAndLables(handle, input_batch_size * num_anchors);
                 float *boxes_buffer = new float[input_batch_size * num_anchors * 4];
                 int *labels_buffer = new int[input_batch_size * num_anchors];
                 rocalCopyEncodedBoxesAndLables(handle, boxes_buffer, labels_buffer);
@@ -1043,8 +1042,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                     std::cout << "\nwidth:" << img_sizes_batch[i * 2];
                     std::cout << "\nHeight:" << img_sizes_batch[(i * 2) + 1];
                 }
-                delete boxes_buffer;
-                delete labels_buffer;
+                delete[] boxes_buffer;
+                delete[] labels_buffer;
             } break;
             default: {
                 std::cout << "Not a valid pipeline type ! Exiting!\n";
