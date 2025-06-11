@@ -1685,6 +1685,8 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes) {
             labels_buf_ptr += _labels_tensor_list[i]->info().data_size();
             boxes_buf_ptr += _bbox_tensor_list[i]->info().data_size();
         }
+
+        // Set the labels and bbox tensorList to the box encoded output only for the first run
         if (_bbox_encoded_output.size() == 0) {
             _bbox_encoded_output.emplace_back(&_labels_tensor_list);
             _bbox_encoded_output.emplace_back(&_bbox_tensor_list);
