@@ -1,6 +1,6 @@
 
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -47,14 +47,6 @@ WebDatasetSourceReader::WebDatasetSourceReader() {
     _loop = false;
     _shuffle = false;
     _file_count_all_shards = 0;
-}
-
-unsigned WebDatasetSourceReader::count_items() {
-    int size = get_max_size_of_shard(_batch_size, _loop);
-    int ret = (size - _read_counter);
-    if (_sharding_info.last_batch_policy == RocalBatchPolicy::DROP && _last_batch_padded_size != 0)
-        ret -= _batch_size;
-    return ((ret < 0) ? 0 : ret);
 }
 
 Reader::Status WebDatasetSourceReader::initialize(ReaderConfig desc) {

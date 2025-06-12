@@ -7,7 +7,7 @@ then
     exit
 fi
 
-# Path to inputs and outputs available in MIVisionX-data
+# Path to inputs and outputs
 one_hot_data_path=${ROCAL_DATA_PATH}/rocal_data/images_jpg/labels_folder/
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 web_dataset_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/

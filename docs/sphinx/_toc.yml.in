@@ -6,8 +6,12 @@ subtrees:
 
 - caption: Installation
   entries:
-  - file: install/install.rst
-    title: Installing rocAL
+  - file: install/rocAL-prerequisites.rst
+    title: rocAL prerequisites
+  - file: install/rocAL-package-install.rst
+    title: Installing rocAL with the package installer
+  - file: install/rocAL-build-and-install.rst
+    title: Building and installing rocAL from source
 
 - caption: Conceptual
   entries:
@@ -28,13 +32,13 @@ subtrees:
 - caption: Examples
   entries:
   - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/image_processing
-    title: Image processing examples
+    title: rocAL image processing examples
   - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch
-    title: Pytorch examples
+    title: rocAL PyTorch examples
   - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/tf
-    title: Tensorflow examples
+    title: rocAL TensorFlow examples
   - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/notebooks
-    title: Jupyter notebooks
+    title: rocAL Jupyter notebooks
   
 - caption: Reference
   entries:

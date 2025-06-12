@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -132,24 +132,24 @@ int main(int argc, const char **argv) {
         return -1;
     }
 
-    int argIdx = 0;
-    const char *path = argv[++argIdx];
+    int argIdx = 1;
+    const char *path = argv[argIdx++];
     int qa_mode = 0;
     unsigned test_case = 0;
     bool downmix = false;
     bool gpu = 0;
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        test_case = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        test_case = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        downmix = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        downmix = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        gpu = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        gpu = atoi(argv[argIdx++]);
 
-    if (argc >= argIdx + MIN_ARG_COUNT)
-        qa_mode = atoi(argv[++argIdx]);
+    if (argc > argIdx)
+        qa_mode = atoi(argv[argIdx++]);
 
     if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
         std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
@@ -185,7 +185,11 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     rocalCreateLabelReader(handle, path, file_list_path.c_str());
 
     is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
-    RocalTensor decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path.c_str(), 0, 1, is_output_audio_decoder, false, false, downmix);
+    RocalTensor decoded_output;
+    if(test_case == 0)
+        decoded_output = rocalAudioFileSource(handle, path, file_list_path.c_str(), 1, is_output_audio_decoder, false, false, downmix);
+    else
+        decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path.c_str(), 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
@@ -228,6 +232,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             float resample = 16000.00;
             std::vector<float> range = {1.15, 1.15};
             RocalTensor uniform_distribution_resample = rocalUniformDistribution(handle, decoded_output, false, range);
+            RocalTensor normal_distribution = rocalNormalDistribution(handle, decoded_output, false, 0.0, 1.0);
             RocalTensor resampled_rate = rocalTensorMulScalar(handle, uniform_distribution_resample, false, resample, ROCAL_FP32);
             rocalResample(handle, decoded_output, resampled_rate, true, 1.15 * 255840, 50.0, ROCAL_FP32);
         } break;
@@ -299,17 +304,19 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
         std::cout << "\n Iteration:: " << iteration << "\n";
         iteration++;
         if (rocalRun(handle) != 0) {
-            break;
+            std::cout << "rocalRun Failed with runtime error" << std::endl;
+            rocalRelease(handle);
+            return -1;
         }
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-        int file_name_length[input_batch_size];
-        int file_name_size = rocalGetImageNameLen(handle, file_name_length);
-        char audio_file_name[file_name_size];
+        std::vector<int> file_name_length(input_batch_size);
+        int file_name_size = rocalGetImageNameLen(handle, file_name_length.data());
+        std::vector<char> audio_file_name(file_name_size);
         std::vector<int> roi(4 * input_batch_size, 0);
-        rocalGetImageName(handle, audio_file_name);
+        rocalGetImageName(handle, audio_file_name.data());
         RocalTensorList labels = rocalGetImageLabels(handle);
         int *label_id = reinterpret_cast<int *>(labels->at(0)->buffer());  // The labels are present contiguously in memory
-        std::cout << "Audio file : " << audio_file_name << "\n";
+        std::cout << "Audio file : " << audio_file_name.data() << "\n";
         std::cout << "Label : " << *label_id << "\n";
         if (test_case == 8) {  // Non silent region detection outputs
             nsr_begin = static_cast<int *>(output_tensor_list->at(0)->buffer());

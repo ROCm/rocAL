@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 TJDecoder::TJDecoder() {
     m_jpegDecompressor = tjInitDecompress();
-    if ((_scaling_factors = tj3GetScalingFactors(&_num_scaling_factors)) == NULL)
+    if ((_scaling_factors = tjGetScalingFactors(&_num_scaling_factors)) == NULL)
         THROW("tjDecompress2_partial_scale(): error getting scaling factors");
     for(int i = 0; i < _num_scaling_factors; i++) {
         if(_scaling_factors[i].num < _scaling_factors[i].denom) {

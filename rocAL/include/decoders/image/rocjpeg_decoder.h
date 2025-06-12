@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #if ENABLE_ROCJPEG
 
-#include "rocjpeg.h"
+#include "rocjpeg/rocjpeg.h"
 
 struct ScalingFactor {
   unsigned num;
@@ -93,7 +93,7 @@ class HWRocJpegDecoder : public Decoder {
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
    private:
-    bool _is_partial_decoder = false;
+    bool _is_partial_decoder = true;
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;
     RocJpegHandle _rocjpeg_handle;
@@ -108,7 +108,7 @@ class HWRocJpegDecoder : public Decoder {
     std::vector<size_t> _src_hstride;
     std::vector<size_t> _src_img_offset;
     std::vector<RocJpegImage> _output_images = {};
-    RocJpegDecodeParams _decode_params = {};
+    std::vector<RocJpegDecodeParams> _decode_params = {};
     uint32_t _num_channels = 0;
     bool _resize_batch = false;
     int _device_id = 0;

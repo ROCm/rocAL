@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <lmdb.h>
 #include "meta_data/meta_data_reader.h"
 #include "readers/video/video_properties.h"
+#include "pipeline/tensor.h"
 
 #define CHECK_LMDB_RETURN_STATUS(status)                                                          \
     do {                                                                                          \
@@ -49,6 +50,7 @@ enum class StorageType {
     VIDEO_FILE_SYSTEM = 8,
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
     WEBDATASET_RECORDS = 10, // tar files - webdataset format
+    NUMPY_DATA = 11          // to support reading from numpy files
 };
 
 enum class ExternalSourceFileMode {
@@ -106,6 +108,8 @@ struct ReaderConfig {
     void set_sharding_info(const ShardingInfo& sharding_info) {
         _sharding_info = sharding_info;
     }
+    void set_files_list(const std::vector<std::string> &files) { _file_names = files; }
+    void set_seed(unsigned seed) { _seed = seed; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -113,7 +117,9 @@ struct ReaderConfig {
     size_t get_sequence_length() { return _sequence_length; }
     size_t get_frame_step() { return _sequence_frame_step; }
     size_t get_frame_stride() { return _sequence_frame_stride; }
+    std::vector<std::string> get_files() { return _file_names; }
     std::string path() { return _path; }
+    unsigned seed() { return _seed; }
 #ifdef ROCAL_VIDEO
     void set_video_properties(VideoProperties video_prop) { _video_prop = video_prop; }
     VideoProperties get_video_properties() { return _video_prop; }
@@ -148,6 +154,8 @@ struct ReaderConfig {
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
     ShardingInfo _sharding_info;
+    std::vector<std::string> _file_names;
+    unsigned _seed = 0;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
 #endif
@@ -164,6 +172,29 @@ struct ImageRecordIOHeader {
                            *  reserved for future purposes for 128bit id
                            *  image_id[0] is used to store image id
                            */
+};
+
+struct NumpyHeaderData {
+   public:
+    std::vector<unsigned> array_shape; // Shape of the numpy array
+    RocalTensorDataType type_info;     // Dtype of the numpy array
+    bool fortran_order = false;        // Indicates whether the data is present in fortran ordering
+    int64_t data_offset = 0;           // Offset indicating the start of the data 
+
+    RocalTensorDataType type() const { return type_info; }  // Returns the dtype of the numpy array
+
+    size_t size() const {              // Returns the size of the numpy array
+        size_t num_elements = 1;
+        for (const auto &dim : array_shape)
+            num_elements *= dim;
+        return num_elements;
+    };
+
+    // Returns the entire data size of the numpy array in bytes
+    size_t numpy_data_nbytes() const { return tensor_data_size(type_info) * size(); }
+    
+    // Returns the shape of the numpy array
+    std::vector<unsigned> shape() const { return array_shape; }
 };
 
 // The VectorView Class - to refer to a portion of a vector and avoiding copies of the data.
@@ -243,6 +274,12 @@ class Reader {
     //! Copies the data of the opened item to the buf
     virtual size_t read_data(unsigned char *buf, size_t read_size) = 0;
 
+    //! Returns the numpy header data information used containing shape, size and dtype
+    virtual const NumpyHeaderData get_numpy_header_data() { return {}; }
+
+    //! Reads the data present in numpy arrays to the buffer
+    virtual size_t read_numpy_data(void *buf, size_t read_size, std::vector<unsigned>& strides_in_dims) { return 0; }
+
     //! Closes the opened item
     virtual int close() = 0;
 
@@ -256,7 +293,7 @@ class Reader {
      //! Returns the path of the last item opened in this resource
     virtual const std::string file_path() { THROW("File path is not set by the reader") }
 
-    virtual unsigned count_items() = 0;
+    virtual unsigned count_items();
 
     virtual ~Reader() = default;
 
@@ -278,6 +315,10 @@ class Reader {
     bool _stick_to_shard = false;   // Determines whether the reader should stick to a data shard instead of going through the entire dataset.
     bool _pad_last_batch_repeated = false;  // Determines if last file is to be repeated for padding the batch.
     int32_t _shard_size = -1;   // Size of the shard
+    size_t _batch_size = 1;
+    bool _loop;
+    bool _shuffle;
+    int _read_counter = 0;
 
     //! Modified the file idx, and sets the current file idx to be processed
     void increment_curr_file_idx(size_t dataset_size);

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -137,8 +137,9 @@ class TensorInfo {
         if (_data_type == data_type)
             return;
         _data_type = data_type;
-        _data_size = (_data_size / _data_type_size);
-        _data_size *= data_type_size();
+        _data_type_size = tensor_data_size(_data_type);
+        modify_strides();
+        _data_size = _strides[0] * _dims[0];
     }
     void get_modified_dims_from_layout(RocalTensorlayout input_layout, RocalTensorlayout output_layout, std::vector<size_t>& new_dims) {
         std::vector<size_t> dims_mapping;
@@ -150,6 +151,10 @@ class TensorInfo {
             dims_mapping = {0, 1, 4, 2, 3};
         } else if (input_layout == RocalTensorlayout::NFCHW && output_layout == RocalTensorlayout::NFHWC) {
             dims_mapping = {0, 1, 3, 4, 2};
+        } else if (input_layout == RocalTensorlayout::NCDHW && output_layout == RocalTensorlayout::NDHWC) {
+            dims_mapping = {0, 2, 3, 4, 1};
+        } else if (input_layout == RocalTensorlayout::NDHWC && output_layout == RocalTensorlayout::NCDHW) {
+            dims_mapping = {0, 4, 1, 2, 3};
         } else {
             THROW("Invalid layout conversion")
         }
@@ -163,6 +168,14 @@ class TensorInfo {
             if (_layout == RocalTensorlayout::NHW || _layout == RocalTensorlayout::NFT || _layout == RocalTensorlayout::NTF) {   // For Audio/2D layouts
                 _max_shape[0] = _dims.at(1);
                 _max_shape[1] = _dims.at(2);
+            } else if (_layout == RocalTensorlayout::NDHWC) {
+                _max_shape.resize(4);
+                _max_shape.assign(_dims.begin() + 1, _dims.end());
+                _channels = _dims.at(4);
+            } else if (_layout == RocalTensorlayout::NCDHW) {
+                _max_shape.resize(4);
+                _max_shape.assign(_dims.begin() + 1, _dims.end());
+                _channels = _dims.at(1);
             } else {            // For Image layouts
                 _is_image = true;
                 if (_layout == RocalTensorlayout::NHWC) {

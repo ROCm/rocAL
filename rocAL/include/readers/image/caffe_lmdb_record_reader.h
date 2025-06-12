@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,8 +60,6 @@ class CaffeLMDBRecordReader : public Reader {
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~CaffeLMDBRecordReader() override;
 
     int close() override;
@@ -82,10 +80,6 @@ class CaffeLMDBRecordReader : public Reader {
     std::string _last_file_name;
     unsigned int _last_file_size;
     bool _last_rec;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     MDB_env *_mdb_env, *_read_mdb_env;
     MDB_dbi _mdb_dbi, _read_mdb_dbi;
     MDB_val _mdb_key, _mdb_value, _read_mdb_key, _read_mdb_value;

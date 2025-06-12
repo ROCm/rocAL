@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,14 +29,16 @@ class FogNode : public Node {
    public:
     FogNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     FogNode() = delete;
-    void init(float fog_param);
-    void init(FloatParam *fog_param);
+    void init(float intensity_param, float gray_param);
+    void init(FloatParam *intensity_param, FloatParam *gray_param);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _fog_param;
-    constexpr static float FOG_VALUE_RANGE[2] = {0.2, 0.8};
+    ParameterVX<float> _intensity_param;
+    ParameterVX<float> _gray_param;
+    constexpr static float INTENSITY_VALUE_RANGE[2] = {0.1, 0.5};
+    constexpr static float GRAY_VALUE_RANGE[2] = {0.2, 0.8};
 };

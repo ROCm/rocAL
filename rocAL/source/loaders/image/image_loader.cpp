@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -69,10 +69,10 @@ void ImageLoader::set_gpu_device_id(int device_id) {
 size_t
 ImageLoader::remaining_count() {
     if (_external_source_reader) {
-        if ((_image_loader->count() != 0) && !_external_input_eos)
-            return _batch_size;
-        else {
+        if ((_image_loader->count() < _batch_size) && _external_input_eos) {
             return 0;
+        } else {
+            return _batch_size;
         }
     }
     return _remaining_image_count;

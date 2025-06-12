@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,10 +39,10 @@ class FFmpegVideoDecoder : public VideoDecoder {
     const char *_src_filename = NULL;
     AVFormatContext *_fmt_ctx = NULL;
     AVCodecContext *_video_dec_ctx = NULL;
-#if USE_FFMPEG_VERSION_4
-    AVCodec *_decoder = NULL;
-#else
+#if USE_AVCODEC_GREATER_THAN_58_134
     const AVCodec *_decoder = NULL;
+#else
+    AVCodec *_decoder = NULL;
 #endif
     AVStream *_video_stream = NULL;
     int _video_stream_idx = -1;

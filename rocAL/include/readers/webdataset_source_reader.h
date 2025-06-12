@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,8 +51,6 @@ class WebDatasetSourceReader : public Reader {
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~WebDatasetSourceReader() override;
 
     int close() override;
@@ -74,10 +72,6 @@ class WebDatasetSourceReader : public Reader {
     std::string _last_id;
     std::string _last_file_name;
     std::vector<std::string> _index_name_list;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     void incremenet_read_ptr();
     int release();
     void parse_tar_files(std::vector<SampleDescription> &samples_container, std::vector<ComponentDescription> &components_container, std::unique_ptr<std::ifstream> &tar_file);
