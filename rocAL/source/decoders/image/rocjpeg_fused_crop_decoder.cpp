@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,11 @@ THE SOFTWARE.
 
 
 #include "pipeline/commons.h"
-#include "decoders/image/rocjpeg_fused_crop_decoder.h"
+#include <stdio.h>
+#include <string.h>
+#include "decoders/image/rocjpeg_decoder.h"
 
-#if ENABLE_HIP
+#if ENABLE_ROCJPEG
 
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
@@ -46,9 +48,130 @@ THE SOFTWARE.
     }                                                                     \
 }
 
-FusedCropRocJpegDecoder::FusedCropRocJpegDecoder() {}
+FusedCropRocJpegDecoder::FusedCropRocJpegDecoder() {
+};
 
-void FusedCropRocJpegDecoder::initialize(int device_id) {
+/**
+ * @brief Gets the channel pitch and sizes.
+ *
+ * This function gets the channel pitch and sizes based on the specified output format, chroma subsampling,
+ * output image, and channel sizes.
+ *
+ * @param output_format The output format.
+ * @param subsampling The chroma subsampling.
+ * @param widths The array to store the channel widths.
+ * @param heights The array to store the channel heights.
+ * @param num_channels The number of channels.
+ * @param output_image The output image.
+ * @param channel_sizes The array to store the channel sizes.
+ * @return The channel pitch.
+ */
+int GetChannelPitchAndSizes(RocJpegOutputFormat output_format, RocJpegChromaSubsampling subsampling, uint32_t *widths, uint32_t *heights,
+                            uint32_t &num_channels, RocJpegImage &output_image, uint32_t *channel_sizes) {
+    switch (output_format) {
+        case ROCJPEG_OUTPUT_NATIVE:
+            switch (subsampling) {
+                case ROCJPEG_CSS_444:
+                    num_channels = 3;
+                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = widths[0];
+                    channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    break;
+                case ROCJPEG_CSS_422:
+                    num_channels = 1;
+                    output_image.pitch[0] = widths[0] * 2;
+                    channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    break;
+                case ROCJPEG_CSS_420:
+                    num_channels = 2;
+                    output_image.pitch[1] = output_image.pitch[0] = widths[0];
+                    channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    channel_sizes[1] = output_image.pitch[1] * (heights[0] >> 1);
+                    break;
+                case ROCJPEG_CSS_400:
+                    num_channels = 1;
+                    output_image.pitch[0] = widths[0];
+                    channel_sizes[0] = output_image.pitch[0] * heights[0];
+                    break;
+                default:
+                    std::cout << "Unknown chroma subsampling!" << std::endl;
+                    return EXIT_FAILURE;
+            }
+            break;
+        case ROCJPEG_OUTPUT_YUV_PLANAR:
+            if (subsampling == ROCJPEG_CSS_400) {
+                num_channels = 1;
+                output_image.pitch[0] = widths[0];
+                channel_sizes[0] = output_image.pitch[0] * heights[0];
+            } else {
+                num_channels = 3;
+                output_image.pitch[0] = widths[0];
+                output_image.pitch[1] = widths[1];
+                output_image.pitch[2] = widths[2];
+                channel_sizes[0] = output_image.pitch[0] * heights[0];
+                channel_sizes[1] = output_image.pitch[1] * heights[1];
+                channel_sizes[2] = output_image.pitch[2] * heights[2];
+            }
+            break;
+        case ROCJPEG_OUTPUT_Y:
+            num_channels = 1;
+            output_image.pitch[0] = widths[0];
+            channel_sizes[0] = output_image.pitch[0] * heights[0];
+            break;
+        case ROCJPEG_OUTPUT_RGB:
+            num_channels = 1;
+            output_image.pitch[0] = widths[0] * 3;
+            channel_sizes[0] = output_image.pitch[0] * heights[0];
+            break;
+        case ROCJPEG_OUTPUT_RGB_PLANAR:
+            num_channels = 3;
+            output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = widths[0];
+            channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * heights[0];
+            break;
+        default:
+            std::cout << "Unknown output format!" << std::endl;
+            return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+/**
+ * @brief Gets the chroma subsampling string.
+ *
+ * This function gets the chroma subsampling string based on the specified subsampling value.
+ *
+ * @param subsampling The chroma subsampling value.
+ * @param chroma_sub_sampling The string to store the chroma subsampling.
+ */
+void GetChromaSubsamplingStr(RocJpegChromaSubsampling subsampling, std::string &chroma_sub_sampling) {
+    switch (subsampling) {
+        case ROCJPEG_CSS_444:
+            chroma_sub_sampling = "YUV 4:4:4";
+            break;
+        case ROCJPEG_CSS_440:
+            chroma_sub_sampling = "YUV 4:4:0";
+            break;
+        case ROCJPEG_CSS_422:
+            chroma_sub_sampling = "YUV 4:2:2";
+            break;
+        case ROCJPEG_CSS_420:
+            chroma_sub_sampling = "YUV 4:2:0";
+            break;
+        case ROCJPEG_CSS_411:
+            chroma_sub_sampling = "YUV 4:1:1";
+            break;
+        case ROCJPEG_CSS_400:
+            chroma_sub_sampling = "YUV 4:0:0";
+            break;
+        case ROCJPEG_CSS_UNKNOWN:
+            chroma_sub_sampling = "UNKNOWN";
+            break;
+        default:
+            chroma_sub_sampling = "";
+            break;
+    }
+}
+
+void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     int num_devices;
     hipDeviceProp_t hip_dev_prop;
     CHECK_HIP(hipGetDeviceCount(&num_devices));
@@ -70,8 +193,106 @@ void FusedCropRocJpegDecoder::initialize(int device_id) {
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
     // Create stream and handle
     CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
-    CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_stream));
+    _rocjpeg_streams.resize(batch_size);
+    for (unsigned i = 0; i < batch_size; i++) {
+        CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_streams[i]));
+    }
+
     _device_id = device_id;
+    _batch_size = batch_size;
+    _output_images.resize(_batch_size);
+    _src_hstride.resize(_batch_size);
+    _src_img_offset.resize(_batch_size);
+    _decode_params_batch.resize(_batch_size);
+
+    // // Allocate mem for width and height arrays for src and dst
+    // if (!_dev_src_width) CHECK_HIP(hipMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
+    // if (!_dev_src_height) CHECK_HIP(hipMalloc((void **)&_dev_src_height, _batch_size * sizeof(size_t)));
+    // if (!_dev_dst_width) CHECK_HIP(hipMalloc((void **)&_dev_dst_width, _batch_size * sizeof(size_t)));
+    // if (!_dev_dst_height) CHECK_HIP(hipMalloc((void **)&_dev_dst_height, _batch_size * sizeof(size_t)));
+    // if (!_dev_src_hstride) CHECK_HIP(hipMalloc((void **)&_dev_src_hstride, _batch_size * sizeof(size_t)));
+    // if (!_dev_src_img_offset) CHECK_HIP(hipMalloc((void **)&_dev_src_img_offset, _batch_size * sizeof(size_t)));
+
+}
+
+// Obtains the decode info of the image, and modifies width and height based on the max decode params after scaling
+Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, 
+                                              int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
+    RocJpegChromaSubsampling subsampling;
+    uint8_t num_components;
+    uint32_t widths[4] = {};
+    uint32_t heights[4] = {};
+    uint32_t channels_size = 0;
+    uint32_t channel_sizes[4] = {};
+
+    uint32_t max_widths[4] = {static_cast<uint32_t>(max_decoded_width), 0, 0, 0};
+    uint32_t max_heights[4] = {static_cast<uint32_t>(max_decoded_height), 0, 0, 0};
+
+    switch(desired_decoded_color_format) {
+        case Decoder::ColorFormat::GRAY:
+            _decode_params_batch[index].output_format = ROCJPEG_OUTPUT_Y;
+            _num_channels = 1;
+            break;
+        case Decoder::ColorFormat::RGB:
+        case Decoder::ColorFormat::BGR:
+            _decode_params_batch[index].output_format = ROCJPEG_OUTPUT_RGB;
+            _num_channels = 3;
+            break;
+    };
+
+    if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[index]) != ROCJPEG_STATUS_SUCCESS) {
+        return Status::HEADER_DECODE_FAILED;
+    }
+    if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[index], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
+        return Status::HEADER_DECODE_FAILED;
+    }
+
+    if (widths[0] < 64 || heights[0] < 64) {
+        return Status::CONTENT_DECODE_FAILED;
+    }
+
+    std::string chroma_sub_sampling = "";
+    GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
+    if (subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
+        return Status::UNSUPPORTED;
+    }
+
+    *width = widths[0];
+    *height = heights[0];
+    // uint scaledw = widths[0], scaledh = heights[0];
+    // // Scaling to be performed if width/height is less than max decode width/height
+    // if (widths[0] > max_decoded_width || heights[0] > max_decoded_height) {
+    //     for (unsigned j = 0; j < _num_scaling_factors; j++) {
+    //         scaledw = (((widths[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
+    //         scaledh = (((heights[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
+    //         if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
+    //             break;
+    //     }
+    // }
+    // // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
+    // if (scaledw != widths[0] || scaledh != heights[0]) {
+    //     _resize_batch = true;   // If the size of any image in the batch is greater than max size, resize the complete batch
+    //     max_widths[0] = (widths[0] + 8) &~ 7;
+    //     max_heights[0] = (heights[0] + 8) &~ 7;
+    // }
+
+    _crop_window.W = std::min(_crop_window.W, (unsigned int)max_decoded_width);
+    _crop_window.H = std::min(_crop_window.H, (unsigned int)max_decoded_height);
+    
+    _decode_params_batch[index].crop_rectangle.left = _crop_window.x;
+    _decode_params_batch[index].crop_rectangle.top = _crop_window.y;
+    _decode_params_batch[index].crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
+    _decode_params_batch[index].crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
+
+    if (GetChannelPitchAndSizes(_decode_params_batch[index].output_format, subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
+        return Status::HEADER_DECODE_FAILED;
+    }
+    *actual_width = _crop_window.W;
+    *actual_height = _crop_window.H;
+
+    _rocjpeg_image_buff_size += max_widths[0] * max_heights[0];
+
+    return Status::OK;
 }
 
 Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
@@ -79,10 +300,10 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     uint8_t num_components;
     uint32_t widths[4] = {};
     uint32_t heights[4] = {};
-    if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_stream) != ROCJPEG_STATUS_SUCCESS) {
+    if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[0]) != ROCJPEG_STATUS_SUCCESS) {
         return Status::HEADER_DECODE_FAILED;
     }
-    if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_stream, &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
+    if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[0], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
         return Status::HEADER_DECODE_FAILED;
     }
     *width = widths[0];
@@ -101,79 +322,67 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     return Status::OK;
 }
 
-Decoder::Status FusedCropRocJpegDecoder::decode(unsigned char *input_buffer, size_t input_size, unsigned char *output_buffer,
-                                           size_t max_decoded_width, size_t max_decoded_height,
-                                           size_t original_image_width, size_t original_image_height,
-                                           size_t &actual_decoded_width, size_t &actual_decoded_height,
-                                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig decoder_config, bool keep_original_size) {
-    int tjpf = TJPF_RGB;
-    int planes = 1;
-    switch (desired_decoded_color_format) {
-        case Decoder::ColorFormat::GRAY:
-            tjpf = TJPF_GRAY;
-            planes = 1;
-            break;
-        case Decoder::ColorFormat::RGB:
-            tjpf = TJPF_RGB;
-            planes = 3;
-            break;
-        case Decoder::ColorFormat::BGR:
-            tjpf = TJPF_BGR;
-            planes = 3;
-            break;
-    };
-    actual_decoded_width = max_decoded_width;
-    actual_decoded_height = max_decoded_height;
-    // You need get the output of random bbox crop
-    // check the vector size for bounding box. If its more than zero go for random bbox crop
-    // else go to random crop
-    unsigned int x1_diff, crop_width_diff;
-    if (_bbox_coord.size() != 0) {
-        // Random bbox crop returns normalized crop cordinates
-        // hence bringing it back to absolute cordinates
-        _crop_window.x = std::lround(_bbox_coord[0] * original_image_width);
-        _crop_window.y = std::lround(_bbox_coord[1] * original_image_height);
-        _crop_window.W = std::lround((_bbox_coord[2]) * original_image_width);
-        _crop_window.H = std::lround((_bbox_coord[3]) * original_image_height);
-    }
-    _crop_window.W = std::min(_crop_window.W, (unsigned int)max_decoded_width);
-    _crop_window.H = std::min(_crop_window.H, (unsigned int)max_decoded_height);
-    // TODO : Turbo Jpeg supports multiple color packing and color formats, add more as an option to the API TJPF_RGB, TJPF_BGR, TJPF_RGBX, TJPF_BGRX, TJPF_RGBA, TJPF_GRAY, TJPF_CMYK , ...
-    if (tjDecompress2_partial(m_jpegDecompressor,
-                              input_buffer,
-                              input_size,
-                              output_buffer,
-                              max_decoded_width,
-                              max_decoded_width * planes,
-                              max_decoded_height,
-                              tjpf,
-                              TJFLAG_ACCURATEDCT, &x1_diff, &crop_width_diff,
-                              _crop_window.x, _crop_window.y, _crop_window.W, _crop_window.H) != 0) {
-        WRN("Jpeg image decode failed " + STR(tjGetErrorStr2(m_jpegDecompressor)))
-        return Status::CONTENT_DECODE_FAILED;
-    }
+Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char *> &output_buffer,
+                                               size_t max_decoded_width, size_t max_decoded_height,
+                                               std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
+                                               std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
 
-    // x1-diff should be set to x offset in tensor pipeline and removed.
-    if (_crop_window.x != x1_diff) {
-        unsigned char *src_ptr_temp, *dst_ptr_temp;
-        unsigned int elements_in_row = max_decoded_width * planes;
-        unsigned int elements_in_crop_row = _crop_window.W * planes;
-        unsigned int xoffs = (_crop_window.x - x1_diff) * planes;  // in case _crop_window.x gets adjusted by tjpeg decoder
-        src_ptr_temp = output_buffer;
-        dst_ptr_temp = output_buffer;
-        for (unsigned int i = 0; i < _crop_window.H; i++) {
-            memcpy(dst_ptr_temp, src_ptr_temp + xoffs, elements_in_crop_row * sizeof(unsigned char));
-            src_ptr_temp += elements_in_row;
-            dst_ptr_temp += elements_in_row;
-        }
+
+    // if (_resize_batch) {
+    //     // Allocate memory for the itermediate decoded output
+    //     _rocjpeg_image_buff_size *= _num_channels;
+    //     if (!_rocjpeg_image_buff) {
+    //         CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
+    //         _prev_image_buff_size = _rocjpeg_image_buff_size;
+    //     } else if (_rocjpeg_image_buff_size > _prev_image_buff_size) {  // Reallocate if the intermediate output exceeds the allocated memory
+    //         CHECK_HIP(hipFree((void *)_rocjpeg_image_buff));
+    //         CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
+    //         _prev_image_buff_size = _rocjpeg_image_buff_size;
+    //     }
+
+    //     uint8_t *img_buff = reinterpret_cast<uint8_t*>(_rocjpeg_image_buff);
+    //     size_t src_offset = 0;
+
+    //     // Update RocJpegImage with the pointer
+    //     for (unsigned i = 0; i < _batch_size; i++) {
+    //             _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
+    //             _src_img_offset[i] = src_offset;
+    //             unsigned pitch_width = (original_image_width[i] + 8) &~ 7;
+    //             unsigned pitch_height = (original_image_height[i] + 8) &~ 7;
+    //             src_offset += (pitch_width * pitch_height * _num_channels);
+    //             img_buff += (pitch_width * pitch_height * _num_channels);
+    //             _src_hstride[i] = pitch_width * _num_channels;
+    //     }
+
+    //     // Copy width and height args to HIP memory
+    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, original_image_width.data(), _batch_size * sizeof(size_t)));
+    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, original_image_height.data(), _batch_size * sizeof(size_t)));
+    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_width, actual_decoded_width.data(), _batch_size * sizeof(size_t)));
+    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_height, actual_decoded_height.data(), _batch_size * sizeof(size_t)));
+    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_hstride, _src_hstride.data(), _batch_size * sizeof(size_t)));
+    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_img_offset, _src_img_offset.data(), _batch_size * sizeof(size_t)));
+    // } else {
+    for (unsigned i = 0; i < _batch_size; i++) {
+        _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);    // For RGB
     }
-    actual_decoded_width = _crop_window.W;
-    actual_decoded_height = _crop_window.H;
+    // }
+
+    CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()));
 
     return Status::OK;
 }
 
 FusedCropRocJpegDecoder::~FusedCropRocJpegDecoder() {
-    tjDestroy(m_jpegDecompressor);
+    CHECK_ROCJPEG(rocJpegDestroy(_rocjpeg_handle));
+    for (auto j = 0; j < _batch_size; j++) {
+        CHECK_ROCJPEG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
+    }
+    if (_rocjpeg_image_buff) CHECK_HIP(hipFree(_rocjpeg_image_buff));
+    // if (_dev_src_width) CHECK_HIP(hipFree(_dev_src_width));
+    // if (_dev_src_height) CHECK_HIP(hipFree(_dev_src_height));
+    // if (_dev_dst_width) CHECK_HIP(hipFree(_dev_dst_width));
+    // if (_dev_dst_height) CHECK_HIP(hipFree(_dev_dst_height));
+    // if (_dev_src_hstride) CHECK_HIP(hipFree(_dev_src_hstride));
+    // if (_dev_src_img_offset) CHECK_HIP(hipFree(_dev_src_img_offset));
 }
 #endif

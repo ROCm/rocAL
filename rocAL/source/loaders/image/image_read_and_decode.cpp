@@ -86,7 +86,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         _random_crop_dec_param = new RocalRandomCropDecParam(aspect_ratio_range, area_range, (int64_t)decoder_config.get_seed(), decoder_config.get_num_attempts(), _batch_size);
     }
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
-        if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
+        if (_decoder_config._type == DecoderType::ROCJPEG_DEC || _decoder_config._type == DecoderType::FUSED_CROP_ROCJPEG_DEC) {
             for (int i = 0; i < batch_size; i++) {
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             }
@@ -289,7 +289,7 @@ ImageReadAndDecode::load(unsigned char *buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-        if (_decoder_config._type != DecoderType::ROCJPEG_DEC) {
+        if (_decoder_config._type != DecoderType::ROCJPEG_DEC && _decoder_config._type != DecoderType::FUSED_CROP_ROCJPEG_DEC) {
 #pragma omp parallel for num_threads(_num_threads)
             for (size_t i = 0; i < _batch_size; i++) {
                 // initialize the actual decoded height and width with the maximum
@@ -338,7 +338,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = scaledw;
                 _actual_decoded_height[i] = scaledh;
             }
-        } else if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
+        } else if (_decoder_config._type == DecoderType::ROCJPEG_DEC && _decoder_config._type == DecoderType::FUSED_CROP_ROCJPEG_DEC) {
 #if ENABLE_HIP
             // Set device ID for load routine thread once
             if (!_set_device_id) {
@@ -380,6 +380,16 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _original_width[i] = original_width;
                 _actual_decoded_width[i] = decoded_width;
                 _actual_decoded_height[i] = decoded_height;
+
+                if (_rocjpeg_decoder->is_partial_decoder()) {
+                    if (_randombboxcrop_meta_data_reader) {
+                        _rocjpeg_decoder->set_bbox_coords(_bbox_coords[i]);
+                    } else if (_random_crop_dec_param) {
+                        Shape dec_shape = {_original_height[i], _original_width[i]};
+                        auto crop_window = _random_crop_dec_param->generate_crop_window(dec_shape, i);
+                        _rocjpeg_decoder->set_crop_window(crop_window);
+                    }
+                }
             }
             
             if (_rocjpeg_decoder->decode_batch(_decompressed_buff_ptrs,
