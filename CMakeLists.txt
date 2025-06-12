@@ -207,7 +207,7 @@ if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 # Set the dependent packages
-set(ROCAL_DEBIAN_PACKAGE_LIST  "mivisionx")
+set(ROCAL_DEBIAN_PACKAGE_LIST  "mivisionx, libturbojpeg:amd64 | libturbojpeg0")
 set(ROCAL_RPM_PACKAGE_LIST     "mivisionx")
 # Set the dev dependent packages
 set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
@@ -218,17 +218,10 @@ if (EXISTS "/etc/os-release")
   file(READ "/etc/os-release" OS_RELEASE)
   string(REGEX MATCH "rhel" RHEL_FOUND ${OS_RELEASE})
   string(REGEX MATCH "Mariner" MARINER_FOUND ${OS_RELEASE})
-  string(REGEX MATCH "Ubuntu" UBUNTU_FOUND ${OS_RELEASE})
-  string(REGEX MATCH "Debian" DEBIAN_FOUND ${OS_RELEASE})
   # Add TurboJPEG
   if(RHEL_FOUND)
     set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, turbojpeg")
     set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, turbojpeg-devel")
-  endif()
-  if(UBUNTU_FOUND)
-    set(ROCAL_DEBIAN_PACKAGE_LIST   "${ROCAL_DEBIAN_PACKAGE_LIST}, libturbojpeg:amd64")
-  elseif(DEBIAN_FOUND)
-    set(ROCAL_DEBIAN_PACKAGE_LIST   "${ROCAL_DEBIAN_PACKAGE_LIST}, libturbojpeg0")
   endif()
   # Add rocDecode and rocJpeg deps for Non-Mariner
   if(NOT MARINER_FOUND)
