@@ -188,7 +188,6 @@ do
         # code coverage tests
         ./unit_tests 14 "$image_path" "${output_path}BrightnessRandom_${rgb_name[$rgb]}_${device_name}" $width $height 3 $device $rgb 1 $display
         ./unit_tests 15 "$coco_detection_path" "${output_path}FlipRandom_${rgb_name[$rgb]}_${device_name}" $width $height 6 $device $rgb 1 $display
-        ./unit_tests 15 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
         ./unit_tests 15 "$coco_detection_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
         ./unit_tests 16 "$coco_keypoints_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
         ./unit_tests 17 "$caffe_classification_path" "${output_path}GammaRandom_${rgb_name[$rgb]}_${device_name}" $width $height 4 $device $rgb 1 $display
@@ -200,6 +199,7 @@ do
         ./unit_tests 23 "$caffe2_classification_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" $width $height 14 $device $rgb 1 $display
         ./unit_tests 24 "$tf_classification_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 15 $device $rgb 1 $display
         ./unit_tests 25 "$webdataset_tar_path" "${output_path}FogRandom_${rgb_name[$rgb]}_${device_name}" $width $height 17 $device $rgb 1 $display
+        ./unit_tests 26 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}LensCorrectionRandom_${rgb_name[$rgb]}_${device_name}" $width $height 18 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}ExposureRandom_${rgb_name[$rgb]}_${device_name}" $width $height 20 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}HueRandom_${rgb_name[$rgb]}_${device_name}" $width $height 21 $device $rgb 1 $display
