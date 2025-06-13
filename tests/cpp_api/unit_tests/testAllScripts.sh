@@ -133,9 +133,9 @@ do
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}CropCenterCMN_${rgb_name[$rgb]}_${device_name}" $width $height 55 $device $rgb 0 $display
 
         # COCO Keypoints
-        ./unit_tests 10 "$coco_keypoints_path" "${output_path}SNP_${rgb_name[$rgb]}_${device_name}" 640 480 14 $device $rgb 0 $display
+        ./unit_tests 10 "$coco_keypoints_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" 640 480 14 $device $rgb 0 $display
         ./unit_tests 10 "$coco_keypoints_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" 640 480 15 $device $rgb 0 $display
-        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Fog_${rgb_name[$rgb]}_${device_name}" 640 480 17 $device $rgb 0 $display
+        ./unit_tests 10 "$coco_keypoints_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" 640 480 41 $device $rgb 0 $display
 
         # mxnet 
         ./unit_tests 11 "$mxnet_path" "${output_path}Jitter_${rgb_name[$rgb]}_${device_name}" $width $height 39 $device $rgb 0 $display
@@ -156,7 +156,7 @@ do
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_caffe2Classification" $width $height 25 $device $rgb 0 $display
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_caffe2Detection" $width $height 25 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 25 $device $rgb 0 $display
-        ./unit_tests 12 "$webdataset_tar_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_web_dataset" $width $height 25 $device $rgb 0 $display
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_webdataset" $width $height 25 $device $rgb 0 $display
         ./unit_tests 13 "$numpy_data_path" "${output_path}CropMirrorNormalize_${rgb_name[$rgb]}_${device_name}_numpy" $width $height 25 $device $rgb 0 $display
 
         # crop
@@ -169,7 +169,7 @@ do
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_caffe2Classification" $width $height 51 $device $rgb 0 $display
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_caffe2Detection" $width $height 51 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_mxnet" $width $height 51 $device $rgb 0 $display
-        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_web_dataset" $width $height 51 $device $rgb 0 $display
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_webdataset" $width $height 51 $device $rgb 0 $display
         ./unit_tests 13 "$numpy_data_path" "${output_path}Crop_${rgb_name[$rgb]}_${device_name}_numpy" $width $height 51 $device $rgb 0 $display
 
         # resize
@@ -183,13 +183,14 @@ do
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_lanczos_default_caffe2Classification" $width $height 0 $device $rgb 0 $display 3 0
         ./unit_tests 9 "$caffe2_detection_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_default_caffe2Detection" $width $height 0 $device $rgb 0 $display 5 0
         ./unit_tests 11 "$mxnet_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_gaussian_default_mxnet" $width $height 0 $device $rgb 0 $display 4 0
-        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_notsmaller_web_dataset" $width $height 0 $device $rgb 0 $display 5 2
+        ./unit_tests 12 "$webdataset_tar_path" "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_notsmaller_webdataset" $width $height 0 $device $rgb 0 $display 5 2
 
         # code coverage tests
         ./unit_tests 14 "$image_path" "${output_path}BrightnessRandom_${rgb_name[$rgb]}_${device_name}" $width $height 3 $device $rgb 1 $display
         ./unit_tests 15 "$coco_detection_path" "${output_path}FlipRandom_${rgb_name[$rgb]}_${device_name}" $width $height 6 $device $rgb 1 $display
-        ./unit_tests 16 "$coco_keypoints_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
-        ./unit_tests 16 "$coco_keypoints_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
+        ./unit_tests 15 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
+        ./unit_tests 15 "$coco_detection_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
+        ./unit_tests 16 "$coco_keypoints_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
         ./unit_tests 17 "$caffe_classification_path" "${output_path}GammaRandom_${rgb_name[$rgb]}_${device_name}" $width $height 4 $device $rgb 1 $display
         ./unit_tests 18 "$caffe2_classification_path" "${output_path}ContrastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 5 $device $rgb 1 $display
         ./unit_tests 19 "$mxnet_path" "${output_path}BlurRandom_${rgb_name[$rgb]}_${device_name}" $width $height 7 $device $rgb 1 $display
