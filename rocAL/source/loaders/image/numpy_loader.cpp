@@ -134,7 +134,7 @@ void NumpyLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
         throw;
     }
     _decoded_data_info._data_names.resize(_batch_size);
-    _tensor_roi.resize(_batch_size);
+    _decoded_data_info._roi_shape.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
     _is_initialized = true;
     LOG("Loader module initialized");
@@ -192,11 +192,11 @@ NumpyLoader::load_routine() {
                 auto original_roi = _reader->get_numpy_header_data().shape();
                 // The numpy header data contains the full array shape. We require only width and height for ROI updation
                 if (data_layout == RocalTensorlayout::NHWC) {
-                    _tensor_roi[file_counter] = {original_roi[1], original_roi[0]};
+                    _decoded_data_info._roi_shape[file_counter] = {original_roi[1], original_roi[0]};
                 } else if (data_layout == RocalTensorlayout::NCHW) {
-                    _tensor_roi[file_counter] = {original_roi[2], original_roi[1]};
+                    _decoded_data_info._roi_shape[file_counter] = {original_roi[2], original_roi[1]};
                 } else {
-                    _tensor_roi[file_counter] = original_roi;
+                    _decoded_data_info._roi_shape[file_counter] = original_roi;
                 }
                 _reader->close();
                 file_counter++;
@@ -267,7 +267,7 @@ NumpyLoader::update_output_tensor() {
 
     _output_decoded_data_info = _circ_buff.get_decoded_data_info();
     _output_names = _output_decoded_data_info._data_names;
-    _output_tensor->update_tensor_roi(_tensor_roi);
+    _output_tensor->update_tensor_roi(_output_decoded_data_info._roi_shape);
     _circ_buff.pop();
     if (!_loop)
         _remaining_file_count -= _batch_size;
