@@ -49,7 +49,7 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
             return std::make_shared<HWRocJpegDecoder>(config.get_hip_stream());
             break;
         case DecoderType::FUSED_CROP_ROCJPEG_DEC:
-            return std::make_shared<FusedCropRocJpegDecoder>(config.get_hip_stream());
+            return std::make_shared<FusedCropRocJpegDecoder>();
             break;
 #endif
         default:

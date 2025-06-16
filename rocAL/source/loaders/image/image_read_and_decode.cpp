@@ -78,7 +78,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _decoder_config = decoder_config;
     _random_crop_dec_param = nullptr;
     _device_id = device_id;
-    if (_decoder_config._type == DecoderType::FUSED_TURBO_JPEG) {
+    if (_decoder_config._type == DecoderType::FUSED_TURBO_JPEG || _decoder_config._type == DecoderType::FUSED_CROP_ROCJPEG_DEC) {
         auto random_aspect_ratio = decoder_config.get_random_aspect_ratio();
         auto random_area = decoder_config.get_random_area();
         AspectRatioRange aspect_ratio_range = std::make_pair((float)random_aspect_ratio[0], (float)random_aspect_ratio[1]);
@@ -338,7 +338,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = scaledw;
                 _actual_decoded_height[i] = scaledh;
             }
-        } else if (_decoder_config._type == DecoderType::ROCJPEG_DEC && _decoder_config._type == DecoderType::FUSED_CROP_ROCJPEG_DEC) {
+        } else if (_decoder_config._type == DecoderType::ROCJPEG_DEC || _decoder_config._type == DecoderType::FUSED_CROP_ROCJPEG_DEC) {
 #if ENABLE_HIP
             // Set device ID for load routine thread once
             if (!_set_device_id) {

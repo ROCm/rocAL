@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #if ENABLE_ROCJPEG
 
-#include "rocjpeg.h"
+#include "rocjpeg/rocjpeg.h"
 class FusedCropRocJpegDecoder : public Decoder {
    public:
     //! Default constructor
@@ -56,6 +56,12 @@ class FusedCropRocJpegDecoder : public Decoder {
     */
     Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) override;
 
+    Decoder::Status decode(unsigned char *input_buffer, size_t input_size, unsigned char *output_buffer,
+                           size_t max_decoded_width, size_t max_decoded_height,
+                           size_t original_image_width, size_t original_image_height,
+                           size_t &actual_decoded_width, size_t &actual_decoded_height,
+                           Decoder::ColorFormat desired_decoded_color_format, DecoderConfig config, bool keep_original_size = false) override { return Status::UNSUPPORTED; }
+
     //! Decodes a batch of actual image data
     /*!
       \param output_buffer User provided HIP buffer used to write the decoded image into
@@ -77,7 +83,7 @@ class FusedCropRocJpegDecoder : public Decoder {
     bool is_partial_decoder() override { return _is_partial_decoder; }
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
-    void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
+    void set_crop_window(CropWindow &crop_window) override;
 
    private:
     bool _is_partial_decoder = true;
@@ -86,8 +92,17 @@ class FusedCropRocJpegDecoder : public Decoder {
     RocJpegHandle _rocjpeg_handle;
     std::vector<RocJpegStreamHandle> _rocjpeg_streams;
     std::vector<RocJpegImage> _output_images = {};
-    RocJpegDecodeParams _decode_params = {};
     std::vector<RocJpegDecodeParams> _decode_params_batch;
+    RocJpegDecodeParams* _decode_params;
     unsigned _batch_size;
+    uint32_t _num_channels = 0;
+    int _device_id = 0;
+    int _max_decoded_width, _max_decoded_height;
+    RocJpegChromaSubsampling _subsampling;
+    uint32_t _max_widths[4] = {0, 0, 0, 0};
+    uint32_t _max_heights[4] = {0, 0, 0, 0};
+    int _index;
+    uint32_t _channels_size = 0;
+    uint32_t _channel_sizes[4] = {};
 };
 #endif
