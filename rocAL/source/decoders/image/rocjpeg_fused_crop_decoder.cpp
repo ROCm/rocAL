@@ -50,7 +50,6 @@ THE SOFTWARE.
 }
 
 FusedCropRocJpegDecoder::FusedCropRocJpegDecoder() {
-    std::cerr << " FusedCropRocJpegDecoder initialized !!\n";
 };
 
 void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) { 
@@ -174,14 +173,11 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     _original_image_width = *actual_width = widths[0];
     _original_image_height = *actual_height = heights[0];
 
-    std::cerr << "Actual width and height : " << *actual_width << " & " << *actual_height << "\n";
-
     return Status::OK;
 }
 
 Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
     
-    std::cerr << "The other decode info is getting called\n";
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
