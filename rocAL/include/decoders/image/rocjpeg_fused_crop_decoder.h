@@ -81,7 +81,7 @@ class FusedCropRocJpegDecoder : public Decoder {
     void initialize(int device_id) override {}
     void initialize(int device_id, unsigned batch_size) override;
     bool is_partial_decoder() override { return _is_partial_decoder; }
-    void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
+    void set_bbox_coords(std::vector<float> bbox_coord) override;
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override;
 
@@ -97,12 +97,6 @@ class FusedCropRocJpegDecoder : public Decoder {
     unsigned _batch_size;
     uint32_t _num_channels = 0;
     int _device_id = 0;
-    int _max_decoded_width, _max_decoded_height;
-    RocJpegChromaSubsampling _subsampling;
-    uint32_t _max_widths[4] = {0, 0, 0, 0};
-    uint32_t _max_heights[4] = {0, 0, 0, 0};
-    int _index;
-    uint32_t _channels_size = 0;
-    uint32_t _channel_sizes[4] = {};
+    int _max_decoded_width, _max_decoded_height, _original_image_width, _original_image_height;
 };
 #endif

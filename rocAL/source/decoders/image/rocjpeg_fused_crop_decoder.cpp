@@ -53,10 +53,22 @@ FusedCropRocJpegDecoder::FusedCropRocJpegDecoder() {
     std::cerr << " FusedCropRocJpegDecoder initialized !!\n";
 };
 
+void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) { 
+    _bbox_coord = bbox_coord;
+    _crop_window.x = std::lround(_bbox_coord[0] * _original_image_width);
+    _crop_window.y = std::lround(_bbox_coord[1] * _original_image_height);
+    _crop_window.W = std::lround((_bbox_coord[2]) * _original_image_width);
+    _crop_window.H = std::lround((_bbox_coord[3]) * _original_image_height);
+
+    _decode_params->crop_rectangle.left = _crop_window.x;
+    _decode_params->crop_rectangle.top = _crop_window.y;
+    _decode_params->crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
+    _decode_params->crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
+}
+
+
 void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) { 
     _crop_window = crop_window;
-_crop_window.W = 200;
-_crop_window.H = 200;
     _crop_window.W = std::min(_crop_window.W, (unsigned int)_max_decoded_width);
     _crop_window.H = std::min(_crop_window.H, (unsigned int)_max_decoded_height);
     
@@ -97,18 +109,7 @@ void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _device_id = device_id;
     _batch_size = batch_size;
     _output_images.resize(_batch_size);
-    // _src_hstride.resize(_batch_size);
-    // _src_img_offset.resize(_batch_size);
     _decode_params_batch.resize(_batch_size);
-
-    // // Allocate mem for width and height arrays for src and dst
-    // if (!_dev_src_width) CHECK_HIP(hipMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
-    // if (!_dev_src_height) CHECK_HIP(hipMalloc((void **)&_dev_src_height, _batch_size * sizeof(size_t)));
-    // if (!_dev_dst_width) CHECK_HIP(hipMalloc((void **)&_dev_dst_width, _batch_size * sizeof(size_t)));
-    // if (!_dev_dst_height) CHECK_HIP(hipMalloc((void **)&_dev_dst_height, _batch_size * sizeof(size_t)));
-    // if (!_dev_src_hstride) CHECK_HIP(hipMalloc((void **)&_dev_src_hstride, _batch_size * sizeof(size_t)));
-    // if (!_dev_src_img_offset) CHECK_HIP(hipMalloc((void **)&_dev_src_img_offset, _batch_size * sizeof(size_t)));
-
 }
 
 // Obtains the decode info of the image, and modifies width and height based on the max decode params after scaling
@@ -118,14 +119,13 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     uint8_t num_components;
     uint32_t widths[4] = {};
     uint32_t heights[4] = {};
-
+    uint32_t channels_size = 0;
+    uint32_t channel_sizes[4] = {};
 
     uint32_t max_widths[4] = {static_cast<uint32_t>(max_decoded_width), 0, 0, 0};
     uint32_t max_heights[4] = {static_cast<uint32_t>(max_decoded_height), 0, 0, 0};
 
-    _max_widths[0] = static_cast<uint32_t>(max_decoded_width);
-    _max_heights[0] = static_cast<uint32_t>(max_decoded_height);
-                                                std::cerr << "Decode info being called\n";
+    RocJpegChromaSubsampling subsampling;
     switch(desired_decoded_color_format) {
         case Decoder::ColorFormat::GRAY:
             _decode_params_batch[index].output_format = ROCJPEG_OUTPUT_Y;
@@ -142,7 +142,7 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
         std::cerr << "Header decode failed\n";
         return Status::HEADER_DECODE_FAILED;
     }
-    if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[index], &num_components, &_subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
+    if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[index], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
         std::cerr << "Header decode failed\n";
         
         return Status::HEADER_DECODE_FAILED;
@@ -155,48 +155,24 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     }
 
     std::string chroma_sub_sampling = "";
-    GetChromaSubsamplingStr(_subsampling, chroma_sub_sampling);
-    if (_subsampling == ROCJPEG_CSS_411 || _subsampling == ROCJPEG_CSS_UNKNOWN) {
+    GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
+    if (subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
         return Status::UNSUPPORTED;
     }
 
     *width = widths[0];
     *height = heights[0];
-    // uint scaledw = widths[0], scaledh = heights[0];
-    // // Scaling to be performed if width/height is less than max decode width/height
-    // if (widths[0] > max_decoded_width || heights[0] > max_decoded_height) {
-    //     for (unsigned j = 0; j < _num_scaling_factors; j++) {
-    //         scaledw = (((widths[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
-    //         scaledh = (((heights[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
-    //         if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
-    //             break;
-    //     }
-    // }
-    // // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
-    // if (scaledw != widths[0] || scaledh != heights[0]) {
-    //     _resize_batch = true;   // If the size of any image in the batch is greater than max size, resize the complete batch
-    //     max_widths[0] = (widths[0] + 8) &~ 7;
-    //     max_heights[0] = (heights[0] + 8) &~ 7;
-    // }
     _max_decoded_width = max_decoded_width;
     _max_decoded_height = max_decoded_height;
 
     _decode_params = &_decode_params_batch[index];
-    _index = index;
-    // _crop_window.W = std::min(_crop_window.W, (unsigned int)max_decoded_width);
-    // _crop_window.H = std::min(_crop_window.H, (unsigned int)max_decoded_height);
-    
-    // _decode_params_batch[index].crop_rectangle.left = _crop_window.x;
-    // _decode_params_batch[index].crop_rectangle.top = _crop_window.y;
-    // _decode_params_batch[index].crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
-    // _decode_params_batch[index].crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
 
-    if (GetChannelPitchAndSizes(_decode_params_batch[index], _subsampling, max_widths, max_heights, _channels_size, _output_images[index], _channel_sizes)) {
+    if (GetChannelPitchAndSizes(_decode_params_batch[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
         // return Status::HEADER_DECODE_FAILED;
         ERR("Header decode failed\n")
     }
-    *actual_width = widths[0];
-    *actual_height = heights[0];
+    _original_image_width = *actual_width = widths[0];
+    _original_image_height = *actual_height = heights[0];
 
     std::cerr << "Actual width and height : " << *actual_width << " & " << *actual_height << "\n";
 
@@ -237,45 +213,9 @@ Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char 
                                                std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
                                                std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
 
-
-    // if (_resize_batch) {
-    //     // Allocate memory for the itermediate decoded output
-    //     _rocjpeg_image_buff_size *= _num_channels;
-    //     if (!_rocjpeg_image_buff) {
-    //         CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
-    //         _prev_image_buff_size = _rocjpeg_image_buff_size;
-    //     } else if (_rocjpeg_image_buff_size > _prev_image_buff_size) {  // Reallocate if the intermediate output exceeds the allocated memory
-    //         CHECK_HIP(hipFree((void *)_rocjpeg_image_buff));
-    //         CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
-    //         _prev_image_buff_size = _rocjpeg_image_buff_size;
-    //     }
-
-    //     uint8_t *img_buff = reinterpret_cast<uint8_t*>(_rocjpeg_image_buff);
-    //     size_t src_offset = 0;
-
-    //     // Update RocJpegImage with the pointer
-    //     for (unsigned i = 0; i < _batch_size; i++) {
-    //             _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
-    //             _src_img_offset[i] = src_offset;
-    //             unsigned pitch_width = (original_image_width[i] + 8) &~ 7;
-    //             unsigned pitch_height = (original_image_height[i] + 8) &~ 7;
-    //             src_offset += (pitch_width * pitch_height * _num_channels);
-    //             img_buff += (pitch_width * pitch_height * _num_channels);
-    //             _src_hstride[i] = pitch_width * _num_channels;
-    //     }
-
-    //     // Copy width and height args to HIP memory
-    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, original_image_width.data(), _batch_size * sizeof(size_t)));
-    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, original_image_height.data(), _batch_size * sizeof(size_t)));
-    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_width, actual_decoded_width.data(), _batch_size * sizeof(size_t)));
-    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_height, actual_decoded_height.data(), _batch_size * sizeof(size_t)));
-    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_hstride, _src_hstride.data(), _batch_size * sizeof(size_t)));
-    //     CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_img_offset, _src_img_offset.data(), _batch_size * sizeof(size_t)));
-    // } else {
     for (unsigned i = 0; i < _batch_size; i++) {
         _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);    // For RGB
     }
-    // }
 
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()));
 
@@ -287,11 +227,5 @@ FusedCropRocJpegDecoder::~FusedCropRocJpegDecoder() {
     for (auto j = 0; j < _batch_size; j++) {
         CHECK_ROCJPEG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
     }
-    // if (_dev_src_width) CHECK_HIP(hipFree(_dev_src_width));
-    // if (_dev_src_height) CHECK_HIP(hipFree(_dev_src_height));
-    // if (_dev_dst_width) CHECK_HIP(hipFree(_dev_dst_width));
-    // if (_dev_dst_height) CHECK_HIP(hipFree(_dev_dst_height));
-    // if (_dev_src_hstride) CHECK_HIP(hipFree(_dev_src_hstride));
-    // if (_dev_src_img_offset) CHECK_HIP(hipFree(_dev_src_img_offset));
 }
 #endif
