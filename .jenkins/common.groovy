@@ -28,11 +28,11 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     def command = """#!/usr/bin/env bash
                 set -x
                 ${enableSCL}
-                echo get latest MIVisionX
-                ${getMIVisionX}
                 echo Build rocAL - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 sudo python rocAL-setup.py --backend ${backend}
+                echo get latest MIVisionX
+                ${getMIVisionX}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
                 cmake -DBACKEND=${backend} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" ../..
                 make -j\$(nproc)
