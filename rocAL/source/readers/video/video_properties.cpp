@@ -93,7 +93,7 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
             if (filesys::path(video_file_name).is_relative()) {
                 filesys::path path(file_path);
                 filesys::path parent = path.parent_path();
-                video_file_name = parent.string() + "/" + video_file_name;
+                video_file_name = (parent / video_file_name).string();
             }
 
             // Check if the video file exists
