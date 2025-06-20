@@ -1529,10 +1529,10 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, flo
     // Copies to the output context given by the user, each image is copied separate for planar
     auto output_tensor_info = _output_tensor_list[0]->info();
     auto dims = output_tensor_info.dims();
-    const size_t w = dims[2];
-    const size_t h = dims[1];
-    const size_t c = dims[3];
     const size_t n = dims[0];
+    const size_t c = dims[1];
+    const size_t h = dims[2];
+    const size_t w = dims[3];
 
     const size_t single_output_tensor_size = output_tensor_info.data_size();
 

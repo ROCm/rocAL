@@ -6,7 +6,7 @@ else
     mkdir build
 fi
 cd build || exit
-cmake ..
+cmake -DBACKEND=HIP ..
 make -j"$(nproc)"
 
 if [[ $ROCAL_DATA_PATH == "" ]]

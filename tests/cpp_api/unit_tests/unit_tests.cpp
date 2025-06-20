@@ -37,6 +37,12 @@ THE SOFTWARE.
 #include "rocal_api.h"
 using namespace cv;
 
+#if ENABLE_HIP
+#include <half/half.hpp>
+#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#endif
+
 #if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
 #define CV_BGR2GRAY COLOR_BGR2GRAY
@@ -1056,7 +1062,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         
         // Testing the rocalToTensor API for copy augmentation
-        if ((test_case == 23) && (gpu == 0)) {
+        if (test_case == 23) {
+         if (gpu == 0) {
             float *f32_batch_output = (float *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
             rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
             rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
@@ -1070,7 +1077,44 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
             free(f32_batch_output);
             free(f16_batch_output);
+#if ENABLE_HIP
+            float *d_f32_batch_output;
+            hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+            rocalToTensor(handle, d_f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, d_f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, d_f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, d_f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+
+
+            half *d_f16_batch_output;
+            hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+            rocalToTensor(handle, d_f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, d_f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, d_f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, d_f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            hipFree(d_f32_batch_output);
+            hipFree(d_f16_batch_output);
+#endif
+        } else {
+#if ENABLE_HIP
+            float *f32_batch_output;
+            hipMalloc(&f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+
+            half *f16_batch_output;
+            hipMalloc(&f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+            hipFree(f32_batch_output);
+            hipFree(f16_batch_output);
+#endif
         }
+    }   
 
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
