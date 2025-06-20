@@ -831,7 +831,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalROIResize" << std::endl;
             output = rocalROIResize(handle, input, 384, 384, true, 416, 416);
         } break;
-
+        case 61: {
+            std::cout << "Running rocalNop" << std::endl;
+            output = rocalNop(handle, input, true);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
@@ -855,6 +858,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
     int w = rocalGetOutputWidth(handle);
+    int output_color_format = rocalGetOutputColorFormat(handle);
+    auto last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1;  // 1920 / w;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);

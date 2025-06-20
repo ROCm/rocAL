@@ -206,12 +206,16 @@ do
         ./unit_tests 0 "$image_path" "${output_path}SaturationRandom_${rgb_name[$rgb]}_${device_name}" $width $height 22 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}Copy_${rgb_name[$rgb]}_${device_name}" $width $height 23 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}ColorTwistRandom_${rgb_name[$rgb]}_${device_name}" $width $height 24 $device $rgb 1 $display
+        ./unit_tests 0 "$image_path" "${output_path}VignetteRandom_${rgb_name[$rgb]}_${device_name}" $width $height 11 $device $rgb 1 $display
+        ./unit_tests 0 "$image_path" "${output_path}JitterRandom_${rgb_name[$rgb]}_${device_name}" $width $height 12 $device $rgb 1 $display
+        ./unit_tests 0 "$image_path" "${output_path}ColorTempRandom_${rgb_name[$rgb]}_${device_name}" $width $height 16 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}CropRandom_${rgb_name[$rgb]}_${device_name}" $width $height 26 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeCropMirrorRandom_${rgb_name[$rgb]}_${device_name}" $width $height 27 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}CropResize_${rgb_name[$rgb]}_${device_name}" $width $height 30 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}SSDRandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 54 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}RandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 59 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ROIResize_${rgb_name[$rgb]}_${device_name}" $width $height 60 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Nop_${rgb_name[$rgb]}_${device_name}" $width $height 61 $device $rgb 1 $display
 
     done
 done
