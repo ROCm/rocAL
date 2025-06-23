@@ -95,7 +95,7 @@ def runTestCommand (platform, project) {
 
     def videoTestArgsTimestamps = videoTestArgs + [
         inputFile: "../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/test_timestamps/test_timestamps.txt",
-        filelist_framenum = 0,
+        filelist_framenum: 0,
         enable_timestamps: 1,
     ]
 
