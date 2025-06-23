@@ -74,7 +74,7 @@ def runTestCommand (platform, project) {
         shuffle: 1,
         resize_width: 1280,
         resize_height: 720,
-        filelist_framenum: 0,
+        filelist_framenum: 1,
         enable_meta_data: 0,
         enable_framenumber: 0,
         enable_timestamps: 0,
@@ -90,12 +90,12 @@ def runTestCommand (platform, project) {
 
     def videoTestArgsFrameNum = videoTestArgs + [
         inputFile: "../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.txt",
-        filelist_framenum: 1,
         enable_framenumber: 1,
     ]
 
     def videoTestArgsTimestamps = videoTestArgs + [
         inputFile: "../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/test_timestamps/test_timestamps.txt",
+        filelist_framenum = 0,
         enable_timestamps: 1,
     ]
 
@@ -224,6 +224,28 @@ def runTestCommand (platform, project) {
 
                     ./video_tests \
                         ${videoHardwareTestArgs.inputFile} ${videoHardwareTestArgs.reader_case} ${videoHardwareTestArgs.processing_device} ${videoHardwareTestArgs.hardware_decode_mode}
+                    
+                    ./video_tests \
+                        ${videoTestArgsSequence.inputFile} 4 ${videoTestArgsSequence.processing_device} \
+                        ${videoTestArgsSequence.hardware_decode_mode} ${videoTestArgsSequence.batch_size} \
+                        ${videoTestArgsSequence.sequence_length} ${videoTestArgsSequence.frame_step} ${videoTestArgsSequence.frame_stride} \
+                        ${videoTestArgsSequence.gray_scale_rgb} ${videoTestArgsSequence.display_on_off} ${videoTestArgsSequence.shuffle} \
+                        ${videoTestArgsSequence.resize_width} ${videoTestArgsSequence.resize_height} \
+                        ${videoTestArgsSequence.filelist_framenum} ${videoTestArgsSequence.enable_meta_data} ${videoTestArgsSequence.enable_framenumber} \
+                        ${videoTestArgsSequence.enable_timestamps} ${videoTestArgsSequence.enable_sequence_rearrange}
+
+                    ./video_tests \
+                        ${videoTestArgs1.inputFile} 5 ${videoTestArgs1.processing_device} \
+                        ${videoTestArgs1.hardware_decode_mode} ${videoTestArgs1.batch_size} \
+                        ${videoTestArgs1.sequence_length} ${videoTestArgs1.frame_step} ${videoTestArgs1.frame_stride} \
+                        ${videoTestArgs1.gray_scale_rgb} ${videoTestArgs1.display_on_off} ${videoTestArgs1.shuffle} \
+                        ${videoTestArgs1.resize_width} ${videoTestArgs1.resize_height} \
+                        ${videoTestArgs1.filelist_framenum} ${videoTestArgs1.enable_meta_data} ${videoTestArgs1.enable_framenumber} \
+                        ${videoTestArgs1.enable_timestamps} ${videoTestArgs1.enable_sequence_rearrange}
+
+                    ./video_tests \
+                        ${videoHardwareTestArgs.inputFile} 6 ${videoHardwareTestArgs.processing_device} ${videoHardwareTestArgs.hardware_decode_mode}
+
                     cd ..
                     chmod a+x ./testScript.sh
                     ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 2
