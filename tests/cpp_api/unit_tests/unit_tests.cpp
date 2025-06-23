@@ -54,7 +54,7 @@ using namespace cv;
 #endif
 
 #define DISPLAY 0
-// #define RANDOMBBOXCROP
+#define RANDOMBBOXCROP
 
 using namespace std::chrono;
 
