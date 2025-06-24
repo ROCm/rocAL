@@ -427,7 +427,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/annotations/person_keypoints_val2017.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, true, true);
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, true, true, false, false, true);
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
