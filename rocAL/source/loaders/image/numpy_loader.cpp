@@ -47,7 +47,6 @@ NumpyLoader::~NumpyLoader() {
 void NumpyLoader::shut_down() {
     if (_internal_thread_running)
         stop_internal_thread();
-    de_init();
     _circ_buff.release();
 }
 
@@ -90,7 +89,6 @@ void NumpyLoader::reset() {
 void NumpyLoader::de_init() {
     // Set running to 0 and wait for the internal thread to join
     stop_internal_thread();
-    _reader.reset();
     _output_mem_size = 0;
     _batch_size = 1;
     _is_initialized = false;

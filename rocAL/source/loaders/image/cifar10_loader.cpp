@@ -84,7 +84,6 @@ void CIFAR10Loader::reset() {
 
 void CIFAR10Loader::de_init() {
     stop_internal_thread();
-    _reader.reset();
     _output_mem_size = 0;
     _batch_size = 1;
     _is_initialized = false;
@@ -158,7 +157,6 @@ void CIFAR10Loader::set_batch_random_bbox_crop_coords(std::vector<std::vector<fl
 void CIFAR10Loader::shut_down() {
     if (_internal_thread_running)
         stop_internal_thread();
-    de_init();
     _circ_buff.release();
 }
 

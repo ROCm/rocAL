@@ -351,7 +351,11 @@ void MasterGraph::set_output(Tensor *output_tensor) {
 void MasterGraph::release() {
     LOG("MasterGraph release ...")
     stop_processing();
+    for (auto &node : _nodes)
+        node->release();
     _nodes.clear();
+    for (auto &node : _root_nodes)
+        node->release();
     _root_nodes.clear();
     _meta_data_nodes.clear();
     _tensor_map.clear();
