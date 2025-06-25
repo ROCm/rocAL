@@ -535,6 +535,26 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 return -1;
             rocalBoxEncoder(handle, coco_anchors, 0.5, mean, stddev);
         } break;
+        case 27:  // raw tfrecord reader
+        {
+            std::cout << "Running RAW TFRECORD READER" << std::endl;
+            pipeline_type = 1;
+            char key1[25] = "image/decoded";
+            char key2[25] = "image/class/label";
+            char key8[25] = "image/filename";
+            rocalCreateTFReader(handle, path, true, key2, key8);
+            decoded_output = rocalRawTFRecordSource(handle, path, key1, key8, color_format, false, false, false, decode_max_width, decode_max_height);
+        } break;
+        case 28:  // raw tfrecord reader
+        {
+            std::cout << "Running RAW TFRECORD READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            char key1[25] = "image/decoded";
+            char key2[25] = "image/class/label";
+            char key8[25] = "image/filename";
+            rocalCreateTFReader(handle, path, true, key2, key8);
+            decoded_output = rocalRawTFRecordSourceSingleShard(handle, path, key1, key8, color_format, 0, 1, false, false, false, decode_max_width, decode_max_height);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -558,7 +578,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;

@@ -21,6 +21,7 @@ coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 coco_keypoints_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/
 tf_detection_path=${ROCAL_DATA_PATH}/rocal_data/tf/detection/
+tf_raw_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/raw/
 caffe_classification_path=${ROCAL_DATA_PATH}/rocal_data/caffe/classification/
 caffe_detection_path=${ROCAL_DATA_PATH}/rocal_data/caffe/detection/
 caffe2_classification_path=${ROCAL_DATA_PATH}/rocal_data/caffe2/classification/
@@ -200,6 +201,8 @@ do
         ./unit_tests 24 "$tf_classification_path" "${output_path}Rain_${rgb_name[$rgb]}_${device_name}" $width $height 15 $device $rgb 1 $display
         ./unit_tests 25 "$webdataset_tar_path" "${output_path}FogRandom_${rgb_name[$rgb]}_${device_name}" $width $height 17 $device $rgb 1 $display
         ./unit_tests 26 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
+        ./unit_tests 27 "$tf_raw_classification_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}_tfraw" $width $height 41 $device $rgb 0 $display
+        ./unit_tests 28 "$tf_raw_classification_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}_tfraw" $width $height 40 $device $rgb 0 $display
         ./unit_tests 0 "$image_path" "${output_path}LensCorrectionRandom_${rgb_name[$rgb]}_${device_name}" $width $height 18 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}ExposureRandom_${rgb_name[$rgb]}_${device_name}" $width $height 20 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}HueRandom_${rgb_name[$rgb]}_${device_name}" $width $height 21 $device $rgb 1 $display

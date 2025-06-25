@@ -1473,6 +1473,8 @@ RocalTensor ROCAL_API_CALL
 rocalRawTFRecordSourceSingleShard(
     RocalContext p_context,
     const char* source_path,
+    const char* user_key_for_encoded_str,
+    const char* user_key_for_filename_str,
     RocalImageColor rocal_color_format,
     unsigned shard_id,
     unsigned shard_count,
@@ -1484,6 +1486,10 @@ rocalRawTFRecordSourceSingleShard(
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
+    std::map<std::string, std::string> feature_key_map = {
+            {"image/encoded", user_key_for_encoded_str},
+            {"image/filename", user_key_for_filename_str},
+    };
     try {
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1508,7 +1514,7 @@ rocalRawTFRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info, feature_key_map);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
