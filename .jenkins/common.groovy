@@ -163,7 +163,10 @@ def runTestCommand (platform, project) {
                     make -j
                     wget https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
                     tar xvf cifar-10-binary.tar.gz
-                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 0 0
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 0 1
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 1 0
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 1 1
                     ./dataloader ./cifar-10-batches-bin/ 1 64 64 1 1
                     cd ../ && mkdir -p video-tests && cd video-tests
                     cp -r /opt/rocm/share/rocal/test/video_tests/* .
