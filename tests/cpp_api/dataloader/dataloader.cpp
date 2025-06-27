@@ -102,7 +102,7 @@ int main(int argc, const char **argv) {
     if (processing_device)
         input0 = rocalRawCIFAR10Source(handle, folderPath1, color_format, false, decode_width, decode_height, "data_batch_", false);
     else
-        input0 = rocalRawCIFAR10SourceSingleShard(handle, folderPath1, color_format, 0, 1, false, false, false, decode_width, decode_height, "data_batch_");
+        input0 = rocalRawCIFAR10SourceSingleShard(handle, folderPath1, color_format, 0, 1, false, true, false, decode_width, decode_height, "data_batch_");
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "rawCIFAR10 source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
@@ -248,6 +248,7 @@ int main(int argc, const char **argv) {
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> " << counter << " images/frames Processed. Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    rocalResetLoaders(handle);
     rocalRelease(handle);
     mat_input.release();
     mat_output.release();

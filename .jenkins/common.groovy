@@ -82,6 +82,9 @@ def runTestCommand (platform, project) {
     ]
 
     def videoTestArgs1 = videoTestArgs + [
+        batch_size: 2,
+        sequence_length: 7,
+        frame_step: 7,
         enable_meta_data: 1,
         enable_framenumber: 1,
         enable_timestamps: 1,
@@ -90,6 +93,7 @@ def runTestCommand (platform, project) {
 
     def videoTestArgsFrameNum = videoTestArgs + [
         inputFile: "../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.txt",
+        enable_meta_data: 1,
         enable_framenumber: 1,
     ]
 
@@ -101,6 +105,7 @@ def runTestCommand (platform, project) {
 
     def videoTestArgsLabelled = videoTestArgs + [
         inputFile: "../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/",
+        enable_meta_data: 1,
         resize_width: 640,
         resize_height: 480,
     ]
