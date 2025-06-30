@@ -115,29 +115,18 @@ typedef class MetaDataInfo {
 class MetaData {
    public:
     virtual ~MetaData() = default;
-    virtual std::vector<int>& get_labels() = 0;
-    virtual AsciiValues& get_ascii_values() = 0;
-    virtual void set_labels(Labels label_ids) = 0;
-    virtual void set_ascii_values(AsciiValues ascii_values) = 0;
-    virtual BoundingBoxCords& get_bb_cords() = 0;
-    virtual void set_bb_cords(BoundingBoxCords bb_cords) = 0;
-    virtual std::vector<int>& get_polygon_count() = 0;
-    virtual std::vector<std::vector<int>>& get_vertices_count() = 0;
-    virtual MaskCords& get_mask_cords() = 0;
-    virtual void set_mask_cords(MaskCords mask_cords) = 0;
-    virtual void set_polygon_counts(std::vector<int> polygon_count) = 0;
-    virtual void set_vertices_counts(std::vector<std::vector<int>> vertices_count) = 0;
-    virtual JointsData& get_joints_data() = 0;
-    virtual void set_joints_data(JointsData* joints_data) = 0;
+    virtual std::vector<int>& get_labels() { THROW("Not Implemented") };
+    virtual AsciiValues& get_ascii_values() { THROW("Not Implemented") };
+    virtual void set_labels(Labels label_ids) { THROW("Not Implemented") };
+    virtual BoundingBoxCords& get_bb_cords() { THROW("Not Implemented") };
+    virtual std::vector<int>& get_polygon_count() { THROW("Not Implemented") };
+    virtual std::vector<std::vector<int>>& get_vertices_count() { THROW("Not Implemented") };
+    virtual MaskCords& get_mask_cords() { THROW("Not Implemented") };
+    virtual JointsData& get_joints_data() { THROW("Not Implemented") };
     ImgSize& get_img_size() { return _info.img_size; }
     ImgSize& get_img_roi_size() { return _info.img_roi_size; }
     std::string& get_image_name() { return _info.img_name; }
     int& get_image_id() { return _info.img_id; }
-    void set_img_size(ImgSize img_size) { _info.img_size = std::move(img_size); }
-    void set_img_roi_size(ImgSize img_roi_size) { _info.img_roi_size = std::move(img_roi_size); }
-    void set_img_id(int img_id) { _info.img_id = img_id; }
-    void set_img_name(std::string img_name) { _info.img_name = img_name; }
-    void set_metadata_info(MetaDataInfo info) { _info = std::move(info); }
 
    protected:
     MetaDataInfo _info;
@@ -149,21 +138,7 @@ class AsciiValue : public MetaData {
     AsciiValue(AsciiValues ascii_values) {
         _ascii_values = std::move(ascii_values);
     }
-    void set_ascii_values(AsciiValues ascii_values) override { _ascii_values = std::move(ascii_values); }
     AsciiValues& get_ascii_values() override { return _ascii_values; }
-    // Not Implemnented
-    void set_labels(Labels label_ids) override { THROW("Not Implemented") }
-    std::vector<int>& get_labels() override {  THROW("Not Implemented") }
-    BoundingBoxCords& get_bb_cords() override { THROW("Not Implemented") }
-    void set_bb_cords(BoundingBoxCords bb_cords) override{THROW("Not Implemented")} 
-    std::vector<int>& get_polygon_count() override{THROW("Not Implemented")} 
-    std::vector<std::vector<int>>& get_vertices_count() override{THROW("Not Implemented")} 
-    MaskCords& get_mask_cords() override { THROW("Not Implemented") }
-    void set_mask_cords(MaskCords mask_cords) override { THROW("Not Implemented") }
-    void set_polygon_counts(std::vector<int> polygon_count) override { THROW("Not Implemented") }
-    void set_vertices_counts(std::vector<std::vector<int>> vertices_count) override{THROW("Not Implemented")} 
-    JointsData& get_joints_data() override { THROW("Not Implemented") }
-    void set_joints_data(JointsData* joints_data) override { THROW("Not Implemented") }
 
    protected:
     AsciiValues _ascii_values = {};  // For storing ASCII data only
@@ -176,18 +151,6 @@ class Label : public MetaData {
     ~Label() = default;
     std::vector<int>& get_labels() override { return _label_ids; }
     void set_labels(Labels label_ids) override { _label_ids = std::move(label_ids); }
-    BoundingBoxCords& get_bb_cords() override { THROW("Not Implemented") }
-    void set_bb_cords(BoundingBoxCords bb_cords) override{THROW("Not Implemented")} 
-    std::vector<int>& get_polygon_count() override{THROW("Not Implemented")} 
-    std::vector<std::vector<int>>& get_vertices_count() override{THROW("Not Implemented")} 
-    MaskCords& get_mask_cords() override { THROW("Not Implemented") }
-    void set_mask_cords(MaskCords mask_cords) override { THROW("Not Implemented") }
-    void set_polygon_counts(std::vector<int> polygon_count) override { THROW("Not Implemented") }
-    void set_vertices_counts(std::vector<std::vector<int>> vertices_count) override{THROW("Not Implemented")} 
-    JointsData& get_joints_data() override { THROW("Not Implemented") }
-    void set_joints_data(JointsData* joints_data) override { THROW("Not Implemented") }
-    void set_ascii_values(AsciiValues ascii_values) override { THROW("Not Implemented") }
-    AsciiValues& get_ascii_values() override { THROW("Not Implemented") }
 
    protected:
     Labels _label_ids = {};  // For label use only
@@ -204,7 +167,6 @@ class BoundingBox : public Label {
         _info.img_id = img_id;
     }
     BoundingBoxCords& get_bb_cords() override { return _bb_cords; }
-    void set_bb_cords(BoundingBoxCords bb_cords) override { _bb_cords = std::move(bb_cords); }
 
    protected:
     BoundingBoxCords _bb_cords = {};  // For bb use
@@ -225,9 +187,6 @@ struct PolygonMask : public BoundingBox {
     std::vector<int>& get_polygon_count() override { return _polygon_count; }
     std::vector<std::vector<int>>& get_vertices_count() override { return _vertices_count; }
     MaskCords& get_mask_cords() override { return _mask_cords; }
-    void set_mask_cords(MaskCords mask_cords) override { _mask_cords = std::move(mask_cords); }
-    void set_polygon_counts(std::vector<int> polygon_count) override { _polygon_count = std::move(polygon_count); }
-    void set_vertices_counts(std::vector<std::vector<int>> vertices_count) override { _vertices_count = std::move(vertices_count); }
 
    protected:
     MaskCords _mask_cords = {};
@@ -243,7 +202,6 @@ class KeyPoint : public BoundingBox {
         _info.img_size = std::move(img_size);
         _joints_data = std::move(*joints_data);
     }
-    void set_joints_data(JointsData* joints_data) override { _joints_data = std::move(*joints_data); }
     JointsData& get_joints_data() override { return _joints_data; }
 
    protected:
@@ -279,26 +237,26 @@ class MetaDataInfoBatch {
 class MetaDataBatch {
    public:
     virtual ~MetaDataBatch() = default;
-    virtual void clear() = 0;
-    virtual void resize(int batch_size) = 0;
-    virtual int size() = 0;
-    virtual void copy_data(std::vector<void*> buffer) = 0;
-    virtual std::vector<size_t>& get_buffer_size() = 0;
-    virtual MetaDataBatch& operator+=(MetaDataBatch& other) = 0;
+    virtual void clear() { THROW("Not Implemented") }
+    virtual void resize(int batch_size) { THROW("Not Implemented") }
+    virtual int size() { THROW("Not Implemented") }
+    virtual void copy_data(std::vector<void*> buffer) { THROW("Not Implemented") }
+    virtual std::vector<size_t>& get_buffer_size() { THROW("Not Implemented") }
+    virtual MetaDataBatch& operator+=(MetaDataBatch& other) { THROW("Not Implemented") }
     MetaDataBatch* concatenate(MetaDataBatch* other) {
         *this += *other;
         return this;
     }
-    virtual std::shared_ptr<MetaDataBatch> clone(bool copy_contents = true) = 0;
-    virtual int mask_size() = 0;
-    virtual std::vector<Labels>& get_labels_batch() = 0;
-    virtual std::vector<AsciiValues>& get_ascii_values_batch() = 0;
-    virtual std::vector<BoundingBoxCords>& get_bb_cords_batch() = 0;
-    virtual void set_xywh_bbox() = 0;
-    virtual std::vector<MaskCords>& get_mask_cords_batch() = 0;
-    virtual std::vector<std::vector<int>>& get_mask_polygons_count_batch() = 0;
-    virtual std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() = 0;
-    virtual JointsDataBatch& get_joints_data_batch() = 0;
+    virtual std::shared_ptr<MetaDataBatch> clone(bool copy_contents = true) { THROW("Not Implemented") }
+    virtual int mask_size() { THROW("Not Implemented") }
+    virtual std::vector<Labels>& get_labels_batch() { THROW("Not Implemented") }
+    virtual std::vector<AsciiValues>& get_ascii_values_batch() { THROW("Not Implemented") }
+    virtual std::vector<BoundingBoxCords>& get_bb_cords_batch() { THROW("Not Implemented") }
+    virtual void set_xywh_bbox() { THROW("Not Implemented") }
+    virtual std::vector<MaskCords>& get_mask_cords_batch() { THROW("Not Implemented") }
+    virtual std::vector<std::vector<int>>& get_mask_polygons_count_batch() { THROW("Not Implemented") }
+    virtual std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() { THROW("Not Implemented") }
+    virtual JointsDataBatch& get_joints_data_batch() { THROW("Not Implemented") }
     std::vector<int>& get_image_id_batch() { return _info_batch.img_ids; }
     std::vector<std::string>& get_image_names_batch() { return _info_batch.img_names; }
     ImgSizes& get_img_sizes_batch() { return _info_batch.img_sizes; }
@@ -380,16 +338,6 @@ class AsciiValueBatch : public MetaDataBatch {
     }
     std::vector<AsciiValues>& get_ascii_values_batch() override { return _ascii_values; }
 
-    // Not implemented
-    std::vector<Labels>& get_labels_batch() override { THROW("Not Implemented") }
-    int mask_size() override{THROW("Not Implemented")} 
-    std::vector<BoundingBoxCords>& get_bb_cords_batch() override { THROW("Not Implemented") }
-    void set_xywh_bbox() override{THROW("Not Implemented")} 
-    std::vector<MaskCords>& get_mask_cords_batch() override{THROW("Not Implemented")} 
-    std::vector<std::vector<int>>& get_mask_polygons_count_batch() override{THROW("Not Implemented")} 
-    std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() override{THROW("Not Implemented")} 
-    JointsDataBatch& get_joints_data_batch() override { THROW("Not Implemented") }
-
    protected:
     std::vector<AsciiValues> _ascii_values = {};
     std::vector<size_t> _buffer_size;
@@ -449,9 +397,6 @@ class LabelBatch : public MetaDataBatch {
         return _buffer_size;
     }
     std::vector<Labels>& get_labels_batch() override { return _label_ids; }
-    std::vector<AsciiValues>& get_ascii_values_batch() override {THROW("Not Implemented")}
-    int mask_size() override{THROW("Not Implemented")} std::vector<BoundingBoxCords>& get_bb_cords_batch() override { THROW("Not Implemented") }
-    void set_xywh_bbox() override{THROW("Not Implemented")} std::vector<MaskCords>& get_mask_cords_batch() override{THROW("Not Implemented")} std::vector<std::vector<int>>& get_mask_polygons_count_batch() override{THROW("Not Implemented")} std::vector<std::vector<std::vector<int>>>& get_mask_vertices_count_batch() override{THROW("Not Implemented")} JointsDataBatch& get_joints_data_batch() override { THROW("Not Implemented") }
 
    protected:
     std::vector<Labels> _label_ids = {};
