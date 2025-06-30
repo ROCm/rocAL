@@ -1099,6 +1099,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         
         // Testing the rocalToTensor API for copy augmentation
+        // Memory allocated here is freed after used in rocalToTensor API for memcopy
         if (test_case == 23) {
             if (gpu == 0) {
                 if (memcpy_backend) {

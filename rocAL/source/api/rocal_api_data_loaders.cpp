@@ -1413,7 +1413,7 @@ RocalTensor ROCAL_API_CALL
 rocalRawTFRecordSource(
     RocalContext p_context,
     const char* source_path,
-    const char* user_key_for_encoded_str,
+    const char* user_key_for_raw_file,
     const char* user_key_for_filename_str,
     RocalImageColor rocal_color_format,
     bool is_output,
@@ -1433,7 +1433,7 @@ rocalRawTFRecordSource(
     try {
         unsigned internal_shard_count = 1;
         std::map<std::string, std::string> feature_key_map = {
-            {"image/encoded", user_key_for_encoded_str},
+            {"image/encoded", user_key_for_raw_file},
             {"image/filename", user_key_for_filename_str},
         };
 
@@ -1473,7 +1473,7 @@ RocalTensor ROCAL_API_CALL
 rocalRawTFRecordSourceSingleShard(
     RocalContext p_context,
     const char* source_path,
-    const char* user_key_for_encoded_str,
+    const char* user_key_for_raw_file,
     const char* user_key_for_filename_str,
     RocalImageColor rocal_color_format,
     unsigned shard_id,
@@ -1487,7 +1487,7 @@ rocalRawTFRecordSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     std::map<std::string, std::string> feature_key_map = {
-            {"image/encoded", user_key_for_encoded_str},
+            {"image/encoded", user_key_for_raw_file},
             {"image/filename", user_key_for_filename_str},
     };
     try {

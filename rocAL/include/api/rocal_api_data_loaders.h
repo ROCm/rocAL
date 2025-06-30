@@ -582,7 +582,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalCo
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_context,
                                                              const char* source_path,
-                                                             const char* user_key_for_raw,
+                                                             const char* user_key_for_raw_file,
                                                              const char* user_key_for_filename,
                                                              RocalImageColor rocal_color_format,
                                                              bool is_output,
@@ -608,7 +608,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_cont
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,
-                                                                        const char* user_key_for_raw,
+                                                                        const char* user_key_for_raw_file,
                                                                         const char* user_key_for_filename,
                                                                         RocalImageColor rocal_color_format,
                                                                         unsigned shard_id,
