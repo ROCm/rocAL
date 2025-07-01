@@ -796,10 +796,7 @@ rocalWarpAffine(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto x0 = static_cast<FloatParam*>(p_x0);
@@ -843,10 +840,7 @@ rocalWarpAffineFixed(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
@@ -878,10 +872,7 @@ rocalFishEye(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
@@ -1080,10 +1071,7 @@ rocalFlip(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto horizontal_flag = static_cast<IntParam*>(p_horizontal_flag);
@@ -1115,10 +1103,7 @@ rocalFlipFixed(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
@@ -1453,10 +1438,7 @@ rocalLensCorrection(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
@@ -1792,10 +1774,7 @@ RocalTensor ROCAL_API_CALL rocalResizeCropMirror(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto crop_h = static_cast<FloatParam*>(p_crop_height);
@@ -2328,10 +2307,7 @@ rocalTranspose(
     bool is_output,
     RocalTensorLayout output_layout) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    RETURN_NULL_IF_INVALID(p_context, p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
