@@ -403,7 +403,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateLabelReader(handle, path);
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
-            decoded_output = rocalFusedJpegCropSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            decoded_output = rocalFusedJpegCropSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 15:  // coco detection with Box IOU matcher
         {
@@ -452,27 +452,31 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running CAFFE CLASSIFICATION READER - SINGLE SHARD" << std::endl;
             pipeline_type = 1;
             rocalCreateCaffeLMDBLabelReader(handle, path);
-            decoded_output = rocalJpegCaffeLMDBRecordSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            RocalShardingInfo sharding_info = RocalShardingInfo(RocalLastBatchPolicy::ROCAL_LAST_BATCH_DROP, true, false, -1);
+            decoded_output = rocalJpegCaffeLMDBRecordSourceSingleShard(handle, path, color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, RocalDecoderType::ROCAL_DECODER_TJPEG, sharding_info);
         } break;
         case 18:  // caffe2 classification
         {
             std::cout << "Running CAFFE2 CLASSIFICATION READER - SINGLE SHARD" << std::endl;
             pipeline_type = 1;
             rocalCreateCaffe2LMDBLabelReader(handle, path, true);
-            decoded_output = rocalJpegCaffe2LMDBRecordSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            RocalShardingInfo sharding_info = RocalShardingInfo(RocalLastBatchPolicy::ROCAL_LAST_BATCH_DROP, true, false, -1);
+            decoded_output = rocalJpegCaffe2LMDBRecordSourceSingleShard(handle, path, color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, RocalDecoderType::ROCAL_DECODER_TJPEG, sharding_info);
         } break;
         case 19:  // mxnet reader
         {
             std::cout << "Running MXNET READER - SINGLE SHARD" << std::endl;
             pipeline_type = 1;
             rocalCreateMXNetReader(handle, path, true);
-            decoded_output = rocalMXNetRecordSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            RocalShardingInfo sharding_info = RocalShardingInfo(RocalLastBatchPolicy::ROCAL_LAST_BATCH_DROP, true, false, -1);
+            decoded_output = rocalMXNetRecordSourceSingleShard(handle, path, color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, RocalDecoderType::ROCAL_DECODER_TJPEG, sharding_info);
         } break;
         case 20:  // Numpy reader
         {
             std::cout << "Running Numpy reader - SINGLE SHARD" << std::endl;
             pipeline_type = 5;
-            decoded_output = rocalNumpyFileSourceSingleShard(handle, path, RocalTensorLayout::ROCAL_NHWC, {}, false, false, false, 0, 1);
+            RocalShardingInfo sharding_info = RocalShardingInfo(RocalLastBatchPolicy::ROCAL_LAST_BATCH_DROP, true, false, -1);
+            decoded_output = rocalNumpyFileSourceSingleShard(handle, path, RocalTensorLayout::ROCAL_NHWC, {}, false, true, false, 0, 1, seed, sharding_info);
         } break;
         case 21: {
             std::cout << "Running IMAGE READER - SINGLE SHARD" << std::endl;
@@ -481,7 +485,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, true);
             else
-                decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+                decoded_output = rocalJpegFileSourceSingleShard(handle, path, color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 22:  // caffe classification
         {
@@ -490,7 +494,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateCaffeLMDBLabelReader(handle, path);
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
-            decoded_output = rocalJpegCaffeLMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            decoded_output = rocalJpegCaffeLMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 23:  // caffe2 classification
         {
@@ -499,7 +503,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateCaffe2LMDBLabelReader(handle, path, true);
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
-            decoded_output = rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            decoded_output = rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 24:  // tf classification
         {
@@ -509,7 +513,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             char key2[25] = "image/class/label";
             char key8[25] = "image/filename";
             rocalCreateTFReader(handle, path, true, key2, key8);
-            decoded_output = rocalJpegTFRecordSourceSingleShard(handle, path, color_format, 0, 1, false, key1, key8, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            RocalShardingInfo sharding_info = RocalShardingInfo(RocalLastBatchPolicy::ROCAL_LAST_BATCH_DROP, true, false, -1);
+            decoded_output = rocalJpegTFRecordSourceSingleShard(handle, path, color_format, 0, 1, false, key1, key8, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, RocalDecoderType::ROCAL_DECODER_TJPEG, sharding_info);
         } break;
         case 25:  // web_dataset reader
         {
@@ -520,7 +525,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             };
             std::string idx_file_path = rocal_data_path + "/rocal_data/web_dataset/idx_file/";
             rocalCreateWebDatasetReader(handle, path, idx_file_path.c_str(), extensions, RocalMissingComponentsBehaviour::ROCAL_MISSING_COMPONENT_ERROR, true);
-            decoded_output = rocalWebDatasetSourceSingleShard(handle, path, idx_file_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height);
+            RocalShardingInfo sharding_info = RocalShardingInfo(RocalLastBatchPolicy::ROCAL_LAST_BATCH_DROP, true, false, -1);
+            decoded_output = rocalWebDatasetSourceSingleShard(handle, path, idx_file_path.c_str(), color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE, decode_max_width, decode_max_height, RocalDecoderType::ROCAL_DECODER_TJPEG, sharding_info);
         } break;
         case 26:  // coco detection with Box encoder
         {
@@ -536,7 +542,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
             else
-                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
             
             // Box Encoder - used for SSD training
             std::vector<float> coco_anchors;
@@ -565,7 +571,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             char key2[25] = "image/class/label";
             char key8[25] = "image/filename";
             rocalCreateTFReader(handle, path, true, key2, key8);
-            decoded_output = rocalRawTFRecordSourceSingleShard(handle, path, key1, key8, color_format, 0, 1, false, false, false, decode_max_width, decode_max_height);
+            decoded_output = rocalRawTFRecordSourceSingleShard(handle, path, key1, key8, color_format, 0, 1, false, true, false, decode_max_width, decode_max_height);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
@@ -866,6 +872,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 61: {
             std::cout << "Running rocalNop" << std::endl;
             output = rocalNop(handle, input, true);
+        } break;
+        case 62: {
+            std::cout << "Running rocalLog1p" << std::endl;
+            output = rocalLog1p(handle, input, true);
         } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
