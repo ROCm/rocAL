@@ -257,6 +257,7 @@ def runTestCommand (platform, project) {
                     cd ..
                     chmod a+x ./testScript.sh
                     ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 2
+                    ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/0/ 2
                     ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/sequence/ 3
                     cd ../ && mkdir -p image-augmentation-app && cd image-augmentation-app
                     cmake /opt/rocm/share/rocal/test/image_augmentation/
