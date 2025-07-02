@@ -82,6 +82,9 @@ def runTestCommand (platform, project) {
     ]
 
     def videoTestArgs1 = videoTestArgs + [
+        batch_size: 2,
+        sequence_length: 7,
+        frame_step: 7,
         enable_meta_data: 1,
         enable_framenumber: 1,
         enable_timestamps: 1,
@@ -90,6 +93,7 @@ def runTestCommand (platform, project) {
 
     def videoTestArgsFrameNum = videoTestArgs + [
         inputFile: "../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/test_frame/test_frame_num.txt",
+        enable_meta_data: 1,
         enable_framenumber: 1,
     ]
 
@@ -101,6 +105,7 @@ def runTestCommand (platform, project) {
 
     def videoTestArgsLabelled = videoTestArgs + [
         inputFile: "../../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/",
+        enable_meta_data: 1,
         resize_width: 640,
         resize_height: 480,
     ]
@@ -163,7 +168,10 @@ def runTestCommand (platform, project) {
                     make -j
                     wget https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
                     tar xvf cifar-10-binary.tar.gz
-                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 0 0
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 0 1
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 1 0
+                    ./dataloader ./cifar-10-batches-bin/ 0 64 64 1 1 1 1
                     ./dataloader ./cifar-10-batches-bin/ 1 64 64 1 1
                     cd ../ && mkdir -p video-tests && cd video-tests
                     cp -r /opt/rocm/share/rocal/test/video_tests/* .

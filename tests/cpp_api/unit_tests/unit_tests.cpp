@@ -37,6 +37,12 @@ THE SOFTWARE.
 #include "rocal_api.h"
 using namespace cv;
 
+#if ENABLE_HIP
+#include <half/half.hpp>
+#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#endif
+
 #if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
 #define CV_BGR2GRAY COLOR_BGR2GRAY
@@ -48,7 +54,7 @@ using namespace cv;
 #endif
 
 #define DISPLAY 0
-// #define RANDOMBBOXCROP
+#define RANDOMBBOXCROP
 
 using namespace std::chrono;
 
@@ -133,12 +139,12 @@ int get_anchors(std::vector<float>& anchors, std::string anchors_file_path) {
     return 0;
 }
 
-int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode);
+int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode, int memcpy_backend, int output_layout, int reverse_channels);
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 6;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: unit_tests reader-type <image-dataset-folder> output_image_name <width> <height> test_case gpu=1/cpu=0 rgb=1/grayscale=0 one_hot_labels=num_of_classes/0  display_all=0(display_last_only)1(display_all)\n");
+        printf("Usage: unit_tests reader-type <image-dataset-folder> output_image_name <width> <height> test_case gpu=1/cpu=0 rgb=1/grayscale=0 one_hot_labels=num_of_classes/0  display_all=0(display_last_only)1(display_all) <memcpy_host=0/memcpy_gpu=1> <nhwc=0/nchw=1> <reverse_channels=0/1> \n");
         return -1;
     }
 
@@ -156,6 +162,9 @@ int main(int argc, const char **argv) {
     int num_of_classes = 0;
     int resize_interpolation_type = 1;  // For Bilinear interpolations
     int resize_scaling_mode = 0;        // For Default scaling mode
+    int memcpy_backend = 0;              // For MEMCPY_HOST
+    int output_layout = 0;              // For NHWC tensor layout
+    int reverse_channels = 0;
 
     if (argc > argIdx)
         test_case = atoi(argv[argIdx++]);
@@ -177,11 +186,20 @@ int main(int argc, const char **argv) {
 
     if (argc > argIdx)
         resize_scaling_mode = atoi(argv[argIdx++]);
+    
+    if (argc > argIdx)
+        memcpy_backend = atoi(argv[argIdx++]);
 
-    return test(test_case, reader_type, path, outName, rgb, gpu, width, height, num_of_classes, display_all, resize_interpolation_type, resize_scaling_mode);
+    if (argc > argIdx)
+        output_layout = atoi(argv[argIdx++]);
+
+    if (argc > argIdx)
+        reverse_channels = atoi(argv[argIdx++]);
+
+    return test(test_case, reader_type, path, outName, rgb, gpu, width, height, num_of_classes, display_all, resize_interpolation_type, resize_scaling_mode, memcpy_backend, output_layout, reverse_channels);
 }
 
-int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
+int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode, int memcpy_backend, int output_layout, int reverse_channels) {
     size_t num_threads = 1;
     const unsigned int input_batch_size = 2;
     int decode_max_width = width;
@@ -397,11 +415,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, false, false, false, true);  // Enable Box IOU matcher
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, false, false, true, true);  // Enable Box IOU matcher
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
             else
-                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
 
             // Box IOU matcher - used for Retinanet training
             std::vector<float> coco_anchors;
@@ -421,7 +439,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/annotations/person_keypoints_val2017.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, true, true);
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, true, true, false, false, true);
 #if defined RANDOMBBOXCROP
             rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
 #endif
@@ -529,6 +547,26 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 return -1;
             rocalBoxEncoder(handle, coco_anchors, 0.5, mean, stddev);
         } break;
+        case 27:  // raw tfrecord reader
+        {
+            std::cout << "Running RAW TFRECORD READER" << std::endl;
+            pipeline_type = 1;
+            char key1[25] = "image/decoded";
+            char key2[25] = "image/class/label";
+            char key8[25] = "image/filename";
+            rocalCreateTFReader(handle, path, true, key2, key8);
+            decoded_output = rocalRawTFRecordSource(handle, path, key1, key8, color_format, false, false, false, decode_max_width, decode_max_height);
+        } break;
+        case 28:  // raw tfrecord reader
+        {
+            std::cout << "Running RAW TFRECORD READER - SINGLE SHARD" << std::endl;
+            pipeline_type = 1;
+            char key1[25] = "image/decoded";
+            char key2[25] = "image/class/label";
+            char key8[25] = "image/filename";
+            rocalCreateTFReader(handle, path, true, key2, key8);
+            decoded_output = rocalRawTFRecordSourceSingleShard(handle, path, key1, key8, color_format, 0, 1, false, false, false, decode_max_width, decode_max_height);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
@@ -552,7 +590,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -825,7 +863,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalROIResize" << std::endl;
             output = rocalROIResize(handle, input, 384, 384, true, 416, 416);
         } break;
-
+        case 61: {
+            std::cout << "Running rocalNop" << std::endl;
+            output = rocalNop(handle, input, true);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
@@ -849,6 +890,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
     int w = rocalGetOutputWidth(handle);
+    int output_color_format = rocalGetOutputColorFormat(handle);
+    auto last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     const unsigned number_of_cols = 1;  // 1920 / w;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
@@ -1056,20 +1099,43 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         
         // Testing the rocalToTensor API for copy augmentation
-        if ((test_case == 23) && (gpu == 0)) {
-            float *f32_batch_output = (float *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
-            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-            rocalToTensor(handle, f32_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+        // Memory allocated here is freed after used in rocalToTensor API for memcopy
+        if (test_case == 23) {
+            if (gpu == 0) {
+                if (memcpy_backend) {
+#if ENABLE_HIP
+                    float *d_f32_batch_output;
+                    hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+                    rocalToTensor(handle, d_f32_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+                    hipFree(d_f32_batch_output);
 
-            half *f16_batch_output = (half *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
-            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NHWC, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, false, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-            rocalToTensor(handle, f16_batch_output, RocalTensorLayout::ROCAL_NCHW, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, true, RocalOutputMemType::ROCAL_MEMCPY_HOST);
-            free(f32_batch_output);
-            free(f16_batch_output);
+                    half *d_f16_batch_output;
+                    hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+                    rocalToTensor(handle, d_f16_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+                    hipFree(d_f16_batch_output);
+#endif
+                } else {
+                    float *f32_batch_output = (float *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+                    rocalToTensor(handle, f32_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+                    free(f32_batch_output);
+
+                    half *f16_batch_output = (half *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+                    rocalToTensor(handle, f16_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+                    free(f16_batch_output);
+                }
+            } else {
+#if ENABLE_HIP
+                float *d_f32_batch_output;
+                hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+                rocalToTensor(handle, d_f32_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+                hipFree(d_f32_batch_output);
+
+                half *d_f16_batch_output;
+                hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+                rocalToTensor(handle, d_f16_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
+                hipFree(d_f16_batch_output);
+#endif
+            }
         }
 
         std::vector<int> compression_params;
@@ -1104,6 +1170,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    rocalResetLoaders(handle);
     rocalRelease(handle);
     mat_input.release();
     mat_output.release();

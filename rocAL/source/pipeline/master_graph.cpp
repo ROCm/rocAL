@@ -351,7 +351,11 @@ void MasterGraph::set_output(Tensor *output_tensor) {
 void MasterGraph::release() {
     LOG("MasterGraph release ...")
     stop_processing();
+    for (auto &node : _nodes)
+        node->release();
     _nodes.clear();
+    for (auto &node : _root_nodes)
+        node->release();
     _root_nodes.clear();
     _meta_data_nodes.clear();
     _tensor_map.clear();
@@ -393,6 +397,7 @@ void MasterGraph::release() {
     _augmented_meta_data = nullptr;
     _meta_data_graph = nullptr;
     _meta_data_reader = nullptr;
+    delete _box_encoder_gpu;
     if (_context && (status = vxReleaseContext(&_context)) != VX_SUCCESS)
         LOG("Failed to call vxReleaseContext " + TOSTR(status))
 }
@@ -1664,17 +1669,17 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, flo
     _convert_time.start();
     // Copies to the output context given by the user, each image is copied separate for planar
     auto output_tensor_info = _output_tensor_list[0]->info();
-    auto dims = output_tensor_info.dims();
-    const size_t w = dims[2];
-    const size_t h = dims[1];
-    const size_t c = dims[3];
-    const size_t n = dims[0];
 
     const size_t single_output_tensor_size = output_tensor_info.data_size();
 
     if (output_tensor_info.mem_type() == RocalMemType::OCL || output_tensor_info.mem_type() == RocalMemType::HIP) {
         THROW("copy_out_tensor_planar for GPU affinity is not implemented")
     } else if (output_tensor_info.mem_type() == RocalMemType::HOST) {
+        auto dims = output_tensor_info.dims();
+        const size_t n = dims[0];
+        const size_t c = dims[1];
+        const size_t h = dims[2];
+        const size_t w = dims[3];
         float multiplier[3] = {multiplier0, multiplier1, multiplier2};
         float offset[3] = {offset0, offset1, offset2};
         size_t dest_buf_offset = 0;

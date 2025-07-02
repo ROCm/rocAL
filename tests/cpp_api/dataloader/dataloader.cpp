@@ -49,7 +49,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        printf("Usage: datalaoder <image_dataset_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off \n");
+        printf("Usage: dataloader <image_dataset_folder [required]> <processing_device=1/cpu=0>  decode_width decode_height batch_size display_on_off <nhwc=0/nchw=1> <reverse_channels=0/1> \n");
         return -1;
     }
     int argIdx = 1;
@@ -60,6 +60,8 @@ int main(int argc, const char **argv) {
     int decode_height = 32;
     int inputBatchSize = 4;
     bool processing_device = 1;
+    bool reverse_channels = 0;
+    bool nchw = 0;
 
     if (argc > argIdx)
         processing_device = atoi(argv[argIdx++]);
@@ -75,6 +77,12 @@ int main(int argc, const char **argv) {
 
     if (argc > argIdx)
         display = atoi(argv[argIdx++]);
+
+    if (argc > argIdx)
+        nchw = atoi(argv[argIdx++]);
+
+    if (argc > argIdx)
+        reverse_channels = atoi(argv[argIdx++]);
 
     std::cout << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
     // The cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
@@ -94,7 +102,7 @@ int main(int argc, const char **argv) {
     if (processing_device)
         input0 = rocalRawCIFAR10Source(handle, folderPath1, color_format, false, decode_width, decode_height, "data_batch_", false);
     else
-        input0 = rocalRawCIFAR10SourceSingleShard(handle, folderPath1, color_format, 0, 1, false, false, false, decode_width, decode_height, "data_batch_");
+        input0 = rocalRawCIFAR10SourceSingleShard(handle, folderPath1, color_format, 0, 1, false, true, false, decode_width, decode_height, "data_batch_");
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "rawCIFAR10 source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
@@ -178,6 +186,16 @@ int main(int argc, const char **argv) {
             return -1;
         }
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        RocalTensorLayout output_layout = nchw ? RocalTensorLayout::ROCAL_NCHW : RocalTensorLayout::ROCAL_NHWC;
+        if (!processing_device) {
+            float *f32_batch_output = (float *)aligned_alloc(8, 8 * ((inputBatchSize * h * w * p * sizeof(float)) / 8 + 1));
+            rocalToTensor(handle, f32_batch_output, output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            free(f32_batch_output);
+
+            half *f16_batch_output = (half *)aligned_alloc(8, 8 * ((inputBatchSize * h * w * p * sizeof(half)) / 8 + 1));
+            rocalToTensor(handle, f16_batch_output, output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            free(f16_batch_output);
+        }
         counter += inputBatchSize;
         RocalTensorList labels = rocalGetImageLabels(handle);
         unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
@@ -230,6 +248,7 @@ int main(int argc, const char **argv) {
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> " << counter << " images/frames Processed. Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    rocalResetLoaders(handle);
     rocalRelease(handle);
     mat_input.release();
     mat_output.release();

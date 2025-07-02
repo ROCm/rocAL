@@ -27,6 +27,11 @@ Node::~Node() {
     _node = nullptr;
 }
 
+void Node::release() {
+    _prev.clear();
+    _next.clear();
+}
+
 void Node::create(std::shared_ptr<Graph> graph) {
     if (_outputs.empty() || _inputs.empty())
         THROW("Uninitialized input/output images to the node")
