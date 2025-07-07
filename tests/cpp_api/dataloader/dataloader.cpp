@@ -101,8 +101,10 @@ int main(int argc, const char **argv) {
     RocalTensor input0;
     if (processing_device)
         input0 = rocalRawCIFAR10Source(handle, folderPath1, color_format, false, decode_width, decode_height, "data_batch_", false);
-    else
-        input0 = rocalRawCIFAR10SourceSingleShard(handle, folderPath1, color_format, 0, 1, false, true, false, decode_width, decode_height, "data_batch_");
+    else {
+        RocalShardingInfo sharding_info = RocalShardingInfo(RocalLastBatchPolicy::ROCAL_LAST_BATCH_DROP, true, false, -1);
+        input0 = rocalRawCIFAR10SourceSingleShard(handle, folderPath1, color_format, 0, 1, false, true, false, decode_width, decode_height, "data_batch_", sharding_info);
+    }
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "rawCIFAR10 source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;

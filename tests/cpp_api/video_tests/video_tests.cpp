@@ -204,7 +204,7 @@ int main(int argc, const char **argv) {
         case 4: {
             std::cout << "\nSEQUENCE READER - Single Shard\n";
             enable_framenumbers = enable_timestamps = 0;
-            input1 = rocalSequenceReaderSingleShard(handle, source_path, color_format, 0, 1, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            input1 = rocalSequenceReaderSingleShard(handle, source_path, color_format, 0, 2, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
             break;
         }
         case 5: {
@@ -218,7 +218,7 @@ int main(int argc, const char **argv) {
         }
         case 6: {
             std::cout << "\nVIDEO READER - SINGLE SHARD\n";
-            input1 = rocalVideoFileSourceSingleShard(handle, source_path, color_format, decoder_mode, 0, 1, sequence_length, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
+            input1 = rocalVideoFileSourceSingleShard(handle, source_path, color_format, decoder_mode, 0, 2, sequence_length, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
             break;
         }
     }

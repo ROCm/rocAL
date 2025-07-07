@@ -36,12 +36,21 @@ THE SOFTWARE.
 // The next 1 byte is an unsigned byte: the minor version number of the file format, e.g. \x00
 // The next 2 bytes form a little-endian unsigned short int: the length of the header data HEADER_LEN.
 #define HEADER_OFFSET 10
-#define CALL_AND_CHECK_FLAG(func) \
-    { \
-    func; \
-    if (_header_parsing_failed) { \
-        return; \
-    } \
+#define CALL_AND_CHECK_FLAG(func)     \
+    {                                 \
+        func;                         \
+        if (_header_parsing_failed) { \
+            return;                   \
+        }                             \
+    }
+
+#define CHECK_CONDITION_AND_SET_FLAG(condition, error_msg, return_value) \
+    {                                                                    \
+        if (condition) {                                                 \
+            ERR(error_msg)                                               \
+            _header_parsing_failed = true;                               \
+            return return_value;                                         \
+        }                                                                \
     }
 
 NumpyDataReader::NumpyDataReader() {
@@ -130,11 +139,7 @@ void NumpyDataReader::update_header_cache(const std::string& file_name, const Nu
 
 template <size_t N>
 void NumpyDataReader::skip_char(const char*& ptr, const char (&what)[N]) {
-    if (strncmp(ptr, what, N - 1)) {
-        ERR("Found wrong symbol during parsing, expected symbol: " + std::string(what));
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(strncmp(ptr, what, N - 1), "Found wrong symbol during parsing, expected symbol: " + std::string(what), void())
     ptr += N - 1;
 }
 
@@ -163,21 +168,13 @@ template <typename T>
 T NumpyDataReader::parse_int(const char*& ptr) {
     char* out_ptr = const_cast<char*>(ptr);  // strtol takes a non-const pointer
     T value = static_cast<T>(strtol(ptr, &out_ptr, 10));
-    if (out_ptr == ptr) {
-        ERR("Parse error: expected a number.");
-        _header_parsing_failed = true;
-        return value;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(out_ptr == ptr, "Parse error: expected a number.", value)
     ptr = out_ptr;
     return value;
 }
 
 std::string NumpyDataReader::parse_string(const char*& input, char delim_start, char delim_end) {
-    if (*input++ != delim_start) {
-        ERR("Expected \'" + std::to_string(delim_start) + "\'");
-        _header_parsing_failed = true;
-        return "";
-    }
+    CHECK_CONDITION_AND_SET_FLAG(*input++ != delim_start, "Expected \'" + std::to_string(delim_start) + "\'", "")
     std::string out;
     for (; *input != '\0'; input++) {
         if (*input == '\\') {
@@ -194,11 +191,7 @@ std::string NumpyDataReader::parse_string(const char*& input, char delim_start, 
             out += *input;
         }
     }
-    if (*input++ != delim_end) {
-        ERR("Expected \'" + std::to_string(delim_end) + "\'");
-        _header_parsing_failed = true;
-        return "";
-    }
+    CHECK_CONDITION_AND_SET_FLAG(*input++ != delim_end, "Expected \'" + std::to_string(delim_end) + "\'", "")
     return out;
 }
 
@@ -211,16 +204,8 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
     if (_header_parsing_failed) return;
     // < means LE, | means N/A, = means native. In all those cases, we can read
     bool little_endian = (typestr[0] == '<' || typestr[0] == '|' || typestr[0] == '=');
-    if (!little_endian) {
-        ERR("Big Endian files are not supported.");
-        _header_parsing_failed = true;
-        return;
-    }
-    if(_numpy_str_to_rocal_dtype.find(typestr.substr(1)) == _numpy_str_to_rocal_dtype.end()) {
-        ERR(typestr.substr(1) + " numpy dtype not supported in rocAL");
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(!little_endian, "Big Endian files are not supported.", void())
+    CHECK_CONDITION_AND_SET_FLAG(_numpy_str_to_rocal_dtype.find(typestr.substr(1)) == _numpy_str_to_rocal_dtype.end(), typestr.substr(1) + " numpy dtype not supported in rocAL", void())
     target.type_info = _numpy_str_to_rocal_dtype[typestr.substr(1)];
     while (std::isspace(*hdr)) hdr++;
     CALL_AND_CHECK_FLAG(skip_char(hdr, ","));
@@ -230,9 +215,7 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
     } else if (try_skip_char(hdr, "False")) {
         target.fortran_order = false;
     } else {
-        ERR("Failed to parse fortran_order field.");
-        _header_parsing_failed = true;
-        return;
+        CHECK_CONDITION_AND_SET_FLAG(true, "Failed to parse fortran_order field.", void())
     }
     while (std::isspace(*hdr)) hdr++;
     CALL_AND_CHECK_FLAG(skip_char(hdr, ","));
@@ -246,11 +229,7 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
         if(_header_parsing_failed) return;
         target.array_shape.push_back(static_cast<unsigned>(shape));
         while (std::isspace(*hdr)) hdr++;
-        if (!(try_skip_char(hdr, ",")) && (target.array_shape.size() <= 1)) {
-            ERR("The first number in a tuple must be followed by a comma.");
-            _header_parsing_failed = true;
-            return;
-        }
+        CHECK_CONDITION_AND_SET_FLAG(!(try_skip_char(hdr, ",")) && (target.array_shape.size() <= 1), "The first number in a tuple must be followed by a comma.", void())
     }
     if (target.fortran_order) {
         // cheapest thing to do is to define the tensor in an reversed way
@@ -261,73 +240,36 @@ void NumpyDataReader::parse_header_data(NumpyHeaderData& target, const std::stri
 void NumpyDataReader::parse_header(NumpyHeaderData& parsed_header, std::string file_path) {
     std::vector<char> token(HEADER_OFFSET + 1);  // Need to store 10 bytes of numpy header info and null termination character
     _current_file_ptr = std::fopen(file_path.c_str(), "rb");
-    if (_current_file_ptr == nullptr) {
-        ERR("Could not open file " + file_path + ": " + std::strerror(errno));
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(_current_file_ptr == nullptr, "Could not open file " + file_path + ": " + std::strerror(errno), void())
 
     int64_t offset = HEADER_OFFSET;
     int64_t n_read = std::fread(token.data(), 1, offset, _current_file_ptr);
     // check if header is too short
-    if (n_read != offset) {
-        ERR("Can not read numpy header file contents");
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(n_read != offset, "Can not read numpy header file contents", void())
     token[n_read] = '\0';
 
     // rocAL only supports numpy V1 headers
     // https://numpy.org/neps/nep-0001-npy-format.html
     int np_api_version = token[6];
-    if (np_api_version != 1) {
-        ERR("rocAL only supports reading npy files with NPY file format version 1");
-        _header_parsing_failed = true;
-        return;
-    }
-
+    CHECK_CONDITION_AND_SET_FLAG(np_api_version != 1, "rocAL only supports reading npy files with NPY file format version 1", void())
     // check if the file is actually a numpy file
     std::string header = std::string(token.data());
-    if (header.find("NUMPY") == std::string::npos) {
-        ERR("File is not a numpy file");
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(header.find("NUMPY") == std::string::npos, "File is not a numpy file", void())
 
     // extract header length which can have up to 65535 bytes - NPYv1 format
     uint16_t header_len = 0;
     memcpy(&header_len, &token[8], 2);
-    if ((header_len + 10) % 16 != 0) {
-        ERR("Error extracting numpy header length");
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG((header_len + 10) % 16 != 0, "Error extracting numpy header length", void())
 
     token.resize(header_len + 1);
-    if (std::fseek(_current_file_ptr, offset, SEEK_SET)) {
-        ERR("Seek operation failed in " + file_path + ": " + std::strerror(errno));
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(std::fseek(_current_file_ptr, offset, SEEK_SET), "Seek operation failed in " + file_path + ": " + std::strerror(errno), void())
     n_read = std::fread(token.data(), 1, header_len, _current_file_ptr);
-    if (n_read != header_len) {
-        ERR("Can not read numpy header upto header_len");
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(n_read != header_len, "Can not read numpy header upto header_len", void())    
     token[header_len] = '\0';
     header = std::string(token.data());
-    if (header.find('{') == std::string::npos) {
-        ERR("Header is corrupted");
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(header.find('{') == std::string::npos, "Header is corrupted", void())
     offset += header_len;
-    if (std::fseek(_current_file_ptr, offset, SEEK_SET)) {
-        ERR("Seek operation failed in " + file_path + ": " + std::strerror(errno));
-        _header_parsing_failed = true;
-        return;
-    }
+    CHECK_CONDITION_AND_SET_FLAG(std::fseek(_current_file_ptr, offset, SEEK_SET), "Seek operation failed in " + file_path + ": " + std::strerror(errno), void())
 
     parse_header_data(parsed_header, header);
     if (_header_parsing_failed) return;

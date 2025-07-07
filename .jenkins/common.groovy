@@ -235,7 +235,7 @@ def runTestCommand (platform, project) {
                     
                     ./video_tests \
                         ${videoTestArgsSequence.inputFile} 4 ${videoTestArgsSequence.processing_device} \
-                        ${videoTestArgsSequence.hardware_decode_mode} ${videoTestArgsSequence.batch_size} \
+                        ${videoTestArgsSequence.hardware_decode_mode} 6 \
                         ${videoTestArgsSequence.sequence_length} ${videoTestArgsSequence.frame_step} ${videoTestArgsSequence.frame_stride} \
                         ${videoTestArgsSequence.gray_scale_rgb} ${videoTestArgsSequence.display_on_off} ${videoTestArgsSequence.shuffle} \
                         ${videoTestArgsSequence.resize_width} ${videoTestArgsSequence.resize_height} \
@@ -252,11 +252,12 @@ def runTestCommand (platform, project) {
                         ${videoTestArgs1.enable_timestamps} ${videoTestArgs1.enable_sequence_rearrange}
 
                     ./video_tests \
-                        ${videoHardwareTestArgs.inputFile} 6 ${videoHardwareTestArgs.processing_device} ${videoHardwareTestArgs.hardware_decode_mode}
+                        ${videoHardwareTestArgs.inputFile} 6 ${videoHardwareTestArgs.processing_device} ${videoHardwareTestArgs.hardware_decode_mode} 2
 
                     cd ..
                     chmod a+x ./testScript.sh
                     ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/ 2
+                    ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/labelled_videos/0/ 2
                     ./testScript.sh ../MIVisionX-data-main/rocal_data/video_and_sequence_samples/sequence/ 3
                     cd ../ && mkdir -p image-augmentation-app && cd image-augmentation-app
                     cmake /opt/rocm/share/rocal/test/image_augmentation/

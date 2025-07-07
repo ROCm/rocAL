@@ -246,8 +246,7 @@ rocalJpegFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -306,8 +305,7 @@ rocalJpegFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -326,10 +324,7 @@ rocalSequenceReader(
     unsigned stride,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         if (sequence_length == 0)
@@ -375,8 +370,7 @@ rocalSequenceReader(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -396,10 +390,7 @@ rocalSequenceReaderSingleShard(
     unsigned stride,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         if (sequence_length == 0)
@@ -446,8 +437,7 @@ rocalSequenceReaderSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -505,8 +495,7 @@ rocalJpegCaffe2LMDBRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -569,8 +558,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -630,8 +618,7 @@ rocalJpegCaffeLMDBRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -694,8 +681,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -757,8 +743,7 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -819,8 +804,7 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -840,10 +824,7 @@ rocalMXNetRecordSource(
     RocalDecoderType dec_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
@@ -884,8 +865,7 @@ rocalMXNetRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -906,10 +886,7 @@ rocalMXNetRecordSourceSingleShard(
     RocalDecoderType dec_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
@@ -952,8 +929,7 @@ rocalMXNetRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1015,8 +991,7 @@ rocalJpegCOCOFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1080,8 +1055,7 @@ rocalJpegCOCOFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1137,8 +1111,7 @@ rocalFusedJpegCrop(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1198,8 +1171,7 @@ rocalJpegCOCOFileSourcePartial(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1262,8 +1234,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1330,8 +1301,7 @@ rocalJpegTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1403,8 +1373,7 @@ rocalJpegTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1424,11 +1393,7 @@ rocalRawTFRecordSource(
     const char* record_name_prefix,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
-
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         unsigned internal_shard_count = 1;
@@ -1463,8 +1428,7 @@ rocalRawTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1523,8 +1487,7 @@ rocalRawTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1583,8 +1546,7 @@ rocalFusedJpegCropSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1606,10 +1568,7 @@ rocalVideoFileSource(
     bool file_list_frame_num,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -1645,8 +1604,7 @@ rocalVideoFileSource(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1688,8 +1646,7 @@ rocalNumpyFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1738,8 +1695,7 @@ rocalNumpyFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1762,10 +1718,7 @@ rocalVideoFileSourceSingleShard(
     bool file_list_frame_num,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -1807,8 +1760,7 @@ rocalVideoFileSourceSingleShard(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1837,11 +1789,7 @@ rocalVideoFileResize(
     RocalResizeInterpolationType interpolation_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* resize_output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return resize_output;
-    }
-
+    ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -1956,8 +1904,7 @@ rocalVideoFileResize(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return resize_output;
 }
@@ -1987,11 +1934,7 @@ rocalVideoFileResizeSingleShard(
     RocalResizeInterpolationType interpolation_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* resize_output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return resize_output;
-    }
-
+    ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -2110,8 +2053,7 @@ rocalVideoFileResizeSingleShard(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return resize_output;
 }
@@ -2156,8 +2098,7 @@ rocalRawCIFAR10Source(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2208,8 +2149,7 @@ rocalRawCIFAR10SourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2266,8 +2206,7 @@ rocalJpegExternalFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2336,8 +2275,7 @@ rocalAudioFileSourceSingleShard(
         THROW("Audio decoder is not enabled since sndfile is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2403,8 +2341,7 @@ rocalAudioFileSource(
         THROW("Audio decoder is not enabled since sndfile is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2471,8 +2408,7 @@ rocalWebDatasetSourceSingleShard(
         THROW("Webdataset reader is not enabled since libtar is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2483,8 +2419,7 @@ rocalResetLoaders(RocalContext p_context) {
     try {
         context->master_graph->reset();
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        ERR(e.what())
+        ROCAL_PRINT_EXCEPTION(context, e);
         return ROCAL_RUNTIME_ERROR;
     }
     return ROCAL_OK;
