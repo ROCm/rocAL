@@ -66,7 +66,7 @@ find_package(FFmpeg QUIET)
 find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
-find_package(ROCDECODE QUIET)
+find_package(rocdecode QUIET)
 find_package(ROCJPEG QUIET)
 
 # HIP Backend
@@ -262,11 +262,11 @@ if(${BUILD_ROCAL})
     # half
     include_directories(${HALF_INCLUDE_DIRS})
     #rocDecode
-    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCDECODE_FOUND)
-        include_directories(${ROCDECODE_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
+    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND)
+        include_directories(${rocdecode_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
         include_directories(${ROCM_PATH}/share/rocdecode/utils)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${ROCDECODE_LIBRARY})
-        set(ROCDECODE_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${rocdecode_LIBRARY})
+        set(rocdecode_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
     endif()
     # rocJPEG
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND ROCJPEG_FOUND)
@@ -296,7 +296,7 @@ if(${BUILD_ROCAL})
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
-                                ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${ROCDECODE_SRCS})
+                                ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${rocdecode_SRCS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         add_dependencies(${PROJECT_NAME} rocAL_hip)
@@ -304,9 +304,9 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=1)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
-        if(ROCDECODE_FOUND)
-            if(${ROCDECODE_VERSION_MAJOR} VERSION_GREATER "0" OR
-               (${ROCDECODE_VERSION_MAJOR} VERSION_EQUAL "0" AND ${ROCDECODE_VERSION_MINOR} VERSION_GREATER_EQUAL "12" AND ${ROCDECODE_VERSION_PATCH} VERSION_GREATER_EQUAL "0"))
+        if(rocdecode_FOUND)
+            if(${rocdecode_VERSION_MAJOR} VERSION_GREATER "0" OR
+               (${rocdecode_VERSION_MAJOR} VERSION_EQUAL "0" AND ${rocdecode_VERSION_MINOR} VERSION_GREATER_EQUAL "12" AND ${rocdecode_VERSION_PATCH} VERSION_GREATER_EQUAL "0"))
                 target_compile_definitions(${PROJECT_NAME} PUBLIC -DENABLE_ROCDECODE)
                 message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
             else()
