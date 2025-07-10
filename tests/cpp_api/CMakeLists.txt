@@ -232,8 +232,7 @@ add_test(
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 find_package(rocdecode QUIET)
 if(rocdecode_FOUND)
-  if(${rocdecode_VERSION_MAJOR} VERSION_GREATER "0" OR
-    (${rocdecode_VERSION_MAJOR} VERSION_EQUAL "0" AND ${rocdecode_VERSION_MINOR} VERSION_GREATER_EQUAL "12" AND ${rocdecode_VERSION_PATCH} VERSION_GREATER_EQUAL "0"))
+  if(${rocdecode_VERSION_MAJOR} VERSION_GREATER_EQUAL "1" AND ${rocdecode_VERSION_MINOR} VERSION_GREATER_EQUAL "0" AND ${rocdecode_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
     add_test(
       NAME video_tests_rocdecode
       COMMAND video_tests
@@ -246,8 +245,7 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 find_package(rocjpeg QUIET)
 if(rocjpeg_FOUND)
-  if(${rocjpeg_VERSION_MAJOR} VERSION_GREATER "0" OR
-     ${rocjpeg_VERSION_MAJOR} VERSION_EQUAL "0" AND ${rocjpeg_VERSION_MINOR} VERSION_GREATER_EQUAL "11" AND ${rocjpeg_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
+  if(${rocjpeg_VERSION_MAJOR} VERSION_GREATER_EQUAL "1" AND ${rocjpeg_VERSION_MINOR} VERSION_GREATER_EQUAL "0" AND ${rocjpeg_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
     add_test(NAME basic_test_rocjpeg_gray
                   COMMAND basic_test 
                   ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 2
