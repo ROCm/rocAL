@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "parameters/parameter_crop_factory.h"
 #include "parameters/parameter_factory.h"
 
+#define NUM_ATTEMPTS 100
+
 class CropResizeNode : public CropNode {
    public:
     CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
@@ -61,5 +63,4 @@ class CropResizeNode : public CropNode {
     int _interpolation_type = 1;  // Linear interpolation by default
     bool _is_random_crop = true;
     bool _is_random_decode_crop = false;
-    int _num_attempts = 100;
 };

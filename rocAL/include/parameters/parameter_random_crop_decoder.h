@@ -46,7 +46,6 @@ class RocalRandomCropDecParam : public CropParam {
     RocalRandomCropDecParam(
         AspectRatioRange aspect_ratio_range = {3.0f / 4, 4.0f / 3},
         AreaRange area_range = {0.08, 1},
-        int64_t seed = time(0),
         int num_attempts = 10,
         int batch_size = 256) : CropParam(batch_size) {
         _aspect_ratio_range = aspect_ratio_range;

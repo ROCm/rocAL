@@ -357,11 +357,8 @@ rocalRandomResizedCrop(
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    if ((p_context == nullptr) || (p_input == nullptr)) {
-        ERR("Invalid ROCAL context or invalid input tensor")
-        return output;
-    }
-
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
@@ -383,8 +380,7 @@ rocalRandomResizedCrop(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(random_resize_crop_node);
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        ERR(e.what())
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }

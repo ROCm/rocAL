@@ -124,7 +124,7 @@ void CropResizeNode::init(std::vector<float>& area_factor, std::vector<float>& a
     _is_random_decode_crop = true;
     auto aspect_ratio_range = std::make_pair((float)aspect_ratio[0], (float)aspect_ratio[1]);
     auto area_factor_range = std::make_pair((float)area_factor[0], (float)area_factor[1]);
-    _crop_dec_param = std::make_shared<RocalRandomCropDecParam>(aspect_ratio_range, area_factor_range, ParameterFactory::instance()->get_seed(), _num_attempts, _batch_size);
+    _crop_dec_param = std::make_shared<RocalRandomCropDecParam>(aspect_ratio_range, area_factor_range, NUM_ATTEMPTS, _batch_size);
     _interpolation_type = static_cast<int>(interpolation_type);
 }
 
