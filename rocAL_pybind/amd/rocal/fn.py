@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -115,21 +115,23 @@ def fish_eye(*inputs, device=None, fill_value=0.0, output_layout=types.NHWC, out
     return (fisheye_image)
 
 
-def fog(*inputs, fog=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def fog(*inputs, intensity_factor=0.5, gray_factor=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies fog effect on images.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param fog (float, default = 0.5)                                             fog fill value used for the augmentation
+        @param intensity_factor (float, default = 0.5)                                intensity factor values for fog calculation
+        @param gray_factor (float, default = 0.5)                                     gray factor values to introduce grayness in the image
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
 
         @return    Image with fog effect
     """
-    fog = b.createFloatParameter(fog) if isinstance(fog, float) else fog
+    intensity_factor = b.createFloatParameter(intensity_factor) if isinstance(intensity_factor, float) else intensity_factor
+    gray_factor = b.createFloatParameter(gray_factor) if isinstance(gray_factor, float) else gray_factor
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0],
-                     "is_output": False, "fog_value": fog, "output_layout": output_layout, "output_dtype": output_dtype}
+                     "is_output": False, "intensity_factor": intensity_factor, "gray_factor": gray_factor, "output_layout": output_layout, "output_dtype": output_dtype}
     fog_image = b.fog(Pipeline._current_pipeline._handle,
                       *(kwargs_pybind.values()))
     return (fog_image)
@@ -181,24 +183,34 @@ def brightness_fixed(*inputs, brightness=1.0, brightness_shift=0.0, device=None,
     return (brightness_image)
 
 
-def lens_correction(*inputs, strength=None, zoom=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def lens_correction(*inputs, camera_matrix=None, distortion_coeffs=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies lens correction effect on images.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param strength (float, optional, default = None)                             strength value used for the augmentation
-        @param zoom (float, optional, default = None)                                 zoom value used for the augmentation
+        @param camera_matrix (list, optional, default = None)                         camera matrix for the entire batch of images
+        @param distortion_coeffs (list, optional, default = None)                     distortion coefficients for the entire batch of images
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
 
         @return  Image with lens correction effect
     """
-    strength = b.createFloatParameter(
-        strength) if isinstance(strength, float) else strength
-    zoom = b.createFloatParameter(zoom) if isinstance(zoom, float) else zoom
+    if isinstance(camera_matrix, list):
+        cameraMatrix = b.CameraMatrix()
+        cameraMatrix.fx = camera_matrix[0]
+        cameraMatrix.cx = camera_matrix[1]
+        cameraMatrix.fy = camera_matrix[2]
+        cameraMatrix.cy = camera_matrix[3]
+    if isinstance(distortion_coeffs, list):
+        distortionCoeffs = b.DistortionCoeffs()
+        distortionCoeffs.k1 = distortion_coeffs[0]
+        distortionCoeffs.k2 = distortion_coeffs[1]
+        distortionCoeffs.p1 = distortion_coeffs[2]
+        distortionCoeffs.p2 = distortion_coeffs[3]
+        distortionCoeffs.k3 = distortion_coeffs[4]
 
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "strength": strength, "zoom": zoom,
+    kwargs_pybind = {"input_image": inputs[0], "camera_matrix": cameraMatrix, "distortion_coeffs": distortionCoeffs, "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     len_corrected_image = b.lensCorrection(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
@@ -217,10 +229,8 @@ def blur(*inputs, window_size=None, sigma=0.0, device=None, output_layout=types.
 
         @return    Image with Blur effect
     """
-    window_size = b.createIntParameter(window_size) if isinstance(
-        window_size, int) else window_size
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "window_size": window_size,
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     blur_image = b.blur(Pipeline._current_pipeline._handle,
                         *(kwargs_pybind.values()))
@@ -342,11 +352,12 @@ def jitter(*inputs, kernel_size=None, seed=0, fill_value=0.0, device=None, outpu
     return (jitter_image)
 
 
-def pixelate(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def pixelate(*inputs, device=None, pixelate_percent=50.0, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies pixelate effect on images
 
         @param inputs                                                                 the input image passed to the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param pixelate_percent (float, optional, default = 50.0)                     Controls how much pixelation is applied to images
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
 
@@ -354,38 +365,33 @@ def pixelate(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.
     """
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0],
-                     "is_output": False, "output_layout": output_layout, "output_dtype": output_dtype}
+                     "is_output": False, "pixelate_percent": pixelate_percent, "output_layout": output_layout, "output_dtype": output_dtype}
     pixelate_image = b.pixelate(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (pixelate_image)
 
 
-def rain(*inputs, rain=None, rain_width=None, rain_height=None, rain_transparency=None,
+def rain(*inputs, rain=None, rain_width=0, rain_height=0, rain_transparency=None, rain_slant_angle=0.0,
          device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Rain effect on images
-
         @param inputs                                                                 the input image passed to the augmentation
-        @param rain (float, optional, default = None)                                 rain fill value used for the augmentation
-        @param rain_width (int, optional, default = None)                             width of the rain pixels for the augmentation
-        @param rain_height (int, optional, default = None)                            height of the rain pixels for the augmentation
+        @param rain (float, optional, default = None)                                 rain percentage value used for the augmentation
+        @param rain_width (int, optional, default = 0)                                width of the rain pixels for the augmentation
+        @param rain_height (int, optional, default = 0)                               height of the rain pixels for the augmentation
         @param rain_transparency (float, optional, default = None)                    transparency value used for the augmentation
+        @param rain_slant_angle (float, optional, default = None)                     slant angle value used for the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC):                   tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
 
         @return    Images with Rain effect
     """
-    rain = b.createFloatParameter(rain) if isinstance(rain, float) else rain
-    rain_width = b.createIntParameter(rain_width) if isinstance(
-        rain_width, int) else rain_width
-    rain_height = b.createIntParameter(rain_height) if isinstance(
-        rain_height, int) else rain_height
     rain_transparency = b.createFloatParameter(rain_transparency) if isinstance(
         rain_transparency, float) else rain_transparency
 
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "rain_value": rain, "rain_width": rain_width, "rain_height": rain_height,
-                     "rain_transparency": rain_transparency, "output_layout": output_layout, "output_dtype": output_dtype}
+                     "rain_slant_angle": rain_slant_angle, "rain_transparency": rain_transparency, "output_layout": output_layout, "output_dtype": output_dtype}
     rain_image = b.rain(Pipeline._current_pipeline._handle,
                         *(kwargs_pybind.values()))
     return (rain_image)
@@ -1265,3 +1271,11 @@ def transpose(*inputs, perm=[], output_layout=types.NHWC, output_dtype=types.UIN
     kwargs_pybind = {"input_image": inputs[0], "perm": perm, "is_output": False, "output_layout": output_layout}
     transposed_image = b.transpose(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (transposed_image)
+
+def log1p(*inputs, output_datatype = types.FLOAT):
+    """
+    Computes the natural logarithm of 1 + input element-wise.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
+    log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return log_output

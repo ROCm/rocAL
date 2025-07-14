@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -185,7 +185,11 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     rocalCreateLabelReader(handle, path, file_list_path.c_str());
 
     is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
-    RocalTensor decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path.c_str(), 0, 1, is_output_audio_decoder, false, false, downmix);
+    RocalTensor decoded_output;
+    if(test_case == 0)
+        decoded_output = rocalAudioFileSource(handle, path, file_list_path.c_str(), 1, is_output_audio_decoder, false, false, downmix);
+    else
+        decoded_output = rocalAudioFileSourceSingleShard(handle, path, file_list_path.c_str(), 0, 1, is_output_audio_decoder, false, false, downmix);
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Audio source could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
         return -1;
@@ -228,6 +232,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             float resample = 16000.00;
             std::vector<float> range = {1.15, 1.15};
             RocalTensor uniform_distribution_resample = rocalUniformDistribution(handle, decoded_output, false, range);
+            RocalTensor normal_distribution = rocalNormalDistribution(handle, decoded_output, false, 0.0, 1.0);
             RocalTensor resampled_rate = rocalTensorMulScalar(handle, uniform_distribution_resample, false, resample, ROCAL_FP32);
             rocalResample(handle, decoded_output, resampled_rate, true, 1.15 * 255840, 50.0, ROCAL_FP32);
         } break;

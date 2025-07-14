@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,13 +43,11 @@ enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode
     FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
     OPENCV_DEC = 2,        //!< for back_up decoding
-    HW_JPEG_DEC = 3,       //!< for JPEG decoding using HW via FFMPEG  
-    SKIP_DECODE = 4,       //!< For skipping decoding in case of uncompressed data from reader
-    FFMPEG_SW_DECODE = 5,   //!< for video decoding using CPU and FFMPEG
-    FFMPEG_HW_DECODE = 6,   //!< for video decoding using HW via FFMPEG
-    ROCDEC_VIDEO_DECODE = 7, //!< for video decoding using HW via rocDecode
-    AUDIO_SOFTWARE_DECODE = 8,  //!< Uses sndfile to decode audio files
-    ROCJPEG_DEC = 9             //!< rocJpeg hardware decoder for decoding jpeg files
+    SKIP_DECODE = 3,       //!< For skipping decoding in case of uncompressed data from reader
+    FFMPEG_SW_DECODE = 4,   //!< for video decoding using CPU and FFMPEG
+    ROCDEC_VIDEO_DECODE = 5, //!< for video decoding using HW via rocDecode
+    AUDIO_SOFTWARE_DECODE = 6,  //!< Uses sndfile to decode audio files
+    ROCJPEG_DEC = 7             //!< rocJpeg hardware decoder for decoding jpeg files
 };
 
 class DecoderConfig {

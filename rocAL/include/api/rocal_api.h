@@ -1,6 +1,6 @@
 /*
 MIT License
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,34 @@ THE SOFTWARE.
 #include "rocal_api_data_transfer.h"
 #include "rocal_api_meta_data.h"
 #include "rocal_api_info.h"
+
+#define ROCAL_INVALID_CONTEXT_EXCEPTION(p_context) \
+    do {                                           \
+        if (p_context == nullptr)                  \
+            THROW("Invalid rocal context")         \
+    } while (0)
+
+#define ROCAL_INVALID_CONTEXT_ERR(p_context, output) \
+    do {                                             \
+        if (p_context == nullptr) {                  \
+            ERR("Invalid rocal context")             \
+            return output;                           \
+        }                                            \
+    } while (0)
+
+#define ROCAL_INVALID_INPUT_ERR(input, output) \
+    do {                                       \
+        if (input == nullptr) {                \
+            ERR("Invalid input image")         \
+            return output;                     \
+        }                                      \
+    } while (0)
+
+#define ROCAL_PRINT_EXCEPTION(context, e) \
+    do {                                  \
+        context->capture_error(e.what()); \
+        std::cerr << e.what() << '\n';    \
+    } while (0)
 
 /*!
  * \file

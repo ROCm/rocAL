@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,8 @@ enum class RocalTensorlayout {
     NHW,
     NFT,
     NTF,
+    NDHWC,
+    NCDHW,
     NONE
 };
 
@@ -97,7 +99,7 @@ enum class RocalMemType {
  *  Currently supports Software decoding, will support Hardware decoding in future
  */
 enum class DecodeMode {
-    HW_VAAPI = 0,
+    ROCDECODE = 0,
     CPU
 };
 

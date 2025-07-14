@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -214,10 +214,6 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
         case 17: {
             std::cout << "Running rocalFog" << std::endl;
             rocalFog(handle, tensor0, true);
-        } break;
-        case 18: {
-            std::cout << "Running rocalLensCorrection" << std::endl;
-            rocalLensCorrection(handle, tensor0, true);
         } break;
         case 19: {
             std::cout << "Running rocalPixelate" << std::endl;

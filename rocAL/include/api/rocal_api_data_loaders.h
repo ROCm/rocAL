@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -558,6 +558,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalCo
                                                                          unsigned shard_id,
                                                                          unsigned shard_count,
                                                                          bool is_output,
+                                                                         const char* user_key_for_encoded,
+                                                                         const char* user_key_for_filename,
                                                                          bool shuffle = false,
                                                                          bool loop = false,
                                                                          RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
@@ -580,7 +582,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalCo
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_context,
                                                              const char* source_path,
-                                                             const char* user_key_for_raw,
+                                                             const char* user_key_for_raw_file,
                                                              const char* user_key_for_filename,
                                                              RocalImageColor rocal_color_format,
                                                              bool is_output,
@@ -601,12 +603,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_cont
  * \param [in] loop: repeat data loading
  * \param [in] out_width The output_width of raw image
  * \param [in] out_height The output height of raw image
- * \param [in] record_name_prefix : if nonempty reader will only read records with certain prefix
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,
+                                                                        const char* user_key_for_raw_file,
+                                                                        const char* user_key_for_filename,
                                                                         RocalImageColor rocal_color_format,
                                                                         unsigned shard_id,
                                                                         unsigned shard_count,
@@ -614,7 +617,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
                                                                         bool shuffle = false,
                                                                         bool loop = false,
                                                                         unsigned out_width = 0, unsigned out_height = 0,
-                                                                        const char* record_name_prefix = "",
                                                                         RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
 
 /*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.
@@ -842,6 +844,33 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawCIFAR10Source(RocalContext context
                                                             bool is_output,
                                                             unsigned out_width, unsigned out_height, const char* filename_prefix = "",
                                                             bool loop = false);
+
+/*! \brief Creates CIFAR10 raw data reader and loader. It allocates the resources and objects required to read raw data stored on the file systems. It accepts external sharding information to load a singe shard only.
+ * \ingroup group_rocal_data_loaders
+ * \param [in] context Rocal context
+ * \param [in] source_path A NULL terminated char string pointing to the location on the disk
+ * \param [in] color_format The color format the images will be decoded to.
+ * \param [in] shard_id Shard id for this loader
+ * \param [in] shard_count Total shard count
+ * \param [in] is_output Determines if the user wants the loaded images to be part of the output or not.
+ * \param [in] shuffle Determines if the user wants to shuffle the dataset or not.
+ * \param [in] loop Determines if the user wants to indefinitely loops through images or not.
+ * \param [in] out_width output width
+ * \param [in] out_height output_height
+ * \param [in] filename_prefix if set loader will only load files with the given prefix name
+ * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \return Reference to the output tensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalRawCIFAR10SourceSingleShard(RocalContext context,
+                                                                       const char* source_path,
+                                                                       RocalImageColor color_format,
+                                                                       unsigned shard_id,
+                                                                       unsigned shard_count,
+                                                                       bool is_output,
+                                                                       bool shuffle,
+                                                                       bool loop,
+                                                                       unsigned out_width, unsigned out_height, const char* filename_prefix = "",
+                                                                       RocalShardingInfo rocal_sharding_info = RocalShardingInfo());                                                            
 
 /*! \brief reset Loaders
  * \ingroup group_rocal_data_loaders

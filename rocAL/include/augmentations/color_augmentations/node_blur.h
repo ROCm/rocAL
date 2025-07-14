@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,14 +30,8 @@ class BlurNode : public Node {
    public:
     BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     BlurNode() = delete;
-    void init(int kernel_size);
-    void init(IntParam *kernel_size_param);
 
    protected:
-    void update_node() override;
+    void update_node() override {};
     void create_node() override;
-
-   private:
-    ParameterVX<int> _kernel_size;
-    constexpr static int KERNEL_SIZE_RANGE[2] = {3, 9};
 };

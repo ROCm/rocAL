@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,20 @@ THE SOFTWARE.
 
 #pragma once
 
+#include "parameters/parameter_factory.h"
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
 
 class PixelateNode : public Node {
    public:
     PixelateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     PixelateNode() = delete;
+    void init(float pixelatePercent);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
+    float _pixelatePercent;
 };

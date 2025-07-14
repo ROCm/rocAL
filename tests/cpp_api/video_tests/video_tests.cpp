@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2020 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2020 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -131,8 +131,6 @@ int main(int argc, const char **argv) {
     auto decoder_mode = ((decoder_type > 0) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE);
     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW;
     if (decoder_type == 1) {
-        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_HW;
-    } else if (decoder_type == 2) {
         rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_ROCDECODE;
         if (processing_device != 1) {
             std::cerr << "Setting the processing device to GPU for rocDecode decoder\n";
@@ -201,6 +199,26 @@ int main(int argc, const char **argv) {
             std::cout << "\nSEQUENCE READER\n";
             enable_framenumbers = enable_timestamps = 0;
             input1 = rocalSequenceReader(handle, source_path, color_format, shard_count, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            break;
+        }
+        case 4: {
+            std::cout << "\nSEQUENCE READER - Single Shard\n";
+            enable_framenumbers = enable_timestamps = 0;
+            input1 = rocalSequenceReaderSingleShard(handle, source_path, color_format, 0, 2, sequence_length, is_output, shuffle, false, frame_step, frame_stride);
+            break;
+        }
+        case 5: {
+            std::cout << "\nVIDEO READER RESIZE - SINGLE SHARD\n";
+            if (resize_width == 0 || resize_height == 0) {
+                std::cerr << "\n[ERR]Resize width and height are passed as NULL values\n";
+                return -1;
+            }
+            input1 = rocalVideoFileResizeSingleShard(handle, source_path, color_format, decoder_mode, 0, 1, sequence_length, resize_width, resize_height, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
+            break;
+        }
+        case 6: {
+            std::cout << "\nVIDEO READER - SINGLE SHARD\n";
+            input1 = rocalVideoFileSourceSingleShard(handle, source_path, color_format, decoder_mode, 0, 2, sequence_length, shuffle, is_output, false, rocal_decoder_type, frame_step, frame_stride, file_list_frame_num);
             break;
         }
     }
@@ -335,6 +353,7 @@ int main(int argc, const char **argv) {
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << "Processed " << counter << " images/frames" << std::endl << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    rocalResetLoaders(handle);
     rocalRelease(handle);
     mat_input.release();
     return 0;

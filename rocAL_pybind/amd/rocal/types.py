@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -64,6 +64,8 @@ from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
 from rocal_pybind.types import NHW
+from rocal_pybind.types import NDHWC
+from rocal_pybind.types import NCDHW
 #     RocalSpectrogramLayout
 from rocal_pybind.types import NFT
 from rocal_pybind.types import NTF
@@ -75,9 +77,7 @@ from rocal_pybind.types import SOFTWARE_DECODE
 #     RocalDecodeDevice
 from rocal_pybind.types import DECODER_TJPEG
 from rocal_pybind.types import DECODER_OPENCV
-from rocal_pybind.types import DECODER_HW_JEPG
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
-from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
 from rocal_pybind.types import DECODER_AUDIO_GENERIC
 from rocal_pybind.types import DECODER_VIDEO_ROCDECODE
 from rocal_pybind.types import DECODER_ROCJPEG
@@ -156,6 +156,8 @@ _known_types = {
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
     NHW: ("NHW", NHW),
+    NDHWC: ("NDHWC", NDHWC),
+    NCDHW: ("NCDHW", NCDHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -166,9 +168,7 @@ _known_types = {
 
     DECODER_TJPEG: ("DECODER_TJPEG", DECODER_TJPEG),
     DECODER_OPENCV: ("DECODER_OPENCV", DECODER_OPENCV),
-    DECODER_HW_JEPG: ("DECODER_HW_JEPG", DECODER_HW_JEPG),
     DECODER_VIDEO_FFMPEG_SW: ("DECODER_VIDEO_FFMPEG_SW", DECODER_VIDEO_FFMPEG_SW),
-    DECODER_VIDEO_FFMPEG_HW: ("DECODER_VIDEO_FFMPEG_HW", DECODER_VIDEO_FFMPEG_HW),
     DECODER_AUDIO_GENERIC: ("DECODER_AUDIO_GENERIC", DECODER_AUDIO_GENERIC),
     DECODER_VIDEO_ROCDECODE: ("DECODER_VIDEO_ROCDECODE", DECODER_VIDEO_ROCDECODE),
     DECODER_ROCJPEG: ("DECODER_ROCJPEG", DECODER_ROCJPEG),

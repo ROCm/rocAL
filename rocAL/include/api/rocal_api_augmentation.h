@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -384,31 +384,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlipFixed(RocalContext context, Rocal
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] kernel_size size ofthr kernel used for blurring
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalBlur(RocalContext context, RocalTensor input,
                                                 bool is_output,
-                                                RocalIntParam kernel_size = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
-/*! \brief Applies blur effect to images with fixed parameters.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] kernel_size size of the kernel used for blurring
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalBlurFixed(RocalContext context, RocalTensor input,
-                                                     int kernel_size, bool is_output,
-                                                     RocalTensorLayout output_layout = ROCAL_NONE,
-                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Blends two input images given the ratio: output = input1*ratio + input2*(1-ratio)
  * \ingroup group_rocal_augmentations
@@ -653,9 +636,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnowFixed(RocalContext context, Rocal
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] rain_value parameter represents the intensity of rain effect
+ * \param [in] rain_value parameter represents the percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
  * \param [in] rain_width parameter represents the width of the rain effect
- * \param [in] rain_height parameter represents the width of the rain effect
+ * \param [in] rain_height parameter represents the height of the rain effect
+ * \param [in] rain_slant_angle parameter represents the Slant angle of the rain drops
  * \param [in] rain_transparency parameter represents the transperancy of the rain effect
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
@@ -663,9 +647,10 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnowFixed(RocalContext context, Rocal
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRain(RocalContext context, RocalTensor input,
                                                 bool is_output,
-                                                RocalFloatParam rain_value = NULL,
-                                                RocalIntParam rain_width = NULL,
-                                                RocalIntParam rain_height = NULL,
+                                                float rain_percentage = 0.0,
+                                                int rain_width = 0,
+                                                int rain_height = 0,
+                                                float rain_slant_angle = 0.0,
                                                 RocalFloatParam rain_transparency = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
@@ -675,20 +660,22 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRain(RocalContext context, RocalTenso
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] rain_value parameter represents the intensity of rain effect
+ * \param [in] rain_value parameter represents the percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
  * \param [in] rain_width parameter represents the width of the rain effect
- * \param [in] rain_height parameter represents the width of the rain effect
+ * \param [in] rain_height parameter represents the height of the rain effect
+ * \param [in] rain_slant_angle parameter represents the Slant angle of the rain drops
  * \param [in] rain_transparency parameter represents the transperancy of the rain effect
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRainFixed(RocalContext context, RocalTensor input,
-                                                     float rain_value,
-                                                     int rain_width,
-                                                     int rain_height,
-                                                     float rain_transparency,
                                                      bool is_output,
+                                                     float rain_percentage = 0.0,
+                                                     int rain_width = 0,
+                                                     int rain_height = 0,
+                                                     float rain_slant_angle = 0.0,
+                                                     float rain_transparency = 0.0,
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -729,13 +716,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTempFixed(RocalContext context, 
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] fog_value parameter representing the intensity of fog effect
+ * \param [in] gray_value parameter representing the gray factor values to introduce grayness in the image
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFog(RocalContext context, RocalTensor input,
                                                bool is_output,
-                                               RocalFloatParam fog_value = NULL,
+                                               RocalFloatParam intensity_value = NULL,
+                                               RocalFloatParam gray_value = NULL,
                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -744,47 +733,31 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFog(RocalContext context, RocalTensor
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] fog_value parameter representing the intensity of fog effect
+ * \param [in] gray_value parameter representing the gray factor values to introduce grayness in the image
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFogFixed(RocalContext context, RocalTensor input,
-                                                    float fog_value, bool is_output,
+                                                    float fog_value, float gray_value, bool is_output,
                                                     RocalTensorLayout output_layout = ROCAL_NONE,
                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
-/*! \brief Applies lens correction effect on images.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] strength parameter representing the strength of the lens correction.
- * \param [in] zoom parameter representing the zoom factor of the lens correction.
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(RocalContext context, RocalTensor input, bool is_output,
-                                                          RocalFloatParam strength = NULL,
-                                                          RocalFloatParam zoom = NULL,
-                                                          RocalTensorLayout output_layout = ROCAL_NONE,
-                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Applies lens correction effect on images with fixed parameters.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
- * \param [in] strength parameter representing the strength of the lens correction.
- * \param [in] zoom parameter representing the zoom factor of the lens correction.
+ * \param [in] camera_matrix Camera matrix passes from the user - should be passed for the entire batch of images.
+ * \param [in] distortion_coeffs Distortion coefficients passes from the user - should be passed for the entire batch of images.
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrectionFixed(RocalContext context, RocalTensor input,
-                                                               float strength, float zoom, bool is_output,
-                                                               RocalTensorLayout output_layout = ROCAL_NONE,
+extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrection(RocalContext context, RocalTensor input,
+                                                               std::vector<CameraMatrix> camera_matrix, std::vector<DistortionCoeffs> distortion_coeffs,
+                                                               bool is_output, RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Applies pixelate effect on images.
@@ -792,12 +765,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLensCorrectionFixed(RocalContext cont
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] pixelate_percentage how much pixelation is applied to the image
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalPixelate(RocalContext context, RocalTensor input,
-                                                    bool is_output,
+                                                    bool is_output, float pixelate_percentage = 50.0,
                                                     RocalTensorLayout output_layout = ROCAL_NONE,
                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -1388,5 +1362,15 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMelFilterBank(RocalContext p_context,
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalTranspose(RocalContext context, RocalTensor input, std::vector<unsigned> perm, bool is_output,
                                                      RocalTensorLayout output_layout = ROCAL_NONE);
+
+/*! \brief Computes the natural logarithm of 1 + input element-wise and returns the output
+ * \param [in] p_context Rocal context
+ * \param [in] p_input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
+                                                       RocalTensor p_input,
+                                                       bool is_output);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

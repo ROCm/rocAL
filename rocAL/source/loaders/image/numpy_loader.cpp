@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -280,31 +280,6 @@ Timing NumpyLoader::timing() {
     t.read_time = _file_load_time.get_timing();
     t.process_time = _swap_handle_time.get_timing();
     return t;
-}
-
-LoaderModuleStatus NumpyLoader::set_cpu_affinity(cpu_set_t cpu_mask) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_affinity() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    int ret = pthread_setaffinity_np(_load_thread.native_handle(),
-                                     sizeof(cpu_set_t), &cpu_mask);
-    if (ret != 0)
-        WRN("Error calling pthread_setaffinity_np: " + TOSTR(ret));
-#endif
-    return LoaderModuleStatus::OK;
-}
-
-LoaderModuleStatus NumpyLoader::set_cpu_sched_policy(struct sched_param sched_policy) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_sched_policy() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    auto ret = pthread_setschedparam(_load_thread.native_handle(), SCHED_FIFO, &sched_policy);
-    if (ret != 0)
-        WRN("Unsuccessful in setting thread realtime priority for loader thread err = " + TOSTR(ret))
-#endif
-    return LoaderModuleStatus::OK;
 }
 
 std::vector<std::string> NumpyLoader::get_id() {

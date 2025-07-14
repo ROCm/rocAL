@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "loaders/image_source_evaluator.h"
 #include "loaders/numpy_source_evaluator.h"
 #include "loaders/image/node_cifar10_loader.h"
+#include "loaders/image/node_cifar10_loader_single_shard.h"
 #include "augmentations/node_copy.h"
 #include "loaders/image/node_fused_jpeg_crop.h"
 #include "loaders/image/node_fused_jpeg_crop_single_shard.h"
@@ -154,7 +155,7 @@ auto convert_color_format_sequence = [](RocalImageColor color_format, size_t n, 
 auto convert_decoder_mode = [](RocalDecodeDevice decode_mode) {
     switch (decode_mode) {
         case ROCAL_HW_DECODE:
-            return DecodeMode::HW_VAAPI;
+            return DecodeMode::ROCDECODE;
 
         case ROCAL_SW_DECODE:
             return DecodeMode::CPU;
@@ -168,8 +169,6 @@ auto convert_video_decoder_type = [](RocalDecoderType decoder_type) {
     switch (decoder_type) {
         case ROCAL_DECODER_VIDEO_FFMPEG_SW:
             return DecoderType::FFMPEG_SW_DECODE;
-        case ROCAL_DECODER_VIDEO_FFMPEG_HW:
-            return DecoderType::FFMPEG_HW_DECODE;
         case ROCAL_DECODER_VIDEO_ROCDECODE:
             return DecoderType::ROCDEC_VIDEO_DECODE;
         default:
@@ -212,7 +211,6 @@ rocalJpegFileSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
@@ -248,8 +246,7 @@ rocalJpegFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -275,7 +272,6 @@ rocalJpegFileSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
@@ -309,8 +305,7 @@ rocalJpegFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -329,10 +324,7 @@ rocalSequenceReader(
     unsigned stride,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         if (sequence_length == 0)
@@ -378,8 +370,7 @@ rocalSequenceReader(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -399,10 +390,7 @@ rocalSequenceReaderSingleShard(
     unsigned stride,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         if (sequence_length == 0)
@@ -449,8 +437,7 @@ rocalSequenceReaderSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -476,7 +463,6 @@ rocalJpegCaffe2LMDBRecordSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
@@ -509,8 +495,7 @@ rocalJpegCaffe2LMDBRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -537,7 +522,6 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
@@ -574,8 +558,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -601,7 +584,6 @@ rocalJpegCaffeLMDBRecordSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
@@ -636,8 +618,7 @@ rocalJpegCaffeLMDBRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -664,7 +645,6 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
@@ -701,8 +681,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -764,8 +743,7 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -826,71 +804,7 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
-    }
-    return output;
-}
-
-RocalTensor ROCAL_API_CALL
-rocalMXNetRecordSource(
-    RocalContext p_context,
-    const char* source_path,
-    RocalImageColor rocal_color_format,
-    unsigned shard_id,
-    unsigned shard_count,
-    bool is_output,
-    std::vector<float>& area_factor,
-    std::vector<float>& aspect_ratio,
-    unsigned num_attempts,
-    bool shuffle,
-    bool loop,
-    RocalImageSizeEvaluationPolicy decode_size_policy,
-    unsigned max_width,
-    unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
-    Tensor* output = nullptr;
-    auto context = static_cast<Context*>(p_context);
-    try {
-        bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
-
-        if (shard_count < 1)
-            THROW("Shard count should be bigger than 0")
-
-        if (shard_id >= shard_count)
-            THROW("Shard id should be smaller than shard count")
-
-        if (use_input_dimension && (max_width == 0 || max_height == 0)) {
-            THROW("Invalid input max width and height");
-        } else {
-            LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
-        }
-
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, source_path, "");
-        auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
-        INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
-        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
-
-        auto info = TensorInfo(std::move(dims),
-                               context->master_graph->mem_type(),
-                               RocalTensorDataType::UINT8,
-                               tensor_layout,
-                               color_format);
-        output = context->master_graph->create_loader_output_tensor(info);
-        auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-
-        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
-
-        context->master_graph->set_loop(loop);
-
-        if (is_output) {
-            auto actual_output = context->master_graph->create_tensor(info, is_output);
-            context->master_graph->add_node<CopyNode>({output}, {actual_output});
-        }
-
-    } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -910,17 +824,13 @@ rocalMXNetRecordSource(
     RocalDecoderType dec_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
@@ -955,8 +865,7 @@ rocalMXNetRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -977,17 +886,13 @@ rocalMXNetRecordSourceSingleShard(
     RocalDecoderType dec_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
@@ -1024,8 +929,7 @@ rocalMXNetRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1052,7 +956,6 @@ rocalJpegCOCOFileSource(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
@@ -1088,8 +991,7 @@ rocalJpegCOCOFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1117,7 +1019,6 @@ rocalJpegCOCOFileSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
@@ -1154,8 +1055,7 @@ rocalJpegCOCOFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1211,8 +1111,7 @@ rocalFusedJpegCrop(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1272,8 +1171,7 @@ rocalJpegCOCOFileSourcePartial(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1336,8 +1234,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1371,7 +1268,6 @@ rocalJpegTFRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (internal_shard_count < 1)
@@ -1405,8 +1301,7 @@ rocalJpegTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1419,6 +1314,8 @@ rocalJpegTFRecordSourceSingleShard(
     unsigned shard_id,
     unsigned shard_count,
     bool is_output,
+    const char* user_key_for_encoded,
+    const char* user_key_for_filename,
     bool shuffle,
     bool loop,
     RocalImageSizeEvaluationPolicy decode_size_policy,
@@ -1429,11 +1326,17 @@ rocalJpegTFRecordSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+        std::string user_key_for_encoded_str(user_key_for_encoded);
+        std::string user_key_for_filename_str(user_key_for_filename);
+
+        std::map<std::string, std::string> feature_key_map = {
+            {"image/encoded", user_key_for_encoded_str},
+            {"image/filename", user_key_for_filename_str},
+        };
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_HW_JPEG) decType = DecoderType::HW_JPEG_DEC;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
 
         if (shard_count < 1)
@@ -1461,7 +1364,7 @@ rocalJpegTFRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, feature_key_map);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1470,8 +1373,7 @@ rocalJpegTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1480,7 +1382,7 @@ RocalTensor ROCAL_API_CALL
 rocalRawTFRecordSource(
     RocalContext p_context,
     const char* source_path,
-    const char* user_key_for_encoded_str,
+    const char* user_key_for_raw_file,
     const char* user_key_for_filename_str,
     RocalImageColor rocal_color_format,
     bool is_output,
@@ -1491,16 +1393,12 @@ rocalRawTFRecordSource(
     const char* record_name_prefix,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
-
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
         unsigned internal_shard_count = 1;
         std::map<std::string, std::string> feature_key_map = {
-            {"image/encoded", user_key_for_encoded_str},
+            {"image/encoded", user_key_for_raw_file},
             {"image/filename", user_key_for_filename_str},
         };
 
@@ -1530,8 +1428,7 @@ rocalRawTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1540,6 +1437,8 @@ RocalTensor ROCAL_API_CALL
 rocalRawTFRecordSourceSingleShard(
     RocalContext p_context,
     const char* source_path,
+    const char* user_key_for_raw_file,
+    const char* user_key_for_filename_str,
     RocalImageColor rocal_color_format,
     unsigned shard_id,
     unsigned shard_count,
@@ -1551,6 +1450,10 @@ rocalRawTFRecordSourceSingleShard(
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
+    std::map<std::string, std::string> feature_key_map = {
+            {"image/encoded", user_key_for_raw_file},
+            {"image/filename", user_key_for_filename_str},
+    };
     try {
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1575,7 +1478,7 @@ rocalRawTFRecordSourceSingleShard(
         output = context->master_graph->create_loader_output_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info, feature_key_map);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1584,8 +1487,7 @@ rocalRawTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1644,8 +1546,7 @@ rocalFusedJpegCropSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1667,10 +1568,7 @@ rocalVideoFileSource(
     bool file_list_frame_num,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -1706,8 +1604,7 @@ rocalVideoFileSource(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1749,8 +1646,7 @@ rocalNumpyFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1799,8 +1695,7 @@ rocalNumpyFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1823,10 +1718,7 @@ rocalVideoFileSourceSingleShard(
     bool file_list_frame_num,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -1868,8 +1760,7 @@ rocalVideoFileSourceSingleShard(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -1898,11 +1789,7 @@ rocalVideoFileResize(
     RocalResizeInterpolationType interpolation_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* resize_output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return resize_output;
-    }
-
+    ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -2017,8 +1904,7 @@ rocalVideoFileResize(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return resize_output;
 }
@@ -2048,11 +1934,7 @@ rocalVideoFileResizeSingleShard(
     RocalResizeInterpolationType interpolation_type,
     RocalShardingInfo rocal_sharding_info) {
     Tensor* resize_output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context or invalid input image")
-        return resize_output;
-    }
-
+    ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
 #ifdef ROCAL_VIDEO
@@ -2171,8 +2053,7 @@ rocalVideoFileResizeSingleShard(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return resize_output;
 }
@@ -2217,8 +2098,58 @@ rocalRawCIFAR10Source(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalRawCIFAR10SourceSingleShard(
+    RocalContext p_context,
+    const char* source_path,
+    RocalImageColor rocal_color_format,
+    unsigned shard_id,
+    unsigned shard_count,
+    bool is_output,
+    bool shuffle,
+    bool loop,
+    unsigned out_width,
+    unsigned out_height,
+    const char* filename_prefix,
+    RocalShardingInfo rocal_sharding_info) {
+    Tensor* output = nullptr;
+    auto context = static_cast<Context*>(p_context);
+    try {
+        if (out_width == 0 || out_height == 0) {
+            THROW("Invalid input width and height");
+        } else {
+            LOG("User input size " + TOSTR(out_width) + " x " + TOSTR(out_height));
+        }
+        if (shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count");
+
+        auto [width, height] = std::make_tuple(out_width, out_height);
+        auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
+        INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
+        ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
+
+        auto info = TensorInfo(std::move(dims),
+                               context->master_graph->mem_type(),
+                               RocalTensorDataType::UINT8,
+                               tensor_layout,
+                               color_format);
+        output = context->master_graph->create_loader_output_tensor(info);
+
+        context->master_graph->add_node<CIFAR10LoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::UNCOMPRESSED_BINARY_DATA, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix, sharding_info);
+        context->master_graph->set_loop(loop);
+
+        if (is_output) {
+            auto actual_output = context->master_graph->create_tensor(info, is_output);
+            context->master_graph->add_node<CopyNode>({output}, {actual_output});
+        }
+
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2275,8 +2206,7 @@ rocalJpegExternalFileSource(
         }
 
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2345,8 +2275,7 @@ rocalAudioFileSourceSingleShard(
         THROW("Audio decoder is not enabled since sndfile is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2412,8 +2341,7 @@ rocalAudioFileSource(
         THROW("Audio decoder is not enabled since sndfile is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2443,8 +2371,6 @@ rocalWebDatasetSourceSingleShard(
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) {
             decType = DecoderType::OPENCV_DEC;
-        } else if (dec_type == ROCAL_DECODER_HW_JPEG) {
-            decType = DecoderType::HW_JPEG_DEC;
         }
 
         if (shard_count < 1) {
@@ -2482,8 +2408,7 @@ rocalWebDatasetSourceSingleShard(
         THROW("Webdataset reader is not enabled since libtar is not present")
 #endif
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        std::cerr << e.what() << '\n';
+        ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
 }
@@ -2494,8 +2419,7 @@ rocalResetLoaders(RocalContext p_context) {
     try {
         context->master_graph->reset();
     } catch (const std::exception& e) {
-        context->capture_error(e.what());
-        ERR(e.what())
+        ROCAL_PRINT_EXCEPTION(context, e);
         return ROCAL_RUNTIME_ERROR;
     }
     return ROCAL_OK;

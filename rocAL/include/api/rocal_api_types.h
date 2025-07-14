@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -229,9 +229,15 @@ enum RocalTensorLayout {
      * Spectrogram Layout TF
      */
     ROCAL_NTF = 6,
+    /*! \brief AMD ROCAL_NDHWC
+     */
+    ROCAL_NDHWC = 7,
+    /*! \brief AMD ROCAL_NCDHW
+     */
+    ROCAL_NCDHW = 8,
     /*! \brief AMD ROCAL_NONE
      */
-    ROCAL_NONE = 7  // Layout for generic tensors (Non-Image or Non-Video)
+    ROCAL_NONE = 9  // Layout for generic tensors (Non-Image or Non-Video)
 };
 
 /*! \brief rocAL Tensor Output Type enum
@@ -271,27 +277,21 @@ enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_OPENCV
      */
     ROCAL_DECODER_OPENCV = 1,
-    /*! \brief AMD ROCAL_DECODER_HW_JPEG
-     */
-    ROCAL_DECODER_HW_JPEG = 2,
     /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_SW
      */
-    ROCAL_DECODER_VIDEO_FFMPEG_SW = 3,
-    /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_HW
-     */
-    ROCAL_DECODER_VIDEO_FFMPEG_HW = 4,
+    ROCAL_DECODER_VIDEO_FFMPEG_SW = 2,
     /*! \brief AMD ROCAL_DECODER_AUDIO_GENERIC
      * Uses SndFile library to read audio files
      */
-    ROCAL_DECODER_AUDIO_GENERIC = 5,
+    ROCAL_DECODER_AUDIO_GENERIC = 3,
     /*! \brief AMD ROCAL_DECODER_VIDEO_ROCDECODE
      * Uses rocDecode library to decode videos on hardware
      */
-    ROCAL_DECODER_VIDEO_ROCDECODE = 6,
+    ROCAL_DECODER_VIDEO_ROCDECODE = 4,
     /*! \brief AMD ROCAL_DECODER_ROCJPEG
      * Uses rocJpeg library to decode images on hardware
      */
-    ROCAL_DECODER_ROCJPEG = 7
+    ROCAL_DECODER_ROCJPEG = 5
 };
 
 enum RocalOutputMemType {
@@ -507,6 +507,21 @@ enum RocalMissingComponentsBehaviour {
     /*! \brief ROCAL_MISSING_COMPONENT_EMPTY
      */
     ROCAL_MISSING_COMPONENT_EMPTY = 2
+};
+
+struct CameraMatrix {
+    float fx;
+    float cx;
+    float fy;
+    float cy;
+};
+
+struct DistortionCoeffs {
+    float k1;
+    float k2;
+    float p1;
+    float p2;
+    float k3;
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
