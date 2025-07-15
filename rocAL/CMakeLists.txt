@@ -230,7 +230,7 @@ if(${BUILD_ROCAL})
     if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND)
         include_directories(${rocdecode_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
         include_directories(${ROCM_PATH}/share/rocdecode/utils)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocdecode:rocdecode)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocdecode::rocdecode)
         set(rocdecode_SRCS ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp)
     endif()
     # rocJPEG
