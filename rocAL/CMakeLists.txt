@@ -46,28 +46,28 @@ project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
 set(BUILD_ROCAL true)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
+# CMake Config location
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Find Dependency
-find_package(AMDRPP QUIET)
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
 find_package(Protobuf QUIET)
 find_package(OpenMP QUIET)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads QUIET)
 find_package(LMDB QUIET)	
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads QUIET)
 # optional packages
 find_package(FFmpeg QUIET)
 find_package(OpenCV QUIET)
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
-find_package(rocdecode QUIET)
-find_package(rocjpeg QUIET)
+find_package(rocdecode 1.0.0 QUIET)
+find_package(rocjpeg 1.0.0 QUIET)
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -127,38 +127,6 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL")
     endif()
 endif()
 # Dependency Check
-# AMD RPP
-if(NOT AMDRPP_FOUND)
-    set(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires AMD's rpp library, Not Found ${ColourReset}")
-else()
-    # find the RPP backend type
-    set(RPP_BACKEND_OPENCL_FOUND 0)
-    set(RPP_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${AMDRPP_INCLUDE_DIRS}/rpp_backend.h)
-        file(READ ${AMDRPP_INCLUDE_DIRS}/rpp_backend.h RPP_BACKEND_FILE)
-        string(REGEX MATCH "RPP_BACKEND_OPENCL ([0-9]*)" _ ${RPP_BACKEND_FILE})
-        set(RPP_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
-        string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-        set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-    else()
-        message(FATAL_ERROR "${Red}ERROR: ${AMDRPP_INCLUDE_DIRS}/rpp_backend.h file Not Found. AMD RPP Package REQUIRED ${ColourReset}")
-    endif()
-
-    if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
-        if (NOT RPP_BACKEND_OPENCL_FOUND)
-            set(BACKEND "CPU")
-            message("-- ${Red}WARNING: RPP with OpenCL backend Not Found (HINT: run setup script with the OCL backend)${ColourReset}")
-            message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
-        endif()
-    elseif("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-        if (NOT RPP_BACKEND_HIP_FOUND)
-            set(BACKEND "CPU")
-            message("-- ${Red}WARNING: RPP with the HIP backend Not Found (HINT: run setup script with the HIP backend)${ColourReset}")
-            message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
-        endif()
-    endif()
-endif()
 # MIVisionX
 if(NOT MIVisionX_FOUND)
     set(BUILD_ROCAL false)
@@ -233,9 +201,6 @@ if(NOT HALF_FOUND)
 endif()
 
 if(${BUILD_ROCAL})
-    # AMD RPP
-    include_directories(${AMDRPP_INCLUDE_DIRS})
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${AMDRPP_LIBRARIES})
     # MIVisionX
     include_directories(${MIVisionX_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OPENVX_LIBRARIES} ${VXRPP_LIBRARIES})

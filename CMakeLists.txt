@@ -130,8 +130,10 @@ else()
 endif()
 message("-- ${BoldBlue}rocAL Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
+# CMake Config location
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 find_package(HALF QUIET)
 
 if(HALF_FOUND)
