@@ -39,6 +39,7 @@ class Node {
     std::vector<Tensor *> output() { return _outputs; };
     void add_next(const std::shared_ptr<Node> &node);   // Adds the Node next to the current Node
     void add_previous(const std::shared_ptr<Node> &node);   // Adds the Node preceding the current Node
+    void release();
     std::shared_ptr<Graph> graph() { return _graph; }
     void set_meta_data(pMetaDataBatch meta_data_info) { _meta_data_info = meta_data_info; }
     bool _is_ssd = false;
