@@ -54,6 +54,10 @@ include(CTest)
 find_library(ROCAL_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
 find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${ROCM_PATH}/include/rocal)
 
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+find_package(rocdecode 1.0.0 QUIET)
+find_package(rocjpeg 1.0.0 QUIET)
+
 if(ROCAL_LIBRARY AND ROCAL_INCLUDE_DIR)
     set(ROCAL_FOUND TRUE)
     message("-- ${White}${PROJECT_NAME}: Using rocAL -- \n\tLibraries:${ROCAL_LIBRARY} \n\tIncludes:${ROCAL_INCLUDE_DIR}${ColourReset}")
@@ -229,32 +233,21 @@ add_test(
 )
 
 # 15 - video_tests -- video reader with rocDecode
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
-find_package(ROCDECODE QUIET)
-if(ROCDECODE_FOUND)
-  if(${ROCDECODE_VERSION_MAJOR} VERSION_GREATER "0" OR
-    (${ROCDECODE_VERSION_MAJOR} VERSION_EQUAL "0" AND ${ROCDECODE_VERSION_MINOR} VERSION_GREATER_EQUAL "12" AND ${ROCDECODE_VERSION_PATCH} VERSION_GREATER_EQUAL "0"))
-    add_test(
-      NAME video_tests_rocdecode
-      COMMAND video_tests
-                ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 2
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
-  endif()
+if(rocdecode_FOUND)
+  add_test(NAME video_tests_rocdecode
+            COMMAND video_tests
+            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 2
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
 endif()
 
 # 16 - basic_test_rocjpeg -- basic test with rocJpeg
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
-find_package(ROCJPEG QUIET)
-if(ROCJPEG_FOUND)
-  if(${ROCJPEG_VERSION_MAJOR} VERSION_GREATER "0" OR
-     ${ROCJPEG_VERSION_MAJOR} VERSION_EQUAL "0" AND ${ROCJPEG_VERSION_MINOR} VERSION_GREATER_EQUAL "11" AND ${ROCJPEG_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
-    add_test(NAME basic_test_rocjpeg_gray
-                  COMMAND basic_test 
-                  ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 2
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
-    add_test(NAME basic_test_rocjpeg_rgb
-                  COMMAND basic_test 
-                  ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
-  endif()
+if(rocjpeg_FOUND)
+  add_test(NAME basic_test_rocjpeg_gray
+            COMMAND basic_test 
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 2
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  add_test(NAME basic_test_rocjpeg_rgb
+            COMMAND basic_test 
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
 endif()
