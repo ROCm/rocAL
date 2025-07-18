@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <VX/vx_types.h>
+#include "pipeline/graph.h"
 
 #include "parameters/parameter_factory.h"
 enum class RocalCropType {
@@ -63,8 +63,11 @@ class CropParam {
     }
     void set_x_drift_factor(Parameter<float> *x_drift);
     void set_y_drift_factor(Parameter<float> *y_drift);
+    virtual void set_area_factor(Parameter<float>* crop_h_factor) {};  // Used in RocalRandomCropParam
+    virtual void set_aspect_ratio(Parameter<float>* crop_w_factor) {}; // Used in RocalRandomCropParam
     const Roi2DCords *in_roi;
     unsigned int x1, y1, x2, y2;
+    unsigned int crop_w, crop_h, crop_d;  // Used by CropResize node for setting crop region
     const unsigned int batch_size;
     void set_batch_size(unsigned int batch_size);
     vx_array x1_arr, y1_arr, croph_arr, cropw_arr, x2_arr, y2_arr;

@@ -33,11 +33,7 @@ void CropResizeNode::create_node() {
     if (_node)
         return;
 
-    if (_is_random_crop) {
-        _crop_param->create_array(_graph);
-    } else {
-        _crop_fixed_param->create_array(_graph);
-    }
+    _crop_param->create_array(_graph);
     std::vector<uint32_t> dst_roi_width(_batch_size, _outputs[0]->info().max_shape()[0]);
     std::vector<uint32_t> dst_roi_height(_batch_size, _outputs[0]->info().max_shape()[1]);
     _dst_roi_width = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size);
@@ -66,23 +62,13 @@ void CropResizeNode::create_node() {
 
 void CropResizeNode::update_node() {
     std::vector<uint32_t> x1, y1, crop_h_dims, crop_w_dims;
-    if (_is_random_crop) {
-        _crop_param->set_image_dimensions(_inputs[0]->info().roi().get_2D_roi());
-        _crop_param->update_array();
-        _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
-        // Obtain the crop coordinates and update the roi
-        x1 = _crop_param->get_x1_arr_val();
-        y1 = _crop_param->get_y1_arr_val();
-    } else {
-        _crop_fixed_param->set_image_dimensions(_inputs[0]->info().roi().get_2D_roi());
-        _crop_fixed_param->update_array();
-        _crop_fixed_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
-        // Obtain the crop coordinates and update the roi
-        x1 = _crop_fixed_param->get_x1_arr_val();
-        y1 = _crop_fixed_param->get_y1_arr_val();
-    }
+    _crop_param->set_image_dimensions(_inputs[0]->info().roi().get_2D_roi());
+    _crop_param->update_array();
+    _crop_param->get_crop_dimensions(crop_w_dims, crop_h_dims);
+    // Obtain the crop coordinates and update the roi
+    x1 = _crop_param->get_x1_arr_val();
+    y1 = _crop_param->get_y1_arr_val();
 
-    _outputs[0]->update_tensor_roi(crop_w_dims, crop_h_dims);
     Roi2DCords *crop_dims = static_cast<Roi2DCords *>(_crop_coordinates);
     for (unsigned i = 0; i < _batch_size; i++) {
         crop_dims[i].xywh.x = x1[i];
@@ -108,16 +94,22 @@ void CropResizeNode::init(FloatParam *area, FloatParam *aspect_ratio, FloatParam
     _crop_param->set_y_drift_factor(core(y_center_drift));
 }
 
+void CropResizeNode::init(std::vector<float>& area_factor, std::vector<float>& aspect_ratio, RocalResizeInterpolationType interpolation_type) {
+    auto aspect_ratio_range = std::make_pair((float)aspect_ratio[0], (float)aspect_ratio[1]);
+    auto area_factor_range = std::make_pair((float)area_factor[0], (float)area_factor[1]);
+    _crop_param = std::make_shared<RocalRandomCropDecParam>(aspect_ratio_range, area_factor_range, NUM_ATTEMPTS, _batch_size);
+    _interpolation_type = static_cast<int>(interpolation_type);
+}
+
 void CropResizeNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, RocalResizeInterpolationType interpolation_type) {
-    _crop_fixed_param = std::make_shared<RocalCropParam>(_batch_size);
-    _crop_fixed_param->crop_w = crop_w;
-    _crop_fixed_param->crop_h = crop_h;
-    _crop_fixed_param->x1 = x_drift;
-    _crop_fixed_param->y1 = y_drift;
+    _crop_param = std::make_shared<RocalCropParam>(_batch_size);
+    _crop_param->crop_w = crop_w;
+    _crop_param->crop_h = crop_h;
+    _crop_param->x1 = x_drift;
+    _crop_param->y1 = y_drift;
     FloatParam *x_drift_param = ParameterFactory::instance()->create_single_value_float_param(x_drift);
     FloatParam *y_drift_param = ParameterFactory::instance()->create_single_value_float_param(y_drift);
-    _crop_fixed_param->set_x_drift_factor(core(x_drift_param));
-    _crop_fixed_param->set_y_drift_factor(core(y_drift_param));
+    _crop_param->set_x_drift_factor(core(x_drift_param));
+    _crop_param->set_y_drift_factor(core(y_drift_param));
     _interpolation_type = static_cast<int>(interpolation_type);
-    _is_random_crop = false;
 }
