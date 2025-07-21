@@ -518,7 +518,7 @@ def random_resized_crop(*inputs, resize_width=0, resize_height=0, crop_area_fact
     """
 
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
+    kwargs_pybind = {"input_image": inputs[0], "dest_width": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
                      "crop_aspect_ratio": crop_aspect_ratio, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     random_resized_crop_image = b.randomResizedCrop(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
