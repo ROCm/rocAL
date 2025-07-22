@@ -586,7 +586,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSourceSingleShard(RocalCo
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_context,
                                                              const char* source_path,
-                                                             const char* user_key_for_raw,
+                                                             const char* user_key_for_raw_file,
                                                              const char* user_key_for_filename,
                                                              RocalImageColor rocal_color_format,
                                                              bool is_output,
@@ -607,12 +607,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_cont
  * \param [in] loop: repeat data loading
  * \param [in] out_width The output_width of raw image
  * \param [in] out_height The output height of raw image
- * \param [in] record_name_prefix : if nonempty reader will only read records with certain prefix
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalContext p_context,
                                                                         const char* source_path,
+                                                                        const char* user_key_for_raw_file,
+                                                                        const char* user_key_for_filename,
                                                                         RocalImageColor rocal_color_format,
                                                                         unsigned shard_id,
                                                                         unsigned shard_count,
@@ -620,7 +621,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
                                                                         bool shuffle = false,
                                                                         bool loop = false,
                                                                         unsigned out_width = 0, unsigned out_height = 0,
-                                                                        const char* record_name_prefix = "",
                                                                         RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
 
 /*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.

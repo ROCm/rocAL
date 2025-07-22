@@ -371,13 +371,13 @@ def pixelate(*inputs, device=None, pixelate_percent=50.0, output_layout=types.NH
     return (pixelate_image)
 
 
-def rain(*inputs, rain=None, rain_width=None, rain_height=None, rain_transparency=None, rain_slant_angle=0.0,
+def rain(*inputs, rain=None, rain_width=0, rain_height=0, rain_transparency=None, rain_slant_angle=0.0,
          device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Rain effect on images
         @param inputs                                                                 the input image passed to the augmentation
         @param rain (float, optional, default = None)                                 rain percentage value used for the augmentation
-        @param rain_width (int, optional, default = None)                             width of the rain pixels for the augmentation
-        @param rain_height (int, optional, default = None)                            height of the rain pixels for the augmentation
+        @param rain_width (int, optional, default = 0)                                width of the rain pixels for the augmentation
+        @param rain_height (int, optional, default = 0)                               height of the rain pixels for the augmentation
         @param rain_transparency (float, optional, default = None)                    transparency value used for the augmentation
         @param rain_slant_angle (float, optional, default = None)                     slant angle value used for the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
@@ -500,7 +500,7 @@ def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None,
     return (crop_resized_image)
 
 
-def random_resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=[0.08, 1.0], crop_aspect_ratio=[0.75, 1.33333],
+def random_resized_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=[0.08, 1.0], crop_aspect_ratio=[0.75, 1.33333],
                 device=None, interpolation_type=types.LINEAR_INTERPOLATION, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Fused function which crops a random portion of image and resize it to a given size.
 
@@ -520,9 +520,9 @@ def random_resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_facto
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
                      "crop_aspect_ratio": crop_aspect_ratio, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
-    crop_resized_image = b.randomResizeCrop(
+    random_resized_crop_image = b.randomResizedCrop(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (crop_resized_image)
+    return (random_resized_crop_image)
 
 
 def roi_resize(*inputs, resize_width=0, resize_height=0, roi_w=None, roi_h=None, roi_pos_x=None, roi_pos_y=None, device=None,

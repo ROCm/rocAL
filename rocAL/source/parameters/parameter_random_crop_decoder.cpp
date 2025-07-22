@@ -34,8 +34,8 @@ void RocalRandomCropDecParam::update_array() {
         auto crop_window = generate_crop_window(input_shape, i);
         x1_arr_val[i] = crop_window.x;
         y1_arr_val[i] = crop_window.y;
-        x2_arr_val[i] = x1_arr_val[i] + crop_window.W;
-        y2_arr_val[i] = y1_arr_val[i] + crop_window.H;
+        x2_arr_val[i] = x1_arr_val[i] + crop_window.W - 1;
+        y2_arr_val[i] = y1_arr_val[i] + crop_window.H - 1;
         cropw_arr_val[i] = crop_window.W;
         croph_arr_val[i] = crop_window.H;
     }

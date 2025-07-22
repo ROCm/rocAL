@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "parameters/parameter_crop_factory.h"
 #include "parameters/parameter_factory.h"
 
+#define NUM_ATTEMPTS 100
+
 class CropResizeNode : public CropNode {
    public:
     CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
@@ -37,29 +39,14 @@ class CropResizeNode : public CropNode {
               RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
-    std::shared_ptr<CropParam> get_crop_param() { 
-        if(_is_random_crop) {
-            if (_is_random_decode_crop) {
-                return std::static_pointer_cast<CropParam>(_crop_dec_param);
-            } else {
-                return std::static_pointer_cast<CropParam>(_crop_param);
-            }
-        } else {
-            return std::static_pointer_cast<CropParam>(_crop_fixed_param);
-        }
-        }
+    std::shared_ptr<CropParam> get_crop_param() { return _crop_param; }
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    std::shared_ptr<RocalRandomCropParam> _crop_param;  // For random crop generation
-    std::shared_ptr<RocalRandomCropDecParam> _crop_dec_param;  // For random decode crop generation
-    std::shared_ptr<RocalCropParam> _crop_fixed_param;  // For fixed crop generation
+    std::shared_ptr<CropParam> _crop_param;  // For random crop generation
     vx_array _dst_roi_width, _dst_roi_height;
     int _interpolation_type = 1;  // Linear interpolation by default
-    bool _is_random_crop = true;
-    bool _is_random_decode_crop = false;
-    int _num_attempts = 100;
 };

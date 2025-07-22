@@ -83,7 +83,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         auto random_area = decoder_config.get_random_area();
         AspectRatioRange aspect_ratio_range = std::make_pair((float)random_aspect_ratio[0], (float)random_aspect_ratio[1]);
         AreaRange area_range = std::make_pair((float)random_area[0], (float)random_area[1]);
-        _random_crop_dec_param = new RocalRandomCropDecParam(aspect_ratio_range, area_range, (int64_t)decoder_config.get_seed(), decoder_config.get_num_attempts(), _batch_size);
+        _random_crop_dec_param = new RocalRandomCropDecParam(aspect_ratio_range, area_range, decoder_config.get_num_attempts(), _batch_size);
     }
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
         if (_decoder_config._type == DecoderType::ROCJPEG_DEC || _decoder_config._type == DecoderType::FUSED_CROP_ROCJPEG_DEC) {
@@ -186,7 +186,7 @@ ImageReadAndDecode::load(unsigned char *buff,
     const unsigned output_planes = std::get<1>(ret);
     const bool keep_original = decoder_keep_original;
     const size_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
-    bool skip_decode = false;
+    bool skip_decode = _decoder_config._type == DecoderType::SKIP_DECODE;
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing
