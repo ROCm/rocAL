@@ -138,17 +138,17 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     };
 
     if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[index]) != ROCJPEG_STATUS_SUCCESS) {
-        std::cerr << "Header decode failed\n";
+        // std::cerr << "Header decode failed\n";
         return Status::HEADER_DECODE_FAILED;
     }
     if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[index], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
-        std::cerr << "Header decode failed\n";
+        // std::cerr << "Header decode failed\n";
         
         return Status::HEADER_DECODE_FAILED;
     }
 
     if (widths[0] < 64 || heights[0] < 64) {
-        std::cerr << "Header decode failed\n";
+        // std::cerr << "Header decode failed\n";
 
         return Status::CONTENT_DECODE_FAILED;
     }
@@ -167,8 +167,8 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     _decode_params = &_decode_params_batch[index];
 
     if (GetChannelPitchAndSizes(_decode_params_batch[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
-        // return Status::HEADER_DECODE_FAILED;
-        ERR("Header decode failed\n")
+        return Status::HEADER_DECODE_FAILED;
+        // ERR("Header decode failed\n")
     }
     _original_image_width = *actual_width = widths[0];
     _original_image_height = *actual_height = heights[0];

@@ -77,6 +77,7 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _src_hstride.resize(_batch_size);
     _src_img_offset.resize(_batch_size);
     _decode_params.resize(_batch_size);
+    _scaled_image.resize(_batch_size);
 
     // Allocate mem for width and height arrays for src and dst
     if (!_dev_src_width) CHECK_HIP(hipMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
@@ -147,6 +148,7 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
         _resize_batch = true;   // If the size of any image in the batch is greater than max size, resize the complete batch
         max_widths[0] = (widths[0] + 8) &~ 7;
         max_heights[0] = (heights[0] + 8) &~ 7;
+        _scaled_image[index] = true;
     }
 
     if (GetChannelPitchAndSizes(_decode_params[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
@@ -212,8 +214,8 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
         for (unsigned i = 0; i < _batch_size; i++) {
                 _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
                 _src_img_offset[i] = src_offset;
-                unsigned pitch_width = (original_image_width[i] + 8) &~ 7;
-                unsigned pitch_height = (original_image_height[i] + 8) &~ 7;
+                unsigned pitch_width = _scaled_image[i] ? (original_image_width[i] + 8) & ~7 : max_decoded_width;
+                unsigned pitch_height = _scaled_image[i] ? (original_image_height[i] + 8) & ~7 : max_decoded_height;
                 src_offset += (pitch_width * pitch_height * _num_channels);
                 img_buff += (pitch_width * pitch_height * _num_channels);
                 _src_hstride[i] = pitch_width * _num_channels;
@@ -241,6 +243,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
                             max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
     }
     _resize_batch = false;  // Need to reset this value for every batch
+    _rocjpeg_image_buff_size = 0;
 
     return Status::OK;
 }
