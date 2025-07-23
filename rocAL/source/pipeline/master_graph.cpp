@@ -351,7 +351,11 @@ void MasterGraph::set_output(Tensor *output_tensor) {
 void MasterGraph::release() {
     LOG("MasterGraph release ...")
     stop_processing();
+    for (auto &node : _nodes)
+        node->release();
     _nodes.clear();
+    for (auto &node : _root_nodes)
+        node->release();
     _root_nodes.clear();
     _meta_data_nodes.clear();
     _tensor_map.clear();
@@ -379,7 +383,6 @@ void MasterGraph::release() {
     _internal_tensor_list.release();  // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _output_tensor_list.release();    // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _metadata_output_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
-    _bbox_encoded_output.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
 
     if (_graph != nullptr)
         _graph->release();
@@ -394,6 +397,7 @@ void MasterGraph::release() {
     _augmented_meta_data = nullptr;
     _meta_data_graph = nullptr;
     _meta_data_reader = nullptr;
+    delete _box_encoder_gpu;
     if (_context && (status = vxReleaseContext(&_context)) != VX_SUCCESS)
         LOG("Failed to call vxReleaseContext " + TOSTR(status))
 }
@@ -1665,17 +1669,17 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, flo
     _convert_time.start();
     // Copies to the output context given by the user, each image is copied separate for planar
     auto output_tensor_info = _output_tensor_list[0]->info();
-    auto dims = output_tensor_info.dims();
-    const size_t w = dims[2];
-    const size_t h = dims[1];
-    const size_t c = dims[3];
-    const size_t n = dims[0];
 
     const size_t single_output_tensor_size = output_tensor_info.data_size();
 
     if (output_tensor_info.mem_type() == RocalMemType::OCL || output_tensor_info.mem_type() == RocalMemType::HIP) {
         THROW("copy_out_tensor_planar for GPU affinity is not implemented")
     } else if (output_tensor_info.mem_type() == RocalMemType::HOST) {
+        auto dims = output_tensor_info.dims();
+        const size_t n = dims[0];
+        const size_t c = dims[1];
+        const size_t h = dims[2];
+        const size_t w = dims[3];
         float multiplier[3] = {multiplier0, multiplier1, multiplier2};
         float offset[3] = {offset0, offset1, offset2};
         size_t dest_buf_offset = 0;
@@ -1816,20 +1820,21 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes) {
         auto encoded_boxes_and_lables = _ring_buffer.get_box_encode_read_buffers();
         unsigned char *boxes_buf_ptr = (unsigned char *)encoded_boxes_and_lables.first;
         unsigned char *labels_buf_ptr = (unsigned char *)encoded_boxes_and_lables.second;
-        auto labels = _ring_buffer.get_meta_data().second->get_labels_batch();
 
         if (_bbox_tensor_list.size() != _labels_tensor_list.size())
             THROW("The number of tensors between bbox and bbox_labels do not match")
         for (unsigned i = 0; i < _bbox_tensor_list.size(); i++) {
-            _labels_tensor_list[i]->set_dims({labels[i].size()});
-            _bbox_tensor_list[i]->set_dims({labels[i].size(), 4});
             _labels_tensor_list[i]->set_mem_handle((void *)labels_buf_ptr);
             _bbox_tensor_list[i]->set_mem_handle((void *)boxes_buf_ptr);
             labels_buf_ptr += _labels_tensor_list[i]->info().data_size();
             boxes_buf_ptr += _bbox_tensor_list[i]->info().data_size();
         }
-        _bbox_encoded_output.emplace_back(&_labels_tensor_list);
-        _bbox_encoded_output.emplace_back(&_bbox_tensor_list);
+
+        // Set the labels and bbox tensorList to the box encoded output only for the first run
+        if (_bbox_encoded_output.size() == 0) {
+            _bbox_encoded_output.emplace_back(&_labels_tensor_list);
+            _bbox_encoded_output.emplace_back(&_bbox_tensor_list);
+        }
     }
     return &_bbox_encoded_output;
 }

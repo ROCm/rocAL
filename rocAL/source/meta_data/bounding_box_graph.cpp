@@ -85,12 +85,12 @@ void BoundingBoxGraph::update_random_bbox_meta_data(pMetaDataBatch input_meta_da
         BoundingBoxCords bb_coords;
         Labels bb_labels;
         BoundingBoxCord crop_box;
-        crop_box.l = crop_cords[i][0];
-        crop_box.t = crop_cords[i][1];
-        crop_box.r = crop_box.l + crop_cords[i][2];
-        crop_box.b = crop_box.t + crop_cords[i][3];
-        float w_factor = 1.0 / crop_cords[i][2];
-        float h_factor = 1.0 / crop_cords[i][3];
+        crop_box.l = crop_cords[i][0] * roi_width[i];
+        crop_box.t = crop_cords[i][1] * roi_height[i];
+        crop_box.r = (crop_box.l + crop_cords[i][2]) * roi_width[i];
+        crop_box.b = (crop_box.t + crop_cords[i][3]) * roi_height[i];
+        BoundingBoxCord temp_box;
+        temp_box.l = temp_box.t = temp_box.r = temp_box.b = 0;
         for (uint j = 0; j < bb_count; j++) {
             // Mask Criteria
             auto x_c = 0.5 * (coords_buf[j].l + coords_buf[j].r);
@@ -100,16 +100,17 @@ void BoundingBoxGraph::update_random_bbox_meta_data(pMetaDataBatch input_meta_da
                 float yA = std::max(crop_box.t, coords_buf[j].t);
                 float xB = std::min(crop_box.r, coords_buf[j].r);
                 float yB = std::min(crop_box.b, coords_buf[j].b);
-                coords_buf[j].l = (xA - crop_box.l) * w_factor;
-                coords_buf[j].t = (yA - crop_box.t) * h_factor;
-                coords_buf[j].r = (xB - crop_box.l) * w_factor;
-                coords_buf[j].b = (yB - crop_box.t) * h_factor;
+                coords_buf[j].l = (xA - crop_box.l);
+                coords_buf[j].t = (yA - crop_box.t);
+                coords_buf[j].r = (xB - crop_box.l);
+                coords_buf[j].b = (yB - crop_box.t);
                 bb_coords.push_back(coords_buf[j]);
                 bb_labels.push_back(labels_buf[j]);
             }
         }
         if (bb_coords.size() == 0) {
-            THROW("Bounding box co-ordinates not found in the image ");
+            bb_coords.push_back(temp_box);
+            bb_labels.push_back(0);
         }
         output_meta_data->get_bb_cords_batch()[i] = bb_coords;
         output_meta_data->get_labels_batch()[i] = bb_labels;

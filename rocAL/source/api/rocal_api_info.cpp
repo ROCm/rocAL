@@ -24,21 +24,6 @@ THE SOFTWARE.
 #include "pipeline/context.h"
 #include "rocal_api.h"
 
-size_t ROCAL_API_CALL rocalGetImageWidth(RocalTensor p_image) {
-    auto image = static_cast<Tensor *>(p_image);
-    return image->info().max_shape()[0];
-}
-
-size_t ROCAL_API_CALL rocalGetImageHeight(RocalTensor p_image) {
-    auto image = static_cast<Tensor *>(p_image);
-    return image->info().max_shape()[1];
-}
-
-size_t ROCAL_API_CALL rocalGetImagePlanes(RocalTensor p_image) {
-    auto image = static_cast<Tensor *>(p_image);
-    return image->info().get_channels();
-}
-
 int ROCAL_API_CALL rocalGetOutputWidth(RocalContext p_context) {
     auto context = static_cast<Context *>(p_context);
     return context->master_graph->output_width();

@@ -186,7 +186,7 @@ ImageReadAndDecode::load(unsigned char *buff,
     const unsigned output_planes = std::get<1>(ret);
     const bool keep_original = decoder_keep_original;
     const size_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
-    bool skip_decode = false;
+    bool skip_decode = _decoder_config._type == DecoderType::SKIP_DECODE;
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing

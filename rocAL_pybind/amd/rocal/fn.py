@@ -371,13 +371,13 @@ def pixelate(*inputs, device=None, pixelate_percent=50.0, output_layout=types.NH
     return (pixelate_image)
 
 
-def rain(*inputs, rain=None, rain_width=None, rain_height=None, rain_transparency=None, rain_slant_angle=0.0,
+def rain(*inputs, rain=None, rain_width=0, rain_height=0, rain_transparency=None, rain_slant_angle=0.0,
          device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Rain effect on images
         @param inputs                                                                 the input image passed to the augmentation
         @param rain (float, optional, default = None)                                 rain percentage value used for the augmentation
-        @param rain_width (int, optional, default = None)                             width of the rain pixels for the augmentation
-        @param rain_height (int, optional, default = None)                            height of the rain pixels for the augmentation
+        @param rain_width (int, optional, default = 0)                                width of the rain pixels for the augmentation
+        @param rain_height (int, optional, default = 0)                               height of the rain pixels for the augmentation
         @param rain_transparency (float, optional, default = None)                    transparency value used for the augmentation
         @param rain_slant_angle (float, optional, default = None)                     slant angle value used for the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
