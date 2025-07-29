@@ -55,7 +55,7 @@ public:
     /**
      * @brief Serialize global pipeline configuration.
      */
-    void serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth);
+    void serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth, size_t seed);
     /**
      * @brief Serialize pipeline output tensors (shape, dtype, device, layout).
      */
