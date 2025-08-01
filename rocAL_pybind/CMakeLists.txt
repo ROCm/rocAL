@@ -69,7 +69,7 @@ else()
 endif()	
 find_package(pybind11 QUIET CONFIG)	
 find_package(HALF QUIET)
-find_package(OpenMP QUIET)
+find_package(OpenMP COMPONENTS CXX QUIET)
 
 # Backend
 if(BUILD_PYPACKAGE)
@@ -181,7 +181,7 @@ if(NOT HALF_FOUND)
     message("-- ${Yellow}NOTE: rocAL pybind requires Half, Not Found${ColourReset}")
 endif()
 # OpenMP
-if(NOT OpenMP_FOUND)
+if(NOT OpenMP_CXX_FOUND)
     set(BUILD_ROCAL_PYBIND false)
     message("-- ${Yellow}NOTE: rocAL pybind library requires OpenMP, Not Found ${ColourReset}")
 endif()
@@ -212,7 +212,7 @@ if(${BUILD_ROCAL_PYBIND})
     include_directories(${HALF_INCLUDE_DIRS})
     # OpenMP
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
     file(GLOB_RECURSE pyfiles amd/*.py)
     file(GLOB_RECURSE sources *.cpp)

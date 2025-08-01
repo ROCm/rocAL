@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include "loaders/image/image_read_and_decode.h"
 
+#include <omp.h>
 #include <cstring>
 #include <iterator>
 

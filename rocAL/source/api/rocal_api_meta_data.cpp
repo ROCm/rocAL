@@ -24,6 +24,7 @@ THE SOFTWARE.
 // Created by mvx on 3/31/20.
 //
 
+#include <omp.h>
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
 #include "rocal_api.h"
