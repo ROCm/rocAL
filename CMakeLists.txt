@@ -209,11 +209,11 @@ if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 # Set the dependent packages
-set(ROCAL_DEBIAN_PACKAGE_LIST  "mivisionx, libturbojpeg:amd64 | libturbojpeg0")
-set(ROCAL_RPM_PACKAGE_LIST     "mivisionx")
+set(ROCAL_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, openmp-extras-runtime, mivisionx, libturbojpeg:amd64 | libturbojpeg0")
+set(ROCAL_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime, mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "mivisionx-devel, lmdb-devel, protobuf-devel")
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "half, rocm-hip-runtime-dev, openmp-extras-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "half, rocm-hip-runtime-devel, openmp-extras-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
 
 # Add OS specific dependencies
 if (EXISTS "/etc/os-release")

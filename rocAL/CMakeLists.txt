@@ -205,6 +205,7 @@ if(${BUILD_ROCAL})
     include_directories(${MIVisionX_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OPENVX_LIBRARIES} ${VXRPP_LIBRARIES})
     # OpenMP
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
     # Threads
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)

@@ -211,6 +211,7 @@ if(${BUILD_ROCAL_PYBIND})
     # half
     include_directories(${HALF_INCLUDE_DIRS})
     # OpenMP
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
     file(GLOB_RECURSE pyfiles amd/*.py)
