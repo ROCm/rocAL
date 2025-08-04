@@ -56,6 +56,7 @@ class RocalRandomCropDecParam : public CropParam {
         _seeds.resize(_batch_size);
     }
     CropWindow generate_crop_window(const Shape& shape, const int instance);
+    std::vector<unsigned> generate_crop_coords(const Shape& shape, const int instance);
     void generate_random_seeds();
     void update_array() override;
 
