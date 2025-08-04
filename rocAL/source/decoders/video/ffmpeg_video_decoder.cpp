@@ -50,6 +50,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
                                       out_width, out_height, out_pix_format, SWS_BILINEAR, nullptr, nullptr, nullptr);
         if (!swsctx) {
             ERR("Fail to get sws_getCachedContext");
+            sws_freeContext(swsctx);
             return Status::FAILED;
         }
     }
@@ -76,10 +77,14 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
         ret = av_read_frame(_fmt_ctx, &pkt);
         if (ret < 0 && ret != AVERROR_EOF) {
             ERR("Fail to av_read_frame: ret=" + TOSTR(ret));
+            av_packet_unref(&pkt);
             status = Status::FAILED;
             break;
         }
-        if (ret == 0 && pkt.stream_index != _video_stream_idx) continue;
+        if (ret == 0 && pkt.stream_index != _video_stream_idx) {
+            av_packet_unref(&pkt);
+            continue;
+        }
         end_of_stream = (ret == AVERROR_EOF);
         if (end_of_stream) {
             // null packet for bumping process
@@ -92,6 +97,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
         if (ret < 0) {
             ERR("Error while sending packet to the decoder\n");
             status = Status::FAILED;
+            av_packet_unref(&pkt);
             break;
         }
 
@@ -99,7 +105,10 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
         while (ret >= 0) {
             ret = avcodec_receive_frame(_video_dec_ctx, dec_frame);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
-            if ((dec_frame->pts < select_frame_pts) || (ret < 0)) continue;
+            if ((dec_frame->pts < select_frame_pts) || (ret < 0)) {
+                av_packet_unref(&pkt);
+                continue;
+            }
             if (frame_count % stride == 0) {
                 dst_data[0] = out_buffer;
                 dst_linesize[0] = out_stride;
@@ -138,22 +147,26 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, in
     _src_filename = src_filename;
     if (avformat_open_input(&_fmt_ctx, src_filename, NULL, NULL) < 0) {
         ERR("Couldn't Open video file " + STR(src_filename));
+        Release();
         return Status::FAILED;
     }
     if (avformat_find_stream_info(_fmt_ctx, NULL) < 0) {
         ERR("av_find_stream_info error");
+        Release();
         return Status::FAILED;
     }
     ret = av_find_best_stream(_fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     if (ret < 0) {
         ERR("Could not find %s stream in input file " +
             STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " " + STR(src_filename));
+        Release();
         return Status::FAILED;
     }
     _video_stream_idx = ret;
     _video_stream = _fmt_ctx->streams[_video_stream_idx];
     if (!_video_stream) {
         ERR("Could not find video stream in the input, aborting");
+        Release();
         return Status::FAILED;
     }
 
@@ -162,6 +175,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, in
     if (!_decoder) {
         ERR("Failed to find " +
             STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec");
+        Release();
         return Status::FAILED;
     }
 
@@ -170,6 +184,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, in
     if (!_video_dec_ctx) {
         ERR("Failed to allocate the " +
             STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec context");
+        Release();
         return Status::NO_MEMORY;
     }
 
@@ -177,6 +192,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, in
     if ((ret = avcodec_parameters_to_context(_video_dec_ctx, _video_stream->codecpar)) < 0) {
         ERR("Failed to copy " +
             STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec parameters to decoder context");
+        Release();
         return Status::FAILED;
     }
 
@@ -184,6 +200,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, in
     if ((ret = avcodec_open2(_video_dec_ctx, _decoder, &opts)) < 0) {
         ERR("Failed to open " +
             STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec");
+        Release();
         return Status::FAILED;
     }
     _dec_pix_fmt = _video_dec_ctx->pix_fmt;

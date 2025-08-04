@@ -344,8 +344,7 @@ ImageReadAndDecode::load(unsigned char *buff,
             if (!_set_device_id) {
                 hipError_t hip_status = hipSetDevice(_device_id);
                 if (hip_status != hipSuccess) {     
-                    std::cerr << "HIP failure : " << hipGetErrorName(hip_status) << "' at " << __FILE__ << ":" << __LINE__ << std::endl;
-                    exit(1);                                                      \
+                    THROW("hipSetDevice failed");
                 }
                 _set_device_id = true;
             }

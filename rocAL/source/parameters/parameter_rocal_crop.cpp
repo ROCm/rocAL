@@ -85,13 +85,13 @@ void RocalCropParam::fill_crop_dims() {
 }
 
 Parameter<float>* RocalCropParam::default_crop_height_factor() {
-    return ParameterFactory::instance()->create_uniform_float_rand_param(CROP_HEIGHT_FACTOR_RANGE[0],
-                                                                         CROP_HEIGHT_FACTOR_RANGE[1])
-        ->core;
+    crop_height_factor_param = ParameterFactory::instance()->create_uniform_float_rand_param(CROP_HEIGHT_FACTOR_RANGE[0],
+                                                                         CROP_HEIGHT_FACTOR_RANGE[1]);
+    return crop_height_factor_param->core;
 }
 
 Parameter<float>* RocalCropParam::default_crop_width_factor() {
-    return ParameterFactory::instance()->create_uniform_float_rand_param(CROP_WIDTH_FACTOR_RANGE[0],
-                                                                         CROP_WIDTH_FACTOR_RANGE[1])
-        ->core;
+    crop_width_factor_param = ParameterFactory::instance()->create_uniform_float_rand_param(CROP_WIDTH_FACTOR_RANGE[0],
+                                                                         CROP_WIDTH_FACTOR_RANGE[1]);
+    return crop_width_factor_param->core;
 }

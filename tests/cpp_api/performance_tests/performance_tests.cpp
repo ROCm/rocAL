@@ -297,6 +297,9 @@ int test(int test_case, const char* path, int rgb, int processing_device, int wi
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
 
     rocalRelease(handle);
+    delete rand_angle;
+    delete rand_crop_area;
+    delete color_temp_adj;
 
     return 0;
 }

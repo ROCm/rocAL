@@ -26,7 +26,12 @@ THE SOFTWARE.
 class RocalCropParam : public CropParam {
    public:
     RocalCropParam() = delete;
-    ~RocalCropParam() = default;
+    virtual ~RocalCropParam() {
+        ParameterFactory::instance()->destroy_param(crop_height_factor);
+        ParameterFactory::instance()->destroy_param(crop_width_factor);
+        delete crop_height_factor_param;
+        delete crop_width_factor_param;
+    }
     RocalCropParam(unsigned int batch_size) : CropParam(batch_size) {
         crop_height_factor = default_crop_height_factor();
         crop_width_factor = default_crop_width_factor();
@@ -42,5 +47,6 @@ class RocalCropParam : public CropParam {
     Parameter<float>* default_crop_height_factor();
     Parameter<float>* default_crop_width_factor();
     Parameter<float>*crop_height_factor, *crop_width_factor;
+    FloatParam *crop_height_factor_param, *crop_width_factor_param;
     void fill_crop_dims() override;
 };

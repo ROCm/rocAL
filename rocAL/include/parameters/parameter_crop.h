@@ -44,7 +44,12 @@ class CropParam {
     // V Y directoin
    public:
     CropParam() = delete;
-    virtual ~CropParam() = default;
+    virtual ~CropParam() {
+        ParameterFactory::instance()->destroy_param(x_drift_factor);
+        ParameterFactory::instance()->destroy_param(y_drift_factor);
+        delete x_drift_param;
+        delete y_drift_param;
+    }
     CropParam(unsigned int batch_size) : batch_size(batch_size), _random(false), _is_fixed_crop(false) {
         x_drift_factor = default_x_drift_factor();
         y_drift_factor = default_y_drift_factor();
@@ -83,6 +88,7 @@ class CropParam {
     constexpr static float CROP_X_DRIFT_RANGE[2] = {0.01, 0.99};
     constexpr static float CROP_Y_DRIFT_RANGE[2] = {0.01, 0.99};
     Parameter<float> *x_drift_factor, *y_drift_factor;
+    FloatParam *x_drift_param, *y_drift_param;
     Parameter<float> *default_x_drift_factor();
     Parameter<float> *default_y_drift_factor();
     std::vector<uint32_t> x1_arr_val, y1_arr_val, croph_arr_val, cropw_arr_val, x2_arr_val, y2_arr_val;

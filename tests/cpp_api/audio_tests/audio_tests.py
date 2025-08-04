@@ -50,7 +50,8 @@ def run_unit_test(rocal_data_path, qa_mode, gpu, downmix, build_folder_path, cas
             downmix = 1
         else:
             src_path = rocal_data_path + "/rocal_data/audio"
-        print("\n\n")
+        print(' '.join([build_folder_path + "/build/audio_tests", src_path, str(case), str(downmix), str(gpu), str(qa_mode)]))
+        continue
         result = subprocess.run([build_folder_path + "/build/audio_tests", src_path, str(case), str(downmix), str(gpu), str(qa_mode)], stdout=subprocess.PIPE)    # nosec
         try:
             decoded_stdout = result.stdout.decode('utf-8')

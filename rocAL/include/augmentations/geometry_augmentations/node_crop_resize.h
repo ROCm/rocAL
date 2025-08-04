@@ -29,6 +29,10 @@ class CropResizeNode : public CropNode {
    public:
     CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     CropResizeNode() = delete;
+    ~CropResizeNode() {
+        _crop_param.reset();
+        _crop_fixed_param.reset();
+    }
     void init(float area, float aspect_ratio, float x_center_drift, float y_center_drift);
     void init(FloatParam *area, FloatParam *aspect_ratio, FloatParam *x_drift_factor, FloatParam *y_drift_factor);
     void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift,
