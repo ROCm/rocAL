@@ -71,8 +71,8 @@ else()
 endif(NOT ROCAL_FOUND)
 message("-- ${BoldBlue}Backend set to -- ${BACKEND}${ColourReset}")
 
-list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/test/cmake)
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/test/cmake)
 
 find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
