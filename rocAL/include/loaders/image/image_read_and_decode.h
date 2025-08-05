@@ -91,7 +91,7 @@ class ImageReadAndDecode {
     std::vector<std::vector<float>> _bbox_coords, _crop_coords_batch;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     pCropCord _CropCord;
-    RocalRandomCropDecParam *_random_crop_dec_param = nullptr;
+    std::shared_ptr<RocalRandomCropDecParam> _random_crop_dec_param = nullptr;
     bool _is_external_source = false;
     int _device_id = 0;
     bool _set_device_id = false;

@@ -29,8 +29,6 @@ class RocalCropParam : public CropParam {
     virtual ~RocalCropParam() {
         ParameterFactory::instance()->destroy_param(crop_height_factor);
         ParameterFactory::instance()->destroy_param(crop_width_factor);
-        delete crop_height_factor_param;
-        delete crop_width_factor_param;
     }
     RocalCropParam(unsigned int batch_size) : CropParam(batch_size) {
         crop_height_factor = default_crop_height_factor();

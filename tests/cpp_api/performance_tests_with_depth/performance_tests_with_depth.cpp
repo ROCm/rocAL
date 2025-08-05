@@ -529,9 +529,6 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
-    delete rand_crop_area;
-    delete rand_angle;
-    delete color_temp_adj;
     mat_input.release();
     mat_output.release();
 

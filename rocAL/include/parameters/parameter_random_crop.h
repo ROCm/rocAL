@@ -29,8 +29,6 @@ class RocalRandomCropParam : public CropParam {
     virtual ~RocalRandomCropParam() {
         ParameterFactory::instance()->destroy_param(area_factor);
         ParameterFactory::instance()->destroy_param(aspect_ratio);
-        delete area_factor_param;
-        delete aspect_ratio_param;
     }
     RocalRandomCropParam(unsigned int batch_size) : CropParam(batch_size) {
         area_factor = default_area_factor();

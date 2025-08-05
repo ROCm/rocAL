@@ -47,8 +47,6 @@ class CropParam {
     virtual ~CropParam() {
         ParameterFactory::instance()->destroy_param(x_drift_factor);
         ParameterFactory::instance()->destroy_param(y_drift_factor);
-        delete x_drift_param;
-        delete y_drift_param;
     }
     CropParam(unsigned int batch_size) : batch_size(batch_size), _random(false), _is_fixed_crop(false) {
         x_drift_factor = default_x_drift_factor();

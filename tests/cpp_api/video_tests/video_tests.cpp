@@ -356,6 +356,5 @@ int main(int argc, const char **argv) {
     rocalResetLoaders(handle);
     rocalRelease(handle);
     mat_input.release();
-    delete color_temp_adj;
     return 0;
 }
