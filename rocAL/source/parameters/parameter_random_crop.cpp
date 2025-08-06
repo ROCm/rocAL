@@ -99,13 +99,13 @@ void RocalRandomCropParam::fill_crop_dims() {
 }
 
 Parameter<float>* RocalRandomCropParam::default_area_factor() {
-    area_factor_param = ParameterFactory::instance()->create_uniform_float_rand_param(AREA_FACTOR_RANGE[0],
-                                                                         AREA_FACTOR_RANGE[1]);
-    return area_factor_param->core;
+    return ParameterFactory::instance()->create_uniform_float_rand_param(AREA_FACTOR_RANGE[0],
+                                                                         AREA_FACTOR_RANGE[1])
+        ->core;
 }
 
 Parameter<float>* RocalRandomCropParam::default_aspect_ratio() {
-    aspect_ratio_param = ParameterFactory::instance()->create_uniform_float_rand_param(ASPECT_RATIO_RANGE[0],
-                                                                         ASPECT_RATIO_RANGE[1]);
-    return aspect_ratio_param->core;
+    return ParameterFactory::instance()->create_uniform_float_rand_param(ASPECT_RATIO_RANGE[0],
+                                                                         ASPECT_RATIO_RANGE[1])
+        ->core;
 }

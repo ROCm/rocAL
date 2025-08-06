@@ -186,7 +186,6 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
 
     is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
     RocalTensor decoded_output, uniform_distribution_resample, normal_distribution, resampled_rate, uniform_distribution_sample;
-    RocalFloatParam p_preemph_coeff;
     if(test_case == 0)
         decoded_output = rocalAudioFileSource(handle, path, file_list_path.c_str(), 1, is_output_audio_decoder, false, false, downmix);
     else
@@ -207,7 +206,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             case_name = "preemphasis_filter";
             RocalTensorOutputType tensorOutputType = RocalTensorOutputType::ROCAL_FP32;
             RocalAudioBorderType preemph_border_type = RocalAudioBorderType::ROCAL_CLAMP;
-            p_preemph_coeff = rocalCreateFloatParameter(0.97);
+            RocalFloatParam p_preemph_coeff = rocalCreateFloatParameter(0.97);
             rocalPreEmphasisFilter(handle, decoded_output, true, p_preemph_coeff, preemph_border_type, tensorOutputType);
 
         } break;

@@ -94,13 +94,13 @@ void CropParam::update_crop_array() {
 }
 
 Parameter<float> *CropParam::default_x_drift_factor() {
-    x_drift_param = ParameterFactory::instance()->create_uniform_float_rand_param(CROP_X_DRIFT_RANGE[0],
-                                                                         CROP_X_DRIFT_RANGE[1]);
-    return x_drift_param->core;
+    return ParameterFactory::instance()->create_uniform_float_rand_param(CROP_X_DRIFT_RANGE[0],
+                                                                         CROP_X_DRIFT_RANGE[1])
+        ->core;
 }
 
 Parameter<float> *CropParam::default_y_drift_factor() {
-    y_drift_param = ParameterFactory::instance()->create_uniform_float_rand_param(CROP_Y_DRIFT_RANGE[0],
-                                                                         CROP_Y_DRIFT_RANGE[1]);
-    return y_drift_param->core;
+    return ParameterFactory::instance()->create_uniform_float_rand_param(CROP_Y_DRIFT_RANGE[0],
+                                                                         CROP_Y_DRIFT_RANGE[1])
+        ->core;
 }

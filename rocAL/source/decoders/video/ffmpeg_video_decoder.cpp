@@ -50,7 +50,6 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
                                       out_width, out_height, out_pix_format, SWS_BILINEAR, nullptr, nullptr, nullptr);
         if (!swsctx) {
             ERR("Fail to get sws_getCachedContext");
-            sws_freeContext(swsctx);
             return Status::FAILED;
         }
     }
@@ -77,7 +76,6 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
         ret = av_read_frame(_fmt_ctx, &pkt);
         if (ret < 0 && ret != AVERROR_EOF) {
             ERR("Fail to av_read_frame: ret=" + TOSTR(ret));
-            av_packet_unref(&pkt);
             status = Status::FAILED;
             break;
         }
@@ -97,7 +95,6 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
         if (ret < 0) {
             ERR("Error while sending packet to the decoder\n");
             status = Status::FAILED;
-            av_packet_unref(&pkt);
             break;
         }
 
@@ -105,10 +102,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
         while (ret >= 0) {
             ret = avcodec_receive_frame(_video_dec_ctx, dec_frame);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) break;
-            if ((dec_frame->pts < select_frame_pts) || (ret < 0)) {
-                av_packet_unref(&pkt);
-                continue;
-            }
+            if ((dec_frame->pts < select_frame_pts) || (ret < 0)) continue;
             if (frame_count % stride == 0) {
                 dst_data[0] = out_buffer;
                 dst_linesize[0] = out_stride;

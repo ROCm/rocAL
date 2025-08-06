@@ -26,10 +26,7 @@ THE SOFTWARE.
 class RocalRandomCropParam : public CropParam {
    public:
     RocalRandomCropParam() = delete;
-    virtual ~RocalRandomCropParam() {
-        ParameterFactory::instance()->destroy_param(area_factor);
-        ParameterFactory::instance()->destroy_param(aspect_ratio);
-    }
+    ~RocalRandomCropParam() = default;
     RocalRandomCropParam(unsigned int batch_size) : CropParam(batch_size) {
         area_factor = default_area_factor();
         aspect_ratio = default_aspect_ratio();
@@ -46,6 +43,5 @@ class RocalRandomCropParam : public CropParam {
     constexpr static float ASPECT_RATIO_RANGE[2] = {0.7500, 1.333};
     Parameter<float>* default_area_factor();
     Parameter<float>* default_aspect_ratio();
-    FloatParam *area_factor_param, *aspect_ratio_param;
     Parameter<float>*area_factor, *aspect_ratio;
 };
