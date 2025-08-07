@@ -308,7 +308,7 @@ MasterGraph::build() {
 }
 
 Tensor *
-MasterGraph::create_loader_output_tensor(const TensorInfo &info) {
+MasterGraph::create_internal_tensor(const TensorInfo &info) {
     /*
      *   NOTE: Output tensor for a source node needs to be created as a regular (non-virtual) tensor
      */

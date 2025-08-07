@@ -114,7 +114,7 @@ class MasterGraph {
     template <typename T, typename M>
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
-    Tensor *create_loader_output_tensor(const TensorInfo &info);
+    Tensor *create_internal_tensor(const TensorInfo &info);  // Creates a regular (non-virtual) tensor and adds it to _internal_tensors vector
     TensorListVector * create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     TensorListVector * create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     TensorListVector * create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool ltrb_bbox = true, bool is_box_encoder = false,

@@ -359,8 +359,5 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalResetLoaders(handle);
     rocalRelease(handle);
-    delete uniform_distribution_resample;
-    delete normal_distribution;
-    delete uniform_distribution_sample;
     return 0;
 }
