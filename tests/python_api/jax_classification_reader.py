@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ def draw_patches(img, idx, layout="nchw", dtype="fp32"):
     if dtype == "fp16":
         image = image.astype("uint8")
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("output_folder/jax_reader/" + str(idx) +
+    cv2.imwrite("output_folder/jax_outputs/" + str(idx) +
                 "_" + "train" + ".png", image * 255)
 
 
@@ -49,7 +49,7 @@ def main():
         print("Please pass image_folder cpu/gpu batch_size")
         exit(0)
     try:
-        path = "output_folder/jax_reader/"
+        path = "output_folder/jax_outputs/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -72,8 +72,7 @@ def main():
             jpegs, labels = fn.readers.file(file_root=data_path)
             decode = fn.decoders.image_slice(jpegs, output_type=types.RGB,
                                              file_root=data_path, shard_id=id, num_shards=jax.device_count(), random_shuffle=True)
-            res = fn.resize(decode, resize_width=224, resize_height=224,
-                            output_layout=types.NCHW, output_dtype=types.UINT8)
+            res = fn.resize(decode, resize_width=224, resize_height=224, output_dtype=types.UINT8)
             flip_coin = fn.random.coin_flip(probability=0.5)
             cmnp = fn.crop_mirror_normalize(res,
                                             output_layout=types.NHWC,
