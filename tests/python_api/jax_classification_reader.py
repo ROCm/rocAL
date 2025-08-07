@@ -58,14 +58,13 @@ def main():
     data_path = sys.argv[1]
     rocal_cpu = True if sys.argv[2] == "cpu" else False
     batch_size = int(sys.argv[3])
-    num_threads = 8
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
 
     mesh = Mesh(jax.devices(), axis_names=("batch"))
     sharding = NamedSharding(mesh, PartitionSpec("batch"))
     pipelines = []
     for id, device in enumerate(jax.devices()):
-        image_classification_train_pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=id,
+        image_classification_train_pipeline = Pipeline(batch_size=batch_size, num_threads=8, device_id=id,
                                                        seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT16)
 
         with image_classification_train_pipeline:
