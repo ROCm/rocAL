@@ -877,6 +877,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalLog1p" << std::endl;
             output = rocalLog1p(handle, input, true);
         } break;
+        case 63: {
+            std::cout << "Running rocalRandomResizedCrop" << std::endl;
+            std::vector<float> area_factor = {0.08, 1};
+            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
+            output = rocalRandomResizedCrop(handle, input, resize_w, resize_h, true, area_factor, aspect_ratio);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
