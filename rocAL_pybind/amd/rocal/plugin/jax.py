@@ -60,10 +60,11 @@ def convert_to_jax_array(array):
     return jax_array
 
 class ROCALJaxIterator(object):
-    """!Iterator for processing data
+    """Initializes the ROCAL JAX iterator.
 
-        @param pipelines            The rocAL pipeline to use for processing data.
-        @param sharding             JAX sharding used for placing outputs on devices
+    Args:
+        pipelines (list of Pipeline objects): List of rocAL pipelines to use.
+        sharding (JAX sharding, optional): JAX sharding to use for placing outputs on devices. Defaults to None.
     """
 
     def __init__(self, pipelines, sharding=None):
@@ -83,13 +84,15 @@ class ROCALJaxIterator(object):
                 sharding, (NamedSharding, PositionalSharding)
             ), "`sharding` should be an instance of `NamedSharding` or `PositionalSharding`"
         self.sharding = sharding
-        self.is_data_available = False
+        self._has_started = False
 
     def next(self):
+        """Returns the next batch of data."""
         return self.__next__()
 
     def __next__(self):
-        self.is_data_available = True
+        """Returns the next batch of data."""
+        self._has_started = True
         pipeline_outputs = []
         for pipeline in self.pipelines:
             if pipeline.rocal_run() != 0:
@@ -151,6 +154,7 @@ class ROCALJaxIterator(object):
         return sharded_outputs
 
     def reset(self):
+        """Resets the iterator for the next epoch."""
         for pipeline in self.pipelines:
             b.rocalResetLoaders(pipeline._handle)
 
@@ -192,29 +196,41 @@ class ROCALJaxIterator(object):
         )
 
     def __iter__(self):
+        """Returns the iterator object."""
         return self
 
     def __len__(self):
+        """Returns the number of batches in the iterator."""
         return self.iterator_length
 
     def __del__(self):
+        """Releases the rocAL resources."""
         for pipeline in self.pipelines:
             b.rocalRelease(pipeline._handle)
 
 
 def get_spec_for_array(jax_array):
+    """Returns the ArraySpec for a given JAX array.
+
+    Args:
+        jax_array (jax.Array): The JAX array.
+
+    Returns:
+        ArraySpec: The specification of the array.
+    """
     return ArraySpec(shape=jax_array.shape, dtype=jax_array.dtype)
 
 
 class ROCALPeekableIterator(ROCALJaxIterator):
-    if not CLU_FOUND:
-        print('Install CLU for peekable data iterator support')
-        raise ImportError
+    """ROCALJaxIterator extended with peek functionality. Compatible with Google CLU PeekableIterator.
+
+     Reference: https://github.com/google/CommonLoopUtils/blob/main/clu/data/dataset_iterator.py
+    """
 
     def __init__(self, pipelines, sharding=None):
-        """ROCALJaxIterator extended with peek functionality. Compatible with Google CLU PeekableIterator.
-         Reference: https://github.com/google/CommonLoopUtils/blob/main/clu/data/dataset_iterator.py
-        """
+        if not CLU_FOUND:
+            print('Install CLU for peekable data iterator support')
+            raise ImportError
         super().__init__(
             pipelines,
             sharding
@@ -226,9 +242,25 @@ class ROCALPeekableIterator(ROCALJaxIterator):
         self.element_spec = None
 
     def set_element_spec(self, outputs):
+        """Sets the element spec for the iterator.
+
+        Args:
+            outputs: The output from the iterator.
+        """
         self.element_spec = [get_spec_for_array(output) for output in outputs]
 
     def assert_output_shape_and_type(self, outputs):
+        """Asserts that the shape and type of the outputs are consistent.
+
+        Args:
+            outputs: The output from the iterator.
+
+        Raises:
+            ValueError: If the shape or type of the output changes between iterations.
+
+        Returns:
+            The outputs if they are consistent.
+        """
         if self.element_spec is None:
             # Set element spec based on the first seen element
             self.set_element_spec(outputs)
@@ -255,11 +287,13 @@ class ROCALPeekableIterator(ROCALJaxIterator):
         return self.assert_output_shape_and_type(peek)
 
     def __next__(self):
+        """Returns the next element from the iterator and advances it."""
         with self.mutex:
             return self.next_with_peek_impl()
 
     def __iter__(self):
-        if self.is_data_available and self.peek is None:
+        """Returns the iterator object. Resets if the iterator has been used."""
+        if self._has_started and self.peek is None:
             self.reset()
         return self
 

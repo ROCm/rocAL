@@ -46,7 +46,7 @@ def draw_patches(img, idx, layout="nchw", dtype="fp32"):
 
 def main():
     if len(sys.argv) < 3:
-        print("Please pass image_folder cpu/gpu batch_size")
+        print("Please pass image_folder batch_size")
         exit(0)
     try:
         path = "output_folder/jax_outputs/"
@@ -56,8 +56,8 @@ def main():
     except OSError as error:
         print(error)
     data_path = sys.argv[1]
-    rocal_cpu = True if sys.argv[2] == "cpu" else False
-    batch_size = int(sys.argv[3])
+    rocal_cpu = False  # JAX iterator only works with device arrays
+    batch_size = int(sys.argv[2])
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
 
     mesh = Mesh(jax.devices(), axis_names=("batch"))
@@ -91,14 +91,17 @@ def main():
     imageIteratorPipeline = ROCALJaxIterator(pipelines, sharding=sharding)
 
     cnt = 0
-    for epoch in range(3):
+    for epoch in range(1):
         print(
             "+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++", epoch)
         for i, it in enumerate(imageIteratorPipeline):
             print(
                 "************************************** i *************************************", i)
-            for img in it:
-                print(img.shape, img.devices())
+            images, labels = it[0], it[1]
+            for img in images:
+                cnt += 1
+                draw_patches(img, cnt, layout="nhwc",
+                             dtype="fp16")
         imageIteratorPipeline.reset()
     print("*********************************************************************")
 
