@@ -310,7 +310,7 @@ MasterGraph::build() {
 Tensor *
 MasterGraph::create_internal_tensor(const TensorInfo &info) {
     /*
-     *   NOTE: Output tensor for a source node needs to be created as a regular (non-virtual) tensor
+     *   NOTE: This function creates a regular (non-virtual) tensor
      */
     auto output = new Tensor(info);
     if (output->create_from_handle(_context) != 0)

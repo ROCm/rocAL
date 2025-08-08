@@ -83,6 +83,7 @@ ParameterFactory::~ParameterFactory() {
                 delete arg;
             },
             rand_obj);
+    // Delete the memory allocated for random parameters
     for (auto&& rand_obj : _params)
         std::visit(
             [](auto&& arg) {
