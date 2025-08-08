@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,8 +60,6 @@ class Caffe2LMDBRecordReader : public Reader {
     //! Returns the id of the latest file opened
     std::string id() override { return _last_id; };
 
-    unsigned count_items() override;
-
     ~Caffe2LMDBRecordReader() override;
 
     int close() override;
@@ -84,10 +82,6 @@ class Caffe2LMDBRecordReader : public Reader {
     std::string _last_file_name;
     unsigned int _last_file_size;
     bool _last_rec;
-    size_t _batch_size = 1;
-    bool _loop;
-    bool _shuffle;
-    int _read_counter = 0;
     uint _file_byte_size;
     void incremenet_read_ptr();
     int release();

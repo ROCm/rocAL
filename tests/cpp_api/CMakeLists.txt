@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2023 Advanced Micro Devices, Inc.
+# Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,14 +33,16 @@ else()
   set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 # Set AMD Clang as default compiler
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS ON)
 if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
     set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(rocal-test)
 
@@ -51,6 +53,10 @@ include(CTest)
 # find rocAL
 find_library(ROCAL_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
 find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${ROCM_PATH}/include/rocal)
+
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+find_package(rocdecode 1.0.0 QUIET)
+find_package(rocjpeg 1.0.0 QUIET)
 
 if(ROCAL_LIBRARY AND ROCAL_INCLUDE_DIR)
     set(ROCAL_FOUND TRUE)
@@ -88,7 +94,7 @@ add_test(
 # 2 - basic_test_gpu
 add_test(NAME basic_test_gpu 
               COMMAND basic_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
 # 3 - basic_test_gray
 add_test(NAME basic_test_gray 
@@ -213,10 +219,10 @@ add_test(NAME unit_tests_gray
               0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 
-# 14 - video_tests
+# 14 - video_tests -- video reader with ffmpeg decoder
 add_test(
   NAME
-  video_tests
+  video_tests_ffmpeg
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
@@ -225,3 +231,23 @@ add_test(
             --test-command "video_tests"
             ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
 )
+
+# 15 - video_tests -- video reader with rocDecode
+if(rocdecode_FOUND)
+  add_test(NAME video_tests_rocdecode
+            COMMAND video_tests
+            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 2
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+endif()
+
+# 16 - basic_test_rocjpeg -- basic test with rocJpeg
+if(rocjpeg_FOUND)
+  add_test(NAME basic_test_rocjpeg_gray
+            COMMAND basic_test 
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 2
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  add_test(NAME basic_test_rocjpeg_rgb
+            COMMAND basic_test 
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+endif()

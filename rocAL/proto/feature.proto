@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -77,13 +77,13 @@ THE SOFTWARE.
 
 syntax = "proto3";
 
-package tensorflow;
-
 option cc_enable_arenas = true;
 option java_outer_classname = "FeatureProtos";
 option java_multiple_files = true;
 option java_package = "org.tensorflow.example";
 option go_package = "github.com/tensorflow/tensorflow/tensorflow/go/core/example/example_protos_go_proto";
+
+package rocal.tensorflow;
 
 // Containers to hold repeated fundamental values.
 message BytesList {

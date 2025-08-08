@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -56,7 +56,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
 
     if (device == "gpu"):
-        decoder_type = types.DECODER_HW_JEPG
+        decoder_type = types.DECODER_ROCJPEG
     else:
         decoder_type = types.DECODER_TJPEG
     if (reader == 'COCOReader'):

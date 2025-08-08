@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -147,7 +147,7 @@ def main():
                 total_count = 0
                 if "larger" in aug_name:
                     resize_width = 400
-                    resize_height = 300
+                    resize_height = 400
                     image_offset = 400
                     pixel_diff, total_count = compare_pixels(
                         img1, img2, aug_name, resize_width, resize_height)
@@ -157,7 +157,7 @@ def main():
                                   y in zip(pixel_diff, pixel_diff2)]
                     total_count = total_count + total_count2
                 elif "smaller" in aug_name:
-                    resize_width = 533
+                    resize_width = 400
                     resize_height = 400
                     image_offset = 2400
                     pixel_diff, total_count = compare_pixels(

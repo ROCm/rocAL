@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@ THE SOFTWARE.
 #include "decoders/video/video_decoder_factory.h"
 
 #include "decoders/video/ffmpeg_video_decoder.h"
-#include "decoders/video/hardware_video_decoder.h"
 #include "decoders/video/rocdec_video_decoder.h"
 #include "decoders/video/video_decoder.h"
 
@@ -33,8 +32,6 @@ std::shared_ptr<VideoDecoder> create_video_decoder(DecoderConfig config) {
     switch (config.type()) {
         case DecoderType::FFMPEG_SW_DECODE:
             return std::make_shared<FFmpegVideoDecoder>();
-        case DecoderType::FFMPEG_HW_DECODE:
-            return std::make_shared<HardWareVideoDecoder>();
 #if ENABLE_ROCDECODE
         case DecoderType::ROCDEC_VIDEO_DECODE:
             return std::make_shared<RocDecVideoDecoder>(config.get_hip_stream());

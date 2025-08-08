@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 
 Cifar10LoaderNode::Cifar10LoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
-    _loader_module = std::make_shared<CIFAR10DataLoader>(device_resources);
+    _loader_module = std::make_shared<CIFAR10Loader>(device_resources);
 }
 
 void Cifar10LoaderNode::init(const std::string &source_path, const std::string &json_path, StorageType storage_type,

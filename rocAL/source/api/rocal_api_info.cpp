@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,21 +23,6 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
 #include "rocal_api.h"
-
-size_t ROCAL_API_CALL rocalGetImageWidth(RocalTensor p_image) {
-    auto image = static_cast<Tensor *>(p_image);
-    return image->info().max_shape()[0];
-}
-
-size_t ROCAL_API_CALL rocalGetImageHeight(RocalTensor p_image) {
-    auto image = static_cast<Tensor *>(p_image);
-    return image->info().max_shape()[1];
-}
-
-size_t ROCAL_API_CALL rocalGetImagePlanes(RocalTensor p_image) {
-    auto image = static_cast<Tensor *>(p_image);
-    return image->info().get_channels();
-}
 
 int ROCAL_API_CALL rocalGetOutputWidth(RocalContext p_context) {
     auto context = static_cast<Context *>(p_context);

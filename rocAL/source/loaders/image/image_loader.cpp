@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,10 @@ ImageLoader::ImageLoader(void *dev_resources) : _circ_buff(dev_resources),
     _is_initialized = false;
     _remaining_image_count = 0;
     _device_id = 0;
+#if ENABLE_HIP
+    DeviceResourcesHip *hipres = static_cast<DeviceResourcesHip *>(dev_resources);
+    _hip_stream = hipres->hip_stream;
+#endif
 }
 
 ImageLoader::~ImageLoader() {
@@ -65,10 +69,10 @@ void ImageLoader::set_gpu_device_id(int device_id) {
 size_t
 ImageLoader::remaining_count() {
     if (_external_source_reader) {
-        if ((_image_loader->count() != 0) && !_external_input_eos)
-            return _batch_size;
-        else {
+        if ((_image_loader->count() < _batch_size) && _external_input_eos) {
             return 0;
+        } else {
+            return _batch_size;
         }
     }
     return _remaining_image_count;
@@ -140,6 +144,12 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _image_loader = std::make_shared<ImageReadAndDecode>();
     size_t shard_count = reader_cfg.get_shard_count();
     int device_id = reader_cfg.get_shard_id();
+#if ENABLE_HIP
+    // Set stream in decoder config, to be used by rocJpeg decoder for scaling
+    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
+        decoder_cfg.set_hip_stream(_hip_stream);
+    }
+#endif
     try {
         // set the device_id for decoder same as shard_id for number of shards > 1
         if (shard_count > 1)
@@ -158,7 +168,12 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
     _crop_image_info._crop_image_coords.resize(_batch_size);
-    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
+        // Initialize circular buffer with HIP memory for rocJPEG hardware decoder
+        _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, true);
+    } else {
+        _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    }
     _is_initialized = true;
     _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     LOG("Loader module initialized");
@@ -281,31 +296,6 @@ Timing ImageLoader::timing() {
     auto t = _image_loader->timing();
     t.process_time = _swap_handle_time.get_timing();
     return t;
-}
-
-LoaderModuleStatus ImageLoader::set_cpu_affinity(cpu_set_t cpu_mask) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_affinity() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    int ret = pthread_setaffinity_np(_load_thread.native_handle(),
-                                     sizeof(cpu_set_t), &cpu_mask);
-    if (ret != 0)
-        WRN("Error calling pthread_setaffinity_np: " + TOSTR(ret));
-#endif
-    return LoaderModuleStatus::OK;
-}
-
-LoaderModuleStatus ImageLoader::set_cpu_sched_policy(struct sched_param sched_policy) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_sched_policy() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    auto ret = pthread_setschedparam(_load_thread.native_handle(), SCHED_FIFO, &sched_policy);
-    if (ret != 0)
-        WRN("Unsuccessful in setting thread realtime priority for loader thread err = " + TOSTR(ret))
-#endif
-    return LoaderModuleStatus::OK;
 }
 
 std::vector<std::string> ImageLoader::get_id() {

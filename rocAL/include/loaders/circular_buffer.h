@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,7 +50,7 @@ class CircularBuffer {
    public:
     CircularBuffer(void* devres);
     ~CircularBuffer();
-    void init(RocalMemType output_mem_type, size_t output_mem_size, size_t buff_depth);
+    void init(RocalMemType output_mem_type, size_t output_mem_size, size_t buff_depth, bool use_hip_memory = false);
     void release();         // release resources
     void sync();            // Syncs device buffers with host
     void unblock_reader();  // Unblocks the thread currently waiting on a call to get_read_buffer
@@ -101,4 +101,5 @@ class CircularBuffer {
     size_t _write_ptr;
     size_t _read_ptr;
     size_t _level;
+    bool _use_pinned_memory = true;
 };

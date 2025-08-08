@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +73,7 @@ class ImageReadAndDecode {
 
    private:
     std::vector<std::shared_ptr<Decoder>> _decoder;
+    std::shared_ptr<Decoder> _rocjpeg_decoder;
     std::shared_ptr<Reader> _reader;
     std::vector<std::vector<unsigned char>> _compressed_buff;
     std::vector<size_t> _actual_read_size;
@@ -92,4 +93,6 @@ class ImageReadAndDecode {
     pCropCord _CropCord;
     RocalRandomCropDecParam *_random_crop_dec_param = nullptr;
     bool _is_external_source = false;
+    int _device_id = 0;
+    bool _set_device_id = false;
 };

@@ -75,7 +75,7 @@ rocAL operators offer the flexibility to run on CPU or GPU for building hybrid p
 
 | Decoders          | Description                            |
 | ----------------- | -------------------------------------- |
-| Image             | Decodes JPEG images                    |
+| Image             | Decodes JPEG images using TurboJpeg/OpenCV/[rocJPEG](https://github.com/ROCm/rocJPEG)                    |
 | Image_raw         | Decodes images in raw format           |
 | Image_random_crop | Decodes and randomly crops JPEG images |
 | Image_slice       | Decodes and slices JPEG images         |

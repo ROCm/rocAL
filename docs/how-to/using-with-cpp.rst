@@ -115,7 +115,7 @@ The example below shows how to create a pipeline, read JPEG images, perform cert
         RocalImage image2 = rocalCropResize(handle, image0, resize_w, resize_h, false, rand_crop_area);;
         for(int i = 0 ; i < aug_depth; i++)
         {
-            image2 = rocalBlurFixed(handle, image2, 17.25, (i == (aug_depth -1)) ? true:false );
+            image2 = rocalBlur(handle, image2, (i == (aug_depth -1)) ? true:false );
         }
     // Calling the API to verify and build the augmentation graph
         if(rocalVerify(handle) != ROCAL_OK)

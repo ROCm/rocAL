@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -64,30 +64,6 @@ extern "C" int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext rocal_conte
  */
 
 extern "C" size_t ROCAL_API_CALL rocalGetRemainingImages(RocalContext rocal_context);
-
-/*!
- * \brief Retrieves the width of the image.
- * \ingroup group_rocal_info
- * \param [in] image The RocalTensor data.
- * \return The width of the image.
- */
-extern "C" size_t ROCAL_API_CALL rocalGetImageWidth(RocalTensor image);
-
-/*!
- * \brief Retrieves the height of the image.
- * \ingroup group_rocal_info
- * \param [in] image The RocalTensor data.
- * \return The height of the image.
- */
-extern "C" size_t ROCAL_API_CALL rocalGetImageHeight(RocalTensor image);
-
-/*!
- * \brief Retrieves the number of planes (channels) in the image.
- * \ingroup group_rocal_info
- * \param [in] image The RocalTensor data.
- * \return The number of planes (channels) in the image.
- */
-extern "C" size_t ROCAL_API_CALL rocalGetImagePlanes(RocalTensor image);
 
 /*!
  * \brief Checks if the RocalContext is empty.

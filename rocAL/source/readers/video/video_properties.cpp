@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ void substring_extraction(std::string const &str, const char delim, std::vector<
 
 // Opens the context of the Video file to obtain the width, heigh and frame rate info.
 void open_video_context(const char *video_file_path, Properties &props) {
-    AVFormatContext *pFormatCtx = NULL;
+    AVFormatContext *pFormatCtx = avformat_alloc_context();
     int videoStream = -1;
     unsigned int i = 0;
 
@@ -88,6 +88,20 @@ void get_video_properties_from_txt_file(VideoProperties &video_props, const char
             std::istringstream line_ss(line);
             if (!(line_ss >> video_file_name >> label))
                 continue;
+
+            // Check if the path specified in the text file is relative
+            if (filesys::path(video_file_name).is_relative()) {
+                filesys::path path(file_path);
+                filesys::path parent = path.parent_path();
+                video_file_name = (parent / video_file_name).string();
+            }
+
+            // Check if the video file exists
+            if (!filesys::exists(video_file_name)) {
+                ERR(video_file_name + " path does not exist");
+                continue;
+            }
+
             open_video_context(video_file_name.c_str(), props);
             if (max_width == props.width || max_width == 0)
                 max_width = props.width;

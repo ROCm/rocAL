@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -148,7 +148,9 @@ std::unordered_map<int, std::string> rocalToPybindLayout = {
     {3, "NFCHW"},
     {4, "NHW"},
     {5, "NFT"},
-    {6, "NTF"}
+    {6, "NTF"},
+    {7, "NDHWC"},
+    {8, "NCDHW"}
 };
 
 std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
@@ -158,6 +160,7 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
     {3, "int8"},
     {4, "uint32"},
     {5, "int32"},
+    {6, "int16"},
 };
 
 #if ENABLE_DLPACK
@@ -202,6 +205,8 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case 16:
                 if (dtype.code == kDLFloat) {
                     return RocalTensorOutputType::ROCAL_FP16;
+                } else if (dtype.code == kDLInt) {
+                    return RocalTensorOutputType::ROCAL_INT16;
                 } else {
                     throw std::runtime_error("Data type code for 16 bit type is not supported.");
                 }
@@ -264,6 +269,11 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
             case RocalTensorOutputType::ROCAL_FP32:
                 out.bits = 32;
                 out.code = kDLFloat;
+                break;
+            case RocalTensorOutputType::ROCAL_INT16:
+                out.bits = 16;
+                out.code = kDLInt;
+                break;
             case RocalTensorOutputType::ROCAL_FP16:
                 out.bits = 16;
                 out.code = kDLFloat;
@@ -660,6 +670,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("FLOAT", ROCAL_FP32)
         .value("FLOAT16", ROCAL_FP16)
         .value("UINT8", ROCAL_UINT8)
+        .value("INT16", ROCAL_INT16)
         .export_values();
     py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
         .value("HOST_MEMORY", ROCAL_MEMCPY_HOST)
@@ -695,6 +706,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("RGB_PLANAR", ROCAL_COLOR_RGB_PLANAR)
         .export_values();
     py::enum_<RocalTensorLayout>(types_m, "RocalTensorLayout", "Tensor layout type")
+        .value("NONE", ROCAL_NONE)
         .value("NHWC", ROCAL_NHWC)
         .value("NCHW", ROCAL_NCHW)
         .value("NFHWC", ROCAL_NFHWC)
@@ -702,6 +714,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("NHW", ROCAL_NHW)
         .value("NFT", ROCAL_NFT)
         .value("NTF", ROCAL_NTF)
+        .value("NDHWC", ROCAL_NDHWC)
+        .value("NCDHW", ROCAL_NCDHW)
         .export_values();
     py::enum_<RocalDecodeDevice>(types_m, "RocalDecodeDevice", "Decode device type")
         .value("HARDWARE_DECODE", ROCAL_HW_DECODE)
@@ -710,11 +724,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     py::enum_<RocalDecoderType>(types_m, "RocalDecoderType", "Rocal Decoder Type")
         .value("DECODER_TJPEG", ROCAL_DECODER_TJPEG)
         .value("DECODER_OPENCV", ROCAL_DECODER_OPENCV)
-        .value("DECODER_HW_JEPG", ROCAL_DECODER_HW_JPEG)
         .value("DECODER_VIDEO_FFMPEG_SW", ROCAL_DECODER_VIDEO_FFMPEG_SW)
-        .value("DECODER_VIDEO_FFMPEG_HW", ROCAL_DECODER_VIDEO_FFMPEG_HW)
-	    .value("DECODER_AUDIO_GENERIC", ROCAL_DECODER_AUDIO_GENERIC)
+        .value("DECODER_AUDIO_GENERIC", ROCAL_DECODER_AUDIO_GENERIC)
         .value("DECODER_VIDEO_ROCDECODE", ROCAL_DECODER_VIDEO_ROCDECODE)
+        .value("DECODER_ROCJPEG", ROCAL_DECODER_ROCJPEG)
         .export_values();
     py::enum_<RocalExternalSourceMode>(types_m, "RocalExternalSourceMode", "Rocal Extrernal Source Mode")
         .value("EXTSOURCE_FNAME", ROCAL_EXTSOURCE_FNAME)
@@ -762,6 +775,19 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .def(py::init<>())
         .def_readonly("anchor", &RocalNSROutput::anchor)
         .def_readonly("shape", &RocalNSROutput::shape);
+    py::class_<CameraMatrix>(m, "CameraMatrix")
+        .def(py::init<>())
+        .def_readwrite("fx", &CameraMatrix::fx)
+        .def_readwrite("cx", &CameraMatrix::cx)
+        .def_readwrite("fy", &CameraMatrix::fy)
+        .def_readwrite("cy", &CameraMatrix::cy);
+    py::class_<DistortionCoeffs>(m, "DistortionCoeffs")
+        .def(py::init<>())
+        .def_readwrite("k1", &DistortionCoeffs::k1)
+        .def_readwrite("k2", &DistortionCoeffs::k2)
+        .def_readwrite("p1", &DistortionCoeffs::p1)
+        .def_readwrite("p2", &DistortionCoeffs::p2)
+        .def_readwrite("k3", &DistortionCoeffs::k3);
     // rocal_api_info.h
     m.def("getRemainingImages", &rocalGetRemainingImages);
     m.def("getImageName", &wrapper_image_name);
@@ -792,6 +818,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("randomBBoxCrop", &rocalRandomBBoxCrop);
     m.def("boxEncoder", &rocalBoxEncoder);
     m.def("boxIouMatcher", &rocalBoxIouMatcher);
+    m.def("cifar10LabelReader", &rocalCreateTextCifar10LabelReader, py::return_value_policy::reference);
     m.def("getImgSizes", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.request();
         int *ptr = static_cast<int *>(buf.ptr);
@@ -1023,8 +1050,14 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("webdatasetSourceSingleShard", &rocalWebDatasetSourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
+    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
+    m.def("cifar10Reader", &rocalRawCIFAR10SourceSingleShard, "Reads file from the source given and decodes it",
+            py::return_value_policy::reference);
     m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
+    m.def("numpyReader", &rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
+          py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
@@ -1039,6 +1072,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("cropResize", &rocalCropResize,
           py::return_value_policy::reference);
     m.def("roiResize", &rocalROIResize,
+          py::return_value_policy::reference);
+    m.def("randomResizedCrop", &rocalRandomResizedCrop,
           py::return_value_policy::reference);
     m.def("copy", &rocalCopy,
           py::return_value_policy::reference);
@@ -1126,5 +1161,9 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("melFilterBank", &rocalMelFilterBank,
           py::return_value_policy::reference);
+    m.def("transpose", &rocalTranspose,
+          py::return_value_policy::reference);
+    m.def("log1p", &rocalLog1p,
+    py::return_value_policy::reference);
 }
 }  // namespace rocal

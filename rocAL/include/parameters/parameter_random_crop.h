@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,8 +31,8 @@ class RocalRandomCropParam : public CropParam {
         area_factor = default_area_factor();
         aspect_ratio = default_aspect_ratio();
     }
-    void set_area_factor(Parameter<float>* crop_h_factor);
-    void set_aspect_ratio(Parameter<float>* crop_w_factor);
+    void set_area_factor(Parameter<float>* crop_h_factor) override;
+    void set_aspect_ratio(Parameter<float>* crop_w_factor) override;
     Parameter<float>* get_area_factor() { return area_factor; }
     Parameter<float>* get_aspect_ratio() { return aspect_ratio; }
     void update_array() override;

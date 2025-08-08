@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -45,8 +45,6 @@ class ImageLoader : public LoaderModule {
     void reset() override;              // Resets the loader to load from the beginning of the media
     Timing timing() override;
     void start_loading() override;
-    LoaderModuleStatus set_cpu_affinity(cpu_set_t cpu_mask);
-    LoaderModuleStatus set_cpu_sched_policy(struct sched_param sched_policy);
     void set_gpu_device_id(int device_id);
     std::vector<std::string> get_id() override;
     DecodedDataInfo get_decode_data_info() override;
@@ -89,4 +87,7 @@ class ImageLoader : public LoaderModule {
     size_t _max_tensor_width, _max_tensor_height;
     bool _external_source_reader = false;  //!< Set to true if external source reader
     bool _external_input_eos = false;      //!< Set to true for last batch for the sequence
+#if ENABLE_HIP
+    hipStream_t _hip_stream = nullptr;
+#endif
 };
