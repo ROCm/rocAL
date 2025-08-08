@@ -84,7 +84,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         auto random_area = decoder_config.get_random_area();
         AspectRatioRange aspect_ratio_range = std::make_pair((float)random_aspect_ratio[0], (float)random_aspect_ratio[1]);
         AreaRange area_range = std::make_pair((float)random_area[0], (float)random_area[1]);
-        _random_crop_dec_param = new RocalRandomCropDecParam(aspect_ratio_range, area_range, (int64_t)decoder_config.get_seed(), decoder_config.get_num_attempts(), _batch_size);
+        _random_crop_dec_param = new RocalRandomCropDecParam(aspect_ratio_range, area_range, decoder_config.get_num_attempts(), _batch_size);
     }
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
         if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
