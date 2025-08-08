@@ -507,8 +507,8 @@ def random_resized_crop(*inputs, resize_width=0, resize_height=0, crop_area_fact
         @param inputs: the input image passed to the augmentation
         @param resize_width (int, optional, default = 0)                                   The length of the X dimension of the resized image
         @param resize_height (int, optional, default = 0)                                  The length of the Y dimension of the resized image
-        @param crop_area_factor (float, optional, default = None)                          area factor used for crop generation
-        @param crop_aspect_ratio (float, optional, default = None)                         aspect ratio used for crop generation
+        @param crop_area_factor (list of float, optional, default = [0.08, 1.0])           area factor used for crop generation
+        @param crop_aspect_ratio (list of float, optional, default = [0.75, 1.33333])      aspect ratio used for crop generation
         @param device (string, optional, default = None)                                   Parameter unused for augmentation
         @param interpolation_type (int, optional, default = types.LINEAR_INTERPOLATION)    Type of interpolation to be used.
         @param output_layout (int, optional, default = types.NHWC)                         tensor layout for the augmentation output
@@ -518,7 +518,7 @@ def random_resized_crop(*inputs, resize_width=0, resize_height=0, crop_area_fact
     """
 
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
+    kwargs_pybind = {"input_image": inputs[0], "dest_width": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
                      "crop_aspect_ratio": crop_aspect_ratio, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     random_resized_crop_image = b.randomResizedCrop(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))

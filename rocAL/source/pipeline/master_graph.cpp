@@ -22,6 +22,7 @@ THE SOFTWARE.
 #if ENABLE_OPENCL
 #include <CL/cl.h>
 #endif
+#include <omp.h>
 #include <vx_ext_amd.h>
 #include <VX/vx_types.h>
 #include <cstring>
