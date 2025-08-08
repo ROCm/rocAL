@@ -21,38 +21,41 @@ THE SOFTWARE.
 */
 
 
-#include "pipeline/commons.h"
 #include <stdio.h>
 #include <string.h>
+
+#include "pipeline/commons.h"
 #include "decoders/image/rocjpeg_decoder.h"
 #include "decoders/image/rocjpeg_fused_crop_decoder.h"
 
 #if ENABLE_ROCJPEG
 
-#include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
 #include "rocal_hip_kernels.h"
 
-#define CHECK_HIP(call) {                                             \
-    hipError_t hip_status = (call);                                   \
-    if (hip_status != hipSuccess) {                                   \
-        std::cerr << "HIP failure: 'status: " << hipGetErrorName(hip_status) << "' at " << __FILE__ << ":" << __LINE__ << std::endl;\
-        exit(1);                                                      \
-    }                                                                 \
-}
+#define CHECK_HIP(call)                                                                                                                  \
+    {                                                                                                                                    \
+        hipError_t hip_status = (call);                                                                                                  \
+        if (hip_status != hipSuccess) {                                                                                                  \
+            std::cerr << "HIP failure: 'status: " << hipGetErrorName(hip_status) << "' at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            exit(1);                                                                                                                     \
+        }                                                                                                                                \
+    }
 
-#define CHECK_ROCJPEG(call) {                                             \
-    RocJpegStatus rocjpeg_status = (call);                                \
-    if (rocjpeg_status != ROCJPEG_STATUS_SUCCESS) {                       \
-        std::cerr << #call << " returned " << rocJpegGetErrorName(rocjpeg_status) << " at " <<  __FILE__ << ":" << __LINE__ << std::endl;\
-        exit(1);                                                        \
-    }                                                                     \
-}
+#define CHECK_ROCJPEG(call)                                                                                                                  \
+    {                                                                                                                                        \
+        RocJpegStatus rocjpeg_status = (call);                                                                                               \
+        if (rocjpeg_status != ROCJPEG_STATUS_SUCCESS) {                                                                                      \
+            std::cerr << #call << " returned " << rocJpegGetErrorName(rocjpeg_status) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            exit(1);                                                                                                                         \
+        }                                                                                                                                    \
+    }
 
 FusedCropRocJpegDecoder::FusedCropRocJpegDecoder() {
 };
 
-void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) { 
+void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) {
     _bbox_coord = bbox_coord;
     _crop_window.x = std::lround(_bbox_coord[0] * _original_image_width);
     _crop_window.y = std::lround(_bbox_coord[1] * _original_image_height);
@@ -65,17 +68,15 @@ void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) {
     _decode_params->crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
 }
 
-
-void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) { 
+void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) {
     _crop_window = crop_window;
     _crop_window.W = std::min(_crop_window.W, (unsigned int)_max_decoded_width);
     _crop_window.H = std::min(_crop_window.H, (unsigned int)_max_decoded_height);
-    
+
     _decode_params->crop_rectangle.left = _crop_window.x;
     _decode_params->crop_rectangle.top = _crop_window.y;
     _decode_params->crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
     _decode_params->crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
-
 }
 
 void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
@@ -112,8 +113,8 @@ void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
 }
 
 // Obtains the decode info of the image, and modifies width and height based on the max decode params after scaling
-Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width, 
-                                              int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
+Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width,
+                                                     int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
     // RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
@@ -125,7 +126,7 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     uint32_t max_heights[4] = {static_cast<uint32_t>(max_decoded_height), 0, 0, 0};
 
     RocJpegChromaSubsampling subsampling;
-    switch(desired_decoded_color_format) {
+    switch (desired_decoded_color_format) {
         case Decoder::ColorFormat::GRAY:
             _decode_params_batch[index].output_format = ROCJPEG_OUTPUT_Y;
             _num_channels = 1;
@@ -137,13 +138,13 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
             break;
     };
 
-    if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[index]) != ROCJPEG_STATUS_SUCCESS) {
+    if (rocJpegStreamParse(reinterpret_cast<uint8_t *>(input_buffer), input_size, _rocjpeg_streams[index]) != ROCJPEG_STATUS_SUCCESS) {
         // std::cerr << "Header decode failed\n";
         return Status::HEADER_DECODE_FAILED;
     }
     if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[index], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
         // std::cerr << "Header decode failed\n";
-        
+
         return Status::HEADER_DECODE_FAILED;
     }
 
@@ -177,12 +178,11 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
 }
 
 Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
-    
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
     uint32_t heights[4] = {};
-    if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[0]) != ROCJPEG_STATUS_SUCCESS) {
+    if (rocJpegStreamParse(reinterpret_cast<uint8_t *>(input_buffer), input_size, _rocjpeg_streams[0]) != ROCJPEG_STATUS_SUCCESS) {
         return Status::HEADER_DECODE_FAILED;
     }
     if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[0], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
@@ -205,12 +205,11 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
 }
 
 Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char *> &output_buffer,
-                                               size_t max_decoded_width, size_t max_decoded_height,
-                                               std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
-                                               std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
-
+                                                      size_t max_decoded_width, size_t max_decoded_height,
+                                                      std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
+                                                      std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
     for (unsigned i = 0; i < _batch_size; i++) {
-        _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);    // For RGB
+        _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);  // For RGB
     }
 
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()));

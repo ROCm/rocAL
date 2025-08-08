@@ -93,7 +93,7 @@ class FusedCropRocJpegDecoder : public Decoder {
     std::vector<RocJpegStreamHandle> _rocjpeg_streams;
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params_batch;
-    RocJpegDecodeParams* _decode_params;
+    RocJpegDecodeParams *_decode_params;
     unsigned _batch_size;
     uint32_t _num_channels = 0;
     int _device_id = 0;

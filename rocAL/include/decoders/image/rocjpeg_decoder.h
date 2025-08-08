@@ -48,12 +48,12 @@ struct ScalingFactor {
  * @return The channel pitch.
  */
 inline int GetChannelPitchAndSizes(RocJpegDecodeParams decode_params, RocJpegChromaSubsampling subsampling, uint32_t *widths, uint32_t *heights,
-                            uint32_t &num_channels, RocJpegImage &output_image, uint32_t *channel_sizes) {
+                                   uint32_t &num_channels, RocJpegImage &output_image, uint32_t *channel_sizes) {
     bool is_roi_valid = false;
     uint32_t roi_width = decode_params.crop_rectangle.right - decode_params.crop_rectangle.left;
     uint32_t roi_height = decode_params.crop_rectangle.bottom - decode_params.crop_rectangle.top;
     if (roi_width > 0 && roi_height > 0 && roi_width <= widths[0] && roi_height <= heights[0]) {
-        is_roi_valid = true; 
+        is_roi_valid = true;
     }
 
     switch (decode_params.output_format) {
@@ -240,7 +240,7 @@ class HWRocJpegDecoder : public Decoder {
     size_t *_dev_src_hstride = nullptr, *_dev_src_img_offset = nullptr;
     std::vector<size_t> _src_hstride;
     std::vector<size_t> _src_img_offset;
-    std::vector<bool> _scaled_image;
+    std::vector<bool> _image_needs_rescaling;
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params = {};
     uint32_t _num_channels = 0;
