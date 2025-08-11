@@ -183,7 +183,7 @@ int main(int argc, const char **argv) {
 
 int test(int test_case, int reader_type, const char *path, const char *outName, int rgb, int gpu, int width, int height, int num_of_classes, int display_all, int resize_interpolation_type, int resize_scaling_mode) {
     size_t num_threads = 1;
-    const unsigned int input_batch_size = 3;
+    const unsigned int input_batch_size = 2;
     int decode_max_width = width;
     int decode_max_height = height;
     int pipeline_type = -1;
@@ -249,7 +249,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateLabelReader(handle, path);
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
-            decoded_output = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, RocalShardingInfo(), ROCAL_DECODER_ROCJPEG);
+            decoded_output = rocalFusedJpegCrop(handle, path, color_format, num_threads, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 2:  // coco detection
         {
@@ -1052,7 +1052,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         }
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
-        memset(mat_input.data, 0, h * w * p);
+
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
         
         // Testing the rocalToTensor API for copy augmentation
