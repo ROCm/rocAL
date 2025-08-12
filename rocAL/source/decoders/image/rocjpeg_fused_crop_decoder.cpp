@@ -49,9 +49,6 @@ THE SOFTWARE.
     }                                                                     \
 }
 
-FusedCropRocJpegDecoder::FusedCropRocJpegDecoder() {
-};
-
 void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) { 
     _bbox_coord = bbox_coord;
     _crop_window.x = std::lround(_bbox_coord[0] * _original_image_width);
@@ -138,23 +135,14 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     };
 
     if (rocJpegStreamParse(reinterpret_cast<uint8_t*>(input_buffer), input_size, _rocjpeg_streams[index]) != ROCJPEG_STATUS_SUCCESS) {
-        std::cerr << "Header decode failed\n";
         return Status::HEADER_DECODE_FAILED;
     }
     if (rocJpegGetImageInfo(_rocjpeg_handle, _rocjpeg_streams[index], &num_components, &subsampling, widths, heights) != ROCJPEG_STATUS_SUCCESS) {
-        std::cerr << "Header decode failed\n";
-        
         return Status::HEADER_DECODE_FAILED;
     }
-
     if (widths[0] < 64 || heights[0] < 64) {
-        std::cerr << "Header decode failed\n";
-
         return Status::CONTENT_DECODE_FAILED;
     }
-
-    std::string chroma_sub_sampling = "";
-    GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
     if (subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
         return Status::UNSUPPORTED;
     }
@@ -167,8 +155,7 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     _decode_params = &_decode_params_batch[index];
 
     if (GetChannelPitchAndSizes(_decode_params_batch[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
-        // return Status::HEADER_DECODE_FAILED;
-        ERR("Header decode failed\n")
+        return Status::HEADER_DECODE_FAILED;
     }
     _original_image_width = *actual_width = widths[0];
     _original_image_height = *actual_height = heights[0];
@@ -190,14 +177,10 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     }
     *width = widths[0];
     *height = heights[0];
-    // _rocjpeg_image_buff_size += (((widths[0] + 8) &~ 7) * ((heights[0] + 8) &~ 7));
 
     if (widths[0] < 64 || heights[0] < 64) {
         return Status::CONTENT_DECODE_FAILED;
     }
-
-    std::string chroma_sub_sampling = "";
-    GetChromaSubsamplingStr(subsampling, chroma_sub_sampling);
     if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
         return Status::UNSUPPORTED;
     }
@@ -212,7 +195,6 @@ Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char 
     for (unsigned i = 0; i < _batch_size; i++) {
         _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);    // For RGB
     }
-
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()));
 
     return Status::OK;

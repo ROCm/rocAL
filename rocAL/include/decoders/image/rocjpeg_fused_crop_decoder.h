@@ -29,21 +29,21 @@ THE SOFTWARE.
 class FusedCropRocJpegDecoder : public Decoder {
    public:
     //! Default constructor
-    FusedCropRocJpegDecoder();
-    //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
+    FusedCropRocJpegDecoder() {}
+    //! Decodes the header of the jpeg compressed data and returns basic info about the compressed image
     /*!
-     \param input_buffer  User provided buffer containig the encoded image
+     \param input_buffer  User provided buffer containing the encoded image
      \param input_size Size of the compressed data provided in the input_buffer
-     \param width pointer to the user's buffer to write the width of the compressed image to
-     \param height pointer to the user's buffer to write the height of the compressed image to
+     \param width pointer to the user's buffer to write the width of the compressed image
+     \param height pointer to the user's buffer to write the height of the compressed image
      \param color_comps pointer to the user's buffer to write the number of color components of the compressed image to
     */
     Status decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) override;
 
-    //! Decodes the header of the Jpeg compressed data and returns basic info about the compressed image
+    //! Decodes the header of the jpeg compressed data and returns basic info about the compressed image
     //! It also scales the width and height wrt max decoded width and height
     /*!
-     \param input_buffer  User provided buffer containig the encoded image
+     \param input_buffer  User provided buffer containing the encoded image
      \param input_size Size of the compressed data provided in the input_buffer
      \param width pointer to the user's buffer to write the width of the compressed image/scaled width based on max_decoded_width
      \param height pointer to the user's buffer to write the height of the compressed image/scaled height based on max_decoded_height
@@ -80,13 +80,12 @@ class FusedCropRocJpegDecoder : public Decoder {
     ~FusedCropRocJpegDecoder() override;
     void initialize(int device_id) override {}
     void initialize(int device_id, unsigned batch_size) override;
-    bool is_partial_decoder() override { return _is_partial_decoder; }
+    bool is_partial_decoder() override { return true; }
     void set_bbox_coords(std::vector<float> bbox_coord) override;
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override;
 
    private:
-    bool _is_partial_decoder = true;
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;
     RocJpegHandle _rocjpeg_handle;
