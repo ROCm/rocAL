@@ -214,6 +214,10 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
         for (unsigned i = 0; i < _batch_size; i++) {
                 _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
                 _src_img_offset[i] = src_offset;
+
+                // For images having original width and height greater than the max decode width and height
+                // the buffer size is strided according to the original width and height, and pitch is set accordingly
+                // For other images the max decode width and height dims are used for the stride
                 unsigned pitch_width = _image_needs_rescaling[i] ? (original_image_width[i] + 8) & ~7 : max_decoded_width;
                 unsigned pitch_height = _image_needs_rescaling[i] ? (original_image_height[i] + 8) & ~7 : max_decoded_height;
                 src_offset += (pitch_width * pitch_height * _num_channels);

@@ -69,8 +69,8 @@ void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) {
 
 void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) {
     _crop_window = crop_window;
-    _crop_window.W = std::min(_crop_window.W, (unsigned int)_max_decoded_width);
-    _crop_window.H = std::min(_crop_window.H, (unsigned int)_max_decoded_height);
+    _crop_window.W = std::min(_crop_window.W, static_cast<unsigned int>(_max_decoded_width));
+    _crop_window.H = std::min(_crop_window.H, static_cast<unsigned int>(_max_decoded_height));
 
     _decode_params->crop_rectangle.left = _crop_window.x;
     _decode_params->crop_rectangle.top = _crop_window.y;
@@ -90,8 +90,6 @@ void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
         return;
     }
     CHECK_HIP(hipSetDevice(device_id));
-
-
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
     // Create stream and handle
     CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
@@ -100,7 +98,6 @@ void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
         CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_streams[i]));
     }
 
-    _device_id = device_id;
     _batch_size = batch_size;
     _output_images.resize(_batch_size);
     _decode_params_batch.resize(_batch_size);
@@ -109,7 +106,6 @@ void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
 // Obtains the decode info of the image, and modifies width and height based on the max decode params after scaling
 Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *actual_width,
                                                      int *actual_height, int max_decoded_width, int max_decoded_height, Decoder::ColorFormat desired_decoded_color_format, int index) {
-    // RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
     uint32_t widths[4] = {};
     uint32_t heights[4] = {};
@@ -123,12 +119,10 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     switch (desired_decoded_color_format) {
         case Decoder::ColorFormat::GRAY:
             _decode_params_batch[index].output_format = ROCJPEG_OUTPUT_Y;
-            _num_channels = 1;
             break;
         case Decoder::ColorFormat::RGB:
         case Decoder::ColorFormat::BGR:
             _decode_params_batch[index].output_format = ROCJPEG_OUTPUT_RGB;
-            _num_channels = 3;
             break;
     };
 
