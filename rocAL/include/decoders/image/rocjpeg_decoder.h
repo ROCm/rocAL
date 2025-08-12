@@ -51,7 +51,7 @@ inline int GetChannelPitchAndSizes(RocJpegDecodeParams decode_params, RocJpegChr
                             uint32_t &num_channels, RocJpegImage &output_image, uint32_t *channel_sizes) {
     uint32_t roi_width = decode_params.crop_rectangle.right - decode_params.crop_rectangle.left;
     uint32_t roi_height = decode_params.crop_rectangle.bottom - decode_params.crop_rectangle.top;
-    if (roi_width > 0 && roi_height > 0 && roi_width <= widths[0] && roi_height <= heights[0]) {
+    if (roi_width > widths[0] || roi_height > heights[0]) {
         ERR("Invalid ROI passed to the decoder")
     }
 
