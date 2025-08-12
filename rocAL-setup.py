@@ -31,7 +31,7 @@ else:
 libraryName = "rocAL"
 
 __copyright__ = f"Copyright(c) 2018 - 2025, AMD ROCm {libraryName}"
-__version__ = "4.0.0"
+__version__ = "4.1.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
 
@@ -155,7 +155,7 @@ linuxSystemInstall_check = ''
 linuxFlag = ''
 sudoValidate = 'sudo -v'
 osUpdate = ''
-if "centos" in os_info_data or "redhat" in os_info_data:
+if "centos" in os_info_data or "redhat" in os_info_data or "Oracle" in os_info_data:
     linuxSystemInstall = 'yum -y'
     linuxSystemInstall_check = '--nogpgcheck'
     osUpdate = 'makecache'
