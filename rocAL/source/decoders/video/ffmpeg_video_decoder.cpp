@@ -32,7 +32,7 @@ THE SOFTWARE.
         ERR(err_msg)                          \
         Release();                            \
         return status;                        \
-    } while (0)
+    } while (0);
 
 FFmpegVideoDecoder::FFmpegVideoDecoder(){};
 
