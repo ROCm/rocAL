@@ -403,7 +403,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateLabelReader(handle, path);
             std::vector<float> area = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
-            decoded_output = rocalFusedJpegCropSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            RocalDecoderType dec_type = gpu ? RocalDecoderType::ROCAL_DECODER_ROCJPEG : RocalDecoderType::ROCAL_DECODER_TJPEG;
+            decoded_output = rocalFusedJpegCropSingleShard(handle, path, color_format, 0, 1, false, area, aspect_ratio, 10, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height, RocalShardingInfo(), dec_type);
         } break;
         case 15:  // coco detection with Box IOU matcher
         {

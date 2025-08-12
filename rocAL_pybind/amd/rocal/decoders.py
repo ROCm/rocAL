@@ -378,7 +378,6 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
     # in tensor branch integration,
     # for now calling partial decoder to match SSD training outer API's .
     if (reader == 'COCOReader'):
-
         kwargs_pybind = {
             "source_path": file_root,
             "json_path": annotations_file,
@@ -394,7 +393,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "dec_type": decoder_type}
         image_decoder_slice = b.cocoImageDecoderSliceShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
@@ -412,7 +412,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "dec_type": decoder_type}
         image_decoder_slice = b.caffeImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
@@ -430,7 +431,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "decode_size_policy": decode_size_policy,
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "dec_type": decoder_type}
         image_decoder_slice = b.caffe2ImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
