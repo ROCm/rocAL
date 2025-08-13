@@ -8,7 +8,7 @@
 rocAL prerequisites
 ********************************************************************
 
-rocAL requires ROCm running on `accelerators based on the CDNA architecture <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_ installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_.
+rocAL requires ROCm running on `accelerators based on the CDNA architecture <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_ installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/docs-6.4.1/install/install-methods/amdgpu-installer-index.html>`_.
 
 rocAL can be installed on the following Linux environments:
   
@@ -65,7 +65,7 @@ libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually
     &trade;
 
 .. |openvx| replace:: AMD OpenVX\ |trade|
-.. _openvx: https://rocm.docs.amd.com/projects/MIVisionX/en/latest/install/amd_openvx-install.html#amd-openvx-install
+.. _openvx: https://rocm.docs.amd.com/projects/MIVisionX/en/latest/install/amd_openvx-install.html
 
 .. |setup| replace:: ``rocAL-setup.py``
 .. _setup: https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py
