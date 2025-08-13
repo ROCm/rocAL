@@ -238,7 +238,7 @@ class HWRocJpegDecoder : public Decoder {
     size_t *_dev_src_hstride = nullptr, *_dev_src_img_offset = nullptr;
     std::vector<size_t> _src_hstride;
     std::vector<size_t> _src_img_offset;
-    std::vector<bool> _image_needs_rescaling;
+    std::vector<bool> _image_needs_rescaling;   // A flag for each image in the batch, set to `true` if the image needs rescaling.
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params = {};
     uint32_t _num_channels = 0;
