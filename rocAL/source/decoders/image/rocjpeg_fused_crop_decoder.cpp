@@ -155,6 +155,7 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     return Status::OK;
 }
 
+// Obtains only the decode info of the image used for image source evaluation
 Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer, size_t input_size, int *width, int *height, int *color_comps) {
     RocJpegChromaSubsampling subsampling;
     uint8_t num_components;
