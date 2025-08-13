@@ -92,7 +92,8 @@ Readers                                     Description
 | Caffe2 LMDB Reader                        | Reads (key, value) pairs from Caffe2 LMDB           
 | COCO Reader – file source and keypoints   | Reads images and JSON annotations from COCO dataset 
 | TFRecord Reader                           | Reads from a TFRecord dataset                       
-| MXNet Reader                              | Reads from a RecordIO dataset                       
+| MXNet Reader                              | Reads from a RecordIO dataset
+| Web Dataset Reader                        | Reads from a web dataset
 ==========================================  =====================================================
 
 
