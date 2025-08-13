@@ -284,6 +284,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourceSingleShard(RocalCo
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
