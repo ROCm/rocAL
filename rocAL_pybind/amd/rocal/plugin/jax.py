@@ -117,7 +117,7 @@ class ROCALJaxIterator(object):
                 self.output_list.append(self.output)
 
             if pipeline._name == "labelReader":
-                if pipeline._one_hot_encoding == True:
+                if pipeline._one_hot_encoding:
                     self.labels = np.empty(self.labels_size, dtype="int32")
                     pipeline.get_one_hot_encoded_labels(
                         self.labels.ctypes.data, pipeline._output_memory_type)
@@ -170,7 +170,10 @@ class ROCALJaxIterator(object):
             if len(set(output_devices)) != 1:
                 raise AssertionError(
                     "JAX iterator requires shards to be placed on \
-                                                different devices or all on the same device."
+                    (
+                        "JAX iterator requires shards to be placed on different devices "
+                        "or all on the same device."
+                    )
                 )
             else:
                 # All shards are on one device (CPU or one GPU)
