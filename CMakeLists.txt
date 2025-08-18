@@ -336,13 +336,13 @@ include(CPack)
 
 cpack_add_component(runtime
                   DISPLAY_NAME "rocAL Runtime Package"
-                  DESCRIPTION "AMD rocAL is a comprehensive augmentation library. \
-rocAL runtime package provides rocAL libraries and license.txt")
+                 DESCRIPTION "Augmentation library. \
+Package provides rocAL libraries and license.txt")
 
 cpack_add_component(dev
                   DISPLAY_NAME "rocAL Develop Package"
-                  DESCRIPTION "AMD rocAL is a comprehensive augmentation library. \
-rocAL develop package provides rocAL libraries, header files, samples, and license.txt")
+                 DESCRIPTION "Augmentation library. \
+Provides libraries, headers, samples, and license.txt")
 
 cpack_add_component(asan
                   DISPLAY_NAME "rocAL ASAN Package"
