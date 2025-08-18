@@ -28,7 +28,10 @@ import sys
 import os
 
 import jax
-from jax.sharding import Mesh, PartitionSpec, NamedSharding
+from jax.sharding import PositionalSharding
+from jax.experimental import mesh_utils
+
+
 
 
 def draw_patches(img, idx, layout="nchw", dtype="fp32"):
@@ -60,8 +63,9 @@ def main():
     batch_size = int(sys.argv[2])
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
 
-    mesh = Mesh(jax.devices(), axis_names=("batch"))
-    sharding = NamedSharding(mesh, PartitionSpec("batch"))
+    mesh = mesh_utils.create_device_mesh((jax.device_count(), 1))
+    sharding = PositionalSharding(mesh)
+    
     pipelines = []
     for id, device in enumerate(jax.devices()):
         image_classification_train_pipeline = Pipeline(batch_size=batch_size, num_threads=8, device_id=id,

@@ -56,7 +56,7 @@ def convert_to_jax_array(array):
     Returns:
         jax.Array: JAX array with the same values and device as input array.
     """
-    jax_array = jax.dlpack.from_dlpack(array)
+    jax_array = jax.dlpack.from_dlpack(array, copy=True)
     return jax_array
 
 class ROCALJaxIterator(object):
@@ -74,10 +74,12 @@ class ROCALJaxIterator(object):
         self.num_devices = len(pipelines)
         self.batch_size = pipelines[0]._batch_size
 
-        self.dimensions = self.dtype = None
-        self.labels_tensor = None
         self.iterator_length = b.getRemainingImages(
             pipelines[0]._handle) // self.batch_size  # Length should be the same across all pipelines
+        self.last_batch_policy = pipelines[0]._last_batch_policy
+        assert (
+            self.last_batch_policy != types.LAST_BATCH_PARTIAL
+        ), "JAX iterator does not support partial last batch policy."
 
         if sharding is not None:
             assert isinstance(
@@ -97,43 +99,37 @@ class ROCALJaxIterator(object):
         for pipeline in self.pipelines:
             if pipeline.rocal_run() != 0:
                 raise StopIteration
-            self.output_tensor_list = pipeline.get_output_tensors()
+            output_tensor_list = pipeline.get_output_tensors()
 
-            self.output_list = []
-            self.device_id = pipeline._device_id
+            output_list = []
+            device_id = pipeline._device_id
             if pipeline._name is None:
                 pipeline._name = pipeline._reader
-            self.last_batch_policy = pipeline._last_batch_policy
-            assert (
-                self.last_batch_policy != types.LAST_BATCH_PARTIAL
-            ), "JAX iterator does not support partial last batch policy."
-            self.labels_size = ((self.batch_size * pipeline._num_classes)
+            labels_size = ((self.batch_size * pipeline._num_classes)
                                 if pipeline._one_hot_encoding else self.batch_size)
-            for i in range(len(self.output_tensor_list)):
-                self.dimensions = self.output_tensor_list[i].dimensions()
-                self.dtype = self.output_tensor_list[i].dtype()
-                self.output = convert_to_jax_array(
-                    self.output_tensor_list[i].__dlpack__(self.device_id))
-                self.output_list.append(self.output)
+            for i in range(len(output_tensor_list)):
+                output = convert_to_jax_array(
+                    output_tensor_list[i].__dlpack__(device_id))
+                output_list.append(output)
 
             if pipeline._name == "labelReader":
                 if pipeline._one_hot_encoding:
-                    self.labels = np.empty(self.labels_size, dtype="int32")
+                    labels = np.empty(labels_size, dtype="int32")
                     pipeline.get_one_hot_encoded_labels(
-                        self.labels.ctypes.data, pipeline._output_memory_type)
-                    self.labels_tensor = self.labels.reshape(
+                        labels.ctypes.data, pipeline._output_memory_type)
+                    labels_tensor = labels.reshape(
                         -1, self.batch_size, pipeline._num_classes)
-                    self.labels_tensor = convert_to_jax_array(
-                        self.labels_tensor)
+                    labels_tensor = convert_to_jax_array(
+                        labels_tensor)
                 else:
-                    self.labels = pipeline.get_image_labels()
-                    self.labels_tensor = self.labels.astype(dtype=np.int_)
-                    self.labels_tensor = convert_to_jax_array(
-                        self.labels_tensor)
-                self.labels_tensor = jax.device_put(
-                    self.labels_tensor, self.output_list[0].device)
-                self.output_list.append(self.labels_tensor)
-            pipeline_outputs.append(self.output_list)
+                    labels = pipeline.get_image_labels()
+                    labels_tensor = labels.astype(dtype=np.int32)
+                    labels_tensor = convert_to_jax_array(
+                        labels_tensor)
+                labels_tensor = jax.device_put(
+                    labels_tensor, output_list[0].device)
+                output_list.append(labels_tensor)
+            pipeline_outputs.append(output_list)
 
         if self.num_devices == 1 and self.sharding is None:
             return pipeline_outputs[0]
@@ -169,7 +165,6 @@ class ROCALJaxIterator(object):
         if len(output_devices) != len(set(output_devices)):
             if len(set(output_devices)) != 1:
                 raise AssertionError(
-                    "JAX iterator requires shards to be placed on \
                     (
                         "JAX iterator requires shards to be placed on different devices "
                         "or all on the same device."
@@ -186,16 +181,32 @@ class ROCALJaxIterator(object):
         compatible with automatic parallelization with JAX.
         """
         shard_shape = individual_outputs[0].shape
+        data_rank = len(shard_shape)
+        num_devices = len(individual_outputs)
+
+        # Calculate the global shape. The first (batch) dimension is aggregated.
+        global_shape = (num_devices * shard_shape[0],) + shard_shape[1:]
 
         if isinstance(self.sharding, NamedSharding):
-            global_shape = (self.sharding.mesh.size *
-                            shard_shape[0], *shard_shape[1:])
+            # Assumes the user wants to shard along the first mesh axis
+            # and replicate across the other data dimensions.
+            mesh = self.sharding.mesh
+            # Create a PartitionSpec matching the data's rank.
+            # e.g., for 4D data and mesh axis 'data', this becomes P('data', None, None, None)
+            partition_spec = jax.sharding.PartitionSpec(
+                mesh.axis_names[0], *(None for _ in range(data_rank - 1)))
+            compatible_sharding = NamedSharding(mesh, partition_spec)
         else:
-            global_shape = (
-                self.sharding.shape[0] * shard_shape[0], *shard_shape[1:])
+            # Assumes the user wants to shard along the single device axis
+            # and replicate across the other data dimensions.
+            devices = self.sharding._devices
+            # Create a sharding shape matching the data's rank.
+            # e.g., for 4D data and 8 devices, this becomes (8, 1, 1, 1)
+            sharding_spec_shape = (num_devices,) + (1,) * (data_rank - 1)
+            compatible_sharding = PositionalSharding(devices).reshape(sharding_spec_shape)
 
         return jax.make_array_from_single_device_arrays(
-            global_shape, self.sharding, individual_outputs
+            global_shape, compatible_sharding, individual_outputs
         )
 
     def __iter__(self):
