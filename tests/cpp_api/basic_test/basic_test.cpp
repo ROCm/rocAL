@@ -202,9 +202,9 @@ int main(int argc, const char **argv) {
             if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                 cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
                 if (DISPLAY)
-                    cv::imshow(win_name, mat_output);
+                    cv::imshow(win_name, mat_color);
                 else
-                    cv::imwrite("output.png", mat_output);
+                    cv::imwrite("output.png", mat_color);
             } else {
                 if (DISPLAY)
                     cv::imshow(win_name, mat_output);

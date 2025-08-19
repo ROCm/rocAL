@@ -161,9 +161,9 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
         if (DISPLAY)
-            cv::imshow("output.png", mat_output);
+            cv::imshow("output.png", mat_color);
         else
-            cv::imwrite("output.png", mat_output);
+            cv::imwrite("output.png", mat_color);
 
         col_counter = (col_counter + 1) % number_of_cols;
         counter += batch_size;

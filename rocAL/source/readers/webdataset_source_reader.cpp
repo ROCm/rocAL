@@ -290,6 +290,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
             entry_name_list.push_back(entry_name);
         }
         std::sort(entry_name_list.begin(), entry_name_list.end());
+        closedir(_sub_dir);
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
         for (auto& path : entry_name_list)
@@ -313,6 +314,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
             _index_name_list.push_back(entry_name);
         }
         std::sort(_index_name_list.begin(), _index_name_list.end());
+        closedir(_sub_dir);
         // Tar file path
         if ((_sub_dir = opendir(_path.c_str())) == nullptr)
             THROW("WebDatasetSourceReader ShardID [" + TOSTR(_shard_id) + "] ERROR: Failed opening the directory at " + _path);
@@ -324,6 +326,7 @@ Reader::Status WebDatasetSourceReader::folder_reading() {
             entry_name_list.push_back(entry_name);
         }
         std::sort(entry_name_list.begin(), entry_name_list.end());
+        closedir(_sub_dir);
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
         for (auto& path : entry_name_list) {
