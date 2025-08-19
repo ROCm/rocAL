@@ -185,7 +185,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     rocalCreateLabelReader(handle, path, file_list_path.c_str());
 
     is_output_audio_decoder = (test_case == 0 || test_case == 3) ? true : false;
-    RocalTensor decoded_output;
+    RocalTensor decoded_output, uniform_distribution_resample, normal_distribution, resampled_rate, uniform_distribution_sample;
     if(test_case == 0)
         decoded_output = rocalAudioFileSource(handle, path, file_list_path.c_str(), 1, is_output_audio_decoder, false, false, downmix);
     else
@@ -231,16 +231,16 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             case_name = "resample";
             float resample = 16000.00;
             std::vector<float> range = {1.15, 1.15};
-            RocalTensor uniform_distribution_resample = rocalUniformDistribution(handle, decoded_output, false, range);
-            RocalTensor normal_distribution = rocalNormalDistribution(handle, decoded_output, false, 0.0, 1.0);
-            RocalTensor resampled_rate = rocalTensorMulScalar(handle, uniform_distribution_resample, false, resample, ROCAL_FP32);
+            uniform_distribution_resample = rocalUniformDistribution(handle, decoded_output, false, range);
+            normal_distribution = rocalNormalDistribution(handle, decoded_output, false, 0.0, 1.0);
+            resampled_rate = rocalTensorMulScalar(handle, uniform_distribution_resample, false, resample, ROCAL_FP32);
             rocalResample(handle, decoded_output, resampled_rate, true, 1.15 * 255840, 50.0, ROCAL_FP32);
         } break;
         case 6: {
             std::cout << "Running TENSOR ADD TENSOR" << std::endl;
             case_name = "tensor_add_tensor";
             std::vector<float> range = {1.15, 1.15};
-            RocalTensor uniform_distribution_sample = rocalUniformDistribution(handle, decoded_output, false, range);
+            uniform_distribution_sample = rocalUniformDistribution(handle, decoded_output, false, range);
             rocalTensorAddTensor(handle, decoded_output, uniform_distribution_sample, true, ROCAL_FP32);
         } break;
         case 7: {
@@ -357,6 +357,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
+    rocalResetLoaders(handle);
     rocalRelease(handle);
     return 0;
 }

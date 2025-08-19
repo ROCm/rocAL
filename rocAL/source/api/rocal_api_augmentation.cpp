@@ -2221,8 +2221,7 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
                                context->master_graph->mem_type(),
                                RocalTensorDataType::FP32);
         info.set_dims(dims);
-        output = context->master_graph->create_tensor(info, is_output);
-        output->create_from_handle(context->master_graph->get_vx_context());
+        output = context->master_graph->create_internal_tensor(info);
         context->master_graph->add_node<UniformDistributionNode>({input}, {output})->init(range);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
@@ -2246,8 +2245,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
                                context->master_graph->mem_type(),
                                RocalTensorDataType::FP32);
         info.set_dims(dims);
-        output = context->master_graph->create_tensor(info, is_output);
-        output->create_from_handle(context->master_graph->get_vx_context());
+        output = context->master_graph->create_internal_tensor(info);
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);

@@ -83,6 +83,13 @@ ParameterFactory::~ParameterFactory() {
                 delete arg;
             },
             rand_obj);
+    // Delete the memory allocated for random parameters
+    for (auto&& rand_obj : _params)
+        std::visit(
+            [](auto&& arg) {
+                delete arg;
+            },
+            rand_obj);
 }
 
 void ParameterFactory::renew_parameters() {
@@ -122,6 +129,7 @@ IntParam* ParameterFactory::create_uniform_int_rand_param(int start, int end) {
     auto gen = new UniformRand<int>(start, end, get_seed_from_seedsequence());
     auto ret = new IntParam(gen, RocalParameterType::RANDOM_UNIFORM);
     _parameters.insert(gen);
+    _params.insert(ret);
     return ret;
 }
 
@@ -129,6 +137,7 @@ FloatParam* ParameterFactory::create_uniform_float_rand_param(float start, float
     auto gen = new UniformRand<float>(start, end, get_seed_from_seedsequence());
     auto ret = new FloatParam(gen, RocalParameterType::RANDOM_UNIFORM);
     _parameters.insert(gen);
+    _params.insert(ret);
     return ret;
 }
 
@@ -136,6 +145,7 @@ IntParam* ParameterFactory::create_custom_int_rand_param(const int* value, const
     auto gen = new CustomRand<int>(value, frequencies, size, get_seed_from_seedsequence());
     auto ret = new IntParam(gen, RocalParameterType::RANDOM_CUSTOM);
     _parameters.insert(gen);
+    _params.insert(ret);
     return ret;
 }
 
@@ -143,6 +153,7 @@ FloatParam* ParameterFactory::create_custom_float_rand_param(const float* value,
     auto gen = new CustomRand<float>(value, frequencies, size, get_seed_from_seedsequence());
     auto ret = new FloatParam(gen, RocalParameterType::RANDOM_CUSTOM);
     _parameters.insert(gen);
+    _params.insert(ret);
     return ret;
 }
 
@@ -150,6 +161,7 @@ IntParam* ParameterFactory::create_single_value_int_param(int value) {
     auto gen = new SimpleParameter<int>(value);
     auto ret = new IntParam(gen, RocalParameterType::DETERMINISTIC);
     _parameters.insert(gen);
+    _params.insert(ret);
     return ret;
 }
 
@@ -157,6 +169,7 @@ FloatParam* ParameterFactory::create_single_value_float_param(float value) {
     auto gen = new SimpleParameter<float>(value);
     auto ret = new FloatParam(gen, RocalParameterType::DETERMINISTIC);
     _parameters.insert(gen);
+    _params.insert(ret);
     return ret;
 }
 
