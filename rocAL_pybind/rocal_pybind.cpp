@@ -671,6 +671,9 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("FLOAT16", ROCAL_FP16)
         .value("UINT8", ROCAL_UINT8)
         .value("INT16", ROCAL_INT16)
+        .value("INT32", ROCAL_INT32)
+        .value("INT8", ROCAL_INT8)
+        .value("UINT32", ROCAL_UINT32)
         .export_values();
     py::enum_<RocalOutputMemType>(types_m, "RocalOutputMemType", "Output memory types")
         .value("HOST_MEMORY", ROCAL_MEMCPY_HOST)
@@ -1164,6 +1167,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("transpose", &rocalTranspose,
           py::return_value_policy::reference);
     m.def("log1p", &rocalLog1p,
-    py::return_value_policy::reference);
+           py::return_value_policy::reference);
+    m.def("externalSource", &rocalExternalSource,
+           py::return_value_policy::reference);
 }
 }  // namespace rocal

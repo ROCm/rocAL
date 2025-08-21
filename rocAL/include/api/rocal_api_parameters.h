@@ -50,7 +50,7 @@ extern "C" unsigned ROCAL_API_CALL rocalGetSeed();
  * \param end end value of the integer range
  * \return RocalIntParam representing the uniform random integer parameter.
  */
-extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntUniformRand(int start, int end);
+extern "C" RocalTensor ROCAL_API_CALL rocalCreateIntUniformRand(RocalContext p_context, int start, int end);
 
 /*! \brief updates uniform random integer parameter within a specified range.
  * \ingroup group_rocal_parameters
@@ -88,14 +88,14 @@ extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatUniformRand(float star
  * \param [in] val value to create float param
  * \return A new RocalFloatParam representing the float parameter.
  */
-extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatParameter(float val);
+extern "C" RocalTensor ROCAL_API_CALL rocalCreateFloatParameter(RocalContext p_context, float val);
 
 /*! \brief Creates a new int parameter with a specified value.
  * \ingroup group_rocal_parameters
  * \param [in] val value to create integer param
  * \return A new RocalIntParam representing the integer parameter.
  */
-extern "C" RocalIntParam ROCAL_API_CALL rocalCreateIntParameter(int val);
+extern "C" RocalTensor ROCAL_API_CALL rocalCreateIntParameter(RocalContext p_context, int val);
 
 /*! \brief Updates a float parameter with a new value.
  * \ingroup group_rocal_parameters
@@ -148,7 +148,7 @@ extern "C" RocalStatus ROCAL_API_CALL rocalUpdateIntRand(const int *values, cons
  * \param size size of the array
  * \return random float parameter
  */
-extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatRand(const float *values, const double *frequencies, unsigned size);
+extern "C" RocalTensor ROCAL_API_CALL rocalCreateFloatRand(RocalContext p_context, const float *values, const double *frequencies, unsigned size);
 
 /*! \brief update the float random value
  * \ingroup group_rocal_parameters
@@ -158,6 +158,6 @@ extern "C" RocalFloatParam ROCAL_API_CALL rocalCreateFloatRand(const float *valu
  * \param [in] updating_obj Rocal Float Param to update
  * \return rocal status value
  */
-extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatRand(const float *values, const double *frequencies, unsigned size, RocalFloatParam updating_obj);
+extern "C" RocalStatus ROCAL_API_CALL rocalUpdateFloatRand(RocalContext p_context, const float *values, const double *frequencies, unsigned size, RocalFloatParam updating_obj);
 
 #endif  // MIVISIONX_ROCAL_API_PARAMETERS_H

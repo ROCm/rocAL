@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "pipeline/commons.h"
+#include "pipeline/context.h"
 #include "parameters/parameter_factory.h"
 #include "rocal_api.h"
 
@@ -46,11 +47,29 @@ rocalGetFloatValue(RocalFloatParam p_obj) {
     return obj->core->get();
 }
 
-RocalIntParam ROCAL_API_CALL
+RocalTensor ROCAL_API_CALL
 rocalCreateIntUniformRand(
+    RocalContext p_context,
     int start,
     int end) {
-    return ParameterFactory::instance()->create_uniform_int_rand_param(start, end);
+        std::vector<size_t> new_dims;
+        Tensor* output_tensor = nullptr;
+        auto context = static_cast<Context*>(p_context);
+        new_dims = { context->user_batch_size(), 1 };
+        auto output_info = TensorInfo(std::move(new_dims),
+                           context->master_graph->mem_type(),
+                           RocalTensorDataType::INT32); // Change according to user passed dtype
+                        //    RocalTensorlayout::NONE,
+                        //    RocalColorFormat::U8); // Dummy Format
+        // output_info.set_dims(new_dims);
+        output_tensor = context->master_graph->create_tensor(output_info, false);
+        output_tensor->set_param(ParameterFactory::instance()->create_uniform_int_rand_param(start, end));
+        // auto someVar = output_tensor->get_param();
+        // std::cerr << "\n Success 1";
+        // auto floatParamVal = std::get<FloatParam*>(someVar);
+        // std::cerr << "\n Success 2";
+    return output_tensor;
+
 }
 
 RocalStatus ROCAL_API_CALL
@@ -96,24 +115,63 @@ rocalUpdateFloatUniformRand(
     return (obj->update(start, end) == 0) ? ROCAL_OK : ROCAL_UPDATE_PARAMETER_FAILED;
 }
 
-RocalFloatParam ROCAL_API_CALL
+RocalTensor ROCAL_API_CALL
 rocalCreateFloatRand(
+    RocalContext p_context,
     const float *values,
     const double *frequencies,
     unsigned size) {
-    return ParameterFactory::instance()->create_custom_float_rand_param(values,
-                                                                        frequencies,
-                                                                        size);
+        auto context = static_cast<Context*>(p_context);
+        Tensor* output_tensor = nullptr;
+        std::vector<size_t> new_dims;
+        new_dims = { context->user_batch_size(), 1 };
+        auto output_info = TensorInfo(std::move(new_dims),
+                           context->master_graph->mem_type(),
+                           RocalTensorDataType::FP32,// Change according to user passed dtype
+                           RocalTensorlayout::NONE,
+                           RocalColorFormat::U8); // Dummy Format
+        // output_info.set_dims(new_dims);
+        output_tensor = context->master_graph->create_tensor(output_info, false);
+        output_tensor->set_param(ParameterFactory::instance()->create_custom_float_rand_param(values,
+                                                                     frequencies,
+                                                                     size));
+        auto someVar = output_tensor->get_param();
+        std::cerr << "\n Success 1";
+        auto floatParamVal = std::get<FloatParam*>(someVar);
+        std::cerr << "\n Success 2";
+        return output_tensor;
 }
 
-RocalFloatParam ROCAL_API_CALL
-rocalCreateFloatParameter(float val) {
-    return ParameterFactory::instance()->create_single_value_float_param(val);
+RocalTensor ROCAL_API_CALL
+rocalCreateFloatParameter(RocalContext p_context, float val) {
+        auto context = static_cast<Context*>(p_context);
+        std::vector<size_t> new_dims;
+        Tensor* output_tensor = nullptr;
+        new_dims = { context->user_batch_size(), 1 };
+        auto output_info = TensorInfo(std::move(new_dims),
+                           context->master_graph->mem_type(),
+                           RocalTensorDataType::FP32,
+                            RocalTensorlayout::NONE,
+                           RocalColorFormat::U8); 
+        output_tensor = context->master_graph->create_tensor(output_info, false);
+        output_tensor->set_param(ParameterFactory::instance()->create_single_value_float_param(val));
+    return output_tensor;
 }
 
-RocalIntParam ROCAL_API_CALL
-rocalCreateIntParameter(int val) {
-    return ParameterFactory::instance()->create_single_value_int_param(val);
+RocalTensor ROCAL_API_CALL
+rocalCreateIntParameter(RocalContext p_context, int val) {
+        auto context = static_cast<Context*>(p_context);
+        std::vector<size_t> new_dims;
+        Tensor* output_tensor = nullptr;
+        new_dims = { context->user_batch_size(), 1 }; // 1D Tensor
+        auto output_info = TensorInfo(std::move(new_dims),
+                           context->master_graph->mem_type(),
+                           RocalTensorDataType::UINT32,
+                           RocalTensorlayout::NONE,
+                           RocalColorFormat::U8); 
+        output_tensor = context->master_graph->create_tensor(output_info, false);
+        output_tensor->set_param(ParameterFactory::instance()->create_single_value_int_param(val));
+        return output_tensor;
 }
 
 RocalStatus ROCAL_API_CALL
@@ -146,6 +204,7 @@ rocalUpdateFloatParameter(float new_val, RocalFloatParam p_input_obj) {
 
 RocalStatus ROCAL_API_CALL
 rocalUpdateFloatRand(
+    RocalContext p_context,
     const float *values,
     const double *frequencies,
     unsigned size,

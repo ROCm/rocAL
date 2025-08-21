@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,24 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <list>
-
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class ContrastNode : public Node {
+class ExternalSourceNode : public Node {
    public:
-    ContrastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    ContrastNode() = delete;
-    void init(float contrast_factor, float contrast_center);
-    void init(FloatParam *contrast_factor_param, FloatParam *contrast_center_param);
-    void init(Tensor *contrast_factor_param, Tensor *contrast_center_param);
+    ExternalSourceNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
+    ExternalSourceNode() = delete;
+
+    void init(const char* source, const char* file_path, int dtype);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _factor, _center;
-    Tensor *_tensor_factor = nullptr, *_tensor_center = nullptr;
-    constexpr static float CONTRAST_FACTOR_RANGE[2] = {0.1, 1.95};
-    constexpr static float CONTRAST_CENTER_RANGE[2] = {60, 90};
+    char* _source;
+    char* _file_path;
+    int _dtype;
 };

@@ -249,9 +249,9 @@ def contrast(*inputs, contrast=None, contrast_center=None, device=None, output_l
 
         @return    Image with adjusted contrast
     """
-    contrast = b.createFloatParameter(
+    contrast = b.createFloatParameter(Pipeline._current_pipeline._handle, 
         contrast) if isinstance(contrast, float) else contrast
-    contrast_center = b.createFloatParameter(contrast_center) if isinstance(
+    contrast_center = b.createFloatParameter(Pipeline._current_pipeline._handle, contrast_center) if isinstance(
         contrast_center, float) else contrast_center
 
     # pybind call arguments
@@ -1279,3 +1279,9 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
     log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return log_output
+
+def external_source_operator(*inputs, file_path=" ", source=" ", dtype = None, size=0):
+    kwargs_pybind = {"input_image": inputs[0], "file_path": file_path, "source":source, "dtype":dtype, "size":size, "is_output":False}
+    output = b.externalSource(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    Pipeline._current_pipeline._external_source_operator = True
+    return (output)

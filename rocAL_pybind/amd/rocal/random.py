@@ -37,7 +37,7 @@ def coin_flip(*inputs, probability=0.5):
     """
     values = [0, 1]
     frequencies = [1 - probability, probability]
-    output_array = b.createIntRand(values, frequencies)
+    output_array = b.createIntRand(Pipeline._current_pipeline._handle, values, frequencies)
     return output_array
 
 def uniform(*inputs, range=[-1.0, 1.0]):

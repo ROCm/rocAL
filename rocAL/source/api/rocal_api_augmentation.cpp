@@ -1174,13 +1174,43 @@ rocalFlipFixed(
     return output;
 }
 
+// RocalTensor ROCAL_API_CALL
+// rocalContrast(
+//     RocalContext p_context,
+//     RocalTensor p_input,
+//     bool is_output,
+//     RocalFloatParam p_contrast_factor,
+//     RocalFloatParam p_contrast_center,
+//     RocalTensorLayout output_layout,
+//     RocalTensorOutputType output_datatype) {
+//     Tensor* output = nullptr;
+//     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+//     ROCAL_INVALID_INPUT_ERR(p_input, output);
+//     auto context = static_cast<Context*>(p_context);
+//     auto input = static_cast<Tensor*>(p_input);
+//     auto contrast_factor = static_cast<FloatParam*>(p_contrast_factor);
+//     auto contrast_center = static_cast<FloatParam*>(p_contrast_center);
+//     try {
+//         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+//         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+//         TensorInfo output_info = input->info();
+//         output_info.set_tensor_layout(op_tensor_layout);
+//         output_info.set_data_type(op_tensor_datatype);
+//         output = context->master_graph->create_tensor(output_info, is_output);
+//         context->master_graph->add_node<ContrastNode>({input}, {output})->init(contrast_factor, contrast_center);
+//     } catch (const std::exception& e) {
+//         ROCAL_PRINT_EXCEPTION(context, e);
+//     }
+//     return output;
+// }
+
 RocalTensor ROCAL_API_CALL
 rocalContrast(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
-    RocalFloatParam p_contrast_factor,
-    RocalFloatParam p_contrast_center,
+    RocalTensor p_contrast_factor,
+    RocalTensor p_contrast_center,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1188,8 +1218,8 @@ rocalContrast(
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto contrast_factor = static_cast<FloatParam*>(p_contrast_factor);
-    auto contrast_center = static_cast<FloatParam*>(p_contrast_center);
+    auto contrast_factor = static_cast<Tensor*>(p_contrast_factor);
+    auto contrast_center = static_cast<Tensor*>(p_contrast_center);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -2436,5 +2466,41 @@ RocalTensor rocalLog1p(RocalContext p_context,
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalExternalSource(
+        RocalContext p_context,
+        RocalTensor p_input,
+        const char* file_path,
+        const char* source,
+        int dtype,
+        int size,
+        bool is_output)
+{
+    std::cout << "Received string from Python: " << source << std::endl;
+    Tensor* output = nullptr;
+    if ((p_context == nullptr)) {
+        ERR("Invalid ROCAL context")
+        return output;
+    }
+
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(dtype);
+
+    TensorInfo output_info, input_info;
+    std::vector<size_t> new_dims = {context->user_batch_size(),1};
+
+    auto info = TensorInfo(std::move(new_dims),
+                           context->master_graph->mem_type(),
+                           op_tensor_datatype,// Change according to user passed dtype
+                           RocalTensorlayout::NONE,
+                           RocalColorFormat::U8); // Dummy Format
+    info.set_external_source();
+    std::cerr << "\n In ESO - check if its set or not - " << info.is_external_source();
+    output = context->master_graph->create_tensor(info, is_output);
+    context->master_graph->add_node<ExternalSourceNode>({input}, {output})->init(source, file_path, dtype);
     return output;
 }
