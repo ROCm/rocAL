@@ -2,6 +2,11 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
+## rocAL 2.4.0 for ROCm 7.1.0 (Unreleased)
+
+### Added
+* Added JAX iterator support in rocAL
+
 ## rocAL 2.3.0 for ROCm 7.0.0
 
 ### Added
