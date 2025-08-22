@@ -721,8 +721,8 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
         DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
-        // For partial decoder API's use FUSED_CROP_ROCJPEG_DEC type when the user requests for rocJpeg decoder
-        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::FUSED_CROP_ROCJPEG_DEC;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
         auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE_LMDB_RECORD, decoder_type, source_path, "");
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
@@ -787,8 +787,8 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
         DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
-        // For partial decoder API's use FUSED_CROP_ROCJPEG_DEC type when the user requests for rocJpeg decoder
-        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::FUSED_CROP_ROCJPEG_DEC;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
         auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE2_LMDB_RECORD, decoder_type, source_path, "");
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
@@ -1099,8 +1099,8 @@ rocalFusedJpegCrop(
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
         DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
-        // For partial decoder API's use FUSED_CROP_ROCJPEG_DEC type when the user requests for rocJpeg decoder
-        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::FUSED_CROP_ROCJPEG_DEC;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
         auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, decoder_type, source_path, "");
 
@@ -1160,8 +1160,8 @@ rocalJpegCOCOFileSourcePartial(
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
         DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
-        // For partial decoder API's use FUSED_CROP_ROCJPEG_DEC type when the user requests for rocJpeg decoder
-        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::FUSED_CROP_ROCJPEG_DEC;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
         auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, decoder_type, source_path, json_path);
 
@@ -1228,8 +1228,8 @@ rocalJpegCOCOFileSourcePartialSingleShard(
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
         DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
-        // For partial decoder API's use FUSED_CROP_ROCJPEG_DEC type when the user requests for rocJpeg decoder
-        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::FUSED_CROP_ROCJPEG_DEC;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
         auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, decoder_type, source_path, json_path);
 
@@ -1548,8 +1548,8 @@ rocalFusedJpegCropSingleShard(
         }
 
         DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
-        // For partial decoder API's use FUSED_CROP_ROCJPEG_DEC type when the user requests for rocJpeg decoder
-        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::FUSED_CROP_ROCJPEG_DEC;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
         auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, decoder_type, source_path, "");
 
