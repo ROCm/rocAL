@@ -1372,6 +1372,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalExternalSource(RocalContext context, RocalTensor p_input, const char* file_path, const char* input, int dtype, int len, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalExternalSource(RocalContext context, RocalTensor p_input, unsigned long long function_id, int dtype, RocalTensorLayout output_layout, bool is_output);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

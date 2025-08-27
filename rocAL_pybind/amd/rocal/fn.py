@@ -1280,8 +1280,9 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return log_output
 
-def external_source_operator(*inputs, file_path=" ", source=" ", dtype = None, size=0):
-    kwargs_pybind = {"input_image": inputs[0], "file_path": file_path, "source":source, "dtype":dtype, "size":size, "is_output":False}
-    output = b.externalSource(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+def python_function(*inputs, function, dtype = None, layout = None):
+    function_id = id(function)
+    kwargs_pybind = {"input_image": inputs[0], "function_id": function_id, "dtype": dtype, "layout": layout, "is_output": False}
+    output = b.externalSource(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     Pipeline._current_pipeline._external_source_operator = True
     return (output)

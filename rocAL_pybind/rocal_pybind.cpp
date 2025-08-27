@@ -291,8 +291,14 @@ PYBIND11_MODULE(rocal_pybind, m) {
     // Bind the C++ structure
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it", py::return_value_policy::reference);
-    m.def("rocalVerify", &rocalVerify);
-    m.def("rocalRun", &rocalRun, py::return_value_policy::reference);
+    m.def("rocalVerify", [](RocalContext ctx) {
+        py::gil_scoped_release release;
+        return rocalVerify(ctx);
+    });
+    m.def("rocalRun", [](RocalContext ctx) {
+        py::gil_scoped_release release;
+        return rocalRun(ctx);
+    }, py::return_value_policy::reference);
     m.def("rocalRelease", &rocalRelease, py::return_value_policy::reference);
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")

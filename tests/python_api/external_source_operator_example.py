@@ -22,6 +22,10 @@ def generate_random_numbers1(count):
     """Generate a list of random numbers."""
     return [9,9,9,9,9]
 
+def print_output_shape(output):
+    print(output.shape)
+    return output
+
 def draw_patches(img, idx, device):
     # image is expected as a tensor, bboxes as numpy
     img = img.astype(np.uint8)  # Convert to 8-bit unsigned integers
@@ -49,13 +53,13 @@ def main():
     max_height = 720
     max_width = 640
     color_format = types.RGB
-    data_path="/data/MIVisionX-data/rocal_data/coco/coco_10_img/train_10images_2017/"
+    data_path="/data/MIVisionX-data/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/"
     decoder_device = 'cpu'
     # Execute the pythonScript containing read_array_from_file definition
     data_type = types.FLOAT
     file_path = os.path.abspath(__file__)
     # pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC , tensor_dtype=types.INT32, output_memory_type=types.HOST_MEMORY if rocal_cpu else types.DEVICE_MEMORY)
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id,
+    pipe = Pipeline(batch_size=batch_size, num_threads=8, device_id=device_id,
                                                    seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT16)
     with pipe:
         jpegs, _ = fn.readers.file(file_root=data_path)
@@ -68,14 +72,14 @@ def main():
                                     shard_id=local_rank,
                                     num_shards=world_size,
                                     random_shuffle=False)
-        output = fn.external_source_operator(images, file_path = file_path, source = "generate_random_numbers", dtype=types.INT32, size=batch_size)
-        output1 = fn.external_source_operator(images, file_path = file_path, source = "generate_random_numbers1", dtype=types.INT32, size=batch_size)
-        contrast_output = fn.contrast(images, contrast_center=output, contrast = output1)
+        output = fn.python_function(images, function = print_output_shape, dtype=types.UINT8, layout=types.NHWC)
+        # output1 = fn.python_function(images, function = generate_random_numbers1, dtype=types.INT32)
+        # contrast_output = fn.contrast(images, contrast_center=output, contrast = output1)
         # blur_output = fn.blur(images, window_size=output1)
         # # brightness = fn.brightness(images)
 
         # # print("output...", blur_output)
-        pipe.set_outputs(contrast_output)
+        pipe.set_outputs(output)
     pipe.build()
     
     # Dataloader
@@ -86,15 +90,17 @@ def main():
     # Enumerate over the Dataloader
     for epoch in range(int(1)):
         print("EPOCH:::::", epoch)
+        import threading, sys
+        print("Main thread owns GIL:", threading.current_thread() is threading.main_thread())
         for i, (output_list, labels) in enumerate(data_loader, 0):
             for j in range(len(output_list)):
-                print("**************", i, "*******************")
-                print("**************starts*******************")
-                print("\nImages:\n", output_list[j])
-                print("\nLABELS:\n", labels)
-                print("**************ends*******************")
-                print("**************", i, "*******************")
-                draw_patches(output_list[j], cnt, "cpu")
+                # print("**************", i, "*******************")
+                # print("**************starts*******************")
+                # print("\nImages:\n", output_list[j])
+                # print("\nLABELS:\n", labels)
+                # print("**************ends*******************")
+                # print("**************", i, "*******************")
+                # draw_patches(output_list[j], cnt, "cpu")
                 cnt += len(output_list[j])
 
         data_loader.reset()

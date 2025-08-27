@@ -2473,15 +2473,13 @@ RocalTensor ROCAL_API_CALL
 rocalExternalSource(
         RocalContext p_context,
         RocalTensor p_input,
-        const char* file_path,
-        const char* source,
+        unsigned long long function_id,
         int dtype,
-        int size,
+        RocalTensorLayout output_layout,
         bool is_output)
 {
-    std::cout << "Received string from Python: " << source << std::endl;
     Tensor* output = nullptr;
-    if ((p_context == nullptr)) {
+    if (p_context == nullptr) {
         ERR("Invalid ROCAL context")
         return output;
     }
@@ -2489,6 +2487,7 @@ rocalExternalSource(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(dtype);
+    RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
 
     TensorInfo output_info, input_info;
     std::vector<size_t> new_dims = {context->user_batch_size(),1};
@@ -2496,11 +2495,10 @@ rocalExternalSource(
     auto info = TensorInfo(std::move(new_dims),
                            context->master_graph->mem_type(),
                            op_tensor_datatype,// Change according to user passed dtype
-                           RocalTensorlayout::NONE,
+                           op_tensor_layout,
                            RocalColorFormat::U8); // Dummy Format
     info.set_external_source();
-    std::cerr << "\n In ESO - check if its set or not - " << info.is_external_source();
     output = context->master_graph->create_tensor(info, is_output);
-    context->master_graph->add_node<ExternalSourceNode>({input}, {output})->init(source, file_path, dtype);
+    context->master_graph->add_node<ExternalSourceNode>({input}, {output})->init(function_id, dtype);
     return output;
 }
