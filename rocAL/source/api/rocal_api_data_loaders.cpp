@@ -168,9 +168,9 @@ auto convert_decoder_mode = [](RocalDecodeDevice decode_mode) {
 auto convert_video_decoder_type = [](RocalDecoderType decoder_type) {
     switch (decoder_type) {
         case ROCAL_DECODER_VIDEO_FFMPEG_SW:
-            return DecoderType::FFMPEG_SW_DECODE;
+            return DecoderType::FFMPEG_VIDEO;
         case ROCAL_DECODER_VIDEO_ROCDECODE:
-            return DecoderType::ROCDEC_VIDEO_DECODE;
+            return DecoderType::ROCDECODE_VIDEO;
         default:
             THROW("Unsupported video decoder type" + TOSTR(decoder_type))
     }
@@ -210,8 +210,8 @@ rocalJpegFileSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -271,8 +271,8 @@ rocalJpegFileSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -462,8 +462,8 @@ rocalJpegCaffe2LMDBRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -521,8 +521,8 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -583,8 +583,8 @@ rocalJpegCaffeLMDBRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -644,8 +644,8 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -830,8 +830,8 @@ rocalMXNetRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -892,8 +892,8 @@ rocalMXNetRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -955,8 +955,8 @@ rocalJpegCOCOFileSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1018,8 +1018,8 @@ rocalJpegCOCOFileSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -1267,8 +1267,8 @@ rocalJpegTFRecordSource(
         };
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
             THROW("internal shard count should be bigger than 0")
@@ -1336,8 +1336,8 @@ rocalJpegTFRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
-        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
+        if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
             THROW("Shard count should be bigger than 0")
@@ -2172,7 +2172,7 @@ rocalJpegExternalFileSource(
     try {
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV_DEC;
+        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if ((decode_size_policy == ROCAL_USE_MAX_SIZE) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED))
             THROW("use_max_size is not supported in external source reader");
 
@@ -2241,7 +2241,7 @@ rocalAudioFileSourceSingleShard(
         } else {
             LOG("User input size " + TOSTR(max_decoded_samples) + " x " + TOSTR(max_decoded_channels))
         }
-        auto [max_sample_length, max_channels] = use_input_dimension ? std::make_tuple(max_decoded_samples, max_decoded_channels) : evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
+        auto [max_sample_length, max_channels] = use_input_dimension ? std::make_tuple(max_decoded_samples, max_decoded_channels) : evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
@@ -2253,7 +2253,7 @@ rocalAudioFileSourceSingleShard(
         output->reset_audio_sample_rate();
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
-        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), sharding_info);
+        context->master_graph->add_node<AudioLoaderSingleShardNode>({}, {output})->Init(shard_id, shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), sharding_info);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
@@ -2305,7 +2305,7 @@ rocalAudioFileSource(
         } else {
             LOG("User input size " + TOSTR(max_decoded_samples) + " x " + TOSTR(max_decoded_channels))
         }
-        auto [max_sample_length, max_channels] = use_input_dimension ? std::make_tuple(max_decoded_samples, max_decoded_channels) : evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
+        auto [max_sample_length, max_channels] = use_input_dimension ? std::make_tuple(max_decoded_samples, max_decoded_channels) : evaluate_audio_data_set(StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE, source_path, source_file_list_path, context->master_graph->meta_data_reader());
         INFO("Internal buffer size for audio samples = " + TOSTR(max_sample_length) + " and channels = " + TOSTR(max_channels))
         RocalTensorDataType tensor_data_type = RocalTensorDataType::FP32;
         std::vector<size_t> dims = {context->user_batch_size(), max_sample_length, max_channels};
@@ -2320,7 +2320,7 @@ rocalAudioFileSource(
             THROW("internal shard count should be bigger than 0")
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), sharding_info);
+        context->master_graph->add_node<AudioLoaderNode>({}, {output})->Init(shard_count, cpu_num_threads, source_path, source_file_list_path, StorageType::FILE_SYSTEM, DecoderType::AUDIO_SOFTWARE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), sharding_info);
         context->master_graph->set_loop(loop);
         if (downmix && (max_channels > 1)) {
             TensorInfo output_info = info;
@@ -2370,7 +2370,7 @@ rocalWebDatasetSourceSingleShard(
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
         if (dec_type == ROCAL_DECODER_OPENCV) {
-            decType = DecoderType::OPENCV_DEC;
+            decType = DecoderType::OPENCV;
         }
 
         if (shard_count < 1) {

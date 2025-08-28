@@ -87,7 +87,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
         _random_crop_dec_param = std::make_shared<RocalRandomCropDecParam>(aspect_ratio_range, area_range, decoder_config.get_num_attempts(), _batch_size);
     }
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
-        if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
+        if (_decoder_config._type == DecoderType::ROCJPEG) {
             for (int i = 0; i < batch_size; i++) {
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             }
@@ -290,7 +290,7 @@ ImageReadAndDecode::load(unsigned char *buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-        if (_decoder_config._type != DecoderType::ROCJPEG_DEC) {
+        if (_decoder_config._type != DecoderType::ROCJPEG) {
 #pragma omp parallel for num_threads(_num_threads)
             for (size_t i = 0; i < _batch_size; i++) {
                 // initialize the actual decoded height and width with the maximum
@@ -339,7 +339,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = scaledw;
                 _actual_decoded_height[i] = scaledh;
             }
-        } else if (_decoder_config._type == DecoderType::ROCJPEG_DEC) {
+        } else if (_decoder_config._type == DecoderType::ROCJPEG) {
 #if ENABLE_HIP
             // Set device ID for load routine thread once
             if (!_set_device_id) {

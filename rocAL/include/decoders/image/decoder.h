@@ -42,12 +42,12 @@ THE SOFTWARE.
 enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode
     FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
-    OPENCV_DEC = 2,        //!< for back_up decoding
+    OPENCV = 2,            //!< for back_up decoding
     SKIP_DECODE = 3,       //!< For skipping decoding in case of uncompressed data from reader
-    FFMPEG_SW_DECODE = 4,   //!< for video decoding using CPU and FFMPEG
-    ROCDEC_VIDEO_DECODE = 5, //!< for video decoding using HW via rocDecode
-    AUDIO_SOFTWARE_DECODE = 6,  //!< Uses sndfile to decode audio files
-    ROCJPEG_DEC = 7             //!< rocJpeg hardware decoder for decoding jpeg files
+    FFMPEG_VIDEO = 4,      //!< for video decoding using CPU and FFMPEG
+    ROCDECODE_VIDEO = 5,   //!< for video decoding using HW via rocDecode
+    AUDIO_SOFTWARE = 6,    //!< Uses sndfile to decode audio files
+    ROCJPEG = 7            //!< rocJpeg hardware decoder for decoding jpeg files
 };
 
 class DecoderConfig {
