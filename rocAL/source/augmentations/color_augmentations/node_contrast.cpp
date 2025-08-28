@@ -32,16 +32,8 @@ void ContrastNode::create_node() {
     if (_node)
         return;
 
-    if(_tensor_factor && _tensor_factor->info().is_external_source()) {
-        _factor.set_tensor(_tensor_factor->handle());
-    } else {
-        _factor.create_tensor(_graph, VX_TYPE_FLOAT32, _batch_size);
-    }
-    if(_tensor_center && _tensor_center->info().is_external_source()) {
-        _center.set_tensor(_tensor_center->handle());
-    } else {
-        _center.create_tensor(_graph, VX_TYPE_FLOAT32, _batch_size);
-    }
+    _factor.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    _center.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -49,7 +41,7 @@ void ContrastNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    _node = vxExtRppContrast(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _factor.default_tensor(), _center.default_tensor(), input_layout_vx, output_layout_vx,roi_type_vx);
+    _node = vxExtRppContrast(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _factor.default_array(), _center.default_array(), input_layout_vx, output_layout_vx,roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the contrast (vxExtRppContrast) node failed: " + TOSTR(status))
@@ -65,21 +57,7 @@ void ContrastNode::init(FloatParam *contrast_factor_param, FloatParam *contrast_
     _center.set_param(core(contrast_center_param));
 }
 
-void ContrastNode::init(Tensor *contrast_factor_tensor, Tensor *contrast_center_tensor) {
-    std::cerr << "\n In The init of Tensor*";
-    _tensor_factor = contrast_factor_tensor;
-    _tensor_center = contrast_center_tensor;
-    if (_tensor_factor && _tensor_factor->info().is_external_source() == false) {
-        _factor.set_param(core(std::get<FloatParam*>(contrast_factor_tensor->get_param())));
-    }
-    if (_tensor_center && _tensor_center->info().is_external_source() == false) {
-        _center.set_param(core(std::get<FloatParam*>(contrast_center_tensor->get_param())));
-    }
-}
-
 void ContrastNode::update_node() {
-    if (_tensor_factor && _tensor_factor->info().is_external_source() == false)
-        _factor.update_tensor();
-    if (_tensor_center && _tensor_center->info().is_external_source() == false)
-        _center.update_tensor();
+    _factor.update_array();
+    _center.update_array();
 }

@@ -25,11 +25,12 @@ THE SOFTWARE.
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
+#include <vx_ext_rpp.h>  // for vxExtPythonFunction and AMD affinity enums via OpenVX AMD ext
 
-class ExternalSourceNode : public Node {
+class PythonFunctionNode : public Node {
    public:
-    ExternalSourceNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
-    ExternalSourceNode() = delete;
+    PythonFunctionNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
+    PythonFunctionNode() = delete;
 
     void init(unsigned long long function_id, int dtype);
 
@@ -38,6 +39,6 @@ class ExternalSourceNode : public Node {
     void update_node() override;
 
    private:
-    unsigned long long _function_id;
-    int _dtype;
+    unsigned long long _function_id = 0;
+    int _dtype = 0;
 };

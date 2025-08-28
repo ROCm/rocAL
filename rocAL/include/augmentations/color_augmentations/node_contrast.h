@@ -33,7 +33,6 @@ class ContrastNode : public Node {
     ContrastNode() = delete;
     void init(float contrast_factor, float contrast_center);
     void init(FloatParam *contrast_factor_param, FloatParam *contrast_center_param);
-    void init(Tensor *contrast_factor_param, Tensor *contrast_center_param);
 
    protected:
     void create_node() override;
@@ -41,7 +40,6 @@ class ContrastNode : public Node {
 
    private:
     ParameterVX<float> _factor, _center;
-    Tensor *_tensor_factor = nullptr, *_tensor_center = nullptr;
     constexpr static float CONTRAST_FACTOR_RANGE[2] = {0.1, 1.95};
     constexpr static float CONTRAST_CENTER_RANGE[2] = {60, 90};
 };

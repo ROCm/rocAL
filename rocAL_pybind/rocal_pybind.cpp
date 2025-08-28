@@ -1174,7 +1174,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("log1p", &rocalLog1p,
            py::return_value_policy::reference);
-    m.def("externalSource", &rocalExternalSource,
+    m.def("pythonFunction", &rocalPythonFunction,
            py::return_value_policy::reference);
 }
 }  // namespace rocal

@@ -325,7 +325,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGammaFixed(RocalContext context, Roca
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalContrast(RocalContext context, RocalTensor input,
                                                     bool is_output,
-                                                    RocalTensor contrast_factor = NULL, RocalTensor contrast_center = NULL,
+                                                    RocalFloatParam contrast_factor = NULL, RocalFloatParam contrast_center = NULL,
                                                     RocalTensorLayout output_layout = ROCAL_NONE,
                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -1372,6 +1372,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalExternalSource(RocalContext context, RocalTensor p_input, unsigned long long function_id, int dtype, RocalTensorLayout output_layout, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalPythonFunction(RocalContext context, RocalTensor input, unsigned long long function_id, int dtype, RocalTensorLayout output_layout, bool is_output);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

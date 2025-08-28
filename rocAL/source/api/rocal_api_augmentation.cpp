@@ -1174,43 +1174,13 @@ rocalFlipFixed(
     return output;
 }
 
-// RocalTensor ROCAL_API_CALL
-// rocalContrast(
-//     RocalContext p_context,
-//     RocalTensor p_input,
-//     bool is_output,
-//     RocalFloatParam p_contrast_factor,
-//     RocalFloatParam p_contrast_center,
-//     RocalTensorLayout output_layout,
-//     RocalTensorOutputType output_datatype) {
-//     Tensor* output = nullptr;
-//     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
-//     ROCAL_INVALID_INPUT_ERR(p_input, output);
-//     auto context = static_cast<Context*>(p_context);
-//     auto input = static_cast<Tensor*>(p_input);
-//     auto contrast_factor = static_cast<FloatParam*>(p_contrast_factor);
-//     auto contrast_center = static_cast<FloatParam*>(p_contrast_center);
-//     try {
-//         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-//         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
-//         TensorInfo output_info = input->info();
-//         output_info.set_tensor_layout(op_tensor_layout);
-//         output_info.set_data_type(op_tensor_datatype);
-//         output = context->master_graph->create_tensor(output_info, is_output);
-//         context->master_graph->add_node<ContrastNode>({input}, {output})->init(contrast_factor, contrast_center);
-//     } catch (const std::exception& e) {
-//         ROCAL_PRINT_EXCEPTION(context, e);
-//     }
-//     return output;
-// }
-
 RocalTensor ROCAL_API_CALL
 rocalContrast(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
-    RocalTensor p_contrast_factor,
-    RocalTensor p_contrast_center,
+    RocalFloatParam p_contrast_factor,
+    RocalFloatParam p_contrast_center,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1218,8 +1188,8 @@ rocalContrast(
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
-    auto contrast_factor = static_cast<Tensor*>(p_contrast_factor);
-    auto contrast_center = static_cast<Tensor*>(p_contrast_center);
+    auto contrast_factor = static_cast<FloatParam*>(p_contrast_factor);
+    auto contrast_center = static_cast<FloatParam*>(p_contrast_center);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -2470,7 +2440,7 @@ RocalTensor rocalLog1p(RocalContext p_context,
 }
 
 RocalTensor ROCAL_API_CALL
-rocalExternalSource(
+rocalPythonFunction(
         RocalContext p_context,
         RocalTensor p_input,
         unsigned long long function_id,
@@ -2479,26 +2449,30 @@ rocalExternalSource(
         bool is_output)
 {
     Tensor* output = nullptr;
-    if (p_context == nullptr) {
-        ERR("Invalid ROCAL context")
-        return output;
-    }
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
 
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
+    auto input   = static_cast<Tensor*>(p_input);
+
+    // Resolve dtype (default handled in Python front-end, but enforce here as well)
     RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(dtype);
+    // Resolve layout defaulting: if NONE, use pipeline default if any; otherwise fall back to input's layout
     RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+    if (op_tensor_layout == RocalTensorlayout::NONE) {
+        // Fall back to input's layout when pipeline layout is NONE
+        op_tensor_layout = input->info().layout();
+    }
 
-    TensorInfo output_info, input_info;
-    std::vector<size_t> new_dims = {context->user_batch_size(),1};
+    // Mirror input tensor info: dims derive from input to avoid runtime range_check error
+    TensorInfo output_info = input->info();
+    output_info.set_data_type(op_tensor_datatype);
+    output_info.set_tensor_layout(op_tensor_layout);
 
-    auto info = TensorInfo(std::move(new_dims),
-                           context->master_graph->mem_type(),
-                           op_tensor_datatype,// Change according to user passed dtype
-                           op_tensor_layout,
-                           RocalColorFormat::U8); // Dummy Format
-    info.set_external_source();
-    output = context->master_graph->create_tensor(info, is_output);
-    context->master_graph->add_node<ExternalSourceNode>({input}, {output})->init(function_id, dtype);
+    output = context->master_graph->create_tensor(output_info, is_output);
+
+    // Insert PythonFunction node
+    std::shared_ptr<PythonFunctionNode> py_node = context->master_graph->add_node<PythonFunctionNode>({input}, {output});
+    py_node->init(function_id, dtype);
     return output;
 }

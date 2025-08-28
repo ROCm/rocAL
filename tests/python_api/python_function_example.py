@@ -3,15 +3,8 @@ from amd.rocal.plugin.generic import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-from parse_config import parse_args
 import os
-import sys
 import cv2
-import inspect
-import builtins
-import ast
-import importlib
-import random
 import numpy as np
 
 def generate_random_numbers(count):
@@ -73,12 +66,6 @@ def main():
                                     num_shards=world_size,
                                     random_shuffle=False)
         output = fn.python_function(images, function = print_output_shape, dtype=types.UINT8, layout=types.NHWC)
-        # output1 = fn.python_function(images, function = generate_random_numbers1, dtype=types.INT32)
-        # contrast_output = fn.contrast(images, contrast_center=output, contrast = output1)
-        # blur_output = fn.blur(images, window_size=output1)
-        # # brightness = fn.brightness(images)
-
-        # # print("output...", blur_output)
         pipe.set_outputs(output)
     pipe.build()
     
