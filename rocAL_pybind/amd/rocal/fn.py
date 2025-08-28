@@ -1280,18 +1280,20 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return log_output
 
-def python_function(*inputs, function, dtype=types.UINT8, layout=None):
+def python_function(*inputs, function, dtype=None, layout=None):
     """
     Invokes a user supplied Python callable on the entire batch (host/CPU only).
     The callable is identified by its Python id() and executed in the backend kernel.
     - Input is exposed as a NumPy view of the batch (no copy for input).
     - The callable must return a NumPy array with matching batch size and shape.
-    - dtype defaults to types.UINT8 when not provided.
+    - dtype defaults to Pipeline tensor dtype when not provided.
     - layout defaults to Pipeline tensor_layout; if NONE, backend falls back to input's layout.
     """
     function_id = id(function)
     if layout is None:
         layout = Pipeline._current_pipeline._tensor_layout
+    if dtype is None:
+        dtype = Pipeline._current_pipeline._tensor_dtype
     kwargs_pybind = {"input_image": inputs[0], "function_id": function_id, "dtype": dtype, "layout": layout, "is_output": False}
     output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return output

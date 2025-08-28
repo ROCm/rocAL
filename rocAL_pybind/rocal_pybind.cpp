@@ -94,11 +94,14 @@ py::object wrapper_copy_to_tensor(RocalContext context, py::object p,
                                   float multiplier1, float multiplier2, float offset0, float offset1, float offset2,
                                   bool reverse_channels, RocalOutputMemType output_mem_type, uint max_roi_height, uint max_roi_width) {
     auto ptr = ctypes_void_ptr(p);
-    // call pure C++ function
-    int status = rocalToTensor(context, ptr, tensor_format, tensor_output_type, multiplier0,
-                               multiplier1, multiplier2, offset0, offset1, offset2,
-                               reverse_channels, output_mem_type, max_roi_height, max_roi_width);
-    return py::cast<py::none>(Py_None);
+    // call pure C++ function without holding the GIL (may block/wait for processing)
+    {
+        py::gil_scoped_release release;
+        int status = rocalToTensor(context, ptr, tensor_format, tensor_output_type, multiplier0,
+                                   multiplier1, multiplier2, offset0, offset1, offset2,
+                                   reverse_channels, output_mem_type, max_roi_height, max_roi_width);
+    }
+    return py::none();
 }
 
 py::object wrapperRocalExternalSourceFeedInput(
@@ -537,6 +540,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, RocalOutputMemType external_mem_type) {
                 auto ptr = ctypes_void_ptr(p);
+                py::gil_scoped_release release;
                 output_tensor.copy_data(static_cast<void *>(ptr), external_mem_type);
             },
             py::return_value_policy::reference,
@@ -546,6 +550,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::array array) {
                 auto buf = array.request();
+                py::gil_scoped_release release;
                 output_tensor.copy_data(static_cast<void *>(buf.ptr), RocalOutputMemType::ROCAL_MEMCPY_HOST);
             },
             py::return_value_policy::reference,
@@ -554,6 +559,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
                 )code")
         .def(
             "copy_data", [](rocalTensor &output_tensor, long array) {
+                py::gil_scoped_release release;
                 output_tensor.copy_data((void *)array, RocalOutputMemType::ROCAL_MEMCPY_GPU);
             },
             py::return_value_policy::reference,
@@ -563,6 +569,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         .def(
             "copy_data", [](rocalTensor &output_tensor, py::object p, uint x_offset, uint y_offset, uint roi_width, uint roi_height) {
                 auto ptr = ctypes_void_ptr(p);
+                py::gil_scoped_release release;
                 output_tensor.copy_data(static_cast<void *>(ptr), x_offset, y_offset, roi_width, roi_height);
             },
             R"code(
@@ -860,7 +867,12 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     // rocal_api_data_transfer.h
     m.def("rocalToTensor", &wrapper_copy_to_tensor);
     m.def("getOutputTensors", [](RocalContext context) {
-        rocalTensorList *output_tensor_list = rocalGetOutputTensors(context);
+        rocalTensorList *output_tensor_list = nullptr;
+        {
+            // May block on ring buffer - release GIL while waiting
+            py::gil_scoped_release release;
+            output_tensor_list = rocalGetOutputTensors(context);
+        }
         py::list list;
         unsigned int size_of_tensor_list = output_tensor_list->size();
         for (uint i = 0; i < size_of_tensor_list; i++)

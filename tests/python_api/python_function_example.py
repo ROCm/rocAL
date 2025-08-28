@@ -1,96 +1,111 @@
+# Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
 from amd.rocal.plugin.generic import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
-import os
+import os, sys
+import random
 import cv2
 import numpy as np
 
-def generate_random_numbers(count):
-    """Generate a list of random numbers."""
-    return [1,2,3,4,5]
 
-def generate_random_numbers1(count):
-    """Generate a list of random numbers."""
-    return [9,9,9,9,9]
+def random_augmentation(probability, augmented, original):
+    import random
+    condition = random.random() < probability
+    neg_condition = condition ^ True
+    return condition * augmented + neg_condition * original
 
-def print_output_shape(output):
-    print(output.shape)
-    return output
+def brightness_fn(img):
+    brightness_scale = random_augmentation(0.5, random.uniform(0.7, 1.3), 1.0)
+    print('Brightness scale: ', brightness_scale)
+    return (img * brightness_scale).astype(np.uint8)  # Casting is needed since it will return fp64 outputs otherwise
 
-def draw_patches(img, idx, device):
-    # image is expected as a tensor, bboxes as numpy
-    img = img.astype(np.uint8)  # Convert to 8-bit unsigned integers
-    # img = img.transpose([0, 2, 3, 1])
-    images_list = []
-    print("images_list",images_list)
-    for im in img:
-        images_list.append(im)
-    print("images_list",images_list)
-    img = cv2.vconcat(images_list)
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("eso_blur_host" + str(idx) + ".png", img,
-                [cv2.IMWRITE_PNG_COMPRESSION, 9])
+def draw_patches(image, idx, layout="nchw", dtype="fp32", device="cpu"):
+    # image is expected as a numpy array
+    if layout == "nchw":
+        image = image.transpose([1, 2, 0])
+    if dtype in ["fp16", "fp32"]:
+        image = image.astype("uint8")
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("output_folder/python_function/" + str(idx) +
+                "_" + "train" + ".png", image*255)
 
 
 def main():
-    # Create Pipeline instance
-    batch_size = 5
+    if len(sys.argv) < 3:
+        print("Please pass image_folder batch_size")
+        exit(0)
+    try:
+        path = "output_folder/python_function/"
+        isExist = os.path.exists(path)
+        if not isExist:
+            os.makedirs(path)
+    except OSError as error:
+        print(error)
+    data_path = sys.argv[1]
+    rocal_cpu = True  # Only supported for Host backend
+    batch_size = int(sys.argv[2])
     num_threads = 1
     device_id = 0
+    random_seed = random.SystemRandom().randint(0, 2**32 - 1)
+
     local_rank = 0
     world_size = 1
-    rocal_cpu = True
-    random_seed = 0
-    max_height = 720
-    max_width = 640
-    color_format = types.RGB
-    data_path="/data/MIVisionX-data/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/"
-    decoder_device = 'cpu'
-    # Execute the pythonScript containing read_array_from_file definition
-    data_type = types.FLOAT
-    file_path = os.path.abspath(__file__)
-    # pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id, seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC , tensor_dtype=types.INT32, output_memory_type=types.HOST_MEMORY if rocal_cpu else types.DEVICE_MEMORY)
-    pipe = Pipeline(batch_size=batch_size, num_threads=8, device_id=device_id,
+    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id,
                                                    seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT16)
     with pipe:
         jpegs, _ = fn.readers.file(file_root=data_path)
-        images = fn.decoders.image(jpegs,
-                                    file_root=data_path,
-                                    device=decoder_device,
-                                    max_decoded_width=max_width,
-                                    max_decoded_height=max_height,
-                                    output_type=color_format,
-                                    shard_id=local_rank,
-                                    num_shards=world_size,
-                                    random_shuffle=False)
-        output = fn.python_function(images, function = print_output_shape, dtype=types.UINT8, layout=types.NHWC)
-        pipe.set_outputs(output)
+        decode = fn.decoders.image(jpegs, file_root=data_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
+        rand_brightness_output = fn.python_function(decode, function = brightness_fn, dtype=types.UINT8, layout=types.NHWC)
+        flip_coin = fn.random.coin_flip(probability=0.5)
+        cmnp = fn.crop_mirror_normalize(rand_brightness_output,
+                                        output_layout=types.NHWC,
+                                        output_dtype=types.FLOAT16,
+                                        crop=(224, 224),
+                                        mirror=flip_coin,
+                                        mean=[0.485 * 255, 0.456 *
+                                              255, 0.406 * 255],
+                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255])
+        pipe.set_outputs(cmnp)
     pipe.build()
     
     # Dataloader
-    data_loader = ROCALClassificationIterator(
-        pipe, device="cpu", device_id=local_rank)
+    data_loader = ROCALClassificationIterator(pipe, device="cpu", device_id=local_rank)
     cnt = 0
 
     # Enumerate over the Dataloader
-    for epoch in range(int(1)):
-        print("EPOCH:::::", epoch)
-        import threading, sys
-        print("Main thread owns GIL:", threading.current_thread() is threading.main_thread())
-        for i, (output_list, labels) in enumerate(data_loader, 0):
-            for j in range(len(output_list)):
-                # print("**************", i, "*******************")
-                # print("**************starts*******************")
-                # print("\nImages:\n", output_list[j])
-                # print("\nLABELS:\n", labels)
-                # print("**************ends*******************")
-                # print("**************", i, "*******************")
-                # draw_patches(output_list[j], cnt, "cpu")
-                cnt += len(output_list[j])
-
+    for epoch in range(3):
+        print(
+            "+++++++++++++++++++++++++++++EPOCH+++++++++++++++++++++++++++++++++++++", epoch)
+        for i, it in enumerate(data_loader):
+            print(
+                "************************************** i *************************************", i)
+            for img in it[0]:
+                cnt += 1
+                draw_patches(img[0], cnt, layout="nhwc",
+                             dtype="fp16", device=rocal_cpu)
         data_loader.reset()
+    print("*********************************************************************")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
