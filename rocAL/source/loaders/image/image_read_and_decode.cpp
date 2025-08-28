@@ -321,7 +321,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _original_width[i] = original_width;
                 // decode the image and get the actual decoded image width and height
                 size_t scaledw, scaledh;
-                if (_decoder[i]->is_partial_decoder()) {
+                if (_decoder[i]->is_cropped_decoder()) {
                     if (_randombboxcrop_meta_data_reader) {
                         _decoder[i]->set_bbox_coords(_bbox_coords[i]);
                     } else if (_random_crop_dec_param) {

@@ -88,12 +88,12 @@ class HWRocJpegDecoder : public Decoder {
     ~HWRocJpegDecoder() override;
     void initialize(int device_id) override {}
     void initialize(int device_id, unsigned batch_size) override;
-    bool is_partial_decoder() override { return _is_partial_decoder; }
+    bool is_cropped_decoder() override { return _is_cropped_decoder; }
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
    private:
-    bool _is_partial_decoder = true;
+    bool _is_cropped_decoder = true;
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;
     RocJpegHandle _rocjpeg_handle;
