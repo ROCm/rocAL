@@ -59,6 +59,13 @@ find_package(LMDB QUIET)
 find_package(RapidJSON QUIET)
 find_package(StdFilesystem QUIET)
 find_package(HALF QUIET)
+if (PYTHON_VERSION_SUGGESTED)
+    find_package(Python3 "${PYTHON_VERSION_SUGGESTED}" EXACT QUIET COMPONENTS Interpreter Development)
+else()
+    set(Python3_FIND_VIRTUALENV FIRST)
+    find_package(Python3 QUIET COMPONENTS Interpreter Development)
+endif()	
+find_package(pybind11 QUIET CONFIG)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 # optional packages
@@ -225,6 +232,9 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
     # half
     include_directories(${HALF_INCLUDE_DIRS})
+    # Python/pybind11 for PythonFunction bridge
+    include_directories(${Python3_INCLUDE_DIRS})
+    include_directories(${pybind11_INCLUDE_DIRS})
     #rocDecode
     if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND)
         include_directories(${rocdecode_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
@@ -373,7 +383,7 @@ if(${BUILD_ROCAL})
     # -Wno-deprecated-declarations -- Do not warn about uses of functions, variables, and types marked as deprecated by using the deprecated attribute
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -mavx2 -mfma -mf16c -Wno-deprecated-declarations")
     message("-- ${White}rocAL -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
-    target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
+    target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST} ${Python3_LIBRARIES})
     message("-- ${White}rocAL -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 
     set_target_properties(rocal PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})

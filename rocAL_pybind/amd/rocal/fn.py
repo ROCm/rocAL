@@ -1287,13 +1287,48 @@ def python_function(*inputs, function, dtype=None, layout=None):
     - Input is exposed as a NumPy view of the batch (no copy for input).
     - The callable must return a NumPy array with matching batch size and shape.
     - dtype defaults to Pipeline tensor dtype when not provided.
-    - layout defaults to Pipeline tensor_layout; if NONE, backend falls back to input's layout.
+    - layout defaults to Pipeline tensor_layout when not provided.
+    
+    @param inputs (list)                                    The input tensor to process
+    @param function (callable)                              Python function to apply to the batch
+    @param dtype (type, optional, default = None)           Output data type (defaults to pipeline dtype)
+    @param layout (type, optional, default = None)          Output tensor layout (defaults to pipeline layout)
+    
+    @return    Transformed tensor after applying the Python function
+    
+    Note: This operation is CPU-only and requires the GIL for execution.
     """
+    # Validate inputs
+    if not inputs:
+        raise ValueError("python_function requires at least one input tensor")
+    
+    # Validate that function is callable
+    if not callable(function):
+        raise TypeError(f"Expected callable function, got {type(function).__name__}")
+    
+    # Validate function has correct signature (accepts one argument)
+    import inspect
+    try:
+        sig = inspect.signature(function)
+    except (ValueError, TypeError):
+        # If we can't inspect, we'll let it fail at runtime
+        pass
+    else:
+        params = list(sig.parameters.values())
+        if not params:
+            raise ValueError("Python function must accept at least one argument (the input batch)")
+    
     function_id = id(function)
+    # Pin the callable to prevent GC; backend uses raw id(pointer)
+    if not hasattr(Pipeline._current_pipeline, "_pyfunc_refs"):
+        Pipeline._current_pipeline._pyfunc_refs = []
+    Pipeline._current_pipeline._pyfunc_refs.append(function)
+    
     if layout is None:
         layout = Pipeline._current_pipeline._tensor_layout
     if dtype is None:
         dtype = Pipeline._current_pipeline._tensor_dtype
+        
     kwargs_pybind = {"input_image": inputs[0], "function_id": function_id, "dtype": dtype, "layout": layout, "is_output": False}
     output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return output

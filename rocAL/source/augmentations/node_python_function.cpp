@@ -20,9 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 #include <vx_ext_rpp.h>
+
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <vector>
+
+#include "helpers/rocal_python_bridge.h"
 #include "augmentations/node_python_function.h"
 #include "pipeline/exception.h"
+
+namespace py = pybind11;
 
 PythonFunctionNode::PythonFunctionNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {
@@ -70,4 +82,149 @@ void PythonFunctionNode::init(unsigned long long function_id, int dtype) {
 
 void PythonFunctionNode::update_node() {
     // No dynamic parameters to update for PythonFunction at the moment.
+}
+
+// C ABI bridge implementation for executing Python callables.
+// This is exported by rocAL and called by external consumers (e.g., MIVisionX OpenVX kernel).
+namespace {
+static std::pair<std::string, size_t> numpy_type_from_vx(vx_enum type) {
+    switch (type) {
+        case VX_TYPE_FLOAT32:
+            return {py::format_descriptor<float>::format(), sizeof(float)};
+        case VX_TYPE_FLOAT16:
+            return {std::string("e"), 2};  // NumPy float16
+        case VX_TYPE_UINT8:
+            return {py::format_descriptor<uint8_t>::format(), sizeof(uint8_t)};
+        case VX_TYPE_INT8:
+            return {py::format_descriptor<int8_t>::format(), sizeof(int8_t)};
+        case VX_TYPE_INT16:
+            return {py::format_descriptor<int16_t>::format(), sizeof(int16_t)};
+        case VX_TYPE_UINT32:
+            return {py::format_descriptor<uint32_t>::format(), sizeof(uint32_t)};
+        case VX_TYPE_INT32:
+            return {py::format_descriptor<int32_t>::format(), sizeof(int32_t)};
+        default:
+            throw std::runtime_error("Unsupported OpenVX dtype in rocal_process_python_function");
+    }
+}
+}  // anonymous namespace
+
+extern "C" ROCAL_API vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params) {
+    if (!src_ptr || !dst_ptr || !params)
+        return VX_ERROR_INVALID_REFERENCE;
+
+    // CPU-only for now
+    if (params->device_type == AGO_TARGET_AFFINITY_GPU)
+        return VX_ERROR_NOT_IMPLEMENTED;
+
+    try {
+        py::gil_scoped_acquire acquire;
+
+        // Resolve input/output numpy dtype and itemsize
+        auto in_np = numpy_type_from_vx(params->in_desc.dtype);
+        auto out_np = numpy_type_from_vx(params->out_desc.dtype);
+        const size_t in_itemsize = in_np.second;
+        const size_t out_itemsize = out_np.second;
+
+        // Build shape/strides (in bytes) for input view
+        const size_t in_ndim = params->in_desc.num_dims;
+        const size_t out_ndim = params->out_desc.num_dims;
+        std::vector<ssize_t> in_shape(in_ndim);
+        std::vector<ssize_t> in_strides(in_ndim);
+        for (size_t i = 0; i < in_ndim; ++i) {
+            in_shape[i] = static_cast<ssize_t>(params->in_desc.shape[i]);
+            in_strides[i] = static_cast<ssize_t>(params->in_desc.strides[i] * in_itemsize);
+        }
+
+        // Zero-copy NumPy view over src_ptr
+        py::capsule owner(src_ptr, [](void*) { /* no-op: memory owned by caller */ });
+        py::array numpy_batch(
+            py::dtype(in_np.first),
+            in_shape,
+            in_strides,
+            src_ptr,
+            owner);
+
+        // Reconstruct Python callable from function_id
+        py::handle fh(reinterpret_cast<PyObject*>(params->function_id));
+        py::object python_function = py::reinterpret_borrow<py::object>(fh);
+
+        // Validate that the object is callable
+        if (!PyCallable_Check(python_function.ptr())) {
+            ERR("Object is not callable\n");
+            return VX_ERROR_INVALID_REFERENCE;
+        }
+
+        // Call the python function
+        py::object result_obj = python_function(numpy_batch);
+
+        // Ensure contiguous result for memcpy
+        py::array result_array = py::cast<py::array>(result_obj);
+        
+        // Check if array is already C-contiguous to avoid unnecessary copy
+        bool is_c_contig = false;
+        try {
+            is_c_contig = py::cast<bool>(result_array.attr("flags").attr("c_contiguous"));
+        } catch (...) {
+            is_c_contig = false;
+        }
+        
+        py::array result_contig;
+        if (is_c_contig) {
+            // Already contiguous, no copy needed
+            result_contig = result_array;
+        } else {
+            // Need to make it contiguous
+            py::module numpy_module = py::module::import("numpy");
+            py::object ascontiguous_fn = numpy_module.attr("ascontiguousarray");
+            result_contig = ascontiguous_fn(result_array).cast<py::array>();
+        }
+
+        // Validate output against out_desc
+        py::buffer_info buf = result_contig.request();
+        if (buf.ndim != static_cast<int>(out_ndim)) {
+            ERR(std::string("Dimension mismatch - expected ") + std::to_string(out_ndim) + " dimensions, got " + std::to_string(buf.ndim));
+            return VX_ERROR_INVALID_DIMENSION;
+        }
+        // Compare shape
+        for (size_t i = 0; i < out_ndim; ++i) {
+            size_t expected = params->out_desc.shape[i];
+            size_t got = static_cast<size_t>(buf.shape[i]);
+            if (expected != got) {
+                ERR(std::string("Shape mismatch at dimension ") + std::to_string(i) +
+                    " - expected " + std::to_string(expected) +
+                    ", got " + std::to_string(got));
+                return VX_ERROR_INVALID_DIMENSION;
+            }
+        }
+        // Verify dtype itemsize (best-effort without inspecting exact dtype kind)
+        if (static_cast<size_t>(buf.itemsize) != out_itemsize) {
+            ERR(std::string("Data type size mismatch - expected ") + std::to_string(out_itemsize) +
+                " bytes, got " + std::to_string(buf.itemsize) + " bytes");
+            return VX_ERROR_INVALID_TYPE;
+        }
+
+        // Copy to destination
+        size_t total_bytes = static_cast<size_t>(buf.itemsize);
+        for (auto dim : buf.shape) total_bytes *= static_cast<size_t>(dim);
+        std::memcpy(dst_ptr, buf.ptr, total_bytes);
+
+        // Explicitly drop references before releasing GIL
+        result_contig = py::array();
+        result_array = py::array();
+        python_function = py::object();
+        numpy_batch = py::array();
+    } catch (const py::error_already_set& e) {
+        // Python exception occurred
+        ERR("Python error: " + std::string(e.what()) + "\n");
+        return VX_FAILURE;
+    } catch (const std::exception& e) {
+        ERR("std::exception: " + std::string(e.what()) + "\n");
+        return VX_FAILURE;
+    } catch (...) {
+        ERR("Unknown exception\n");
+        return VX_FAILURE;
+    }
+
+    return VX_SUCCESS;
 }
