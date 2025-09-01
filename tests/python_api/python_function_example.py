@@ -36,8 +36,16 @@ def random_augmentation(probability, augmented, original):
 
 def brightness_fn(img):
     brightness_scale = random_augmentation(0.5, random.uniform(0.7, 1.3), 1.0)
-    print('Brightness scale: ', brightness_scale)
     return (img * brightness_scale).astype(np.uint8)  # Casting is needed since it will return fp64 outputs otherwise
+
+class NormalizeWithStats:
+    def __init__(self, mean, std):
+        self.mean = np.array(mean).reshape(1, 1, 1, -1)
+        self.std = np.array(std).reshape(1, 1, 1, -1)
+    
+    def __call__(self, batch):
+        # Normalize using user passed mean and std
+        return ((batch - self.mean) / self.std).astype(np.float32)  # Casting is needed since it will return fp64 outputs otherwise
 
 def draw_patches(image, idx, layout="nchw", dtype="fp32", device="cpu"):
     # image is expected as a numpy array
@@ -64,28 +72,28 @@ def main():
     data_path = sys.argv[1]
     rocal_cpu = True  # Only supported for Host backend
     batch_size = int(sys.argv[2])
-    num_threads = 1
-    device_id = 0
     random_seed = random.SystemRandom().randint(0, 2**32 - 1)
 
     local_rank = 0
     world_size = 1
-    pipe = Pipeline(batch_size=batch_size, num_threads=num_threads, device_id=device_id,
+    normalizer = NormalizeWithStats(mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
+                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255])
+    pipe = Pipeline(batch_size=batch_size, num_threads=8, device_id=local_rank,
                                                    seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT16)
     with pipe:
         jpegs, _ = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image(jpegs, file_root=data_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
         rand_brightness_output = fn.python_function(decode, function = brightness_fn, dtype=types.UINT8, layout=types.NHWC)
         flip_coin = fn.random.coin_flip(probability=0.5)
-        cmnp = fn.crop_mirror_normalize(rand_brightness_output,
+        cropped_output = fn.crop_mirror_normalize(rand_brightness_output,
                                         output_layout=types.NHWC,
-                                        output_dtype=types.FLOAT16,
+                                        output_dtype=types.UINT8,
                                         crop=(224, 224),
                                         mirror=flip_coin,
-                                        mean=[0.485 * 255, 0.456 *
-                                              255, 0.406 * 255],
-                                        std=[0.229 * 255, 0.224 * 255, 0.225 * 255])
-        pipe.set_outputs(cmnp)
+                                        mean=[0, 0, 0],
+                                        std=[1, 1, 1])
+        normalized_output = fn.python_function(cropped_output, function = normalizer, dtype=types.FLOAT, layout=types.NHWC)
+        pipe.set_outputs(normalized_output)
     pipe.build()
     
     # Dataloader
@@ -102,9 +110,10 @@ def main():
             for img in it[0]:
                 cnt += 1
                 draw_patches(img[0], cnt, layout="nhwc",
-                             dtype="fp16", device=rocal_cpu)
+                             dtype="fp32", device=rocal_cpu)
         data_loader.reset()
-    print("*********************************************************************")
+    print("##############################  PYTHON FUNCTION OPERATOR SUCCESS  ############################")
+
 
 
 if __name__ == "__main__":
