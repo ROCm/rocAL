@@ -160,21 +160,10 @@ extern "C" ROCAL_API vx_status rocal_process_python_function(void* src_ptr, void
 
         // Ensure contiguous result for memcpy
         py::array result_array = py::cast<py::array>(result_obj);
-        
-        // Check if array is already C-contiguous to avoid unnecessary copy
-        bool is_c_contig = false;
-        try {
-            is_c_contig = py::cast<bool>(result_array.attr("flags").attr("c_contiguous"));
-        } catch (...) {
-            is_c_contig = false;
-        }
-        
-        py::array result_contig;
-        if (is_c_contig) {
-            // Already contiguous, no copy needed
-            result_contig = result_array;
-        } else {
-            // Need to make it contiguous
+        py::array result_contig = result_array;
+
+        if (!(result_array.flags() & py::array::c_style)) {
+            // Not C-contiguous, need to make it contiguous
             py::module numpy_module = py::module::import("numpy");
             py::object ascontiguous_fn = numpy_module.attr("ascontiguousarray");
             result_contig = ascontiguous_fn(result_array).cast<py::array>();
