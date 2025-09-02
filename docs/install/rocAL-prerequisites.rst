@@ -10,13 +10,15 @@ rocAL prerequisites
 
 rocAL requires ROCm running on `accelerators based on the CDNA architecture <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_ installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/docs-6.4.1/install/install-methods/amdgpu-installer-index.html>`_.
 
-To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ hardware image decoder, rocJPEG must be installed prior to installing rocAL. If rocJPEG is not installed prior to installing rocAL, the software image decoder, TurboJPEG, will be used instead.
+To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ hardware image decoder, rocJPEG must be installed prior to installing rocAL. If rocJPEG is not found, the TurboJPEG software decoder will be used instead.
 
-rocAL can be installed on the following Linux environments:
+rocAL has been tested on the following Linux environments:
   
 * Ubuntu 22.04 or 24.04
 * RedHat 8 or 9
 * SLES 15-SP5
+
+See `Supported operating systems <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-operating-systems>`_ for the complete list of ROCm supported Linux environments.
 
 :doc:`Building rocAL from source <./rocAL-build-and-install>` requires CMake Version 3.10 or later, AMD Clang++ Version 18.0.0 or later, and the following compiler support:
 
