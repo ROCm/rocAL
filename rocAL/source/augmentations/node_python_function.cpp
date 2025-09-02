@@ -124,7 +124,6 @@ extern "C" ROCAL_API vx_status rocal_process_python_function(void* src_ptr, void
         auto in_np = numpy_type_from_vx(params->in_desc.dtype);
         auto out_np = numpy_type_from_vx(params->out_desc.dtype);
         const size_t in_itemsize = in_np.second;
-        const size_t out_itemsize = out_np.second;
 
         // Build shape/strides (in bytes) for input view
         const size_t in_ndim = params->in_desc.num_dims;
@@ -186,11 +185,17 @@ extern "C" ROCAL_API vx_status rocal_process_python_function(void* src_ptr, void
                 return VX_ERROR_INVALID_DIMENSION;
             }
         }
-        // Verify dtype itemsize (best-effort without inspecting exact dtype kind)
-        if (static_cast<size_t>(buf.itemsize) != out_itemsize) {
-            ERR(std::string("Data type size mismatch - expected ") + std::to_string(out_itemsize) +
-                " bytes, got " + std::to_string(buf.itemsize) + " bytes");
-            return VX_ERROR_INVALID_TYPE;
+        // Verify returned array dtype matches expected dtype
+        {
+            py::dtype expected_dtype = py::dtype(out_np.first);
+            py::dtype got_dtype = result_contig.dtype();
+            std::string expected_kind = std::string(py::str(expected_dtype.attr("kind")));
+            std::string got_kind = std::string(py::str(got_dtype.attr("kind")));
+            if (expected_kind != got_kind) {
+                ERR(std::string("Data type kind mismatch - expected kind '") + expected_kind +
+                    "', got '" + got_kind + "'");
+                return VX_ERROR_INVALID_TYPE;
+            }
         }
 
         // Copy to destination
