@@ -272,10 +272,10 @@ void CircularBuffer::release() {
                 }
             } else {
 #else
-        free(_host_buffer_ptrs[buffIdx]);
+        if(_host_buffer_ptrs[buffIdx]) free(_host_buffer_ptrs[buffIdx]);
 #endif
 #if ENABLE_HIP || ENABLE_OPENCL
-            free(_host_buffer_ptrs[buffIdx]);
+        if(_host_buffer_ptrs[buffIdx]) free(_host_buffer_ptrs[buffIdx]);
         }
 #endif
     }
