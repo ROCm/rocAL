@@ -21,6 +21,7 @@ All the required prerequisites are installed when the package installation metho
   
   | TurboJPEG must be installed manually on SLES. 
   | To use FFMPeg on SLES and RedHat, the ``FFMPeg-dev`` package must be installed manually.
+  | To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ hardware image decoder, rocJPEG must be installed prior to installing rocAL. 
 
 
 Basic installation

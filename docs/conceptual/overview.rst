@@ -18,8 +18,8 @@ ROCm™ Augmentation Library (rocAL™) lets the user create hybrid pipelines to
 To optimize the preprocessing pipeline, rocAL utilizes the following features:
 
 - Prefetching: Loads the data for the next batch while the existing batch is under process. This parallelization allows more batches to be processed in less time.
-- Hybrid execution: Utilizes both the CPU and GPU simultaneously. For example, decoding the data on the CPU while running the training on the GPU. 
-- Hardware decoding: Uses the AMD VCN and VA-API to efficiently decode data on the hardware. 
+- Hybrid execution: Utilizes both the CPU and GPU simultaneously. For example, decoding the data on the CPU while running the training on the GPU.
+- Hardware decoding: Uses rocDecode and rocJPEG to decode data on hardware.
 - Batch processing: Groups and processes the data together as a batch.
 
 .. figure:: ../data/ch1_pipelines.png
@@ -90,7 +90,7 @@ Readers                                     Description
 | Video Reader                              | Reads videos from a list of files in a folder(s)    
 | Caffe LMDB Reader                         | Reads (key, value) pairs from Caffe LMDB            
 | Caffe2 LMDB Reader                        | Reads (key, value) pairs from Caffe2 LMDB           
-| COCO Reader – file source and keypoints   | Reads images and JSON annotations from COCO dataset 
+| COCO Reader - file source and keypoints   | Reads images and JSON annotations from COCO dataset 
 | TFRecord Reader                           | Reads from a TFRecord dataset                       
 | MXNet Reader                              | Reads from a RecordIO dataset
 | Web Dataset Reader                        | Reads from a web dataset
