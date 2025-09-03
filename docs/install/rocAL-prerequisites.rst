@@ -18,8 +18,6 @@ rocAL has been tested on the following Linux environments:
 
 * RHEL 8 and 9
 
-* SLES 15-SP5
-
 See `Supported operating systems <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-operating-systems>`_ for the complete list of ROCm supported Linux environments.
 
 :doc:`Building rocAL from source <./rocAL-build-and-install>` requires CMake Version 3.10 or later, AMD Clang++ Version 18.0.0 or later, and the following compiler support:
@@ -72,3 +70,4 @@ libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually
 
 .. |setup| replace:: ``rocAL-setup.py``
 .. _setup: https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py
+
