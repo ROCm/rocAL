@@ -32,7 +32,7 @@ class PythonFunctionNode : public Node {
     PythonFunctionNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
     PythonFunctionNode() = delete;
 
-    void init(unsigned long long function_id, int dtype);
+    void init(unsigned long long function_id);
 
    protected:
     void create_node() override;
@@ -40,5 +40,4 @@ class PythonFunctionNode : public Node {
 
    private:
     unsigned long long _function_id = 0;
-    int _dtype = 0;
 };

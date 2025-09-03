@@ -1329,6 +1329,6 @@ def python_function(*inputs, function, dtype=None, layout=None):
     if dtype is None:
         dtype = Pipeline._current_pipeline._tensor_dtype
         
-    kwargs_pybind = {"input_image": inputs[0], "function_id": function_id, "dtype": dtype, "layout": layout, "is_output": False}
+    kwargs_pybind = {"input_image": inputs[0], "function_id": function_id, "layout": layout, "dtype": dtype, "is_output": False}
     output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return output

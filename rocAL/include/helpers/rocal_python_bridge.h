@@ -77,14 +77,7 @@ Returns:
 - VX_FAILURE for runtime Python exceptions
 - VX_ERROR_NOT_IMPLEMENTED if device_type is GPU or environment cannot execute
 */
-#if !defined(ROCAL_API)
-#if defined(_WIN32) || defined(_WIN64)
-#define ROCAL_API __declspec(dllexport)
-#else
-#define ROCAL_API __attribute__((visibility("default")))
-#endif
-#endif
-ROCAL_API vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params);
+vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params);
 
 #ifdef __cplusplus
 } /* extern "C" */

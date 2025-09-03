@@ -2444,8 +2444,8 @@ rocalPythonFunction(
         RocalContext p_context,
         RocalTensor p_input,
         unsigned long long function_id,
-        int dtype,
         RocalTensorLayout output_layout,
+        RocalTensorOutputType output_datatype,
         bool is_output)
 {
     Tensor* output = nullptr;
@@ -2455,14 +2455,8 @@ rocalPythonFunction(
     auto context = static_cast<Context*>(p_context);
     auto input   = static_cast<Tensor*>(p_input);
 
-    // Resolve dtype (default handled in Python front-end, but enforce here as well)
-    RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(dtype);
-    // Resolve layout defaulting: if NONE, use pipeline default if any; otherwise fall back to input's layout
+    RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
     RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-    if (op_tensor_layout == RocalTensorlayout::NONE) {
-        // Fall back to input's layout when pipeline layout is NONE
-        op_tensor_layout = input->info().layout();
-    }
 
     // Mirror input tensor info: dims derive from input to avoid runtime range_check error
     TensorInfo output_info = input->info();
@@ -2470,9 +2464,6 @@ rocalPythonFunction(
     output_info.set_tensor_layout(op_tensor_layout);
 
     output = context->master_graph->create_tensor(output_info, is_output);
-
-    // Insert PythonFunction node
-    std::shared_ptr<PythonFunctionNode> py_node = context->master_graph->add_node<PythonFunctionNode>({input}, {output});
-    py_node->init(function_id, dtype);
+    context->master_graph->add_node<PythonFunctionNode>({input}, {output})->init(function_id);
     return output;
 }

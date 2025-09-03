@@ -56,18 +56,19 @@ void PythonFunctionNode::create_node() {
     vx_scalar input_layout_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &input_layout);
     vx_scalar output_layout_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &roi_type);
-    vx_scalar dtype_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &_dtype);
+    uint64_t bridge_fn_ptr = reinterpret_cast<uint64_t>(&rocal_process_python_function);
+    vx_scalar bridge_fn_ptr_vx = vxCreateScalar(vx_ctx, VX_TYPE_UINT64, &bridge_fn_ptr);
 
     _node = vxExtPythonFunction(
         _graph->get(),
         _inputs[0]->handle(),
         _inputs[0]->get_roi_tensor(),
         _outputs[0]->handle(),
+        bridge_fn_ptr_vx,
         function_id_vx,
         input_layout_vx,
         output_layout_vx,
-        roi_type_vx,
-        dtype_vx);
+        roi_type_vx);
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) {
@@ -75,14 +76,11 @@ void PythonFunctionNode::create_node() {
     }
 }
 
-void PythonFunctionNode::init(unsigned long long function_id, int dtype) {
+void PythonFunctionNode::init(unsigned long long function_id) {
     _function_id = function_id;
-    _dtype = dtype;
 }
 
-void PythonFunctionNode::update_node() {
-    // No dynamic parameters to update for PythonFunction at the moment.
-}
+void PythonFunctionNode::update_node() {}
 
 // C ABI bridge implementation for executing Python callables.
 // This is exported by rocAL and called by external consumers (e.g., MIVisionX OpenVX kernel).
@@ -109,7 +107,7 @@ static std::pair<std::string, size_t> numpy_type_from_vx(vx_enum type) {
 }
 }  // anonymous namespace
 
-extern "C" ROCAL_API vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params) {
+extern "C" vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params) {
     if (!src_ptr || !dst_ptr || !params)
         return VX_ERROR_INVALID_REFERENCE;
 
