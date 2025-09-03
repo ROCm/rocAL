@@ -65,7 +65,7 @@ else()
     set(Python3_FIND_VIRTUALENV FIRST)
     find_package(Python3 QUIET COMPONENTS Interpreter Development)
 endif()	
-find_package(pybind11 QUIET CONFIG)
+find_package(pybind11 QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 # optional packages
@@ -206,6 +206,14 @@ if(NOT HALF_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires HALF, Not Found ${ColourReset}")	
 endif()
+# Python3	
+if(NOT Python3_FOUND)	
+    message("-- ${Yellow}NOTE: rocAL PythonFunction operator requires Python3, Not Found${ColourReset}")
+endif()
+# PyBind11
+if(NOT pybind11_FOUND)	
+    message("-- ${Yellow}NOTE: rocAL PythonFunction operator requires pybind11, Not Found${ColourReset}")
+endif()
 
 if(${BUILD_ROCAL})
     # MIVisionX
@@ -232,9 +240,6 @@ if(${BUILD_ROCAL})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FILESYSTEM_LIBRARIES})	
     # half
     include_directories(${HALF_INCLUDE_DIRS})
-    # Python/pybind11 for PythonFunction bridge
-    include_directories(${Python3_INCLUDE_DIRS})
-    include_directories(${pybind11_INCLUDE_DIRS})
     #rocDecode
     if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND)
         include_directories(${rocdecode_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
@@ -296,6 +301,13 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_HIP=0)
         target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCL=0)
         message("-- ${White}rocAL built with CPU only Backend${ColourReset}")
+    endif()
+    # Python/pybind11 for PythonFunction operator
+    if (Python3_FOUND AND pybind11_FOUND)
+        include_directories(${Python3_INCLUDE_DIRS})
+        include_directories(${pybind11_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Python3_LIBRARIES})
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_PYTHON)
     endif()
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)
@@ -383,7 +395,7 @@ if(${BUILD_ROCAL})
     # -Wno-deprecated-declarations -- Do not warn about uses of functions, variables, and types marked as deprecated by using the deprecated attribute
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -mavx2 -mfma -mf16c -Wno-deprecated-declarations")
     message("-- ${White}rocAL -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
-    target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST} ${Python3_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
     message("-- ${White}rocAL -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 
     set_target_properties(rocal PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})

@@ -20,7 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "helpers/rocal_python_bridge.h"
+#include "augmentations/node_python_function.h"
+#include "pipeline/exception.h"
 
+#ifdef ROCAL_PYTHON
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <vx_ext_rpp.h>
@@ -29,10 +33,6 @@ THE SOFTWARE.
 #include <cstring>
 #include <string>
 #include <vector>
-
-#include "helpers/rocal_python_bridge.h"
-#include "augmentations/node_python_function.h"
-#include "pipeline/exception.h"
 
 namespace py = pybind11;
 
@@ -220,3 +220,4 @@ extern "C" vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr,
 
     return VX_SUCCESS;
 }
+#endif

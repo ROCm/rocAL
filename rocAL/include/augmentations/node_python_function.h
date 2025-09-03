@@ -25,7 +25,6 @@ THE SOFTWARE.
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
-#include <vx_ext_rpp.h>  // for vxExtPythonFunction and AMD affinity enums via OpenVX AMD ext
 
 class PythonFunctionNode : public Node {
    public:
