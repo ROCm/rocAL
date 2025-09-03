@@ -6,6 +6,8 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Added
 * Added JAX iterator support in rocAL
+### Removed
+* Removed OpenCL backend support
 
 ## rocAL 2.3.0 for ROCm 7.0.0
 
