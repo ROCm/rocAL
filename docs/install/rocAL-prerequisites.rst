@@ -14,7 +14,8 @@ To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.
 
 rocAL has been tested on the following Linux environments:
   
-* Ubuntu 22.04 or 24.04
+* Ubuntu 22.04 and 24.04
+
 * RedHat 8 or 9
 * SLES 15-SP5
 
