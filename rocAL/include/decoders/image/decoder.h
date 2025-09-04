@@ -34,11 +34,6 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #endif
 
-#if ENABLE_HIP
-#include "hip/hip_runtime_api.h"
-#include "hip/hip_runtime.h"
-#endif
-
 enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode
     FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
@@ -47,7 +42,8 @@ enum class DecoderType {
     FFMPEG_SW_DECODE = 4,   //!< for video decoding using CPU and FFMPEG
     ROCDEC_VIDEO_DECODE = 5, //!< for video decoding using HW via rocDecode
     AUDIO_SOFTWARE_DECODE = 6,  //!< Uses sndfile to decode audio files
-    ROCJPEG_DEC = 7             //!< rocJpeg hardware decoder for decoding jpeg files
+    ROCJPEG_DEC = 7,            //!< rocJpeg hardware decoder for decoding jpeg files
+    ROCJPEG_CROPPED = 8  //!< For partial decoding of jpeg files using rocJpeg hardware decoder 
 };
 
 class DecoderConfig {
