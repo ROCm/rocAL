@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "helpers/rocal_python_bridge.h"
 #include "augmentations/node_python_function.h"
 #include "pipeline/exception.h"
 
@@ -107,7 +106,7 @@ static std::pair<std::string, size_t> numpy_type_from_vx(vx_enum type) {
 }
 }  // anonymous namespace
 
-extern "C" vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params) {
+vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params) {
     if (!src_ptr || !dst_ptr || !params)
         return VX_ERROR_INVALID_REFERENCE;
 

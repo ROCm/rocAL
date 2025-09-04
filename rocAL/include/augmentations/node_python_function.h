@@ -21,10 +21,46 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <stddef.h>
+#include <stdint.h>
+
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
+
+#ifndef ROCAL_PY_MAX_TENSOR_DIMS
+#define ROCAL_PY_MAX_TENSOR_DIMS 8
+#endif
+
+typedef struct RocalPyTensorDesc_ {
+    size_t num_dims;                          /* e.g., 4 for [N,H,W,C] */
+    size_t shape[ROCAL_PY_MAX_TENSOR_DIMS];   /* lengths per dimension */
+    size_t strides[ROCAL_PY_MAX_TENSOR_DIMS]; /* strides in elements */
+    vx_enum dtype;                            /* OpenVX scalar type enum */
+    int layout;                               /* matches rocAL/vx tensor layout enums */
+} RocalPyTensorDesc;
+
+typedef struct RocalPyExecParams_ {
+    uint64_t function_id; /* CPython id(function), provided by python front-end */
+    RocalPyTensorDesc in_desc;
+    RocalPyTensorDesc out_desc;
+    int roi_type;         /* reserved for future use; pass-through */
+    uint32_t device_type; /* AGO_TARGET_AFFINITY_{CPU,GPU}; currently CPU-only */
+} RocalPyExecParams;
+
+/*
+Execute the provided Python callable on a batched view of src_ptr described by
+params->in_desc. The callable must return a NumPy array matching params->out_desc
+(shape, ndim, dtype). The result will be copied into dst_ptr.
+
+Returns:
+- VX_SUCCESS on success
+- VX_ERROR_INVALID_DIMENSION / VX_ERROR_INVALID_TYPE on validation mismatch
+- VX_FAILURE for runtime Python exceptions
+- VX_ERROR_NOT_IMPLEMENTED if device_type is GPU or environment cannot execute
+*/
+vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params);
 
 class PythonFunctionNode : public Node {
    public:
