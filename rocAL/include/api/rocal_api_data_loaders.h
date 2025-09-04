@@ -188,6 +188,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSource(RocalContext conte
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContext p_context,
@@ -203,7 +204,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContex
                                                                      bool loop = false,
                                                                      RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                      unsigned max_width = 0, unsigned max_height = 0,
-                                                                     RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                     RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
 
 /*! \brief Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -220,6 +222,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContex
  * \param [in] area_factor Determines how much area to be cropped. Ranges from from 0.08 - 1.
  * \param [in] aspect_ratio Determines the aspect ration of crop. Ranges from 0.75 to 1.33.
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(RocalContext p_context,
@@ -236,7 +239,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(
                                                                                 bool loop = false,
                                                                                 RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                 unsigned max_width = 0, unsigned max_height = 0,
-                                                                                RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                                RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                                RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
 
 /*! \brief Creates JPEG image reader. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -280,6 +284,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourceSingleShard(RocalCo
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
+ * \param [in] rocal_decoder_type Determines the decoder_type, tjpeg or hwdec
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -457,6 +462,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSourceSingleShard(RocalCon
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
@@ -471,7 +477,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
                                                          bool loop = false,
                                                          RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                          unsigned max_width = 0, unsigned max_height = 0,
-                                                         RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                         RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                         RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
 
 /*! \brief Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
  * \ingroup group_rocal_data_loaders
@@ -488,6 +495,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext context,
@@ -503,7 +511,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext
                                                                     bool loop = false,
                                                                     RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                     unsigned max_width = 0, unsigned max_height = 0,
-                                                                    RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                    RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                    RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
 
 /*! \brief Creates TensorFlow records JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -896,6 +905,7 @@ extern "C" RocalStatus ROCAL_API_CALL rocalResetLoaders(RocalContext context);
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourcePartialSingleShard(RocalContext p_context,
@@ -911,7 +921,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourcePartialSingl
                                                                                        bool loop = false,
                                                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                        unsigned max_width = 0, unsigned max_height = 0,
-                                                                                       RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                                       RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                                       RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
 
 /*! \brief Creates JPEG image reader and partial decoder for Caffe2 LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe22 LMDB Records. It has internal sharding capability to load/decode in parallel is user wants.
  * \ingroup group_rocal_data_loaders
@@ -927,6 +938,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourcePartialSingl
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(RocalContext p_context,
@@ -942,7 +954,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSing
                                                                                         bool loop = false,
                                                                                         RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                         unsigned max_width = 0, unsigned max_height = 0,
-                                                                                        RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                                        RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                                        RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
 /*! \brief Creates JPEG external source image reader.
  * \ingroup group_rocal_data_loaders
  * \param [in] rocal_context Rocal context
