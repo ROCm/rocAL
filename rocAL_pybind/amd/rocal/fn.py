@@ -1296,7 +1296,19 @@ def python_function(*inputs, function, dtype=None, layout=None):
     
     @return    Transformed tensor after applying the Python function
     
-    Note: This operation is CPU-only and requires the GIL for execution.
+    Examples
+    --------
+    >>> def custom_transform(batch):
+    ...     return (batch * 2.0 + 1.0).astype(np.float32)
+    >>> 
+    >>> output = fn.python_function(input_tensor, function=custom_transform, dtype=types.FLOAT)
+    
+    Notes
+    -----
+    - This operation is CPU-only and requires the GIL for execution
+    - The input is provided as a zero-copy NumPy view when possible
+    - The function must maintain the batch dimension size
+    - For best performance, avoid heavy computations in the Python function
     """
     # Validate inputs
     if not inputs:
