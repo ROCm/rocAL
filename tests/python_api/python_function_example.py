@@ -24,6 +24,7 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 import os, sys
 import random
+from functools import partial
 import cv2
 import numpy as np
 
@@ -37,6 +38,16 @@ def random_augmentation(probability, augmented, original):
 def brightness_fn(img):
     brightness_scale = random_augmentation(0.5, random.uniform(0.7, 1.3), 1.0)
     return (img * brightness_scale).astype(np.uint8)  # Casting is needed since it will return fp64 outputs otherwise
+
+def crop_fn(img, crop_size):
+    return img[:, :crop_size[0], :crop_size[1], :]    # Crop along the height and width dimensions
+
+def flip_fn(img):
+    rand_prob = random.random()
+    if rand_prob < 0.5:
+        return img[:, :, ::-1, :]
+    else:
+        return img
 
 class NormalizeWithStats:
     def __init__(self, mean, std):
@@ -78,21 +89,17 @@ def main():
     world_size = 1
     normalizer = NormalizeWithStats(mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
                                         std=[0.229 * 255, 0.224 * 255, 0.225 * 255])
+    crop_image_fn = partial(crop_fn, crop_size=(224, 224))
+    # Pipeline example with random brightness + crop + hflip + normalize
     pipe = Pipeline(batch_size=batch_size, num_threads=8, device_id=local_rank,
                                                    seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC, tensor_dtype=types.FLOAT16)
     with pipe:
         jpegs, _ = fn.readers.file(file_root=data_path)
         decode = fn.decoders.image(jpegs, file_root=data_path, output_type=types.RGB, shard_id=local_rank, num_shards=world_size, random_shuffle=False)
         rand_brightness_output = fn.python_function(decode, function = brightness_fn, dtype=types.UINT8, layout=types.NHWC)
-        flip_coin = fn.random.coin_flip(probability=0.5)
-        cropped_output = fn.crop_mirror_normalize(rand_brightness_output,
-                                        output_layout=types.NHWC,
-                                        output_dtype=types.UINT8,
-                                        crop=(224, 224),
-                                        mirror=flip_coin,
-                                        mean=[0, 0, 0],
-                                        std=[1, 1, 1])
-        normalized_output = fn.python_function(cropped_output, function = normalizer, dtype=types.FLOAT, layout=types.NHWC)
+        cropped_output = fn.python_function(rand_brightness_output, function = crop_image_fn, output_dims=(224, 224, 3), dtype=types.UINT8, layout=types.NHWC)
+        flipped_output = fn.python_function(cropped_output, function = flip_fn, dtype=types.UINT8, layout=types.NHWC)
+        normalized_output = fn.python_function(flipped_output, function = normalizer, dtype=types.FLOAT, layout=types.NHWC)
         pipe.set_outputs(normalized_output)
     pipe.build()
     

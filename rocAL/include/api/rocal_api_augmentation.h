@@ -1372,6 +1372,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalPythonFunction(RocalContext context, RocalTensor input, unsigned long long function_id, RocalTensorLayout output_layout, RocalTensorOutputType output_datatype, bool is_output);
+extern "C" RocalTensor ROCAL_API_CALL rocalPythonFunction(RocalContext context, RocalTensor input, unsigned long long function_id, std::vector<size_t> output_dims, RocalTensorLayout output_layout, RocalTensorOutputType output_datatype, bool is_output);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

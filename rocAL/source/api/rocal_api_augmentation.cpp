@@ -2444,6 +2444,7 @@ rocalPythonFunction(
         RocalContext p_context,
         RocalTensor p_input,
         unsigned long long function_id,
+        std::vector<size_t> output_dims,
         RocalTensorLayout output_layout,
         RocalTensorOutputType output_datatype,
         bool is_output)
@@ -2461,6 +2462,13 @@ rocalPythonFunction(
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_datatype);
         output_info.set_tensor_layout(op_tensor_layout);
+        if(!output_dims.empty()) {
+            std::vector<size_t> dims = output_info.dims();
+            for (int i = 1; i < dims.size(); i++)
+                dims[i] = output_dims[i - 1];
+            if(dims != output_info.dims())
+                output_info.set_dims(dims);  // Only modify output tensor dims if it do not match with the user specified dims
+        }
 
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PythonFunctionNode>({input}, {output})->init(function_id);
