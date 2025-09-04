@@ -10,13 +10,13 @@ rocAL prerequisites
 
 rocAL requires ROCm running on `accelerators based on the CDNA architecture <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_ installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/docs-6.4.1/install/install-methods/amdgpu-installer-index.html>`_.
 
-To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ hardware image decoder, rocJPEG must be installed prior to installing rocAL. If rocJPEG is not found, the TurboJPEG software decoder will be used instead.
+To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ hardware image decoder, rocJPEG must be installed prior to installing rocAL. If rocJPEG is not found, the `TurboJPEG <https://libjpeg-turbo.org/>`_ software decoder will be used instead.
 
 rocAL has been tested on the following Linux environments:
   
 * Ubuntu 22.04 and 24.04
-
 * RHEL 8 and 9
+* SLES 15 SP6 and SP7
 
 See `Supported operating systems <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-operating-systems>`_ for the complete list of ROCm supported Linux environments.
 
@@ -58,8 +58,7 @@ libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually
 .. note::
   
   | TurboJPEG must be installed manually on SLES. 
-  | To use FFMPeg on SLES and RedHat, the ``FFMPeg-dev`` package must be installed manually.
-
+  | To use FFMPeg on SLES and RHEL, the ``FFMPeg-dev`` package must be installed manually.
 
 .. |trade| raw:: html
 
