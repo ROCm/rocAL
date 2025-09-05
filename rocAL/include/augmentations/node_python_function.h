@@ -45,7 +45,6 @@ typedef struct RocalPyExecParams_ {
     uint64_t function_id; /* CPython id(function), provided by python front-end */
     RocalPyTensorDesc in_desc;
     RocalPyTensorDesc out_desc;
-    int roi_type;         /* reserved for future use; pass-through */
     uint32_t device_type; /* AGO_TARGET_AFFINITY_{CPU,GPU}; currently CPU-only */
 } RocalPyExecParams;
 

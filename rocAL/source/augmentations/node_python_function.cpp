@@ -50,24 +50,20 @@ void PythonFunctionNode::create_node() {
 
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
-    int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
 
     vx_scalar input_layout_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &input_layout);
     vx_scalar output_layout_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &output_layout);
-    vx_scalar roi_type_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &roi_type);
     uint64_t bridge_fn_ptr = reinterpret_cast<uint64_t>(&rocal_process_python_function);
     vx_scalar bridge_fn_ptr_vx = vxCreateScalar(vx_ctx, VX_TYPE_UINT64, &bridge_fn_ptr);
 
     _node = vxExtPythonFunction(
         _graph->get(),
         _inputs[0]->handle(),
-        _inputs[0]->get_roi_tensor(),
         _outputs[0]->handle(),
         bridge_fn_ptr_vx,
         function_id_vx,
         input_layout_vx,
-        output_layout_vx,
-        roi_type_vx);
+        output_layout_vx);
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) {
