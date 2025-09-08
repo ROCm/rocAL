@@ -21,13 +21,10 @@ rocAL is installed in the ROCm installation directory by default. If rocAL for b
 
 You can choose to use the |setup| setup script to install most :doc:`prerequisites <./rocAL-prerequisites>`
 
-
 .. note::
   
   | TurboJPEG must be installed manually on SLES. 
   | To use FFmpeg on SLES and RedHat, the ``FFmpeg-dev`` package must be installed manually.
-  | To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ hardware image decoder, rocJPEG must be installed prior to installing rocAL. 
-
 
 To build and install rocAL for the HIP backend, create the ``build_hip`` directory under the ``rocAL`` root directory. Change directory to ``build_hip``:
 

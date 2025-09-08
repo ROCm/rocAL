@@ -10,8 +10,6 @@ rocAL prerequisites
 
 rocAL requires ROCm running on `accelerators based on the CDNA architecture <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_ installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/docs-6.4.1/install/install-methods/amdgpu-installer-index.html>`_.
 
-To use the `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ hardware image decoder, rocJPEG must be installed prior to installing rocAL. If rocJPEG is not found, the `TurboJPEG <https://libjpeg-turbo.org/>`_ software decoder will be used instead.
-
 rocAL has been tested on the following Linux environments:
   
 * Ubuntu 22.04 and 24.04
@@ -47,13 +45,14 @@ The following prerequisites are required and are installed with both the package
 * `TurboJPEG <https://libjpeg-turbo.org/>`_
 * `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v2.11.1>`_ version 2.11.1
 * `RapidJSON <https://github.com/Tencent/rapidjson>`_
+* `OpenCV <https://docs.opencv.org/4.6.0/index.html>`_
 * Python3, Python3 pip, and  Python3 wheel
 
 libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually.
 
 `FFMPEG <https://www.ffmpeg.org>`_ is not required, but is installed by the package installer. It can also be installed with the setup script using the ``--ffmpeg`` option. 
 
-`rocDecode <https://rocm.docs.amd.com/projects/rocDecode/en/latest/index.html>`_ and `OpenCV <https://docs.opencv.org/4.6.0/index.html>`_ are installed by the package installer and the setup script.
+`rocDecode <https://rocm.docs.amd.com/projects/rocDecode/en/latest/index.html>`_ and `rocJPEG <https://rocm.docs.amd.com/projects/rocJPEG/en/latest/index.html>`_ are installed by the package installer and the setup script, but aren't required by rocAL. When installed, rocJPEG is used as the hardware image decoder and rocDecode is used as the hardware video decoder. 
 
 .. note::
   
