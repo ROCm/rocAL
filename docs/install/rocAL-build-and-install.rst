@@ -12,7 +12,6 @@ Before building and installing rocAL, ensure ROCm has been installed with the `A
 
 The rocAL source code is available from `https://github.com/ROCm/rocAL <https://github.com/ROCm/rocAL>`_. Use the rocAL version that corresponds to the installed version of ROCm.
 
-
 rocAL supports both the HIP and OpenCL backends. 
 
 rocAL is installed in the ROCm installation directory by default. If rocAL for both HIP and OpenCL backends will be installed on the system, each version must be installed in its own custom directory and not in the default directory. 
@@ -22,12 +21,10 @@ rocAL is installed in the ROCm installation directory by default. If rocAL for b
 
 You can choose to use the |setup| setup script to install most :doc:`prerequisites <./rocAL-prerequisites>`
 
-
 .. note::
   
   | TurboJPEG must be installed manually on SLES. 
   | To use FFmpeg on SLES and RedHat, the ``FFmpeg-dev`` package must be installed manually.
-
 
 To build and install rocAL for the HIP backend, create the ``build_hip`` directory under the ``rocAL`` root directory. Change directory to ``build_hip``:
 
