@@ -702,7 +702,8 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_width,
     unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    RocalDecoderType dec_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -719,8 +720,11 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
         } else {
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
+        DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, source_path, "");
+        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE_LMDB_RECORD, decoder_type, source_path, "");
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
@@ -733,7 +737,7 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
+        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, decoder_type, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
 
         context->master_graph->set_loop(loop);
 
@@ -764,7 +768,8 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_width,
     unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    RocalDecoderType dec_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -781,8 +786,11 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
         } else {
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
+        DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE2_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, source_path, "");
+        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::CAFFE2_LMDB_RECORD, decoder_type, source_path, "");
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
@@ -795,7 +803,7 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE2_LMDB_RECORD, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
+        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE2_LMDB_RECORD, decoder_type, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1075,7 +1083,8 @@ rocalFusedJpegCrop(
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_width,
     unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    RocalDecoderType dec_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1089,8 +1098,11 @@ rocalFusedJpegCrop(
         } else {
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
+        DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, "");
+        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, decoder_type, source_path, "");
 
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
@@ -1102,7 +1114,7 @@ rocalFusedJpegCrop(
                                color_format);
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
-        context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
+        context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, decoder_type, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1132,7 +1144,8 @@ rocalJpegCOCOFileSourcePartial(
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_width,
     unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    RocalDecoderType dec_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1146,8 +1159,11 @@ rocalJpegCOCOFileSourcePartial(
         } else {
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
+        DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, json_path);
+        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, decoder_type, source_path, json_path);
 
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         INFO("Internal buffer size width = " + TOSTR(width) + " height = " + TOSTR(height) + " depth = " + TOSTR(num_of_planes))
@@ -1161,7 +1177,7 @@ rocalJpegCOCOFileSourcePartial(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
-        context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
+        context->master_graph->add_node<FusedJpegCropNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, decoder_type, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
 
         context->master_graph->set_loop(loop);
 
@@ -1193,7 +1209,8 @@ rocalJpegCOCOFileSourcePartialSingleShard(
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_width,
     unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    RocalDecoderType dec_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1210,8 +1227,11 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         } else {
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
+        DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
 
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, json_path);
+        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::COCO_FILE_SYSTEM, decoder_type, source_path, json_path);
 
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
@@ -1224,7 +1244,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
+        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, decoder_type, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
 
         context->master_graph->set_loop(loop);
 
@@ -1508,7 +1528,8 @@ rocalFusedJpegCropSingleShard(
     RocalImageSizeEvaluationPolicy decode_size_policy,
     unsigned max_width,
     unsigned max_height,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    RocalDecoderType dec_type) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1526,7 +1547,11 @@ rocalFusedJpegCropSingleShard(
             LOG("User input size " + TOSTR(max_width) + " x " + TOSTR(max_height))
         }
 
-        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, source_path, "");
+        DecoderType decoder_type = DecoderType::FUSED_TURBO_JPEG;
+        // For partial decoder API's use ROCJPEG_CROPPED type when the user requests for rocJpeg decoder
+        if (dec_type == RocalDecoderType::ROCAL_DECODER_ROCJPEG) decoder_type = DecoderType::ROCJPEG_CROPPED;
+
+        auto [width, height] = use_input_dimension ? std::make_tuple(max_width, max_height) : evaluate_image_data_set(decode_size_policy, StorageType::FILE_SYSTEM, decoder_type, source_path, "");
 
         auto [color_format, tensor_layout, dims, num_of_planes] = convert_color_format(rocal_color_format, context->user_batch_size(), height, width);
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
@@ -1537,7 +1562,7 @@ rocalFusedJpegCropSingleShard(
                                color_format);
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
-        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, DecoderType::FUSED_TURBO_JPEG, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
+        context->master_graph->add_node<FusedJpegCropSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::FILE_SYSTEM, decoder_type, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), num_attempts, area_factor, aspect_ratio, sharding_info);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
