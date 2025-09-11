@@ -381,7 +381,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = decoded_width;
                 _actual_decoded_height[i] = decoded_height;
 
-                if (_rocjpeg_decoder->is_partial_decoder()) {
+                if (_rocjpeg_decoder->is_cropped_decoder()) {
                     if (_randombboxcrop_meta_data_reader) {
                         _rocjpeg_decoder->set_bbox_coords(_bbox_coords[i]);
                     } else if (_random_crop_dec_param) {

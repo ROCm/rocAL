@@ -42,7 +42,7 @@ enum class DecoderType {
     FFMPEG_VIDEO = 4,      //!< for video decoding using CPU and FFMPEG
     ROCDECODE_VIDEO = 5,   //!< for video decoding using HW via rocDecode
     AUDIO_SOFTWARE = 6,    //!< Uses sndfile to decode audio files
-    ROCJPEG = 7            //!< rocJpeg hardware decoder for decoding jpeg files
+    ROCJPEG = 7,           //!< rocJpeg hardware decoder for decoding jpeg files
     ROCJPEG_CROPPED = 8    //!< For partial decoding of jpeg files using rocJpeg hardware decoder 
 };
 
