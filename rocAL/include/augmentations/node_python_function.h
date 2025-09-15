@@ -42,10 +42,10 @@ typedef struct RocalPyTensorDesc_ {
 } RocalPyTensorDesc;
 
 typedef struct RocalPyExecParams_ {
-    uint64_t function_id; /* CPython id(function), provided by python front-end */
-    RocalPyTensorDesc in_desc;
-    RocalPyTensorDesc out_desc;
-    uint32_t device_type; /* AGO_TARGET_AFFINITY_{CPU,GPU}; currently CPU-only */
+    uint64_t function_id;        /* CPython id(function), provided by python front-end */
+    RocalPyTensorDesc in_desc;   /* Input tensor descriptions */
+    RocalPyTensorDesc out_desc;  /* Output tensor description */
+    uint32_t device_type;        /* AGO_TARGET_AFFINITY_{CPU,GPU}; currently CPU-only */
 } RocalPyExecParams;
 
 /*
@@ -53,11 +53,17 @@ Execute the provided Python callable on a batched view of src_ptr described by
 params->in_desc. The callable must return a NumPy array matching params->out_desc
 (shape, ndim, dtype). The result will be copied into dst_ptr.
 
+Parameters:
+- src_ptr: Input tensor data pointer
+- dst_ptr: Output tensor data pointer
+- params: Execution parameters including function ID and tensor descriptions
+
 Returns:
 - VX_SUCCESS on success
 - VX_ERROR_INVALID_DIMENSION / VX_ERROR_INVALID_TYPE on validation mismatch
 - VX_FAILURE for runtime Python exceptions
 - VX_ERROR_NOT_IMPLEMENTED if device_type is GPU or environment cannot execute
+- VX_ERROR_INVALID_REFERENCE if src_ptr, dst_ptr, or params is null
 */
 vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params);
 
