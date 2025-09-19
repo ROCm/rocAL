@@ -37,13 +37,13 @@ THE SOFTWARE.
 enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode
     FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
-    OPENCV_DEC = 2,        //!< for back_up decoding
+    OPENCV = 2,            //!< for back_up decoding
     SKIP_DECODE = 3,       //!< For skipping decoding in case of uncompressed data from reader
-    FFMPEG_SW_DECODE = 4,   //!< for video decoding using CPU and FFMPEG
-    ROCDEC_VIDEO_DECODE = 5, //!< for video decoding using HW via rocDecode
-    AUDIO_SOFTWARE_DECODE = 6,  //!< Uses sndfile to decode audio files
-    ROCJPEG_DEC = 7,            //!< rocJpeg hardware decoder for decoding jpeg files
-    ROCJPEG_CROPPED = 8  //!< For partial decoding of jpeg files using rocJpeg hardware decoder 
+    FFMPEG_VIDEO = 4,      //!< for video decoding using CPU and FFMPEG
+    ROCDECODE_VIDEO = 5,   //!< for video decoding using HW via rocDecode
+    AUDIO_SOFTWARE = 6,    //!< Uses sndfile to decode audio files
+    ROCJPEG = 7,           //!< rocJpeg hardware decoder for decoding jpeg files
+    ROCJPEG_CROPPED = 8    //!< For partial decoding of jpeg files using rocJpeg hardware decoder 
 };
 
 class DecoderConfig {
@@ -155,7 +155,7 @@ class Decoder {
     virtual ~Decoder() = default;
     virtual void initialize(int device_id) = 0;
     virtual void initialize(int device_id, unsigned batch_size) { THROW("Initialize not implemented") }
-    virtual bool is_partial_decoder() = 0;
+    virtual bool is_cropped_decoder() = 0;
     virtual void set_bbox_coords(std::vector<float> bbox_coords) = 0;
     virtual std::vector<float> get_bbox_coords() = 0;
     virtual void set_crop_window(CropWindow &crop_window) = 0;
