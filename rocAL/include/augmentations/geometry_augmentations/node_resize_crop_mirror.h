@@ -32,9 +32,9 @@ class ResizeCropMirrorNode : public CropNode {
     ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResizeCropMirrorNode() = delete;
     void init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror,
-              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
+              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
     void init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror,
-              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
+              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
