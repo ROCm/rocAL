@@ -1269,6 +1269,15 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
 
+    // Add each opertor to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("LabelReader_" + std::to_string(_op_idx++), "reader");
+
+    // Add all arguments as part of the operator
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+
+    _pipeline_operators.push_back(reader_op);
+
     std::vector<size_t> dims = {1};
     auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default labels Info
     default_labels_info.set_metadata();

@@ -52,6 +52,8 @@ THE SOFTWARE.
 #endif
 #include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
+#include "pipeline/pipeline_operator.h"
+
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
 #define BBOX_COUNT 4
@@ -240,12 +242,17 @@ class MasterGraph {
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
+    std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;
+    int _op_idx = 0;
 };
 
 template <typename T>
 std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
     auto node = std::make_shared<T>(inputs, outputs);
     _nodes.push_back(node);
+
+    // Add each opertor to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
     for (auto &input : inputs) {
         if (_tensor_map.find(input) == _tensor_map.end())
@@ -287,6 +294,10 @@ inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+
+    // Add each opertor to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
+
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
