@@ -378,13 +378,15 @@ class Tensor : public rocalTensor {
         return (_info.mem_type() == RocalMemType::HOST ? ROCAL_CPU : ROCAL_GPU);
     }
     uint64_t data_type_size() override { return _info.data_type_size(); }
-
+    std::string tensor_name() { return _tensor_name; }
    private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;     //!< Pointer to the tensor's internal buffer (opencl or host)
     TensorInfo _info;                //!< The structure holding the info related to the stored OpenVX tensor
     vx_context _context = nullptr;
     vx_tensor _vx_roi_handle = nullptr;  //!< The OpenVX tensor for ROI
+    inline static int _tensor_idx = 0;
+    std::string _tensor_name;
 };
 
 /*! \brief Contains a list of rocalTensors */
