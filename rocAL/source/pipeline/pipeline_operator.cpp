@@ -51,6 +51,93 @@ void PipelineOperator::serialize_pipeop_inputs_and_outputs_to_protobuf(rocal_pro
     }
 }
 
+// Template helper function to add parameter values based on type
+template<typename T>
+void add_param_value(rocal_proto::Parameter *parameter, const T& value) {
+    if constexpr (std::is_same_v<T, int>) {
+        parameter->add_param_val_int(value);
+    } else if constexpr (std::is_same_v<T, float>) {
+        parameter->add_param_val_float(value);
+    }
+}
+
+// Template function to safely extract and cast parameter core
+template<typename T>
+auto extract_param_core(Argument &op_arg) {
+    if constexpr (std::is_same_v<T, int>) {
+        auto param = std::get<IntParam *>(op_arg.param);
+        return param->core;
+    } else if constexpr (std::is_same_v<T, float>) {
+        auto param = std::get<FloatParam *>(op_arg.param);
+        return param->core;
+    }
+}
+
+// Template function to handle SimpleParameter serialization
+template<typename T>
+void serialize_simple_parameter(rocal_proto::Parameter *parameter, Argument &op_arg) {
+    auto param_core = extract_param_core<T>(op_arg);
+    auto simple_param = dynamic_cast<SimpleParameter<T> *>(param_core);
+    if (simple_param) {
+        add_param_value(parameter, simple_param->get());
+    }
+}
+
+// Template function to handle UniformRand serialization
+template<typename T>
+void serialize_uniform_rand(rocal_proto::Parameter *parameter, Argument &op_arg) {
+    auto param_core = extract_param_core<T>(op_arg);
+    auto uniform_param = dynamic_cast<UniformRand<T> *>(param_core);
+    if (uniform_param) {
+        auto uniform_range = uniform_param->get_start_and_end();
+        add_param_value(parameter, uniform_range.first);
+        add_param_value(parameter, uniform_range.second);
+    }
+}
+
+// Template function to handle CustomRand serialization
+template<typename T>
+void serialize_custom_rand(rocal_proto::Parameter *parameter, Argument &op_arg) {
+    auto param_core = extract_param_core<T>(op_arg);
+    auto random_param = dynamic_cast<CustomRand<T> *>(param_core);
+    if (random_param) {
+        // Add values
+        auto values_vec = random_param->get_values();
+        for (const auto &val : values_vec) {
+            add_param_value(parameter, val);
+        }
+        
+        // Add frequencies
+        auto frequency_vec = random_param->get_frequencies();
+        for (const auto &val : frequency_vec) {
+            parameter->add_frequency(val);
+        }
+        
+        parameter->set_size(random_param->size());
+    }
+}
+
+// Type dispatcher function to handle different data types
+template<typename T>
+void serialize_parameter_by_type(rocal_proto::Parameter *parameter, Argument &op_arg) {
+    if (op_arg.enum_type_name == "SimpleParameter") {
+        serialize_simple_parameter<T>(parameter, op_arg);
+    } else if (op_arg.enum_type_name == "UniformRand") {
+        serialize_uniform_rand<T>(parameter, op_arg);
+    } else if (op_arg.enum_type_name == "CustomRand") {
+        serialize_custom_rand<T>(parameter, op_arg);
+    }
+}
+
+// Main function with improved structure and error handling
+void serialize_parameter_to_protobuf(rocal_proto::Parameter *parameter, Argument &op_arg) {
+    if (op_arg.type_name == "int") {
+        serialize_parameter_by_type<int>(parameter, op_arg);
+    } else if (op_arg.type_name == "float") {
+        serialize_parameter_by_type<float>(parameter, op_arg);
+    }
+}
+
 void PipelineOperator::serialize_pipeop_args_to_protobuf(rocal_proto::OperatorDef *opdef) {
     std::vector<Argument> arguments_list;
 
@@ -71,9 +158,8 @@ void PipelineOperator::serialize_pipeop_args_to_protobuf(rocal_proto::OperatorDe
             arg->set_instance_name(op_arg.enum_type_name);
 
         if (op_arg.is_parameter) {
-            // TODO - Will be enabled later
-            // rocal_proto::Parameter *param = arg->mutable_param();
-            // serialize_parameter_to_protobuf(param, op_arg);
+            rocal_proto::Parameter *param = arg->mutable_param();
+            serialize_parameter_to_protobuf(param, op_arg);
         } else if (op_arg.type_name == "enum") {
             rocal_proto::EnumType* enum_arg = arg->mutable_enum_value();
             enum_arg->set_name(op_arg.enum_type_name);
