@@ -52,7 +52,7 @@ THE SOFTWARE.
 #endif
 #include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
-#include "pipeline/pipeline_operator.h"
+#include "pipeline/pipeline_serializer.h"
 
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
@@ -153,6 +153,8 @@ class MasterGraph {
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
+    void serialize(size_t &serialized_string_size);
+    std::string get_serialized_string() { return _serialized_pipeline; }
 #if ENABLE_OPENCL
     cl_command_queue get_ocl_cmd_q() { return _device.resources()->cmd_queue; }
 #endif
@@ -244,6 +246,8 @@ class MasterGraph {
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;
     int _op_idx = 0;
+    PipelineSerializer _pipeline_serializer;
+    std::string _serialized_pipeline;  // Stores the serialized string of the pipeline
 };
 
 template <typename T>

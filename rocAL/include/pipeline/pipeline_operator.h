@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include <string>
 #include "pipeline/node.h"
+#include "rocal.pb.h"
 
 // Stores the information for the operator in the pipeline
 class PipelineOperator {
@@ -37,7 +38,8 @@ class PipelineOperator {
     void set_arguments(std::vector<Argument> op_arguments) {
         arguments = op_arguments;
     }
-
+    void serialize_pipeop_args_to_protobuf(rocal_proto::OperatorDef *opdef);
+    void serialize_pipeop_inputs_and_outputs_to_protobuf(rocal_proto::OperatorDef *opdef);
     std::string operator_name;  // Name of the Node/operator
     std::string module_name;    // Denotes the type of operator i.e loader/reader/augmentation
     std::vector<Argument> arguments;
