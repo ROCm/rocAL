@@ -61,7 +61,7 @@ enum class ExternalSourceFileMode {
     RAWDATA_UNCOMPRESSED = 2,
     NONE = 3,
 };
-AUTO_REGISTER_ENUM(ExternalSourceFileMode);
+AUTO_REGISTER_ENUM(ExternalSourceFileMode)
 
 struct ShardingInfo {
     RocalBatchPolicy last_batch_policy;
