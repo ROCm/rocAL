@@ -2464,7 +2464,7 @@ rocalPythonFunction(
         output_info.set_tensor_layout(op_tensor_layout);
         if(!output_dims.empty()) {
             std::vector<size_t> dims = output_info.dims();
-            for (int i = 1; i < dims.size(); i++)
+            for (size_t i = 1; i < dims.size(); i++)
                 dims[i] = output_dims[i - 1];
             if(dims != output_info.dims())
                 output_info.set_dims(dims);  // Only modify output tensor dims if it do not match with the user specified dims

@@ -30,9 +30,8 @@ import numpy as np
 
 
 def random_augmentation(probability, augmented, original):
-    import random
     condition = random.random() < probability
-    neg_condition = condition ^ True
+    neg_condition = not condition
     return condition * augmented + neg_condition * original
 
 def brightness_fn(img):
@@ -65,8 +64,7 @@ def draw_patches(image, idx, layout="nchw", dtype="fp32", device="cpu"):
     if dtype in ["fp16", "fp32"]:
         image = image.astype("uint8")
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("output_folder/python_function/" + str(idx) +
-                "_" + "train" + ".png", image*255)
+    cv2.imwrite(f"output_folder/python_function/{idx}_train.png", image*255)
 
 
 def main():
