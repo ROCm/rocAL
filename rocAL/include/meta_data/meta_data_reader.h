@@ -45,7 +45,7 @@ enum class MetaDataReaderType {
     MXNET_META_DATA_READER,
     WEBDATASET_META_DATA_READER
 };
-AUTO_REGISTER_ENUM(MetaDataReaderType)
+REGISTER_ENUM(MetaDataReaderType)
 
 struct MetaDataConfig {
    private:

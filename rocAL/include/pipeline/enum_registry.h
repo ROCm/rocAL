@@ -104,9 +104,9 @@ private:
  * \param EnumType The enum type to register
  * 
  * Uses a static variable with lambda function to ensure proper initialization timing.
- * Usage: AUTO_REGISTER_ENUM(MyEnumType)
+ * Usage: REGISTER_ENUM(MyEnumType)
  */
-#define AUTO_REGISTER_ENUM(EnumType) \
+#define REGISTER_ENUM(EnumType) \
     static bool enum_registered_##EnumType = []() { \
         EnumRegistry::getInstance().registerEnum<EnumType>(#EnumType); \
         return true; \
