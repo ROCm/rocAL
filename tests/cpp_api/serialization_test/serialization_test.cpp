@@ -31,6 +31,16 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
+#ifdef USE_OPENCV_4
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#else
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#endif
+
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
@@ -114,10 +124,10 @@ int main(int argc, const char **argv) {
     std::cout << "Serialized string size: " << serialized_string_size << " bytes" << std::endl;
     
     // Allocate buffer for the serialized string
-    std::vector<char> serialized_buffer(serialized_string_size + 1, '\0');
+    std::string serialized_pipe_string(serialized_string_size, '\0');
     
     // Get the actual serialized string
-    RocalStatus get_string_status = rocalGetSerializedString(handle, serialized_buffer.data());
+    RocalStatus get_string_status = rocalGetSerializedString(handle, serialized_pipe_string.c_str());
     
     if (get_string_status != ROCAL_OK) {
         std::cout << "Failed to get serialized string: " << rocalGetErrorMessage(handle) << std::endl;
@@ -126,7 +136,7 @@ int main(int argc, const char **argv) {
     }
     
     std::cout << "\n=== Serialized Pipeline String ===" << std::endl;
-    std::cout << serialized_buffer.data() << std::endl;
+    std::cout << serialized_pipe_string << std::endl;
     std::cout << "=== End of Serialized String ===" << std::endl;
     
     /*>>>>>>>>>>>>>>>>>>> Test Pipeline Execution <<<<<<<<<<<<<<<<<<<*/
@@ -140,6 +150,21 @@ int main(int argc, const char **argv) {
     std::vector<std::string> names;
     names.resize(inputBatchSize);
     
+    /*>>>>>>>>>>>>>>>>>>> Display using OpenCV <<<<<<<<<<<<<<<<<*/
+    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
+    int w = rocalGetOutputWidth(handle);
+    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
+    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
+    cv::Mat mat_output(h, w, cv_color_format);
+    cv::Mat mat_input(h, w, cv_color_format);
+    cv::Mat mat_color;
+
+    // Variables for OpenCV display
+    int col_counter = 0;
+    int number_of_cols = 1;
+    bool display_all = true;
+    const char* outName = "serialization_test_output";
+
     for (int iter = 0; iter < test_iterations && !rocalIsEmpty(handle); iter++) {
         std::cout << "\nIteration " << (iter + 1) << ":" << std::endl;
         
@@ -165,6 +190,30 @@ int main(int argc, const char **argv) {
             pos += ImageNameLen[i];
             std::cout << "  Image: " << names[i] << " | Label: " << labels_buffer[i] << std::endl;
         }
+
+        // Copy Image data from handle
+        rocalCopyToOutput(handle, mat_input.data, h * w * p);
+
+        std::vector<int> compression_params;
+        compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);
+
+        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+        std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
+        if (display_all)
+            out_filename = std::string(outName) + std::to_string(iter) + ".png";  // in case the user specifies non png filename
+
+        if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
+#ifdef USE_OPENCV_4
+            cv::cvtColor(mat_output, mat_color, cv::COLOR_RGB2BGR);
+#else
+            cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+#endif
+            cv::imwrite(out_filename, mat_color, compression_params);
+        } else {
+            cv::imwrite(out_filename, mat_output, compression_params);
+        }
+        col_counter = (col_counter + 1) % number_of_cols;
     }
     
     std::cout << "\n=== Serialization Test Completed Successfully ===" << std::endl;
