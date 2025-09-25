@@ -86,7 +86,7 @@ void ResizeNode::update_node() {
 void ResizeNode::init(unsigned dest_width, unsigned dest_height, ResizeScalingMode scaling_mode,
                       const std::vector<unsigned> &max_size, ResizeInterpolationType interpolation_type) {
     _interpolation_type = (int)interpolation_type;
-    _scaling_mode = static_cast<ResizeScalingMode>(scaling_mode);
+    _scaling_mode = scaling_mode;
     _out_width = dest_width;
     _out_height = dest_height;
     if (max_size.size() > 0) {
