@@ -176,7 +176,7 @@ struct Timing {
         DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
         PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the pytorch iterator)
  */
-enum RocalBatchPolicy {
+enum class RocalBatchPolicy {
     FILL = 0,
     DROP,
     PARTIAL
@@ -220,7 +220,7 @@ class BatchRNG {
 /*! \brief MissingComponentsBehaviour for Webdataset
  *
  */
-enum MissingComponentsBehaviour {
+enum class MissingComponentsBehaviour {
     MISSING_COMPONENT_ERROR = 0,
     MISSING_COMPONENT_SKIP,
     MISSING_COMPONENT_EMPTY
