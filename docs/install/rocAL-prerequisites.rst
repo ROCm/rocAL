@@ -64,8 +64,9 @@ libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually
     &trade;
 
 .. |openvx| replace:: AMD OpenVX\ |trade|
-.. _openvx: https://rocm.docs.amd.com/projects/MIVisionX/en/latest/install/amd_openvx-install.html
+.. _openvx: https://rocm.docs.amd.com/projects/MIVisionX/en/latest/install/MIVisionX-install-OpenVX.html
 
 .. |setup| replace:: ``rocAL-setup.py``
 .. _setup: https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py
+
 
