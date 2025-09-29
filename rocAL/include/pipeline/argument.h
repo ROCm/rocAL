@@ -21,40 +21,82 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <memory>
+
 #include <any>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
-#include <map>
 #include <vector>
-#include <string>
-#include <stdexcept>
 
 #include "pipeline/argument_types.h"
+#include "pipeline/commons.h"
 #include "pipeline/enum_registry.h"
 #include "parameters/parameter_factory.h"
-#include "pipeline/commons.h"
 
 /**
  * @brief Argument class stores the details of each argument in the Node
  * 
  * This class encapsulates argument information for pipeline nodes, supporting
- * various data types including basic types, enums, vectors, maps, and parameters. 
+ * various data types including basic types, enums, vectors, maps, and parameters.
+ * 
+ * The class provides type-safe storage and retrieval of arguments with support for:
+ * - Basic types (int, float, string, etc.)
+ * - Enum types with registry lookup
+ * - Vector containers
+ * - String-to-string maps
+ * - Shared pointers
+ * - Parameter objects (FloatParam, IntParam)
  */
 class Argument {
-   public:
-    std::string arg_name;       ///< Name of the argument
-    std::string type_name;      ///< Denotes the data type of the argument
-    std::string enum_type_name; ///< Denotes the name of the enum <arg_name_enum>
-    bool is_vector = false;     ///< True if the argument contains vector data
-    bool is_parameter = false;  ///< True if the argument is a parameter object
-    bool is_null_ptr = false;   ///< True if the argument represents a null pointer
-    std::vector<std::any> values; ///< Storage for argument values (can change to std::variant later)
-    pParam param;      ///< Parameter stored for parameter-type arguments
-    
-   private:
-    // Helper method to get type name from registry or built-in types
+public:
+    // Public member variables
+    std::string arg_name;                 ///< Name of the argument
+    std::string type_name;                ///< Denotes the data type of the argument
+    std::string enum_type_name;           ///< Denotes the name of the enum <arg_name_enum>
+    bool is_vector = false;               ///< True if the argument contains vector data
+    bool is_parameter = false;            ///< True if the argument is a parameter object
+    bool is_null_ptr = false;             ///< True if the argument represents a null pointer
+    std::vector<std::any> values;         ///< Storage for argument values (can change to std::variant later)
+    pParam param;                         ///< Parameter stored for parameter-type arguments
+
+    // Constructors
+
+    /**
+     * @brief Unified template constructor for all data types
+     * @tparam T The type of the value being stored
+     * @param name The name of the argument
+     * @param val The value to store
+     * @throws std::runtime_error if the type is unknown or unsupported
+     */
+    template <typename T>
+    explicit Argument(std::string name, T&& val) : arg_name(std::move(name)) {
+
+        if constexpr (std::is_enum_v<std::decay_t<T>>) {
+            constructFromEnum(std::forward<T>(val));
+        } else if constexpr (is_vector_type_v<std::decay_t<T>>) {
+            constructFromVector(std::forward<T>(val));
+        } else if constexpr (is_shared_ptr_v<std::decay_t<T>>) {
+            constructFromSharedPtr(std::forward<T>(val));
+        } else if constexpr (is_string_map_v<std::decay_t<T>>) {
+            constructFromMap(std::forward<T>(val));
+        } else if constexpr (is_param_type_v<std::decay_t<T>>) {
+            constructFromParam(std::forward<T>(val));
+        } else {
+            constructFromBasicType(std::forward<T>(val));
+        }
+    }
+
+
+private:
+    /**
+     * @brief Helper method to get type name from registry or built-in types
+     * @tparam T The type to get the name for
+     * @return The string representation of the type name
+     */
     template<typename T>
     std::string getTypeName() const {
         using DecayedType = std::decay_t<T>;
@@ -69,109 +111,156 @@ class Argument {
         }
     }
 
-public:
-
-    template <typename T>
-    explicit inline Argument(const std::string name, T&& val)
-        : arg_name(std::move(name)) {
-        if constexpr (std::is_enum_v<std::decay_t<T>>) {
-            type_name = "enum"; // Enum types are stored as integers by default
-            
-            enum_type_name = getTypeName<T>();
-            if (enum_type_name != "unknown_enum") {
-                values.push_back(static_cast<int>(val));
-            } else {
-                THROW("Unknown enum type for argument " + arg_name)
-            }
-        } else if constexpr (is_vector_type_v<std::decay_t<T>>) {
-            using ElementType = typename std::decay_t<T>::value_type;
-            std::string element_type_name = getTypeName<ElementType>();
-            if (element_type_name != "unknown") {
-                type_name = element_type_name;                
-                is_vector = true;
-                values.reserve(val.size()); // Pre-allocate for better performance
-                for (auto&& v : std::forward<T>(val)) {
-                    values.push_back(static_cast<ElementType>(std::forward<decltype(v)>(v)));
-                }
-            } else {
-                THROW("Unknown vector element type for argument " + arg_name)
-            }
+    /**
+     * @brief Constructs argument from enum type
+     * @tparam T The enum type
+     * @param val The enum value
+     */
+    template<typename T>
+    void constructFromEnum(T&& val) {
+        static_assert(std::is_enum_v<std::decay_t<T>>, "T must be an enum type");
+        
+        type_name = "enum";
+        enum_type_name = getTypeName<T>();
+        
+        if (enum_type_name != "unknown_enum") {
+            values.push_back(static_cast<int>(val));
         } else {
-            type_name = getTypeName<T>();
-            if (type_name != "unknown") {
-                if constexpr (std::is_same_v<std::decay_t<T>, const char*>) {
-                    values.push_back(std::string(val));
-                } else {
-                    values.push_back(static_cast<std::decay_t<T>>(std::forward<T>(val)));
-                }
-            } else {
-                THROW("Unknown type " + std::string(typeid(T).name()) + " for argument " + arg_name)
-            }
+            THROW("Unknown enum type for argument " + arg_name);
         }
     }
 
-    // Used to store the feature key map
-    explicit inline Argument(std::string name, std::map<std::string, std::string> val)
-        : arg_name(std::move(name)) {
+    /**
+     * @brief Constructs argument from vector type
+     * @tparam T The vector type
+     * @param val The vector value
+     */
+    template<typename T>
+    void constructFromVector(T&& val) {
+        static_assert(is_vector_type_v<std::decay_t<T>>, "T must be a vector type");
+        
+        using ElementType = typename std::decay_t<T>::value_type;
+        const std::string element_type_name = getTypeName<ElementType>();
+        
+        if (element_type_name != "unknown") {
+            type_name = element_type_name;
+            is_vector = true;
+            values.reserve(val.size());
+            
+            for (auto&& v : std::forward<T>(val)) {
+                values.push_back(static_cast<ElementType>(std::forward<decltype(v)>(v)));
+            }
+        } else {
+            THROW("Unknown vector element type for argument " + arg_name);
+        }
+    }
+
+    /**
+     * @brief Constructs argument from basic type
+     * @tparam T The basic type
+     * @param val The value
+     */
+    template<typename T>
+    void constructFromBasicType(T&& val) {
+        type_name = getTypeName<T>();
+        
+        if (type_name != "unknown") {
+            if constexpr (std::is_same_v<std::decay_t<T>, const char*>) {
+                values.push_back(std::string(val));
+            } else {
+                values.push_back(static_cast<std::decay_t<T>>(std::forward<T>(val)));
+            }
+        } else {
+            THROW("Unknown type " + std::string(typeid(T).name()) + " for argument " + arg_name);
+        }
+    }
+
+    /**
+     * @brief Constructs argument from shared pointer type
+     * @tparam T The shared_ptr type
+     * @param val The shared_ptr value
+     */
+    template<typename T>
+    void constructFromSharedPtr(T&& val) {
+        static_assert(is_shared_ptr_v<std::decay_t<T>>, "T must be a shared_ptr type");
+        
+        type_name = "shared_ptr";
+        // For MetadataReader case store an empty value
+        // During deserialization the MetadataReader should be created and passed from the MasterGraph.
+        if (arg_name == "meta_data_reader") {
+            values.push_back(static_cast<int>(0));
+        } else {
+            THROW("Unsupported shared_ptr type for argument " + arg_name);
+        }
+    }
+
+    /**
+     * @brief Constructs argument from string-to-string map type
+     * @tparam T The map type
+     * @param val The map value
+     */
+    template<typename T>
+    void constructFromMap(T&& val) {
+        static_assert(is_string_map_v<std::decay_t<T>>, "T must be a string-to-string map type");
+        
         type_name = "map_string";
         is_vector = true;
+        
         if (!val.empty()) {
             values.reserve(val.size() * 2); // Pre-allocate for key-value pairs
-            for (auto&& pair : std::move(val)) {
+            for (auto&& pair : std::forward<T>(val)) {
                 values.push_back(std::move(pair.first));   // Push key
                 values.push_back(std::move(pair.second));  // Push value
             }
         }
     }
 
-    // Used to store the shared_ptr
-    template <typename T>
-    explicit inline Argument(std::string name, std::shared_ptr<T> val)
-        : arg_name(std::move(name)) {
-        type_name = "shared_ptr";
-
-        // For MetadataReader case store an empty value
-        // During deserialization the MetadataReader should be created and passed from the MasterGraph.
-        if (arg_name == "meta_data_reader") {
-            values.push_back(static_cast<int>(0));
+    /**
+     * @brief Constructs argument from parameter type (FloatParam* or IntParam*)
+     * @tparam T The parameter pointer type
+     * @param val The parameter pointer value
+     */
+    template<typename T>
+    void constructFromParam(T&& val) {
+        static_assert(is_param_type_v<std::decay_t<T>>, "T must be a parameter pointer type");
+        
+        using DecayedType = std::decay_t<T>;
+        
+        if constexpr (std::is_same_v<DecayedType, FloatParam*>) {
+            type_name = "float";
+        } else if constexpr (std::is_same_v<DecayedType, IntParam*>) {
+            type_name = "int";
         }
-        // Could store additional shared_ptr metadata here if needed
+        
+        if (val == nullptr) {
+            is_null_ptr = true;
+            type_name = "nullptr";
+            return;
+        }
+        
+        extractParam(val->type, val);
     }
 
-    // Deduces the type of parameter of the argument
-    inline void extract_param(const RocalParameterType param_type, pParam parameter) {
-        if (param_type == RocalParameterType::DETERMINISTIC) {
-            enum_type_name = "SimpleParameter";
-        } else if (param_type == RocalParameterType::RANDOM_UNIFORM) {
-            enum_type_name = "UniformRand";
-        } else if (param_type == RocalParameterType::RANDOM_CUSTOM) {
-            enum_type_name = "CustomRand";
+    /**
+     * @brief Deduces the type of parameter of the argument
+     * @param param_type The type of the parameter
+     * @param parameter The parameter object
+     */
+    void extractParam(RocalParameterType param_type, pParam parameter) {
+        switch (param_type) {
+            case RocalParameterType::DETERMINISTIC:
+                enum_type_name = "SimpleParameter";
+                break;
+            case RocalParameterType::RANDOM_UNIFORM:
+                enum_type_name = "UniformRand";
+                break;
+            case RocalParameterType::RANDOM_CUSTOM:
+                enum_type_name = "CustomRand";
+                break;
+            default:
+                THROW("Unknown parameter type for argument " + arg_name);
         }
         param = parameter;
         is_parameter = true;
-    }
-
-    // Constructor for FloatParam arguments
-    explicit inline Argument(std::string name, FloatParam* param)
-        : arg_name(std::move(name)) {
-        type_name = "float";
-        if (param == nullptr) {
-            is_null_ptr = true;
-            type_name = "nullptr";
-            return;
-        }
-        extract_param(param->type, param);
-    }
-
-    // Constructor for IntParam arguments
-    explicit inline Argument(std::string name, IntParam* param)
-        : arg_name(std::move(name)) {
-        type_name = "int";
-        if (param == nullptr) {
-            type_name = "nullptr";
-            is_null_ptr = true;
-            return;
-        }
-        extract_param(param->type, param);
     }
 };
