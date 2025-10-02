@@ -12,7 +12,7 @@ rocAL improves machine learning (ML) pipeline efficiency by preprocessing data a
 
 TensorFlow iterators and readers are provided as plugins to separate data loading from training.
 
-You'll need a `rocAL TensorFlow Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ to run PyTorch training with rocAL.
+You'll need a `rocAL TensorFlow Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ to run TensorFlow training with rocAL.
 
 To use rocAL with TernsorFlow, import the rocAL PyBind libraries:
 
