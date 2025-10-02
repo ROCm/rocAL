@@ -33,4 +33,4 @@ Set up a training pipeline that reads data ``readers.tfrecord`` and uses ``decod
 
 Call the training pipeline using ``ROCALIterator``.
 
-An example of TensorFlow training using rocAL is available in the `rocAL GitHub repository <https://github.com/spolifroni-amd/rocAL/tree/develop/docs/examples/tf/>`_.
+An example of TensorFlow training using rocAL is available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/tree/develop/docs/examples/tf/>`_.
