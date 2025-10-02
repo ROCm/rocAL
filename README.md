@@ -91,6 +91,11 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install cmake
   ```
 
+* HIP
+  ```shell
+  sudo apt install hip-dev
+  ```
+
 * [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
   ```shell
   sudo apt install mivisionx-dev
