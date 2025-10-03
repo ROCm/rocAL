@@ -64,7 +64,7 @@ rocAL can be currently used to perform the following operations either with rand
 * Linux distribution
   + Ubuntu - `22.04` / `24.04`
   + RedHat - `8` / `9`
-  + SLES - `15 SP6` / `15 SP7`
+  + SLES - `15 SP7`
 
 ### Hardware
 
@@ -89,6 +89,11 @@ rocAL can be currently used to perform the following operations either with rand
 
   ```shell
   sudo apt install cmake
+  ```
+
+* HIP
+  ```shell
+  sudo apt install hip-dev
   ```
 
 * [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
