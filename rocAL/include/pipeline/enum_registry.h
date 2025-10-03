@@ -25,10 +25,6 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <typeindex>
 #include <string>
-#include <type_traits>
-#include <functional>
-#include <stdexcept>
-#include <any>
 
 /*!
  * \brief Centralized enum registry for automatic enum type name management
