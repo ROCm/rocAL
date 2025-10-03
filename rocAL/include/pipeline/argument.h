@@ -209,8 +209,8 @@ private:
         if (!val.empty()) {
             values.reserve(val.size() * 2); // Pre-allocate for key-value pairs
             for (auto&& pair : std::forward<T>(val)) {
-                values.push_back(std::move(pair.first));   // Push key
-                values.push_back(std::move(pair.second));  // Push value
+                values.push_back(pair.first);   // Push key
+                values.push_back(pair.second);  // Push value
             }
         }
     }
