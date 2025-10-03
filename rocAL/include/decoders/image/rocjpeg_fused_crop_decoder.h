@@ -80,7 +80,7 @@ class FusedCropRocJpegDecoder : public Decoder {
     ~FusedCropRocJpegDecoder() override;
     void initialize(int device_id) override {}
     void initialize(int device_id, unsigned batch_size) override;
-    bool is_partial_decoder() override { return true; }
+    bool is_cropped_decoder() override { return true; }
     void set_bbox_coords(std::vector<float> bbox_coord) override;
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override;
