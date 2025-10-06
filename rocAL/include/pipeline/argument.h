@@ -42,21 +42,13 @@ THE SOFTWARE.
  * 
  * This class encapsulates argument information for pipeline nodes, supporting
  * various data types including basic types, enums, vectors, maps, and parameters.
- * 
- * The class provides type-safe storage and retrieval of arguments with support for:
- * - Basic types (int, float, string, etc.)
- * - Enum types with registry lookup
- * - Vector containers
- * - String-to-string maps
- * - Shared pointers
- * - Parameter objects (FloatParam, IntParam)
  */
 class Argument {
 public:
     // Public member variables
     std::string arg_name;                 ///< Name of the argument
     std::string type_name;                ///< Denotes the data type of the argument
-    std::string enum_type_name;           ///< Denotes the name of the enum <arg_name_enum>
+    std::string sub_type_name;            ///< Denotes the name of the enum/ type of parameter
     bool is_vector = false;               ///< True if the argument contains vector data
     bool is_parameter = false;            ///< True if the argument is a parameter object
     bool is_null_ptr = false;             ///< True if the argument represents a null pointer
@@ -121,9 +113,9 @@ private:
         static_assert(std::is_enum_v<std::decay_t<T>>, "T must be an enum type");
         
         type_name = "enum";
-        enum_type_name = getTypeName<T>();
+        sub_type_name = getTypeName<T>();
         
-        if (enum_type_name != "unknown_enum") {
+        if (sub_type_name != "unknown_enum") {
             values.push_back(static_cast<int>(val));
         } else {
             THROW("Unknown enum type for argument " + arg_name);
@@ -249,13 +241,13 @@ private:
     void extractParam(RocalParameterType param_type, pParam parameter) {
         switch (param_type) {
             case RocalParameterType::DETERMINISTIC:
-                enum_type_name = "SimpleParameter";
+                sub_type_name = "SimpleParameter";
                 break;
             case RocalParameterType::RANDOM_UNIFORM:
-                enum_type_name = "UniformRand";
+                sub_type_name = "UniformRand";
                 break;
             case RocalParameterType::RANDOM_CUSTOM:
-                enum_type_name = "CustomRand";
+                sub_type_name = "CustomRand";
                 break;
             default:
                 THROW("Unknown parameter type for argument " + arg_name);
