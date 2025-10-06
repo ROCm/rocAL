@@ -9,7 +9,7 @@ rocAL Python API overview
 The rocAL Python package has been created using Pybind11 which enables data transfer between the rocAL C++ API and Python API.
 The ``rocal_pybind`` package includes both PyTorch and TensorFlow framework support and support for multiple data readers such as ``FileReader``, ``COCOReader``, and ``TFRecordReader``.
 
-The rocAL data types are defined in `amd.rocal.types <https://github.com/ROCm/rocAL/blob/master/rocAL_pybind/amd/rocal/types.py>`_. 
+The rocAL data types are defined in `amd.rocal.types <https://github.com/ROCm/rocAL/blob/develop/rocAL_pybind/amd/rocal/types.py>`_. 
 
 ``amd.rocal.fn``
   Contains the image augmentations linked to the rocAL C++ API.
