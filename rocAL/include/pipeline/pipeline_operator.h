@@ -25,21 +25,24 @@ THE SOFTWARE.
 #include <string>
 #include "pipeline/node.h"
 
-// Stores the information for the operator in the pipeline
+// Represents an operator in the pipeline
 class PipelineOperator {
    public:
+    // Constructor to initialize the operator
     explicit inline PipelineOperator(std::string op_name, std::string op_module_name,
                                      std::shared_ptr<Node> op_node = nullptr) {
-        operator_name = op_name;
-        module_name = op_module_name;
-        node = op_node;
+        operator_name = op_name;           // Set the operator's name
+        module_name = op_module_name;      // Set the type/category of the operator
+        node = op_node;                    // Optional reference to the underlying node object
     }
+
+    // Set the list of arguments associated with this operator
     void set_arguments(std::vector<Argument> op_arguments) {
         arguments = op_arguments;
     }
 
-    std::string operator_name;  // Name of the Node/operator
-    std::string module_name;    // Denotes the type of operator i.e loader/reader/augmentation
-    std::vector<Argument> arguments;
-    std::shared_ptr<Node> node;
+    std::string operator_name;              // Name of the operator (e.g., "ResizeNode")
+    std::string module_name;                // Category of the operator (e.g., "loader", "augmentation" or "reader")
+    std::vector<Argument> arguments;        // List of arguments/configurations for the operator
+    std::shared_ptr<Node> node;             // Pointer to the associated computational graph node
 };
