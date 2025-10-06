@@ -139,7 +139,8 @@ private:
             is_vector = true;
             values.reserve(val.size());
             
-            for (auto&& v : std::forward<T>(val)) {
+            auto&& local_val = std::forward<T>(val);
+            for (auto&& v : local_val) {
                 values.push_back(static_cast<ElementType>(std::forward<decltype(v)>(v)));
             }
         } else {
