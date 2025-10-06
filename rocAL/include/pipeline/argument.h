@@ -201,8 +201,8 @@ private:
         
         if (!val.empty()) {
             values.reserve(val.size() * 2); // Pre-allocate for key-value pairs
-            auto&& forwarded_val = std::forward<T>(val);
-            for (auto&& pair : forwarded_val) {
+            auto&& string_map = std::forward<T>(val);
+            for (auto&& pair : string_map) {
                 values.push_back(pair.first);   // Push key
                 values.push_back(pair.second);  // Push value
             }
