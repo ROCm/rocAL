@@ -33,7 +33,7 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
 
     * :doc:`Run PyTorch training with rocAL <./how-to/rocAL-pytorch-framework>`
     * :doc:`Run TensorFlow training with rocAL <./how-to/rocAL-tensorflow-framework>`
-
+    * :doc:`Run JAX training with rocAL <./how-to/rocAL-jax-framework>`
 
   .. grid-item-card:: Examples
     
@@ -45,9 +45,11 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
   .. grid-item-card:: Reference
 
     * :doc:`rocAL RNNT dataloading <./reference/rocAL-and-RNNT>`  
-    * :doc:`rocAL Python API overview <../reference/rocAL-python-api>`
     * :doc:`rocAL C++ API overview <../reference/rocAL-cpp-api>`
-    * :doc:`rocAL API reference <../doxygen/html/files>`
+    * :doc:`rocAL C++ reference <../reference/rocAL-cpp-api-list>`
+    * :doc:`rocAL Python API overview <../reference/rocAL-python-api>`
+    * :doc:`rocAL Python reference <../reference/rocAL-python-api-list>`
+
 
 To contribute to the documentation refer to `Contributing to ROCm Docs <https://rocm.docs.amd.com/en/latest/contribute/contributing.html>`_.
 

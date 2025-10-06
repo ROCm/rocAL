@@ -14,22 +14,11 @@ PyTorch iterators and readers are provided as plugins to separate data loading f
 
 You'll need a `rocAL PyTorch Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ to run PyTorch training with rocAL.
 
-To use rocAL with PyTorch, import the rocAL libraries:
-
-.. code:: python
-     
-    from amd.rocal.plugin.pytorch import ROCALClassificationIterator
-    from amd.rocal.pipeline import Pipeline
-    import amd.rocal.fn as fn
-    import amd.rocal.types as types
-
-And import the PyTorch libraries:
+To use rocAL with PyTorch, import the rocAL PyTorch plugin:
 
 .. code:: python
 
-   import torch.nn as nn
-   import torch.nn.functional as F
-   import torch.optim as optim
+  from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 
 Set up a training pipeline that reads data from a dataset using ``readers.file`` and uses ``decoders.image_slice`` to decode the raw images. 
 

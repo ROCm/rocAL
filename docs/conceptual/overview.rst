@@ -91,6 +91,7 @@ Readers                                     Description
 | TFRecord Reader                           | Reads from a TFRecord dataset                       
 | MXNet Reader                              | Reads from a RecordIO dataset
 | Web Dataset Reader                        | Reads from a web dataset
+| CIFAR-10 Dataset Reader                   | Reads from a binary CIFAR-10 dataset
 ==========================================  =====================================================
 
 

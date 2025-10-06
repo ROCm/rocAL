@@ -14,22 +14,13 @@ TensorFlow iterators and readers are provided as plugins to separate data loadin
 
 You'll need a `rocAL TensorFlow Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ to run TensorFlow training with rocAL.
 
-To use rocAL with TernsorFlow, import the rocAL PyBind libraries:
+To use rocAL with TernsorFlow, import the rocAL TensorFlor plugin:
 
 .. code:: python
 
-    from amd.rocal.plugin.tf import ROCALIterator
-    from amd.rocal.pipeline import Pipeline
-    import amd.rocal.fn as fn
-    import amd.rocal.types as types
+  from amd.rocal.plugin.tf import ROCALIterator
 
-And import the TensorFlow library:
-
-.. code:: python
-
-    import tensorflow as tf
-
-Set up a training pipeline that reads data ``readers.tfrecord`` and uses ``decoders.image`` to decode the raw images. 
+Set up a training pipeline that reads data with ``readers.tfrecord`` and uses ``decoders.image`` to decode the raw images. 
 
 Call the training pipeline using ``ROCALIterator``.
 

@@ -1,28 +1,34 @@
+# MIT License
+
+# Copyright (c) 2022 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# Configuration file for the Sphinx documentation builder.
+#
+# This file only contains a selection of the most common options. For a full
+# list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import re
 
-'''
-html_theme is usually unchanged (rocm_docs_theme).
-flavor defines the site header display, select the flavor for the corresponding portals
-flavor options: rocm, rocm-docs-home, rocm-blogs, rocm-ds, instinct, ai-developer-hub, local, generic
-'''
-html_theme = "rocm_docs_theme"
-html_theme_options = {"flavor": "rocm-docs-home"}
-
-'''
-docs_header_version is used to manually configure the version in the header. If
-there exists a non-null value mapped to docs_header_version, then the header in
-the documentation page will contain the given version string.
-'''
-html_context = {
-    "docs_header_version": "3.15"
-}
-
-# This section turns on/off article info
-setting_all_article_info = True
-all_article_info_os = ["linux"]
-all_article_info_author = ""
+from rocm_docs import ROCmDocs
 
 
 with open('../CMakeLists.txt', encoding='utf-8') as f:
@@ -41,28 +47,12 @@ release = version_number
 
 external_toc_path = "./sphinx/_toc.yml"
 
-
-doxygen_root = "doxygen"
-doxysphinx_enabled = True
-doxygen_project = {
-    "name": "doxygen",
-    "path": "doxygen/xml",
-}
-
-
-extensions = [
-    "rocm_docs", 
-    "rocm_docs.doxygen",
-] 
-
-'''
 docs_core = ROCmDocs(left_nav_title)
 docs_core.run_doxygen(doxygen_root="doxygen", doxygen_path="doxygen/xml")
 docs_core.enable_api_reference()
 docs_core.setup()
-'''
-
-html_title = f"{project} {version_number} documentation"
 
 external_projects_current_project = "rocal"
 
+for sphinx_var in ROCmDocs.SPHINX_VARS:
+    globals()[sphinx_var] = getattr(docs_core, sphinx_var)
