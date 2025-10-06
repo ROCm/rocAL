@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include "pipeline/graph.h"
 #include "meta_data/meta_data_graph.h"
 #include "pipeline/tensor.h"
-#include "argument.h"
+#include "pipeline/argument.h"
 
 class Node {
    public:
