@@ -7,6 +7,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Added
 * Added JAX iterator support in rocAL
 * Refactor external enum usage in rocAL, to maintain separation between external and internal enums.
+* Add support to register all the enums required for serialization using newly introduced enum registry.
 
 ## rocAL 2.3.0 for ROCm 7.0.0
 
