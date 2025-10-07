@@ -1269,7 +1269,7 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
 
-    // Add each opertor to the pipeline operators list
+    // Add each operator to the pipeline operators list
     auto reader_op = std::make_shared<PipelineOperator>("LabelReader_" + std::to_string(_op_idx++), "reader");
 
     // Add all arguments as part of the operator
