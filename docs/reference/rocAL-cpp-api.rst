@@ -24,7 +24,7 @@ Returns: The context for the pipeline
 
 Arguments: 
 
-* RocalProcessMode: Defines whether rocal data loading should be on the CPU or `GPU <https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api_types.h#L153>`_. 
+* RocalProcessMode: Defines whether rocal data loading should be on the CPU or `GPU <https://github.com/ROCm/rocAL/blob/develop/rocAL/include/api/rocal_api_types.h#L153>`_. 
 
 .. code-block:: cpp
 
@@ -32,7 +32,7 @@ Arguments:
     RocalProcessMode::ROCAL_PROCESS_CPU
 
 
-* RocalTensorOutputType: Defines whether the output of rocal tensor is `FP32 or FP16 <https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api_types.h#L227>`_. 
+* RocalTensorOutputType: Defines whether the output of rocal tensor is `FP32 or FP16 <https://github.com/ROCm/rocAL/blob/develop/rocAL/include/api/rocal_api_types.h#L227>`_. 
 
 .. code-block:: cpp
 
@@ -40,7 +40,7 @@ Arguments:
     RocalTensorOutputType::ROCAL_FP16
 
 
-See `rocalCreate example <https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L54>`_. 
+See `rocalCreate example <https://github.com/ROCm/rocAL/blob/develop/rocAL/include/api/rocal_api.h#L54>`_. 
 
 .. code-block:: cpp
 
@@ -54,7 +54,7 @@ Use: To verify the graph for all the inputs and outputs
 
 Returns: A status code indicating the success or failure
 
-See `rocalVerify example <https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L68>`_. 
+See `rocalVerify example <https://github.com/ROCm/rocAL/blob/develop/rocAL/include/api/rocal_api.h#L68>`_. 
 
 .. code-block:: cpp
 
@@ -68,7 +68,7 @@ Use: To process and run the built and verified graph
 
 Returns: A status code indicating the success or failure
 
-See `rocalRun example <https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L77>`_. 
+See `rocalRun example <https://github.com/ROCm/rocAL/blob/develop/rocAL/include/api/rocal_api.h#L77>`_. 
 
 .. code-block:: cpp
 
@@ -82,7 +82,7 @@ Use: To free all the resources allocated during the graph creation process
 
 Returns: A status code indicating the success or failure
 
-See `rocalRelease example <https://github.com/ROCm/rocAL/blob/master/rocAL/include/api/rocal_api.h#L86>`_. 
+See `rocalRelease example <https://github.com/ROCm/rocAL/blob/develop/rocAL/include/api/rocal_api.h#L86>`_. 
 
 .. code-block:: cpp
 
