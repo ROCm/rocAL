@@ -53,7 +53,7 @@ enum class StorageType {
     WEBDATASET_RECORDS = 10, // tar files - webdataset format
     NUMPY_DATA = 11          // to support reading from numpy files
 };
-AUTO_REGISTER_ENUM(StorageType)
+REGISTER_ENUM(StorageType)
 
 enum class ExternalSourceFileMode {
     FILENAME = 0,
@@ -61,7 +61,7 @@ enum class ExternalSourceFileMode {
     RAWDATA_UNCOMPRESSED = 2,
     NONE = 3,
 };
-AUTO_REGISTER_ENUM(ExternalSourceFileMode);
+REGISTER_ENUM(ExternalSourceFileMode)
 
 struct ShardingInfo {
     RocalBatchPolicy last_batch_policy;

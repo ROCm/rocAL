@@ -244,8 +244,8 @@ class MasterGraph {
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
-    std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;
-    int _op_idx = 0;
+    std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
+    int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries
     PipelineSerializer _pipeline_serializer;
     std::string _serialized_pipeline;  // Stores the serialized string of the pipeline
 };
@@ -255,7 +255,7 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, co
     auto node = std::make_shared<T>(inputs, outputs);
     _nodes.push_back(node);
 
-    // Add each opertor to the pipeline operators list
+    // Add each operator to the pipeline operators list
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
     for (auto &input : inputs) {
@@ -299,7 +299,7 @@ inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
 
-    // Add each opertor to the pipeline operators list
+    // Add each operator to the pipeline operators list
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
 
     for (auto &output : outputs)
