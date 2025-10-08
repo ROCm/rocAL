@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include "parameters/parameter_factory.h"
 
 // Enhanced type traits for argument processing (C++17 compatible)
 
@@ -76,6 +77,29 @@ struct is_string_type<char*> : std::true_type {};
 template <typename T>
 constexpr bool is_string_type_v = is_string_type<std::decay_t<T>>::value;
 
+// String-to-string map detection
+template <typename T>
+struct is_string_map : std::false_type {};
+
+template <typename Compare, typename Alloc>
+struct is_string_map<std::map<std::string, std::string, Compare, Alloc>> : std::true_type {};
+
+template <typename T>
+constexpr bool is_string_map_v = is_string_map<std::decay_t<T>>::value;
+
+// Parameter type detection
+template <typename T>
+struct is_param_type : std::false_type {};
+
+template <>
+struct is_param_type<FloatParam*> : std::true_type {};
+
+template <>
+struct is_param_type<IntParam*> : std::true_type {};
+
+template <typename T>
+constexpr bool is_param_type_v = is_param_type<std::decay_t<T>>::value;
+
 // SFINAE-based type checking (C++17 compatible)
 template <typename T>
 using enable_if_basic_type = std::enable_if_t<
@@ -107,7 +131,5 @@ constexpr const char* get_type_name() noexcept {
     else if constexpr (std::is_same_v<DecayedType, bool>) return "bool";
     else if constexpr (std::is_same_v<DecayedType, std::string>) return "string";
     else if constexpr (std::is_same_v<DecayedType, char*> || std::is_same_v<DecayedType, const char*>) return "char_str";
-    else if constexpr (is_map_type_v<DecayedType>) return "map";
-    else if constexpr (is_shared_ptr_v<DecayedType>) return "shared_ptr";
     else return "unknown";
 }

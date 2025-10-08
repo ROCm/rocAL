@@ -385,7 +385,7 @@ class Tensor : public rocalTensor {
     TensorInfo _info;                //!< The structure holding the info related to the stored OpenVX tensor
     vx_context _context = nullptr;
     vx_tensor _vx_roi_handle = nullptr;  //!< The OpenVX tensor for ROI
-    inline static int _tensor_idx = 0;
+    inline static int _tensor_idx = 0;  // Tensor index used to uniquely name Tensors
     std::string _tensor_name;
 };
 
