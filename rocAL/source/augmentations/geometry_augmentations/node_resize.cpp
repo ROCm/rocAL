@@ -86,7 +86,7 @@ void ResizeNode::update_node() {
 void ResizeNode::init(unsigned dest_width, unsigned dest_height, ResizeScalingMode scaling_mode,
                       const std::vector<unsigned> &max_size, ResizeInterpolationType interpolation_type) {
     _interpolation_type = (int)interpolation_type;
-    _scaling_mode = static_cast<ResizeScalingMode>(scaling_mode);
+    _scaling_mode = scaling_mode;
     _out_width = dest_width;
     _out_height = dest_height;
     if (max_size.size() > 0) {
@@ -107,9 +107,9 @@ void ResizeNode::adjust_out_roi_size() {
             if (_max_height) _dst_height = std::min(_dst_height, _max_height);
         }
     } else if (_scaling_mode == ResizeScalingMode::DEFAULT) {
-        if ((!_dst_width) & _dst_height) {  // Only height is passed
+        if ((!_dst_width) && _dst_height) {  // Only height is passed
             _dst_width = std::lround(_src_width * (static_cast<float>(_dst_height) / _src_height));
-        } else if ((!_dst_height) & _dst_width) {  // Only width is passed
+        } else if ((!_dst_height) && _dst_width) {  // Only width is passed
             _dst_height = std::lround(_src_height * (static_cast<float>(_dst_width) / _src_width));
         }
 

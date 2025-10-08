@@ -55,7 +55,7 @@ enum class RocalTensorlayout {
     NCDHW,
     NONE
 };
-AUTO_REGISTER_ENUM(RocalTensorlayout)
+REGISTER_ENUM(RocalTensorlayout)
 
 /*! \brief Tensor data type
  *
@@ -70,13 +70,13 @@ enum class RocalTensorDataType {
     INT32,
     INT16
 };
-AUTO_REGISTER_ENUM(RocalTensorDataType)
+REGISTER_ENUM(RocalTensorDataType)
 
 enum class RocalAffinity {
     GPU = 0,
     CPU
 };
-AUTO_REGISTER_ENUM(RocalAffinity)
+REGISTER_ENUM(RocalAffinity)
 
 /*! \brief Color formats currently supported by Rocal SDK as input/output
  *
@@ -87,7 +87,7 @@ enum class RocalColorFormat {
     U8,
     RGB_PLANAR,
 };
-AUTO_REGISTER_ENUM(RocalColorFormat)
+REGISTER_ENUM(RocalColorFormat)
 
 /*! \brief Memory type, host or device
  *
@@ -98,7 +98,7 @@ enum class RocalMemType {
     OCL,
     HIP
 };
-AUTO_REGISTER_ENUM(RocalMemType)
+REGISTER_ENUM(RocalMemType)
 
 /*! \brief Decoder mode for Video decoding
  *
@@ -108,7 +108,7 @@ enum class DecodeMode {
     ROCDECODE = 0,
     CPU
 };
-AUTO_REGISTER_ENUM(DecodeMode)
+REGISTER_ENUM(DecodeMode)
 
 /*! \brief Tensor ROI type
  *
@@ -118,7 +118,7 @@ enum class RocalROIType {
     LTRB = 0,
     XYWH
 };
-AUTO_REGISTER_ENUM(RocalROIType)
+REGISTER_ENUM(RocalROIType)
 
 /*! \brief Tensor ROI in LTRB format
  *
@@ -176,12 +176,12 @@ struct Timing {
         DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
         PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the pytorch iterator)
  */
-enum RocalBatchPolicy {
+enum class RocalBatchPolicy {
     FILL = 0,
     DROP,
     PARTIAL
 };
-AUTO_REGISTER_ENUM(RocalBatchPolicy)
+REGISTER_ENUM(RocalBatchPolicy)
 
 template <typename RNG = std::mt19937>
 class BatchRNG {
@@ -220,12 +220,12 @@ class BatchRNG {
 /*! \brief MissingComponentsBehaviour for Webdataset
  *
  */
-enum MissingComponentsBehaviour {
+enum class MissingComponentsBehaviour {
     MISSING_COMPONENT_ERROR = 0,
     MISSING_COMPONENT_SKIP,
     MISSING_COMPONENT_EMPTY
 };
-AUTO_REGISTER_ENUM(MissingComponentsBehaviour);
+REGISTER_ENUM(MissingComponentsBehaviour)
 
 /*! \brief Internal Resize Scaling Mode enum
  * Internal version of RocalResizeScalingMode for use within rocAL implementation
@@ -237,7 +237,7 @@ enum class ResizeScalingMode {
     NOT_LARGER,
     MIN_MAX
 };
-AUTO_REGISTER_ENUM(ResizeScalingMode);
+REGISTER_ENUM(ResizeScalingMode)
 
 /*! \brief Internal Resize Interpolation Type enum
  * Internal version of RocalResizeInterpolationType for use within rocAL implementation
@@ -250,7 +250,7 @@ enum class ResizeInterpolationType {
     GAUSSIAN,
     TRIANGULAR
 };
-AUTO_REGISTER_ENUM(ResizeInterpolationType);
+REGISTER_ENUM(ResizeInterpolationType)
 
 /*! \brief Internal Mel Scale Formula enum
  * Internal version of RocalMelScaleFormula for use within rocAL implementation
@@ -259,7 +259,7 @@ enum class MelScaleFormula {
     SLANEY = 0,
     HTK
 };
-AUTO_REGISTER_ENUM(MelScaleFormula);
+REGISTER_ENUM(MelScaleFormula)
 
 /*! \brief Internal Audio Border Type enum
  * Internal version of RocalAudioBorderType for use within rocAL implementation
@@ -269,7 +269,7 @@ enum class AudioBorderType {
     CLAMP,
     REFLECT
 };
-AUTO_REGISTER_ENUM(AudioBorderType);
+REGISTER_ENUM(AudioBorderType)
 
 /*! \brief Internal Out Of Bounds Policy enum
  * Internal version of RocalOutOfBoundsPolicy for use within rocAL implementation
@@ -279,4 +279,4 @@ enum class OutOfBoundsPolicy {
     TRIMTOSHAPE,
     ERROR
 };
-AUTO_REGISTER_ENUM(OutOfBoundsPolicy);
+REGISTER_ENUM(OutOfBoundsPolicy)
