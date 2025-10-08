@@ -34,6 +34,110 @@ void PipelineSerializer::serialize_pipeline_config(size_t num_threads, size_t ba
     _pipeline.set_prefetch_queue_depth(prefetch_queue_depth);
 }
 
+void set_tensor_proto(rocal_proto::InputOutput *in_out_proto, Tensor *tensor, bool is_input = false) {
+    in_out_proto->set_name(tensor->tensor_name());
+    in_out_proto->set_device(static_cast<int>(tensor->info().mem_type()));
+    in_out_proto->set_dtype(static_cast<int>(tensor->info().data_type()));
+    in_out_proto->set_layout(static_cast<int>(tensor->info().layout()));
+    in_out_proto->set_color_format(static_cast<int>(tensor->info().color_format()));
+    for (auto &dim : tensor->info().dims())
+        in_out_proto->add_dims(dim);
+    in_out_proto->set_num_dims(tensor->info().num_of_dims());
+    in_out_proto->set_is_argument_input(is_input);
+}
+
+void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef) {
+
+    // Iterate through each argument to store in the protobuffers
+    for (auto &op_arg : arguments_list) {
+        rocal_proto::Arguments *arg = opdef->add_args();
+        arg->set_name(op_arg.arg_name);
+        arg->set_type(op_arg.type_name);
+        arg->set_is_vector(op_arg.is_vector);
+
+        if (op_arg.type_name == "nullptr") continue;
+        if (op_arg.sub_type_name != "")
+            arg->set_instance_name(op_arg.sub_type_name);
+
+        if (op_arg.is_parameter) {
+            // TODO - Will be enabled later
+            // rocal_proto::Parameter *param = arg->mutable_param();
+            // serialize_parameter_to_protobuf(param, op_arg);
+        } else if (op_arg.type_name == "enum") {
+            rocal_proto::EnumType* enum_arg = arg->mutable_enum_value();
+            enum_arg->set_name(op_arg.sub_type_name);
+            enum_arg->set_value(std::any_cast<int>(op_arg.values[0]));
+        } else {
+            // Scalars go to the flat repeated fields; vectors go to repeated *Vector messages
+            if (op_arg.is_vector) {
+                if (op_arg.values.empty()) {
+                    // Represent empty vector by adding an empty vector message of the right type
+                    if (op_arg.type_name == "int" || op_arg.type_name == "shared_ptr"
+                        || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t") {
+                        static_cast<void>(arg->add_int_vectors());
+                    } else if (op_arg.type_name == "float") {
+                        static_cast<void>(arg->add_float_vectors());
+                    } else if (op_arg.type_name == "char_str" || op_arg.type_name == "string"
+                               || op_arg.type_name == "map_string") {
+                        static_cast<void>(arg->add_string_vectors());
+                    } else {
+                        THROW("Vector type not supported for Argument " + op_arg.arg_name + " with type " + op_arg.type_name);
+                    }
+                } else {
+                    if (op_arg.type_name == "int" || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t") {
+                        auto *vec = arg->add_int_vectors();
+                        for (auto &v : op_arg.values) {
+                            // Map unsigned/size_t to int64 for IntVector as per spec (only Int/Float/String vectors permitted)
+                            if (op_arg.type_name == "unsigned") {
+                                vec->add_values(static_cast<int64_t>(std::any_cast<unsigned>(v)));
+                            } else if (op_arg.type_name == "size_t") {
+                                vec->add_values(static_cast<int64_t>(std::any_cast<size_t>(v)));
+                            } else {
+                                vec->add_values(static_cast<int64_t>(std::any_cast<int>(v)));
+                            }
+                        }
+                    } else if (op_arg.type_name == "float") {
+                        auto *vec = arg->add_float_vectors();
+                        for (auto &v : op_arg.values) {
+                            vec->add_values(std::any_cast<float>(v));
+                        }
+                    } else if (op_arg.type_name == "char_str" || op_arg.type_name == "string" 
+                               || op_arg.type_name == "map_string") {
+                        auto *vec = arg->add_string_vectors();
+                        for (auto &v : op_arg.values) {
+                            vec->add_values(std::any_cast<std::string>(v));
+                        }
+                    } else {
+                        THROW("Vector type not supported for Argument " + op_arg.arg_name + " with type " + op_arg.type_name);
+                    }
+                }
+            } else {
+                // Scalar path (use flat repeated fields)
+                if (op_arg.values.size() > 1) {
+                    ERR("Argument has more than one value, is_vector should be set to true")
+                }
+                for (auto &v : op_arg.values) {
+                    if (op_arg.type_name == "int" || op_arg.type_name == "shared_ptr") {
+                        arg->add_ints(std::any_cast<int>(v));
+                    } else if (op_arg.type_name == "float") {
+                        arg->add_floats(std::any_cast<float>(v));
+                    } else if (op_arg.type_name == "char_str" || op_arg.type_name == "string") {
+                        arg->add_strings(std::any_cast<std::string>(v));
+                    } else if (op_arg.type_name == "bool") {
+                        arg->add_bools(std::any_cast<bool>(v));
+                    } else if (op_arg.type_name == "unsigned") {
+                        arg->add_uints(std::any_cast<unsigned>(v));
+                    } else if (op_arg.type_name == "size_t") {
+                        arg->add_uints(std::any_cast<size_t>(v));
+                    } else {
+                        THROW("Invalid type specified for the Argument " + op_arg.arg_name);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void PipelineSerializer::serialize_operators(std::vector<std::shared_ptr<PipelineOperator>>& operators) {
     // Serialize all operators
     for (auto &pipe_op : operators) {
@@ -41,8 +145,23 @@ void PipelineSerializer::serialize_operators(std::vector<std::shared_ptr<Pipelin
         op->set_name(pipe_op->operator_name);
         op->set_module_name(pipe_op->module_name);
         // Add support to add each argument in the operator
-        pipe_op->serialize_pipeop_args_to_protobuf(op);
-        pipe_op->serialize_pipeop_inputs_and_outputs_to_protobuf(op);
+        serialize_pipeop_arguments(pipe_op->get_arguments(), op);
+        // serialize_pipeop_inputs_and_outputs(pipe_op->get_inputs(), pipe_op->get_outputs());
+
+        if (pipe_op->module_name == "reader")
+            continue;  // Readers do not have tensor outputs, hence return
+
+        // Serialize input tensors to protobuffers
+        for (auto &node_input : pipe_op->get_inputs()) {
+            rocal_proto::InputOutput *input = op->add_inputs();
+            set_tensor_proto(input, node_input, true);
+        }
+
+        // Serialize output tensors to protobuffers
+        for (auto &node_output : pipe_op->get_outputs()) {
+            rocal_proto::InputOutput *output = op->add_outputs();
+            set_tensor_proto(output, node_output);
+        }
     }
 }
 
@@ -52,14 +171,6 @@ void PipelineSerializer::serialize_output_tensors(TensorList& output_tensors_lis
     for (size_t idx = 0; idx < output_tensors_list.size(); idx++) {
         rocal_proto::InputOutput *output = _pipeline.add_pipe_outputs();
         auto pipe_output = output_tensors_list[idx];
-        output->set_name(pipe_output->tensor_name());
-        output->set_device(static_cast<int>(pipe_output->info().mem_type()));
-        output->set_dtype(static_cast<int>(pipe_output->info().data_type()));
-        output->set_layout(static_cast<int>(pipe_output->info().layout()));
-        output->set_color_format(static_cast<int>(pipe_output->info().color_format()));
-        for (auto& dim : pipe_output->info().dims())
-            output->add_dims(dim);
-        output->set_num_dims(pipe_output->info().num_of_dims());
-        output->set_is_argument_input(false);
+        set_tensor_proto(output, pipe_output, false);
     }
 }

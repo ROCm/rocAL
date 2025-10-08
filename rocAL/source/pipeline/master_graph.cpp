@@ -1269,7 +1269,7 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
 
-    // Add each opertor to the pipeline operators list
+    // Add each operator to the pipeline operators list
     auto reader_op = std::make_shared<PipelineOperator>("LabelReader_" + std::to_string(_op_idx++), "reader");
 
     // Add all arguments as part of the operator
@@ -1887,7 +1887,7 @@ void MasterGraph::feed_external_input(const std::vector<std::string>& input_imag
 void MasterGraph::serialize(size_t &serialized_string_size) {
     _pipeline_serializer.serialize_pipeline_config(_cpu_num_threads, _user_batch_size, _gpu_id, _mem_type, _prefetch_queue_depth);
     _pipeline_serializer.serialize_operators(_pipeline_operators);
-    _pipeline_serializer.serialize_output_tensors(_internal_tensor_list);
+    _pipeline_serializer.serialize_output_tensors(_output_tensor_list);
     _pipeline_serializer.serialize_to_string(_serialized_pipeline);
     serialized_string_size = _serialized_pipeline.size();
 }

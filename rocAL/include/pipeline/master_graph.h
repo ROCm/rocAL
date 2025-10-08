@@ -255,7 +255,7 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, co
     auto node = std::make_shared<T>(inputs, outputs);
     _nodes.push_back(node);
 
-    // Add each opertor to the pipeline operators list
+    // Add each operator to the pipeline operators list
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
     for (auto &input : inputs) {
@@ -299,7 +299,7 @@ inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
 
-    // Add each opertor to the pipeline operators list
+    // Add each operator to the pipeline operators list
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
 
     for (auto &output : outputs)

@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include <string>
 #include "pipeline/pipeline_operator.h"
+#include "rocal.pb.h"
 
 class PipelineSerializer {
 public:
@@ -50,6 +51,7 @@ public:
     void serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth);
     void serialize_output_tensors(TensorList& output_tensors_list);
     void serialize_operators(std::vector<std::shared_ptr<PipelineOperator>>& operators);
+    void serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef);
 
     /**
      * @brief Deserialize a rocAL pipeline from a file

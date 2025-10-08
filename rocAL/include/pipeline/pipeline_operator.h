@@ -38,12 +38,26 @@ class PipelineOperator {
     }
 
     // Set the list of arguments associated with this operator
-    void set_arguments(std::vector<Argument> op_arguments) {
+    void set_arguments(std::vector<Argument>& op_arguments) {
         arguments = op_arguments;
     }
 
-    void serialize_pipeop_args_to_protobuf(rocal_proto::OperatorDef *opdef);
-    void serialize_pipeop_inputs_and_outputs_to_protobuf(rocal_proto::OperatorDef *opdef);
+    const std::vector<Argument>& get_arguments() {
+        if (this->module_name == "reader") {
+            return this->arguments;
+        } else {
+            return this->node->get_args_list();
+        }
+    }
+
+    const std::vector<Tensor *>& get_inputs() {
+        return this->node->input();
+    }
+
+    const std::vector<Tensor *>& get_outputs() {
+        return this->node->output();
+    }
+
     std::string operator_name;              // Name of the operator (e.g., "ResizeNode")
     std::string module_name;                // Category of the operator (e.g., "loader", "augmentation" or "reader")
     std::vector<Argument> arguments;        // List of arguments/configurations for the operator
