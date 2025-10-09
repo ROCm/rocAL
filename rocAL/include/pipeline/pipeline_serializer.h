@@ -41,6 +41,12 @@ public:
 
     // Serialization methods
     /**
+     * @brief Serialize the current PipelineDef into a file on disk.
+     * @param file_path Path to save the serialized pipeline (binary payload)
+     */
+    void serialize_to_file(const std::string& file_path);
+
+    /**
      * @brief Serialize the current PipelineDef into a binary string.
      * @param serialized_string Output string containing the serialized pipeline
      */
