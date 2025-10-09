@@ -2,12 +2,28 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## rocAL 2.4.0 for ROCm 7.1.0 (Unreleased)
+## rocAL 2.5.0 (Unreleased)
+
+### Changes
+* OpenCL backend support - deprecated
+
+## rocAL 2.4.0 for ROCm 7.1.0
 
 ### Added
 * Added JAX iterator support in rocAL
-### Removed
-* Removed OpenCL backend support
+* rocJPEG - Fused Crop decoding support
+
+### Changes
+* CropResize - updates and fixes
+* Packaging - Remove Meta Package dependency for HIP
+
+### Resolved issues
+* OpenMP - dependency linking errors resolved
+* Bugfix - memory leaks in rocAL
+
+### Known issues
+* Package installation on SLES requires manually installing `TurboJPEG`.
+* Package installation on CentOS, RedHat, and SLES requires manually installing the `FFMPEG Dev` package.
 
 ## rocAL 2.3.0 for ROCm 7.0.0
 
