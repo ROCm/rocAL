@@ -120,7 +120,7 @@ rocalSerialize(RocalContext rocal_context, size_t &serialized_string_size) {
 }
 
 RocalStatus ROCAL_API_CALL
-rocalGetSerializedString(RocalContext rocal_context, const char* serialized_string) {
+rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
     auto context = static_cast<Context*>(rocal_context);
     try {
         if (!serialized_string) {
@@ -130,7 +130,7 @@ rocalGetSerializedString(RocalContext rocal_context, const char* serialized_stri
         auto serialize_pipe_string = context->master_graph->get_serialized_string();
         if (serialize_pipe_string.empty())
             THROW("Serialized string is empty, Invoke rocalSerialize before obtaining the string")
-        std::memcpy(const_cast<char*>(serialized_string), serialize_pipe_string.c_str(), serialize_pipe_string.size() + 1);
+        std::memcpy(serialized_string, serialize_pipe_string.c_str(), serialize_pipe_string.size() + 1);
 
     } catch (const std::exception& e) {
         context->capture_error(e.what());

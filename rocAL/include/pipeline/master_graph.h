@@ -153,7 +153,10 @@ class MasterGraph {
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
-    void serialize(size_t &serialized_string_size);
+    /**
+     * Serialize API
+     */
+    void serialize(size_t &serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
     std::string get_serialized_string() { return _serialized_pipeline; }
 #if ENABLE_OPENCL
     cl_command_queue get_ocl_cmd_q() { return _device.resources()->cmd_queue; }
@@ -246,8 +249,10 @@ class MasterGraph {
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
     int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries
+    // Helper used to build protobuf payloads of the pipeline
     PipelineSerializer _pipeline_serializer;
-    std::string _serialized_pipeline;  // Stores the serialized string of the pipeline
+    // Stores the serialized binary string representation of the pipeline
+    std::string _serialized_pipeline;
 };
 
 template <typename T>

@@ -144,9 +144,7 @@ void PipelineSerializer::serialize_operators(std::vector<std::shared_ptr<Pipelin
         rocal_proto::OperatorDef *op = _pipeline.add_operators();
         op->set_name(pipe_op->operator_name);
         op->set_module_name(pipe_op->module_name);
-        // Add support to add each argument in the operator
         serialize_pipeop_arguments(pipe_op->get_arguments(), op);
-        // serialize_pipeop_inputs_and_outputs(pipe_op->get_inputs(), pipe_op->get_outputs());
 
         if (pipe_op->module_name == "reader")
             continue;  // Readers do not have tensor outputs, hence return
