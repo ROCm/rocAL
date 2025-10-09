@@ -12,7 +12,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gcc g++ cmake pkg-config g
 
 # install OpenCV
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev \
-        libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-dev unzip && \
+        libtbb12 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-dev unzip && \
         mkdir OpenCV && cd OpenCV && wget https://github.com/opencv/opencv/archive/4.8.0.zip && unzip 4.8.0.zip && \
         mkdir build && cd build && cmake -DWITH_GTK=ON -DWITH_JPEG=ON -DBUILD_JPEG=ON -DWITH_OPENCL=OFF ../opencv-4.8.0 && make -j8 && sudo make install && sudo ldconfig && cd
 
