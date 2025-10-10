@@ -218,6 +218,7 @@ coreCommonPackages = [
 # rocm pacakges
 rocmDebianPackages = [
     'half',
+    'hip-dev',
     'mivisionx-dev',
     'rocjpeg-dev',
     'rocdecode-dev'
@@ -230,6 +231,7 @@ if "mariner" in platformInfo:
     rocdecodePackage = "mivisionx-devel" # TBD - rocDecode unsupported on Mariner
 rocmRPMPackages = [
     'half',
+    'hip-devel',
     'mivisionx-devel',
     str(rocjpegPackage),
     str(rocdecodePackage)

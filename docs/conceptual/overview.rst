@@ -91,6 +91,7 @@ Readers                                     Description
 | TFRecord Reader                           | Reads from a TFRecord dataset                       
 | MXNet Reader                              | Reads from a RecordIO dataset
 | Web Dataset Reader                        | Reads from a web dataset
+| CIFAR-10 Dataset Reader                   | Reads from a binary CIFAR-10 dataset
 ==========================================  =====================================================
 
 
@@ -107,4 +108,4 @@ Decoders                Description
 ======================  ========================================
 
 To see examples demonstrating the usage of decoders and readers, see 
-`rocAL Python Examples <https://github.com/ROCm/rocAL/tree/master/docs/examples>`_.
+`rocAL Python Examples <https://github.com/ROCm/rocAL/tree/develop/docs/examples>`_.
