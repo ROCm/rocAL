@@ -2,15 +2,6 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## rocAL 2.5.0 (Unreleased)
-
-### Added
-* Introduce enum registry to register all the enums present in rocAL.
-
-### Changes
-* Refactor external enum usage in rocAL, to maintain separation between external and internal enums.
-* Introduced the following enums ResizeScalingMode, ResizeInterpolationType, MelScaleFormula, AudioBorderType, OutOfBoundsPolicy in commons.h.
-
 ## rocAL 2.4.0 for ROCm 7.1.0
 
 ### Added

@@ -94,14 +94,14 @@ void CropResizeNode::init(FloatParam *area, FloatParam *aspect_ratio, FloatParam
     _crop_param->set_y_drift_factor(core(y_center_drift));
 }
 
-void CropResizeNode::init(std::vector<float>& area_factor, std::vector<float>& aspect_ratio, ResizeInterpolationType interpolation_type) {
+void CropResizeNode::init(std::vector<float>& area_factor, std::vector<float>& aspect_ratio, RocalResizeInterpolationType interpolation_type) {
     auto aspect_ratio_range = std::make_pair((float)aspect_ratio[0], (float)aspect_ratio[1]);
     auto area_factor_range = std::make_pair((float)area_factor[0], (float)area_factor[1]);
     _crop_param = std::make_shared<RocalRandomCropDecParam>(aspect_ratio_range, area_factor_range, NUM_ATTEMPTS, _batch_size);
     _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void CropResizeNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, ResizeInterpolationType interpolation_type) {
+void CropResizeNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, RocalResizeInterpolationType interpolation_type) {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
     _crop_param->crop_w = crop_w;
     _crop_param->crop_h = crop_h;

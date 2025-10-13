@@ -79,7 +79,7 @@ void WarpAffineNode::update_affine_array() {
         THROW(" vxCopyArrayRange failed in the WarpAffine(vxExtRppWarpAffinePD) node: " + TOSTR(affine_status))
 }
 
-void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, float o1, ResizeInterpolationType interpolation_type) {
+void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, float o1, RocalResizeInterpolationType interpolation_type) {
     _x0.set_param(x0);
     _x1.set_param(x1);
     _y0.set_param(y0);
@@ -90,7 +90,7 @@ void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, floa
 }
 
 void WarpAffineNode::init(FloatParam* x0, FloatParam* x1, FloatParam* y0, FloatParam* y1,
-                          FloatParam* o0, FloatParam* o1, ResizeInterpolationType interpolation_type) {
+                          FloatParam* o0, FloatParam* o1, RocalResizeInterpolationType interpolation_type) {
     _x0.set_param(core(x0));
     _x1.set_param(core(x1));
     _y0.set_param(core(y0));
