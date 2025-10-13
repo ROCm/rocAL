@@ -33,10 +33,10 @@ class CropResizeNode : public CropNode {
     CropResizeNode() = delete;
     void init(float area, float aspect_ratio, float x_center_drift, float y_center_drift);
     void init(std::vector<float>& area_factor, std::vector<float>& aspect_ratio,
-              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
+              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
     void init(FloatParam *area, FloatParam *aspect_ratio, FloatParam *x_drift_factor, FloatParam *y_drift_factor);
     void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift,
-              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
+              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<CropParam> get_crop_param() { return _crop_param; }

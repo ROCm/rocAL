@@ -23,12 +23,13 @@ THE SOFTWARE.
 #pragma once
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
+#include "rocal_api_types.h"
 
 class MelFilterBankNode : public Node {
    public:
      MelFilterBankNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
      MelFilterBankNode() = delete;
-     void init(float freq_high, float freq_low, MelScaleFormula mel_formula, int nfilter, bool normalize, float sample_rate);
+     void init(float freq_high, float freq_low, RocalMelScaleFormula mel_formula, int nfilter, bool normalize, float sample_rate);
 
    protected:
      void create_node() override;

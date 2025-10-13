@@ -86,7 +86,7 @@ rocalRotate(
         output_info.modify_dims_width_and_height(op_tensor_layout, dest_width, dest_height);
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<RotateNode> rotate_node = context->master_graph->add_node<RotateNode>({input}, {output});
-        rotate_node->init(angle, static_cast<ResizeInterpolationType>(interpolation_type));
+        rotate_node->init(angle, interpolation_type);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<RotateMetaNode, RotateNode>(rotate_node);
     } catch (const std::exception& e) {
@@ -126,7 +126,7 @@ rocalRotateFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
 
         std::shared_ptr<RotateNode> rotate_node = context->master_graph->add_node<RotateNode>({input}, {output});
-        rotate_node->init(angle, static_cast<ResizeInterpolationType>(interpolation_type));
+        rotate_node->init(angle, interpolation_type);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<RotateMetaNode, RotateNode>(rotate_node);
     } catch (const std::exception& e) {
@@ -376,7 +376,7 @@ rocalRandomResizedCrop(
         output = context->master_graph->create_tensor(output_info, is_output);
 
         std::shared_ptr<CropResizeNode> random_resize_crop_node = context->master_graph->add_node<CropResizeNode>({input}, {output});
-        random_resize_crop_node->init(area_factor, aspect_ratio, static_cast<ResizeInterpolationType>(interpolation_type));
+        random_resize_crop_node->init(area_factor, aspect_ratio, interpolation_type);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(random_resize_crop_node);
     } catch (const std::exception& e) {
@@ -458,7 +458,7 @@ rocalROIResize(
         output = context->master_graph->create_tensor(output_info, is_output);
 
         std::shared_ptr<CropResizeNode> roi_resize_node = context->master_graph->add_node<CropResizeNode>({input}, {output});
-        roi_resize_node->init(roi_h, roi_w, roi_pos_x, roi_pos_y, static_cast<ResizeInterpolationType>(interpolation_type));
+        roi_resize_node->init(roi_h, roi_w, roi_pos_x, roi_pos_y, interpolation_type);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(roi_resize_node);
     } catch (const std::exception& e) {
@@ -554,7 +554,7 @@ rocalResize(
         output = context->master_graph->create_tensor(output_info, is_output);
 
         std::shared_ptr<ResizeNode> resize_node = context->master_graph->add_node<ResizeNode>({input}, {output});
-        resize_node->init(out_width, out_height, static_cast<ResizeScalingMode>(resize_scaling_mode), maximum_size, static_cast<ResizeInterpolationType>(interpolation_type));
+        resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMetaNode, ResizeNode>(resize_node);
     } catch (const std::exception& e) {
@@ -666,7 +666,7 @@ RocalTensor ROCAL_API_CALL
         output = context->master_graph->create_tensor(output_info, is_output);
 
         std::shared_ptr<ResizeMirrorNormalizeNode> rmn_node = context->master_graph->add_node<ResizeMirrorNormalizeNode>({input}, {output});
-        rmn_node->init(out_width, out_height, static_cast<ResizeScalingMode>(resize_scaling_mode), maximum_size, static_cast<ResizeInterpolationType>(interpolation_type), mean, std_dev, mirror);
+        rmn_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type, mean, std_dev, mirror);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode, ResizeMirrorNormalizeNode>(rmn_node);
     } catch (const std::exception& e) {
@@ -860,7 +860,7 @@ rocalWarpAffine(
         output_info.modify_dims_width_and_height(op_tensor_layout, dest_width, dest_height);
         output = context->master_graph->create_tensor(output_info, is_output);
 
-        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, static_cast<ResizeInterpolationType>(interpolation_type));
+        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, interpolation_type);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -899,7 +899,7 @@ rocalWarpAffineFixed(
         output_info.modify_dims_width_and_height(op_tensor_layout, dest_width, dest_height);
         output = context->master_graph->create_tensor(output_info, is_output);
 
-        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, static_cast<ResizeInterpolationType>(interpolation_type));
+        context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, interpolation_type);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2015,7 +2015,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, static_cast<AudioBorderType>(preemph_border_type));
+        context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, preemph_border_type);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2315,7 +2315,7 @@ rocalSlice(
         output_info.set_data_type(op_tensor_data_type);
         output_info.set_max_shape();
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values, static_cast<OutOfBoundsPolicy>(policy));
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values, policy);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2376,7 +2376,7 @@ rocalMelFilterBank(
         output_info.set_dims(dims);
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, static_cast<MelScaleFormula>(mel_formula), nfilter, normalize, sample_rate);
+        context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, mel_formula, nfilter, normalize, sample_rate);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

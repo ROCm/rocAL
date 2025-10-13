@@ -30,7 +30,6 @@ THE SOFTWARE.
 #include "meta_data/meta_data_reader.h"
 #include "readers/video/video_properties.h"
 #include "pipeline/tensor.h"
-#include "pipeline/enum_registry.h"
 
 #define CHECK_LMDB_RETURN_STATUS(status)                                                          \
     do {                                                                                          \
@@ -53,7 +52,6 @@ enum class StorageType {
     WEBDATASET_RECORDS = 10, // tar files - webdataset format
     NUMPY_DATA = 11          // to support reading from numpy files
 };
-REGISTER_ENUM(StorageType)
 
 enum class ExternalSourceFileMode {
     FILENAME = 0,
@@ -61,7 +59,6 @@ enum class ExternalSourceFileMode {
     RAWDATA_UNCOMPRESSED = 2,
     NONE = 3,
 };
-REGISTER_ENUM(ExternalSourceFileMode)
 
 struct ShardingInfo {
     RocalBatchPolicy last_batch_policy;

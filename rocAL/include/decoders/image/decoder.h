@@ -45,7 +45,6 @@ enum class DecoderType {
     ROCJPEG = 7,           //!< rocJpeg hardware decoder for decoding jpeg files
     ROCJPEG_CROPPED = 8    //!< For partial decoding of jpeg files using rocJpeg hardware decoder 
 };
-REGISTER_ENUM(DecoderType)
 
 class DecoderConfig {
    public:
