@@ -51,7 +51,7 @@ void SliceNode::create_node() {
 
 void SliceNode::update_node() {}
 
-void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_values, OutOfBoundsPolicy policy) {
+void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_values, RocalOutOfBoundsPolicy policy) {
     _policy = policy;
     _anchor = anchor;
     _shape = shape;

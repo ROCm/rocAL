@@ -25,15 +25,16 @@ THE SOFTWARE.
 #include "parameters/parameter_crop_factory.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
+#include "rocal_api_types.h"
 
 class ResizeCropMirrorNode : public CropNode {
    public:
     ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResizeCropMirrorNode() = delete;
     void init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror,
-              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
+              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
     void init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror,
-              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
+              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
