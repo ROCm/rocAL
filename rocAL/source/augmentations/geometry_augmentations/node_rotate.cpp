@@ -47,12 +47,12 @@ void RotateNode::create_node() {
         THROW("Adding the rotate (vxExtRppRotate) node failed: " + TOSTR(status))
 }
 
-void RotateNode::init(float angle, ResizeInterpolationType interpolation_type) {
+void RotateNode::init(float angle, RocalResizeInterpolationType interpolation_type) {
     _angle.set_param(angle);
     _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void RotateNode::init(FloatParam *angle, ResizeInterpolationType interpolation_type) {
+void RotateNode::init(FloatParam *angle, RocalResizeInterpolationType interpolation_type) {
     _angle.set_param(core(angle));
     _interpolation_type = static_cast<int>(interpolation_type);
 }

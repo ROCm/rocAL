@@ -52,7 +52,7 @@ void MelFilterBankNode::create_node() {
 
 void MelFilterBankNode::update_node() {}
 
-void MelFilterBankNode::init(float freq_high, float freq_low, MelScaleFormula mel_formula,
+void MelFilterBankNode::init(float freq_high, float freq_low, RocalMelScaleFormula mel_formula,
                              int nfilter, bool normalize, float sample_rate) {
     _freq_high = freq_high;
     _freq_low = freq_low;

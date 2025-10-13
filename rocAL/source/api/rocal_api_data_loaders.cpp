@@ -1913,7 +1913,7 @@ rocalVideoFileResize(
             resize_output->reset_tensor_roi();
 
             std::shared_ptr<ResizeNode> resize_node = context->master_graph->add_node<ResizeNode>({output}, {resize_output});
-            resize_node->init(out_width, out_height, static_cast<ResizeScalingMode>(resize_scaling_mode), maximum_size, static_cast<ResizeInterpolationType>(interpolation_type));
+            resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
 
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
@@ -2062,7 +2062,7 @@ rocalVideoFileResizeSingleShard(
             resize_output->reset_tensor_roi();
 
             std::shared_ptr<ResizeNode> resize_node = context->master_graph->add_node<ResizeNode>({output}, {resize_output});
-            resize_node->init(out_width, out_height, static_cast<ResizeScalingMode>(resize_scaling_mode), maximum_size, static_cast<ResizeInterpolationType>(interpolation_type));
+            resize_node->init(out_width, out_height, resize_scaling_mode, maximum_size, interpolation_type);
 
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(output_info, is_output);
