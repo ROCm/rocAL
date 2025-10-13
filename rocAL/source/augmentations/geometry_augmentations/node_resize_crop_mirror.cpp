@@ -83,7 +83,7 @@ void ResizeCropMirrorNode::update_node() {
     }
 }
 
-void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror, RocalResizeInterpolationType interpolation_type) {
+void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror, ResizeInterpolationType interpolation_type) {
     _crop_param->crop_w = crop_w;
     _crop_param->crop_h = crop_h;
     _crop_param->x1 = 0;
@@ -92,7 +92,7 @@ void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntPar
     _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror, RocalResizeInterpolationType interpolation_type) {
+void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror, ResizeInterpolationType interpolation_type) {
     _crop_param->set_crop_height_factor(core(crop_h_factor));
     _crop_param->set_crop_width_factor(core(crop_w_factor));
     _crop_param->set_random();
