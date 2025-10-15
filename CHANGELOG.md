@@ -9,6 +9,8 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Changes
 * OpenCL backend support - deprecated
 * CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
+* Refactor external enum usage in rocAL, to maintain separation between external and internal enums.
+* Introduced the following enums ResizeScalingMode, ResizeInterpolationType, MelScaleFormula, AudioBorderType, OutOfBoundsPolicy in commons.h.
 
 ## rocAL 2.4.0 for ROCm 7.1.0
 

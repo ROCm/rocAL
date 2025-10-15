@@ -40,7 +40,7 @@ elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/
 endif()
 
 # rocAL Version
-set(VERSION "2.4.0")
+set(VERSION "2.5.0")
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
