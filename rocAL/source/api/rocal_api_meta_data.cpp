@@ -256,10 +256,6 @@ void
         hipError_t err = hipMemcpy(buf, one_hot_encoded.data(), sizeof(int) * meta_data_batch_size * num_of_classes, hipMemcpyHostToDevice);
         if (err != hipSuccess)
             THROW("Invalid Data Pointer: Error copying to device memory")
-#elif ENABLE_OPENCL
-        if (clEnqueueWriteBuffer(context->master_graph->get_ocl_cmd_q(), (cl_mem)buf, CL_TRUE, 0, sizeof(int) * meta_data_batch_size * num_of_classes, one_hot_encoded, 0, NULL, NULL) != CL_SUCCESS)
-            THROW("Invalid Data Pointer: Error copying to device memory")
-
 #endif
     }
 }

@@ -242,9 +242,6 @@ To build rocAL from source and install, follow the steps below:
 git clone https://github.com/ROCm/rocAL.git
 ```
 
->[!NOTE] 
-> rocAL has support for two GPU backends: **OPENCL** and **HIP**:
-
 #### HIP Backend
 
 * Instructions for building rocAL with the **HIP** GPU backend (default GPU backend):

@@ -23,14 +23,10 @@ THE SOFTWARE.
 #pragma once
 #include <condition_variable>
 #include <vector>
-#if ENABLE_OPENCL
-#include <CL/cl.h>
-#endif
 #include <queue>
-
 #include "pipeline/commons.h"
-#include "device/device_manager.h"
 #include "device/device_manager_hip.h"
+
 struct DecodedDataInfo {
     std::vector<std::string> _data_names;
     std::vector<uint32_t> _roi_width;
@@ -84,10 +80,6 @@ class CircularBuffer {
 #if ENABLE_HIP
     hipStream_t _hip_stream;
     int _hip_device_id, _hip_canMapHostMemory;
-#elif ENABLE_OPENCL
-    cl_command_queue _cl_cmdq = nullptr;
-    cl_context _cl_context = nullptr;
-    cl_device_id _device_id = nullptr;
 #endif
     std::vector<void*> _dev_buffer;  // Actual memory allocated on the device (in the case of GPU affinity)
     std::vector<unsigned char*> _host_buffer_ptrs;
