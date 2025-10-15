@@ -7,6 +7,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Added
 
 ### Changes
+* OpenCL backend support - deprecated
 * CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
 
 ## rocAL 2.4.0 for ROCm 7.1.0

@@ -21,16 +21,12 @@ THE SOFTWARE.
 */
 
 #include "loaders/circular_buffer.h"
-
 #include "pipeline/log.h"
 
 CircularBuffer::CircularBuffer(void *devres) : _write_ptr(0),
                                                _read_ptr(0),
                                                _level(0) {
-#if ENABLE_OPENCL
-    DeviceResources *ocl = static_cast<DeviceResources *>(devres);
-    _cl_cmdq = ocl->cmd_queue, _cl_context = ocl->context, _device_id = ocl->device_id;
-#elif ENABLE_HIP
+#if ENABLE_HIP
     DeviceResourcesHip *hipres = static_cast<DeviceResourcesHip *>(devres);
     _hip_stream = hipres->hip_stream, _hip_device_id = hipres->device_id, _hip_canMapHostMemory = hipres->dev_prop.canMapHostMemory;
 #endif
@@ -88,32 +84,7 @@ unsigned char *CircularBuffer::get_write_buffer() {
 void CircularBuffer::sync() {
     if (!_initialized)
         return;
-#if ENABLE_OPENCL
-    cl_int err = CL_SUCCESS;
-    if (_output_mem_type == RocalMemType::OCL) {
-#if 0
-        if(clEnqueueWriteBuffer(_cl_cmdq, _dev_sub_buffer[_write_ptr], CL_TRUE, 0, _output_mem_size, _host_buffer_ptrs[_write_ptr], 0, NULL, NULL) != CL_SUCCESS)
-            THROW("clEnqueueMapBuffer of size "+ TOSTR(_output_mem_size) + " failed " + TOSTR(err));
-
-#else
-        // NOTE: instead of calling clEnqueueWriteBuffer (shown above),
-        //  an unmap/map cen be done to make sure data is copied from the host to device, it's fast
-        // NOTE: Using clEnqueueUnmapMemObject/clEnqueuenmapMemObject when buffer is allocated with
-        //  CL_MEM_ALLOC_HOST_PTR adds almost no overhead
-        clEnqueueUnmapMemObject(_cl_cmdq, (cl_mem)_dev_buffer[_write_ptr], _host_buffer_ptrs[_write_ptr], 0, NULL, NULL);
-        _host_buffer_ptrs[_write_ptr] = (unsigned char *)clEnqueueMapBuffer(_cl_cmdq,
-                                                                            (cl_mem)_dev_buffer[_write_ptr],
-                                                                            CL_FALSE,
-                                                                            CL_MAP_WRITE,
-                                                                            0,
-                                                                            _output_mem_size,
-                                                                            0, NULL, NULL, &err);
-        if (err)
-            THROW("clEnqueueUnmapMemObject of size " + TOSTR(_output_mem_size) + " failed " + TOSTR(err));
-
-#endif
-    } else {
-#elif ENABLE_HIP
+#if ENABLE_HIP
     if (_output_mem_type == RocalMemType::HIP) {
         // copy memory to host only if needed
         if (!_hip_canMapHostMemory && _use_pinned_memory) {
@@ -128,7 +99,7 @@ void CircularBuffer::sync() {
             // For the host processing no copy is needed, since data is already loaded in the host buffers
             // and handle will be swaped on it
         }
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     }
 #endif
 }
@@ -170,42 +141,7 @@ void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, 
         THROW("Error internal buffer size for the circular buffer should be greater than one")
 
         // Allocating buffers
-#if ENABLE_OPENCL
-    if (_output_mem_type == RocalMemType::OCL) {
-        if (_cl_cmdq == nullptr || _device_id == nullptr || _cl_context == nullptr)
-            THROW("Error ocl structure needed since memory type is OCL");
-
-        cl_int err = CL_SUCCESS;
-
-        for (size_t buffIdx = 0; buffIdx < _buff_depth; buffIdx++) {
-            // NOTE: we don't need to use CL_MEM_ALLOC_HOST_PTR memory if this buffer is not going to be
-            //  used in the host. But we cannot ensure which Rocal's copy function is going to be called
-            //  (copy to host or OCL) by the user
-            _dev_buffer[buffIdx] = (void *)clCreateBuffer(_cl_context,
-                                                          CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,
-                                                          _output_mem_size, NULL, &err);  // Create pinned memory
-            if (!_dev_buffer[buffIdx] || err)
-                THROW("clCreateBuffer of size" + TOSTR(_output_mem_size) + "failed " + TOSTR(err));
-
-            // TODO: we don't need to map the buffers to host here if the output of the output of this
-            //   loader_module is not required by the user to be part of the augmented output
-            _host_buffer_ptrs[buffIdx] = (unsigned char *)clEnqueueMapBuffer(_cl_cmdq,
-                                                                             (cl_mem)_dev_buffer[buffIdx],
-                                                                             CL_TRUE, CL_MAP_WRITE,
-                                                                             0,
-                                                                             _output_mem_size,
-                                                                             0, NULL, NULL, &err);
-            if (err)
-                THROW("clEnqueueMapBuffer of size" + TOSTR(_output_mem_size) + "failed " + TOSTR(err));
-            clRetainMemObject((cl_mem)_dev_buffer[buffIdx]);
-        }
-    } else {
-        for (size_t buffIdx = 0; buffIdx < _buff_depth; buffIdx++) {
-            // a minimum of extra MEM_ALIGNMENT is allocated
-            _host_buffer_ptrs[buffIdx] = (unsigned char *)aligned_alloc(MEM_ALIGNMENT, MEM_ALIGNMENT * (_output_mem_size / MEM_ALIGNMENT + 1));
-        }
-    }
-#elif ENABLE_HIP
+#if ENABLE_HIP
         if (_output_mem_type == RocalMemType::HIP) {
             if (!_hip_stream || _hip_device_id == -1)
                 THROW("Error HIP device resource is not initialized");
@@ -247,14 +183,7 @@ void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, 
 
 void CircularBuffer::release() {
     for (size_t buffIdx = 0; buffIdx < _buff_depth; buffIdx++) {
-#if ENABLE_OPENCL
-        if (_output_mem_type == RocalMemType::OCL) {
-            if (clEnqueueUnmapMemObject(_cl_cmdq, (cl_mem)_dev_buffer[buffIdx], _host_buffer_ptrs[buffIdx], 0, NULL, NULL) != CL_SUCCESS)
-                ERR("Could not unmap ocl memory")
-            if (clReleaseMemObject((cl_mem)_dev_buffer[buffIdx]) != CL_SUCCESS)
-                ERR("Could not release ocl memory in the circular buffer")
-        } else {
-#elif ENABLE_HIP
+#if ENABLE_HIP
             if (_output_mem_type == RocalMemType::HIP) {
                 if (_use_pinned_memory && _host_buffer_ptrs[buffIdx]) {
                     hipError_t err = hipHostFree((void *)_host_buffer_ptrs[buffIdx]);
@@ -274,7 +203,7 @@ void CircularBuffer::release() {
 #else
         free(_host_buffer_ptrs[buffIdx]);
 #endif
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
             free(_host_buffer_ptrs[buffIdx]);
         }
 #endif
@@ -285,14 +214,10 @@ void CircularBuffer::release() {
     _write_ptr = 0;
     _read_ptr = 0;
     _level = 0;
-#if ENABLE_OPENCL
-    _cl_cmdq = 0;
-    _cl_context = 0;
-    _device_id = 0;
-#elif ENABLE_HIP
-            _hip_stream = nullptr;
-            _hip_canMapHostMemory = 0;
-            _hip_device_id = 0;
+#if ENABLE_HIP
+    _hip_stream = nullptr;
+    _hip_canMapHostMemory = 0;
+    _hip_device_id = 0;
 #endif
 }
 
