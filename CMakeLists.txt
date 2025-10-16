@@ -31,16 +31,16 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS ON)
-if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
-  set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
-  set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
-elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+  set(CMAKE_C_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang)
+  set(CMAKE_CXX_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
   set(CMAKE_C_COMPILER clang)
   set(CMAKE_CXX_COMPILER clang++)
 endif()
 
 # rocAL Version
-set(VERSION "2.4.0")
+set(VERSION "2.5.0")
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
@@ -97,9 +97,7 @@ endif()
 if(NOT DEFINED BACKEND)
   set(BACKEND "HIP")   # set default backend to HIP
 else()
-  if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
-    set(BACKEND "OPENCL")
-  elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+  if("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
     set(BACKEND "HIP")
   elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
     set(BACKEND "CPU")
@@ -209,11 +207,11 @@ if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 # Set the dependent packages
-set(ROCAL_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, openmp-extras-runtime, mivisionx, libturbojpeg:amd64 | libturbojpeg0")
-set(ROCAL_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime, mivisionx")
+set(ROCAL_DEBIAN_PACKAGE_LIST  "hip-runtime-amd, openmp-extras-runtime, mivisionx, libturbojpeg:amd64 | libturbojpeg0")
+set(ROCAL_RPM_PACKAGE_LIST     "hip-runtime-amd, openmp-extras-runtime, mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "half, rocm-hip-runtime-dev, openmp-extras-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "half, rocm-hip-runtime-devel, openmp-extras-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "half, hip-dev, openmp-extras-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "half, hip-devel, openmp-extras-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
 
 # Add OS specific dependencies
 if (EXISTS "/etc/os-release")
