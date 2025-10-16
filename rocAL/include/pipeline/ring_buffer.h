@@ -23,14 +23,8 @@ THE SOFTWARE.
 #pragma once
 #include <condition_variable>
 #include <vector>
-
-#if ENABLE_OPENCL
-#include <CL/cl.h>
-#endif
 #include <queue>
-
 #include "pipeline/commons.h"
-#include "device/device_manager.h"
 #include "device/device_manager_hip.h"
 #include "meta_data/meta_data.h"
 

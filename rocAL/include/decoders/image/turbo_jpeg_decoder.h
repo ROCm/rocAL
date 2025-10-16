@@ -57,7 +57,7 @@ class TJDecoder : public Decoder {
 
     ~TJDecoder() override;
     void initialize(int device_id) override{};
-    bool is_partial_decoder() override { return _is_partial_decoder; }
+    bool is_cropped_decoder() override { return _is_cropped_decoder; }
     void set_bbox_coords(std::vector<float> bbox_coord) override { _bbox_coord = bbox_coord; }
     void set_crop_window(CropWindow &crop_window) override { _crop_window = crop_window; }
     std::vector<float> get_bbox_coords() override { return _bbox_coord; }
@@ -66,7 +66,7 @@ class TJDecoder : public Decoder {
     tjhandle m_jpegDecompressor;
     tjscalingfactor *_scaling_factors = nullptr;
     int _num_scaling_factors = 0;
-    bool _is_partial_decoder = false;
+    bool _is_cropped_decoder = false;
     std::vector<float> _bbox_coord;
     const static unsigned _max_scaling_factor = 8;
     CropWindow _crop_window;
