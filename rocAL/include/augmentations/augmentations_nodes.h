@@ -44,6 +44,7 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_resize.h"
 #include "augmentations/geometry_augmentations/node_rotate.h"
 #include "augmentations/color_augmentations/node_color_twist.h"
+#include "augmentations/color_augmentations/node_color_cast.h"
 #include "augmentations/color_augmentations/node_hue.h"
 #include "augmentations/color_augmentations/node_saturation.h"
 #include "augmentations/geometry_augmentations/node_crop_mirror_normalize.h"

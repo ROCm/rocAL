@@ -884,6 +884,16 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
             output = rocalRandomResizedCrop(handle, input, resize_w, resize_h, true, area_factor, aspect_ratio);
         } break;
+        case 64: {
+            std::cout << "Running rocalColorCast" << std::endl;
+            std::vector<float> rgb = {0.25f, 0.10f, 0.00f};
+            output = rocalColorCast(handle, input, true, float_param, rgb, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 65: {
+            std::cout << "Running rocalColorCastFixed" << std::endl;
+            std::vector<float> rgb = {0.25f, 0.10f, 0.00f};
+            output = rocalColorCastFixed(handle, input, 0.5f, rgb, true, output_tensor_layout, output_tensor_dtype);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

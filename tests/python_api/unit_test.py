@@ -91,7 +91,7 @@ def main():
     if (scaling_mode != types.SCALING_MODE_DEFAULT and interpolation_type !=
             types.LINEAR_INTERPOLATION):
         interpolation_type = types.LINEAR_INTERPOLATION
-    if augmentation_name in ["hue", "saturation", "color_twist"] and color_format == types.GRAY:
+    if augmentation_name in ["hue", "saturation", "color_twist", "color_cast"] and color_format == types.GRAY:
         print("Not a valid option! Exiting!")
         sys.exit(0)
 
@@ -394,6 +394,12 @@ def main():
                                     saturation=0.25,
                                     output_layout=tensor_layout,
                                     output_dtype=tensor_dtype)
+        elif augmentation_name == "color_cast":
+            output = fn.color_cast(images,
+                                   alpha=0.5,
+                                   rgb=[0.25, 0.10, 0.00],
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
         elif augmentation_name == "crop":
             output = fn.crop(images,
                              crop=(3, 224, 224),

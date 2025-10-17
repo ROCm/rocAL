@@ -1083,6 +1083,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("colorTwistFixed", &rocalColorTwistFixed,
           py::return_value_policy::reference);
+    m.def("colorCast", &rocalColorCast,
+          py::return_value_policy::reference);
+    m.def("colorCastFixed", &rocalColorCastFixed,
+          py::return_value_policy::reference);
     m.def("cropMirrorNormalize", &rocalCropMirrorNormalize,
           py::return_value_policy::reference);
     m.def("crop", &rocalCrop,

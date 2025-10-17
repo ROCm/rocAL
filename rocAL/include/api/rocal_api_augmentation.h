@@ -930,6 +930,42 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwistFixed(RocalContext context,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Applies color cast to images by blending a per-sample RGB color with input using alpha.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] alpha parameter that controls blending amount for color cast per sample (0..1)
+ * \param [in] rgb vector specifying the target color to cast. Can be a single triplet [r,g,b] replicated across batch or per-sample triplets of size batch*3
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalColorCast(RocalContext context, RocalTensor input,
+                                                     bool is_output,
+                                                     RocalFloatParam alpha,
+                                                     std::vector<float>& rgb,
+                                                     RocalTensorLayout output_layout = ROCAL_NONE,
+                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies color cast to images with fixed parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] alpha fixed blending amount for color cast (0..1)
+ * \param [in] rgb vector specifying the target color to cast. Can be a single triplet [r,g,b] replicated across batch or per-sample triplets of size batch*3
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalColorCastFixed(RocalContext context, RocalTensor input,
+                                                          float alpha,
+                                                          std::vector<float>& rgb,
+                                                          bool is_output,
+                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Fused function which performs crop, normalize and flip on images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context

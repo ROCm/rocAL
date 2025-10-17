@@ -909,6 +909,24 @@ def color_twist(*inputs, brightness=1.0, contrast=1.0, hue=0.0,
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (color_twist_image)
 
+def color_cast(*inputs, alpha=1.0, rgb=[0.0, 0.0, 0.0], device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies color cast by blending a target RGB color with the input using alpha.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param alpha (float or FloatParam, default = 1.0)                            blending amount for the cast (0..1). If float, wrapped into a FloatParam.
+        @param rgb (list of floats, default = [0.0, 0.0, 0.0])                       target color to cast; can be a single triplet [r,g,b] or per-sample triplets with length batch*3
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image with color cast applied
+    """
+    alpha = b.createFloatParameter(alpha) if isinstance(alpha, float) else alpha
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "p_alpha": alpha, "rgb": rgb,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    color_cast_image = b.colorCast(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (color_cast_image)
+
 
 def uniform(*inputs, range=[-1, 1], device=None):
     """!Applies uniform random number generation to the input images.

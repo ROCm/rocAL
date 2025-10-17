@@ -112,6 +112,7 @@ do
         # caffe detection
         python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name saturation --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Saturation_${rgb_name[$rgb]}_${device_name}"        
         python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name color_twist --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ColorTwist_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name color_cast --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ColorCast_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name rain --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Rain_${rgb_name[$rgb]}_${device_name}"
 
         # caffe2 classification
