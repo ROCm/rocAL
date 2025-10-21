@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.22)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -42,6 +42,7 @@ endif()
 
 # Set Project Version and Language
 project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
+message("DEBUG: Printing VERSION value -- ${VERSION}")
 
 set(TARGET_NAME rocal_pybind)
 
@@ -61,13 +62,7 @@ set(CMAKE_SKIP_BUILD_RPATH TRUE)
 
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
-#if (PYTHON_VERSION_SUGGESTED)
-#    find_package(Python3 "${PYTHON_VERSION_SUGGESTED}" EXACT QUIET COMPONENTS Interpreter Development)
-#else()
-#    set(Python3_FIND_VIRTUALENV FIRST)
-#    find_package(Python3 QUIET COMPONENTS Interpreter Development)
-#endif()	
-find_package(pybind11 QUIET CONFIG)	
+find_package(pybind11 QUIET CONFIG)
 find_package(HALF QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
 
@@ -76,9 +71,7 @@ if(BUILD_PYPACKAGE)
     if(NOT DEFINED BACKEND)
         set(BACKEND "HIP")   # set default backend to HIP
     else()
-        if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
-            set(BACKEND "OPENCL")
-        elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+        if("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
             set(BACKEND "HIP")
         elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
             set(BACKEND "CPU")
@@ -109,17 +102,6 @@ if(BUILD_PYPACKAGE)
             message("-- ${Yellow}rocAL PyBind requires HIP, Not Found${ColourReset}")
         endif()
     endif()
-
-    # Find OpenCL Support
-    if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "OPENCL")
-        find_package(OpenCL QUIET)
-        if(OpenCL_FOUND)
-            message("-- ${White}rocAL PyBind -- Using OpenCL -- Path:" ${OpenCL_LIBRARIES} "\tVersion:" ${CL_TARGET_OpenCL_VERSION})
-        else()
-            set(BUILD_ROCAL_PYBIND false)
-            message("-- ${Yellow}rocAL PyBind requires OpenCL, Not Found${ColourReset}")
-        endif()
-    endif()
 endif()
 
 # Dependency Check
@@ -129,34 +111,19 @@ if(NOT MIVisionX_FOUND)
     message("-- ${Yellow}NOTE: rocAL PyBind library requires AMD's MIVisionX library, Not Found ${ColourReset}")
 else()
     #find the MIVisionX backend type
-    set(MIVISIONX_BACKEND_OPENCL_FOUND 0)
     set(MIVISIONX_BACKEND_HIP_FOUND 0)
     if(EXISTS ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h)
         file(READ ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h MIVISIONX_BACKEND_FILE)
-        string(REGEX MATCH "ENABLE_OPENCL ([0-9]*)" _ ${MIVISIONX_BACKEND_FILE})
-        set(MIVISIONX_BACKEND_OPENCL_FOUND ${CMAKE_MATCH_1})
         string(REGEX MATCH "ENABLE_HIP ([0-9]*)" _ ${MIVISIONX_BACKEND_FILE})
         set(MIVISIONX_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
     else()
         message(FATAL_ERROR "${Red}ERROR: ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h file Not Found. MIVisionX Package REQUIRED ${ColourReset}")
     endif()
 
-    if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
-        if (NOT MIVISIONX_BACKEND_OPENCL_FOUND)
+    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+        if (NOT MIVISIONX_BACKEND_HIP_FOUND)
             set(BUILD_ROCAL_PYBIND false)
-            message("-- ${Red}ERROR: rocAL PyBind -- MIVisionX with OpenCL backend Not Found${ColourReset}")
-        endif()
-
-        if ("${BACKEND}" STREQUAL "OPENCL" AND OpenCL_FOUND)
-            if (NOT MIVISIONX_BACKEND_OPENCL_FOUND)
-                set(BUILD_ROCAL_PYBIND false)
-                message("-- ${Red}ERROR: rocAL PyBind -- MIVisionX with OpenCL backend Not Found${ColourReset}")
-            endif()
-        elseif("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-            if (NOT MIVISIONX_BACKEND_HIP_FOUND)
-                set(BUILD_ROCAL_PYBIND false)
-                message("-- ${Red}ERROR: rocAL PyBind -- MIVisionX with the HIP backend Not Found${ColourReset}")
-            endif()
+            message("-- ${Red}ERROR: rocAL PyBind -- MIVisionX with the HIP backend Not Found${ColourReset}")
         endif()
     endif()
 endif()
@@ -165,13 +132,9 @@ if(NOT TurboJpeg_FOUND)
     set(BUILD_ROCAL_PYBIND false)
     message("-- ${Yellow}NOTE: rocAL pybind requires TurboJpeg, Not Found${ColourReset}")
 endif()
-# Python3
-#if(NOT Python3_FOUND)	
-#    set(BUILD_ROCAL_PYBIND false)	
-#    message("-- ${Yellow}NOTE: rocAL pybind requires Python3, Not Found${ColourReset}")
-#endif()
+
 # PyBind11
-if(NOT pybind11_FOUND)	
+if(NOT pybind11_FOUND)
     set(BUILD_ROCAL_PYBIND false)
     message("-- ${Yellow}NOTE: rocAL pybind requires pybind11, Not Found${ColourReset}")
 endif()
@@ -188,32 +151,59 @@ endif()
 
 # multi version python support
 set(PYTHON_VERSIONS "3.12" "3.11" "3.10" "3.9" "3.8")
-if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.12"))
-    message("-- ${Yellow}NOTE: rocAL pybind supported on Python versions - 3.8, 3.9, 3.10, 3.11, 3.12. Not Found, Please provide supported version${ColourReset}")
-    set(BUILD_ROCAL_PYBIND false)
-endif()
+add_custom_target(PyPackageBuildAll)
+add_custom_target(PyPackageInstallAll)
 
-foreach(VERSION ${PYTHON_VERSIONS})
-    message(STATUS "Searching for Python version: ${VERSION}")
-    find_package(Python3 "${VERSION}" EXACT QUIET COMPONENTS Interpreter Development)
-    set(PYTHON_EXECUTABLE_${VERSION} ${Python3_EXECUTABLE})
-    set(PYTHON_FOUND_${VERSION} ${Python3_FOUND})
+foreach(PY_VERSION ${PYTHON_VERSIONS})
+    message(STATUS "Searching for Python version: ${PY_VERSION}")
 
-    if(NOT PYTHON_FOUND_${VERSION})
+    foreach(v IN ITEMS
+        Python3_EXECUTABLE
+        Python3_VERSION
+        Python3_SOABI
+        Python3_EXTENSION_SUFFIX
+        Python3_Interpreter_FOUND
+        Python3_Development_FOUND
+        Python3_INCLUDE_DIRS
+        Python3_LIBRARY
+        Python3_LIBRARIES
+        Python3_STDARCH
+        Python3_FIND_IMPLEMENTATIONS
+    )
+        unset(${v} CACHE)
+        unset(${v})
+    endforeach()
+
+    set(Python3_FIND_VIRTUALENV LAST)
+    set(Python3_FIND_STRATEGY LOCATION)
+
+    find_package(Python3 "${PY_VERSION}" EXACT QUIET COMPONENTS Interpreter Development.Module)
+    set(PYTHON_EXECUTABLE_${PY_VERSION} ${Python3_EXECUTABLE})
+    set(PYTHON_INCLUDE_DIRS_${PY_VERSION} ${Python3_INCLUDE_DIRS})
+    set(PYTHON_FOUND_${PY_VERSION} ${Python3_FOUND})
+    set(PYTHON_LIBRARIES_${PY_VERSION} ${Python3_LIBRARIES})
+
+    if(NOT PYTHON_FOUND_${PY_VERSION})
         set(BUILD_ROCAL_PYBIND false)
-        message("-- ${Yellow}NOTE: Python ${VERSION} Not Found, not building rocAL pybind for this version${ColourReset}")
+        message("-- ${Yellow}NOTE: Python${PY_VERSION} Not Found, not building rocAL pybind for Python${PY_VERSION}${ColourReset}")
     else()
         set(BUILD_ROCAL_PYBIND true)
-        message("-- ${Green}NOTE: Python ${VERSION} Found, building rocAL pybind for this version${ColourReset}")
     endif()
 
     if(${BUILD_ROCAL_PYBIND})
-        message("-- ${Yellow}NOTE: Python ${VERSION} Found, building rocAL pybind for this version${ColourReset}")
+        message("-- ${Green}NOTE: Python ${PY_VERSION} Found, building rocAL pybind for this ${Python3_EXECUTABLE}${ColourReset}")
+        # ----- Create a unique pybind module target for this Python -----
+        string(REPLACE "." "_" VERSION_ID "${PY_VERSION}")          # e.g., 3.11 -> 3_11
+        set(mod_tgt "rocal_pybind_${VERSION_ID}")                # CMake target name
+        set(pkg_dir "rocal_pybind")                              # Python package dir name
+        set(out_dir "${CMAKE_BINARY_DIR}/${pkg_dir}-${PY_VERSION}") # per-version bin dir
+        file(MAKE_DIRECTORY "${out_dir}")
+
         # avoid setting the default installation path to /usr/local
         if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)	
-            message("-- ${Green}NOTE: rocAL PyBind default installation path -- ${Python3_STDARCH} ${ColourReset}")	
-            set(CMAKE_INSTALL_PREFIX_PYTHON ${Python3_STDARCH} CACHE PATH "rocAL PyBind default installation path" FORCE)	
-        endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)	
+            message("-- ${Green}NOTE: rocAL PyBind default installation path -- ${Python3_STDARCH} ${ColourReset}")
+            set(CMAKE_INSTALL_PREFIX_PYTHON ${Python3_STDARCH} CACHE PATH "rocAL PyBind default installation path" FORCE)
+        endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
         # MIVisionX
@@ -225,24 +215,27 @@ foreach(VERSION ${PYTHON_VERSIONS})
         # rocAL
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
         include_directories(../rocAL/include/api/)
-        # Python3	
-        include_directories(${Python3_INCLUDE_DIRS})	
+        # Python3
+        include_directories(${Python3_INCLUDE_DIRS})
         message("-- ${Green}NOTE: rocAL pybind requires Python3, Found --  ${Python3_EXECUTABLE} ${ColourReset}")	
-        # PyBind11	
+        # PyBind11
         include_directories(${pybind11_INCLUDE_DIRS})
         # half
         include_directories(${HALF_INCLUDE_DIRS})
         # OpenMP
         #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath='$ORIGIN:$ORIGIN/llvm/lib'")
+        #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath='$ORIGIN:$ORIGIN/llvm/lib'")
 
-        file(GLOB_RECURSE pyfiles amd/*.py)
-        file(GLOB_RECURSE sources *.cpp)
+        # Binding sources
+        set(BINDING_SOURCES
+            ${CMAKE_CURRENT_SOURCE_DIR}/rocal_pybind.cpp
+            # add other .cpp files here explicitly
+        )
 
-        pybind11_add_module(rocal_pybind MODULE ${sources})
-        target_link_libraries(rocal_pybind PRIVATE ${LINK_LIBRARY_LIST})
-        add_dependencies(rocal_pybind rocal)
+        pybind11_add_module(${mod_tgt} MODULE ${BINDING_SOURCES})
+        target_link_libraries(${mod_tgt} PRIVATE ${LINK_LIBRARY_LIST})
+        add_dependencies(${mod_tgt} rocal)
         message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
         message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 
@@ -250,68 +243,61 @@ foreach(VERSION ${PYTHON_VERSIONS})
         find_package(DLPACK QUIET)
         if(DLPACK_FOUND)
             include_directories(${DLPACK_INCLUDE_DIRS})
-            target_compile_definitions(rocal_pybind PUBLIC ENABLE_DLPACK=1)
+            target_compile_definitions(${mod_tgt} PUBLIC ENABLE_DLPACK=1)
         else()
-            target_compile_definitions(rocal_pybind PUBLIC ENABLE_DLPACK=0)
+            target_compile_definitions(${mod_tgt} PUBLIC ENABLE_DLPACK=0)
             message("-- ${Yellow}NOTE: DLPack Not Found - rocAL Tensorflow and Generic plugins built without GPU support!${ColourReset}")
         endif()
 
-        set_target_properties(rocal_pybind PROPERTIES
-            PREFIX "${PYTHON_MODULE_PREFIX}"
-            SUFFIX "${PYTHON_MODULE_EXTENSION}"
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}")
-        set(TARGET_PYMODULE_NAME "${PYTHON_MODULE_PREFIX}rocal_pybind${PYTHON_MODULE_EXTENSION}")
+        set_target_properties(${mod_tgt} PROPERTIES
+            PREFIX ""
+            LIBRARY_OUTPUT_DIRECTORY "${out_dir}")
+        if(DEFINED Python3_EXTENSION_SUFFIX AND Python3_EXTENSION_SUFFIX)
+            set_target_properties(${mod_tgt} PROPERTIES SUFFIX "${Python3_EXTENSION_SUFFIX}")
+        endif()
 
-        CONFIGURE_FILE(amd/__init__.py
-                    ${CMAKE_BINARY_DIR}/${TARGET_NAME}/__init__.py @ONLY
-                    )
-        CONFIGURE_FILE(setup.py
-                    ${CMAKE_BINARY_DIR}/setup.py @ONLY
-                    )
-        CONFIGURE_FILE(getrocALwheelname.py
-                    ${CMAKE_BINARY_DIR}/getrocALwheelname.py @ONLY
-                    )
-        CONFIGURE_FILE(rocal_pybind.cpp
-                    ${CMAKE_BINARY_DIR}/rocal_pybind.cpp @ONLY
-                    )
+        set(pkg_name "rocal_pybind")
+        set(py_work "${CMAKE_BINARY_DIR}/py${PY_VERSION}")
+        set(py_exe "${Python3_EXECUTABLE}")
+        file(MAKE_DIRECTORY "${py_work}/dist")
 
-        foreach (filename ${pyfiles})
-            get_filename_component(target "${filename}" REALPATH)
-            #to maintain folder structure
-            file(RELATIVE_PATH ITEM_PATH_REL ${CMAKE_CURRENT_SOURCE_DIR} ${filename})
-            message(STATUS "Copying ${filename} to ${TARGET_NAME}/${ITEM_PATH_REL}")
-            configure_file("${filename}" "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${ITEM_PATH_REL}" COPYONLY)
-        endforeach (filename)
+        add_custom_target(PyPackageBuild-${PY_VERSION}
+        COMMAND "${py_exe}" -m build -w -o "${py_work}/dist" "${CMAKE_SOURCE_DIR}/rocAL_pybind"
+        WORKING_DIRECTORY "${py_work}"
+        COMMENT "Build wheel for rocal Python ${PY_VERSION}"
+        VERBATIM
+        )
+        add_dependencies(PyPackageBuild-${PY_VERSION} ${mod_tgt})
+        add_dependencies(PyPackageBuildAll PyPackageBuild-${PY_VERSION})
 
-        execute_process(COMMAND "${Python3_EXECUTABLE}" getrocALwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
-        message(STATUS "Detected rocAL Python wheel filename ${PY_WHEELFILE}")
-            
-        add_custom_target(PyPackageBuild
-            COMMAND "${Python3_EXECUTABLE}" -m pip wheel .
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-            COMMENT "Building python wheel package"
-            )
+        add_custom_target(PyPackageInstall-${PY_VERSION}
+        COMMAND "${py_exe}" -m pip install --upgrade --force-reinstall --no-deps
+                            --no-index --find-links "${py_work}/dist"
+                            "${pkg_name}==${PROJECT_VERSION}"
+        WORKING_DIRECTORY "${py_work}"
+        COMMENT "Install ${pkg_name} ${PROJECT_VERSION} for Python ${PY_VERSION}"
+        VERBATIM
+        )
+        add_dependencies(PyPackageInstall-${PY_VERSION} PyPackageBuild-${PY_VERSION})
+        add_dependencies(PyPackageInstallAll PyPackageInstall-${PY_VERSION})
 
-        add_dependencies(PyPackageBuild rocal_pybind)
+        # Python files - Install
+        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/amd/
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                COMPONENT runtime
+                FILES_MATCHING PATTERN "*.py")
 
-        set_target_properties(PyPackageBuild PROPERTIES Package_Name ${PY_WHEELFILE})
-        add_custom_target(PyPackageInstall
-                COMMAND "${Python3_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
-                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-                COMMENT "Installing wheel file"
-                )
-        add_dependencies(PyPackageInstall PyPackageBuild)
-            
-        #install rocAL pybind libs
-        install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
-        install(DIRECTORY amd DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime)
-        message("-- ${Green}Radeon Augmentation Library Python Binding - rocal_pybind module added ${ColourReset}")
+        # rocAL pybind libs - install
+        install(TARGETS ${mod_tgt}
+                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-        # PyBind Test - Installed
+        # PyBind Test - Install
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/python_api DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
-    #else()
-    #    message("-- ${Red}WARNING: rocAL PyBind Module excluded - Dependency Failure${ColourReset}")
+
+        message("-- ${Green}Radeon Augmentation Library Python Binding - ${mod_tgt} module added ${ColourReset}")
+
     endif()
 endforeach()
