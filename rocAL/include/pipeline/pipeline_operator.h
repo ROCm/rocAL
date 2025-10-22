@@ -37,7 +37,7 @@ class PipelineOperator {
     }
 
     // Set the list of arguments associated with this operator
-    void set_arguments(std::vector<Argument> op_arguments) {
+    void set_arguments(std::vector<Argument>& op_arguments) {
         arguments = op_arguments;
     }
 
