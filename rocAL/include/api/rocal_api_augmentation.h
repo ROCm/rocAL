@@ -774,6 +774,30 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPixelate(RocalContext context, RocalT
                                                     RocalTensorLayout output_layout = ROCAL_NONE,
                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Applies a grid mask effect to images by overlaying a grid of transparent/opaque tiles.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] tile_width width of each grid tile in pixels
+ * \param [in] grid_ratio ratio of masked area within a tile (0..1)
+ * \param [in] grid_angle angle of the grid in radians
+ * \param [in] translate_x translation offset in x for the grid origin
+ * \param [in] translate_y translation offset in y for the grid origin
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalGridMask(RocalContext context, RocalTensor input,
+                                                    bool is_output,
+                                                    unsigned tile_width,
+                                                    float grid_ratio,
+                                                    float grid_angle,
+                                                    unsigned translate_x,
+                                                    unsigned translate_y,
+                                                    RocalTensorLayout output_layout = ROCAL_NONE,
+                                                    RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Adjusts the exposure in images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context

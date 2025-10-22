@@ -894,6 +894,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> rgb = {0.25f, 0.10f, 0.00f};
             output = rocalColorCastFixed(handle, input, 0.5f, rgb, true, output_tensor_layout, output_tensor_dtype);
         } break;
+        case 66: {
+            std::cout << "Running rocalGridMask" << std::endl;
+            unsigned tile_width = 32;
+            float grid_ratio = 0.5f;
+            float grid_angle = 0.0f; // radians
+            unsigned translate_x = 0;
+            unsigned translate_y = 0;
+            output = rocalGridMask(handle, input, true, tile_width, grid_ratio, grid_angle, translate_x, translate_y, output_tensor_layout, output_tensor_dtype);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

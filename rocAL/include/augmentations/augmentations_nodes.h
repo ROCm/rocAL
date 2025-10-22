@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_color_temperature.h"
 #include "augmentations/effects_augmentations/node_fog.h"
 #include "augmentations/effects_augmentations/node_pixelate.h"
+#include "augmentations/effects_augmentations/node_grid_mask.h"
 #include "augmentations/geometry_augmentations/node_lens_correction.h"
 #include "augmentations/color_augmentations/node_gamma.h"
 #include "augmentations/geometry_augmentations/node_flip.h"

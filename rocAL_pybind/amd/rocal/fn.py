@@ -371,6 +371,37 @@ def pixelate(*inputs, device=None, pixelate_percent=50.0, output_layout=types.NH
     return (pixelate_image)
 
 
+def grid_mask(*inputs, tile_width=16, grid_ratio=0.5, grid_angle=0.0, translate_x=0, translate_y=0,
+              device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies GridMask effect by overlaying a grid of tiles with a masked ratio.
+
+        @param inputs                                   the input image passed to the augmentation
+        @param tile_width (int, default = 16)           width of each grid tile in pixels
+        @param grid_ratio (float, default = 0.5)        ratio of masked area within a tile (0..1)
+        @param grid_angle (float, default = 0.0)        angle of the grid in radians
+        @param translate_x (int, default = 0)           translation offset in x for the grid origin
+        @param translate_y (int, default = 0)           translation offset in y for the grid origin
+        @param device (string, optional)                Parameter unused for augmentation
+        @param output_layout (int, default = types.NHWC) tensor layout for the augmentation output
+        @param output_dtype (int, default = types.UINT8) tensor dtype for the augmentation output
+
+        @return    Image with grid mask effect applied
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "tile_width": tile_width,
+        "grid_ratio": grid_ratio,
+        "grid_angle": grid_angle,
+        "translate_x": translate_x,
+        "translate_y": translate_y,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    grid_mask_image = b.gridMask(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (grid_mask_image)
+
+
 def rain(*inputs, rain=None, rain_width=0, rain_height=0, rain_transparency=None, rain_slant_angle=0.0,
          device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Rain effect on images

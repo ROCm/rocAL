@@ -1133,6 +1133,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("pixelate", &rocalPixelate,
           py::return_value_policy::reference);
+    m.def("gridMask", &rocalGridMask,
+          py::return_value_policy::reference);
     m.def("blend", &rocalBlend,
           py::return_value_policy::reference);
     m.def("randomCrop", &rocalRandomCrop,

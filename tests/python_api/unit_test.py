@@ -371,6 +371,15 @@ def main():
             output = fn.pixelate(images,
                                  output_layout=tensor_layout,
                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "grid_mask":
+            output = fn.grid_mask(images,
+                                  tile_width=32,
+                                  grid_ratio=0.5,
+                                  grid_angle=0.0,
+                                  translate_x=0,
+                                  translate_y=0,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
         elif augmentation_name == "exposure":
             output = fn.exposure(images,
                                  exposure=1.0,
