@@ -52,7 +52,7 @@ class Node {
     void set_graph_id(int id) { _graph_id = id; }
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
-    std::vector<Argument> get_args_list() { return _args; }
+    const std::vector<Argument>& get_args_list() const { return _args; }
 
    protected:
     virtual void create_node() = 0;
