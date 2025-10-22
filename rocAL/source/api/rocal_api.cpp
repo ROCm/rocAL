@@ -127,7 +127,7 @@ rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
             THROW("String copy failed, Invalid pointer passed for serialize")
         }
 
-        auto serialize_pipe_string = context->master_graph->get_serialized_string();
+        auto& serialize_pipe_string = context->master_graph->get_serialized_string();
         if (serialize_pipe_string.empty())
             THROW("Serialized string is empty, Invoke rocalSerialize before obtaining the string")
         std::memcpy(serialized_string, serialize_pipe_string.c_str(), serialize_pipe_string.size() + 1);
