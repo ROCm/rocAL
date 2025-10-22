@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "pipeline/ring_buffer.h"
-#include "device/device_manager.h"
 
 RingBuffer::RingBuffer(unsigned buffer_depth) : BUFF_DEPTH(buffer_depth),
                                                 _dev_sub_buffer(buffer_depth),
@@ -118,33 +117,7 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> &
     if (BUFF_DEPTH < 2)
         THROW("Error internal buffer size for the ring buffer should be greater than one")
 
-#if ENABLE_OPENCL
-    DeviceResources *dev_ocl = static_cast<DeviceResources *>(_dev);
-    // Allocating buffers
-    if (mem_type == RocalMemType::OCL) {
-        if (dev_ocl->cmd_queue == nullptr || dev_ocl->device_id == nullptr || dev_ocl->context == nullptr)
-            THROW("Error ocl structure needed since memory type is OCL");
-
-        cl_int err = CL_SUCCESS;
-
-        for (size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++) {
-            cl_mem_flags flags = CL_MEM_READ_ONLY;
-
-            _dev_sub_buffer[buffIdx].resize(sub_buffer_count);
-            for (unsigned sub_idx = 0; sub_idx < sub_buffer_count; sub_idx++) {
-                _dev_sub_buffer[buffIdx][sub_idx] = clCreateBuffer(dev_ocl->context, flags, _sub_buffer_size[sub_idx], NULL, &err);
-
-                if (err) {
-                    _dev_sub_buffer.clear();
-                    THROW("clCreateBuffer of size " + TOSTR(_sub_buffer_size[sub_idx]) + " index " + TOSTR(sub_idx) +
-                          " failed " + TOSTR(err));
-                }
-
-                clRetainMemObject((cl_mem)_dev_sub_buffer[buffIdx][sub_idx]);
-            }
-        }
-    } else {
-#elif ENABLE_HIP
+#if ENABLE_HIP
     DeviceResourcesHip *dev_hip = static_cast<DeviceResourcesHip *>(_dev);
     // Allocating buffers
     if (_mem_type == RocalMemType::HIP) {
@@ -180,7 +153,7 @@ void RingBuffer::init(RocalMemType mem_type, void *devres, std::vector<size_t> &
                 _host_roi_buffers[buffIdx][sub_buff_idx] = static_cast<unsigned *>(malloc(roi_buffer_size[sub_buff_idx]));  // Allocate HOST ROI buffers
             }
         }
-#if ENABLE_OPENCL || ENABLE_HIP
+#if ENABLE_HIP
     }
 #endif
 }
@@ -206,26 +179,6 @@ void RingBuffer::initBoxEncoderMetaData(RocalMemType mem_type, size_t encoded_bb
             }
         }
     }
-#elif ENABLE_OPENCL
-        DeviceResources *dev_ocl = static_cast<DeviceResources *>(_dev);
-        if (mem_type == RocalMemType::OCL) {
-            if (dev_ocl->cmd_queue == nullptr || dev_ocl->device_id == nullptr || dev_ocl->context == nullptr)
-                THROW("Error ocl structure needed since memory type is OCL");
-
-            cl_int err = CL_SUCCESS;
-            for (size_t buffIdx = 0; buffIdx < BUFF_DEPTH; buffIdx++) {
-                _dev_bbox_buffer[buffIdx] = clCreateBuffer(dev_ocl->context, CL_MEM_READ_WRITE, encoded_bbox_size, NULL, &err);
-                if (err) {
-                    _dev_bbox_buffer.clear();
-                    THROW("clCreateBuffer of size " + TOSTR(encoded_bbox_size) + " failed " + TOSTR(err));
-                }
-                _dev_labels_buffer[buffIdx] = clCreateBuffer(dev_ocl->context, CL_MEM_READ_WRITE, encoded_labels_size, NULL, &err);
-                if (err) {
-                    _dev_labels_buffer.clear();
-                    THROW("clCreateBuffer of size " + TOSTR(encoded_labels_size) + " failed " + TOSTR(err));
-                }
-            }
-        }
 #else
     {
         if (_meta_data_sub_buffer_count < 2)
@@ -314,24 +267,6 @@ void RingBuffer::release_gpu_res() {
         _host_meta_data_buffers.clear();
         _dev_roi_buffers.clear();
     }
-#elif ENABLE_OPENCL
-        if (_mem_type == RocalMemType::OCL) {
-            for (size_t buffIdx = 0; buffIdx < _dev_sub_buffer.size(); buffIdx++) {
-                for (unsigned sub_buf_idx = 0; sub_buf_idx < _dev_sub_buffer[buffIdx].size(); sub_buf_idx++) {
-                    if (_dev_sub_buffer[buffIdx][sub_buf_idx])
-                        if (clReleaseMemObject((cl_mem)_dev_sub_buffer[buffIdx][sub_buf_idx]) != CL_SUCCESS)
-                            ERR("Could not release ocl memory in the ring buffer")
-                }
-                if (_host_meta_data_buffers.size() != 0) {
-                    for (unsigned sub_buf_idx = 0; sub_buf_idx < _host_meta_data_buffers[buffIdx].size(); sub_buf_idx++) {
-                        if (_host_meta_data_buffers[buffIdx][sub_buf_idx])
-                            free(_host_meta_data_buffers[buffIdx][sub_buf_idx]);
-                    }
-                }
-            }
-            _dev_sub_buffer.clear();
-            _host_meta_data_buffers.clear();
-        }
 #endif
 }
 

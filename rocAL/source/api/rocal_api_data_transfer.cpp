@@ -23,9 +23,6 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
 #include "rocal_api.h"
-#if ENABLE_OPENCL
-#include "CL/cl.h"
-#endif
 
 RocalStatus ROCAL_API_CALL
 rocalToTensor(RocalContext p_context, void* out_ptr, RocalTensorLayout tensor_format, RocalTensorOutputType tensor_output_type, float multiplier0,

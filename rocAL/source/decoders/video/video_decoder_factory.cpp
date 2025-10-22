@@ -30,10 +30,10 @@ THE SOFTWARE.
 #ifdef ROCAL_VIDEO
 std::shared_ptr<VideoDecoder> create_video_decoder(DecoderConfig config) {
     switch (config.type()) {
-        case DecoderType::FFMPEG_SW_DECODE:
+        case DecoderType::FFMPEG_VIDEO:
             return std::make_shared<FFmpegVideoDecoder>();
 #if ENABLE_ROCDECODE
-        case DecoderType::ROCDEC_VIDEO_DECODE:
+        case DecoderType::ROCDECODE_VIDEO:
             return std::make_shared<RocDecVideoDecoder>(config.get_hip_stream());
 #endif
         default:

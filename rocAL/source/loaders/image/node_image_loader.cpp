@@ -55,7 +55,7 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     std::array<std::string, 23> arg_names = {
         "internal_shard_count", "cpu_num_threads", "source_path",
         "json_path", "feature_key_map", "storage_type", "decoder_type",
-        "shuffle", "loop", "load_batch_count", "mem_type","meta_data_reader", "decoder_keep_orig",
+        "shuffle", "loop", "load_batch_count", "mem_type", "meta_data_reader", "decoder_keep_orig",
         "last_batch_policy", "pad_last_batch_repeated", "stick_to_shard", "shard_size",
         "file_prefix", "sequence_length", "step", "stride",
         "external_file_mode", "index_path"
