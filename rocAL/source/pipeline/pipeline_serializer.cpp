@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <fstream>
 
 void PipelineSerializer::serialize_to_string(std::string& serialized_string) {
-    serialized_string = _pipeline.SerializeAsString();
+    serialized_string = _pipeline_proto.SerializeAsString();
 }
 
 void PipelineSerializer::serialize_to_file(const std::string& file_path) {
@@ -33,17 +33,17 @@ void PipelineSerializer::serialize_to_file(const std::string& file_path) {
     if (!ofs) {
         THROW("Failed to open file for writing serialized pipeline: " + file_path);
     }
-    if (!_pipeline.SerializeToOstream(&ofs)) {
+    if (!_pipeline_proto.SerializeToOstream(&ofs)) {
         THROW("Failed to serialize pipeline to file: " + file_path);
     }
 }
 
 void PipelineSerializer::serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth) {
-    _pipeline.set_num_threads(num_threads);
-    _pipeline.set_batch_size(batch_size);
-    _pipeline.set_device_id(device_id);
-    _pipeline.set_rocal_cpu(device_type == RocalMemType::HOST ? true : false);
-    _pipeline.set_prefetch_queue_depth(prefetch_queue_depth);
+    _pipeline_proto.set_num_threads(num_threads);
+    _pipeline_proto.set_batch_size(batch_size);
+    _pipeline_proto.set_device_id(device_id);
+    _pipeline_proto.set_rocal_cpu(device_type == RocalMemType::HOST ? true : false);
+    _pipeline_proto.set_prefetch_queue_depth(prefetch_queue_depth);
 }
 
 void set_tensor_proto(rocal_proto::InputOutput *in_out_proto, Tensor *tensor, bool is_input = false) {
@@ -153,7 +153,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
 void PipelineSerializer::serialize_operators(std::vector<std::shared_ptr<PipelineOperator>>& operators) {
     // Serialize all operators
     for (auto &pipe_op : operators) {
-        rocal_proto::OperatorDef *op = _pipeline.add_operators();
+        rocal_proto::OperatorDef *op = _pipeline_proto.add_operators();
         op->set_name(pipe_op->operator_name);
         op->set_module_name(pipe_op->module_name);
         serialize_pipeop_arguments(pipe_op->get_arguments(), op);
@@ -179,7 +179,7 @@ void PipelineSerializer::serialize_output_tensors(TensorList& output_tensors_lis
 
     // Serialize the pipeline outputs
     for (size_t idx = 0; idx < output_tensors_list.size(); idx++) {
-        rocal_proto::InputOutput *output = _pipeline.add_pipe_outputs();
+        rocal_proto::InputOutput *output = _pipeline_proto.add_pipe_outputs();
         auto pipe_output = output_tensors_list[idx];
         set_tensor_proto(output, pipe_output, false);
     }

@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "rocal.pb.h"
 
 /**
- * @brief Helper to serialize a built rocAL pipeline into a protobuf-based payload.
+ * @brief Helper to serialize a built rocAL pipeline into protobuffers.
  *
  * This class gathers top-level pipeline configuration, operators (names, modules,
  * arguments) and tensors (inputs/outputs) and writes them into rocal_proto::PipelineDef.
@@ -61,7 +61,7 @@ public:
      */
     void serialize_output_tensors(TensorList& output_tensors_list);
     /**
-     * @brief Serialize all operators, their arguments, and IO tensors.
+     * @brief Serialize all operators in the pipeline, their arguments, and IO tensors.
      */
     void serialize_operators(std::vector<std::shared_ptr<PipelineOperator>>& operators);
     /**
@@ -70,6 +70,6 @@ public:
     void serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef);
 
 protected:
-    rocal_proto::PipelineDef _pipeline;
+    rocal_proto::PipelineDef _pipeline_proto;
 
 };
