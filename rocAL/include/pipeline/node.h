@@ -49,7 +49,7 @@ class Node {
     const Roi2DCords *get_dst_roi() { return _outputs[0]->info().roi().get_2D_roi(); }
     void set_graph_id(int id) { _graph_id = id; }
     int get_graph_id() { return _graph_id; }
-    std::vector<Argument> get_args_list() { return _args; }
+    const std::vector<Argument>& get_args_list() const { return _args; }
 
    protected:
     virtual void create_node() = 0;
