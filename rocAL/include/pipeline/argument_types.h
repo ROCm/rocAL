@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <stdexcept>
 #include "parameters/parameter_factory.h"
 
-// Enhanced type traits for argument processing (C++17 compatible)
+// Enhanced type traits, to check for the type of argument used for argument processing (C++17 compatible)
 
 // Vector type detection
 template <typename T>
