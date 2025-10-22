@@ -91,7 +91,7 @@ def main():
     if (scaling_mode != types.SCALING_MODE_DEFAULT and interpolation_type !=
             types.LINEAR_INTERPOLATION):
         interpolation_type = types.LINEAR_INTERPOLATION
-    if augmentation_name in ["hue", "saturation", "color_twist", "color_cast"] and color_format == types.GRAY:
+    if augmentation_name in ["hue", "saturation", "color_twist", "color_cast", "non_linear_blend"] and color_format == types.GRAY:
         print("Not a valid option! Exiting!")
         sys.exit(0)
 
@@ -483,6 +483,18 @@ def main():
                               ratio=0.5,
                               output_layout=tensor_layout,
                               output_dtype=tensor_dtype)
+        elif augmentation_name == "non_linear_blend":
+            output1 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=416,
+                                dest_height=416,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.non_linear_blend(images,
+                                         output1,
+                                         stddev=0.2,
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype)
         elif augmentation_name == "resize_crop":
             output = fn.resize_crop(images,
                                     resize_width=416,

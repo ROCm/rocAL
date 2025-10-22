@@ -1137,6 +1137,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("blend", &rocalBlend,
           py::return_value_policy::reference);
+    m.def("nonLinearBlend", &rocalNonLinearBlend,
+          py::return_value_policy::reference);
+    m.def("nonLinearBlendFixed", &rocalNonLinearBlendFixed,
+          py::return_value_policy::reference);
     m.def("randomCrop", &rocalRandomCrop,
           py::return_value_policy::reference);
     m.def("colorTemp", &rocalColorTemp,

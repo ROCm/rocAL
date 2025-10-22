@@ -42,6 +42,7 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_blur.h"
 #include "augmentations/geometry_augmentations/node_fisheye.h"
 #include "augmentations/color_augmentations/node_blend.h"
+#include "augmentations/color_augmentations/node_non_linear_blend.h"
 #include "augmentations/geometry_augmentations/node_resize.h"
 #include "augmentations/geometry_augmentations/node_rotate.h"
 #include "augmentations/color_augmentations/node_color_twist.h"

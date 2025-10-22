@@ -54,6 +54,39 @@ def blend(*inputs, ratio=None, device=None, output_layout=types.NHWC, output_dty
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (blend_image)
 
+def non_linear_blend(*inputs, stddev=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Non-linear blend of two input images using per-sample stddev parameter.
+
+        @param inputs                                                                 list containing two input images
+        @param stddev (float, optional, default = None)                               standard deviation parameter controlling non-linear blend
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    non-linearly blended image
+    """
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "stddev": stddev,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    output_image = b.nonLinearBlend(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def non_linear_blend_fixed(*inputs, stddev=0.2, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Non-linear blend of two input images using a fixed stddev parameter.
+
+        @param inputs                                                                 list containing two input images
+        @param stddev (float, default = 0.2)                                          fixed standard deviation parameter controlling non-linear blend
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    non-linearly blended image
+    """
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "stddev": stddev, "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    output_image = b.nonLinearBlendFixed(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
 
 def snow(*inputs, snow=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies snow effect on images.
