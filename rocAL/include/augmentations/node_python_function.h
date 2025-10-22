@@ -30,10 +30,10 @@ THE SOFTWARE.
 #include "parameters/parameter_vx.h"
 
 #ifndef ROCAL_PY_MAX_TENSOR_DIMS
-#define ROCAL_PY_MAX_TENSOR_DIMS 8
+#define ROCAL_PY_MAX_TENSOR_DIMS 5
 #endif
 
-typedef struct RocalPyTensorDesc_ {
+typedef struct {
     size_t num_dims;                          /* e.g., 4 for [N,H,W,C] */
     size_t shape[ROCAL_PY_MAX_TENSOR_DIMS];   /* lengths per dimension */
     size_t strides[ROCAL_PY_MAX_TENSOR_DIMS]; /* strides in elements */
@@ -41,7 +41,7 @@ typedef struct RocalPyTensorDesc_ {
     int layout;                               /* matches rocAL/vx tensor layout enums */
 } RocalPyTensorDesc;
 
-typedef struct RocalPyExecParams_ {
+typedef struct {
     uint64_t function_id;        /* CPython id(function), provided by python front-end */
     RocalPyTensorDesc in_desc;   /* Input tensor descriptions */
     RocalPyTensorDesc out_desc;  /* Output tensor description */
