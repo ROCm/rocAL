@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include <exception>
 #include <string>
+#include <cstring>
 
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
