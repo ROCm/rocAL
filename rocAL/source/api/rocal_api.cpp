@@ -107,7 +107,7 @@ rocalVerify(RocalContext p_context) {
 }
 
 RocalStatus ROCAL_API_CALL
-rocalSerialize(RocalContext rocal_context, size_t &serialized_string_size) {
+rocalSerialize(RocalContext rocal_context, size_t *serialized_string_size) {
     auto context = static_cast<Context*>(rocal_context);
     try {
         context->master_graph->serialize(serialized_string_size);

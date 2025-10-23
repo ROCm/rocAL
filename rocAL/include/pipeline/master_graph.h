@@ -156,7 +156,7 @@ public:
     /**
      * Serialize API
      */
-    void serialize(size_t &serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
+    void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
     std::string& get_serialized_string() { return _serialized_pipeline; }
 private:
     Status update_node_parameters();

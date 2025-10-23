@@ -116,7 +116,7 @@ extern "C" RocalStatus ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
  * \param [out] serialized_string_size number of bytes in the serialized string
  * \return A \ref RocalStatus - A status code indicating the success or failure.
  */
-extern "C" RocalStatus ROCAL_API_CALL rocalSerialize(RocalContext rocal_context, size_t &serialized_string_size);
+extern "C" RocalStatus ROCAL_API_CALL rocalSerialize(RocalContext rocal_context, size_t* serialized_string_size);
 
 /*!
  * \brief Copy the last serialized pipeline string into a user buffer.
