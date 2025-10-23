@@ -134,7 +134,7 @@ rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
 
     } catch (const std::exception& e) {
         context->capture_error(e.what());
-        ERR(e.what())
+        ERR(e.what());
         return ROCAL_RUNTIME_ERROR;
     }
     return ROCAL_OK;

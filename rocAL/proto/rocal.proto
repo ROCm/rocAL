@@ -24,7 +24,7 @@ syntax = "proto3";
 
 package rocal_proto;
 
-// Stores the Input/Ouptut tensors
+// Stores the Input/Output tensors
 message InputOutput {
   string name = 1;
   optional string type = 2;
