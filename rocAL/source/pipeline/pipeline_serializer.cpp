@@ -72,6 +72,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
             arg->set_instance_name(op_arg.sub_type_name);
 
         if (op_arg.is_parameter) {
+            THROW("Parameter types are unsupported for Argument " + op_arg.arg_name);
             // TODO - Will be enabled later
             // rocal_proto::Parameter *param = arg->mutable_param();
             // serialize_parameter_to_protobuf(param, op_arg);
