@@ -1361,3 +1361,76 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
     log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return log_output
+
+
+def median_filter(*inputs, kernel_size=3, border_type=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies median filter to images.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param kernel_size (int, default = 3)                                         median filter kernel size (pixels), typically odd: 3,5,7
+        @param border_type (int, default = 0)                                         border handling policy (implementation specific)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Image after median filtering
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "kernel_size": kernel_size,
+        "border_type": border_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.medianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+
+def gaussian_filter(*inputs, stddev=None, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies gaussian filter to images with per-sample stddev parameter.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param stddev (float or FloatParam, optional, default = None)                 per-sample standard deviation parameter; if float, wrapped into a FloatParam
+        @param kernel_size (int, default = 3)                                         gaussian filter kernel size (pixels), typically odd: 3,5,7
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Image after gaussian filtering
+    """
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "stddev": stddev,
+        "kernel_size": kernel_size,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.gaussianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+
+def gaussian_filter_fixed(*inputs, stddev=1.0, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies gaussian filter to images with fixed stddev.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param stddev (float, default = 1.0)                                          fixed standard deviation value
+        @param kernel_size (int, default = 3)                                         gaussian filter kernel size (pixels), typically odd: 3,5,7
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Image after gaussian filtering with fixed stddev
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "stddev": stddev,
+        "kernel_size": kernel_size,
+        "is_output": False,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.gaussianFilterFixed(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)

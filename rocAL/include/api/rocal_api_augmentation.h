@@ -1465,4 +1465,58 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
 
+/*! \brief Applies median filter to images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] kernel_size Median filter kernel size (pixels)
+ * \param [in] border_type Border handling policy (implementation specific)
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalMedianFilter(RocalContext context, RocalTensor input,
+                                                        bool is_output,
+                                                        int kernel_size = 3,
+                                                        int border_type = 0,
+                                                        RocalTensorLayout output_layout = ROCAL_NONE,
+                                                        RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies gaussian filter to images with per-sample stddev parameter.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] stddev Per-sample standard deviation parameter
+ * \param [in] kernel_size Gaussian filter kernel size (pixels)
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilter(RocalContext context, RocalTensor input,
+                                                          bool is_output,
+                                                          RocalFloatParam stddev = NULL,
+                                                          int kernel_size = 3,
+                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies gaussian filter to images with fixed stddev.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] stddev Fixed standard deviation value
+ * \param [in] kernel_size Gaussian filter kernel size (pixels)
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilterFixed(RocalContext context, RocalTensor input,
+                                                               float stddev,
+                                                               int kernel_size,
+                                                               bool is_output,
+                                                               RocalTensorLayout output_layout = ROCAL_NONE,
+                                                               RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

@@ -1107,6 +1107,12 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("blur", &rocalBlur,
           py::return_value_policy::reference);
+    m.def("medianFilter", &rocalMedianFilter,
+          py::return_value_policy::reference);
+    m.def("gaussianFilter", &rocalGaussianFilter,
+          py::return_value_policy::reference);
+    m.def("gaussianFilterFixed", &rocalGaussianFilterFixed,
+          py::return_value_policy::reference);
     m.def("contrast", &rocalContrast,
           py::return_value_policy::reference);
     m.def("flip", &rocalFlip,

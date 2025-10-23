@@ -325,6 +325,24 @@ def main():
                              window_size=5,
                              output_layout=tensor_layout,
                              output_dtype=tensor_dtype)
+        elif augmentation_name == "median_filter":
+            output = fn.median_filter(images,
+                                      kernel_size=3,
+                                      border_type=0,
+                                      output_layout=tensor_layout,
+                                      output_dtype=tensor_dtype)
+        elif augmentation_name == "gaussian_filter":
+            output = fn.gaussian_filter(images,
+                                        stddev=1.0,
+                                        kernel_size=3,
+                                        output_layout=tensor_layout,
+                                        output_dtype=tensor_dtype)
+        elif augmentation_name == "gaussian_filter_fixed":
+            output = fn.gaussian_filter_fixed(images,
+                                              stddev=1.0,
+                                              kernel_size=3,
+                                              output_layout=tensor_layout,
+                                              output_dtype=tensor_dtype)
         elif augmentation_name == "warp_affine":
             output = fn.warp_affine(images, dest_height=416, dest_width=416, matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
                                     output_layout=tensor_layout, output_dtype=tensor_dtype, interpolation_type=types.LINEAR_INTERPOLATION)
