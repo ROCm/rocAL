@@ -185,3 +185,7 @@ void PipelineSerializer::serialize_output_tensors(TensorList& output_tensors_lis
         set_tensor_proto(output, pipe_output, false);
     }
 }
+
+void PipelineSerializer::reset() {
+    _pipeline_proto.Clear();
+}

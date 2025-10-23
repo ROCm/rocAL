@@ -69,6 +69,11 @@ public:
      */
     void serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef);
 
+    /**
+     * @brief Clear any previously serialized state to start fresh.
+     */
+    void reset();
+
 protected:
     rocal_proto::PipelineDef _pipeline_proto;
 
