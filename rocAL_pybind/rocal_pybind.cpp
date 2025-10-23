@@ -1127,6 +1127,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("warpAffineFixed", &rocalWarpAffineFixed,
           py::return_value_policy::reference);
+    m.def("warpPerspective", &rocalWarpPerspective,
+          py::return_value_policy::reference);
     m.def("fog", &rocalFog,
           py::return_value_policy::reference);
     m.def("fishEye", &rocalFishEye,

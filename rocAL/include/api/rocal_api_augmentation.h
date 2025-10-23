@@ -510,6 +510,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWarpAffineFixed(RocalContext context,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Applies perspective transformation to images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] dest_height output height (0 to use input max height)
+ * \param [in] dest_width output width (0 to use input max width)
+ * \param [in] perspective vector specifying 3x3 perspective transform coefficients.
+ *            Either a single matrix of length 9 replicated across the batch or a per-sample array of length batch*9.
+ * \param [in] interpolation_type The type of interpolation to be used for warp perspective.
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalWarpPerspective(RocalContext context, RocalTensor input, bool is_output,
+                                                           unsigned dest_height = 0, unsigned dest_width = 0,
+                                                           std::vector<float> &perspective,
+                                                           RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
+                                                           RocalTensorLayout output_layout = ROCAL_NONE,
+                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Applies fish eye effect on images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context

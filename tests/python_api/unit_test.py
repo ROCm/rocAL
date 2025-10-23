@@ -346,6 +346,16 @@ def main():
         elif augmentation_name == "warp_affine":
             output = fn.warp_affine(images, dest_height=416, dest_width=416, matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
                                     output_layout=tensor_layout, output_dtype=tensor_dtype, interpolation_type=types.LINEAR_INTERPOLATION)
+        elif augmentation_name == "warp_perspective":
+            output = fn.warp_perspective(images,
+                                         dest_height=416,
+                                         dest_width=416,
+                                         perspective=[1.0, 0.0, 0.0,
+                                                      0.0, 1.0, 0.0,
+                                                      0.001, 0.001, 1.0],
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype,
+                                         interpolation_type=types.LINEAR_INTERPOLATION)
         elif augmentation_name == "fish_eye":
             output = fn.fish_eye(images,
                                  output_layout=tensor_layout,

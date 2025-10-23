@@ -795,6 +795,40 @@ def warp_affine(*inputs, dest_width=0, dest_height=0, matrix=[0, 0, 0, 0, 0, 0],
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (warp_affine_output)
 
+def warp_perspective(*inputs, dest_width=0, dest_height=0, perspective=[1.0, 0.0, 0.0,
+                                                                         0.0, 1.0, 0.0,
+                                                                         0.0, 0.0, 1.0],
+                     interpolation_type=types.LINEAR_INTERPOLATION, device=None,
+                     output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies perspective transformation to images.
+
+        @param inputs                                                                      the input image passed to the augmentation
+        @param dest_width (int, optional, default = 0)                                     The length of the X dimension of the transformed image (0 uses input max width)
+        @param dest_height (int, optional, default = 0)                                    The length of the Y dimension of the transformed image (0 uses input max height)
+        @param perspective (list of 9 floats, default = identity)                          3x3 perspective transform matrix flattened row-major.
+                                                                                            Either a single 9-element list replicated across the batch or per-sample data of length batch*9.
+        @param interpolation_type (int, optional, default = types.LINEAR_INTERPOLATION)    Type of interpolation to be used.
+        @param device (string, optional, default = None)                                   Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                         tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                         tensor dtype for the augmentation output
+
+        @return    Perspective warped images
+    """
+    # Order of arguments must match C API binding signature in rocal_pybind:
+    # (context, input, is_output, dest_height, dest_width, perspective, interpolation_type, output_layout, output_datatype)
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "dest_height": dest_height,
+        "dest_width": dest_width,
+        "perspective": perspective,
+        "interpolation_type": interpolation_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    warp_persp_output = b.warpPerspective(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (warp_persp_output)
+
 
 def vignette(*inputs, vignette=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Vignette effect

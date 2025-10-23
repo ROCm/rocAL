@@ -23,6 +23,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "augmentations/geometry_augmentations/node_warp_affine.h"
+#include "augmentations/geometry_augmentations/node_warp_perspective.h"
 #include "augmentations/color_augmentations/node_exposure.h"
 #include "augmentations/color_augmentations/node_vignette.h"
 #include "augmentations/effects_augmentations/node_jitter.h"
