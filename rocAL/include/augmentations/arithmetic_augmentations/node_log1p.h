@@ -23,7 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
-#include "rocal_api_types.h"
 
 class Log1pNode : public Node {
    public:

@@ -22,11 +22,7 @@ THE SOFTWARE.
 */
 
 #include <cstdio>
-#if ENABLE_OPENCL
-#include <CL/cl.h>
-#endif
 #include <vx_ext_amd.h>
-
 #include <cstring>
 #include <stdexcept>
 #include "pipeline/commons.h"
@@ -380,23 +376,7 @@ void Tensor::create_roi_tensor_from_handle(void **handle) {
         THROW("Error: vxCreateTensorFromHandle(src tensor roi: failed " + TOSTR(status))
 }
 
-#if ENABLE_OPENCL
-unsigned Tensor::copy_data(cl_command_queue queue, unsigned char *user_buffer, bool sync) {
-    if (_info._type != TensorInfo::Type::HANDLE) return 0;
-
-    if (_info._mem_type == RocalMemType::OCL) {
-        cl_int status;
-        if ((status = clEnqueueReadBuffer(
-                 queue, (cl_mem)_mem_handle, sync ? (CL_TRUE) : CL_FALSE, 0,
-                 _info.data_size(), user_buffer, 0, nullptr, nullptr)) != CL_SUCCESS) {
-            THROW("clEnqueueReadBuffer failed: " + TOSTR(status))
-        }
-    } else {
-        memcpy(user_buffer, _mem_handle, _info.data_size());
-    }
-    return 0;
-}
-#elif ENABLE_HIP
+#if ENABLE_HIP
 unsigned Tensor::copy_data(hipStream_t stream, void *host_memory, bool sync) {
     if (_info._type != TensorInfo::Type::HANDLE) return 0;
 
