@@ -2443,11 +2443,11 @@ RocalTensor ROCAL_API_CALL
 rocalPythonFunction(
         RocalContext p_context,
         RocalTensor p_input,
+        bool is_output,
         unsigned long long function_id,
         std::vector<size_t> output_dims,
         RocalTensorLayout output_layout,
-        RocalTensorOutputType output_datatype,
-        bool is_output)
+        RocalTensorOutputType output_datatype)
 {
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);

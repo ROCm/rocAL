@@ -1287,8 +1287,6 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     - Input is exposed as a NumPy view of the batch (no copy for input).
     - The callable must return a NumPy array with matching batch size.
     - output_dims defaults to input tensor dimensions when not provided.
-    - dtype defaults to Pipeline tensor dtype when not provided.
-    - layout defaults to Pipeline tensor_layout when not provided.
     
     @param inputs (list)                                    The input tensor to process
     @param function (callable)                              Python function to apply to the batch
@@ -1307,6 +1305,7 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     
     Notes
     -----
+    - This operation accepts only a single input tensor
     - This operation is CPU-only and requires the GIL for execution
     - The input is provided as a zero-copy NumPy view when possible
     - The function must maintain the batch dimension size
@@ -1343,6 +1342,6 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     if dtype is None:
         dtype = Pipeline._current_pipeline._tensor_dtype
         
-    kwargs_pybind = {"input_image": inputs[0], "function_id": function_id, "output_dims": output_dims, "layout": layout, "dtype": dtype, "is_output": False}
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "function_id": function_id, "output_dims": output_dims, "layout": layout, "dtype": dtype}
     output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return output

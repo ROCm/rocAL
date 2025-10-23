@@ -201,7 +201,7 @@ void CircularBuffer::release() {
                 }
             } else {
 #else
-        if(_host_buffer_ptrs[buffIdx]) free(_host_buffer_ptrs[buffIdx]);
+        free(_host_buffer_ptrs[buffIdx]);
 #endif
 #if ENABLE_HIP
             free(_host_buffer_ptrs[buffIdx]);

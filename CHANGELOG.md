@@ -5,6 +5,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ## rocAL 2.5.0 (Unreleased)
 
 ### Added
+* Added python function execution support in rocAL
 
 ### Changes
 * OpenCL backend support - deprecated
