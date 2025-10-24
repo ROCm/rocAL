@@ -75,3 +75,4 @@ THE SOFTWARE.
 #include "augmentations/arithmetic_augmentations/node_log1p.h"
 #include "augmentations/filter_augmentations/node_median_filter.h"
 #include "augmentations/filter_augmentations/node_gaussian_filter.h"
+#include "augmentations/filter_augmentations/node_threshold.h"

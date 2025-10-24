@@ -915,6 +915,16 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             float stddev = 0.2f;
             output = rocalNonLinearBlendFixed(handle, input, output_1, stddev, true, output_tensor_layout, output_tensor_dtype);
         } break;
+        case 69: {
+            std::cout << "Running rocalThreshold" << std::endl;
+            RocalFloatParam min_param = rocalCreateFloatParameter(64.0f);
+            RocalFloatParam max_param = rocalCreateFloatParameter(192.0f);
+            output = rocalThreshold(handle, input, true, min_param, max_param, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 70: {
+            std::cout << "Running rocalThresholdFixed" << std::endl;
+            output = rocalThresholdFixed(handle, input, 64.0f, 192.0f, true, output_tensor_layout, output_tensor_dtype);
+        }
         case 76: {
             std::cout << "Running rocalMedianFilter" << std::endl;
             int kernel = 3;

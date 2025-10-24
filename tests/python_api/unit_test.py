@@ -343,6 +343,12 @@ def main():
                                               kernel_size=3,
                                               output_layout=tensor_layout,
                                               output_dtype=tensor_dtype)
+        elif augmentation_name == "threshold":
+            output = fn.threshold(images,
+                                  min=64.0,
+                                  max=192.0,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
         elif augmentation_name == "warp_affine":
             output = fn.warp_affine(images, dest_height=416, dest_width=416, matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
                                     output_layout=tensor_layout, output_dtype=tensor_dtype, interpolation_type=types.LINEAR_INTERPOLATION)

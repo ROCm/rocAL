@@ -525,7 +525,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWarpAffineFixed(RocalContext context,
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalWarpPerspective(RocalContext context, RocalTensor input, bool is_output,
-                                                           unsigned dest_height = 0, unsigned dest_width = 0,
+                                                           unsigned dest_height, unsigned dest_width,
                                                            std::vector<float> &perspective,
                                                            RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
@@ -1539,5 +1539,40 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilterFixed(RocalContext cont
                                                                bool is_output,
                                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies thresholding to images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] min per-sample minimum threshold value
+ * \param [in] max per-sample maximum threshold value
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalThreshold(RocalContext context, RocalTensor input,
+                                                     bool is_output,
+                                                     RocalFloatParam min = NULL,
+                                                     RocalFloatParam max = NULL,
+                                                     RocalTensorLayout output_layout = ROCAL_NONE,
+                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies thresholding to images with fixed min/max parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] min fixed minimum threshold value
+ * \param [in] max fixed maximum threshold value
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalThresholdFixed(RocalContext context, RocalTensor input,
+                                                          float min, float max,
+                                                          bool is_output,
+                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H
