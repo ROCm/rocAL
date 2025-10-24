@@ -46,7 +46,7 @@ void PipelineSerializer::serialize_pipeline_config(size_t num_threads, size_t ba
     _pipeline_proto.set_prefetch_queue_depth(prefetch_queue_depth);
 }
 
-void set_tensor_proto(rocal_proto::InputOutput *in_out_proto, Tensor *tensor, bool is_input = false) {
+void set_tensor_proto(rocal_proto::InputOutput *in_out_proto, Tensor *tensor, bool is_input) {
     in_out_proto->set_name(tensor->tensor_name());
     in_out_proto->set_device(static_cast<int>(tensor->info().mem_type()));
     in_out_proto->set_dtype(static_cast<int>(tensor->info().data_type()));
@@ -171,7 +171,7 @@ void PipelineSerializer::serialize_operators(std::vector<std::shared_ptr<Pipelin
         // Serialize output tensors to protobuffers
         for (auto &node_output : pipe_op->get_outputs()) {
             rocal_proto::InputOutput *output = op->add_outputs();
-            set_tensor_proto(output, node_output);
+            set_tensor_proto(output, node_output, false);
         }
     }
 }
