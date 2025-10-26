@@ -80,3 +80,4 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_erode.h"
 #include "augmentations/filter_augmentations/node_magnitude.h"
 #include "augmentations/filter_augmentations/node_phase.h"
+#include "augmentations/filter_augmentations/node_erase.h"

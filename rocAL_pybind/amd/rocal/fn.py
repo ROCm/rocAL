@@ -1516,3 +1516,32 @@ def threshold_fixed(*inputs, min=0.0, max=255.0, device=None, output_layout=type
     }
     output_image = b.thresholdFixed(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (output_image)
+
+def erase(*inputs, anchor_box_info=None, colors=None, num_boxes=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Erases regions in images based on per-sample anchor boxes and colors.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param anchor_box_info (rocalTensor, required)                                tensor holding per-sample per-box LTRB anchors (shape: [N, max_boxes, 4])
+        @param colors (rocalTensor, required)                                         tensor holding per-sample per-box RGB colors (shape: [N, max_boxes, 3])
+        @param num_boxes (int or IntParam, optional, default = None)                  per-sample number of boxes; if int, wrapped into IntParam
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Image with specified regions erased
+    """
+    if anchor_box_info is None or colors is None:
+        raise RuntimeError("erase requires anchor_box_info and colors tensors")
+
+    num_boxes = b.createIntParameter(num_boxes) if isinstance(num_boxes, int) else num_boxes
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "anchor_box_info": anchor_box_info,
+        "colors": colors,
+        "num_boxes": num_boxes,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.erase(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)

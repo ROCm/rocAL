@@ -1117,6 +1117,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("thresholdFixed", &rocalThresholdFixed,
           py::return_value_policy::reference);
+    m.def("erase", &rocalErase,
+          py::return_value_policy::reference);
     m.def("contrast", &rocalContrast,
           py::return_value_policy::reference);
     m.def("flip", &rocalFlip,
@@ -1146,6 +1148,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("pixelate", &rocalPixelate,
           py::return_value_policy::reference);
     m.def("gridMask", &rocalGridMask,
+          py::return_value_policy::reference);
+    m.def("erase", &rocalErase,
           py::return_value_policy::reference);
     m.def("blend", &rocalBlend,
           py::return_value_policy::reference);

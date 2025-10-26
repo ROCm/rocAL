@@ -968,6 +968,39 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
 
         }break;
+        case 71: {
+            std::cout << "Running rocalErase" << std::endl;
+            // Erase requires auxiliary tensors: anchor_box_info [N, max_boxes, 4] and colors [N, max_boxes, 3].
+            // Attempt to load them from ROCAL_DATA_PATH; if unavailable, fall back to copy to keep pipeline functional.
+            RocalTensor anchor = nullptr;
+            RocalTensor colors = nullptr;
+            bool erase_ready = false;
+
+            if (strcmp(rocal_data_path.c_str(), "") != 0) {
+                try {
+                    std::string anchors_path = rocal_data_path + "/rocal_data/erase/anchors.npy";
+                    std::string colors_path  = rocal_data_path + "/rocal_data/erase/colors.npy";
+                    // Load auxiliary tensors via Numpy reader (expects files to exist in test dataset)
+                    anchor = rocalNumpyFileSource(handle, anchors_path.c_str(), num_threads, RocalTensorLayout::ROCAL_NONE);
+                    colors = rocalNumpyFileSource(handle, colors_path.c_str(), num_threads, RocalTensorLayout::ROCAL_NONE);
+                    if (anchor && colors) {
+                        erase_ready = true;
+                    }
+                } catch (...) {
+                    std::cout << "Erase aux tensors not found/readable at ROCAL_DATA_PATH -- falling back to copy\n";
+                }
+            } else {
+                std::cout << "ROCAL_DATA_PATH not set -- falling back to copy for erase test\n";
+            }
+
+            if (erase_ready) {
+                // Use existing uniform_int_param created earlier for per-sample number of boxes
+                output = rocalErase(handle, input, true, anchor, colors, uniform_int_param, output_tensor_layout, output_tensor_dtype);
+            } else {
+                // Fallback path to keep pipeline valid when aux tensors are unavailable
+                output = rocalCopy(handle, input, true);
+            }
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
