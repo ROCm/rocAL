@@ -127,7 +127,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
             } else {
                 // Scalar path (use flat repeated fields)
                 if (op_arg.values.size() > 1) {
-                    ERR("Argument has more than one value, is_vector should be set to true");
+                    THROW("Argument '" + op_arg.arg_name + "' has more than one value, but is_vector is false. This is not allowed.");
                 }
                 for (auto &v : op_arg.values) {
                     if (op_arg.type_name == "int" || op_arg.type_name == "shared_ptr") {
