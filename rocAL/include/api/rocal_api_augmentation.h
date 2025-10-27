@@ -1575,4 +1575,66 @@ extern "C" RocalTensor ROCAL_API_CALL rocalThresholdFixed(RocalContext context, 
                                                           RocalTensorLayout output_layout = ROCAL_NONE,
                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Applies dilate to images (morphological operation).
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] kernel_size kernel size for dilate (pixels)
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalDilate(RocalContext context, RocalTensor input,
+                                                  bool is_output,
+                                                  int kernel_size = 3,
+                                                  RocalTensorLayout output_layout = ROCAL_NONE,
+                                                  RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies erode to images (morphological operation).
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] kernel_size kernel size for erode (pixels)
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalErode(RocalContext context, RocalTensor input,
+                                                 bool is_output,
+                                                 int kernel_size = 3,
+                                                 RocalTensorLayout output_layout = ROCAL_NONE,
+                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Computes magnitude given two input tensors.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 First input tensor
+ * \param [in] input2 Second input tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalMagnitude(RocalContext context, RocalTensor input1, RocalTensor input2,
+                                                     bool is_output,
+                                                     RocalTensorLayout output_layout = ROCAL_NONE,
+                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Computes phase given two input tensors.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 First input tensor
+ * \param [in] input2 Second input tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalPhase(RocalContext context, RocalTensor input1, RocalTensor input2,
+                                                 bool is_output,
+                                                 RocalTensorLayout output_layout = ROCAL_NONE,
+                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

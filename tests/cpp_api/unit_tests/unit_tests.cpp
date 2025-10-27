@@ -574,6 +574,26 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateTFReader(handle, path, true, key2, key8);
             decoded_output = rocalRawTFRecordSourceSingleShard(handle, path, key1, key8, color_format, 0, 1, false, true, false, decode_max_width, decode_max_height);
         } break;
+        case 72: {
+            std::cout << "Running rocalDilate" << std::endl;
+            output = rocalDilate(handle, input, true, 3, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 73: {
+            std::cout << "Running rocalErode" << std::endl;
+            output = rocalErode(handle, input, true, 3, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 74: {
+            std::cout << "Running rocalMagnitude" << std::endl;
+            // Create a second tensor by rotating the input; use as second input to magnitude
+            RocalTensor input2 = rocalRotate(handle, input, false);
+            output = rocalMagnitude(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 75: {
+            std::cout << "Running rocalPhase" << std::endl;
+            // Create a second tensor by rotating the input; use as second input to phase
+            RocalTensor input2 = rocalRotate(handle, input, false);
+            output = rocalPhase(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;

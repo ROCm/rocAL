@@ -76,3 +76,7 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_median_filter.h"
 #include "augmentations/filter_augmentations/node_gaussian_filter.h"
 #include "augmentations/filter_augmentations/node_threshold.h"
+#include "augmentations/filter_augmentations/node_dilate.h"
+#include "augmentations/filter_augmentations/node_erode.h"
+#include "augmentations/filter_augmentations/node_magnitude.h"
+#include "augmentations/filter_augmentations/node_phase.h"
