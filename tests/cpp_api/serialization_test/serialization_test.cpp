@@ -113,7 +113,7 @@ int main(int argc, const char **argv) {
     
     // Get the size of the serialized string
     size_t serialized_string_size = 0;
-    RocalStatus serialize_status = rocalSerialize(handle, serialized_string_size);
+    RocalStatus serialize_status = rocalSerialize(handle, &serialized_string_size);
     
     if (serialize_status != ROCAL_OK) {
         std::cout << "Failed to serialize pipeline: " << rocalGetErrorMessage(handle) << std::endl;
@@ -123,11 +123,11 @@ int main(int argc, const char **argv) {
     
     std::cout << "Serialized string size: " << serialized_string_size << " bytes" << std::endl;
     
-    // Allocate buffer for the serialized string
+        // Allocate buffer for the serialized string
     std::string serialized_pipe_string(serialized_string_size, '\0');
     
     // Get the actual serialized string
-    RocalStatus get_string_status = rocalGetSerializedString(handle, serialized_pipe_string.c_str());
+    RocalStatus get_string_status = rocalGetSerializedString(handle, serialized_pipe_string.data());
     
     if (get_string_status != ROCAL_OK) {
         std::cout << "Failed to get serialized string: " << rocalGetErrorMessage(handle) << std::endl;
