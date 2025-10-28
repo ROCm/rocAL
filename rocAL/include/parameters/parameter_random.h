@@ -105,7 +105,7 @@ class UniformRand : public Parameter<T> {
         return (_start == _end);
     }
 
-    std::pair<int, int> get_start_and_end() {
+    std::pair<T, T> get_start_and_end() {
         return std::make_pair(_start, _end);
     }
 
@@ -230,9 +230,9 @@ struct CustomRand : public Parameter<T> {
         return (_values.size() == 1);
     }
 
-    std::vector<T>& get_values() { return _values; }
+    const std::vector<T>& get_values() const { return _values; }
 
-    std::vector<double>& get_frequencies() { return _frequencies; }
+    const std::vector<double>& get_frequencies() const { return _frequencies; }
 
     unsigned size() { return _size; }
 
