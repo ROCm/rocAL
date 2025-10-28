@@ -22,5 +22,4 @@ To use rocAL with JAX, import the rocAL JAX plugin:
 
 Get the number of available devices using ``jax.device_count()``. Set up a training pipeline that partitions the training data and run the pipeline on each device using ``ROCALJaxIterator``.
 
-A `Jupyter Notebook <../examples/notebooks/jax_training_example.ipynb>`_ is available as an example of using JAX with rocAL.
-
+A `Jupyter Notebook <../examples/notebooks/jax_training_example.html>`_ is available as an example of using JAX with rocAL.
