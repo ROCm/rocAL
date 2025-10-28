@@ -40,12 +40,12 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
             return std::make_shared<FusedCropTJDecoder>();
             break;
 #if ENABLE_OPENCV
-        case DecoderType::OPENCV_DEC:
+        case DecoderType::OPENCV:
             return std::make_shared<CVDecoder>();
             break;
 #endif
 #if ENABLE_ROCJPEG
-        case DecoderType::ROCJPEG_DEC:
+        case DecoderType::ROCJPEG:
             return std::make_shared<HWRocJpegDecoder>(config.get_hip_stream());
             break;
         case DecoderType::ROCJPEG_CROPPED:
