@@ -5,10 +5,10 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ## (Unreleased) rocAL 2.5.0
 
 ### Added
-* Introduce enum registry to register all the enums present in rocAL.
-* Introduce Argument class which stores the value and type of each argument in the Node.
+* `EnumRegistry` to register all the enums present in rocAL.
+* `Argument` class which stores the value and type of each argument in the Node.
 * Support to store the arguments in the Node class.
-* Introduces PipelineOperator class to represent operators in the pipeline with metadata.
+* `PipelineOperator` class to represent operators in the pipeline with metadata.
 
 ### Changes
 * OpenCL backend support - deprecated
