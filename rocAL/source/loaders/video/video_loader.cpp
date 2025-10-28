@@ -134,7 +134,7 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoder_keep_original = decoder_keep_original;
     _video_loader = std::make_shared<VideoReadAndDecode>();
 #if ENABLE_HIP
-    if (decoder_cfg._type == DecoderType::ROCDEC_VIDEO_DECODE) {
+    if (decoder_cfg._type == DecoderType::ROCDECODE_VIDEO) {
         decoder_cfg.set_hip_stream(_hip_stream);
     }
 #endif
@@ -152,7 +152,7 @@ void VideoLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
     _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, 
-                    decoder_cfg._type == DecoderType::ROCDEC_VIDEO_DECODE ? true : false);  // Use HIP memory for rocDecode
+                    decoder_cfg._type == DecoderType::ROCDECODE_VIDEO ? true : false);  // Use HIP memory for rocDecode
     _is_initialized = true;
     LOG("Loader module initialized");
 }

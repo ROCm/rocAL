@@ -23,9 +23,17 @@ THE SOFTWARE.
 #pragma once
 
 #include <string>
+#include <vector>
+#include <memory>
 #include "pipeline/pipeline_operator.h"
 #include "rocal.pb.h"
 
+/**
+ * @brief Helper to serialize a built rocAL pipeline into protobuffers.
+ *
+ * This class gathers top-level pipeline configuration, operators (names, modules,
+ * arguments) and tensors (inputs/outputs) and writes them into rocal_proto::PipelineDef.
+ */
 class PipelineSerializer {
 public:
     PipelineSerializer() {}
@@ -33,43 +41,40 @@ public:
 
     // Serialization methods
     /**
-     * @brief Serialize a rocAL pipeline to a file
-     * @param context The rocAL context containing the pipeline
-     * @param file_path Path to save the serialized pipeline
-     * @return RocalStatus indicating success or failure
+     * @brief Serialize the current PipelineDef into a file on disk.
+     * @param file_path Path to save the serialized pipeline (binary payload)
      */
     void serialize_to_file(const std::string& file_path);
 
     /**
-     * @brief Serialize a rocAL pipeline to a string
-     * @param context The rocAL context containing the pipeline
+     * @brief Serialize the current PipelineDef into a binary string.
      * @param serialized_string Output string containing the serialized pipeline
-     * @return RocalStatus indicating success or failure
      */
     void serialize_to_string(std::string& serialized_string);
 
+    /**
+     * @brief Serialize global pipeline configuration.
+     */
     void serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth);
+    /**
+     * @brief Serialize pipeline output tensors (shape, dtype, device, layout).
+     */
     void serialize_output_tensors(TensorList& output_tensors_list);
+    /**
+     * @brief Serialize all operators in the pipeline, their arguments, and IO tensors.
+     */
     void serialize_operators(std::vector<std::shared_ptr<PipelineOperator>>& operators);
+    /**
+     * @brief Serialize a single operator's arguments into protobuf.
+     */
     void serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef);
 
     /**
-     * @brief Deserialize a rocAL pipeline from a file
-     * @param file_path Path to the serialized pipeline file
-     * @param context Output context containing the deserialized pipeline
-     * @return RocalStatus indicating success or failure
+     * @brief Clear any previously serialized state to start fresh.
      */
-    // RocalStatus deserialize_from_file(const std::string& file_path, Context** context);
-
-    /**
-     * @brief Deserialize a rocAL pipeline from a string
-     * @param serialized_string String containing the serialized pipeline
-     * @param context Output context containing the deserialized pipeline
-     * @return RocalStatus indicating success or failure
-     */
-    // RocalStatus deserialize_from_string(const std::string& serialized_string, Context** context);
+    void reset();
 
 protected:
-    rocal_proto::PipelineDef _pipeline;
+    rocal_proto::PipelineDef _pipeline_proto;
 
 };

@@ -330,10 +330,7 @@ class Tensor : public rocalTensor {
         }
     }
     void reset_mem_handle() { _mem_handle = nullptr; }
-#if ENABLE_OPENCL
-    unsigned copy_data(cl_command_queue queue, unsigned char* user_buffer, bool sync);
-    unsigned copy_data(cl_command_queue queue, cl_mem user_buffer, bool sync);
-#elif ENABLE_HIP
+#if ENABLE_HIP
     unsigned copy_data(hipStream_t stream, void* host_memory, bool sync);
 #endif
     unsigned copy_data(void* user_buffer, RocalOutputMemType external_mem_type) override;
