@@ -37,6 +37,14 @@ message InputOutput {
   uint32 num_dims = 9;
 }
 
+message Parameter {
+  int32 param_type = 1;
+  repeated float param_val_float = 2;
+  repeated int32 param_val_int = 3;
+  repeated double frequency = 4;  // Used only for CustomRand param
+  optional uint32 size = 5; // Used only for CustomRand param
+}
+
 message EnumType {
   string name = 1;
   int32 value = 2;
@@ -65,6 +73,7 @@ message Arguments {
   repeated string strings = 6;
   repeated bool bools = 7;
   repeated uint64 uints = 8;
+  optional Parameter param = 9;
   optional EnumType enum_value = 10;
 
   // vector storage
