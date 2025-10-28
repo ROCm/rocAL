@@ -216,3 +216,52 @@ enum MissingComponentsBehaviour {
     MISSING_COMPONENT_SKIP,
     MISSING_COMPONENT_EMPTY
 };
+
+/*! \brief Internal Resize Scaling Mode enum
+ * Internal version of RocalResizeScalingMode for use within rocAL implementation
+ */
+enum class ResizeScalingMode {
+    DEFAULT = 0,
+    STRETCH,
+    NOT_SMALLER,
+    NOT_LARGER,
+    MIN_MAX
+};
+
+/*! \brief Internal Resize Interpolation Type enum
+ * Internal version of RocalResizeInterpolationType for use within rocAL implementation
+ */
+enum class ResizeInterpolationType {
+    NEAREST_NEIGHBOR = 0,
+    LINEAR,
+    CUBIC,
+    LANCZOS,
+    GAUSSIAN,
+    TRIANGULAR
+};
+
+/*! \brief Internal Mel Scale Formula enum
+ * Internal version of RocalMelScaleFormula for use within rocAL implementation
+ */
+enum class MelScaleFormula {
+    SLANEY = 0,
+    HTK
+};
+
+/*! \brief Internal Audio Border Type enum
+ * Internal version of RocalAudioBorderType for use within rocAL implementation
+ */
+enum class AudioBorderType {
+    ZERO = 0,
+    CLAMP,
+    REFLECT
+};
+
+/*! \brief Internal Out Of Bounds Policy enum
+ * Internal version of RocalOutOfBoundsPolicy for use within rocAL implementation
+ */
+enum class OutOfBoundsPolicy {
+    PAD = 0,
+    TRIMTOSHAPE,
+    ERROR
+};

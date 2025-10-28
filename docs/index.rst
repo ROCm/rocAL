@@ -31,30 +31,22 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
 
   .. grid-item-card:: How to
 
-    * :doc:`Use the rocAL C++ API <./how-to/using-with-cpp>`
-    * :doc:`Use the rocAL Python API <./how-to/using-with-python>`
-    * :doc:`Use ML framework integration <./how-to/framework>`
+    * :doc:`Run PyTorch training with rocAL <./how-to/rocAL-pytorch-framework>`
+    * :doc:`Run TensorFlow training with rocAL <./how-to/rocAL-tensorflow-framework>`
+    * :doc:`Run JAX training with rocAL <./how-to/rocAL-jax-framework>`
 
   .. grid-item-card:: Examples
     
-    * `rocAL image processing examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/image_processing>`_ 
-    * `rocAL PyTorch examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch>`_ 
-    * `rocAL TensorFlow examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/tf>`_
-    * `rocAL Jupyter notebooks <https://github.com/ROCm/rocAL/tree/master/docs/examples/notebooks>`_ 
+    * :doc:`rocAL framework integration examples <./examples/examples>`
 
   .. grid-item-card:: Reference
 
     * :doc:`rocAL RNNT dataloading <./reference/rocAL-and-RNNT>`  
-    * `rocAL API Modules <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/modules.html>`_
-    * `rocAL API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal.html>`_
-    * `rocAL Datatypes <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__types.html>`_
-    * `rocAL Augmentation API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__augmentations.html>`_
-    * `rocAL Data Loaders API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__data__loaders.html>`_
-    * `rocAL Data Transfer API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__data__transfer.html>`_
-    * `rocAL Info API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__info.html>`_
-    * `rocAL Metadata API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__meta__data.html>`_
-    * `rocAL Parameter API <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/group__group__rocal__parameters.html>`_
-    * `rocAL Header Files <https://rocm.docs.amd.com/projects/rocAL/en/latest/doxygen/html/files.html>`_
+    * :doc:`rocAL C++ API overview <../reference/rocAL-cpp-api>`
+    * :doc:`rocAL C++ reference <../reference/rocAL-cpp-api-list>`
+    * :doc:`rocAL Python API overview <../reference/rocAL-python-api>`
+    * :doc:`rocAL Python reference <../reference/rocAL-python-api-list>`
+
 
 To contribute to the documentation refer to `Contributing to ROCm Docs <https://rocm.docs.amd.com/en/latest/contribute/contributing.html>`_.
 

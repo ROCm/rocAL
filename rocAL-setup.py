@@ -218,6 +218,7 @@ coreCommonPackages = [
 # rocm pacakges
 rocmDebianPackages = [
     'half',
+    'hip-dev',
     'mivisionx-dev',
     'rocjpeg-dev',
     'rocdecode-dev'
@@ -230,6 +231,7 @@ if "mariner" in platformInfo:
     rocdecodePackage = "mivisionx-devel" # TBD - rocDecode unsupported on Mariner
 rocmRPMPackages = [
     'half',
+    'hip-devel',
     'mivisionx-devel',
     str(rocjpegPackage),
     str(rocdecodePackage)
@@ -259,6 +261,8 @@ if "sles" in platformInfo:
     libProtoCompiler = "libprotobuf-c-devel"
     libsndFile = "cmake" # TBD - libsndfile-devel  fails to install in SLES
     libTurboJPEG = "cmake" # TBD libturbojpeg0 dev/devel package unavailable in SLES
+if "centos-8" in platformInfo:
+    libTurboJPEG = "cmake" # TurboJPEG >=2.0.0 unavailable on CentOS 8
 coreRPMPackages = [
     'nasm',
     'yasm',
@@ -340,7 +344,7 @@ else:
     ERROR_CHECK(os.system('(cd '+deps_dir+'; mkdir build )'))
 
     # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
-    if "SLES" in platformInfo:
+    if ("sles" in platformInfo) or ("centos-8" in platformInfo):
         turboJpegVersion = '3.0.2'
         ERROR_CHECK(os.system(
                     '(cd '+deps_dir+'; git clone -b '+turboJpegVersion+' https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
