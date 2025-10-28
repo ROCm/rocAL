@@ -77,6 +77,8 @@ auto extract_param_core(const Argument &op_arg) {
     } else if constexpr (std::is_same_v<T, float>) {
         auto param = std::get<FloatParam *>(op_arg.param);
         return param->core;
+    } else {
+        THROW("Extract_param_core only supports int and float types.")
     }
 }
 
