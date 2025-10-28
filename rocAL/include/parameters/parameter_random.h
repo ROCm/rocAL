@@ -245,5 +245,5 @@ struct CustomRand : public Parameter<T> {
     std::vector<T> _param_values;  //!< The values will be used in parameter_vx.h file after renewing
     std::mt19937 _generator;
     std::mutex _lock;
-    unsigned _size;
+    unsigned _size = 0;
 };

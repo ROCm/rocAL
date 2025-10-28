@@ -38,11 +38,10 @@ message InputOutput {
 }
 
 message Parameter {
-  int32 param_type = 1;
-  repeated float param_val_float = 2;
-  repeated int32 param_val_int = 3;
-  repeated double frequency = 4;  // Used only for CustomRand param
-  optional uint32 size = 5; // Used only for CustomRand param
+  repeated float param_val_float = 1;
+  repeated int32 param_val_int = 2;
+  repeated double frequency = 3;  // Used only for CustomRand param
+  optional uint32 size = 4; // Used only for CustomRand param
 }
 
 message EnumType {
