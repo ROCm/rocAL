@@ -58,14 +58,14 @@ class PipelineOperator {
     /**
      * Get the input tensors connected to the underlying node.
      */
-    const std::vector<Tensor *>& get_inputs() {
+    const std::vector<Tensor *>& get_inputs() const {
         return this->node->input();
     }
 
     /**
      * Get the output tensors produced by the underlying node.
      */
-    const std::vector<Tensor *>& get_outputs() {
+    const std::vector<Tensor *>& get_outputs() const {
         return this->node->output();
     }
 

@@ -76,8 +76,8 @@ message Arguments {
   optional Parameter param = 9;
   optional EnumType enum_value = 10;
 
-  // vector storage (deprecated): use *_vectors below instead
-  bool is_vector = 11 [deprecated = true];
+  // vector storage
+  bool is_vector = 11;
 
   // Vector payloads (use these when the argument carries vectors)
   repeated FloatVector float_vectors = 12;
