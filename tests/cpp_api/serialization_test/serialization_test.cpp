@@ -90,7 +90,7 @@ int main(int argc, const char **argv) {
     }
 
     // Add brightness augmentation (mark as output)
-    RocalTensor brightness_output = rocalBrightnessFixed(handle, decoded_output, 0.5, 1.5, true);
+    RocalTensor brightness_output = rocalBrightness(handle, decoded_output, true);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Brightness augmentation could not initialize : " << rocalGetErrorMessage(handle) << std::endl;
