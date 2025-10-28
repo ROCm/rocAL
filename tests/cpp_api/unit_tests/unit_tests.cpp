@@ -960,6 +960,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             RocalTensor input2 = rocalRotate(handle, input, false);
             output = rocalPhase(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
         } break;
+        case 79: {
+            std::cout << "Running rocalWarpPerspective" << std::endl;
+            std::vector<float> perspective_1d_matrix = {0.93f, 0.5f, 0.0f,
+                                                        -0.5f, 0.93f, 0.0f,
+                                                        0.005f, 0.005f, 1.0f};
+            output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
+
+        }break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

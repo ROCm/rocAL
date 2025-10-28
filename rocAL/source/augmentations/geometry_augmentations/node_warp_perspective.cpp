@@ -30,23 +30,17 @@ WarpPerspectiveNode::WarpPerspectiveNode(const std::vector<Tensor*>& inputs, con
     : Node(inputs, outputs) {
 }
 
-void WarpPerspectiveNode::init(const std::vector<float>& perspective_matrix, ResizeInterpolationType interpolation_type) {
-    _perspective = perspective_matrix;
-    _interpolation_type = static_cast<int>(interpolation_type);
-}
-
 void WarpPerspectiveNode::build_perspective_array() {
     // Build per-sample perspective array of length 9 * batch_size.
     // If a single 9-element matrix is provided, replicate across the batch.
-    uint batch_size = _batch_size;
-    const size_t expected_len = static_cast<size_t>(batch_size) * 9;
+    const size_t expected_len = static_cast<size_t>(_batch_size) * 9;
 
     std::vector<float> data;
     data.resize(expected_len);
 
     if (_perspective.size() == 9) {
         // Replicate across batch
-        for (uint i = 0; i < batch_size; ++i) {
+        for (uint i = 0; i < _batch_size; ++i) {
             const size_t base = static_cast<size_t>(i) * 9;
             for (int k = 0; k < 9; ++k) {
                 data[base + k] = _perspective[k];
@@ -61,8 +55,8 @@ void WarpPerspectiveNode::build_perspective_array() {
 
     // Create vx_array and populate it
     vx_status status;
-    _perspective_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, expected_len);
-    status = vxAddArrayItems(_perspective_array, expected_len, data.data(), sizeof(vx_float32));
+    _perspective_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, expected_len);
+    status = vxAddArrayItems(_perspective_array_vx, expected_len, data.data(), sizeof(vx_float32));
     if (status != VX_SUCCESS) {
         THROW("WarpPerspective: vxAddArrayItems failed while creating perspective array: " + TOSTR(status));
     }
@@ -96,7 +90,7 @@ void WarpPerspectiveNode::create_node() {
                                     _inputs[0]->handle(),
                                     _inputs[0]->get_roi_tensor(),
                                     _outputs[0]->handle(),
-                                    _perspective_array,
+                                    _perspective_array_vx,
                                     interpolation_vx,
                                     input_layout_vx,
                                     output_layout_vx,
@@ -108,36 +102,9 @@ void WarpPerspectiveNode::create_node() {
     }
 }
 
-void WarpPerspectiveNode::update_node() {
-    // Update perspective array if parameters are dynamic
-    uint batch_size = _batch_size;
-    const size_t expected_len = static_cast<size_t>(batch_size) * 9;
-
-    std::vector<float> data;
-    data.resize(expected_len);
-
-    if (_perspective.size() == 9) {
-        for (uint i = 0; i < batch_size; ++i) {
-            const size_t base = static_cast<size_t>(i) * 9;
-            for (int k = 0; k < 9; ++k) {
-                data[base + k] = _perspective[k];
-            }
-        }
-    } else if (_perspective.size() == expected_len) {
-        data = _perspective;
-    } else {
-        THROW("WarpPerspective update: perspective matrix length must be 9 or 9 * batch_size, got: " + TOSTR(_perspective.size()));
-    }
-
-    vx_status perspective_status;
-    perspective_status = vxCopyArrayRange((vx_array)_perspective_array,
-                                          0,
-                                          expected_len,
-                                          sizeof(vx_float32),
-                                          data.data(),
-                                          VX_WRITE_ONLY,
-                                          VX_MEMORY_TYPE_HOST);
-    if (perspective_status != VX_SUCCESS) {
-        THROW("vxCopyArrayRange failed in the WarpPerspective (vxExtRppWarpPerspective) node: " + TOSTR(perspective_status));
-    }
+void WarpPerspectiveNode::init(const std::vector<float>& perspective_matrix, ResizeInterpolationType interpolation_type) {
+    _perspective = perspective_matrix;
+    _interpolation_type = static_cast<int>(interpolation_type);
 }
+
+void WarpPerspectiveNode::update_node() {}

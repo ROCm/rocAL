@@ -40,7 +40,7 @@ protected:
 
 private:
     std::vector<float> _perspective; // length 9 or 9 * batch_size
-    vx_array _perspective_array = nullptr;
+    vx_array _perspective_array_vx = nullptr;
     int _interpolation_type = 0;
 
     void build_perspective_array();  // replicates per-batch if needed and creates vx_array
