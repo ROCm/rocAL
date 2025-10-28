@@ -31,14 +31,8 @@ subtrees:
 
 - caption: Examples
   entries:
-  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/image_processing
-    title: rocAL image processing examples
-  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch
-    title: rocAL PyTorch examples
-  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/tf
-    title: rocAL TensorFlow examples
-  - url: https://github.com/ROCm/rocAL/tree/master/docs/examples/notebooks
-    title: rocAL Jupyter notebooks
+  - file: examples/examples.rst
+    title: Framework integration examples
   
 - caption: Reference
   entries:
