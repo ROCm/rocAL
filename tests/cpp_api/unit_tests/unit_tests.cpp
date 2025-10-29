@@ -917,9 +917,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 69: {
             std::cout << "Running rocalThreshold" << std::endl;
-            RocalFloatParam min_param = rocalCreateFloatParameter(64.0f);
-            RocalFloatParam max_param = rocalCreateFloatParameter(192.0f);
-            output = rocalThreshold(handle, input, true, min_param, max_param, output_tensor_layout, output_tensor_dtype);
+            std::vector<float> min_threshold = {30.0f, 30.0f, 30.0f};
+            std::vector<float> max_threshold = {100.0f, 100.0f, 100.0f};
+            output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 70: {
             std::cout << "Running rocalThresholdFixed" << std::endl;

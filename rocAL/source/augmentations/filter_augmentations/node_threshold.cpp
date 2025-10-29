@@ -25,17 +25,56 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 
 ThresholdNode::ThresholdNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
-    : Node(inputs, outputs),
-      _min(THRESHOLD_MIN_RANGE[0], THRESHOLD_MIN_RANGE[1]),
-      _max(THRESHOLD_MAX_RANGE[0], THRESHOLD_MAX_RANGE[1]) {}
+    : Node(inputs, outputs) {}
+
+void fill_vector_with_threshold_values(std::vector<float>& threshold_batch, 
+        std::vector<float>& threshold_values,
+        size_t no_of_channels) {
+
+    size_t threshold_vec_size = threshold_batch.size();
+    
+    if (threshold_values.size() == no_of_channels) {
+        for (int i = 0; i < threshold_vec_size; i+=no_of_channels) {
+            for (int c = 0; c < no_of_channels; c++) {
+                threshold_batch[i + c] = threshold_values[c];
+            }
+        }
+    } else if (threshold_values.size() == threshold_vec_size) {
+        threshold_batch = threshold_values;
+    } else if (threshold_values.size() > 0) {
+        THROW("Threshold: Threshold vector length must be no_of_channels or no_of_channels * batch_size, got: " + TOSTR(threshold_values.size()));
+    }
+}
 
 void ThresholdNode::create_node() {
     if (_node)
         return;
 
+    std::vector<float> min_vec, max_vec;
+
+
     // Create per-sample arrays for min and max threshold values
-    _min.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    _max.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
+    auto no_of_channels = _inputs[0]->info().get_channels();
+    auto array_size = _batch_size * no_of_channels;
+    std::vector<float> min_array, max_array;
+    min_array.resize(array_size, 0.0f);
+    max_array.resize(array_size, 0.0f);
+    fill_vector_with_threshold_values(min_array, _min, no_of_channels);
+    fill_vector_with_threshold_values(max_array, _max, no_of_channels);
+    
+    // Create vx_array and populate it
+    vx_status status;
+    vx_array min_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, array_size);
+    status = vxAddArrayItems(min_array_vx, array_size, min_array.data(), sizeof(vx_float32));
+    if (status != VX_SUCCESS) {
+        THROW("Threshold: vxAddArrayItems failed while creating min array: " + TOSTR(status));
+    }
+
+    vx_array max_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, array_size);
+    status = vxAddArrayItems(max_array_vx, array_size, max_array.data(), sizeof(vx_float32));
+    if (status != VX_SUCCESS) {
+        THROW("Threshold: vxAddArrayItems failed while creating max array: " + TOSTR(status));
+    }
 
     // Tensor layout and ROI type
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
@@ -51,28 +90,19 @@ void ThresholdNode::create_node() {
                               _inputs[0]->handle(),
                               _inputs[0]->get_roi_tensor(),
                               _outputs[0]->handle(),
-                              _min.default_array(),
-                              _max.default_array(),
+                              min_array_vx,
+                              max_array_vx,
                               input_layout_vx,
                               output_layout_vx,
                               roi_type_vx);
 
-    vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the threshold (vxExtRppThreshold) node failed: " + TOSTR(status))
 }
 
-void ThresholdNode::init(float min_val, float max_val) {
-    _min.set_param(min_val);
-    _max.set_param(max_val);
+void ThresholdNode::init(std::vector<float>& min_val, std::vector<float>& max_val) {
+    _min = min_val;
+    _max = max_val;
 }
 
-void ThresholdNode::init(FloatParam *min_param, FloatParam *max_param) {
-    _min.set_param(core(min_param));
-    _max.set_param(core(max_param));
-}
-
-void ThresholdNode::update_node() {
-    _min.update_array();
-    _max.update_array();
-}
+void ThresholdNode::update_node() {}

@@ -31,18 +31,12 @@ class ThresholdNode : public Node {
    public:
     ThresholdNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ThresholdNode() = delete;
-
-    // Overloads for dynamic vs fixed parameters
-    void init(float min_val, float max_val);
-    void init(FloatParam *min_param, FloatParam *max_param);
+    void init(std::vector<float>& min_val, std::vector<float>& max_val);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _min, _max;
-    // Default ranges for thresholds on U8 inputs; for floating types values are passed as-is
-    constexpr static float THRESHOLD_MIN_RANGE[2] = {0.0f, 255.0f};
-    constexpr static float THRESHOLD_MAX_RANGE[2] = {0.0f, 255.0f};
+    std::vector<float> _min, _max;
 };
