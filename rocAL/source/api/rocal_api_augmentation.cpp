@@ -2757,7 +2757,7 @@ extern "C" RocalTensor ROCAL_API_CALL
 rocalDilate(RocalContext p_context,
             RocalTensor p_input,
             bool is_output,
-            int kernel_size,
+            unsigned kernel_size,
             RocalTensorLayout output_layout,
             RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -2772,9 +2772,7 @@ rocalDilate(RocalContext p_context,
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_dtype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph
-            ->add_node<DilateNode>({input}, {output})
-            ->init(kernel_size);
+        context->master_graph->add_node<DilateNode>({input}, {output})->init(kernel_size);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2786,7 +2784,7 @@ extern "C" RocalTensor ROCAL_API_CALL
 rocalErode(RocalContext p_context,
            RocalTensor p_input,
            bool is_output,
-           int kernel_size,
+           unsigned kernel_size,
            RocalTensorLayout output_layout,
            RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -2801,9 +2799,7 @@ rocalErode(RocalContext p_context,
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_dtype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph
-            ->add_node<ErodeNode>({input}, {output})
-            ->init(kernel_size);
+        context->master_graph->add_node<ErodeNode>({input}, {output})->init(kernel_size);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

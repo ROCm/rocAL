@@ -24,7 +24,7 @@ THE SOFTWARE.
 DilateNode::DilateNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
-void DilateNode::init(int kernel_size) {
+void DilateNode::init(unsigned kernel_size) {
     _kernel_size = kernel_size;
 }
 
@@ -40,9 +40,7 @@ void DilateNode::create_node() {
     vx_scalar input_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &input_layout);
     vx_scalar output_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &roi_type);
-
-    vx_uint32 ksize_u32 = static_cast<vx_uint32>(_kernel_size);
-    vx_scalar kernel_size_vx = vxCreateScalar(ctx, VX_TYPE_UINT32, &ksize_u32);
+    vx_scalar kernel_size_vx = vxCreateScalar(ctx, VX_TYPE_UINT32, &_kernel_size);
 
     _node = vxExtRppDilate(_graph->get(),
                            _inputs[0]->handle(),

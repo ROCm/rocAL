@@ -25,12 +25,12 @@ public:
     ErodeNode() = delete;
 
     // Fixed kernel size across the batch
-    void init(int kernel_size);
+    void init(unsigned kernel_size);
 
 protected:
     void update_node() override;
     void create_node() override;
 
 private:
-    int _kernel_size = 3; // default kernel size
+    unsigned _kernel_size = 3; // default kernel size
 };
