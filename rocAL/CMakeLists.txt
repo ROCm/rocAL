@@ -210,6 +210,12 @@ endif()
 if(NOT pybind11_FOUND)	
     message("-- ${Yellow}NOTE: rocAL PythonFunction operator requires pybind11, Not Found${ColourReset}")
 endif()
+if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "1" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER_EQUAL "1")
+    set(BUILD_ROCAL true)
+else()
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}rocAL -- Requires MIVisionX vx_rpp version >= 3.1.1 for rocAL${ColourReset}")
+endif() 
 
 if(${BUILD_ROCAL})
     # MIVisionX

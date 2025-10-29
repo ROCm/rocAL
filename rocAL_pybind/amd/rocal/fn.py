@@ -1314,6 +1314,8 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     # Validate inputs
     if not inputs:
         raise ValueError("python_function requires at least one input tensor")
+    if len(inputs) != 1:
+        raise ValueError("python_function requires supports only one input tensor")
     
     # Validate that function is callable
     if not callable(function):

@@ -110,27 +110,27 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
         py::gil_scoped_acquire acquire;
 
         // Resolve input/output numpy dtype and itemsize
-        auto in_np = numpy_type_from_vx(params->in_desc.dtype);
-        auto out_np = numpy_type_from_vx(params->out_desc.dtype);
-        const size_t in_itemsize = in_np.second;
-        const size_t out_itemsize = out_np.second;
+        auto input_np = numpy_type_from_vx(params->in_desc.dtype);
+        auto output_np = numpy_type_from_vx(params->out_desc.dtype);
+        const size_t input_itemsize = input_np.second;
+        const size_t output_itemsize = output_np.second;
 
         // Build shape/strides (in bytes) for input view
-        const size_t in_ndim = params->in_desc.num_dims;
-        const size_t out_ndim = params->out_desc.num_dims;
-        std::vector<ssize_t> in_shape(in_ndim);
-        std::vector<ssize_t> in_strides(in_ndim);
-        for (size_t i = 0; i < in_ndim; ++i) {
-            in_shape[i] = static_cast<ssize_t>(params->in_desc.shape[i]);
-            in_strides[i] = static_cast<ssize_t>(params->in_desc.strides[i] * in_itemsize);
+        const size_t input_ndim = params->in_desc.num_dims;
+        const size_t output_ndim = params->out_desc.num_dims;
+        std::vector<ssize_t> input_shape(input_ndim);
+        std::vector<ssize_t> input_strides(input_ndim);
+        for (size_t i = 0; i < input_ndim; ++i) {
+            input_shape[i] = static_cast<ssize_t>(params->in_desc.shape[i]);
+            input_strides[i] = static_cast<ssize_t>(params->in_desc.strides[i] * input_itemsize);
         }
 
         // Zero-copy NumPy view over src_ptr
         py::capsule owner(src_ptr, [](void*) { /* no-op: memory owned by caller */ });
         py::array input_numpy_batch(
-            py::dtype(in_np.first),
-            in_shape,
-            in_strides,
+            py::dtype(input_np.first),
+            input_shape,
+            input_strides,
             src_ptr,
             owner);
 
@@ -160,12 +160,12 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
 
         // Validate output against out_desc
         py::buffer_info buf = result_contig.request();
-        if (buf.ndim != static_cast<int>(out_ndim)) {
-            ERR(std::string("Dimension mismatch - expected ") + std::to_string(out_ndim) + " dimensions, got " + std::to_string(buf.ndim));
+        if (buf.ndim != static_cast<int>(output_ndim)) {
+            ERR(std::string("Dimension mismatch - expected ") + std::to_string(output_ndim) + " dimensions, got " + std::to_string(buf.ndim));
             return VX_ERROR_INVALID_DIMENSION;
         }
         // Compare shape
-        for (size_t i = 0; i < out_ndim; ++i) {
+        for (size_t i = 0; i < output_ndim; ++i) {
             size_t expected = params->out_desc.shape[i];
             size_t got = static_cast<size_t>(buf.shape[i]);
             if (expected != got) {
@@ -176,7 +176,7 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
             }
         }
         // Verify returned array dtype matches expected dtype
-        py::dtype expected_dtype = py::dtype(out_np.first);
+        py::dtype expected_dtype = py::dtype(output_np.first);
         py::dtype got_dtype = result_contig.dtype();
         std::string expected_kind = std::string(py::str(expected_dtype.attr("kind")));
         std::string got_kind = std::string(py::str(got_dtype.attr("kind")));
@@ -185,15 +185,15 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
                 "', got '" + got_kind + "'");
             return VX_ERROR_INVALID_TYPE;
         }
-        if (static_cast<size_t>(buf.itemsize) != out_itemsize) {
-            ERR(std::string("Data type size mismatch - expected ") + std::to_string(out_itemsize) +
+        if (static_cast<size_t>(buf.itemsize) != output_itemsize) {
+            ERR(std::string("Data type size mismatch - expected ") + std::to_string(output_itemsize) +
             " bytes, got " + std::to_string(buf.itemsize) + " bytes");
             return VX_ERROR_INVALID_TYPE;
         }
 
         // Calculate expected destination buffer size
-        size_t dst_total_bytes = out_itemsize;
-        for (size_t i = 0; i < out_ndim; ++i) {
+        size_t dst_total_bytes = output_itemsize;
+        for (size_t i = 0; i < output_ndim; ++i) {
             dst_total_bytes *= params->out_desc.shape[i];
         }
 

@@ -2462,6 +2462,8 @@ rocalPythonFunction(
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_datatype);
         output_info.set_tensor_layout(op_tensor_layout);
+        // If user passes dimensions of the output tensor, set the TensorInfo dims accordingly
+        // The user passed output dimensions won't contain the batch dimension, so it should be added
         if(!output_dims.empty()) {
             std::vector<size_t> dims = output_info.dims();
             for (size_t i = 1; i < dims.size(); i++)
