@@ -2449,13 +2449,13 @@ rocalPythonFunction(
         RocalTensorLayout output_layout,
         RocalTensorOutputType output_datatype)
 {
+#ifdef ROCAL_PYTHON
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input   = static_cast<Tensor*>(p_input);
     try {
-#ifdef ROCAL_PYTHON
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
 
@@ -2474,11 +2474,11 @@ rocalPythonFunction(
 
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PythonFunctionNode>({input}, {output})->init(function_id);
-#else
-        THROW("PythonFunction node is not enabled since python/pybind11 is not present")
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
     return output;
+#else
+        THROW("PythonFunction node is not enabled since python/pybind11 is not present")
+#endif
 }
