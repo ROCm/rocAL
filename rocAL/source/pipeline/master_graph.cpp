@@ -843,7 +843,7 @@ void MasterGraph::output_routine() {
     // Set device ID for output routine thread once
     if (!_set_device_id) {
         hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {     
+        if (hip_status != hipSuccess) {
             THROW("hipSetDevice failed");
         }
         _set_device_id = true;
@@ -955,7 +955,7 @@ void MasterGraph::output_routine_multiple_loaders() {
     // Set device ID for output routine thread once
     if (!_set_device_id) {
         hipError_t hip_status = hipSetDevice(_gpu_id);
-        if (hip_status != hipSuccess) {     
+        if (hip_status != hipSuccess) {
             THROW("hipSetDevice failed");
         }
         _set_device_id = true;
