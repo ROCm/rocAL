@@ -22,12 +22,12 @@ subtrees:
 
 - caption: How to
   entries:
-  - file: how-to/using-with-cpp.rst
-    title: Use the rocAL C++ API
-  - file: how-to/using-with-python.rst
-    title: Use the rocAL Python API
-  - file: how-to/framework.rst
-    title: Use ML framework integration
+  - file: how-to/rocAL-pytorch-framework.rst
+    title: Run PyTorch training 
+  - file: how-to/rocAL-tensorflow-framework.rst
+    title: Run TensorFlow training 
+  - file: how-to/rocAL-jax-framework.rst
+    title: Run JAX training
 
 - caption: Examples
   entries:
@@ -37,16 +37,14 @@ subtrees:
 - caption: Reference
   entries:
   - file: reference/rocAL-and-RNNT.rst
-    title: rocAL RNNT dataloading
-  - file: doxygen/html/group__group__rocal
-  - file: doxygen/html/group__group__rocal__types
-  - file: doxygen/html/group__group__rocal__augmentations
-  - file: doxygen/html/group__group__rocal__data__loaders
-  - file: doxygen/html/group__group__rocal__data__transfer
-  - file: doxygen/html/group__group__rocal__info
-  - file: doxygen/html/group__group__rocal__meta__data
-  - file: doxygen/html/group__group__rocal__parameters
-  - file: doxygen/html/files
-    title: rocAL Header files
+    title: RNNT dataloading
+  - file: reference/rocAL-cpp-api.rst
+    title: C++ API overview
+  - file: reference/rocAL-cpp-api-list.rst
+    title: C++ reference
+  - file: reference/rocAL-python-api.rst
+    title: Python API overview
+  - file: reference/rocAL-python-api-list.rst
+    title: Python API reference
 
   - file: license.rst

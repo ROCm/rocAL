@@ -2,8 +2,6 @@
   :description: Installing rocAL using the package installer
   :keywords: rocAL, ROCm, API, install, installation, package installer
 
-.. _install:
-
 ********************************************************************
 Installing rocAL with the package installer
 ********************************************************************
@@ -71,7 +69,7 @@ Use the following commands to install ``rocal``, ``rocal-dev``, and ``rocal-test
 
     .. code:: shell
 
-    sudo zypper install rocal rocal-devel rocal-test
+      sudo zypper install rocal rocal-devel rocal-test
 
 
 The rocAL test package will install a CTest module. Use the following steps to test the installation:
