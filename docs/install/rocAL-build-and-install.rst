@@ -2,8 +2,6 @@
   :description: rocAL building and installing
   :keywords: rocAL, ROCm, API, documentation
 
-.. _install:
-
 ********************************************************************
 Building and installing rocAL from source code
 ********************************************************************
@@ -30,27 +28,27 @@ To build and install rocAL for the HIP backend, create the ``build_hip`` directo
 
 .. code:: shell
  
-    mkdir build-hip
-    cd build-hip
+  mkdir build-hip
+  cd build-hip
 
 Use ``cmake`` to generate a makefile: 
 
 .. code:: shell
   
-    cmake ../
+  cmake ../
 
 If rocAL will be built for both the HIP and OpenCL backends, use the ``-DCMAKE_INSTALL_PREFIX`` CMake directive to set the installation directory. For example:
 
 .. code:: shell
 
-    cmake -DCMAKE_INSTALL_PREFIX=/opt/hip_backend/
+  cmake -DCMAKE_INSTALL_PREFIX=/opt/hip_backend/
 
 
 Run make:
 
 .. code:: shell
 
-    make 
+  make 
 
 Run ``cmake`` again to generate Python bindings for ``rocal_pybind`` then install:
 
@@ -70,7 +68,6 @@ The instructions to install rocAL for the OpenCL backend are similar to those fo
   sudo make install
 
 After the installation, the rocAL files will be installed under ``/opt/rocm/`` unless ``-DCMAKE_INSTALL_PREFIX`` was specified. If ``-DCMAKE_INSTALL_PREFIX`` was specified, the rocAL files will be installed under the specified directory.
-
 
 To make and run the tests, use ``make test``.
 
