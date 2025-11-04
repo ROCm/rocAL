@@ -2,8 +2,6 @@
   :description: rocAL building and installing
   :keywords: rocAL, ROCm, API, documentation
 
-.. _install:
-
 ********************************************************************
 Building and installing rocAL from source code
 ********************************************************************
@@ -35,7 +33,7 @@ Use ``cmake`` to generate a makefile:
 
 .. code:: shell
   
-    cmake ../
+  cmake ../
 
 Use the ``-DCMAKE_INSTALL_PREFIX`` directive to set the installation directory. For example:
 
@@ -48,7 +46,7 @@ Run make:
 
 .. code:: shell
 
-    make 
+  make 
 
 Run ``cmake`` again to generate Python bindings for ``rocal_pybind`` then install:
 
@@ -59,7 +57,6 @@ Run ``cmake`` again to generate Python bindings for ``rocal_pybind`` then instal
 
 
 After the installation, the rocAL files will be installed under ``/opt/rocm/`` unless ``-DCMAKE_INSTALL_PREFIX`` was specified. If ``-DCMAKE_INSTALL_PREFIX`` was specified, the rocAL files will be installed under the specified directory.
-
 
 To make and run the tests, use ``make test``.
 
