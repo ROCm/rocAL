@@ -829,6 +829,36 @@ def warp_perspective(*inputs, dest_width=0, dest_height=0, perspective=[1.0, 0.0
     warp_persp_output = b.warpPerspective(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (warp_persp_output)
 
+def remap(*inputs, dest_width=0, dest_height=0, row_remap=[], col_remap=[],
+          interpolation_type=types.LINEAR_INTERPOLATION, device=None,
+          output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies pixel remapping using per-sample row/col maps.
+
+        @param inputs                               the input image tensor
+        @param dest_width (int, default = 0)        destination width; 0 uses input max width
+        @param dest_height (int, default = 0)       destination height; 0 uses input max height
+        @param row_remap (list of float)            flattened HxW y-coordinates for remap
+        @param col_remap (list of float)            flattened HxW x-coordinates for remap
+        @param interpolation_type (int)             interpolation to use (e.g., LINEAR_INTERPOLATION)
+        @param output_layout (int)                  tensor layout for the augmentation output
+        @param output_dtype (int)                   tensor dtype for the augmentation output
+
+        @return    Remapped image
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "dest_height": dest_height,
+        "dest_width": dest_width,
+        "row_remap": row_remap,
+        "col_remap": col_remap,
+        "interpolation_type": interpolation_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.remap(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
 
 def vignette(*inputs, vignette=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Vignette effect

@@ -1135,6 +1135,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("warpPerspective", &rocalWarpPerspective,
           py::return_value_policy::reference);
+    m.def("remap", &rocalRemap,
+          py::return_value_policy::reference);
     m.def("cropAndPatch", &rocalCropAndPatch,
           py::return_value_policy::reference);
     m.def("fog", &rocalFog,

@@ -999,8 +999,34 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
 
         }break;
+        case 80: {
+            std::cout << "Running rocalRemap (vector-based tables)" << std::endl;
+            // Build identity remap tables (row = y, col = x) for output size [height,width]
+            const int H = height;
+            const int W = width;
+            std::vector<float> row_remap(H * W);
+            std::vector<float> col_remap(H * W);
+            auto half_width = W / 2;
+            for (int y = 0; y < H; ++y) {
+                int x = 0;
+                for (; x < half_width; ++x) {
+                    row_remap[y * W + x] = static_cast<float>(y);
+                    col_remap[y * W + x] = static_cast<float>(half_width - x);
+                }
+                for (; x < W; ++x) {
+                    row_remap[y * W + x] = static_cast<float>(y);
+                    col_remap[y * W + x] = static_cast<float>(x);
+                }
+            }
+            // Use bilinear interpolation, default layout/dtype
+            output = rocalRemap(handle, input, true,
+                                H, W,
+                                row_remap, col_remap,
+                                ROCAL_LINEAR_INTERPOLATION,
+                                output_tensor_layout, output_tensor_dtype);
+        } break;
         case 81: {
-            std::cout << "Running rocalCropAndPatch (vector-based ROIs)" << std::endl;
+            std::cout << "Running rocalCropAndPatch" << std::endl;
             // Create a simple second input (e.g., rotated version)
             RocalTensor input2 = rocalRotate(handle, input, false);
             // Define XYWH ROIs (replicated across batch if size==4)
