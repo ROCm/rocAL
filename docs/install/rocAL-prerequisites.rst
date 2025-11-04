@@ -46,6 +46,7 @@ The following prerequisites are required and are installed with both the package
 * `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v2.11.1>`_ version 2.11.1
 * `RapidJSON <https://github.com/Tencent/rapidjson>`_
 * `OpenCV <https://docs.opencv.org/4.6.0/index.html>`_
+* hip-dev 
 * Python3, Python3 pip, and  Python3 wheel
 
 libstdc++-12-dev is required on Ubuntu 22.04 only and must be installed manually.
