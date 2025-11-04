@@ -999,6 +999,23 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
 
         }break;
+        case 81: {
+            std::cout << "Running rocalCropAndPatch (vector-based ROIs)" << std::endl;
+            // Create a simple second input (e.g., rotated version)
+            RocalTensor input2 = rocalRotate(handle, input, false);
+            // Define XYWH ROIs (replicated across batch if size==4)
+            // dst_roi: place the patch at top-left corner with size WxH reduced
+            int roi_w = std::max(1, width / 4);
+            int roi_h = std::max(1, height / 4);
+            // crop_roi: crop region from input2
+            std::vector<int> crop_roi = {std::max(0, width/8), std::max(0, height/8), roi_w, roi_h};
+            // patch_roi: patch location inside destination where crop will be pasted
+            std::vector<int> patch_roi = {0, 0, roi_w, roi_h};
+            output = rocalCropAndPatch(handle, input, input2, true,
+                                       crop_roi, patch_roi,
+                                       output_tensor_layout,
+                                       output_tensor_dtype);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

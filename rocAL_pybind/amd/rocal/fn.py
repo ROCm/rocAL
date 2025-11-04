@@ -976,6 +976,33 @@ def crop(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (cropped_image)
 
+def crop_and_patch(*inputs, crop_roi=[0, 0, 0, 0], patch_roi=[0, 0, 0, 0],
+                   device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Crops a region from the second input and patches it into a destination region in the first input.
+
+        ROIs are specified in XYWH format: [x, y, w, h].
+
+        @param inputs                                  two input tensors; first is destination, second is source for cropping
+        @param dst_roi (list of int)                   destination ROI in input0 where patch will be placed
+        @param crop_roi (list of int)                  crop ROI in input1 to extract as patch
+        @param patch_roi (list of int)                 ROI inside destination region where the patch is pasted
+        @param output_layout (int)                     tensor layout for the augmentation output
+        @param output_dtype (int)                      tensor dtype for the augmentation output
+
+        @return    Output image after crop-and-patch
+    """
+    kwargs_pybind = {
+        "input_image0": inputs[0],
+        "input_image1": inputs[1],
+        "is_output": False,
+        "crop_roi": crop_roi,
+        "patch_roi": patch_roi,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.cropAndPatch(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
 
 def color_twist(*inputs, brightness=1.0, contrast=1.0, hue=0.0,
                 saturation=1.0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):

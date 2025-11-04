@@ -531,6 +531,25 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWarpPerspective(RocalContext context,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Crops and patches regions between two input tensors based on provided ROIs.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 First input tensor
+ * \param [in] input2 Second input tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] crop_roi Per-sample ROI tensor for crop region
+ * \param [in] patch_roi Per-sample ROI tensor for patch region
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalCropAndPatch(RocalContext context,
+                                                        RocalTensor input1, RocalTensor input2,
+                                                        bool is_output,
+                                                        std::vector<int> &crop_roi, std::vector<int> &patch_roi,
+                                                        RocalTensorLayout output_layout = ROCAL_NONE,
+                                                        RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Applies fish eye effect on images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
