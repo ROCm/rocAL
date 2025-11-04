@@ -1042,6 +1042,21 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                        output_tensor_layout,
                                        output_tensor_dtype);
         } break;
+        case 82: {
+            std::cout << "Running rocalRicap" << std::endl;
+            // Permutation for quadrants [q0,q1,q2,q3]; replicate across batch if size==4
+            std::vector<unsigned> permutation = {0, 1, 1, 0};
+            // Define 4 XYWH ROIs covering image quadrants; replicate across batch if size==16
+            int q_w = std::max(1, width / 2);
+            int q_h = std::max(1, height / 2);
+            std::vector<int> crop_rois = {
+                0,      0,      q_w, q_h,   // top-left
+                q_w,    0,      q_w, q_h,   // top-right
+                0,      q_h,    q_w, q_h,   // bottom-left
+                q_w,    q_h,    q_w, q_h    // bottom-right
+            };
+            output = rocalRicap(handle, input, true, permutation, crop_rois, output_tensor_layout, output_tensor_dtype);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

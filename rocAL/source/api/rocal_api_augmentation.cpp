@@ -2977,3 +2977,39 @@ rocalPhase(RocalContext p_context,
     }
     return output;
 }
+
+// New: RICAP external API
+RocalTensor ROCAL_API_CALL
+rocalRicap(RocalContext p_context,
+           RocalTensor p_input,
+           bool is_output,
+           std::vector<unsigned> &permutation,
+           std::vector<int> &crop_rois,
+           RocalTensorLayout output_layout,
+           RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+
+    auto context = static_cast<Context*>(p_context);
+    auto input   = static_cast<Tensor*>(p_input);
+    try {
+        // Output tensor inherits shape from input; allow layout/datatype override
+        RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        if (op_tensor_layout != RocalTensorlayout::NONE)
+            output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_dtype);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+
+        // Wire Ricap node and pass raw vectors; node will build vx objects and call vxExtRppRicap
+        auto ricap_node = context->master_graph->add_node<RicapNode>({input}, {output});
+        ricap_node->init(permutation, crop_rois);
+        // No meta-data changes needed
+    } catch (const std::exception &e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
