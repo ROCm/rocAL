@@ -531,6 +531,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWarpPerspective(RocalContext context,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Applies remap to images using per-pixel row/col lookup tables.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] dest_height output height (0 to use input max height)
+ * \param [in] dest_width output width (0 to use input max width)
+ * \param [in] row_remap_table Tensor with remap rows (NHWC, c=1) sized to match output dimensions
+ * \param [in] col_remap_table Tensor with remap cols (NHWC, c=1) sized to match output dimensions
+ * \param [in] interpolation_type Interpolation policy
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalRemap(RocalContext context, RocalTensor input, bool is_output,
+                                                 unsigned dest_height, unsigned dest_width,
+                                                 std::vector<float> &row_remap, std::vector<float> &col_remap,
+                                                 RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
+                                                 RocalTensorLayout output_layout = ROCAL_NONE,
+                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Crops and patches regions between two input tensors based on provided ROIs.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
