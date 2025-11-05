@@ -10,6 +10,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Support to store the arguments in the Node class.
 * `PipelineOperator` class to represent operators in the pipeline with metadata.
 * `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
+* Serialization test to validate pipeline serialization functionality.
 
 ### Changes
 * OpenCL backend support - deprecated
