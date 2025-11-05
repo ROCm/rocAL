@@ -1057,6 +1057,28 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             };
             output = rocalRicap(handle, input, true, permutation, crop_rois, output_tensor_layout, output_tensor_dtype);
         } break;
+        case 83: {
+            std::cout << "Running rocalBitwiseOps AND" << std::endl;
+            // Create second input tensor (rotate input to get variation)
+            RocalTensor input2 = rocalRotate(handle, input, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_AND,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 84: {
+            std::cout << "Running rocalBitwiseOps OR" << std::endl;
+            RocalTensor input2 = rocalRotate(handle, input, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_OR,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 85: {
+            std::cout << "Running rocalBitwiseOps XOR" << std::endl;
+            RocalTensor input2 = rocalRotate(handle, input, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_XOR,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

@@ -265,3 +265,12 @@ enum class OutOfBoundsPolicy {
     TRIMTOSHAPE,
     ERROR
 };
+
+/*! \brief Internal Bitwise Operation enum
+ * Internal version of RocalBitwiseOp for use within rocAL implementation
+ */
+enum class BitwiseOp {
+    AND = 0,
+    OR  = 1,
+    XOR = 2
+};

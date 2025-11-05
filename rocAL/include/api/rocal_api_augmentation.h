@@ -1719,4 +1719,23 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRicap(RocalContext context,
                                                  RocalTensorLayout output_layout = ROCAL_NONE,
                                                  RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Performs bitwise operations (AND/OR/XOR) elementwise on two input tensors.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 First input tensor (U8)
+ * \param [in] input2 Second input tensor (U8)
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] op The bitwise operation to perform (AND/OR/XOR)
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor (defaults to U8)
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalBitwiseOps(RocalContext context,
+                                                      RocalTensor input1,
+                                                      RocalTensor input2,
+                                                      bool is_output,
+                                                      RocalBitwiseOp op,
+                                                      RocalTensorLayout output_layout = ROCAL_NONE,
+                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

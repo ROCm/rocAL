@@ -753,6 +753,12 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
         .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
         .export_values();
+    // Bitwise Ops enum
+    py::enum_<RocalBitwiseOp>(types_m, "RocalBitwiseOp", "Bitwise operation selector")
+        .value("BITWISE_AND", ROCAL_BITWISE_AND)
+        .value("BITWISE_OR",  ROCAL_BITWISE_OR)
+        .value("BITWISE_XOR", ROCAL_BITWISE_XOR)
+        .export_values();
     py::enum_<RocalMissingComponentsBehaviour>(types_m, "RocalMissingComponentsBehaviour", "Rocal Missing components behavior")
         .value("MISSING_COMPONENT_ERROR", ROCAL_MISSING_COMPONENT_ERROR)
         .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
@@ -1138,6 +1144,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("remap", &rocalRemap,
           py::return_value_policy::reference);
     m.def("cropAndPatch", &rocalCropAndPatch,
+          py::return_value_policy::reference);
+    m.def("bitwiseOps", &rocalBitwiseOps,
           py::return_value_policy::reference);
     m.def("fog", &rocalFog,
           py::return_value_policy::reference);

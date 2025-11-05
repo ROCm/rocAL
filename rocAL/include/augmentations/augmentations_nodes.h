@@ -81,6 +81,7 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_magnitude.h"
 #include "augmentations/filter_augmentations/node_phase.h"
 #include "augmentations/filter_augmentations/node_erase.h"
+#include "augmentations/filter_augmentations/node_bitwise_ops.h"
 #include "augmentations/geometry_augmentations/node_crop_and_patch.h"
 #include "augmentations/geometry_augmentations/node_remap.h"
 #include "augmentations/geometry_augmentations/node_ricap.h"
