@@ -19,6 +19,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds support to track operators in MasterGraph with unique naming.
 * Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
 * Add support to store the pipeline into protobuf format.
+* Adds template-based serialization functions for different parameter types to convert to protobuf format.
 
 ## rocAL 2.4.0 for ROCm 7.1.0
 
