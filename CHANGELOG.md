@@ -5,6 +5,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ## rocAL 2.5.0 (Unreleased)
 
 ### Added
+* Introduce enum registry to register all the enums present in rocAL.
 
 ### Changes
 * OpenCL backend support - deprecated
