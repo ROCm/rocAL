@@ -37,10 +37,7 @@ The rocAL public repository is located at `https://github.com/ROCm/rocAL <https:
 
   .. grid-item-card:: Examples
     
-    * `rocAL image processing examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/image_processing>`_ 
-    * `rocAL PyTorch examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/pytorch>`_ 
-    * `rocAL TensorFlow examples <https://github.com/ROCm/rocAL/tree/master/docs/examples/tf>`_
-    * `rocAL Jupyter notebooks <https://github.com/ROCm/rocAL/tree/master/docs/examples/notebooks>`_ 
+    * :doc:`rocAL framework integration examples <./examples/examples>`
 
   .. grid-item-card:: Reference
 
