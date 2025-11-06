@@ -6,6 +6,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Added
 * Added python function execution support in rocAL
+* Introduce enum registry to register all the enums present in rocAL.
 
 ### Changes
 * OpenCL backend support - deprecated
