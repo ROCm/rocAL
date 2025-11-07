@@ -239,6 +239,7 @@ private:
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
     int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries
+    bool _set_device_id = false;
 };
 
 template <typename T>
