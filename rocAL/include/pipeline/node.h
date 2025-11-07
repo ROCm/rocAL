@@ -54,6 +54,7 @@ class Node {
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
     const std::vector<Argument>& get_args_list() const { return _args; }
+    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("Not Implemented") }
 
    protected:
     virtual void create_node() = 0;

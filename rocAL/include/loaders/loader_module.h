@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include "circular_buffer.h"
 #include "pipeline/commons.h"
 #include "decoders/image/decoder.h"
-#include "meta_data/meta_data_graph.h"
+#include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "meta_data/meta_data_reader.h"
 #include "pipeline/tensor.h"
 
