@@ -22,12 +22,16 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
+#include <google/protobuf/message.h>
+#include <google/protobuf/io/coded_stream.h>
+
 #include <exception>
 #include <string>
 #include <cstring>
 
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
+#include "rocal.pb.h"
 
 RocalStatus ROCAL_API_CALL
 rocalRelease(RocalContext p_context) {
@@ -118,6 +122,58 @@ rocalSerialize(RocalContext rocal_context, size_t *serialized_string_size) {
         return ROCAL_RUNTIME_ERROR;
     }
     return ROCAL_OK;
+}
+
+RocalContext ROCAL_API_CALL
+rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size, RocalPipelineParams& pipe_params) {
+    RocalContext context = nullptr;
+    try {
+        // Parse from the serialized string.
+        rocal_proto::PipelineDef pipe;
+        google::protobuf::io::CodedInputStream coded_input(
+        reinterpret_cast<const uint8_t *>(serialized_pipeline), serialized_string_size);
+        coded_input.SetTotalBytesLimit(serialized_string_size);
+        pipe.ParseFromCodedStream(&coded_input);
+
+        // Get the pipeline related info
+        if (pipe_params.batch_size.has_value()) {
+            std::cerr << "Batch size value : " << pipe_params.batch_size.value() << "\n";
+        }
+        pipe_params.batch_size = pipe_params.batch_size.value_or(pipe.batch_size());
+        if (pipe.has_device_id())
+            pipe_params.device_id = pipe_params.device_id.value_or(pipe.device_id());
+        if (pipe.has_num_threads())
+            pipe_params.num_threads = pipe_params.num_threads.value_or(pipe.num_threads());
+        if (pipe.has_rocal_cpu())
+            pipe_params.rocal_cpu = pipe_params.rocal_cpu.value_or(pipe.rocal_cpu());
+        if (pipe.has_prefetch_queue_depth())
+           pipe_params.prefetch_queue_depth = pipe_params.prefetch_queue_depth.value_or(pipe.prefetch_queue_depth());
+        if (pipe.has_seed()) {
+            pipe_params.seed = pipe_params.seed.value_or(pipe.seed());
+            std::cerr << "Seed : " << pipe_params.seed.value() << "\n";
+            rocalSetSeed(pipe.seed());
+        }
+
+        std::cerr << "BS : " << pipe_params.batch_size.value() << "\n";
+        std::cerr << "TID : " << pipe_params.num_threads.value() << "\n";
+        std::cerr << "GPU ID : " << pipe_params.device_id.value() << "\n";
+        std::cerr << "CPU : " << pipe_params.rocal_cpu.value() << "\n";
+        std::cerr << "Prefetch : " << pipe_params.prefetch_queue_depth.value() << "\n";
+
+
+        RocalAffinity affinity = pipe_params.rocal_cpu ? RocalAffinity::CPU : RocalAffinity::GPU;
+        // Create the context
+        context = new Context(pipe_params.batch_size.value(), affinity,
+                              std::max(pipe_params.device_id.value_or(0), 0),
+                              pipe_params.num_threads.value_or(1),
+                              pipe_params.prefetch_queue_depth.value_or(3),
+                              RocalTensorDataType::FP32);  // Need to set dtype in protobuf/just use default value
+        static_cast<Context*>(context)->master_graph->deserialize(&pipe);
+
+    } catch (const std::exception& e) {
+        ERR(STR("Failed to init the Rocal context, ") + STR(e.what()))
+    }
+    return context;
 }
 
 RocalStatus ROCAL_API_CALL
