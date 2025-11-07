@@ -55,6 +55,49 @@ public:
     std::vector<std::any> values;         ///< Storage for argument values
     pParam param;                         ///< Parameter stored for parameter-type arguments
 
+    template <typename T>
+    T Get() const {
+        std::cerr << "Type name -> " << type_name << "\n";
+
+        // Compile-time check for parameter types
+        if constexpr (std::is_same_v<T, FloatParam*> || std::is_same_v<T, IntParam*>) {
+            if (is_null_ptr) {
+                return nullptr;
+            }
+            if constexpr (std::is_same_v<T, FloatParam*>)
+                return std::get<FloatParam*>(param);
+            else if constexpr (std::is_same_v<T, IntParam*>)
+                return std::get<IntParam*>(param);
+        } else {
+            if (is_null_ptr || is_parameter)
+                THROW("Undefined type passed")
+
+            if constexpr (is_vector_type<std::decay_t<T>>::value) {
+                std::cerr << "Vector type\n";
+                using ElementType = typename std::decay_t<T>::value_type;
+
+                std::vector<ElementType> result;
+                for (const auto& v : values) {
+                    result.push_back(std::any_cast<ElementType>(v));
+                    std::cerr << "Print val : " << std::any_cast<ElementType>(v) << "\n";
+                }
+                return result;
+            } else if (!is_vector) {
+                std::cerr << "Non Vector type detected - \t" << values.size() <<"\n";
+                return std::any_cast<T>(values[0]);
+            }        
+        }
+    }
+
+    template<>
+    std::map<std::string, std::string> Get<std::map<std::string, std::string>>() const {
+        std::map<std::string, std::string> feature_map;
+        for (int i = 0; i < values.size(); i+=2) {
+            feature_map[std::any_cast<std::string>(values[i])] = std::any_cast<std::string>(values[i + 1]);
+        }
+        return feature_map;
+    }
+
     // Constructors
 
     /**
