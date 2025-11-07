@@ -107,6 +107,8 @@ public:
      * @param val The value to store
      * @throws std::runtime_error if the type is unknown or unsupported
      */
+    Argument() {}
+
     template <typename T>
     explicit Argument(std::string name, T&& val) : arg_name(std::move(name)) {
 
@@ -302,3 +304,39 @@ private:
         is_parameter = true;
     }
 };
+
+template <typename... Args, std::size_t... I>
+std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments, std::index_sequence<I...>) {
+    return std::make_tuple(arguments[I].Get<Args>()...);
+}
+
+// Helper: extract arguments into a tuple using index sequence
+template <typename... Args>
+std::tuple<Args...> unpack_arguments(const std::vector<Argument>& arguments) {
+    return unpack_arguments_impl<Args...>(arguments, std::index_sequence_for<Args...>{});
+}
+
+template <typename NodeType, typename... Args>
+bool init_args(NodeType* node, const std::vector<Argument>& arguments) {
+    if (arguments.size() != sizeof...(Args)) return false;
+
+    try {
+        // Unpack arguments with type-check and casting
+        // For C++ >= 20
+        // std::tuple<Args...> unpacked_args = [&]<std::size_t... I>(std::index_sequence<I...>) {
+        //     return std::make_tuple(arguments[I].Get<Args>()...);
+        // }(std::index_sequence_for<Args...>{});
+
+        auto unpacked_args = unpack_arguments<Args...>(arguments);
+        std::cerr << "Arguments unpacked\t" << std::tuple_size<decltype(unpacked_args)>::value << "\n";
+
+        std::apply([&](Args&... unpacked) {
+            node->init(unpacked...);
+        }, unpacked_args);
+
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "[ERR] Exception during init_args: " << e.what() << "\n";
+        return false; // Type mismatch
+    }
+}
