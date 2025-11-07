@@ -248,6 +248,7 @@ private:
     PipelineSerializer _pipeline_serializer;
     // Stores the serialized binary string representation of the pipeline
     std::string _serialized_pipeline;
+    bool _set_device_id = false;
 };
 
 template <typename T>
