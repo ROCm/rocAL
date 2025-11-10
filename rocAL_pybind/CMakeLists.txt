@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.10)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -139,7 +139,7 @@ if(NOT pybind11_FOUND)
     message("-- ${Yellow}NOTE: rocAL pybind requires pybind11, Not Found${ColourReset}")
 endif()
 # Half
-if(NOT HALF_FOUND)	
+if(NOT HALF_FOUND)
     set(BUILD_ROCAL_PYBIND false)
     message("-- ${Yellow}NOTE: rocAL pybind requires Half, Not Found${ColourReset}")
 endif()
@@ -196,11 +196,11 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         string(REPLACE "." "_" VERSION_ID "${PY_VERSION}")          # e.g., 3.11 -> 3_11
         set(mod_tgt "rocal_pybind_${VERSION_ID}")                # CMake target name
         set(pkg_dir "rocal_pybind")                              # Python package dir name
-        set(out_dir "${CMAKE_BINARY_DIR}/${pkg_dir}-${PY_VERSION}") # per-version bin dir
+        set(out_dir "${CMAKE_BINARY_DIR}/${pkg_dir}_${PY_VERSION}") # per-version bin dir
         file(MAKE_DIRECTORY "${out_dir}")
 
         # avoid setting the default installation path to /usr/local
-        if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)	
+        if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
             message("-- ${Green}NOTE: rocAL PyBind default installation path -- ${Python3_STDARCH} ${ColourReset}")
             set(CMAKE_INSTALL_PREFIX_PYTHON ${Python3_STDARCH} CACHE PATH "rocAL PyBind default installation path" FORCE)
         endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -235,6 +235,7 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
 
         pybind11_add_module(${mod_tgt} MODULE ${BINDING_SOURCES})
         target_link_libraries(${mod_tgt} PRIVATE ${LINK_LIBRARY_LIST})
+
         add_dependencies(${mod_tgt} rocal)
         message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
         message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
@@ -249,12 +250,34 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
             message("-- ${Yellow}NOTE: DLPack Not Found - rocAL Tensorflow and Generic plugins built without GPU support!${ColourReset}")
         endif()
 
+        execute_process(
+            COMMAND "${Python3_EXECUTABLE}" -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"
+            OUTPUT_VARIABLE Python3_EXTENSION_SUFFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
         set_target_properties(${mod_tgt} PROPERTIES
             PREFIX ""
+            SUFFIX "${Python3_EXTENSION_SUFFIX}"
             LIBRARY_OUTPUT_DIRECTORY "${out_dir}")
-        if(DEFINED Python3_EXTENSION_SUFFIX AND Python3_EXTENSION_SUFFIX)
-            set_target_properties(${mod_tgt} PROPERTIES SUFFIX "${Python3_EXTENSION_SUFFIX}")
-        endif()
+
+        set_target_properties(${mod_tgt} PROPERTIES OUTPUT_NAME "rocal_pybind")
+
+        # Python files - Install
+        install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/amd/"
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/amd
+                COMPONENT runtime)
+                #FILES_MATCHING PATTERN "*.py")
+
+        # rocAL pybind libs - install
+        install(TARGETS ${mod_tgt}
+                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+        # PyBind Test - Install
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/python_api DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
 
         set(pkg_name "rocal_pybind")
         set(py_work "${CMAKE_BINARY_DIR}/py${PY_VERSION}")
@@ -281,22 +304,7 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         add_dependencies(PyPackageInstall-${PY_VERSION} PyPackageBuild-${PY_VERSION})
         add_dependencies(PyPackageInstallAll PyPackageInstall-${PY_VERSION})
 
-        # Python files - Install
-        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/amd/
-                DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                COMPONENT runtime
-                FILES_MATCHING PATTERN "*.py")
-
-        # rocAL pybind libs - install
-        install(TARGETS ${mod_tgt}
-                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-        # PyBind Test - Install
-        install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
-        install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/python_api DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
-
+        
         message("-- ${Green}Radeon Augmentation Library Python Binding - ${mod_tgt} module added ${ColourReset}")
 
     endif()
