@@ -65,47 +65,27 @@ def main():
             shutil.rmtree(new_data_path)
         os.makedirs(new_data_path)
         for i in range(10):
-            np_array = np.random.randint(0, 256, (128, 128, 128, 4))
+            np_array = np.random.randn(128, 128, 128, 4)
             np.save(os.path.join(new_data_path, f'{i}.npy'), np_array.astype(np.int16))
         data_path = new_data_path
-        input_layout = types.NDHWC
-    if augmentation_name == "normalize" or augmentation_name == "transpose":
-        # Create random input tensors with multi channels
-        new_data_path = f'{augmentation_name}_inputs'
-        if os.path.exists(new_data_path):
-            shutil.rmtree(new_data_path)
-        os.makedirs(new_data_path)
-        for i in range(10):
-            np_array = np.random.randint(0, 256, (768, 1152, 16))
-            # Normalize kernel only supports F32->F32 variant so creating F32 inputs
-            np_dtype = np.float32 if augmentation_name == "normalize" else np.uint8
-            np.save(os.path.join(new_data_path, f'{i}.npy'), np_array.astype(np_dtype))
-        data_path = new_data_path
-        input_layout = types.NHWC
-    if augmentation_name == "resize":
-        input_layout = types.NHWC
 
     pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads,
                         device_id=local_rank, seed=random_seed, rocal_cpu=rocal_cpu)
 
     with pipeline:
-        # Numpy reader can be used to read inputs of different dtypes and layouts (including voxel layouts) - need to specify output layout correctly
-        numpy_reader_output = fn.readers.numpy(file_root=data_path, shard_id=local_rank, num_shards=world_size, output_layout=input_layout)
+        numpy_reader_output = fn.readers.numpy(
+            file_root=data_path, shard_id=local_rank, num_shards=world_size, output_layout=types.NHWC)
         if augmentation_name == "log1p":
             output = fn.log1p(numpy_reader_output)
-        elif augmentation_name == "normalize":
-            output = fn.normalize(numpy_reader_output, axes=[0,1], mean=[127.5]*16, stddev=[127.5]*16, output_datatype=types.FLOAT)
-        elif augmentation_name == "transpose":
-            output = fn.transpose(numpy_reader_output, perm=[2,0,1], output_layout=types.NCHW)
         else:
-            output = fn.resize(numpy_reader_output, resize_width=400, resize_height=400, output_layout=output_layout)
+            output = fn.resize(
+                numpy_reader_output, resize_width=400, resize_height=400, output_layout=output_layout)
         pipeline.set_outputs(output)
 
     pipeline.build()
 
     cnt = 0
     numpyIteratorPipeline = ROCALNumpyIterator(pipeline)
-    print(f"##############################  RUNNING {augmentation_name.upper()} ############################")
     for epoch in range(args.num_epochs):
         print("epoch:: ", epoch)
         for i, [batch] in enumerate(numpyIteratorPipeline):
@@ -113,7 +93,6 @@ def main():
                 print(batch)
             for img in batch:
                 if args.display:
-                    # Can only be used with resize augmentation since other augmentations outputs cannot be visualized
                     draw_patches(img, cnt, args)
                 cnt += 1
         numpyIteratorPipeline.reset()
