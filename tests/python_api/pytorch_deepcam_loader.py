@@ -52,7 +52,7 @@ def main():
         shutil.rmtree(data_path)
     os.makedirs(data_path)
     for i in range(10):
-        # Creating dummy inputs similar to data shape of Deepcam training
+        # Creating dummy inputs similar to data shape of dataset used in Deepcam training
         np_array = np.random.randint(0, 256, (768, 1152, 16))
         np.save(os.path.join(data_path, f'{i}.npy'), np_array.astype(np.float32))
 
