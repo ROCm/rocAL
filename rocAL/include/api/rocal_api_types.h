@@ -533,7 +533,9 @@ enum RocalBitwiseOp {
     /*! \brief Bitwise OR operation */
     ROCAL_BITWISE_OR  = 1,
     /*! \brief Bitwise XOR operation */
-    ROCAL_BITWISE_XOR = 2
+    ROCAL_BITWISE_XOR = 2,
+    /*! \brief Bitwise NOT operation */
+    ROCAL_BITWISE_NOT = 3
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

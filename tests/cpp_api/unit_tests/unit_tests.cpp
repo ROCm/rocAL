@@ -1079,6 +1079,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                      RocalBitwiseOp::ROCAL_BITWISE_XOR,
                                      output_tensor_layout, output_tensor_dtype);
         } break;
+        case 86: {
+            std::cout << "Running rocalBitwiseOps NOT (single input)" << std::endl;
+            // NOT uses only a single input; pass same tensor for second parameter (ignored internally)
+            output = rocalBitwiseOps(handle, input, input, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_NOT,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

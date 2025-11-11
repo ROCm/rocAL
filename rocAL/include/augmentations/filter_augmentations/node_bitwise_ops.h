@@ -27,12 +27,12 @@ public:
     BitwiseOpsNode() = delete;
 
     // Initialize the op to perform
-    void init(BitwiseOp op) { _op = op; }
+    void init(BitwiseOp op) { _operator = op; }
 
 protected:
     void create_node() override;
     void update_node() override;
 
 private:
-    BitwiseOp _op { BitwiseOp::AND };
+    BitwiseOp _operator = BitwiseOp::AND;
 };

@@ -758,6 +758,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("BITWISE_AND", ROCAL_BITWISE_AND)
         .value("BITWISE_OR",  ROCAL_BITWISE_OR)
         .value("BITWISE_XOR", ROCAL_BITWISE_XOR)
+        .value("BITWISE_NOT", ROCAL_BITWISE_NOT)
         .export_values();
     py::enum_<RocalMissingComponentsBehaviour>(types_m, "RocalMissingComponentsBehaviour", "Rocal Missing components behavior")
         .value("MISSING_COMPONENT_ERROR", ROCAL_MISSING_COMPONENT_ERROR)

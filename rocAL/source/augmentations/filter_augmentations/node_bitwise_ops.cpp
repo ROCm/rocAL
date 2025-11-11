@@ -9,20 +9,15 @@ Advanced Micro Devices, Inc. All rights reserved.
 void BitwiseOpsNode::create_node() {
     if (_node) return;
 
-    if (_inputs.size() < 2)
-        THROW("BitwiseOps node needs two input tensors")
+    // For AND/OR/XOR require two inputs; for NOT allow a single input
+    if ( (_operator != BitwiseOp::NOT && _inputs.size() < 2) ||
+         (_operator == BitwiseOp::NOT && _inputs.size() < 1) )
+        THROW("BitwiseOps node needs two input tensors for binary ops and one input tensor for NOT")
 
     int input_layout  = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type      = static_cast<int>(_inputs[0]->info().roi_type());
-    int op            = 0;
-
-    switch (_op) {
-        case BitwiseOp::AND: op = 0; break;
-        case BitwiseOp::OR:  op = 1; break;
-        case BitwiseOp::XOR: op = 2; break;
-        default: op = 0; break;
-    }
+    int op            = static_cast<int>(_operator);
 
     vx_context ctx = vxGetContext((vx_reference)_graph->get());
     vx_scalar input_layout_vx  = vxCreateScalar(ctx, VX_TYPE_INT32, &input_layout);
@@ -33,7 +28,7 @@ void BitwiseOpsNode::create_node() {
     // pSrcRoi is carried in _inputs[0] ROI tensor
     _node = vxExtRppBitwiseOps(_graph->get(),
                                _inputs[0]->handle(),      // pSrc1
-                               _inputs[1]->handle(),      // pSrc2
+                               (_operator == BitwiseOp::NOT ? nullptr : _inputs[1]->handle()), // pSrc2 (optional for NOT)
                                _inputs[0]->get_roi_tensor(), // pSrcRoi (per-sample ROI for inputs)
                                _outputs[0]->handle(),     // pDst
                                input_layout_vx,

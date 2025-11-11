@@ -271,6 +271,7 @@ enum class OutOfBoundsPolicy {
  */
 enum class BitwiseOp {
     AND = 0,
-    OR  = 1,
-    XOR = 2
+    OR,
+    XOR,
+    NOT
 };
