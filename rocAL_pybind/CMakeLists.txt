@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -178,10 +178,7 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
     set(Python3_FIND_STRATEGY LOCATION)
 
     find_package(Python3 "${PY_VERSION}" EXACT QUIET COMPONENTS Interpreter Development.Module)
-    set(PYTHON_EXECUTABLE_${PY_VERSION} ${Python3_EXECUTABLE})
-    set(PYTHON_INCLUDE_DIRS_${PY_VERSION} ${Python3_INCLUDE_DIRS})
     set(PYTHON_FOUND_${PY_VERSION} ${Python3_FOUND})
-    set(PYTHON_LIBRARIES_${PY_VERSION} ${Python3_LIBRARIES})
 
     if(NOT PYTHON_FOUND_${PY_VERSION})
         set(BUILD_ROCAL_PYBIND false)
@@ -191,10 +188,10 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
     endif()
 
     if(${BUILD_ROCAL_PYBIND})
-        message("-- ${Green}NOTE: Python ${PY_VERSION} Found, building rocAL pybind for this ${Python3_EXECUTABLE}${ColourReset}")
+        message("-- ${Green}NOTE: Python ${PY_VERSION} Found, building rocAL pybind for ${Python3_EXECUTABLE}${ColourReset}")
         # ----- Create a unique pybind module target for this Python -----
-        string(REPLACE "." "_" VERSION_ID "${PY_VERSION}")          # e.g., 3.11 -> 3_11
-        set(mod_tgt "rocal_pybind_${VERSION_ID}")                # CMake target name
+        #string(REPLACE "." "_" VERSION_ID "${PY_VERSION}")          # e.g., 3.11 -> 3_11
+        set(mod_tgt "rocal_pybind_${PY_VERSION}")                # CMake target name
         set(pkg_dir "rocal_pybind")                              # Python package dir name
         set(out_dir "${CMAKE_BINARY_DIR}/${pkg_dir}_${PY_VERSION}") # per-version bin dir
         file(MAKE_DIRECTORY "${out_dir}")
@@ -217,7 +214,8 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         include_directories(../rocAL/include/api/)
         # Python3
         include_directories(${Python3_INCLUDE_DIRS})
-        message("-- ${Green}NOTE: rocAL pybind requires Python3, Found --  ${Python3_EXECUTABLE} ${ColourReset}")	
+        #include_directories(Python3::Python)
+        message("-- ${Green}NOTE: rocAL pybind requires Python3, Found --  ${Python3_INCLUDE_DIRS} ${ColourReset}")	
         # PyBind11
         include_directories(${pybind11_INCLUDE_DIRS})
         # half
@@ -259,9 +257,8 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         set_target_properties(${mod_tgt} PROPERTIES
             PREFIX ""
             SUFFIX "${Python3_EXTENSION_SUFFIX}"
-            LIBRARY_OUTPUT_DIRECTORY "${out_dir}")
-
-        set_target_properties(${mod_tgt} PROPERTIES OUTPUT_NAME "rocal_pybind")
+            LIBRARY_OUTPUT_DIRECTORY "${out_dir}"
+            OUTPUT_NAME "rocal_pybind")
 
         # Python files - Install
         install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/amd/"
@@ -272,39 +269,13 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         # rocAL pybind libs - install
         install(TARGETS ${mod_tgt}
                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+                RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR})
+                #ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
         # PyBind Test - Install
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/python_api DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
 
-        set(pkg_name "rocal_pybind")
-        set(py_work "${CMAKE_BINARY_DIR}/py${PY_VERSION}")
-        set(py_exe "${Python3_EXECUTABLE}")
-        file(MAKE_DIRECTORY "${py_work}/dist")
-
-        add_custom_target(PyPackageBuild-${PY_VERSION}
-        COMMAND "${py_exe}" -m build -w -o "${py_work}/dist" "${CMAKE_SOURCE_DIR}/rocAL_pybind"
-        WORKING_DIRECTORY "${py_work}"
-        COMMENT "Build wheel for rocal Python ${PY_VERSION}"
-        VERBATIM
-        )
-        add_dependencies(PyPackageBuild-${PY_VERSION} ${mod_tgt})
-        add_dependencies(PyPackageBuildAll PyPackageBuild-${PY_VERSION})
-
-        add_custom_target(PyPackageInstall-${PY_VERSION}
-        COMMAND "${py_exe}" -m pip install --upgrade --force-reinstall --no-deps
-                            --no-index --find-links "${py_work}/dist"
-                            "${pkg_name}==${PROJECT_VERSION}"
-        WORKING_DIRECTORY "${py_work}"
-        COMMENT "Install ${pkg_name} ${PROJECT_VERSION} for Python ${PY_VERSION}"
-        VERBATIM
-        )
-        add_dependencies(PyPackageInstall-${PY_VERSION} PyPackageBuild-${PY_VERSION})
-        add_dependencies(PyPackageInstallAll PyPackageInstall-${PY_VERSION})
-
-        
         message("-- ${Green}Radeon Augmentation Library Python Binding - ${mod_tgt} module added ${ColourReset}")
 
     endif()
