@@ -235,6 +235,7 @@ private:
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
+    bool _set_device_id = false;
 };
 
 template <typename T>

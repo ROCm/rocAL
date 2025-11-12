@@ -432,6 +432,7 @@ MasterGraph::reset() {
     _ring_buffer.unblock_writer();
     if (_output_thread.joinable())
         _output_thread.join();
+    _set_device_id = false;
     _ring_buffer.reset();
     _sequence_start_framenum_vec.clear();
     _sequence_frame_timestamps_vec.clear();
@@ -838,6 +839,16 @@ bool MasterGraph::is_out_of_data() {
 
 void MasterGraph::output_routine() {
     INFO("Output routine started with " + TOSTR(_remaining_count) + " to load");
+#if ENABLE_HIP
+    // Set device ID for output routine thread once
+    if (!_set_device_id) {
+        hipError_t hip_status = hipSetDevice(_gpu_id);
+        if (hip_status != hipSuccess) {
+            THROW("hipSetDevice failed");
+        }
+        _set_device_id = true;
+    }
+#endif
     try {
         while (_processing) {
             if (_loader_module->remaining_count() < (_is_sequence_reader_output ? _sequence_batch_size : _user_batch_size)) {
@@ -940,6 +951,16 @@ void MasterGraph::output_routine() {
 
 void MasterGraph::output_routine_multiple_loaders() {
     INFO("Output routine for multiple loaders started with " + TOSTR(_remaining_count) + " to load");
+#if ENABLE_HIP
+    // Set device ID for output routine thread once
+    if (!_set_device_id) {
+        hipError_t hip_status = hipSetDevice(_gpu_id);
+        if (hip_status != hipSuccess) {
+            THROW("hipSetDevice failed");
+        }
+        _set_device_id = true;
+    }
+#endif
     try {
         while (_processing) {
             if (is_out_of_data()) {
