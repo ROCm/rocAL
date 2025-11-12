@@ -241,6 +241,7 @@ private:
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
     int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries
     int _tensor_idx = 0; // Index/counter used to uniquely name Tensor instances created in the pipeline
+    bool _set_device_id = false;
 };
 
 template <typename T>
