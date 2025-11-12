@@ -407,7 +407,7 @@ class TensorList : public rocalTensorList {
     Tensor* at(size_t index) override { return _tensor_list[index]; }
     void operator=(TensorList& other) {
         for (unsigned idx = 0; idx < other.size(); idx++) {
-            auto* new_tensor = new Tensor(other[idx]->info(), other[idx]->tensor_name() + "_1");
+            auto* new_tensor = new Tensor(other[idx]->info(), other[idx]->tensor_name() + "_copy");
             if (new_tensor->create_from_handle(other[idx]->context()) != 0)
                 THROW("Cannot create the tensor from handle")
             this->push_back(new_tensor);
