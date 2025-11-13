@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <list>
+#include <VX/vx.h>
 
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
@@ -43,6 +44,11 @@ class EraseNode : public Node {
     // Overloads for dynamic vs fixed parameters
     void init(Tensor *anchor_box_info, Tensor *colors, int num_boxes_fixed);
     void init(Tensor *anchor_box_info, Tensor *colors, IntParam *num_boxes_param);
+    // New: raw vector-based init (replicates across batch as needed)
+    void init(std::vector<float> anchor,
+              std::vector<float> shape,
+              std::vector<unsigned> num_boxes,
+              std::vector<float> fill_value);
 
    protected:
     void create_node() override;
@@ -52,6 +58,15 @@ class EraseNode : public Node {
     ParameterVX<int> _num_boxes;
     Tensor *_anchor = nullptr;
     Tensor *_colors = nullptr;
+
+    // Raw-vector mode
+    bool _use_raw_vectors = false;
+    std::vector<float> _anchor_vec;
+    std::vector<float> _colors_vec;
+    std::vector<int>   _num_boxes_vec;
+    vx_tensor _vx_anchor = nullptr;
+    vx_tensor _vx_colors = nullptr;
+    vx_array  _vx_num_boxes = nullptr;
 
     // Conservative default range for number of boxes per sample
     constexpr static int NUM_BOXES_RANGE[2] = {0, 1024};
