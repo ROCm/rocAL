@@ -285,7 +285,13 @@ Tensor::~Tensor() {
 Tensor::Tensor(const TensorInfo &tensor_info)
     : _info(tensor_info) {
     _info._type = TensorInfo::Type::UNKNOWN;
-    _tensor_name = "tensor_" + std::to_string(_tensor_idx++);
+    _mem_handle = nullptr;
+}
+
+Tensor::Tensor(const TensorInfo &tensor_info, const std::string &name)
+    : _info(tensor_info) {
+    _info._type = TensorInfo::Type::UNKNOWN;
+    _tensor_name = "tensor_" + name;
     _mem_handle = nullptr;
 }
 
