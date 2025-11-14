@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
-#include <google/protobuf/message.h>
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/message.h>
 
 #include <exception>
 #include <string>
@@ -136,37 +136,42 @@ rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size,
         pipe.ParseFromCodedStream(&coded_input);
 
         // Get the pipeline related info
-        if (pipe_params.batch_size.has_value()) {
-            std::cerr << "Batch size value : " << pipe_params.batch_size.value() << "\n";
+        if (!pipe_params.batch_size.has_value()) {
+            if (pipe.has_batch_size())
+                pipe_params.batch_size = pipe.batch_size();
+            else
+                THROW("Serialized pipeline missing required batch size");
         }
-        pipe_params.batch_size = pipe_params.batch_size.value_or(pipe.batch_size());
-        if (pipe.has_device_id())
-            pipe_params.device_id = pipe_params.device_id.value_or(pipe.device_id());
-        if (pipe.has_num_threads())
-            pipe_params.num_threads = pipe_params.num_threads.value_or(pipe.num_threads());
-        if (pipe.has_rocal_cpu())
-            pipe_params.rocal_cpu = pipe_params.rocal_cpu.value_or(pipe.rocal_cpu());
-        if (pipe.has_prefetch_queue_depth())
-           pipe_params.prefetch_queue_depth = pipe_params.prefetch_queue_depth.value_or(pipe.prefetch_queue_depth());
-        if (pipe.has_seed()) {
-            pipe_params.seed = pipe_params.seed.value_or(pipe.seed());
-            std::cerr << "Seed : " << pipe_params.seed.value() << "\n";
+
+        if (!pipe_params.device_id.has_value() && pipe.has_device_id())
+            pipe_params.device_id = pipe.device_id();
+
+        if (!pipe_params.num_threads.has_value() && pipe.has_num_threads())
+            pipe_params.num_threads = pipe.num_threads();
+
+        if (!pipe_params.rocal_cpu.has_value() && pipe.has_rocal_cpu())
+            pipe_params.rocal_cpu = pipe.rocal_cpu();
+
+        if (!pipe_params.prefetch_queue_depth.has_value() && pipe.has_prefetch_queue_depth())
+           pipe_params.prefetch_queue_depth = pipe.prefetch_queue_depth();
+
+        if (!pipe_params.seed.has_value() && pipe.has_seed()) {
+            pipe_params.seed = pipe.seed();
             rocalSetSeed(pipe.seed());
         }
 
-        std::cerr << "BS : " << pipe_params.batch_size.value() << "\n";
-        std::cerr << "TID : " << pipe_params.num_threads.value() << "\n";
-        std::cerr << "GPU ID : " << pipe_params.device_id.value() << "\n";
-        std::cerr << "CPU : " << pipe_params.rocal_cpu.value() << "\n";
-        std::cerr << "Prefetch : " << pipe_params.prefetch_queue_depth.value() << "\n";
+        const size_t batch_size = pipe_params.batch_size.value();
+        const int device_id = pipe_params.device_id.value_or(0);
+        const size_t num_threads = pipe_params.num_threads.value_or(1);
+        const size_t prefetch_queue_depth = pipe_params.prefetch_queue_depth.value_or(3);
+        const bool use_cpu = pipe_params.rocal_cpu.value_or(false);
 
-
-        RocalAffinity affinity = pipe_params.rocal_cpu ? RocalAffinity::CPU : RocalAffinity::GPU;
+        RocalAffinity affinity = use_cpu ? RocalAffinity::CPU : RocalAffinity::GPU;
         // Create the context
-        context = new Context(pipe_params.batch_size.value(), affinity,
-                              std::max(pipe_params.device_id.value_or(0), 0),
-                              pipe_params.num_threads.value_or(1),
-                              pipe_params.prefetch_queue_depth.value_or(3),
+        context = new Context(batch_size, affinity,
+                              std::max(device_id, 0),
+                              num_threads,
+                              prefetch_queue_depth,
                               RocalTensorDataType::FP32);  // Need to set dtype in protobuf/just use default value
         static_cast<Context*>(context)->master_graph->deserialize(&pipe);
 
