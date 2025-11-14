@@ -64,12 +64,13 @@ class EraseNode : public Node {
     bool _use_raw_vectors = false;
     std::vector<int> _anchor_vec;
     std::vector<float> _colors_vec, _fill_values_vec, _fill_values;
-    std::vector<int>   _num_boxes_vec;
+    std::vector<unsigned> _num_boxes_vec;
     vx_tensor _vx_anchor = nullptr;
     vx_tensor _vx_colors = nullptr;
-    vx_array  _vx_num_boxes = nullptr;
+    vx_tensor  _vx_num_boxes = nullptr;
     void* _anchor_ptr = nullptr;
     void* _color_ptr = nullptr;
+    void* _num_box_ptr = nullptr;
     unsigned _total_boxes = 0;
 
     // Conservative default range for number of boxes per sample

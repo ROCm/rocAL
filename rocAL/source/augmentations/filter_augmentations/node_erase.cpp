@@ -47,69 +47,68 @@ void EraseNode::create_node() {
 
     vx_tensor anchor_tensor = nullptr;
     vx_tensor color_tensor  = nullptr;
-    vx_array  num_boxes_arr = nullptr;
 
-    if (_use_raw_vectors) {
-        // Fill up anchor and shape
+    // Select memory type and VX mem type for handle-backed tensors
+    auto mem_type = _inputs[0]->info().mem_type();
+    vx_enum vx_mem = (mem_type == RocalMemType::HIP) ? VX_MEMORY_TYPE_HIP : VX_MEMORY_TYPE_HOST;
+    
+    // NumBox tensor handle
+    vx_size num_box_dims[1]   = {_batch_size};
+    vx_size num_box_stride[1] = {0};
+    num_box_stride[0] = sizeof(vx_uint32);
 
-        // Create vx_array for num_boxes
-        num_boxes_arr = vxCreateArray(vx_ctx, VX_TYPE_INT32, _batch_size);
-        vx_status st = vxAddArrayItems(num_boxes_arr, _batch_size, _num_boxes_vec.data(), sizeof(int32_t));
-        if (st != VX_SUCCESS) THROW("vxAddArrayItems failed while creating num_boxes array: " + TOSTR(st))
+    size_t bytes_a = num_box_stride[0] * num_box_dims[0];
+    allocate_host_or_pinned_mem(&_num_box_ptr, bytes_a, mem_type);
+    std::memcpy(_num_box_ptr, _num_boxes_vec.data(), bytes_a);
 
-        // Select memory type and VX mem type for handle-backed tensors
-        auto mem_type = _inputs[0]->info().mem_type();
-        vx_enum vx_mem = (mem_type == RocalMemType::HIP) ? VX_MEMORY_TYPE_HIP : VX_MEMORY_TYPE_HOST;
-
-        // Anchor tensor handle
-        vx_size anchor_dims[2]   = { (vx_size)_total_boxes, (vx_size)4 };
-        vx_size anchor_stride[2] = { 0, 0 };
-        anchor_stride[0] = sizeof(vx_int32);
-        anchor_stride[1] = anchor_stride[0] * anchor_dims[0];
-
-        size_t bytes_a = anchor_stride[1] * anchor_dims[1];
-        allocate_host_or_pinned_mem(&_anchor_ptr, bytes_a, mem_type);
-        std::memcpy(_anchor_ptr, _anchor_vec.data(), bytes_a);
-
-        _vx_anchor = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
-                                              2, anchor_dims, VX_TYPE_INT32, 0, anchor_stride, _anchor_ptr, vx_mem);
-        if (!_vx_anchor) THROW("vxCreateTensorFromHandle for anchor tensor failed");
-        {
-            vx_status s = vxGetStatus((vx_reference)_vx_anchor);
-            if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle anchor failed: " + TOSTR(s));
-        }
-
-        // Color tensor handle
-        vx_size color_dims[2]   = { (vx_size)_total_boxes, (vx_size)_inputs[0]->info().get_channels() };
-        vx_size color_stride[2] = { 0, 0 };
-        color_stride[0] = sizeof(vx_float32);
-        color_stride[1] = color_stride[0] * color_dims[0];
-
-        size_t bytes_c = color_stride[1] * color_dims[1];
-        allocate_host_or_pinned_mem(&_color_ptr, bytes_c, mem_type);
-        std::memcpy(_color_ptr, _fill_values_vec.data(), bytes_c);
-
-        _vx_colors = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
-                                              2, color_dims, VX_TYPE_FLOAT32, 0, color_stride, _color_ptr, vx_mem);
-        if (!_vx_colors) THROW("vxCreateTensorFromHandle for color tensor failed");
-        {
-            vx_status s = vxGetStatus((vx_reference)_vx_colors);
-            if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle color failed: " + TOSTR(s));
-        }
-
-        // Output tensors for node creation
-        anchor_tensor = _vx_anchor;
-        color_tensor  = _vx_colors;
-        _vx_num_boxes = num_boxes_arr;
-    } else {
-        if (!_anchor || !_colors)
-            THROW("Erase node requires non-null anchor and colors tensors")
-        // ParameterVX path for num_boxes
-        _num_boxes.create_array(_graph, VX_TYPE_INT32, _batch_size);
-        anchor_tensor = _anchor->handle();
-        color_tensor  = _colors->handle();
-        num_boxes_arr = _num_boxes.default_array();
+    _vx_num_boxes = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
+                                            1, num_box_dims, VX_TYPE_UINT32, 0, num_box_stride, _num_box_ptr, vx_mem);
+    if (!_vx_num_boxes) THROW("vxCreateTensorFromHandle for num_box tensor failed");
+    {
+        vx_status s = vxGetStatus((vx_reference)_vx_num_boxes);
+        if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle num_box failed: " + TOSTR(s));
     }
+
+    // Anchor tensor handle
+    vx_size anchor_dims[2]   = { (vx_size)_total_boxes, (vx_size)4 };
+    vx_size anchor_stride[2] = { 0, 0 };
+    anchor_stride[0] = sizeof(vx_int32);
+    anchor_stride[1] = anchor_stride[0] * anchor_dims[0];
+
+    size_t bytes_n = anchor_stride[1] * anchor_dims[1];
+    allocate_host_or_pinned_mem(&_anchor_ptr, bytes_n, mem_type);
+    std::memcpy(_anchor_ptr, _anchor_vec.data(), bytes_n);
+
+    _vx_anchor = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
+                                            2, anchor_dims, VX_TYPE_INT32, 0, anchor_stride, _anchor_ptr, vx_mem);
+    if (!_vx_anchor) THROW("vxCreateTensorFromHandle for anchor tensor failed");
+    {
+        vx_status s = vxGetStatus((vx_reference)_vx_anchor);
+        if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle anchor failed: " + TOSTR(s));
+    }
+
+    // Color tensor handle
+    vx_size color_dims[2]   = { (vx_size)_total_boxes, (vx_size)_inputs[0]->info().get_channels() };
+    vx_size color_stride[2] = { 0, 0 };
+    color_stride[0] = sizeof(vx_float32);
+    color_stride[1] = color_stride[0] * color_dims[0];
+
+    size_t bytes_c = color_stride[1] * color_dims[1];
+    allocate_host_or_pinned_mem(&_color_ptr, bytes_c, mem_type);
+    std::memcpy(_color_ptr, _fill_values_vec.data(), bytes_c);
+
+    _vx_colors = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
+                                            2, color_dims, VX_TYPE_FLOAT32, 0, color_stride, _color_ptr, vx_mem);
+    if (!_vx_colors) THROW("vxCreateTensorFromHandle for color tensor failed");
+    {
+        vx_status s = vxGetStatus((vx_reference)_vx_colors);
+        if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle color failed: " + TOSTR(s));
+    }
+
+    // Output tensors for node creation
+    anchor_tensor = _vx_anchor;
+    color_tensor  = _vx_colors;
+        // _vx_num_boxes = num_boxes_arr;
 
     // Create Erase node via MIVisionX RPP extension
     _node = vxExtRppErase(_graph->get(),
@@ -118,7 +117,7 @@ void EraseNode::create_node() {
                           _outputs[0]->handle(),
                           anchor_tensor,
                           color_tensor,
-                          num_boxes_arr,
+                          _vx_num_boxes,
                           input_layout_vx,
                           output_layout_vx,
                           roi_type_vx);
@@ -283,7 +282,7 @@ EraseNode::~EraseNode() {
 
     if (_vx_anchor) vxReleaseTensor(&_vx_anchor);
     if (_vx_colors) vxReleaseTensor(&_vx_colors);
-    if (_vx_num_boxes) vxReleaseArray(&_vx_num_boxes);
+    if (_vx_num_boxes) vxReleaseTensor(&_vx_num_boxes);
 
     if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
@@ -297,10 +296,16 @@ EraseNode::~EraseNode() {
             if (err != hipSuccess)
                 std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
         }
+        if (_num_box_ptr)  {
+            hipError_t err = hipHostFree(_num_box_ptr);
+            if (err != hipSuccess)
+                std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+        }
 #endif
     } else {
         if (_anchor_ptr) free(_anchor_ptr);
         if (_color_ptr) free(_color_ptr);
+        if (_num_box_ptr) free(_num_box_ptr);
     }
-    _anchor_ptr = _color_ptr = nullptr;
+    _anchor_ptr = _color_ptr = _num_box_ptr = nullptr;
 }
