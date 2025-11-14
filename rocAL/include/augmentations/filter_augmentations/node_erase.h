@@ -56,23 +56,14 @@ class EraseNode : public Node {
     void update_node() override;
 
    private:
-    ParameterVX<int> _num_boxes;
-    Tensor *_anchor = nullptr;
-    Tensor *_colors = nullptr;
-
-    // Raw-vector mode
-    bool _use_raw_vectors = false;
     std::vector<int> _anchor_vec;
     std::vector<float> _colors_vec, _fill_values_vec, _fill_values;
     std::vector<unsigned> _num_boxes_vec;
-    vx_tensor _vx_anchor = nullptr;
-    vx_tensor _vx_colors = nullptr;
-    vx_tensor  _vx_num_boxes = nullptr;
+    vx_tensor _anchor_vx = nullptr;
+    vx_tensor _colors_vx = nullptr;
+    vx_tensor  _num_boxes_vx = nullptr;
     void* _anchor_ptr = nullptr;
     void* _color_ptr = nullptr;
     void* _num_box_ptr = nullptr;
     unsigned _total_boxes = 0;
-
-    // Conservative default range for number of boxes per sample
-    constexpr static int NUM_BOXES_RANGE[2] = {0, 1024};
 };
