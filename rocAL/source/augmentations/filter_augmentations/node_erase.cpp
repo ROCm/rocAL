@@ -21,8 +21,11 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_amd.h>
 #include "augmentations/filter_augmentations/node_erase.h"
 #include "pipeline/exception.h"
+#include "pipeline/tensor.h"
+#include <cstring>
 
 EraseNode::EraseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs),
@@ -47,119 +50,57 @@ void EraseNode::create_node() {
     vx_array  num_boxes_arr = nullptr;
 
     if (_use_raw_vectors) {
-        // Build per-sample num_boxes array (int32)
-        if (_num_boxes_vec.empty()) {
-            THROW("Erase raw-vector mode requires non-empty num_boxes vector")
-        }
-        // Ensure length == batch; replicate if single value
-        if (_num_boxes_vec.size() != _batch_size) {
-            if (_num_boxes_vec.size() == 1) {
-                _num_boxes_vec.resize(_batch_size, _num_boxes_vec[0]);
-            } else {
-                THROW("num_boxes vector length must be 1 or equal to batch size")
-            }
-        }
-        int max_boxes = 0;
-        for (int nb : _num_boxes_vec) max_boxes = std::max(max_boxes, nb);
-        if (max_boxes <= 0) max_boxes = 1; // avoid zero-sized tensors
+        // Fill up anchor and shape
 
         // Create vx_array for num_boxes
         num_boxes_arr = vxCreateArray(vx_ctx, VX_TYPE_INT32, _batch_size);
         vx_status st = vxAddArrayItems(num_boxes_arr, _batch_size, _num_boxes_vec.data(), sizeof(int32_t));
         if (st != VX_SUCCESS) THROW("vxAddArrayItems failed while creating num_boxes array: " + TOSTR(st))
 
-        // Prepare anchor tensor [N, max_boxes, 4] FP32
-        vx_size anchor_dims[3] = { (vx_size)_batch_size, (vx_size)max_boxes, (vx_size)4 };
-        anchor_tensor = vxCreateTensor(vx_ctx, 3, anchor_dims, VX_TYPE_FLOAT32, 0);
-        if (vxGetStatus((vx_reference)anchor_tensor) != VX_SUCCESS)
-            THROW("vxCreateTensor failed for anchor tensor")
+        // Select memory type and VX mem type for handle-backed tensors
+        auto mem_type = _inputs[0]->info().mem_type();
+        vx_enum vx_mem = (mem_type == RocalMemType::HIP) ? VX_MEMORY_TYPE_HIP : VX_MEMORY_TYPE_HOST;
 
-        // Prepare color tensor [N, max_boxes, 3] FP32
-        vx_size color_dims[3] = { (vx_size)_batch_size, (vx_size)max_boxes, (vx_size)3 };
-        color_tensor = vxCreateTensor(vx_ctx, 3, color_dims, VX_TYPE_FLOAT32, 0);
-        if (vxGetStatus((vx_reference)color_tensor) != VX_SUCCESS)
-            THROW("vxCreateTensor failed for color tensor")
+        // Anchor tensor handle
+        vx_size anchor_dims[2]   = { (vx_size)_total_boxes, (vx_size)4 };
+        vx_size anchor_stride[2] = { 0, 0 };
+        anchor_stride[0] = sizeof(vx_int32);
+        anchor_stride[1] = anchor_stride[0] * anchor_dims[0];
 
-        // Compute strides (in bytes)
-        vx_size anchor_strides[3] = {
-            (vx_size)(max_boxes * 4 * sizeof(float)),   // stride for N
-            (vx_size)(4 * sizeof(float)),               // stride for boxes
-            (vx_size)(sizeof(float))                    // stride for channels (4)
-        };
-        vx_size color_strides[3] = {
-            (vx_size)(max_boxes * 3 * sizeof(float)),   // stride for N
-            (vx_size)(3 * sizeof(float)),               // stride for boxes
-            (vx_size)(sizeof(float))                    // stride for channels (3)
-        };
+        size_t bytes_a = anchor_stride[1] * anchor_dims[1];
+        allocate_host_or_pinned_mem(&_anchor_ptr, bytes_a, mem_type);
+        std::memcpy(_anchor_ptr, _anchor_vec.data(), bytes_a);
 
-        // Fill host buffers for anchors/colors
-        std::vector<float> anchor_buf(_batch_size * max_boxes * 4, 0.0f);
-        std::vector<float> color_buf (_batch_size * max_boxes * 3, 0.0f);
-
-        // Determine source interpretation: per-batch concatenation or single-sample replicated
-        auto total_anchor_needed = 0ul;
-        for (int nb : _num_boxes_vec) total_anchor_needed += (unsigned long)(nb * 4);
-        auto total_color_needed = 0ul;
-        for (int nb : _num_boxes_vec) total_color_needed += (unsigned long)(nb * 3);
-
-        bool anchor_is_batch_concat = (_anchor_vec.size() == total_anchor_needed);
-        bool color_is_batch_concat  = (_colors_vec.size() == total_color_needed);
-
-        // If single-sample provided, assume first sample data replicated/truncated per nb[i]
-        bool anchor_is_single = (_anchor_vec.size() == (size_t)(4 * std::max(1, max_boxes)));
-        bool color_is_single  = (_colors_vec.size() == (size_t)(3 * std::max(1, max_boxes)));
-
-        // Fill per sample
-        size_t a_src_off = 0, c_src_off = 0;
-        for (size_t i = 0; i < _batch_size; ++i) {
-            int nb = _num_boxes_vec[i];
-            // Anchors
-            for (int b = 0; b < nb; ++b) {
-                const float* src_a = nullptr;
-                if (anchor_is_batch_concat) {
-                    src_a = &_anchor_vec[a_src_off + b * 4];
-                } else {
-                    // replicate from the first nb anchors of single-sample vector
-                    if ((size_t)((b + 1) * 4) > _anchor_vec.size())
-                        THROW("anchor_box_info vector smaller than required");
-                    src_a = &_anchor_vec[b * 4];
-                }
-                size_t dst_idx = (i * max_boxes + b) * 4;
-                anchor_buf[dst_idx + 0] = src_a[0];
-                anchor_buf[dst_idx + 1] = src_a[1];
-                anchor_buf[dst_idx + 2] = src_a[2];
-                anchor_buf[dst_idx + 3] = src_a[3];
-            }
-            // Colors
-            for (int b = 0; b < nb; ++b) {
-                const float* src_c = nullptr;
-                if (color_is_batch_concat) {
-                    src_c = &_colors_vec[c_src_off + b * 3];
-                } else {
-                    if ((size_t)((b + 1) * 3) > _colors_vec.size())
-                        THROW("colors vector smaller than required");
-                    src_c = &_colors_vec[b * 3];
-                }
-                size_t dst_idx = (i * max_boxes + b) * 3;
-                color_buf[dst_idx + 0] = src_c[0];
-                color_buf[dst_idx + 1] = src_c[1];
-                color_buf[dst_idx + 2] = src_c[2];
-            }
-            if (anchor_is_batch_concat) a_src_off += (size_t)(nb * 4);
-            if (color_is_batch_concat)  c_src_off += (size_t)(nb * 3);
+        _vx_anchor = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
+                                              2, anchor_dims, VX_TYPE_INT32, 0, anchor_stride, _anchor_ptr, vx_mem);
+        if (!_vx_anchor) THROW("vxCreateTensorFromHandle for anchor tensor failed");
+        {
+            vx_status s = vxGetStatus((vx_reference)_vx_anchor);
+            if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle anchor failed: " + TOSTR(s));
         }
 
-        // Copy buffers into vx_tensors
-        vx_size start[3] = {0, 0, 0};
-        vx_size end_a[3] = { (vx_size)_batch_size, (vx_size)max_boxes, (vx_size)4 };
-        vx_status st_a = vxCopyTensorPatch(anchor_tensor, 3, start, end_a, anchor_strides,
-                                           anchor_buf.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-        if (st_a != VX_SUCCESS) THROW("vxCopyTensorPatch failed for anchor tensor: " + TOSTR(st_a))
+        // Color tensor handle
+        vx_size color_dims[2]   = { (vx_size)_total_boxes, (vx_size)_inputs[0]->info().get_channels() };
+        vx_size color_stride[2] = { 0, 0 };
+        color_stride[0] = sizeof(vx_float32);
+        color_stride[1] = color_stride[0] * color_dims[0];
 
-        vx_size end_c[3] = { (vx_size)_batch_size, (vx_size)max_boxes, (vx_size)3 };
-        vx_status st_c = vxCopyTensorPatch(color_tensor, 3, start, end_c, color_strides,
-                                           color_buf.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-        if (st_c != VX_SUCCESS) THROW("vxCopyTensorPatch failed for color tensor: " + TOSTR(st_c))
+        size_t bytes_c = color_stride[1] * color_dims[1];
+        allocate_host_or_pinned_mem(&_color_ptr, bytes_c, mem_type);
+        std::memcpy(_color_ptr, _fill_values_vec.data(), bytes_c);
+
+        _vx_colors = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
+                                              2, color_dims, VX_TYPE_FLOAT32, 0, color_stride, _color_ptr, vx_mem);
+        if (!_vx_colors) THROW("vxCreateTensorFromHandle for color tensor failed");
+        {
+            vx_status s = vxGetStatus((vx_reference)_vx_colors);
+            if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle color failed: " + TOSTR(s));
+        }
+
+        // Output tensors for node creation
+        anchor_tensor = _vx_anchor;
+        color_tensor  = _vx_colors;
+        _vx_num_boxes = num_boxes_arr;
     } else {
         if (!_anchor || !_colors)
             THROW("Erase node requires non-null anchor and colors tensors")
@@ -201,77 +142,130 @@ void EraseNode::init(Tensor *anchor_box_info, Tensor *colors, IntParam *num_boxe
     _use_raw_vectors = false;
 }
 
-// New: raw vector-based init (replicates across batch if needed)
+ // New: raw vector-based init (replicates across batch if needed)
 void EraseNode::init(std::vector<float> anchor,
                      std::vector<float> shape,
-                     std::vector<unsigned> num_boxes
+                     std::vector<unsigned> num_boxes,
                      std::vector<float> fill_value) {
+    // Use raw-vector path
+    _use_raw_vectors = true;
 
-    // Validate anchor and shape should be same size
-    // _anchor_vec = std::move(anchor);
-    // _shape_vec = std::move(shape);
-    
-    _num_boxes_vec.resize(_batch_size);
+    // Keep fill pattern for colors; create_node expands it to per-box/channel
+    _fill_values = std::move(fill_value);
+
+    // Normalize num_boxes to batch size
+    _num_boxes_vec.clear();
     if (num_boxes.size() == 1) {
-        std::fill(_num_boxes_vec.begin(), _num_boxes_vec.end(), num_boxes[0]);
-    } else if (num_boxes.size() == _batch_size) {
-        _num_boxes_vec = num_boxes;
+        _num_boxes_vec.assign(static_cast<size_t>(_batch_size), static_cast<int>(num_boxes[0]));
+    } else if (num_boxes.size() == static_cast<size_t>(_batch_size)) {
+        _num_boxes_vec.assign(num_boxes.begin(), num_boxes.end());
     } else {
-        THROW("Invalid number of elements passed for num of boxes")
+        THROW("num_boxes vector length must be 1 or equal to batch size");
     }
-    _total_boxes = std::accumulate(_num_boxes_vec.begin(), _num_boxes_vec.end(), 0);
 
-    _fill_values_vec.resize(_total_boxes * _batch_size * _inputs[0]->info().get_channels());
-    if (fill_value.size() == 1) {
-        std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), fill_value[0]);
-    } else if (fill_value.size() == _inputs[0]->info().get_channels()) {
-        for (int i = 0; i < _batch_size; ++i)
-            std::copy(_fill_values_vec.begin(), _fill_values_vec.end(), fill_value.begin() + i * fill_value.size());
-    } else if (fill_value.size() == _batch_size) {
-        const int channels = _inputs[0]->info().get_channels();
-        for (int i = 0; i < _batch_size; ++i) {
-            float* dst = _fill_values_vec.data() + static_cast<size_t>(i) * channels;
-            std::fill(dst, dst + channels, fill_value[i]);
+    // Compute prefix offsets and total boxes
+    std::vector<int> prefix(static_cast<size_t>(_batch_size) + 1, 0);
+    for (int i = 0; i < _batch_size; ++i) prefix[i + 1] = prefix[i] + _num_boxes_vec[i];
+    _total_boxes = static_cast<size_t>(prefix[_batch_size]);
+
+    auto channels = _inputs[0]->info().get_channels();
+    _fill_values_vec.resize(static_cast<size_t>(_total_boxes) * channels);
+
+    const auto fill_sz = _fill_values.size();
+
+    if (fill_sz == 1) {
+        // One scalar for everything
+        std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), _fill_values[0]);
+    }
+    else if (fill_sz == static_cast<size_t>(channels)) {
+        // Per-channel pattern replicated to each box
+        float* dst = _fill_values_vec.data();
+        for (int b = 0; b < _total_boxes; ++b) {
+            std::copy_n(_fill_values.data(), channels, dst);
+            dst += channels;
         }
-    } else if (fill_value.size() == (_total_boxes * _batch_size * _inputs[0]->info().get_channels())) {
-        _fill_values_vec = std::move(fill_value);
-    } else {
-        THROW("Invalid number of values passed for fill value")
+    }
+    else if (fill_sz == static_cast<size_t>(_batch_size)) {
+        // Per-sample scalar replicated across its boxes (and channels)
+        float* dst = _fill_values_vec.data();
+        for (int i = 0; i < _batch_size; ++i) {
+            const int nb = _num_boxes_vec[i];
+            const float v = _fill_values[i];
+            const size_t count = static_cast<size_t>(nb) * channels;
+            std::fill_n(dst, count, v);
+            dst += count;
+        }
+    }
+    else if (fill_sz == static_cast<size_t>(_batch_size) * channels) {
+        // Per-sample per-channel pattern replicated across that sample’s boxes
+        float* dst = _fill_values_vec.data();
+        const float* src = _fill_values.data();
+        for (int i = 0; i < _batch_size; ++i) {
+            for (int b = 0; b < _num_boxes_vec[i]; ++b) {
+                std::copy_n(src + i * channels, channels, dst);
+                dst += channels;
+            }
+        }
+    }
+    else if (num_boxes.size() == 1 &&
+            fill_sz == static_cast<size_t>(num_boxes[0]) * channels) {
+        // Single-sample per-box per-channel replicated across batch.
+        // All samples must have the same nb equal to num_boxes[0].
+        const int nb_single = num_boxes[0];
+        float* dst = _fill_values_vec.data();
+        for (int i = 0; i < _batch_size; ++i) {
+            if (_num_boxes_vec[i] != nb_single)
+                THROW("num_boxes mismatch across samples for single-sample fill pattern");
+            const float* src = _fill_values.data();
+            std::copy_n(src, static_cast<size_t>(nb_single) * channels, dst);
+            dst += static_cast<size_t>(nb_single) * channels;
+        }
+    }
+    else if (fill_sz == static_cast<size_t>(_total_boxes) * channels) {
+        // Fully specified flattened values
+        std::copy(_fill_values.begin(), _fill_values.end(), _fill_values_vec.begin());
+    }
+    else {
+        THROW("Invalid number of values passed for fill value");
     }
     
-    _anchor_box_vec.resize(_total_boxes * 4);
-    if (num_boxes.size() == 1 && anchor.size() == num_boxes[0] * 2) {
-        for (int i = 0; i < _batch_size; i++) {
-            for (int n = 0; n < _num_boxes_vec[i]; n++) {
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 0] = anchor[n * 2];
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 1] = anchor[n * 2 + 1];
-            }
-        }
+    // Build contiguous [x1, y1, w, h] for all boxes
+    _anchor_vec.assign(_total_boxes * 4, 0.0f);
 
-    } else if (anchor.size() == (_total_boxes * 2)) {
-        for (int i = 0; i < _batch_size; i++) {
-            for (int n = 0; n < _num_boxes_vec[i]; n++) {
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 0] = anchor[(i * _num_boxes_vec[i] + n) * 2];
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 1] = anchor[(i * _num_boxes_vec[i] + n) * 2 + 1];
+    // Case 1: single-sample vectors replicated across batch
+    if (num_boxes.size() == 1 &&
+        anchor.size() == static_cast<size_t>(num_boxes[0]) * 2 &&
+        shape.size()  == static_cast<size_t>(num_boxes[0]) * 2) {
+        const int nb_single = static_cast<int>(num_boxes[0]);
+        for (int i = 0; i < _batch_size; ++i) {
+            if (_num_boxes_vec[i] != nb_single)
+                THROW("num_boxes mismatch across samples for single-sample anchor/shape pattern");
+            for (int n = 0; n < nb_single; ++n) {
+                const size_t dst = (static_cast<size_t>(prefix[i] + n) * 4);
+                _anchor_vec[dst + 0] = static_cast<int>(anchor[static_cast<size_t>(n) * 2 + 0]); // x1
+                _anchor_vec[dst + 1] = static_cast<int>(anchor[static_cast<size_t>(n) * 2 + 1]); // y1
+                _anchor_vec[dst + 2] = static_cast<int>(shape [static_cast<size_t>(n) * 2 + 0]); // w
+                _anchor_vec[dst + 3] = static_cast<int>(shape [static_cast<size_t>(n) * 2 + 1]); // h
             }
         }
     }
-
-    if (num_boxes.size() == 1 && shape.size() == num_boxes[0] * 2) {
-        for (int i = 0; i < _batch_size; i++) {
-            for (int n = 0; n < _num_boxes_vec[i]; n++) {
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 2] = shape[n * 2];
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 3] = shape[n * 2 + 1];
+    // Case 2: fully specified per-sample concatenated anchor/shape
+    else if (anchor.size() == _total_boxes * 2 && shape.size() == _total_boxes * 2) {
+        for (int i = 0; i < _batch_size; ++i) {
+            const int nb = _num_boxes_vec[i];
+            const size_t base = static_cast<size_t>(prefix[i]);
+            for (int n = 0; n < nb; ++n) {
+                const size_t dst = (base + static_cast<size_t>(n)) * 4;
+                const size_t src = (base + static_cast<size_t>(n)) * 2;
+                _anchor_vec[dst + 0] = static_cast<int>(anchor[src + 0]); // x1
+                _anchor_vec[dst + 1] = static_cast<int>(anchor[src + 1]); // y1
+                _anchor_vec[dst + 2] = static_cast<int>(shape [src + 0]); // w
+                _anchor_vec[dst + 3] = static_cast<int>(shape [src + 1]); // h
             }
         }
-
-    } else if (shape.size() == (_total_boxes * 2)) {
-        for (int i = 0; i < _batch_size; i++) {
-            for (int n = 0; n < _num_boxes_vec[i]; n++) {
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 2] = shape[(i * _num_boxes_vec[i] + n) * 2];
-                _anchor_box_vec[(i * _num_boxes_vec[i] + n) * 4 + 3] = shape[(i * _num_boxes_vec[i] + n) * 2 + 1];
-            }
-        }
+    }
+    else {
+        THROW("Invalid anchor/shape vector sizes");
     }
 }
 
@@ -281,4 +275,32 @@ void EraseNode::update_node() {
         return;
     }
     _num_boxes.update_array();
+}
+
+EraseNode::~EraseNode() {
+    if (_inputs.empty() || !_inputs[0]) return;
+    auto mem_type = _inputs[0]->info().mem_type();
+
+    if (_vx_anchor) vxReleaseTensor(&_vx_anchor);
+    if (_vx_colors) vxReleaseTensor(&_vx_colors);
+    if (_vx_num_boxes) vxReleaseArray(&_vx_num_boxes);
+
+    if (mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        if (_anchor_ptr)  {
+            hipError_t err = hipHostFree(_anchor_ptr);
+            if (err != hipSuccess)
+                std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+        }
+        if (_color_ptr)  {
+            hipError_t err = hipHostFree(_color_ptr);
+            if (err != hipSuccess)
+                std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+        }
+#endif
+    } else {
+        if (_anchor_ptr) free(_anchor_ptr);
+        if (_color_ptr) free(_color_ptr);
+    }
+    _anchor_ptr = _color_ptr = nullptr;
 }

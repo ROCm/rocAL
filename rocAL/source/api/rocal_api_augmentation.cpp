@@ -853,7 +853,7 @@ rocalThreshold(
 
  // New: Erase augmentation
 RocalTensor ROCAL_API_CALL
-rocalErase(
+rocalEraseTensor(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
@@ -882,6 +882,40 @@ rocalErase(
             erase_node->init(anchor, colors, num_boxes_param);
         else
             erase_node->init(anchor, colors, 0);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalErase(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    std::vector<float>& anchor,
+    std::vector<float>& shape,
+    std::vector<unsigned>& num_boxes,
+    std::vector<float>& fill_value,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input   = static_cast<Tensor*>(p_input);
+    try {
+        if (anchor.size() != shape.size())
+            THROW("Anchor and shape dimensions do not match")
+        RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_dtype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        auto erase_node = context->master_graph->add_node<EraseNode>({input}, {output});
+        // Use raw-vector overload; node will allocate and replicate per batch if needed
+        erase_node->init(anchor, shape, num_boxes, fill_value);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

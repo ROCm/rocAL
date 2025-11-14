@@ -1577,6 +1577,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalThresholdFixed(RocalContext context, 
                                                           RocalTensorLayout output_layout = ROCAL_NONE,
                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Erases regions in images using raw vectors (no parameters/tensors).
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] anchor_box_info Flattened LTRB anchors: either [4*num_boxes] replicated or [batch*4*num_boxes]
+ * \param [in] colors Flattened RGB colors per box: either [3*num_boxes] replicated or [batch*3*num_boxes]
+ * \param [in] num_boxes Per-sample number of boxes: either [1] to replicate or [batch]
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalErase(RocalContext context, RocalTensor input,
+                                                 bool is_output,
+                                                 std::vector<float> &anchor,
+                                                 std::vector<float> &shape,
+                                                 std::vector<unsigned> &num_boxes,
+                                                 std::vector<float> &fill_value,
+                                                 RocalTensorLayout output_layout = ROCAL_NONE,
+                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Applies dilate to images (morphological operation).
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
@@ -1651,12 +1672,12 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPhase(RocalContext context, RocalTens
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalErase(RocalContext context, RocalTensor input,
-                                                 bool is_output,
-                                                 RocalTensor anchor_box_info,
-                                                 RocalTensor colors,
-                                                 RocalIntParam num_boxes = NULL,
-                                                 RocalTensorLayout output_layout = ROCAL_NONE,
-                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+extern "C" RocalTensor ROCAL_API_CALL rocalEraseTensor(RocalContext context, RocalTensor input,
+                                                        bool is_output,
+                                                        RocalTensor anchor_box_info,
+                                                        RocalTensor colors,
+                                                        RocalIntParam num_boxes = NULL,
+                                                        RocalTensorLayout output_layout = ROCAL_NONE,
+                                                        RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

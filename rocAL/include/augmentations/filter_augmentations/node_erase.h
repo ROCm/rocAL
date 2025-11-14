@@ -40,6 +40,7 @@ class EraseNode : public Node {
    public:
     EraseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     EraseNode() = delete;
+    ~EraseNode();
 
     // Overloads for dynamic vs fixed parameters
     void init(Tensor *anchor_box_info, Tensor *colors, int num_boxes_fixed);
@@ -61,12 +62,15 @@ class EraseNode : public Node {
 
     // Raw-vector mode
     bool _use_raw_vectors = false;
-    std::vector<float> _anchor_vec;
-    std::vector<float> _colors_vec;
+    std::vector<int> _anchor_vec;
+    std::vector<float> _colors_vec, _fill_values_vec, _fill_values;
     std::vector<int>   _num_boxes_vec;
     vx_tensor _vx_anchor = nullptr;
     vx_tensor _vx_colors = nullptr;
     vx_array  _vx_num_boxes = nullptr;
+    void* _anchor_ptr = nullptr;
+    void* _color_ptr = nullptr;
+    unsigned _total_boxes = 0;
 
     // Conservative default range for number of boxes per sample
     constexpr static int NUM_BOXES_RANGE[2] = {0, 1024};
