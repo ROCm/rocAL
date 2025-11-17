@@ -36,6 +36,7 @@ struct DecodedDataInfo {
     std::vector<uint32_t> _audio_samples; //! Amplitude of an audio signal at a specific point in time
     std::vector<uint32_t> _audio_channels; //! Number of audio channels in an audio signal
     std::vector<float> _audio_sample_rates; //! The number of samples of audio carried per second
+    std::vector<std::vector<uint32_t>> _roi_shape; //! ROI values for each dimension
 };
 
 struct CropImageInfo {
