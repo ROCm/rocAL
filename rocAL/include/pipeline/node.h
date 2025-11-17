@@ -25,10 +25,11 @@ THE SOFTWARE.
 #include <set>
 #include <array>
 #include <utility>
+#include <map>
+#include <functional>
 
 #include "pipeline/graph.h"
 #include "loaders/loader_module.h"
-// #include "meta_data/meta_data_graph.h"
 #include "pipeline/tensor.h"
 #include "pipeline/argument.h"
 
