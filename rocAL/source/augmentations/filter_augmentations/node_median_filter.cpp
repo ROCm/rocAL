@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -40,9 +40,7 @@ void MedianFilterNode::create_node() {
     vx_scalar input_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &input_layout);
     vx_scalar output_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &roi_type);
-
-    vx_uint32 ksize_u32 = static_cast<vx_uint32>(_kernel_size);
-    vx_scalar kernel_size_vx = vxCreateScalar(ctx, VX_TYPE_UINT32, &ksize_u32);
+    vx_scalar kernel_size_vx = vxCreateScalar(ctx, VX_TYPE_UINT32, &_kernel_size);
     vx_int32 border_i32 = static_cast<vx_int32>(_border_type);
     vx_scalar border_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &border_i32);
 

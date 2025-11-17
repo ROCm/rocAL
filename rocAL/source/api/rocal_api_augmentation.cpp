@@ -765,7 +765,7 @@ rocalMedianFilter(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
-    int kernel_size,
+    unsigned kernel_size,
     int border_type,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -797,7 +797,7 @@ rocalGaussianFilter(
     RocalTensor p_input,
     bool is_output,
     RocalFloatParam p_stddev,
-    int kernel_size,
+    unsigned kernel_size,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -828,7 +828,7 @@ rocalGaussianFilterFixed(
     RocalContext p_context,
     RocalTensor p_input,
     float stddev,
-    int kernel_size,
+    unsigned kernel_size,
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {

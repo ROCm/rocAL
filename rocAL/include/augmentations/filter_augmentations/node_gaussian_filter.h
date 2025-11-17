@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -37,7 +37,7 @@ protected:
 private:
     // Per-sample stddev (size batch_size)
     ParameterVX<float> _stddev;
-    int _kernel_size = 3;
+    unsigned _kernel_size = 3;
 
     // Reasonable range for stddev > 0
     constexpr static float STDDEV_RANGE[2] = {0.01f, 64.0f};

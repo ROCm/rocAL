@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -32,6 +32,6 @@ protected:
     void update_node() override;
 
 private:
-    int _kernel_size = 3;
+    unsigned _kernel_size = 3;
     int _border_type = 0;
 };
