@@ -19,6 +19,10 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.10)
+include( utils.cmake )
+set( ROCAL "rocal" )
+set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
+set( BUILD_DEBIAN_PKGING_FLAG ON CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
   set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -168,12 +172,14 @@ include(CTest)
 add_subdirectory(tests/cpp_api)
 
 # set package information
+set(PKG_MAINTAINER_NM  "rocAL Support")
+set(PKG_MAINTAINER_EMAIL  "mivisionx.support@amd.com")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_LICENSE       "MIT")
-set(CPACK_PACKAGE_CONTACT       "rocAL Support <mivisionx.support@amd.com>")
+set(CPACK_PACKAGE_CONTACT "${PKG_MAINTAINER_NM} <${PKG_MAINTAINER_EMAIL}>")
 set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rocAL")
@@ -181,9 +187,11 @@ set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rocAL")
 if(ENABLE_ASAN_PACKAGING)
   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "AMD rocAL address sanitizer libraries")
   set(CPACK_RPM_PACKAGE_SUMMARY "AMD rocAL address sanitizer libraries")
+  set( COMP_TYPE "asan" )
 else()
   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "AMD rocAL is a comprehensive augmentation library")
   set(CPACK_RPM_PACKAGE_SUMMARY "AMD rocAL is a comprehensive augmentation library")
+  set( COMP_TYPE "runtime" )
 endif()
 
 if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
@@ -329,6 +337,8 @@ else()
     message("-- ${White}AMD ROCm rocAL DEB Dev Package -- ${CPACK_DEBIAN_DEV_PACKAGE_DEPENDS}${ColourReset}")
 endif()
 endif()
+
+configure_pkg( ${ROCAL} ${COMP_TYPE} ${CPACK_PACKAGE_VERSION} ${PKG_MAINTAINER_NM} ${PKG_MAINTAINER_EMAIL} )
 
 include(CPack)
 
