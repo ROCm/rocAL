@@ -109,8 +109,11 @@ rocalVerify(RocalContext p_context) {
 
 RocalStatus ROCAL_API_CALL
 rocalSerialize(RocalContext rocal_context, size_t *serialized_string_size) {
-    auto context = static_cast<Context*>(rocal_context);
+    auto context = static_cast<Context *>(rocal_context);
     try {
+        if (!serialized_string_size) {
+            return ROCAL_INVALID_PARAMETER_TYPE;
+        }
         context->master_graph->serialize(serialized_string_size);
     } catch (const std::exception& e) {
         context->capture_error(e.what());

@@ -58,6 +58,9 @@ class PipelineOperator {
      * Get the input tensors connected to the underlying node.
      */
     const std::vector<Tensor *>& get_inputs() const {
+        if (!this->node) {
+            THROW("get_inputs() called on operator with no associated node");
+        }
         return this->node->input();
     }
 
@@ -65,6 +68,9 @@ class PipelineOperator {
      * Get the output tensors produced by the underlying node.
      */
     const std::vector<Tensor *>& get_outputs() const {
+        if (!this->node) {
+            THROW("get_outputs() called on operator with no associated node");
+        }
         return this->node->output();
     }
 
