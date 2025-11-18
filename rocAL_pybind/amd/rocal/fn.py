@@ -1315,7 +1315,7 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     if not inputs:
         raise ValueError("python_function requires at least one input tensor")
     if len(inputs) != 1:
-        raise ValueError("python_function requires supports only one input tensor")
+        raise ValueError("python_function requires only one input tensor")
     
     # Validate that function is callable
     if not callable(function):
@@ -1331,7 +1331,7 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     else:
         params = list(sig.parameters.values())
         if not params:
-            raise ValueError("Python function must accept at least one argument (the input batch)")
+            raise ValueError("Python function must accept exactly one argument (the input batch)")
     
     function_id = id(function)
     # Pin the callable to prevent GC; backend uses raw id(pointer)

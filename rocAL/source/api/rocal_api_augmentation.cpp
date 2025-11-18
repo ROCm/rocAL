@@ -2469,7 +2469,7 @@ rocalPythonFunction(
             for (size_t i = 1; i < dims.size(); i++)
                 dims[i] = output_dims[i - 1];
             if(dims != output_info.dims())
-                output_info.set_dims(dims);  // Only modify output tensor dims if it do not match with the user specified dims
+                output_info.set_dims(dims);  // Only modify output tensor dims if it does not match the user specified dims
         }
 
         output = context->master_graph->create_tensor(output_info, is_output);
