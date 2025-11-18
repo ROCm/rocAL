@@ -128,7 +128,7 @@ rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
     auto context = static_cast<Context*>(rocal_context);
     try {
         if (!serialized_string) {
-            THROW("String copy failed, Invalid pointer passed for serialize")
+            THROW("String copy failed, Invalid pointer passed for serialize.")
         }
 
         auto& serialize_pipe_string = context->master_graph->get_serialized_string();

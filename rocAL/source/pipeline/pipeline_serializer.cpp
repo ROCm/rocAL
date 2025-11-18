@@ -25,7 +25,9 @@ THE SOFTWARE.
 #include <fstream>
 
 void PipelineSerializer::serialize_to_string(std::string& serialized_string) {
-    serialized_string = _pipeline_proto.SerializeAsString();
+    if (!_pipeline_proto.SerializeToString(&serialized_string)) {
+        THROW("Failed to serialize pipeline to string.");
+    }
 }
 
 void PipelineSerializer::serialize_to_file(const std::string& file_path) {
