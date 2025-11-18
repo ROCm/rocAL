@@ -26,12 +26,18 @@ THE SOFTWARE.
 #include <vector>
 #include "pipeline/node.h"
 
-// Represents an operator in the pipeline
+/**
+ * @brief Represents an operator in the pipeline for serialization purposes.
+ * 
+ * This class encapsulates metadata about pipeline operators including their name,
+ * module category, arguments, and associated computational node. It is used to track
+ * and serialize pipeline structure.
+ */
 class PipelineOperator {
    public:
     // Constructor to initialize the operator
-    explicit inline PipelineOperator(const std::string& op_name, const std::string& op_module_name,
-                                     std::shared_ptr<Node> op_node = nullptr)
+    explicit PipelineOperator(const std::string& op_name, const std::string& op_module_name,
+                              std::shared_ptr<Node> op_node = nullptr)
         : operator_name(op_name), module_name(op_module_name), node(std::move(op_node)) {
     }
 
