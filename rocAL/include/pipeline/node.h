@@ -39,8 +39,8 @@ class Node {
     virtual ~Node();
     void create(std::shared_ptr<Graph> graph);
     void update_parameters();
-    const std::vector<Tensor *>& input() const { return _inputs; }
-    const std::vector<Tensor *>& output() const { return _outputs; }
+    std::vector<Tensor *> input() { return _inputs; };
+    std::vector<Tensor *> output() { return _outputs; };
     void add_next(const std::shared_ptr<Node> &node);   // Adds the Node next to the current Node
     void add_previous(const std::shared_ptr<Node> &node);   // Adds the Node preceding the current Node
     void release();
@@ -68,7 +68,7 @@ class Node {
     int _graph_id = -1;
     std::vector<Argument> _args;
     template <size_t N, size_t... Indices, typename... Args>
-    void set_node_arguments(std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
+    void set_node_arguments(const std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
         // Fold expression to create Argument object for each argument in the node
         (this->_args.push_back(Argument(arg_names[Indices], std::forward<Args>(args))), ...);
     }

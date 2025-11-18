@@ -23,17 +23,16 @@ THE SOFTWARE.
 #pragma once
 
 #include <string>
+#include <vector>
 #include "pipeline/node.h"
 
 // Represents an operator in the pipeline
 class PipelineOperator {
    public:
     // Constructor to initialize the operator
-    explicit inline PipelineOperator(std::string op_name, std::string op_module_name,
-                                     std::shared_ptr<Node> op_node = nullptr) {
-        operator_name = op_name;           // Set the operator's name
-        module_name = op_module_name;      // Set the type/category of the operator
-        node = op_node;                    // Optional reference to the underlying node object
+    explicit inline PipelineOperator(const std::string& op_name, const std::string& op_module_name,
+                                     std::shared_ptr<Node> op_node = nullptr)
+        : operator_name(op_name), module_name(op_module_name), node(std::move(op_node)) {
     }
 
     // Set the list of arguments associated with this operator
@@ -47,7 +46,7 @@ class PipelineOperator {
      * For reader modules, arguments are stored directly on the operator.
      * For augmentation operators, the arguments are maintained by the underlying Node.
      */
-    const std::vector<Argument>& get_arguments() {
+    const std::vector<Argument>& get_arguments() const {
         if (this->module_name == "reader") {
             return this->arguments;
         } else {
@@ -59,6 +58,9 @@ class PipelineOperator {
      * Get the input tensors connected to the underlying node.
      */
     const std::vector<Tensor *>& get_inputs() const {
+        if (!this->node) {
+            THROW("get_inputs() called on operator with no associated node");
+        }
         return this->node->input();
     }
 
@@ -66,6 +68,9 @@ class PipelineOperator {
      * Get the output tensors produced by the underlying node.
      */
     const std::vector<Tensor *>& get_outputs() const {
+        if (!this->node) {
+            THROW("get_outputs() called on operator with no associated node");
+        }
         return this->node->output();
     }
 
