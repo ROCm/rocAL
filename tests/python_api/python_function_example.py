@@ -115,7 +115,7 @@ def main():
             for img in it[0]:
                 cnt += 1
                 draw_patches(img[0], cnt, layout="nhwc",
-                             dtype="fp32", device=rocal_cpu)
+                             dtype="fp32", device="cpu")
         data_loader.reset()
     print("##############################  PYTHON FUNCTION OPERATOR SUCCESS  ############################")
 
