@@ -36,8 +36,8 @@ class PipelineOperator {
     }
 
     // Set the list of arguments associated with this operator
-    void set_arguments(const std::vector<Argument>& op_arguments) {
-        arguments = op_arguments;
+    void set_arguments(const std::vector<Argument>& arguments) {
+        this->arguments = arguments;
     }
 
     std::string operator_name;              // Name of the operator (e.g., "ResizeNode")
