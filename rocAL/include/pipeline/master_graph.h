@@ -175,6 +175,7 @@ private:
     bool no_more_processed_data();
     // is_out_of_data() is called to check the remaining batch count from each loader module, if any of the loader module has consumed all the batches it returns true.
     bool is_out_of_data();
+    // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
     inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
