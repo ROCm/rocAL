@@ -42,7 +42,7 @@ void PipelineSerializer::serialize_pipeline_config(size_t num_threads, size_t ba
     _pipeline_proto.set_num_threads(num_threads);
     _pipeline_proto.set_batch_size(batch_size);
     _pipeline_proto.set_device_id(device_id);
-    _pipeline_proto.set_rocal_cpu(device_type == RocalMemType::HOST ? true : false);
+    _pipeline_proto.set_rocal_cpu(device_type == RocalMemType::HOST);
     _pipeline_proto.set_prefetch_queue_depth(prefetch_queue_depth);
 }
 
@@ -164,6 +164,9 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
             rocal_proto::Parameter *param = arg->mutable_param();
             serialize_parameter_to_protobuf(param, op_arg);
         } else if (op_arg.type_name == "enum") {
+            if (op_arg.values.empty()) {
+                THROW("Enum argument " + op_arg.arg_name + " has no values");
+            }
             rocal_proto::EnumType* enum_arg = arg->mutable_enum_value();
             enum_arg->set_name(op_arg.sub_type_name);
             enum_arg->set_value(std::any_cast<int>(op_arg.values[0]));

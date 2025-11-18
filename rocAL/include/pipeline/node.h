@@ -68,7 +68,7 @@ class Node {
     int _graph_id = -1;
     std::vector<Argument> _args;
     template <size_t N, size_t... Indices, typename... Args>
-    void set_node_arguments(std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
+    void set_node_arguments(const std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
         // Fold expression to create Argument object for each argument in the node
         (this->_args.push_back(Argument(arg_names[Indices], std::forward<Args>(args))), ...);
     }

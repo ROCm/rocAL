@@ -153,11 +153,13 @@ public:
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
-    /**
+    /*
      * Serialize API
      */
     void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
+    // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
     std::string& get_serialized_string() { return _serialized_pipeline; }
+
 private:
     Status update_node_parameters();
     void create_single_graph();
