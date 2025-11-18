@@ -97,12 +97,12 @@ message OperatorDef {
 
 // Stores pipeline arguments and a list of nodes/operators
 message PipelineDef {
-  optional int64 num_threads = 1;
-  required int32 batch_size = 2;
+  optional uint64 num_threads = 1;
+  required uint64 batch_size = 2;
   optional int32 device_id = 3;
   optional int64 seed = 4;
   optional bool rocal_cpu = 5;
-  optional int32 prefetch_queue_depth = 6;
+  optional uint64 prefetch_queue_depth = 6;
   repeated OperatorDef operators = 7;
   repeated InputOutput pipe_outputs = 8;
 }
