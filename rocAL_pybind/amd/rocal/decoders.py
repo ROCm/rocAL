@@ -31,7 +31,7 @@ from amd.rocal.pipeline import Pipeline
 def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations_file='', index_path ='', shard_id=0, num_shards=1, random_shuffle=False,
           output_type=types.RGB, decoder_type=types.DECODER_TJPEG, device=None,
           decode_size_policy=types.USER_GIVEN_SIZE_ORIG, max_decoded_width=1000, max_decoded_height=1000,
-          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1):
+          last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True, stick_to_shard=True, shard_size=-1, seed=0):
     """!Decodes images using different readers and decoders.
 
         @param inputs                   list of input images.
@@ -173,7 +173,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "seed": seed}
         decoded_image = b.imageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 

@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <memory>
 #include <numeric>  // std::inner_product, std::accumulate
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <thread>
 #include <variant>
@@ -83,6 +84,12 @@ class UniformRand : public Parameter<T> {
         } else {
             renew_value();
         }
+    }
+
+    std::string serialize_rng() const override {
+        std::ostringstream ss;
+        ss << _generator;
+        return ss.str();
     }
     int update(T start, T end) {
         std::unique_lock<std::mutex> lock(_lock);
@@ -210,6 +217,12 @@ struct CustomRand : public Parameter<T> {
         } else {
             renew_value();
         }
+    }
+
+    std::string serialize_rng() const override {
+        std::ostringstream ss;
+        ss << _generator;
+        return ss.str();
     }
     T get() override {
         return _updated_val;

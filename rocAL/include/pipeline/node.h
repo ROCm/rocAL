@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "meta_data/meta_data_graph.h"
 #include "pipeline/tensor.h"
 #include "pipeline/argument.h"
+#include "pipeline/checkpoint.h"
 
 class Node {
    public:
@@ -53,6 +54,8 @@ class Node {
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
     const std::vector<Argument>& get_args_list() const { return _args; }
+    virtual void save_state(std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) {}
+    virtual std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) { return ""; }
 
    protected:
     virtual void create_node() = 0;

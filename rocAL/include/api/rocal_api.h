@@ -78,9 +78,10 @@ THE SOFTWARE.
  * \param [in] cpu_thread_count number of cpu threads
  * \param [in] prefetch_queue_depth The depth of the prefetch queue.
  * \param [in] output_tensor_data_type RocalTensorOutputType: Defines whether the output of rocal tensor is FP32 or FP16.
+ * \param [in] enable_checkpointing is enabled to store the state of each operator in tge pipeline for every iteration
  * \return A \ref RocalContext - The context for the pipeline
  */
-extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32);
+extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32, bool enable_checkpointing = false);
 
 /*!
  * \brief  rocalVerify function to verify the graph for all the inputs and outputs
@@ -131,5 +132,10 @@ extern "C" RocalStatus ROCAL_API_CALL rocalSerialize(RocalContext rocal_context,
  * \return A \ref RocalStatus - A status code indicating the success or failure.
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedString(RocalContext rocal_context, char* serialized_string);
+
+
+extern "C" RocalStatus ROCAL_API_CALL rocalCheckpoint(RocalContext rocal_context, size_t* serialized_ckpt_string_size);
+
+extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_ckpt_string);
 
 #endif

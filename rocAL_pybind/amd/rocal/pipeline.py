@@ -66,13 +66,14 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=0, device_id=0, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None): 
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None,
+                 enable_checkpointing=False): 
         if (rocal_cpu):
             self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
         else:
             self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
 
         if (b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
@@ -123,6 +124,7 @@ class Pipeline(object):
         self._external_source = None
         self._external_source_mode = None
         self._last_batch_policy = None
+        self._enable_checkpointing = enable_checkpointing
 
     def build(self):
         """!Build the pipeline using rocalVerify call
@@ -234,6 +236,19 @@ class Pipeline(object):
     
     def get_image_name_length(self, idx):
         return b.getImageNameLen(self._handle, idx)
+
+    def checkpoint(self, filename=None):
+        """
+        Capture and return the current pipeline checkpoint as bytes.
+        Optionally persist the checkpoint to ``filename`` if provided.
+        """
+        if not self._enable_checkpointing:
+            raise RuntimeError("Checkpointing was not enabled when this pipeline was created.")
+        ckpt = b.checkpoint(self._handle)
+        if filename is not None:
+            with open(filename, "wb") as f:
+                f.write(ckpt)
+        return ckpt
 
     def get_remaining_images(self):
         return b.getRemainingImages(self._handle)

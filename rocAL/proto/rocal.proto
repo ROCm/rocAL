@@ -38,10 +38,11 @@ message InputOutput {
 }
 
 message Parameter {
-  repeated float param_val_float = 1;
-  repeated int32 param_val_int = 2;
-  repeated double frequency = 3;  // Used only for CustomRand param
-  optional uint32 size = 4; // Used only for CustomRand param
+  required int32 param_type = 1;
+  repeated float param_val_float = 2;
+  repeated int32 param_val_int = 3;
+  repeated double frequency = 4;  // Used only for CustomRand param
+  optional uint32 size = 5; // Used only for CustomRand param
 }
 
 message EnumType {
@@ -105,4 +106,39 @@ message PipelineDef {
   optional int32 prefetch_queue_depth = 6;
   repeated OperatorDef operators = 7;
   repeated InputOutput pipe_outputs = 8;
+}
+
+message ExternalContextCheckpoint {
+  optional int64 pipeline_iteration = 1;
+  optional bytes iterator_data = 2;
+}
+
+message AugmentationRNGSnapshot {
+  repeated bytes rng_mt19937 = 1;
+}
+
+message Checkpoint {
+  message OpCheckpoint {
+    optional string operator_name = 1;
+    optional bytes operator_state = 2;
+  }
+
+  repeated OpCheckpoint cpts = 1;
+  optional ExternalContextCheckpoint external_ctx = 2;
+  optional AugmentationRNGSnapshot aug_rng = 3;
+
+  // Optional versioning and identity/config fields
+  optional uint64 pipeline_signature = 10;
+  optional uint32 checkpoint_version = 11;
+  optional uint32 batch_size = 12;
+  optional int32 device_id = 13;
+  optional int32 mem_type = 14;
+}
+
+message LoaderState {
+  optional int32 current_epoch = 1;
+  optional int32 age = 2;
+  optional bytes rng = 3;
+  optional int64 iteration_number = 4;
+  optional uint32 curr_file_idx = 5;
 }

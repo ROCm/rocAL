@@ -22,10 +22,18 @@ THE SOFTWARE.
 
 #pragma once
 #include <condition_variable>
+#include <random>
 #include <vector>
 #include <queue>
 #include "pipeline/commons.h"
 #include "device/device_manager_hip.h"
+
+struct LoaderState {
+    int64_t _epoch_number = 0;
+    int64_t _iteration_number = 0;
+    std::mt19937 _rng{};
+    unsigned _curr_file_idx = 0;  // Current file index in the reader
+};
 
 struct DecodedDataInfo {
     std::vector<std::string> _data_names;
@@ -36,6 +44,7 @@ struct DecodedDataInfo {
     std::vector<uint32_t> _audio_samples; //! Amplitude of an audio signal at a specific point in time
     std::vector<uint32_t> _audio_channels; //! Number of audio channels in an audio signal
     std::vector<float> _audio_sample_rates; //! The number of samples of audio carried per second
+    LoaderState _loader_state;
 };
 
 struct CropImageInfo {
