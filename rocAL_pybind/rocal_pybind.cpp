@@ -294,6 +294,15 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("rocalVerify", &rocalVerify);
     m.def("rocalRun", &rocalRun, py::return_value_policy::reference);
     m.def("rocalRelease", &rocalRelease, py::return_value_policy::reference);
+    m.def("checkpoint", [](RocalContext context) {
+        size_t size = 0;
+        rocalCheckpoint(context, &size);
+        std::string serialized_ckpt(size, '\0');
+        if (size > 0) {
+            rocalGetSerializedCheckpointString(context, serialized_ckpt.data());
+        }
+        return py::bytes(serialized_ckpt);
+    }, "Returns the serialized checkpoint as Python bytes");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)

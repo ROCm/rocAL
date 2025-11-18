@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include <fstream>
 
+#include "parameters/parameter_factory.h"
+
 void PipelineSerializer::serialize_to_string(std::string& serialized_string) {
     serialized_string = _pipeline_proto.SerializeAsString();
 }
@@ -140,6 +142,16 @@ void serialize_parameter_by_type(rocal_proto::Parameter *parameter, const Argume
 
 // Main function with improved structure and error handling
 void serialize_parameter_to_protobuf(rocal_proto::Parameter *parameter, const Argument &op_arg) {
+    if (op_arg.sub_type_name == "SimpleParameter") {
+        parameter->set_param_type(static_cast<int>(RocalParameterType::DETERMINISTIC));
+    } else if (op_arg.sub_type_name == "UniformRand") {
+        parameter->set_param_type(static_cast<int>(RocalParameterType::RANDOM_UNIFORM));
+    } else if (op_arg.sub_type_name == "CustomRand") {
+        parameter->set_param_type(static_cast<int>(RocalParameterType::RANDOM_CUSTOM));
+    } else {
+        parameter->set_param_type(static_cast<int>(RocalParameterType::DETERMINISTIC));
+    }
+
     if (op_arg.type_name == "int") {
         serialize_parameter_by_type<int>(parameter, op_arg);
     } else if (op_arg.type_name == "float") {

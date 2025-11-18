@@ -23,14 +23,15 @@ THE SOFTWARE.
 #include "loaders/image/node_image_loader.h"
 
 #include "pipeline/exception.h"
+#include "rocal.pb.h"
 
 ImageLoaderNode::ImageLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }
 
 void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, const std::map<std::string, std::string> feature_key_map, StorageType storage_type, DecoderType decoder_type,
-                           bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig, const ShardingInfo& sharding_info, const char *file_prefix, unsigned sequence_length, 
-                           unsigned step, unsigned stride, ExternalSourceFileMode external_file_mode, const std::string &index_path) {
+                           bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig, const ShardingInfo& sharding_info, bool enable_checkpointing, unsigned seed, const char *file_prefix,
+                           unsigned sequence_length, unsigned step, unsigned stride, ExternalSourceFileMode external_file_mode, const std::string &index_path) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for ImageLoaderNode, cannot initialize")
     if (internal_shard_count < 1)
@@ -50,14 +51,15 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_external_filemode(external_file_mode);
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
+    reader_cfg.enable_checkpointing(enable_checkpointing);
+    reader_cfg.set_seed(seed);
 
-
-    std::array<std::string, 23> arg_names = {
+    std::array<std::string, 25> arg_names = {
         "internal_shard_count", "cpu_num_threads", "source_path",
         "json_path", "feature_key_map", "storage_type", "decoder_type",
-        "shuffle", "loop", "load_batch_count", "mem_type", "meta_data_reader", "decoder_keep_orig",
-        "last_batch_policy", "pad_last_batch_repeated", "stick_to_shard", "shard_size",
-        "file_prefix", "sequence_length", "step", "stride",
+        "shuffle", "loop", "load_batch_count", "mem_type","meta_data_reader", "decoder_keep_orig",
+        "last_batch_policy", "pad_last_batch_repeated", "stick_to_shard", "shard_size", "enable_checkpointing",
+        "seed", "file_prefix", "sequence_length", "step", "stride",
         "external_file_mode", "index_path"
     };
 
@@ -65,8 +67,8 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
                        cpu_num_threads, source_path, json_path, feature_key_map, storage_type, 
                        decoder_type, shuffle, loop, load_batch_count, mem_type, meta_data_reader, decoder_keep_orig, 
                        sharding_info.last_batch_policy, sharding_info.pad_last_batch_repeated, 
-                       sharding_info.stick_to_shard, sharding_info.shard_size, file_prefix,
-                       sequence_length, step, stride, external_file_mode, index_path);
+                       sharding_info.stick_to_shard, sharding_info.shard_size, enable_checkpointing, seed,
+                       file_prefix, sequence_length, step, stride, external_file_mode, index_path);
 
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type),
                                mem_type,
@@ -82,4 +84,20 @@ std::shared_ptr<LoaderModule> ImageLoaderNode::get_loader_module() {
 
 ImageLoaderNode::~ImageLoaderNode() {
     _loader_module = nullptr;
+}
+
+void ImageLoaderNode::save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
+    op_ckpt->GetMutableCheckpointState() = _loader_module->get_loader_state();
+}
+
+std::string ImageLoaderNode::serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
+    auto loader_state = op_ckpt->GetOperatorCheckpointState<LoaderState>();
+    rocal_proto::LoaderState proto_state;
+    proto_state.set_current_epoch(static_cast<int32_t>(loader_state._epoch_number));
+    // Backward compatibility - keep age as iteration if someone relies on it
+    proto_state.set_age(static_cast<int32_t>(loader_state._iteration_number));
+    proto_state.set_iteration_number(static_cast<int64_t>(loader_state._iteration_number));
+    proto_state.set_rng(SerializeRNGToString(loader_state._rng));
+    proto_state.set_curr_file_idx(static_cast<uint32_t>(loader_state._curr_file_idx));
+    return proto_state.SerializeAsString();
 }
