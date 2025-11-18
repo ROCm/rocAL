@@ -46,7 +46,7 @@ class PipelineOperator {
      * For reader modules, arguments are stored directly on the operator.
      * For augmentation operators, the arguments are maintained by the underlying Node.
      */
-    const std::vector<Argument>& get_arguments() {
+    const std::vector<Argument>& get_arguments() const {
         if (this->module_name == "reader") {
             return this->arguments;
         } else {
