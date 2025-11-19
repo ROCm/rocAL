@@ -425,39 +425,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBlendFixed(RocalContext context, Roca
                                                       RocalTensorLayout output_layout = ROCAL_NONE,
                                                       RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-/*! \brief Non-linear blend of two input images using per-sample stddev parameter.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input1 Input1 Rocal tensor
- * \param [in] input2 Input2 Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] stddev Rocal parameter defining the per-sample stddev for non-linear blend
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalNonLinearBlend(RocalContext context, RocalTensor input1, RocalTensor input2,
-                                                          bool is_output,
-                                                          RocalFloatParam stddev = NULL,
-                                                          RocalTensorLayout output_layout = ROCAL_NONE,
-                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
-/*! \brief Non-linear blend of two input images using a fixed stddev parameter.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input1 Input1 Rocal tensor
- * \param [in] input2 Input2 Rocal tensor
- * \param [in] stddev fixed stddev for non-linear blend
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalNonLinearBlendFixed(RocalContext context, RocalTensor input1, RocalTensor input2,
-                                                               float stddev, bool is_output,
-                                                               RocalTensorLayout output_layout = ROCAL_NONE,
-                                                               RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
 /*! \brief Applies affine transformation to images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
@@ -807,30 +774,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalPixelate(RocalContext context, RocalT
                                                     RocalTensorLayout output_layout = ROCAL_NONE,
                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-/*! \brief Applies a grid mask effect to images by overlaying a grid of transparent/opaque tiles.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] tile_width width of each grid tile in pixels
- * \param [in] grid_ratio ratio of masked area within a tile (0..1)
- * \param [in] grid_angle angle of the grid in radians
- * \param [in] translate_x translation offset in x for the grid origin
- * \param [in] translate_y translation offset in y for the grid origin
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalGridMask(RocalContext context, RocalTensor input,
-                                                    bool is_output,
-                                                    unsigned tile_width,
-                                                    float grid_ratio,
-                                                    float grid_angle,
-                                                    unsigned translate_x,
-                                                    unsigned translate_y,
-                                                    RocalTensorLayout output_layout = ROCAL_NONE,
-                                                    RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
 /*! \brief Adjusts the exposure in images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
@@ -986,42 +929,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTwistFixed(RocalContext context,
                                                            bool is_output,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
-/*! \brief Applies color cast to images by blending a per-sample RGB color with input using alpha.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] alpha parameter that controls blending amount for color cast per sample (0..1)
- * \param [in] rgb vector specifying the target color to cast. Can be a single triplet [r,g,b] replicated across batch or per-sample triplets of size batch*3
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalColorCast(RocalContext context, RocalTensor input,
-                                                     bool is_output,
-                                                     RocalFloatParam alpha,
-                                                     std::vector<float>& rgb,
-                                                     RocalTensorLayout output_layout = ROCAL_NONE,
-                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
-
-/*! \brief Applies color cast to images with fixed parameters.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] alpha fixed blending amount for color cast (0..1)
- * \param [in] rgb vector specifying the target color to cast. Can be a single triplet [r,g,b] replicated across batch or per-sample triplets of size batch*3
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] output_layout the layout of the output tensor
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalColorCastFixed(RocalContext context, RocalTensor input,
-                                                          float alpha,
-                                                          std::vector<float>& rgb,
-                                                          bool is_output,
-                                                          RocalTensorLayout output_layout = ROCAL_NONE,
-                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Fused function which performs crop, normalize and flip on images.
  * \ingroup group_rocal_augmentations
@@ -1465,6 +1372,66 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
 
+/*! \brief Applies color cast to images by blending a per-sample RGB color with input using alpha.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] alpha parameter that controls blending amount for color cast per sample (0..1)
+ * \param [in] rgb vector specifying the target color to cast. Can be a single triplet [r,g,b] replicated across batch or per-sample triplets of size batch*3
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalColorCast(RocalContext context, RocalTensor input,
+                                                     bool is_output,
+                                                     RocalFloatParam alpha,
+                                                     std::vector<float>& rgb,
+                                                     RocalTensorLayout output_layout = ROCAL_NONE,
+                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies color cast to images with fixed parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] alpha fixed blending amount for color cast (0..1)
+ * \param [in] rgb vector specifying the target color to cast. Can be a single triplet [r,g,b] replicated across batch or per-sample triplets of size batch*3
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalColorCastFixed(RocalContext context, RocalTensor input,
+                                                          float alpha,
+                                                          std::vector<float>& rgb,
+                                                          bool is_output,
+                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies a grid mask effect to images by overlaying a grid of transparent/opaque tiles.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] tile_width width of each grid tile in pixels
+ * \param [in] grid_ratio ratio of masked area within a tile (0..1)
+ * \param [in] grid_angle angle of the grid in radians
+ * \param [in] translate_x translation offset in x for the grid origin
+ * \param [in] translate_y translation offset in y for the grid origin
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalGridMask(RocalContext context, RocalTensor input,
+                                                    bool is_output,
+                                                    unsigned tile_width,
+                                                    float grid_ratio,
+                                                    float grid_angle,
+                                                    unsigned translate_x,
+                                                    unsigned translate_y,
+                                                    RocalTensorLayout output_layout = ROCAL_NONE,
+                                                    RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Applies median filter to images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
@@ -1516,6 +1483,39 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilterFixed(RocalContext cont
                                                                float stddev,
                                                                unsigned kernel_size,
                                                                bool is_output,
+                                                               RocalTensorLayout output_layout = ROCAL_NONE,
+                                                               RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+                                                               /*! \brief Non-linear blend of two input images using per-sample stddev parameter.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 Input1 Rocal tensor
+ * \param [in] input2 Input2 Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] stddev Rocal parameter defining the per-sample stddev for non-linear blend
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalNonLinearBlend(RocalContext context, RocalTensor input1, RocalTensor input2,
+                                                          bool is_output,
+                                                          RocalFloatParam stddev = NULL,
+                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Non-linear blend of two input images using a fixed stddev parameter.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 Input1 Rocal tensor
+ * \param [in] input2 Input2 Rocal tensor
+ * \param [in] stddev fixed stddev for non-linear blend
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalNonLinearBlendFixed(RocalContext context, RocalTensor input1, RocalTensor input2,
+                                                               float stddev, bool is_output,
                                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
 

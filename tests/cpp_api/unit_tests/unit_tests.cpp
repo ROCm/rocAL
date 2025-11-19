@@ -915,18 +915,18 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             float stddev = 0.2f;
             output = rocalNonLinearBlendFixed(handle, input, output_1, stddev, true, output_tensor_layout, output_tensor_dtype);
         } break;
-        case 76: {
+        case 69: {
             std::cout << "Running rocalMedianFilter" << std::endl;
             int kernel = 3;
             int border_type = 0;
             output = rocalMedianFilter(handle, input, true, kernel, border_type, output_tensor_layout, output_tensor_dtype);
         } break;
-        case 77: {
+        case 70: {
             std::cout << "Running rocalGaussianFilter" << std::endl;
             // Use existing float_param defined earlier as per-sample stddev
             output = rocalGaussianFilter(handle, input, true, float_param, 3, output_tensor_layout, output_tensor_dtype);
         } break;
-        case 78: {
+        case 71: {
             std::cout << "Running rocalGaussianFilterFixed" << std::endl;
             output = rocalGaussianFilterFixed(handle, input, 0.5, 3, true, output_tensor_layout, output_tensor_dtype);
         } break;
