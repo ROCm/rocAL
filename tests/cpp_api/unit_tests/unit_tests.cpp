@@ -906,13 +906,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 67: {
             std::cout << "Running rocalNonLinearBlend" << std::endl;
             RocalTensor output_1 = rocalRotate(handle, input, false);
-            RocalFloatParam stddev_param = rocalCreateFloatParameter(0.2f);
+            RocalFloatParam stddev_param = rocalCreateFloatParameter(40.0f);
             output = rocalNonLinearBlend(handle, input, output_1, true, stddev_param, output_tensor_layout, output_tensor_dtype);
         } break;
         case 68: {
             std::cout << "Running rocalNonLinearBlendFixed" << std::endl;
             RocalTensor output_1 = rocalRotateFixed(handle, input, 45, false);
-            float stddev = 0.2f;
+            float stddev = 50.0f;
             output = rocalNonLinearBlendFixed(handle, input, output_1, stddev, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 69: {
