@@ -97,7 +97,7 @@ public:
         if (it != _name_to_converter_map.end()) {
             return it->second(value);  // Call the conversion function and return std::any
         } else {
-            THROW("No conversion function registered for enum: " + enumTypeName)
+            THROW("No conversion function registered for enum: " + enumTypeName);
         }
     }
 

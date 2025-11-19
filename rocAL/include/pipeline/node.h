@@ -55,7 +55,8 @@ class Node {
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
     const std::vector<Argument>& get_args_list() const { return _args; }
-    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("Not Implemented") }
+    // Returns the LoaderModule associated with this node, Derived LoaderNodes should override this method.
+    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("Not Implemented"); }
 
    protected:
     virtual void create_node() = 0;
@@ -77,6 +78,19 @@ class Node {
     }
 };
 
+/*!
+ * \brief Factory class for dynamic node creation and registration
+ * 
+ * This singleton class implements the factory pattern for managing node registration and creation,
+ * which is essential for deserializing pipeline graphs. It maintains separate registries for
+ * loader nodes and augmentation nodes, allowing runtime instantiation of nodes by name.
+ * 
+ * The factory supports two types of nodes:
+ * - Loader nodes: Created with a Tensor output and device resources
+ * - Augmentation nodes: Created with input and output Tensor vectors
+ * 
+ * Nodes are registered using the REGISTER_LOADER_NODE and REGISTER_NODE macros.
+ */
 class NodeFactory {
 public:
     using LoaderCreator = std::function<std::shared_ptr<Node>(Tensor*, void*)>;
@@ -100,7 +114,7 @@ public:
         if (it != _loader_node_registry.end()) {
             return it->second(output_tensor, dev_resource);
         } else {
-            THROW("The given node not found in the registry" + name)
+            THROW("Node not found in the registry: " + name);
         }
     }
 
@@ -109,7 +123,7 @@ public:
         if (it != _node_registry.end()) {
             return it->second(inputs, outputs);
         } else {
-            THROW("The given node not found in the registry" + name)
+            THROW("Node not found in the registry: " + name);
         }
     }
 
@@ -118,6 +132,17 @@ private:
     std::map<std::string, AugmentationCreator> _node_registry;
 };
 
+/*!
+ * \brief Macro for automatic loader node registration
+ * \param CLASS_NAME The loader node class to register
+ * 
+ * This macro automatically registers a loader node class with the NodeFactory.
+ * 
+ * Usage: REGISTER_LOADER_NODE(ImageLoaderNode)
+ * 
+ * The registration happens at static initialization time, ensuring the node
+ * is available for deserialization before main() executes.
+ */
 #define REGISTER_LOADER_NODE(CLASS_NAME) \
     static struct CLASS_NAME##_NodeRegistrar { \
         CLASS_NAME##_NodeRegistrar() { \
@@ -127,6 +152,17 @@ private:
         } \
     } _##CLASS_NAME##_registrar;
 
+/*!
+ * \brief Macro for automatic augmentation node registration
+ * \param CLASS_NAME The augmentation node class to register
+ * 
+ * This macro automatically registers an augmentation node class with the NodeFactory.
+ * 
+ * Usage: REGISTER_NODE(BrightnessNode)
+ * 
+ * The registration happens at static initialization time, ensuring the node
+ * is available for deserialization before main() executes.
+ */
 #define REGISTER_NODE(CLASS_NAME) \
     static struct CLASS_NAME##_NodeRegistrar { \
         CLASS_NAME##_NodeRegistrar() { \
