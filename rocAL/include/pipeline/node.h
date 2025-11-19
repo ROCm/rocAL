@@ -70,8 +70,14 @@ class Node {
     std::vector<std::shared_ptr<Node>> _prev;   // Stores the reference to a list of previous Nodes
     int _graph_id = -1;
     std::vector<Argument> _args;
+    /**
+     * @brief Template function to set node arguments using variadic templates and fold expressions.
+     * 
+     * This function creates Argument objects for each argument-name pair and stores them in the node.
+     * It uses fold expressions to expand the parameter pack at compile time.
+     */
     template <size_t N, size_t... Indices, typename... Args>
-    void set_node_arguments(std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
+    void set_node_arguments(const std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
         // Fold expression to create Argument object for each argument in the node
         (this->_args.push_back(Argument(arg_names[Indices], std::forward<Args>(args))), ...);
     }
