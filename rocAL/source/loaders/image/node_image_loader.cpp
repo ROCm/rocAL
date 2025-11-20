@@ -76,8 +76,6 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
 }
 
 void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    std::cerr << "Arguments count : " << arguments.size() << "\n";
-    // auto shard_cnt = arguments[0].Get<unsigned>();
     this->init(arguments[0].Get<unsigned>(), arguments[1].Get<unsigned>(), arguments[2].Get<std::string>(),
                arguments[3].Get<std::string>(), arguments[4].Get<std::map<std::string, std::string>>(), arguments[5].Get<StorageType>(),
                arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(), 
