@@ -66,6 +66,13 @@ public:
                 return std::get<FloatParam*>(param);
             else if constexpr (std::is_same_v<T, IntParam*>)
                 return std::get<IntParam*>(param);
+        } else if constexpr (std::is_same_v<T, std::map<std::string, std::string>>) {
+            // Handle string-to-string map type
+            std::map<std::string, std::string> feature_map;
+            for (int i = 0; i < values.size(); i+=2) {
+                feature_map[std::any_cast<std::string>(values[i])] = std::any_cast<std::string>(values[i + 1]);
+            }
+            return feature_map;
         } else {
             if (is_null_ptr || is_parameter)
                 THROW("Type mismatch: cannot retrieve non-parameter type from a parameter argument (arg_name: '" + arg_name + "', type_name: '" + type_name + "')");
@@ -292,16 +299,6 @@ private:
         is_parameter = true;
     }
 };
-
-// Template specialization for std::map<std::string, std::string>
-template<>
-inline std::map<std::string, std::string> Argument::Get<std::map<std::string, std::string>>() const {
-    std::map<std::string, std::string> feature_map;
-    for (int i = 0; i < values.size(); i+=2) {
-        feature_map[std::any_cast<std::string>(values[i])] = std::any_cast<std::string>(values[i + 1]);
-    }
-    return feature_map;
-}
 
 template <typename... Args, std::size_t... I>
 std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments, std::index_sequence<I...>) {
