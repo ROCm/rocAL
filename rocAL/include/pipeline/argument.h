@@ -55,6 +55,18 @@ public:
     std::vector<std::any> values;         ///< Storage for argument values
     pParam param;                         ///< Parameter stored for parameter-type arguments
 
+    /**
+     * @brief Retrieves the value of the argument as the specified type.
+     * 
+     * This template method extracts the stored value(s) from the argument and returns
+     * them as the requested type. It supports scalar types, vectors, maps, and parameter
+     * pointer types.
+     * 
+     * @tparam T The type to which the argument value should be cast. Supported types include:
+     * @return The value of the argument as type T.
+     * @note For parameter pointer types (FloatParam*, IntParam*), nullptr is returned
+     *       if the argument is a null pointer.
+     */
     template <typename T>
     T Get() const {
         // Compile-time check for parameter types
@@ -308,7 +320,13 @@ std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments
     return std::make_tuple(arguments[I].Get<Args>()...);
 }
 
-// Helper: extract arguments into a tuple using index sequence
+/**
+ * @brief Extracts arguments into a tuple using index sequence expansion
+ * 
+ * This helper function unpacks a vector of Argument objects into a std::tuple
+ * with the specified types. It uses compile-time index sequences to extract
+ * each argument at the corresponding position and cast it to the requested type.
+ */
 template <typename... Args>
 std::tuple<Args...> unpack_arguments(const std::vector<Argument>& arguments) {
     return unpack_arguments_impl<Args...>(arguments, std::index_sequence_for<Args...>{});
