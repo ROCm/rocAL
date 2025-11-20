@@ -86,6 +86,9 @@ public:
                 }
                 return result;
             } else if (!is_vector) {
+                if (values.empty()) {
+                    THROW("Value not present for the given argument : " + arg_name)
+                }
                 return std::any_cast<T>(values[0]);
             } else {
                 THROW("Unsupported type requested for argument : " + arg_name + " of type " + type_name);
