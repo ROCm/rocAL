@@ -80,17 +80,10 @@ public:
                 return result;
             } else if (!is_vector) {
                 return std::any_cast<T>(values[0]);
-            }        
+            } else {
+                THROW("Unsupported type requested for argument : " + arg_name + " of type " + type_name);
+            }
         }
-    }
-
-    template<>
-    std::map<std::string, std::string> Get<std::map<std::string, std::string>>() const {
-        std::map<std::string, std::string> feature_map;
-        for (int i = 0; i < values.size(); i+=2) {
-            feature_map[std::any_cast<std::string>(values[i])] = std::any_cast<std::string>(values[i + 1]);
-        }
-        return feature_map;
     }
 
     // Constructors
@@ -299,6 +292,16 @@ private:
         is_parameter = true;
     }
 };
+
+// Template specialization for std::map<std::string, std::string>
+template<>
+inline std::map<std::string, std::string> Argument::Get<std::map<std::string, std::string>>() const {
+    std::map<std::string, std::string> feature_map;
+    for (int i = 0; i < values.size(); i+=2) {
+        feature_map[std::any_cast<std::string>(values[i])] = std::any_cast<std::string>(values[i + 1]);
+    }
+    return feature_map;
+}
 
 template <typename... Args, std::size_t... I>
 std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments, std::index_sequence<I...>) {
