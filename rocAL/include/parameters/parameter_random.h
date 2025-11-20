@@ -105,7 +105,8 @@ class UniformRand : public Parameter<T> {
         return (_start == _end);
     }
 
-    std::pair<T, T> get_start_and_end() {
+    // Get the start and end values of the uniform random parameter.
+    std::pair<T, T> get_start_and_end() const {
         return std::make_pair(_start, _end);
     }
 
@@ -230,11 +231,14 @@ struct CustomRand : public Parameter<T> {
         return (_values.size() == 1);
     }
 
+    // Get the values array for this CustomRand parameter.
     const std::vector<T>& get_values() const { return _values; }
 
+    // Get the frequency/probability array for this CustomRand parameter.
     const std::vector<double>& get_frequencies() const { return _frequencies; }
 
-    unsigned size() { return _size; }
+    // This method returns the current size of the parameter array managed by CustomRand.
+    unsigned size() const { return _size; }
 
    private:
     std::vector<T> _values;            //!< Values

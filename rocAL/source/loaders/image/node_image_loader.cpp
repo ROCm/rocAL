@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(ImageLoaderNode)
+
 ImageLoaderNode::ImageLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }
@@ -50,7 +52,6 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_external_filemode(external_file_mode);
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
-
 
     std::array<std::string, 23> arg_names = {
         "internal_shard_count", "cpu_num_threads", "source_path",

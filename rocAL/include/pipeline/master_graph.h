@@ -153,11 +153,13 @@ public:
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
-    /**
+    /*
      * Serialize API
      */
     void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
+    // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
     std::string& get_serialized_string() { return _serialized_pipeline; }
+
 private:
     Status update_node_parameters();
     void create_single_graph();
@@ -173,6 +175,8 @@ private:
     bool no_more_processed_data();
     // is_out_of_data() is called to check the remaining batch count from each loader module, if any of the loader module has consumed all the batches it returns true.
     bool is_out_of_data();
+    // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
+    inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
@@ -248,6 +252,8 @@ private:
     PipelineSerializer _pipeline_serializer;
     // Stores the serialized binary string representation of the pipeline
     std::string _serialized_pipeline;
+    int _tensor_idx = 0; // Index/counter used to uniquely name Tensor instances created in the pipeline
+    bool _set_device_id = false;
 };
 
 template <typename T>
