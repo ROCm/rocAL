@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <string>
 #include <any>
 #include <functional>
+#include "pipeline/exception.h"
 /*!
  * \brief Centralized enum registry for automatic enum type name management
  * 
