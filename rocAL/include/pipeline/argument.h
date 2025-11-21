@@ -55,6 +55,49 @@ public:
     std::vector<std::any> values;         ///< Storage for argument values
     pParam param;                         ///< Parameter stored for parameter-type arguments
 
+    template <typename T>
+    T Get() const {
+        std::cerr << "Type name -> " << type_name << "\n";
+
+        // Compile-time check for parameter types
+        if constexpr (std::is_same_v<T, FloatParam*> || std::is_same_v<T, IntParam*>) {
+            if (is_null_ptr) {
+                return nullptr;
+            }
+            if constexpr (std::is_same_v<T, FloatParam*>)
+                return std::get<FloatParam*>(param);
+            else if constexpr (std::is_same_v<T, IntParam*>)
+                return std::get<IntParam*>(param);
+        } else {
+            if (is_null_ptr || is_parameter)
+                THROW("Undefined type passed")
+
+            if constexpr (is_vector_type<std::decay_t<T>>::value) {
+                std::cerr << "Vector type\n";
+                using ElementType = typename std::decay_t<T>::value_type;
+
+                std::vector<ElementType> result;
+                for (const auto& v : values) {
+                    result.push_back(std::any_cast<ElementType>(v));
+                    std::cerr << "Print val : " << std::any_cast<ElementType>(v) << "\n";
+                }
+                return result;
+            } else if (!is_vector) {
+                std::cerr << "Non Vector type detected - \t" << values.size() <<"\n";
+                return std::any_cast<T>(values[0]);
+            }        
+        }
+    }
+
+    template<>
+    std::map<std::string, std::string> Get<std::map<std::string, std::string>>() const {
+        std::map<std::string, std::string> feature_map;
+        for (int i = 0; i < values.size(); i+=2) {
+            feature_map[std::any_cast<std::string>(values[i])] = std::any_cast<std::string>(values[i + 1]);
+        }
+        return feature_map;
+    }
+
     // Constructors
 
     /**
@@ -64,6 +107,8 @@ public:
      * @param val The value to store
      * @throws std::runtime_error if the type is unknown or unsupported
      */
+    Argument() {}
+
     template <typename T>
     explicit Argument(std::string name, T&& val) : arg_name(std::move(name)) {
 
@@ -259,3 +304,39 @@ private:
         is_parameter = true;
     }
 };
+
+template <typename... Args, std::size_t... I>
+std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments, std::index_sequence<I...>) {
+    return std::make_tuple(arguments[I].Get<Args>()...);
+}
+
+// Helper: extract arguments into a tuple using index sequence
+template <typename... Args>
+std::tuple<Args...> unpack_arguments(const std::vector<Argument>& arguments) {
+    return unpack_arguments_impl<Args...>(arguments, std::index_sequence_for<Args...>{});
+}
+
+template <typename NodeType, typename... Args>
+bool init_args(NodeType* node, const std::vector<Argument>& arguments) {
+    if (arguments.size() != sizeof...(Args)) return false;
+
+    try {
+        // Unpack arguments with type-check and casting
+        // For C++ >= 20
+        // std::tuple<Args...> unpacked_args = [&]<std::size_t... I>(std::index_sequence<I...>) {
+        //     return std::make_tuple(arguments[I].Get<Args>()...);
+        // }(std::index_sequence_for<Args...>{});
+
+        auto unpacked_args = unpack_arguments<Args...>(arguments);
+        std::cerr << "Arguments unpacked\t" << std::tuple_size<decltype(unpacked_args)>::value << "\n";
+
+        std::apply([&](Args&... unpacked) {
+            node->init(unpacked...);
+        }, unpacked_args);
+
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "[ERR] Exception during init_args: " << e.what() << "\n";
+        return false; // Type mismatch
+    }
+}

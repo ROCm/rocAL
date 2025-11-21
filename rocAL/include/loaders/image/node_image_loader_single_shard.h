@@ -41,7 +41,7 @@ class ImageLoaderSingleShardNode : public Node {
               bool enable_checkpointing = false, unsigned seed = 0,
               const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(), unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0, ExternalSourceFileMode external_file_mode = ExternalSourceFileMode::NONE, const std::string &index_path = "");
 
-    std::shared_ptr<LoaderModule> get_loader_module();
+    std::shared_ptr<LoaderModule> get_loader_module() override;
     std::string node_name() const override { return "ImageLoaderSingleShardNode"; }
     void save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) override;
     std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) override;

@@ -33,6 +33,7 @@ class BrightnessNode : public Node {
 
     void init(float alpha, float beta);
     void init(FloatParam *alpha_param, FloatParam *beta_param);
+    void initialize_args(std::vector<Argument> &arguments) override;
     std::string node_name() const override { return "BrightnessNode"; }
 
    protected:
@@ -45,3 +46,4 @@ class BrightnessNode : public Node {
     constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
     constexpr static float BETA_RANGE[2] = {0, 25};
 };
+REGISTER_NODE(BrightnessNode)
