@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import random
 from amd.rocal.plugin.pytorch import ROCALNumpyIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
