@@ -906,13 +906,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 67: {
             std::cout << "Running rocalNonLinearBlend" << std::endl;
             RocalTensor output_1 = rocalRotate(handle, input, false);
-            RocalFloatParam stddev_param = rocalCreateFloatParameter(0.2f);
+            RocalFloatParam stddev_param = rocalCreateFloatParameter(40.0f);
             output = rocalNonLinearBlend(handle, input, output_1, true, stddev_param, output_tensor_layout, output_tensor_dtype);
         } break;
         case 68: {
             std::cout << "Running rocalNonLinearBlendFixed" << std::endl;
             RocalTensor output_1 = rocalRotateFixed(handle, input, 45, false);
-            float stddev = 0.2f;
+            float stddev = 50.0f;
             output = rocalNonLinearBlendFixed(handle, input, output_1, stddev, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 69: {
@@ -931,12 +931,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             int border_type = 0;
             output = rocalMedianFilter(handle, input, true, kernel, border_type, output_tensor_layout, output_tensor_dtype);
         } break;
-        case 77: {
+        case 70: {
             std::cout << "Running rocalGaussianFilter" << std::endl;
             // Use existing float_param defined earlier as per-sample stddev
             output = rocalGaussianFilter(handle, input, true, float_param, 3, output_tensor_layout, output_tensor_dtype);
         } break;
-        case 78: {
+        case 71: {
             std::cout << "Running rocalGaussianFilterFixed" << std::endl;
             output = rocalGaussianFilterFixed(handle, input, 0.5, 3, true, output_tensor_layout, output_tensor_dtype);
         } break;
