@@ -916,16 +916,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalNonLinearBlendFixed(handle, input, output_1, stddev, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 69: {
-            std::cout << "Running rocalThreshold" << std::endl;
-            std::vector<float> min_threshold = {30.0f, 30.0f, 30.0f};
-            std::vector<float> max_threshold = {100.0f, 100.0f, 100.0f};
-            output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
-        } break;
-        case 70: {
-            std::cout << "Running rocalThresholdFixed" << std::endl;
-            output = rocalThresholdFixed(handle, input, 64.0f, 192.0f, true, output_tensor_layout, output_tensor_dtype);
-        }
-        case 76: {
             std::cout << "Running rocalMedianFilter" << std::endl;
             int kernel = 3;
             int border_type = 0;
@@ -960,7 +950,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             RocalTensor input2 = rocalRotate(handle, input, false);
             output = rocalPhase(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
         } break;
-        case 79: {
+        case 76: {
+            std::cout << "Running rocalThreshold" << std::endl;
+            std::vector<float> min_threshold = {30.0f, 30.0f, 30.0f};
+            std::vector<float> max_threshold = {100.0f, 100.0f, 100.0f};
+            output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 77: {
+            std::cout << "Running rocalThresholdFixed" << std::endl;
+            output = rocalThresholdFixed(handle, input, 64.0f, 192.0f, true, output_tensor_layout, output_tensor_dtype);
+        }
+        case 78: {
             std::cout << "Running rocalWarpPerspective" << std::endl;
             std::vector<float> perspective_1d_matrix = {0.93f, 0.5f, 0.0f,
                                                         -0.5f, 0.93f, 0.0f,

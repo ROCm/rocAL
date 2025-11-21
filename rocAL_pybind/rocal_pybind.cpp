@@ -1103,16 +1103,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("blur", &rocalBlur,
           py::return_value_policy::reference);
-    m.def("medianFilter", &rocalMedianFilter,
-          py::return_value_policy::reference);
-    m.def("gaussianFilter", &rocalGaussianFilter,
-          py::return_value_policy::reference);
-    m.def("gaussianFilterFixed", &rocalGaussianFilterFixed,
-          py::return_value_policy::reference);
-    m.def("threshold", &rocalThreshold,
-          py::return_value_policy::reference);
-    m.def("thresholdFixed", &rocalThresholdFixed,
-          py::return_value_policy::reference);
     m.def("contrast", &rocalContrast,
           py::return_value_policy::reference);
     m.def("flip", &rocalFlip,
@@ -1126,8 +1116,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("saturation", &rocalSaturation,
           py::return_value_policy::reference);
     m.def("warpAffineFixed", &rocalWarpAffineFixed,
-          py::return_value_policy::reference);
-    m.def("warpPerspective", &rocalWarpPerspective,
           py::return_value_policy::reference);
     m.def("fog", &rocalFog,
           py::return_value_policy::reference);
@@ -1192,6 +1180,20 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("nonLinearBlend", &rocalNonLinearBlend,
           py::return_value_policy::reference);
     m.def("nonLinearBlendFixed", &rocalNonLinearBlendFixed,
+          py::return_value_policy::reference);
+    m.def("dilate", &rocalDilateFilter,
+          py::return_value_policy::reference);
+    m.def("erode", &rocalErodeFilter,
+          py::return_value_policy::reference);
+    m.def("magnitude", &rocalMagnitude,
+          py::return_value_policy::reference);
+    m.def("phase", &rocalPhase,
+          py::return_value_policy::reference);
+    m.def("threshold", &rocalThreshold,
+          py::return_value_policy::reference);
+    m.def("thresholdFixed", &rocalThresholdFixed,
+          py::return_value_policy::reference);
+    m.def("warpPerspective", &rocalWarpPerspective,
           py::return_value_policy::reference);
 }
 }  // namespace rocal
