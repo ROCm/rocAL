@@ -69,7 +69,6 @@ public:
      */
     template <typename T>
     T Get() const {
-        // Compile-time check for parameter types
         if constexpr (std::is_same_v<T, FloatParam*> || std::is_same_v<T, IntParam*>) {
             if (is_null_ptr) {
                 return nullptr;
@@ -79,10 +78,13 @@ public:
             else if constexpr (std::is_same_v<T, IntParam*>)
                 return std::get<IntParam*>(param);
         } else if constexpr (std::is_same_v<T, std::map<std::string, std::string>>) {
-            // Handle string-to-string map type
+            if ((values.size() % 2) != 0)
+                THROW("Corrupted map payload for argument : " + arg_name);
             std::map<std::string, std::string> feature_map;
-            for (int i = 0; i < values.size(); i+=2) {
-                feature_map[std::any_cast<std::string>(values[i])] = std::any_cast<std::string>(values[i + 1]);
+            for (size_t i = 0; i < values.size(); i += 2) {
+                const auto& key = std::any_cast<const std::string&>(values[i]);
+                const auto& value = std::any_cast<const std::string&>(values[i + 1]);
+                feature_map.emplace(key, value);
             }
             return feature_map;
         } else {
