@@ -1090,10 +1090,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("colorTwistFixed", &rocalColorTwistFixed,
           py::return_value_policy::reference);
-    m.def("colorCast", &rocalColorCast,
-          py::return_value_policy::reference);
-    m.def("colorCastFixed", &rocalColorCastFixed,
-          py::return_value_policy::reference);
     m.def("cropMirrorNormalize", &rocalCropMirrorNormalize,
           py::return_value_policy::reference);
     m.def("crop", &rocalCrop,
@@ -1114,18 +1110,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("blur", &rocalBlur,
           py::return_value_policy::reference);
-    m.def("medianFilter", &rocalMedianFilter,
-          py::return_value_policy::reference);
-    m.def("gaussianFilter", &rocalGaussianFilter,
-          py::return_value_policy::reference);
-    m.def("gaussianFilterFixed", &rocalGaussianFilterFixed,
-          py::return_value_policy::reference);
-    m.def("threshold", &rocalThreshold,
-          py::return_value_policy::reference);
-    m.def("thresholdFixed", &rocalThresholdFixed,
-          py::return_value_policy::reference);
-    m.def("erase", &rocalErase,
-          py::return_value_policy::reference);
     m.def("contrast", &rocalContrast,
           py::return_value_policy::reference);
     m.def("flip", &rocalFlip,
@@ -1140,14 +1124,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("warpAffineFixed", &rocalWarpAffineFixed,
           py::return_value_policy::reference);
-    m.def("warpPerspective", &rocalWarpPerspective,
-          py::return_value_policy::reference);
-    m.def("remap", &rocalRemap,
-          py::return_value_policy::reference);
-    m.def("cropAndPatch", &rocalCropAndPatch,
-          py::return_value_policy::reference);
-    m.def("bitwiseOps", &rocalBitwiseOps,
-          py::return_value_policy::reference);
     m.def("fog", &rocalFog,
           py::return_value_policy::reference);
     m.def("fishEye", &rocalFishEye,
@@ -1160,15 +1136,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("pixelate", &rocalPixelate,
           py::return_value_policy::reference);
-    m.def("gridMask", &rocalGridMask,
-          py::return_value_policy::reference);
-    m.def("erase", &rocalErase,
-          py::return_value_policy::reference);
     m.def("blend", &rocalBlend,
-          py::return_value_policy::reference);
-    m.def("nonLinearBlend", &rocalNonLinearBlend,
-          py::return_value_policy::reference);
-    m.def("nonLinearBlendFixed", &rocalNonLinearBlendFixed,
           py::return_value_policy::reference);
     m.def("randomCrop", &rocalRandomCrop,
           py::return_value_policy::reference);
@@ -1203,6 +1171,46 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("transpose", &rocalTranspose,
           py::return_value_policy::reference);
     m.def("log1p", &rocalLog1p,
-    py::return_value_policy::reference);
+          py::return_value_policy::reference);
+    m.def("colorCast", &rocalColorCast,
+          py::return_value_policy::reference);
+    m.def("colorCastFixed", &rocalColorCastFixed,
+          py::return_value_policy::reference);
+    m.def("gridMask", &rocalGridMask,
+          py::return_value_policy::reference);
+    m.def("gaussianFilter", &rocalGaussianFilter,
+          py::return_value_policy::reference);
+    m.def("gaussianFilterFixed", &rocalGaussianFilterFixed,
+          py::return_value_policy::reference);
+    m.def("medianFilter", &rocalMedianFilter,
+          py::return_value_policy::reference);
+    m.def("nonLinearBlend", &rocalNonLinearBlend,
+          py::return_value_policy::reference);
+    m.def("nonLinearBlendFixed", &rocalNonLinearBlendFixed,
+          py::return_value_policy::reference);
+    m.def("dilate", &rocalDilateFilter,
+          py::return_value_policy::reference);
+    m.def("erode", &rocalErodeFilter,
+          py::return_value_policy::reference);
+    m.def("magnitude", &rocalMagnitude,
+          py::return_value_policy::reference);
+    m.def("phase", &rocalPhase,
+          py::return_value_policy::reference);
+    m.def("threshold", &rocalThreshold,
+          py::return_value_policy::reference);
+    m.def("thresholdFixed", &rocalThresholdFixed,
+          py::return_value_policy::reference);
+    m.def("warpPerspective", &rocalWarpPerspective,
+          py::return_value_policy::reference);
+    m.def("remap", &rocalRemap,
+          py::return_value_policy::reference);
+    m.def("cropAndPatch", &rocalCropAndPatch,
+          py::return_value_policy::reference);
+    m.def("bitwiseOps", &rocalBitwiseOps,
+          py::return_value_policy::reference);
+    m.def("erase", &rocalErase,
+          py::return_value_policy::reference);
+    m.def("ricap", &rocalRicap,
+          py::return_value_policy::reference);
 }
 }  // namespace rocal
