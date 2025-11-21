@@ -260,7 +260,6 @@ git clone https://github.com/ROCm/rocAL.git
   cd build-hip
   cmake ../
   make -j8
-  sudo cmake --build . --target PyPackageInstall
   sudo make install
   ```
 >[!NOTE]

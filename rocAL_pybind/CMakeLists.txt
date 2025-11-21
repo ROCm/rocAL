@@ -254,12 +254,12 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         # Python files - Install
         install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/amd/"
                 DESTINATION ${CMAKE_INSTALL_LIBDIR}/amd
-                COMPONENT runtime)
+                COMPONENT dev)
 
         # rocAL pybind libs - install
         install(TARGETS ${mod_tgt}
                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                COMPONENT runtime)
+                COMPONENT dev)
 
         # PyBind Test - Install
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
