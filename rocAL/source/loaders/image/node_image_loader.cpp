@@ -53,7 +53,6 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_sharding_info(sharding_info);
     reader_cfg.enable_checkpointing(enable_checkpointing);
     reader_cfg.set_seed(seed);
-
     std::array<std::string, 25> arg_names = {
         "internal_shard_count", "cpu_num_threads", "source_path",
         "json_path", "feature_key_map", "storage_type", "decoder_type",

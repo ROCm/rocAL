@@ -103,10 +103,11 @@ void CropResizeNode::init(std::vector<float>& area_factor, std::vector<float>& a
 
 void CropResizeNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, ResizeInterpolationType interpolation_type) {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
-    _crop_param->crop_w = crop_w;
-    _crop_param->crop_h = crop_h;
-    _crop_param->x1 = x_drift;
-    _crop_param->y1 = y_drift;
+    auto rocal_crop_param = std::dynamic_pointer_cast<RocalCropParam>(_crop_param);  // Use dynamic_pointer_cast to update the data members of the RocalCropParam class
+    rocal_crop_param->crop_w = crop_w;
+    rocal_crop_param->crop_h = crop_h;
+    rocal_crop_param->x1 = x_drift;
+    rocal_crop_param->y1 = y_drift;
     FloatParam *x_drift_param = ParameterFactory::instance()->create_single_value_float_param(x_drift);
     FloatParam *y_drift_param = ParameterFactory::instance()->create_single_value_float_param(y_drift);
     _crop_param->set_x_drift_factor(core(x_drift_param));
