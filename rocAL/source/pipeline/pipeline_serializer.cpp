@@ -25,7 +25,9 @@ THE SOFTWARE.
 #include <fstream>
 
 void PipelineSerializer::serialize_to_string(std::string& serialized_string) {
-    serialized_string = _pipeline_proto.SerializeAsString();
+    if (!_pipeline_proto.SerializeToString(&serialized_string)) {
+        THROW("Failed to serialize pipeline to string.");
+    }
 }
 
 void PipelineSerializer::serialize_to_file(const std::string& file_path) {
@@ -39,11 +41,11 @@ void PipelineSerializer::serialize_to_file(const std::string& file_path) {
 }
 
 void PipelineSerializer::serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth) {
-    _pipeline_proto.set_num_threads(num_threads);
-    _pipeline_proto.set_batch_size(batch_size);
+    _pipeline_proto.set_num_threads(static_cast<uint64_t>(num_threads));
+    _pipeline_proto.set_batch_size(static_cast<uint64_t>(batch_size));
     _pipeline_proto.set_device_id(device_id);
-    _pipeline_proto.set_rocal_cpu(device_type == RocalMemType::HOST ? true : false);
-    _pipeline_proto.set_prefetch_queue_depth(prefetch_queue_depth);
+    _pipeline_proto.set_rocal_cpu(device_type == RocalMemType::HOST);
+    _pipeline_proto.set_prefetch_queue_depth(static_cast<uint64_t>(prefetch_queue_depth));
 }
 
 void set_tensor_proto(rocal_proto::InputOutput *in_out_proto, Tensor *tensor, bool is_input) {
@@ -87,9 +89,10 @@ template<typename T>
 void serialize_simple_parameter(rocal_proto::Parameter *parameter, const Argument &op_arg) {
     auto param_core = extract_param_core<T>(op_arg);
     auto simple_param = dynamic_cast<SimpleParameter<T> *>(param_core);
-    if (simple_param) {
-        add_param_value(parameter, simple_param->get());
+    if (!simple_param) {
+        THROW("Failed to cast parameter '" + op_arg.arg_name + "' to SimpleParameter type");
     }
+    add_param_value(parameter, simple_param->get());
 }
 
 // Template function to handle UniformRand serialization
@@ -97,11 +100,12 @@ template<typename T>
 void serialize_uniform_rand(rocal_proto::Parameter *parameter, const Argument &op_arg) {
     auto param_core = extract_param_core<T>(op_arg);
     auto uniform_param = dynamic_cast<UniformRand<T> *>(param_core);
-    if (uniform_param) {
-        auto uniform_range = uniform_param->get_start_and_end();
-        add_param_value(parameter, uniform_range.first);
-        add_param_value(parameter, uniform_range.second);
+    if (!uniform_param) {
+        THROW("Failed to cast parameter '" + op_arg.arg_name + "' to UniformRand type");
     }
+    auto uniform_range = uniform_param->get_start_and_end();
+    add_param_value(parameter, uniform_range.first);
+    add_param_value(parameter, uniform_range.second);
 }
 
 // Template function to handle CustomRand serialization
@@ -109,21 +113,22 @@ template<typename T>
 void serialize_custom_rand(rocal_proto::Parameter *parameter, const Argument &op_arg) {
     auto param_core = extract_param_core<T>(op_arg);
     auto random_param = dynamic_cast<CustomRand<T> *>(param_core);
-    if (random_param) {
-        // Add values
-        auto values_vec = random_param->get_values();
-        for (const auto &val : values_vec) {
-            add_param_value(parameter, val);
-        }
-        
-        // Add frequencies
-        auto frequency_vec = random_param->get_frequencies();
-        for (const auto &val : frequency_vec) {
-            parameter->add_frequency(val);
-        }
-        
-        parameter->set_size(random_param->size());
+    if (!random_param) {
+        THROW("Failed to cast parameter '" + op_arg.arg_name + "' to CustomRand type");
     }
+    // Add values
+    auto values_vec = random_param->get_values();
+    for (const auto &val : values_vec) {
+        add_param_value(parameter, val);
+    }
+    
+    // Add frequencies
+    auto frequency_vec = random_param->get_frequencies();
+    for (const auto &val : frequency_vec) {
+        parameter->add_frequency(val);
+    }
+    
+    parameter->set_size(random_param->size());
 }
 
 // Type dispatcher function to handle different data types
@@ -164,6 +169,9 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
             rocal_proto::Parameter *param = arg->mutable_param();
             serialize_parameter_to_protobuf(param, op_arg);
         } else if (op_arg.type_name == "enum") {
+            if (op_arg.values.empty()) {
+                THROW("Enum argument " + op_arg.arg_name + " has no values");
+            }
             rocal_proto::EnumType* enum_arg = arg->mutable_enum_value();
             enum_arg->set_name(op_arg.sub_type_name);
             enum_arg->set_value(std::any_cast<int>(op_arg.values[0]));

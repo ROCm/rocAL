@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <string>
 #include <any>
 #include <functional>
+#include "pipeline/exception.h"
 /*!
  * \brief Centralized enum registry for automatic enum type name management
  * 
@@ -88,7 +89,7 @@ public:
     /*!
      * \brief Convert integer value to enum and return as std::any
      * \param enumTypeName The name of the enum type
-     * \param value The integer value to convert
+     * \param value The integer value to convert (must be a valid value for the target enum)
      * \return The converted enum value wrapped in std::any
      * \throws std::runtime_error if enum type is not registered
      */
@@ -97,7 +98,7 @@ public:
         if (it != _name_to_converter_map.end()) {
             return it->second(value);  // Call the conversion function and return std::any
         } else {
-            throw std::runtime_error("No conversion function registered for enum: " + enumTypeName);
+            THROW("No conversion function registered for enum: " + enumTypeName);
         }
     }
 

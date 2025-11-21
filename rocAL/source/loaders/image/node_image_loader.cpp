@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(ImageLoaderNode)
+
 ImageLoaderNode::ImageLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }
@@ -51,7 +53,6 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
 
-
     std::array<std::string, 23> arg_names = {
         "internal_shard_count", "cpu_num_threads", "source_path",
         "json_path", "feature_key_map", "storage_type", "decoder_type",
@@ -75,12 +76,16 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
 }
 
 void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    std::cerr << "Arguments count : " << arguments.size() << "\n";
-    // auto shard_cnt = arguments[0].Get<unsigned>();
+    constexpr size_t kExpectedArgCount = 23;
+    if (arguments.size() != kExpectedArgCount)
+        THROW("ImageLoaderNode expected " + std::to_string(kExpectedArgCount) + " arguments, received " + std::to_string(arguments.size()));
+    ShardingInfo sharding_info(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>());
+    std::string file_prefix = arguments[17].Get<std::string>();
+
     this->init(arguments[0].Get<unsigned>(), arguments[1].Get<unsigned>(), arguments[2].Get<std::string>(),
                arguments[3].Get<std::string>(), arguments[4].Get<std::map<std::string, std::string>>(), arguments[5].Get<StorageType>(),
-               arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(), 
-               meta_data_reader, arguments[12].Get<bool>(), ShardingInfo(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>()), arguments[17].Get<std::string>().c_str(),
+               arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(),
+               meta_data_reader, arguments[12].Get<bool>(), sharding_info, file_prefix.c_str(),
                arguments[18].Get<unsigned>(), arguments[19].Get<unsigned>(), arguments[20].Get<unsigned>(), arguments[21].Get<ExternalSourceFileMode>(), arguments[22].Get<std::string>());
 }
 
