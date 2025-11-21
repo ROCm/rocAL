@@ -3103,7 +3103,7 @@ rocalRicap(RocalContext p_context,
     return output;
 }
 
-extern "C" RocalTensor ROCAL_API_CALL
+RocalTensor ROCAL_API_CALL
 rocalBitwiseOps(RocalContext p_context,
                 RocalTensor p_input1,
                 RocalTensor p_input2,
