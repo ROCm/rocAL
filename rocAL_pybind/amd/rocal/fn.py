@@ -1458,29 +1458,6 @@ def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC
     output_image = b.threshold(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (output_image)
 
-def threshold_fixed(*inputs, min=0.0, max=255.0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
-    """!Applies thresholding to images with fixed min/max values.
-
-        @param inputs                                                                 the input image passed to the augmentation
-        @param min (float, default = 0.0)                                             fixed minimum threshold value
-        @param max (float, default = 255.0)                                          fixed maximum threshold value
-        @param device (string, optional, default = None)                              Parameter unused for augmentation
-        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
-        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
-
-        @return    Thresholded image
-    """
-    kwargs_pybind = {
-        "input_image": inputs[0],
-        "min": min,
-        "max": max,
-        "is_output": False,
-        "output_layout": output_layout,
-        "output_dtype": output_dtype
-    }
-    output_image = b.thresholdFixed(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (output_image)
-
 def warp_perspective(*inputs, dest_width=0, dest_height=0, perspective=[1.0, 0.0, 0.0,
                                                                          0.0, 1.0, 0.0,
                                                                          0.0, 0.0, 1.0],

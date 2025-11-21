@@ -957,10 +957,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 77: {
-            std::cout << "Running rocalThresholdFixed" << std::endl;
-            output = rocalThresholdFixed(handle, input, 64.0f, 192.0f, true, output_tensor_layout, output_tensor_dtype);
-        }
-        case 78: {
             std::cout << "Running rocalWarpPerspective" << std::endl;
             std::vector<float> perspective_1d_matrix = {0.93f, 0.5f, 0.0f,
                                                         -0.5f, 0.93f, 0.0f,
