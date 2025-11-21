@@ -964,7 +964,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
 
         }break;
-        case 80: {
+        case 78: {
             std::cout << "Running rocalRemap (vector-based tables)" << std::endl;
             // Build identity remap tables (row = y, col = x) for output size [height,width]
             const int H = height;
@@ -990,7 +990,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                 ROCAL_LINEAR_INTERPOLATION,
                                 output_tensor_layout, output_tensor_dtype);
         } break;
-        case 81: {
+        case 79: {
             std::cout << "Running rocalCropAndPatch" << std::endl;
             // Create a simple second input (e.g., rotated version)
             RocalTensor input2 = rocalRotate(handle, input, false);
@@ -1007,7 +1007,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                        output_tensor_layout,
                                        output_tensor_dtype);
         } break;
-        case 82: {
+        case 80: {
             std::cout << "Running rocalRicap" << std::endl;
             // Permutation for quadrants [q0,q1,q2,q3]; replicate across batch if size==4
             std::vector<unsigned> permutation = {0, 1, 1, 0};
@@ -1022,7 +1022,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             };
             output = rocalRicap(handle, input, true, permutation, crop_rois, output_tensor_layout, output_tensor_dtype);
         } break;
-        case 83: {
+        case 81: {
             std::cout << "Running rocalBitwiseOps AND" << std::endl;
             // Create second input tensor (rotate input to get variation)
             RocalTensor input2 = rocalRotate(handle, input, false);
@@ -1030,28 +1030,28 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                      RocalBitwiseOp::ROCAL_BITWISE_AND,
                                      output_tensor_layout, output_tensor_dtype);
         } break;
-        case 84: {
+        case 82: {
             std::cout << "Running rocalBitwiseOps OR" << std::endl;
             RocalTensor input2 = rocalRotate(handle, input, false);
             output = rocalBitwiseOps(handle, input, input2, true,
                                      RocalBitwiseOp::ROCAL_BITWISE_OR,
                                      output_tensor_layout, output_tensor_dtype);
         } break;
-        case 85: {
+        case 83: {
             std::cout << "Running rocalBitwiseOps XOR" << std::endl;
             RocalTensor input2 = rocalRotate(handle, input, false);
             output = rocalBitwiseOps(handle, input, input2, true,
                                      RocalBitwiseOp::ROCAL_BITWISE_XOR,
                                      output_tensor_layout, output_tensor_dtype);
         } break;
-        case 86: {
+        case 84: {
             std::cout << "Running rocalBitwiseOps NOT (single input)" << std::endl;
             // NOT uses only a single input; pass same tensor for second parameter (ignored internally)
             output = rocalBitwiseOps(handle, input, input, true,
                                      RocalBitwiseOp::ROCAL_BITWISE_NOT,
                                      output_tensor_layout, output_tensor_dtype);
         } break;
-        case 87: {
+        case 85: {
             std::cout << "Running rocalErase (vector inputs, single fill value)" << std::endl;
             // Use vector-based API: provide anchor [x1,y1], shape [w,h], num_boxes, and a single fill value
             // Replicate num_boxes across batch with a single entry
