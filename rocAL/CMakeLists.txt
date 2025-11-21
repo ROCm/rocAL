@@ -301,7 +301,7 @@ if(${BUILD_ROCAL})
         include_directories(${Python3_INCLUDE_DIRS})
         include_directories(${pybind11_INCLUDE_DIRS})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Python3_LIBRARIES})
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_PYTHON)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_PYTHON_FUNCTION)
     endif()
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD=1)

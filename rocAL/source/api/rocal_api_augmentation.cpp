@@ -2449,7 +2449,7 @@ rocalPythonFunction(
         RocalTensorLayout output_layout,
         RocalTensorOutputType output_datatype)
 {
-#ifdef ROCAL_PYTHON
+#ifdef ROCAL_PYTHON_FUNCTION
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);

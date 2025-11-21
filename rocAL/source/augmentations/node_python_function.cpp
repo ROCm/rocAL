@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include "augmentations/node_python_function.h"
 #include "pipeline/exception.h"
 
-#ifdef ROCAL_PYTHON
+#ifdef ROCAL_PYTHON_FUNCTION
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <vx_ext_rpp.h>
