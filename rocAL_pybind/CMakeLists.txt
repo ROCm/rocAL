@@ -150,7 +150,7 @@ if(NOT OpenMP_CXX_FOUND)
 endif()
 
 # multi version python support
-set(PYTHON_VERSIONS "3.12" "3.11" "3.10" "3.9" "3.8")
+set(PYTHON_VERSIONS "3.13" "3.12" "3.11" "3.10" "3.9" "3.8")
 add_custom_target(PyPackageBuildAll)
 add_custom_target(PyPackageInstallAll)
 
@@ -174,10 +174,9 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         unset(${v})
     endforeach()
 
-    set(Python3_FIND_VIRTUALENV LAST)
-    set(Python3_FIND_STRATEGY LOCATION)
+    set(Python3_FIND_VIRTUALENV FIRST)
 
-    find_package(Python3 "${PY_VERSION}" EXACT QUIET COMPONENTS Interpreter Development.Module)
+    find_package(Python3 "${PY_VERSION}" EXACT QUIET COMPONENTS Interpreter Development)
     set(PYTHON_FOUND_${PY_VERSION} ${Python3_FOUND})
 
     if(NOT PYTHON_FOUND_${PY_VERSION})
@@ -190,40 +189,25 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
     if(${BUILD_ROCAL_PYBIND})
         message("-- ${Green}NOTE: Python ${PY_VERSION} Found, building rocAL pybind for ${Python3_EXECUTABLE}${ColourReset}")
         # ----- Create a unique pybind module target for this Python -----
-        #string(REPLACE "." "_" VERSION_ID "${PY_VERSION}")          # e.g., 3.11 -> 3_11
         set(mod_tgt "rocal_pybind_${PY_VERSION}")                # CMake target name
-        set(pkg_dir "rocal_pybind")                              # Python package dir name
-        set(out_dir "${CMAKE_BINARY_DIR}/${pkg_dir}_${PY_VERSION}") # per-version bin dir
-        file(MAKE_DIRECTORY "${out_dir}")
 
         # avoid setting the default installation path to /usr/local
         if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-            message("-- ${Green}NOTE: rocAL PyBind default installation path -- ${Python3_STDARCH} ${ColourReset}")
             set(CMAKE_INSTALL_PREFIX_PYTHON ${Python3_STDARCH} CACHE PATH "rocAL PyBind default installation path" FORCE)
         endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-        # MIVisionX
-        include_directories(${MIVisionX_INCLUDE_DIRS})
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OPENVX_LIBRARIES} ${VXRPP_LIBRARIES})
+        # Reset and build link library list for this specific Python version
+        set(LINK_LIBRARY_LIST_${PY_VERSION} "")
+        # MIVisionX and RPP
+        list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} ${OPENVX_LIBRARIES} ${VXRPP_LIBRARIES})
         # TurboJPEG
-        include_directories(${TurboJpeg_INCLUDE_DIRS})
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
+        list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} ${TurboJpeg_LIBRARIES})
         # rocAL
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocal)
-        include_directories(../rocAL/include/api/)
-        # Python3
-        include_directories(${Python3_INCLUDE_DIRS})
-        #include_directories(Python3::Python)
-        message("-- ${Green}NOTE: rocAL pybind requires Python3, Found --  ${Python3_INCLUDE_DIRS} ${ColourReset}")	
-        # PyBind11
-        include_directories(${pybind11_INCLUDE_DIRS})
-        # half
-        include_directories(${HALF_INCLUDE_DIRS})
+        list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} rocal)
         # OpenMP
-        #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
-        #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath='$ORIGIN:$ORIGIN/llvm/lib'")
+        list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} ${OpenMP_CXX_LIBRARIES})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath='$ORIGIN:$ORIGIN/llvm/lib'")
 
         # Binding sources
         set(BINDING_SOURCES
@@ -232,10 +216,19 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         )
 
         pybind11_add_module(${mod_tgt} MODULE ${BINDING_SOURCES})
-        target_link_libraries(${mod_tgt} PRIVATE ${LINK_LIBRARY_LIST})
+        # Use target-specific includes to avoid cross-contamination between Python versions
+        target_include_directories(${mod_tgt} PRIVATE 
+            ${MIVisionX_INCLUDE_DIRS}
+            ${TurboJpeg_INCLUDE_DIRS}
+            ${Python3_INCLUDE_DIRS}
+            ${pybind11_INCLUDE_DIRS}
+            ${HALF_INCLUDE_DIRS}
+            ../rocAL/include/api/
+        )
+        target_link_libraries(${mod_tgt} PRIVATE ${LINK_LIBRARY_LIST_${PY_VERSION}} ${Python3_LIBRARIES})
 
         add_dependencies(${mod_tgt} rocal)
-        message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
+        message("-- ${White}rocal_pybind -- Link Libraries: ${LINK_LIBRARY_LIST_${PY_VERSION}}${ColourReset}")
         message("-- ${White}rocal_pybind -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 
         #DLPack
@@ -257,20 +250,17 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
         set_target_properties(${mod_tgt} PROPERTIES
             PREFIX ""
             SUFFIX "${Python3_EXTENSION_SUFFIX}"
-            LIBRARY_OUTPUT_DIRECTORY "${out_dir}"
             OUTPUT_NAME "rocal_pybind")
 
         # Python files - Install
         install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/amd/"
                 DESTINATION ${CMAKE_INSTALL_LIBDIR}/amd
                 COMPONENT runtime)
-                #FILES_MATCHING PATTERN "*.py")
 
         # rocAL pybind libs - install
         install(TARGETS ${mod_tgt}
                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR})
-                #ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+                COMPONENT runtime)
 
         # PyBind Test - Install
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
