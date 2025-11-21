@@ -93,6 +93,7 @@ public:
                 using ElementType = typename std::decay_t<T>::value_type;
 
                 std::vector<ElementType> result;
+                result.reserve(values.size());
                 for (const auto& v : values) {
                     result.push_back(std::any_cast<ElementType>(v));
                 }

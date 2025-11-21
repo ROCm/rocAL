@@ -76,10 +76,13 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
 }
 
 void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    ShardingInfo sharding_info(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>());
+    std::string file_prefix = arguments[17].Get<std::string>();
+
     this->init(arguments[0].Get<unsigned>(), arguments[1].Get<unsigned>(), arguments[2].Get<std::string>(),
                arguments[3].Get<std::string>(), arguments[4].Get<std::map<std::string, std::string>>(), arguments[5].Get<StorageType>(),
-               arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(), 
-               meta_data_reader, arguments[12].Get<bool>(), ShardingInfo(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>()), arguments[17].Get<std::string>().c_str(),
+               arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(),
+               meta_data_reader, arguments[12].Get<bool>(), sharding_info, file_prefix.c_str(),
                arguments[18].Get<unsigned>(), arguments[19].Get<unsigned>(), arguments[20].Get<unsigned>(), arguments[21].Get<ExternalSourceFileMode>(), arguments[22].Get<std::string>());
 }
 
