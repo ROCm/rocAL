@@ -24,5 +24,5 @@ Set up a training pipeline that reads data from a dataset using ``readers.file``
 
 Call the training pipeline using ``ROCALClassificationIterator``.
 
-Two examples of PyTorch training using rocAL are available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/master/docs/examples/pytorch/>`_.
+Two examples of PyTorch training using rocAL are available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/develop/docs/examples/pytorch/>`_.
 

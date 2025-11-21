@@ -39,6 +39,7 @@ When building rocAL from source, the |setup| setup script can be used to install
 The following prerequisites are required and are installed with both the package installer and the setup script:
 
 * `MIVisionX <https://rocm.docs.amd.com/projects/MIVisionX/en/latest/index.html>`_ with |openvx|_ and the VX_RPP and AMD Media extensions
+* `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/index.html>`_
 * `The half-precision floating-point library <https://half.sourceforge.net>`_ version 1.12.0 or later
 * `Google Protobuf <https://developers.google.com/protocol-buffers>`_ version 3.12.4 or later
 * `LMBD Library <http://www.lmdb.tech/doc/>`_

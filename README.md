@@ -242,9 +242,6 @@ To build rocAL from source and install, follow the steps below:
 git clone https://github.com/ROCm/rocAL.git
 ```
 
->[!NOTE] 
-> rocAL has support for two GPU backends: **OPENCL** and **HIP**:
-
 #### HIP Backend
 
 * Instructions for building rocAL with the **HIP** GPU backend (default GPU backend):
@@ -367,7 +364,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * Linux distribution
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15-SP5`
+  * SLES - `15-SP7`
 * ROCm: rocm-core - `7.0.0`+
 * MIVisionX - `mivisionx-dev`/`mivisionx-devel`
 * rocDecode - `rocdecode-dev`/`rocdecode-devel`

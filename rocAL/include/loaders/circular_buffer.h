@@ -23,14 +23,10 @@ THE SOFTWARE.
 #pragma once
 #include <condition_variable>
 #include <vector>
-#if ENABLE_OPENCL
-#include <CL/cl.h>
-#endif
 #include <queue>
-
 #include "pipeline/commons.h"
-#include "device/device_manager.h"
 #include "device/device_manager_hip.h"
+
 struct DecodedDataInfo {
     std::vector<std::string> _data_names;
     std::vector<uint32_t> _roi_width;
@@ -40,6 +36,7 @@ struct DecodedDataInfo {
     std::vector<uint32_t> _audio_samples; //! Amplitude of an audio signal at a specific point in time
     std::vector<uint32_t> _audio_channels; //! Number of audio channels in an audio signal
     std::vector<float> _audio_sample_rates; //! The number of samples of audio carried per second
+    std::vector<std::vector<uint32_t>> _roi_shape; //! ROI values for each dimension
 };
 
 struct CropImageInfo {
@@ -84,10 +81,6 @@ class CircularBuffer {
 #if ENABLE_HIP
     hipStream_t _hip_stream;
     int _hip_device_id, _hip_canMapHostMemory;
-#elif ENABLE_OPENCL
-    cl_command_queue _cl_cmdq = nullptr;
-    cl_context _cl_context = nullptr;
-    cl_device_id _device_id = nullptr;
 #endif
     std::vector<void*> _dev_buffer;  // Actual memory allocated on the device (in the case of GPU affinity)
     std::vector<unsigned char*> _host_buffer_ptrs;

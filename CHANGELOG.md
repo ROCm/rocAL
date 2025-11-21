@@ -2,6 +2,19 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
+## (Unreleased) rocAL 2.5.0
+
+### Added
+* Introduce enum registry to register all the enums present in rocAL.
+* Introduce Argument class which stores the value and type of each argument in the Node.
+* Support to store the arguments in the Node class.
+
+### Changes
+* OpenCL backend support - deprecated
+* CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
+* Refactor external enum usage in rocAL, to maintain separation between external and internal enums.
+* Introduced the following enums ResizeScalingMode, ResizeInterpolationType, MelScaleFormula, AudioBorderType, OutOfBoundsPolicy in commons.h.
+
 ## rocAL 2.4.0 for ROCm 7.1.0
 
 ### Added
