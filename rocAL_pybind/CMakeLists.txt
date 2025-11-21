@@ -42,7 +42,6 @@ endif()
 
 # Set Project Version and Language
 project(rocal_pybind VERSION ${VERSION} LANGUAGES CXX)
-message("DEBUG: Printing VERSION value -- ${VERSION}")
 
 set(TARGET_NAME rocal_pybind)
 
