@@ -43,6 +43,7 @@ class Parameter {
     virtual std::vector<T> get_array() { return {}; };
 
     virtual std::string serialize_rng() const { return {}; }
+    virtual void deserialize_rng(const std::string&) {}
 
     virtual ~Parameter() {}
     ///

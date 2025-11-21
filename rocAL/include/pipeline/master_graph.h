@@ -166,6 +166,7 @@ public:
     void get_serialized_checkpoint(size_t &serialized_ckpt_string_size);
     const std::string& get_serialized_checkpoint_string() const { return _serialized_checkpoint; }
     void deserialize(rocal_proto::PipelineDef *pipe_def);
+    void restore_from_serialized_checkpoint(const std::string &serialized_ckpt);
     Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
     void deserialize_args_from_protobuf(const rocal_proto::OperatorDef& opdef, std::vector<Argument>& arguments);
 private:
@@ -342,6 +343,8 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Track loader nodes for checkpointing/serialization
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 

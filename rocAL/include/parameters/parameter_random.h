@@ -91,6 +91,10 @@ class UniformRand : public Parameter<T> {
         ss << _generator;
         return ss.str();
     }
+    void deserialize_rng(const std::string &data) override {
+        std::istringstream ss(data);
+        ss >> _generator;
+    }
     int update(T start, T end) {
         std::unique_lock<std::mutex> lock(_lock);
         if (end < start)
@@ -223,6 +227,10 @@ struct CustomRand : public Parameter<T> {
         std::ostringstream ss;
         ss << _generator;
         return ss.str();
+    }
+    void deserialize_rng(const std::string &data) override {
+        std::istringstream ss(data);
+        ss >> _generator;
     }
     T get() override {
         return _updated_val;

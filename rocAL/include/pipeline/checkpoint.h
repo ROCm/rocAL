@@ -37,6 +37,11 @@ inline std::string SerializeRNGToString(const std::mt19937 &rng) {
     return stream.str();
 }
 
+inline void DeserializeRNGFromString(const std::string &data, std::mt19937 &rng) {
+    std::stringstream stream(data);
+    stream >> rng;
+}
+
 class OperatorCheckpoint {
    public:
     explicit OperatorCheckpoint(std::string name) : _operator_name(std::move(name)) {}

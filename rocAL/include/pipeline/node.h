@@ -57,6 +57,7 @@ class Node {
     const std::vector<Argument>& get_args_list() const { return _args; }
     virtual void save_state(std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) {}
     virtual std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) { return ""; }
+    virtual void restore_state(const std::string &/*operator_state_bytes*/) {}
     virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("Not Implemented") }
     virtual void initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) { THROW("Not Implemented") }
     virtual void initialize_args(std::vector<Argument> &arguments) { THROW("Not Implemented") }

@@ -55,6 +55,7 @@ class ImageLoader : public LoaderModule {
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
     size_t last_batch_padded_size() override;
     const LoaderState& get_loader_state() const override;
+    void restore_from_state(const LoaderState& s) override;
 
    private:
     bool is_out_of_data();

@@ -45,6 +45,7 @@ class ImageLoaderSingleShardNode : public Node {
     std::string node_name() const override { return "ImageLoaderSingleShardNode"; }
     void save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) override;
     std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) override;
+    void restore_state(const std::string &operator_state_bytes) override;
 
    protected:
     void create_node() override{};

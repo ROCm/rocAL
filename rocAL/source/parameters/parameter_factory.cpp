@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include <cstdlib>
 #include <ctime>
+#include <stdexcept>
 
 #include "parameters/parameter_simple.h"
 ParameterFactory* ParameterFactory::_instance = nullptr;
@@ -213,6 +214,24 @@ std::vector<std::string> ParameterFactory::snapshot_rngs() {
         }
     }
     return out;
+}
+
+void ParameterFactory::restore_rngs(const std::vector<std::string>& rng_states) {
+    if (rng_states.size() != _param_list.size()) {
+        throw std::runtime_error("ParameterFactory::restore_rngs: snapshot size mismatch with parameter list");
+    }
+    for (size_t i = 0; i < _param_list.size(); ++i) {
+        std::visit([&](auto* param) {
+            if (!param) {
+                return;
+            }
+            pParamCore key = param;
+            if (_parameters.find(key) == _parameters.end()) {
+                return;
+            }
+            param->deserialize_rng(rng_states[i]);
+        }, _param_list[i]);
+    }
 }
 
 void ParameterFactory::destroy_instance() {

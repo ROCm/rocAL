@@ -93,7 +93,63 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
         for idx in range(batch_size):
             print(image_names[idx], label[idx])
 
+    del iterator
+    gc.collect()
+
     return serialized_ckpt, ckpt_path
+
+
+def restore_and_compare(bs, rocal_device, rocal_cpu, img_folder, serialized_ckpt=None, ckpt_path=None):
+    """Create a fresh pipeline in a separate scope and restore from checkpoint.
+
+    Accepts either serialized_ckpt bytes or ckpt_path on disk.
+    """
+    pipe_restored = image_decoder_pipeline(
+        batch_size=bs,
+        num_threads=1,
+        device_id=gpu_id,
+        rocal_cpu=rocal_cpu,
+        tensor_layout=types.NHWC,
+        reverse_channels=True,
+        mean=[0, 0, 0],
+        std=[255, 255, 255],
+        device=rocal_device,
+        path=img_folder,
+        enable_checkpointing=True,
+    )
+    pipe_restored.build()
+
+    print(f"Before restore: remaining images = {pipe_restored.get_remaining_images()}")
+    print(f"Checkpoint size: {len(serialized_ckpt) if serialized_ckpt else 'N/A'} bytes")
+
+    try:
+        if serialized_ckpt is not None:
+            pipe_restored.restore_checkpoint(serialized_ckpt=serialized_ckpt)
+            print("Restore from serialized checkpoint completed")
+        elif ckpt_path is not None:
+            pipe_restored.restore_checkpoint(filename=ckpt_path)
+            print(f"Restore from checkpoint file {ckpt_path} completed")
+        else:
+            raise RuntimeError("No checkpoint provided for restore")
+    except Exception as e:
+        print("Error restoring checkpoint:", e)
+        print("Tip: Ensure the checkpoint was produced by an identical pipeline.")
+        pipe_restored.rocal_release()
+        return
+
+    print(f"After restore: remaining images = {pipe_restored.get_remaining_images()}")
+
+    iterator = ROCALGenericIterator(pipe_restored)
+    for i in range(5):
+        batch = iterator.next()
+        [image], label = batch
+        image_names = _get_image_names(pipe_restored)
+        for idx in range(batch_size):
+            print(image_names[idx], label[idx])
+
+    del iterator
+    gc.collect()
+
 
 def main():
     print('Optional arguments: <cpu/gpu> <image_folder>')
@@ -114,9 +170,23 @@ def main():
     )
     
     print("\n========== Creating and Checkpointing Pipeline ==========")
-    serialized_ckpt, used_path = create_and_checkpoint(
+    serialized_ckpt, _ = create_and_checkpoint(
         bs, rocal_device, rocal_cpu, img_folder, ckpt_path=ckpt_path
     )
+
+    time.sleep(0.5)
+
+    print("\n========== Restoring Pipeline from Checkpoint ==========")
+    restore_and_compare(
+        bs,
+        rocal_device,
+        rocal_cpu,
+        img_folder,
+        serialized_ckpt=serialized_ckpt,
+        ckpt_path=None,
+    )
+
+    print("\n========== Checkpoint Test Completed Successfully ==========")
 
 if __name__ == '__main__':
     main()

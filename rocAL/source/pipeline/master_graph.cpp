@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <VX/vx_types.h>
 #include <cstring>
 #include <sched.h>
+#include <unordered_map>
 #include <typeinfo>
 #include <half/half.hpp>
 #include "pipeline/master_graph.h"
@@ -354,6 +355,8 @@ void MasterGraph::release() {
     // shut_down loader:: required for releasing any allocated resourses
     for (auto &loader_module : _loader_modules)
         loader_module->shut_down();
+    // Destroy ParameterFactory singleton to allow new pipelines to have completely fresh state
+    ParameterFactory::destroy_instance();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_HIP
@@ -1966,6 +1969,84 @@ void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size)
 
     _serialized_checkpoint = checkpoint.SerializeAsString();
     serialized_ckpt_string_size = _serialized_checkpoint.size();
+}
+
+void MasterGraph::restore_from_serialized_checkpoint(const std::string &serialized_ckpt) {
+    if (!_checkpointing_enabled) {
+        THROW("Checkpointing is not enabled for this pipeline");
+    }
+
+    bool was_processing = _processing;
+    if (was_processing) {
+        stop_processing();
+    }
+    _ring_buffer.reset();
+    _first_run = true;
+
+    rocal_proto::Checkpoint checkpoint;
+    if (!checkpoint.ParseFromString(serialized_ckpt)) {
+        THROW("Failed to parse serialized rocAL checkpoint");
+    }
+
+    if (checkpoint.has_checkpoint_version() && checkpoint.checkpoint_version() != kCheckpointVersion) {
+        THROW("rocAL checkpoint version mismatch");
+    }
+    if (checkpoint.has_pipeline_signature()) {
+        uint64_t current_sig = compute_pipeline_signature();
+        if (current_sig != checkpoint.pipeline_signature()) {
+            THROW("rocAL checkpoint/pipeline signature mismatch - checkpoint was created with a different pipeline configuration");
+        }
+    }
+    if (checkpoint.has_batch_size() && static_cast<uint32_t>(_user_batch_size) != checkpoint.batch_size()) {
+        THROW("rocAL checkpoint restore failed: batch_size mismatch");
+    }
+    if (checkpoint.has_device_id() && static_cast<int32_t>(_gpu_id) != checkpoint.device_id()) {
+        THROW("rocAL checkpoint restore failed: device_id mismatch");
+    }
+    if (checkpoint.has_mem_type() && static_cast<int32_t>(_mem_type) != checkpoint.mem_type()) {
+        THROW("rocAL checkpoint restore failed: mem_type mismatch");
+    }
+
+    std::unordered_map<std::string, std::shared_ptr<Node>> node_by_name;
+    node_by_name.reserve(_pipeline_operators.size());
+    for (auto &pipe_op : _pipeline_operators) {
+        if (pipe_op->node) {
+            node_by_name.emplace(pipe_op->operator_name, pipe_op->node);
+        }
+    }
+
+    for (int i = 0; i < checkpoint.cpts_size(); i++) {
+        const auto &cpt = checkpoint.cpts(i);
+        auto it = node_by_name.find(cpt.operator_name());
+        if (it == node_by_name.end()) {
+            continue;
+        }
+        it->second->restore_state(cpt.operator_state());
+    }
+
+    if (checkpoint.has_aug_rng()) {
+        std::vector<std::string> rng_states;
+        rng_states.reserve(checkpoint.aug_rng().rng_mt19937_size());
+        for (int i = 0; i < checkpoint.aug_rng().rng_mt19937_size(); i++) {
+            rng_states.emplace_back(checkpoint.aug_rng().rng_mt19937(i));
+        }
+        ParameterFactory::instance()->restore_rngs(rng_states);
+    }
+
+    if (checkpoint.has_external_ctx()) {
+        _iteration_number = checkpoint.external_ctx().pipeline_iteration();
+    }
+
+    if (!_loader_modules.empty()) {
+        _remaining_count = static_cast<int>(_loader_modules[0]->remaining_count());
+        for (size_t i = 1; i < _loader_modules.size(); i++) {
+            _remaining_count = std::min(_remaining_count, static_cast<int>(_loader_modules[i]->remaining_count()));
+        }
+    }
+
+    if (was_processing) {
+        start_processing();
+    }
 }
 
 Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output) {

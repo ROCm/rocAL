@@ -303,6 +303,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
         }
         return py::bytes(serialized_ckpt);
     }, "Returns the serialized checkpoint as Python bytes");
+    m.def("restoreFromCheckpoint", [](RocalContext context, py::bytes checkpoint_bytes) {
+        std::string ckpt = checkpoint_bytes;
+        rocalRestoreFromSerializedCheckpoint(context, ckpt.data(), ckpt.size());
+    }, "Restores the pipeline from a checkpoint bytes object");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)
