@@ -282,6 +282,8 @@ void PipelineSerializer::serialize_output_tensors(TensorList& output_tensors_lis
 }
 
 RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto::OperatorDef& opdef, std::vector<Argument>& arguments) {
+    arguments.clear();
+    arguments.reserve(opdef.args_size());
     for (const auto& proto_arg : opdef.args()) {
         Argument arg;
         arg.arg_name = proto_arg.name();
