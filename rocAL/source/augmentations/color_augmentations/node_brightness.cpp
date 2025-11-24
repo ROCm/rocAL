@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_brightness.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(BrightnessNode)
+
 BrightnessNode::BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
                                                                                                             _beta(BETA_RANGE[0], BETA_RANGE[1]) {}

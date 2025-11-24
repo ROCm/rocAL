@@ -28,9 +28,9 @@ THE SOFTWARE.
 
 #include "pipeline/graph.h"
 #include "loaders/loader_module.h"
-// #include "meta_data/meta_data_graph.h"
 #include "pipeline/tensor.h"
 #include "pipeline/argument.h"
+#include "pipeline/node_factory.h"
 
 class Node {
    public:
@@ -54,9 +54,10 @@ class Node {
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
     const std::vector<Argument>& get_args_list() const { return _args; }
-    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("Not Implemented") }
-    virtual void initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) { THROW("Not Implemented") }
-    virtual void initialize_args(std::vector<Argument> &arguments) { THROW("Not Implemented") }
+    // Returns the LoaderModule associated with this node, Derived LoaderNodes should override this method.
+    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("Not Implemented"); }
+    virtual void initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) { THROW("Not Implemented"); }
+    virtual void initialize_args(std::vector<Argument> &arguments) { THROW("Not Implemented"); }
 
    protected:
     virtual void create_node() = 0;
@@ -71,68 +72,15 @@ class Node {
     std::vector<std::shared_ptr<Node>> _prev;   // Stores the reference to a list of previous Nodes
     int _graph_id = -1;
     std::vector<Argument> _args;
+    /**
+     * @brief Template function to set node arguments using variadic templates and fold expressions.
+     * 
+     * This function creates Argument objects for each argument-name pair and stores them in the node.
+     * It uses fold expressions to expand the parameter pack at compile time.
+     */
     template <size_t N, size_t... Indices, typename... Args>
-    void set_node_arguments(std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
+    void set_node_arguments(const std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
         // Fold expression to create Argument object for each argument in the node
         (this->_args.push_back(Argument(arg_names[Indices], std::forward<Args>(args))), ...);
     }
 };
-
-class NodeFactory {
-public:
-    using LoaderCreator = std::function<std::shared_ptr<Node>(Tensor*, void*)>;
-    using AugmentationCreator = std::function<std::shared_ptr<Node>(const std::vector<Tensor *>&, const std::vector<Tensor *>&)>;
-
-    static NodeFactory& instance() {
-        static NodeFactory factory;
-        return factory;
-    }
-
-    void register_loader_node(const std::string& name, LoaderCreator creator) {
-        _loader_node_registry[name] = std::move(creator);
-    }
-
-    void register_node(const std::string& name, AugmentationCreator creator) {
-        _node_registry[name] = std::move(creator);
-    }
-
-    std::shared_ptr<Node> create_loader_node(const std::string& name, Tensor* output_tensor, void *dev_resource) const {
-        auto it = _loader_node_registry.find(name);
-        if (it != _loader_node_registry.end()) {
-            return it->second(output_tensor, dev_resource);
-        } else {
-            THROW("The given node not found in the registry" + name)
-        }
-    }
-
-    std::shared_ptr<Node> create_node(const std::string& name, const std::vector<Tensor *>& inputs, const std::vector<Tensor *>& outputs) const {
-        auto it = _node_registry.find(name);
-        if (it != _node_registry.end()) {
-            return it->second(inputs, outputs);
-        } else {
-            THROW("The given node not found in the registry" + name)
-        }
-    }
-
-private:
-    std::map<std::string, LoaderCreator> _loader_node_registry;
-    std::map<std::string, AugmentationCreator> _node_registry;
-};
-
-#define REGISTER_LOADER_NODE(CLASS_NAME) \
-    static struct CLASS_NAME##_NodeRegistrar { \
-        CLASS_NAME##_NodeRegistrar() { \
-            NodeFactory::instance().register_loader_node(#CLASS_NAME, [](Tensor *output, void *dev_resources) { \
-                return std::make_shared<CLASS_NAME>(output, dev_resources); \
-            }); \
-        } \
-    } _##CLASS_NAME##_registrar;
-
-#define REGISTER_NODE(CLASS_NAME) \
-    static struct CLASS_NAME##_NodeRegistrar { \
-        CLASS_NAME##_NodeRegistrar() { \
-            NodeFactory::instance().register_node(#CLASS_NAME, [](const std::vector<Tensor *>& inputs, const std::vector<Tensor *>& outputs) { \
-                return std::make_shared<CLASS_NAME>(inputs, outputs); \
-            }); \
-        } \
-    } _##CLASS_NAME##_registrar;
