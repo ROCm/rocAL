@@ -74,7 +74,7 @@ void RemapNode::create_node() {
         for (vx_size n = 0; n < N; ++n) {
             const float* src = replicate ? vec.data() : (vec.data() + n * elems_per_sample);
             float *dst = fptr + n * elems_per_sample;
-            std::memcpy(dst, src, elems_per_sample);
+            std::memcpy(dst, src, elems_per_sample * sizeof(float));
         }
         *out_t = t;
     };
