@@ -1904,7 +1904,7 @@ std::shared_ptr<Node> MasterGraph::add_node(std::string node_name, const std::ve
         node->set_graph_id(_loaders_count++);
         _root_nodes.push_back(node);
         
-        // Add each opertor to the pipeline operators list
+        // Add each operator to the pipeline operators list
         _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
 
         for (auto &output : outputs)
@@ -1970,8 +1970,9 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                         if (!inputs_vector.empty()) {
                             // Check compatibility with first input tensor as reference
                             Tensor* reference_input = inputs_vector[0];
+                            bool is_geometric_aug = std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), get_node_name(op_def.name())) != GEOMETRIC_AUGMENTATIONS.end();
                             if (reference_input && check_tensor_info(reference_input->info(), op_output)
-                                && std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), get_node_name(op_def.name())) == GEOMETRIC_AUGMENTATIONS.end()) {
+                                && !is_geometric_aug) {
                                 output_tensor = create_tensor(reference_input->info(), false);
                                 tensor_info_compatible = true;
                             }

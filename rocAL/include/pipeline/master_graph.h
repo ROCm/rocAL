@@ -190,7 +190,7 @@ private:
     std::list<std::shared_ptr<Node>> _root_nodes;                                 //!< List of all root nodes (image/video loaders)
     std::list<std::shared_ptr<Node>> _meta_data_nodes;                            //!< List of nodes where meta data has to be updated after augmentation
     std::map<Tensor *, std::shared_ptr<Node>> _tensor_map;                        //!< key: tensor, value : Parent node
-    std::map<std::string, Tensor *> _pipeline_tensors;                        
+    std::map<std::string, Tensor *> _pipeline_tensors;                        //!< Maps tensor names to tensor pointers during deserialization
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
     TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder
