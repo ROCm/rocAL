@@ -112,7 +112,6 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
         // Resolve input/output numpy dtype and itemsize
         auto input_np = numpy_type_from_vx(params->in_desc.dtype);
         auto output_np = numpy_type_from_vx(params->out_desc.dtype);
-        const size_t input_itemsize = input_np.second;
         const size_t output_itemsize = output_np.second;
 
         // Build shape/strides (in bytes) for input view
@@ -122,7 +121,7 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
         std::vector<ssize_t> input_strides(input_ndim);
         for (size_t i = 0; i < input_ndim; ++i) {
             input_shape[i] = static_cast<ssize_t>(params->in_desc.shape[i]);
-            input_strides[i] = static_cast<ssize_t>(params->in_desc.strides[i] * input_itemsize);
+            input_strides[i] = static_cast<ssize_t>(params->in_desc.strides[i]);
         }
 
         // Zero-copy NumPy view over src_ptr
