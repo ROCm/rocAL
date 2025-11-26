@@ -218,8 +218,107 @@ int main(int argc, const char **argv) {
     
     std::cout << "\n=== Serialization Test Completed Successfully ===" << std::endl;
     
-    // Clean up
+    /*>>>>>>>>>>>>>>>>>>> Deserialization Test <<<<<<<<<<<<<<<<<<<*/
+    
+    std::cout << "\n=== Testing Pipeline Deserialization ===" << std::endl;
+    
+    // Set up pipeline parameters for deserialization
+    RocalPipelineParams pipe_params;
+    pipe_params.batch_size = inputBatchSize;
+    pipe_params.num_threads = 1;
+    pipe_params.prefetch_queue_depth = 3;
+    pipe_params.device_id = 0;
+    pipe_params.rocal_cpu = !processing_device;  // true for CPU, false for GPU
+    
+    // Create a new pipeline from the serialized string
+    RocalContext deserialized_handle = rocalDeserialize(serialized_pipe_string.c_str(), 
+                                                        serialized_string_size, 
+                                                        pipe_params);
+    
+    if (deserialized_handle == nullptr || rocalGetStatus(deserialized_handle) != ROCAL_OK) {
+        std::cout << "Failed to deserialize pipeline" << std::endl;
+        rocalRelease(handle);
+        return -1;
+    }
+    
+    std::cout << "Pipeline deserialized successfully!" << std::endl;
+    std::cout << "Deserialized pipeline - Augmented copies count: " << rocalGetAugmentationBranchCount(deserialized_handle) << std::endl;
+    std::cout << "Deserialized pipeline - Output dimensions: " << rocalGetOutputWidth(deserialized_handle) << "x" << rocalGetOutputHeight(deserialized_handle) << std::endl;
+    
+    /*>>>>>>>>>>>>>>>>>>> Test Deserialized Pipeline Execution <<<<<<<<<<<<<<<<<<<*/
+    
+    std::cout << "\n=== Testing Deserialized Pipeline Execution ===" << std::endl;
+    std::cout << "Available images in deserialized pipeline: " << rocalGetRemainingImages(deserialized_handle) << std::endl;
+    
+    // Prepare OpenCV matrices for deserialized pipeline output
+    cv::Mat mat_deserialized_output(h, w, cv_color_format);
+    cv::Mat mat_deserialized_input(h, w, cv_color_format);
+    cv::Mat mat_deserialized_color;
+    
+    // Run the same number of iterations on the deserialized pipeline
+    for (int iter = 0; iter < test_iterations && !rocalIsEmpty(deserialized_handle); iter++) {
+        std::cout << "\nDeserialized Pipeline - Iteration " << (iter + 1) << ":" << std::endl;
+        
+        if (rocalRun(deserialized_handle) != 0) {
+            std::cout << "rocalRun Failed with runtime error on deserialized pipeline" << std::endl;
+            rocalRelease(handle);
+            rocalRelease(deserialized_handle);
+            return -1;
+        }
+        
+        // Get labels from deserialized pipeline
+        RocalTensorList deserialized_labels = rocalGetImageLabels(deserialized_handle);
+        
+        // Get image names from deserialized pipeline
+        int ImageNameLenDeserialized[inputBatchSize];
+        unsigned imagename_size_deserialized = rocalGetImageNameLen(deserialized_handle, ImageNameLenDeserialized);
+        std::vector<char> imageNamesDeserialized(imagename_size_deserialized);
+        rocalGetImageName(deserialized_handle, imageNamesDeserialized.data());
+        std::string imageNamesStrDeserialized(imageNamesDeserialized.data());
+        
+        int pos = 0;
+        int *labels_buffer_deserialized = reinterpret_cast<int *>(deserialized_labels->at(0)->buffer());
+        std::vector<std::string> names_deserialized;
+        names_deserialized.resize(inputBatchSize);
+        
+        for (int i = 0; i < inputBatchSize; i++) {
+            names_deserialized[i] = imageNamesStrDeserialized.substr(pos, ImageNameLenDeserialized[i]);
+            pos += ImageNameLenDeserialized[i];
+            std::cout << "  Image: " << names_deserialized[i] << " | Label: " << labels_buffer_deserialized[i] << std::endl;
+        }
+        
+        // Copy Image data from deserialized handle
+        rocalCopyToOutput(deserialized_handle, mat_deserialized_input.data, h * w * p);
+        
+        std::vector<int> compression_params;
+        compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);
+        
+        mat_deserialized_input.copyTo(mat_deserialized_output(cv::Rect(col_counter * w, 0, w, h)));
+        std::string out_filename_deserialized = std::string("deserialized_") + std::string(outName) + ".png";
+        if (display_all)
+            out_filename_deserialized = std::string("deserialized_") + std::string(outName) + std::to_string(iter) + ".png";
+        
+        if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
+#ifdef USE_OPENCV_4
+            cv::cvtColor(mat_deserialized_output, mat_deserialized_color, cv::COLOR_RGB2BGR);
+#else
+            cv::cvtColor(mat_deserialized_output, mat_deserialized_color, CV_RGB2BGR);
+#endif
+            cv::imwrite(out_filename_deserialized, mat_deserialized_color, compression_params);
+        } else {
+            cv::imwrite(out_filename_deserialized, mat_deserialized_output, compression_params);
+        }
+        col_counter = (col_counter + 1) % number_of_cols;
+    }
+    
+    std::cout << "\n=== Deserialization Test Completed Successfully ===" << std::endl;
+    std::cout << "\nBoth original and deserialized pipelines executed successfully!" << std::endl;
+    std::cout << "Output images saved with 'deserialized_' prefix for comparison." << std::endl;
+    
+    // Clean up both pipelines
     rocalRelease(handle);
+    rocalRelease(deserialized_handle);
     
     return 0;
 }
