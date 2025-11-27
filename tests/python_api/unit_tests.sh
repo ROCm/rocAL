@@ -10,7 +10,7 @@ fi
 # Path to inputs and outputs
 one_hot_data_path=${ROCAL_DATA_PATH}/rocal_data/images_jpg/labels_folder/
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
-web_dataset_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/
+web_dataset_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/tar_file/
 coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 coco_json_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/annotations/coco_data.json
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/
