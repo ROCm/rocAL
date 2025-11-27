@@ -452,8 +452,8 @@ def main():
                                            output_dtype=tensor_dtype)
         elif augmentation_name == "lens_correction":
             output = fn.lens_correction(images,
-                                        strength=2.9,
-                                        zoom=1.2,
+                                        camera_matrix=[534.07088364, 341.53407554, 534.11914595, 232.94565259],
+                                        distortion_coeffs=[-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798],
                                         output_layout=tensor_layout,
                                         output_dtype=tensor_dtype)
         elif augmentation_name == "blend":

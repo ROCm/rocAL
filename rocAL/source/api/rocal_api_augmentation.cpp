@@ -1507,14 +1507,6 @@ rocalLensCorrection(
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
-        if (camera_matrix.size() != context->user_batch_size()) {
-            ERR("User should pass camera matrix for all images in a batch")
-            return output;
-        }
-        if (distortion_coeffs.size() != context->user_batch_size()) {
-            ERR("User should pass distortion coefficients for all images in a batch")
-            return output;
-        }
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
