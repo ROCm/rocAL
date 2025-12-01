@@ -150,8 +150,9 @@ endif()
 
 # multi version python support
 set(PYTHON_VERSIONS "3.13" "3.12" "3.11" "3.10" "3.9" "3.8")
-add_custom_target(PyPackageBuildAll)
-add_custom_target(PyPackageInstallAll)
+if(PYTHON_VERSION_SUGGESTED)
+    set(PYTHON_VERSIONS "${PYTHON_VERSION_SUGGESTED}")
+endif()
 
 foreach(PY_VERSION ${PYTHON_VERSIONS})
     message(STATUS "Searching for Python version: ${PY_VERSION}")
@@ -179,13 +180,9 @@ foreach(PY_VERSION ${PYTHON_VERSIONS})
     set(PYTHON_FOUND_${PY_VERSION} ${Python3_FOUND})
 
     if(NOT PYTHON_FOUND_${PY_VERSION})
-        set(BUILD_ROCAL_PYBIND false)
         message("-- ${Yellow}NOTE: Python${PY_VERSION} Not Found, not building rocAL pybind for Python${PY_VERSION}${ColourReset}")
+        continue()
     else()
-        set(BUILD_ROCAL_PYBIND true)
-    endif()
-
-    if(${BUILD_ROCAL_PYBIND})
         message("-- ${Green}NOTE: Python ${PY_VERSION} Found, building rocAL pybind for ${Python3_EXECUTABLE}${ColourReset}")
         # ----- Create a unique pybind module target for this Python -----
         set(mod_tgt "rocal_pybind_${PY_VERSION}")                # CMake target name
