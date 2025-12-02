@@ -886,19 +886,19 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 64: {
             std::cout << "Running rocalColorCast" << std::endl;
-            std::vector<float> rgb = {0.25f, 0.10f, 0.00f};
-            output = rocalColorCast(handle, input, true, float_param, rgb, output_tensor_layout, output_tensor_dtype);
+            std::vector<float> rgb = {12.0f, 0.0f, 100.00f};
+            output = rocalColorCast(handle, input, true, nullptr, rgb, output_tensor_layout, output_tensor_dtype);
         } break;
         case 65: {
             std::cout << "Running rocalColorCastFixed" << std::endl;
-            std::vector<float> rgb = {0.25f, 0.10f, 0.00f};
+            std::vector<float> rgb = {12.0f, 0.0f, 100.0f};
             output = rocalColorCastFixed(handle, input, 0.5f, rgb, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 66: {
             std::cout << "Running rocalGridMask" << std::endl;
-            unsigned tile_width = 32;
-            float grid_ratio = 0.5f;
-            float grid_angle = 0.0f; // radians
+            unsigned tile_width = 40;
+            float grid_ratio = 0.6f;
+            float grid_angle = 0.5f; // radians
             unsigned translate_x = 0;
             unsigned translate_y = 0;
             output = rocalGridMask(handle, input, true, tile_width, grid_ratio, grid_angle, translate_x, translate_y, output_tensor_layout, output_tensor_dtype);
@@ -924,11 +924,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 70: {
             std::cout << "Running rocalGaussianFilter" << std::endl;
             // Use existing float_param defined earlier as per-sample stddev
-            output = rocalGaussianFilter(handle, input, true, float_param, 3, output_tensor_layout, output_tensor_dtype);
+            output = rocalGaussianFilter(handle, input, true, nullptr, 3, output_tensor_layout, output_tensor_dtype);
         } break;
         case 71: {
             std::cout << "Running rocalGaussianFilterFixed" << std::endl;
-            output = rocalGaussianFilterFixed(handle, input, 0.5, 3, true, output_tensor_layout, output_tensor_dtype);
+            output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 72: {
             std::cout << "Running rocalDilate" << std::endl;
