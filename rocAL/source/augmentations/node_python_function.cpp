@@ -121,7 +121,7 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
         std::vector<ssize_t> input_strides(input_ndim);
         for (size_t i = 0; i < input_ndim; ++i) {
             input_shape[i] = static_cast<ssize_t>(params->in_desc.shape[i]);
-            input_strides[i] = static_cast<ssize_t>(params->in_desc.strides[i]);
+            input_strides[i] = static_cast<ssize_t>(params->in_desc.strides[i] * input_np.second);
         }
 
         // Zero-copy NumPy view over src_ptr
