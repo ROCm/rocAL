@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <sstream>
 #include <vector>
 
 namespace py = pybind11;

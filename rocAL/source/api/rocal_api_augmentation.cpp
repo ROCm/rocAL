@@ -2466,6 +2466,8 @@ rocalPythonFunction(
         // The user passed output dimensions won't contain the batch dimension, so it should be added
         if(!output_dims.empty()) {
             std::vector<size_t> dims = output_info.dims();
+            if(output_dims.size() != dims.size() - 1)
+                THROW("User passed output dimensions size does not match with the input tensor dimensions")
             for (size_t i = 1; i < dims.size(); i++)
                 dims[i] = output_dims[i - 1];
             if(dims != output_info.dims())
