@@ -20,6 +20,12 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+# Allow target_link_libraries() to add libraries to targets defined
+# in other directories (needed to adjust 'rocal' from this directory).
+if(POLICY CMP0079)
+    cmake_policy(SET CMP0079 NEW)
+endif()
+
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -173,6 +179,19 @@ endif()
 if(NOT OpenMP_CXX_FOUND)
     set(BUILD_ROCAL_PYBIND false)
     message("-- ${Yellow}NOTE: rocAL pybind library requires OpenMP, Not Found ${ColourReset}")
+endif()
+
+# Enable PythonFunction operator in core rocAL library when building pybind
+# and all Python/pybind11/MIVisionX conditions are satisfied.
+if(BUILD_ROCAL_PYBIND AND TARGET rocal)
+    if (Python3_FOUND AND pybind11_FOUND AND (VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.1"))
+        target_compile_definitions(rocal PUBLIC ROCAL_PYTHON_FUNCTION)
+        target_include_directories(rocal PRIVATE ${Python3_INCLUDE_DIRS} ${pybind11_INCLUDE_DIRS})
+        target_link_libraries(rocal ${Python3_LIBRARIES})
+        message("-- ${White}rocAL PythonFunction operator enabled for pybind${ColourReset}")
+    else()
+        message("-- ${Yellow}NOTE: rocAL PythonFunction operator disabled - requires Python3, pybind11 and MIVisionX vx_rpp >= 3.1.1${ColourReset}")
+    endif()
 endif()
 
 if(${BUILD_ROCAL_PYBIND})
