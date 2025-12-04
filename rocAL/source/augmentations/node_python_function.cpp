@@ -46,7 +46,7 @@ void PythonFunctionNode::create_node() {
 
     vx_context vx_ctx = vxGetContext((vx_reference)_graph->get());
 
-    // Scalars
+    // Passing the function ID as a vx_scalar
     vx_scalar function_id_vx = vxCreateScalar(vx_ctx, VX_TYPE_UINT64, &_function_id);
 
     int input_layout = static_cast<int>(_inputs[0]->info().layout());

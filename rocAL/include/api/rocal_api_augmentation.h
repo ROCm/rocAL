@@ -1377,7 +1377,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] function_id Function id of the python function
+ * \param [in] function_id Memory address of the python function object, i.e. the value returned by id(python_function).
  * \param [in] output_dims Dimensions(excluding batch dim) of the output tensor
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
