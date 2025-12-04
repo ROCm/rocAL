@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "meta_data/cifar10_meta_data_reader.h"
 #include "meta_data/coco_meta_data_reader.h"
 #include "meta_data/coco_meta_data_reader_key_points.h"
+#include "meta_data/coco_yolo_meta_data_reader.h"
 #include "pipeline/exception.h"
 #include "meta_data/label_reader_folders.h"
 #include "meta_data/mxnet_meta_data_reader.h"
@@ -100,6 +101,17 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("COCO_KEY_POINTS_META_DATA_READER can only be used to load keypoints")
             auto meta_data_reader = std::make_shared<COCOMetaDataReaderKeyPoints>();
             meta_data_batch = std::make_shared<KeyPointBatch>();
+            meta_data_reader->init(config, meta_data_batch);
+            return meta_data_reader;
+        } break;
+        case MetaDataReaderType::COCO_YOLO_META_DATA_READER: {
+            if (config.type() != MetaDataType::BoundingBox && config.type() != MetaDataType::PolygonMask)
+                THROW("COCO_YOLO_META_DATA_READER can only be used to load bounding boxes and mask coordinates")
+            auto meta_data_reader = std::make_shared<COCOYoloMetaDataReader>();
+            if (config.type() == MetaDataType::PolygonMask)
+                meta_data_batch = std::make_shared<PolygonMaskBatch>();
+            else
+                meta_data_batch = std::make_shared<BoundingBoxBatch>();
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;

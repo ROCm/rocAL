@@ -54,12 +54,15 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     _shuffle = desc.shuffle();
     _meta_data_reader = desc.meta_data_reader();
 
-    if (_json_path == "") {
+    // Only require JSON path if no metadata reader is set,
+    // or if the metadata reader is not a YOLO reader
+    bool is_yolo_reader = _meta_data_reader &&
+        (_meta_data_reader->get_reader_type() == MetaDataReaderType::COCO_YOLO_META_DATA_READER);
+
+    if (_json_path == "" && !is_yolo_reader) {
         std::cout << "\n _json_path has to be set manually";
         exit(0);
     }
-    // if (!_meta_data_reader )
-    //     std::cout<<"Metadata reader not initialized for COCO file source\n";
 
     ret = subfolder_reading();
     _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
