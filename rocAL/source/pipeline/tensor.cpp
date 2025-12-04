@@ -288,6 +288,13 @@ Tensor::Tensor(const TensorInfo &tensor_info)
     _mem_handle = nullptr;
 }
 
+Tensor::Tensor(const TensorInfo &tensor_info, const std::string &name)
+    : _info(tensor_info) {
+    _info._type = TensorInfo::Type::UNKNOWN;
+    _tensor_name = "tensor_" + name;
+    _mem_handle = nullptr;
+}
+
 int Tensor::create_virtual(vx_context context, vx_graph graph) {
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")

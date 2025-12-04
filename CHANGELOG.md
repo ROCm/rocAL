@@ -8,7 +8,10 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Multi-version python `.so` build support for rocal pybind. Supports python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13
 * Introduce enum registry to register all the enums present in rocAL.
 * Introduce Argument class which stores the value and type of each argument in the Node.
+* `EnumRegistry` to register all the enums present in rocAL.
+* `Argument` class which stores the value and type of each argument in the Node.
 * Support to store the arguments in the Node class.
+* `PipelineOperator` class to represent operators in the pipeline with metadata.
 
 ### Changes
 * Changes build instructions to omit building of wheels.
@@ -16,6 +19,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
 * Refactor external enum usage in rocAL, to maintain separation between external and internal enums.
 * Introduced the following enums ResizeScalingMode, ResizeInterpolationType, MelScaleFormula, AudioBorderType, OutOfBoundsPolicy in commons.h.
+* Adds support to track operators in MasterGraph with unique naming.
 
 ### Removed
 * Removed building wheels for python. 
