@@ -941,19 +941,27 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 74: {
             std::cout << "Running rocalMagnitude" << std::endl;
             // Create a second tensor by rotating the input; use as second input to magnitude
-            RocalTensor input2 = rocalRotate(handle, input, false);
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45.0f, false);
             output = rocalMagnitude(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 75: {
             std::cout << "Running rocalPhase" << std::endl;
             // Create a second tensor by rotating the input; use as second input to phase
-            RocalTensor input2 = rocalRotate(handle, input, false);
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45.0f, false);
             output = rocalPhase(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 76: {
             std::cout << "Running rocalThreshold" << std::endl;
-            std::vector<float> min_threshold = {30.0f, 30.0f, 30.0f};
-            std::vector<float> max_threshold = {100.0f, 100.0f, 100.0f};
+            std::vector<float> min_threshold;
+            std::vector<float> max_threshold;
+            if (rgb) {
+                min_threshold = {30.0f, 30.0f, 30.0f};
+                max_threshold = {100.0f, 100.0f, 100.0f};
+            } else {
+                min_threshold = {30.0f};
+                max_threshold = {100.0f};       
+            }
+
             output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
         } break;
         case 77: {
