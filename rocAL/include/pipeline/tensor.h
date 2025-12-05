@@ -342,6 +342,8 @@ class Tensor : public rocalTensor {
 
     //! Constructor accepting the tensor information as input
     explicit Tensor(const TensorInfo& tensor_info);
+    //! Constructor accepting the tensor information and a name
+    explicit Tensor(const TensorInfo& tensor_info, const std::string& name);
     int create(vx_context context);
     void create_roi_tensor_from_handle(void** handle);
     void update_tensor_roi(const std::vector<uint32_t>& width, const std::vector<uint32_t>& height);
@@ -375,13 +377,14 @@ class Tensor : public rocalTensor {
         return (_info.mem_type() == RocalMemType::HOST ? ROCAL_CPU : ROCAL_GPU);
     }
     uint64_t data_type_size() override { return _info.data_type_size(); }
-
+    std::string tensor_name() { return _tensor_name; }
    private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
     void* _mem_handle = nullptr;     //!< Pointer to the tensor's internal buffer (opencl or host)
     TensorInfo _info;                //!< The structure holding the info related to the stored OpenVX tensor
     vx_context _context = nullptr;
     vx_tensor _vx_roi_handle = nullptr;  //!< The OpenVX tensor for ROI
+    std::string _tensor_name;
 };
 
 /*! \brief Contains a list of rocalTensors */
@@ -404,7 +407,7 @@ class TensorList : public rocalTensorList {
     Tensor* at(size_t index) override { return _tensor_list[index]; }
     void operator=(TensorList& other) {
         for (unsigned idx = 0; idx < other.size(); idx++) {
-            auto* new_tensor = new Tensor(other[idx]->info());
+            auto* new_tensor = new Tensor(other[idx]->info(), other[idx]->tensor_name() + "_copy");
             if (new_tensor->create_from_handle(other[idx]->context()) != 0)
                 THROW("Cannot create the tensor from handle")
             this->push_back(new_tensor);

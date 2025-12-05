@@ -294,7 +294,7 @@ MasterGraph::create_internal_tensor(const TensorInfo &info) {
     /*
      *   NOTE: This function creates a regular (non-virtual) tensor
      */
-    auto output = new Tensor(info);
+    auto output = new Tensor(info, get_tensor_uid());
     if (output->create_from_handle(_context) != 0)
         THROW("Creating output tensor for loader failed");
 
@@ -305,13 +305,13 @@ MasterGraph::create_internal_tensor(const TensorInfo &info) {
 
 Tensor *
 MasterGraph::create_tensor(const TensorInfo &info, bool is_output) {
-    auto *output = new Tensor(info);
+    auto *output = new Tensor(info, get_tensor_uid());
     // if the tensor is not an output tensor, the tensor creation is deferred and later it'll be created as a virtual tensor
     if (is_output) {
         if (output->create_from_handle(_context) != 0)
             THROW("Cannot create the tensor from handle")
         _internal_tensor_list.push_back(output);
-        _output_tensor_list.push_back(new Tensor(info));  // Creating a replica of the output tensor to be returned to the user
+        _output_tensor_list.push_back(new Tensor(info, get_tensor_uid()));  // Creating a replica of the output tensor to be returned to the user
     }
 
     return output;
@@ -323,7 +323,7 @@ void MasterGraph::set_output(Tensor *output_tensor) {
             THROW("Cannot create the tensor from handle")
 
         _internal_tensor_list.push_back(output_tensor);
-        _output_tensor_list.push_back(new Tensor(output_tensor->info()));  // Creating a replica of the output tensor to be returned to the user
+        _output_tensor_list.push_back(new Tensor(output_tensor->info(), get_tensor_uid()));  // Creating a replica of the output tensor to be returned to the user
     } else {
         // Decoder case only
         auto actual_output = create_tensor(output_tensor->info(), true);
@@ -1097,15 +1097,15 @@ TensorListVector* MasterGraph::create_coco_meta_data_reader(const char *source_p
     {
         auto labels_info = default_labels_info;
         auto bbox_info = default_bbox_info;
-        _labels_tensor_list.push_back(new Tensor(labels_info));
-        _bbox_tensor_list.push_back(new Tensor(bbox_info));
+        _labels_tensor_list.push_back(new Tensor(labels_info, "label_" + get_tensor_uid()));
+        _bbox_tensor_list.push_back(new Tensor(bbox_info, "bbox_" + get_tensor_uid()));
         if (metadata_type == MetaDataType::PolygonMask) {
             auto mask_info = default_mask_info;
-            _mask_tensor_list.push_back(new Tensor(mask_info));
+            _mask_tensor_list.push_back(new Tensor(mask_info, "mask_" + get_tensor_uid()));
         }
         if(is_box_iou_matcher) {
             auto matches_info = default_matches_info;
-            _matches_tensor_list.push_back(new Tensor(matches_info));
+            _matches_tensor_list.push_back(new Tensor(matches_info, "matches_" + get_tensor_uid()));
         }
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
@@ -1138,7 +1138,7 @@ TensorListVector* MasterGraph::create_tf_record_meta_data_reader(const char *sou
 
         for (unsigned i = 0; i < _user_batch_size; i++) {
             auto info = default_labels_info;
-            auto tensor = new Tensor(info);
+            auto tensor = new Tensor(info, "label_" + get_tensor_uid());
             _labels_tensor_list.push_back(tensor);
         }
         _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
@@ -1156,8 +1156,8 @@ TensorListVector* MasterGraph::create_tf_record_meta_data_reader(const char *sou
         for (unsigned i = 0; i < _user_batch_size; i++) {
             auto labels_info = default_labels_info;
             auto bbox_info = default_bbox_info;
-            _labels_tensor_list.push_back(new Tensor(labels_info));
-            _bbox_tensor_list.push_back(new Tensor(bbox_info));
+            _labels_tensor_list.push_back(new Tensor(labels_info, "label_" + get_tensor_uid()));
+            _bbox_tensor_list.push_back(new Tensor(bbox_info, "bbox_" + get_tensor_uid()));
         }
         _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
         _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
@@ -1178,6 +1178,15 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("LabelReader_" + std::to_string(_op_idx++), "reader");
+
+    // Add all arguments as part of the operator
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+
+    _pipeline_operators.push_back(reader_op);
+
     std::vector<size_t> dims = {1};
     auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default labels Info
     default_labels_info.set_metadata();
@@ -1185,7 +1194,7 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
 
     for (unsigned i = 0; i < _user_batch_size; i++) {
         auto info = default_labels_info;
-        _labels_tensor_list.push_back(new Tensor(info));
+        _labels_tensor_list.push_back(new Tensor(info, "label_" + get_tensor_uid()));
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
@@ -1221,7 +1230,7 @@ TensorListVector* MasterGraph::create_webdataset_reader(
         for (unsigned i = 0; i < _user_batch_size; i++) {
             _meta_data_buffer_size.emplace_back(_user_batch_size * default_ascii_values_info.data_size());
             auto info = default_ascii_values_info;
-            auto tensor = new Tensor(info);
+            auto tensor = new Tensor(info, "wds_" + get_tensor_uid());
             _ascii_tensor_list[ext_count].push_back(tensor);
         }
         _metadata_output_tensor_list.emplace_back(&_ascii_tensor_list[ext_count]);
@@ -1253,7 +1262,7 @@ TensorListVector* MasterGraph::create_video_label_reader(const char *source_path
 
     for (unsigned i = 0; i < _user_batch_size; i++) {
         auto info = default_labels_info;
-        auto tensor = new Tensor(info);
+        auto tensor = new Tensor(info, "label_" + get_tensor_uid());
         _labels_tensor_list.push_back(tensor);
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
@@ -1280,7 +1289,7 @@ TensorListVector* MasterGraph::create_mxnet_label_reader(const char *source_path
 
     for (unsigned i = 0; i < _user_batch_size; i++) {
         auto info = default_labels_info;
-        auto tensor = new Tensor(info);
+        auto tensor = new Tensor(info, "label_" + get_tensor_uid());
         _labels_tensor_list.push_back(tensor);
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
@@ -1337,7 +1346,7 @@ TensorListVector* MasterGraph::create_caffe2_lmdb_record_meta_data_reader(const 
 
         for (unsigned i = 0; i < _user_batch_size; i++) {
             auto info = default_labels_info;
-            auto tensor = new Tensor(info);
+            auto tensor = new Tensor(info, "label_" + get_tensor_uid());
             _labels_tensor_list.push_back(tensor);
         }
         _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
@@ -1355,8 +1364,8 @@ TensorListVector* MasterGraph::create_caffe2_lmdb_record_meta_data_reader(const 
         for (unsigned i = 0; i < _user_batch_size; i++) {
             auto labels_info = default_labels_info;
             auto bbox_info = default_bbox_info;
-            _labels_tensor_list.push_back(new Tensor(labels_info));
-            _bbox_tensor_list.push_back(new Tensor(bbox_info));
+            _labels_tensor_list.push_back(new Tensor(labels_info, "label_" + get_tensor_uid()));
+            _bbox_tensor_list.push_back(new Tensor(bbox_info, "bbox_" + get_tensor_uid()));
         }
         _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
         _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
@@ -1385,7 +1394,7 @@ TensorListVector* MasterGraph::create_caffe_lmdb_record_meta_data_reader(const c
 
         for (unsigned i = 0; i < _user_batch_size; i++) {
             auto info = default_labels_info;
-            auto tensor = new Tensor(info);
+            auto tensor = new Tensor(info, "label_" + get_tensor_uid());
             _labels_tensor_list.push_back(tensor);
         }
         _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
@@ -1403,8 +1412,8 @@ TensorListVector* MasterGraph::create_caffe_lmdb_record_meta_data_reader(const c
         for (unsigned i = 0; i < _user_batch_size; i++) {
             auto labels_info = default_labels_info;
             auto bbox_info = default_bbox_info;
-            _labels_tensor_list.push_back(new Tensor(labels_info));
-            _bbox_tensor_list.push_back(new Tensor(bbox_info));
+            _labels_tensor_list.push_back(new Tensor(labels_info, "label_" + get_tensor_uid()));
+            _bbox_tensor_list.push_back(new Tensor(bbox_info, "bbox_" + get_tensor_uid()));
         }
         _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
         _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
@@ -1431,7 +1440,7 @@ TensorListVector* MasterGraph::create_cifar10_label_reader(const char *source_pa
 
     for (unsigned i = 0; i < _user_batch_size; i++) {
         auto info = default_labels_info;
-        auto tensor = new Tensor(info);
+        auto tensor = new Tensor(info, "label_" + get_tensor_uid());
         _labels_tensor_list.push_back(tensor);
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
@@ -1777,7 +1786,7 @@ void MasterGraph::feed_external_input(const std::vector<std::string>& input_imag
 
             for (unsigned i = 0; i < _user_batch_size; i++) {
                 auto info = default_labels_info;
-                _labels_tensor_list.push_back(new Tensor(info));
+                _labels_tensor_list.push_back(new Tensor(info, "label_" + get_tensor_uid()));
             }
             _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
         }

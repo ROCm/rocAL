@@ -50,11 +50,19 @@ void BrightnessNode::create_node() {
 void BrightnessNode::init(float alpha, float beta) {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
+
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"alpha", "beta"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta);
 }
 
 void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
+
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"alpha", "beta"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta);
 }
 
 void BrightnessNode::update_node() {
