@@ -27,6 +27,25 @@ THE SOFTWARE.
 #include "pipeline/tensor.h"
 #include <cstring>
 
+inline vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
+    switch (data_type) {
+        case RocalTensorDataType::FP32:
+            return VX_TYPE_FLOAT32;
+        case RocalTensorDataType::FP16:
+            return VX_TYPE_FLOAT16;
+        case RocalTensorDataType::UINT8:
+            return VX_TYPE_UINT8;
+        case RocalTensorDataType::UINT32:
+            return VX_TYPE_UINT32;
+        case RocalTensorDataType::INT32:
+            return VX_TYPE_INT32;
+        case RocalTensorDataType::INT16:
+            return VX_TYPE_INT16;
+        default:
+            THROW("Unsupported Tensor type " + TOSTR(data_type))
+    }
+}
+
 EraseNode::EraseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs) {}
 
@@ -83,18 +102,53 @@ void EraseNode::create_node() {
         if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle anchor failed: " + TOSTR(s));
     }
 
-    // Color tensor handle
+    // Color tensor handle - match input tensor data type
+    auto input_data_type = _inputs[0]->info().data_type();
+    vx_enum vx_color_type = interpret_tensor_data_type(input_data_type);
+    size_t color_element_size = tensor_data_size(input_data_type);
+    
     vx_size color_dims[2]   = { (vx_size)_total_boxes, (vx_size)_inputs[0]->info().get_channels() };
     vx_size color_stride[2] = { 0, 0 };
-    color_stride[0] = sizeof(vx_float32);
+    color_stride[0] = color_element_size;
     color_stride[1] = color_stride[0] * color_dims[0];
 
     size_t bytes_c = color_stride[1] * color_dims[1];
     allocate_host_or_pinned_mem(&_color_ptr, bytes_c, mem_type);
-    std::memcpy(_color_ptr, _fill_values_vec.data(), bytes_c);
+    
+    // Convert and copy fill values according to input data type
+    if (input_data_type == RocalTensorDataType::UINT8) {
+        uint8_t* color_ptr_u8 = static_cast<uint8_t*>(_color_ptr);
+        for (size_t i = 0; i < _fill_values_vec.size(); i++) {
+            color_ptr_u8[i] = static_cast<uint8_t>(std::round(std::max(0.0f, std::min(255.0f, _fill_values_vec[i]))));
+        }
+    } else if (input_data_type == RocalTensorDataType::INT16) {
+        int16_t* color_ptr_i16 = static_cast<int16_t*>(_color_ptr);
+        for (size_t i = 0; i < _fill_values_vec.size(); i++) {
+            color_ptr_i16[i] = static_cast<int16_t>(std::round(_fill_values_vec[i]));
+        }
+    } else if (input_data_type == RocalTensorDataType::UINT32) {
+        uint32_t* color_ptr_u32 = static_cast<uint32_t*>(_color_ptr);
+        for (size_t i = 0; i < _fill_values_vec.size(); i++) {
+            color_ptr_u32[i] = static_cast<uint32_t>(std::round(std::max(0.0f, _fill_values_vec[i])));
+        }
+    } else if (input_data_type == RocalTensorDataType::INT32) {
+        int32_t* color_ptr_i32 = static_cast<int32_t*>(_color_ptr);
+        for (size_t i = 0; i < _fill_values_vec.size(); i++) {
+            color_ptr_i32[i] = static_cast<int32_t>(std::round(_fill_values_vec[i]));
+        }
+    } else if (input_data_type == RocalTensorDataType::FP16) {
+        // For FP16, we need to handle it as 16-bit values
+        uint16_t* color_ptr_f16 = static_cast<uint16_t*>(_color_ptr);
+        for (size_t i = 0; i < _fill_values_vec.size(); i++) {
+            // Convert float to half precision (simplified conversion)
+            color_ptr_f16[i] = static_cast<uint16_t>(_fill_values_vec[i]);
+        }
+    } else { // FP32 or default case
+        std::memcpy(_color_ptr, _fill_values_vec.data(), bytes_c);
+    }
 
     vx_tensor _colors_vx = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
-                                                   2, color_dims, VX_TYPE_FLOAT32, 0, color_stride, _color_ptr, vx_mem);
+                                                   2, color_dims, vx_color_type, 0, color_stride, _color_ptr, vx_mem);
     if (!_colors_vx) THROW("vxCreateTensorFromHandle for color tensor failed");
     {
         vx_status s = vxGetStatus((vx_reference)_colors_vx);
@@ -141,6 +195,7 @@ void EraseNode::init(std::vector<float> anchor,
     std::vector<int> prefix(static_cast<size_t>(_batch_size) + 1, 0);
     for (int i = 0; i < _batch_size; ++i) prefix[i + 1] = prefix[i] + _num_boxes_vec[i];
     _total_boxes = static_cast<size_t>(prefix[_batch_size]);
+    std::cerr << "Total Boxes " << _total_boxes << "\n";
 
     auto channels = _inputs[0]->info().get_channels();
     _fill_values_vec.resize(static_cast<size_t>(_total_boxes) * channels);
@@ -170,19 +225,9 @@ void EraseNode::init(std::vector<float> anchor,
             dst += count;
         }
     }
-    else if (fill_sz == static_cast<size_t>(_batch_size) * channels) {
-        // Per-sample per-channel pattern replicated across that sample’s boxes
-        float* dst = _fill_values_vec.data();
-        const float* src = _fill_values.data();
-        for (int i = 0; i < _batch_size; ++i) {
-            for (int b = 0; b < _num_boxes_vec[i]; ++b) {
-                std::copy_n(src + i * channels, channels, dst);
-                dst += channels;
-            }
-        }
-    }
     else if (num_boxes.size() == 1 &&
             fill_sz == static_cast<size_t>(num_boxes[0]) * channels) {
+        std::cerr << "Comes over here-----\n";
         // Single-sample per-box per-channel replicated across batch.
         // All samples must have the same nb equal to num_boxes[0].
         const int nb_single = num_boxes[0];
@@ -198,6 +243,17 @@ void EraseNode::init(std::vector<float> anchor,
     else if (fill_sz == static_cast<size_t>(_total_boxes) * channels) {
         // Fully specified flattened values
         std::copy(_fill_values.begin(), _fill_values.end(), _fill_values_vec.begin());
+    }
+    else if (fill_sz == static_cast<size_t>(_batch_size) * channels) {
+        // Per-sample per-channel pattern replicated across that sample’s boxes
+        float* dst = _fill_values_vec.data();
+        const float* src = _fill_values.data();
+        for (int i = 0; i < _batch_size; ++i) {
+            for (int b = 0; b < _num_boxes_vec[i]; ++b) {
+                std::copy_n(src + i * channels, channels, dst);
+                dst += channels;
+            }
+        }
     }
     else {
         THROW("Invalid number of values passed for fill value");
