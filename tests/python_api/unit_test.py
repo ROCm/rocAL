@@ -334,6 +334,7 @@ def main():
                                  output_dtype=tensor_dtype)
         elif augmentation_name == "vignette":
             output = fn.vignette(images,
+                                 vignette=float(50),
                                  output_layout=tensor_layout,
                                  output_dtype=tensor_dtype)
         elif augmentation_name == "jitter":
