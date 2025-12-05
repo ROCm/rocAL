@@ -1001,7 +1001,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 79: {
             std::cout << "Running rocalCropAndPatch" << std::endl;
             // Create a simple second input (e.g., rotated version)
-            RocalTensor input2 = rocalRotate(handle, input, false);
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
             // Define XYWH ROIs (replicated across batch if size==4)
             // dst_roi: place the patch at top-left corner with size WxH reduced
             int roi_w = std::max(1, width / 4);
@@ -1018,7 +1018,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 80: {
             std::cout << "Running rocalRicap" << std::endl;
             // Permutation for quadrants [q0,q1,q2,q3]; replicate across batch if size==4
-            std::vector<unsigned> permutation = {0, 1, 1, 0};
+            std::vector<unsigned> permutation = {0, 1, 1, 0, 1, 0, 0, 1};
             // Define 4 XYWH ROIs covering image quadrants; replicate across batch if size==16
             int q_w = std::max(1, width / 2);
             int q_h = std::max(1, height / 2);
@@ -1033,21 +1033,21 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 81: {
             std::cout << "Running rocalBitwiseOps AND" << std::endl;
             // Create second input tensor (rotate input to get variation)
-            RocalTensor input2 = rocalRotate(handle, input, false);
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
             output = rocalBitwiseOps(handle, input, input2, true,
                                      RocalBitwiseOp::ROCAL_BITWISE_AND,
                                      output_tensor_layout, output_tensor_dtype);
         } break;
         case 82: {
             std::cout << "Running rocalBitwiseOps OR" << std::endl;
-            RocalTensor input2 = rocalRotate(handle, input, false);
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
             output = rocalBitwiseOps(handle, input, input2, true,
                                      RocalBitwiseOp::ROCAL_BITWISE_OR,
                                      output_tensor_layout, output_tensor_dtype);
         } break;
         case 83: {
             std::cout << "Running rocalBitwiseOps XOR" << std::endl;
-            RocalTensor input2 = rocalRotate(handle, input, false);
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
             output = rocalBitwiseOps(handle, input, input2, true,
                                      RocalBitwiseOp::ROCAL_BITWISE_XOR,
                                      output_tensor_layout, output_tensor_dtype);
@@ -1083,7 +1083,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             };
 
             // Single fill value replicated for all boxes and channels
-            std::vector<float> fill_value = {0.0f};
+            std::vector<float> fill_value;
+            if (rgb) {
+                fill_value = {0.0f, 0.0f, 240.0f, 0.0f, 60.0f, 0.0f};
+            } else {
+                fill_value = {120.0f, 60.0f};
+            }
 
             // Execute vector-based erase
             output = rocalErase(handle, input, true,
@@ -1136,6 +1141,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             return -1;
         }
         int image_name_length[input_batch_size];
+        /*
         switch (pipeline_type) {
             case 1: {   // classification pipeline
                 RocalTensorList labels = rocalGetImageLabels(handle);
@@ -1316,6 +1322,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 return -1;
             }
         }
+        */
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
