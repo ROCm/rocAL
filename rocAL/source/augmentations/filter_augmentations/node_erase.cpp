@@ -206,6 +206,21 @@ void EraseNode::init(std::vector<float> anchor,
         // One scalar for everything
         std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), _fill_values[0]);
     }
+    else if (num_boxes.size() == 1 &&
+            fill_sz == static_cast<size_t>(num_boxes[0]) * channels) {
+        std::cerr << "Comes over here-----\n";
+        // Single-sample per-box per-channel replicated across batch.
+        // All samples must have the same nb equal to num_boxes[0].
+        const int nb_single = num_boxes[0];
+        float* dst = _fill_values_vec.data();
+        for (int i = 0; i < _batch_size; ++i) {
+            if (_num_boxes_vec[i] != nb_single)
+                THROW("num_boxes mismatch across samples for single-sample fill pattern");
+            const float* src = _fill_values.data();
+            std::copy_n(src, static_cast<size_t>(nb_single) * channels, dst);
+            dst += static_cast<size_t>(nb_single) * channels;
+        }
+    }
     else if (fill_sz == static_cast<size_t>(channels)) {
         // Per-channel pattern replicated to each box
         float* dst = _fill_values_vec.data();
@@ -223,21 +238,6 @@ void EraseNode::init(std::vector<float> anchor,
             const size_t count = static_cast<size_t>(nb) * channels;
             std::fill_n(dst, count, v);
             dst += count;
-        }
-    }
-    else if (num_boxes.size() == 1 &&
-            fill_sz == static_cast<size_t>(num_boxes[0]) * channels) {
-        std::cerr << "Comes over here-----\n";
-        // Single-sample per-box per-channel replicated across batch.
-        // All samples must have the same nb equal to num_boxes[0].
-        const int nb_single = num_boxes[0];
-        float* dst = _fill_values_vec.data();
-        for (int i = 0; i < _batch_size; ++i) {
-            if (_num_boxes_vec[i] != nb_single)
-                THROW("num_boxes mismatch across samples for single-sample fill pattern");
-            const float* src = _fill_values.data();
-            std::copy_n(src, static_cast<size_t>(nb_single) * channels, dst);
-            dst += static_cast<size_t>(nb_single) * channels;
         }
     }
     else if (fill_sz == static_cast<size_t>(_total_boxes) * channels) {
