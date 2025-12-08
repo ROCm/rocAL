@@ -17,6 +17,11 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduced the following enums ResizeScalingMode, ResizeInterpolationType, MelScaleFormula, AudioBorderType, OutOfBoundsPolicy in commons.h.
 * Adds support to track operators in MasterGraph with unique naming.
 
+### Resolved issues
+* Use HIP memory for fused crop rocjpeg decoder
+* Resolve an issue in numpy loader where ROI is updated incorrectly
+* Resolve an issue in CropResize node where crop_w and crop_h values were not correctly updated
+
 ### Known issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
 * Package installation on CentOS, RedHat, and SLES requires manually installing the `FFMPEG Dev` package.
