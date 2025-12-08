@@ -122,6 +122,8 @@ def parse_args():
         'coco-pipeline', 'coco-pipeline-related options')
     coco_reader.add_argument('--json-path', '-json-path', type=str,
                                help='coco dataset json path')
+    coco_reader.add_argument('--select-mask-ids', type=str, default="0",
+                             help='Comma separated polygon ids to fetch via get_select_mask (defaults to first polygon)')
     # caffe_reader.py related options
     caffe_pipeline = parser.add_argument_group(
         'caffe-pipeline', 'caffe-pipeline-related options')

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,22 @@ import amd.rocal.types as types
 import numpy as np
 from parse_config import parse_args
 
+
+def _parse_mask_ids(mask_ids):
+    if not mask_ids:
+        return [0]
+    parsed = []
+    for token in mask_ids.split(','):
+        token = token.strip()
+        if not token:
+            continue
+        try:
+            parsed.append(int(token))
+        except ValueError:
+            continue
+    return parsed or [0]
+
+
 class ROCALCOCOIterator(object):
     """
     COCO ROCAL iterator for pyTorch.
@@ -41,7 +57,8 @@ class ROCALCOCOIterator(object):
            Epoch size.
     """
 
-    def __init__(self, pipelines, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None, tensor_dtype=types.FLOAT, device="cpu", display=False):
+    def __init__(self, pipelines, tensor_layout=types.NCHW, reverse_channels=False, multiplier=None, offset=None,
+                 tensor_dtype=types.FLOAT, device="cpu", display=False, select_mask_ids=None):
 
         try:
             assert pipelines is not None, "Number of provided pipelines has to be at least 1"
@@ -65,6 +82,7 @@ class ROCALCOCOIterator(object):
         # Image sizes of a batch
         self.img_size = np.zeros((self.bs * 2), dtype="int32")
         self.output_memory_type = self.loader._output_memory_type
+        self.select_mask_ids = select_mask_ids if select_mask_ids else [0]
 
     def next(self):
         return self.__next__()
@@ -81,36 +99,44 @@ class ROCALCOCOIterator(object):
                 self.dimensions = self.output_tensor_list[i].dimensions()
                 self.torch_dtype = self.output_tensor_list[i].dtype()
                 if self.device == "cpu":
-                    self.output = torch.empty(self.dimensions, dtype=getattr(torch, self.torch_dtype))
+                    self.output = torch.empty(
+                        self.dimensions, dtype=getattr(torch, self.torch_dtype))
                 else:
                     torch_gpu_device = torch.device('cuda', self.device_id)
-                    self.output = torch.empty(self.dimensions, dtype=getattr(torch, self.torch_dtype), device=torch_gpu_device)
-                self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output.data_ptr()), self.output_memory_type)
+                    self.output = torch.empty(self.dimensions, dtype=getattr(
+                        torch, self.torch_dtype), device=torch_gpu_device)
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(
+                    self.output.data_ptr()), self.output_memory_type)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
-                self.output_tensor_list[i].copy_data(ctypes.c_void_p(self.output_list[i].data_ptr()), self.output_memory_type)
+                self.output_tensor_list[i].copy_data(ctypes.c_void_p(
+                    self.output_list[i].data_ptr()), self.output_memory_type)
 
         self.labels = self.loader.get_bounding_box_labels()
         # 1D bboxes array in a batch
         self.bboxes = self.loader.get_bounding_box_cords()
         self.loader.get_image_id(self.image_id)
+        image_id_tensor = torch.tensor(self.image_id)
+        image_size_tensor = torch.tensor(self.img_size).view(-1, self.bs, 2)
         pixelwise_labels = self.loader.get_pixelwise_labels()
         random_mask_pixel = self.loader.get_random_mask_pixel()
         random_object_bbox = self.loader.get_random_object_bbox(types.OUT_BOX)
+        select_mask_polygons = self.loader.get_select_mask(self.select_mask_ids)
 
         for i in range(self.bs):
             if self.display:
                 img = self.output
                 draw_patches(img[i], self.image_id[i],
                              self.bboxes[i], self.device, self.tensor_dtype, self.tensor_format)
-        return (self.output), self.bboxes, self.labels, pixelwise_labels, random_mask_pixel, random_object_bbox
+        return (self.output), self.bboxes, self.labels, image_id_tensor, image_size_tensor, pixelwise_labels, random_mask_pixel, random_object_bbox, select_mask_polygons
 
     def reset(self):
         self.loader.rocal_reset_loaders()
 
     def __iter__(self):
         return self
+
 
 def draw_patches(img, idx, bboxes, device, dtype, layout):
     # image is expected as a tensor, bboxes as numpy
@@ -130,9 +156,10 @@ def draw_patches(img, idx, bboxes, device, dtype, layout):
         loc_ = [l, t, r, b]
         color = (255, 0, 0)
         thickness = 2
+        image = cv2.UMat(image).get()
         image = cv2.rectangle(image, (int(loc_[0]), int(loc_[1])), (int(
             (loc_[2])), int((loc_[3]))), color, thickness)
-        cv2.imwrite("OUTPUT_FOLDER/COCO_READER/" +
+        cv2.imwrite("output_folder/coco_reader/" +
                     str(idx)+"_"+"train"+".png", image)
 
 
@@ -150,8 +177,9 @@ def main():
     random_seed = args.seed
     tensor_format = types.NHWC if args.NHWC else types.NCHW
     tensor_dtype = types.FLOAT16 if args.fp16 else types.FLOAT
+    select_mask_ids = _parse_mask_ids(getattr(args, "select_mask_ids", "0"))
     try:
-        path = "OUTPUT_FOLDER/COCO_READER/"
+        path = "output_folder/coco_reader/"
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
@@ -163,20 +191,40 @@ def main():
                     seed=random_seed, rocal_cpu=rocal_cpu, tensor_layout=tensor_format, tensor_dtype=tensor_dtype)
     # Use pipeline instance to make calls to reader, decoder & augmentation's
     with pipe:
-        jpegs, bboxes, labels = fn.readers.coco(annotations_file=annotation_path, pixelwise_masks=True)
+        jpegs, bboxes, labels = fn.readers.coco(
+            annotations_file=annotation_path, pixelwise_masks=True)
         images_decoded = fn.decoders.image(jpegs, output_type=types.RGB, file_root=image_path,
                                            annotations_file=annotation_path, random_shuffle=False, shard_id=local_rank, num_shards=world_size)
-        brightened_images = fn.brightness(images_decoded)
-        pipe.set_outputs(brightened_images)
+        res_images = fn.resize(
+            images_decoded, resize_width=300, resize_height=300)
+        saturation = fn.uniform(range=[0.1, 0.4])
+        contrast = fn.uniform(range=[0.1, 25.0])
+        brightness = fn.uniform(range=[0.875, 1.125])
+        hue = fn.uniform(range=[5.0, 170.0])
+        ct_images = fn.color_twist(
+            res_images, saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
+        flip_coin = fn.random.coin_flip(probability=0.5)
+        cmn_images = fn.crop_mirror_normalize(ct_images,
+                                              crop=(224, 224),
+                                              crop_pos_x=0.0,
+                                              crop_pos_y=0.0,
+                                              mean=[0, 0, 0],
+                                              std=[1, 1, 1],
+                                              mirror=flip_coin,
+                                              output_layout=tensor_format,
+                                              output_dtype=tensor_dtype)
+        pipe.set_outputs(cmn_images)
     # Build the pipeline
     pipe.build()
     # Dataloader
     if (args.rocal_gpu):
         data_loader = ROCALCOCOIterator(
-            pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display, tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cuda")
+            pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display,
+            tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cuda", select_mask_ids=select_mask_ids)
     else:
         data_loader = ROCALCOCOIterator(
-            pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display, tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cpu")
+            pipe, multiplier=pipe._multiplier, offset=pipe._offset, display=display,
+            tensor_layout=tensor_format, tensor_dtype=tensor_dtype, device="cpu", select_mask_ids=select_mask_ids)
 
     import timeit
     start = timeit.default_timer()
@@ -184,16 +232,20 @@ def main():
     for epoch in range(int(args.num_epochs)):
         print("EPOCH:::::", epoch)
         for i, it in enumerate(data_loader, 0):
-            print("**************", i, "*******************")
-            print("**************starts*******************")
-            print("\nIMAGES : \n", it[0])
-            print("\nBBOXES:\n", it[1])
-            print("\nLABELS:\n", it[2])
-            print("\nPIXELWISE MASKS:\n", [np.unique(label) for label in it[3]])
-            print("\nRANDOM MASK PIXEL:\n", it[4])
-            print("\nRANDOM OBJECT BBOX:\n", it[5])
-            print("**************ends*******************")
-            print("**************", i, "*******************")
+            if args.print_tensor:
+                print("**************", i, "*******************")
+                print("**************starts*******************")
+                print("\nIMAGES : \n", it[0])
+                print("\nBBOXES:\n", it[1])
+                print("\nLABELS:\n", it[2])
+                print("\nIMAGE ID:\n", it[3])
+                print("\nIMAGE SIZE:\n", it[4])
+                print("\nPIXELWISE MASK UNIQUE VALUES:\n", [np.unique(mask) for mask in it[5]])
+                print("\nRANDOM MASK PIXELS:\n", it[6])
+                print("\nRANDOM OBJECT BBOXES:\n", it[7])
+                print("\nSELECT MASK POLYGONS:\n", it[8])
+                print("**************ends*******************")
+                print("**************", i, "*******************")
         data_loader.reset()
     # Your statements here
     stop = timeit.default_timer()
