@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,10 +21,10 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "graph.h"
-#include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "pipeline/graph.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
 class BrightnessNode : public Node {
    public:
@@ -33,6 +33,7 @@ class BrightnessNode : public Node {
 
     void init(float alpha, float beta);
     void init(FloatParam *alpha_param, FloatParam *beta_param);
+    std::string node_name() const override { return "BrightnessNode"; }
 
    protected:
     void create_node() override;

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,15 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "decoder_factory.h"
+#include "decoders/image/decoder_factory.h"
 
-#include <decoder.h>
-#include <fused_crop_decoder.h>
-#include <hw_jpeg_decoder.h>
-#include <open_cv_decoder.h>
-#include <turbo_jpeg_decoder.h>
+#include "decoders/image/decoder.h"
+#include "decoders/image/fused_crop_decoder.h"
+#include "decoders/image/open_cv_decoder.h"
+#include "decoders/image/turbo_jpeg_decoder.h"
+#include "decoders/image/rocjpeg_decoder.h"
+#include "decoders/image/rocjpeg_fused_crop_decoder.h"
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
     switch (config.type()) {
@@ -39,13 +40,16 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
             return std::make_shared<FusedCropTJDecoder>();
             break;
 #if ENABLE_OPENCV
-        case DecoderType::OPENCV_DEC:
+        case DecoderType::OPENCV:
             return std::make_shared<CVDecoder>();
             break;
 #endif
-#if ROCAL_VIDEO
-        case DecoderType::HW_JPEG_DEC:
-            return std::make_shared<HWJpegDecoder>();
+#if ENABLE_ROCJPEG
+        case DecoderType::ROCJPEG:
+            return std::make_shared<HWRocJpegDecoder>(config.get_hip_stream());
+            break;
+        case DecoderType::ROCJPEG_CROPPED:
+            return std::make_shared<FusedCropRocJpegDecoder>();
             break;
 #endif
         default:

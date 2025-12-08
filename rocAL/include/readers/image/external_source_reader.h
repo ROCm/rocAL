@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,11 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "commons.h"
-#include "image_reader.h"
-#include "external_source.h"
-#include "timing_debug.h"
-#include "filesystem.h"
+#include "pipeline/commons.h"
+#include "readers/image/image_reader.h"
+#include "readers/image/external_source.h"
+#include "pipeline/timing_debug.h"
+#include "pipeline/filesystem.h"
 
 class ExternalSourceReader : public Reader, public ExternalSourceImageReader {
    public:

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_brightness.h"
-#include "exception.h"
+#include "augmentations/color_augmentations/node_brightness.h"
+#include "pipeline/exception.h"
 
 BrightnessNode::BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
@@ -50,11 +50,19 @@ void BrightnessNode::create_node() {
 void BrightnessNode::init(float alpha, float beta) {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
+
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"alpha", "beta"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta);
 }
 
 void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
+
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"alpha", "beta"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta);
 }
 
 void BrightnessNode::update_node() {

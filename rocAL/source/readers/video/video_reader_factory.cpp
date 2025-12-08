@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_reader_factory.h"
+#include "readers/video/video_reader_factory.h"
 
 #include <memory>
 #include <stdexcept>
 
-#include "video_file_source_reader.h"
+#include "readers/video/video_file_source_reader.h"
 
 #ifdef ROCAL_VIDEO
 std::shared_ptr<VideoReader> create_video_reader(ReaderConfig config) {

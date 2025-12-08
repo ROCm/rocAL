@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,9 @@ THE SOFTWARE.
 #pragma once
 #include <map>
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
 class TextFileMetaDataReader : public MetaDataReader {
    public:
     void init(const MetaDataConfig& cfg, pMetaDataBatch meta_data_batch) override;
@@ -36,6 +36,7 @@ class TextFileMetaDataReader : public MetaDataReader {
     bool set_timestamp_mode() override { return false; }
 
     const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
+    std::vector<std::string> get_relative_file_path() override { return _relative_file_path; }
     TextFileMetaDataReader();
 
    private:
@@ -45,4 +46,5 @@ class TextFileMetaDataReader : public MetaDataReader {
     void add(std::string image_name, int label);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::string _path;
+    std::vector<std::string> _relative_file_path {};
 };

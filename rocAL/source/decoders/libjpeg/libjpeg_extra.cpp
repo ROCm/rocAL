@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of inst software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "libjpeg_extra.h"
+#include "decoders/libjpeg/libjpeg_extra.h"
 #include <setjmp.h>
 #include <string.h>
-#include "commons.h"
+#include "pipeline/commons.h"
 
 enum { COMPRESS = 1, DECOMPRESS = 2 };
 static J_COLOR_SPACE pf2cs[TJ_NUMPF] = {
@@ -83,7 +83,7 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
       /* If we get here, the JPEG code has signaled an error. */
-      retval = -1;  goto bailout;
+      return -1;
     }
 
     // set up, read header, set image parameters, save size
@@ -144,8 +144,8 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     jpeg_skip_scanlines(&cinfo, cinfo.output_height - crop_y - crop_height);
     jpeg_finish_decompress(&cinfo);
 
-    bailout:
-    if (cinfo.global_state > DSTATE_START) jpeg_abort_decompress(&cinfo);
+  bailout:
+    jpeg_destroy_decompress(&cinfo);
     if (row_pointer) free(row_pointer);
     return retval;
 }
@@ -178,7 +178,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
         /* If we get here, the JPEG code has signaled an error. */
-        retval = -1;  goto bailout;
+        return -1;
     }
 
     jpeg_mem_src(&cinfo, jpegBuf, jpegSize);
@@ -190,7 +190,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jpegwidth = cinfo.image_width;  jpegheight = cinfo.image_height;
     if (width == 0) width = jpegwidth;
     if (height == 0) height = jpegheight;
-    if ((scalingFactors = tj3GetScalingFactors(&numScalingFactors)) == NULL)
+    if ((scalingFactors = tjGetScalingFactors(&numScalingFactors)) == NULL)
         THROW("tjDecompress2_partial_scale(): error getting scaling factors");
 
     for (i = 0; i < numScalingFactors; i++) {
@@ -259,7 +259,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jpeg_finish_decompress(&cinfo);
 
   bailout:
-    if (cinfo.global_state > DSTATE_START) jpeg_abort_decompress(&cinfo);
+    jpeg_destroy_decompress(&cinfo);
     if (row_pointer) free(row_pointer);
     if (tmp_row) free(tmp_row);
     return retval;

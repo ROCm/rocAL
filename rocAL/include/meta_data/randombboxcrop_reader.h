@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,23 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <graph.h>
+#include "pipeline/graph.h"
 #include <vx_ext_rpp.h>
 
 #include <map>
 #include <random>
 
-#include "caffe2_meta_data_reader_detection.h"
-#include "caffe_meta_data_reader_detection.h"
-#include "coco_meta_data_reader.h"
-#include "commons.h"
-#include "meta_data_reader.h"
-#include "parameter_crop_factory.h"
-#include "parameter_factory.h"
-#include "randombboxcrop_meta_data_reader.h"
-#include "tf_meta_data_reader_detection.h"
-#include <random>
-#include "seed_rng.h"
+#include "meta_data/caffe2_meta_data_reader_detection.h"
+#include "meta_data/caffe_meta_data_reader_detection.h"
+#include "meta_data/coco_meta_data_reader.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data_reader.h"
+#include "parameters/parameter_crop_factory.h"
+#include "parameters/parameter_factory.h"
+#include "meta_data/randombboxcrop_meta_data_reader.h"
+#include "meta_data/tf_meta_data_reader_detection.h"
+#include "pipeline/seed_rng.h"
 
 class RandomBBoxCropReader : public RandomBBoxCrop_MetaDataReader {
    public:

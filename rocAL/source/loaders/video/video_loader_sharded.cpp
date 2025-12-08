@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "video_loader_sharded.h"
+#include "loaders/video/video_loader_sharded.h"
 #ifdef ROCAL_VIDEO
 
 VideoLoaderSharded::VideoLoaderSharded(void *dev_resources) : _dev_resources(dev_resources) {
@@ -39,8 +39,8 @@ std::vector<std::string> VideoLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info VideoLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+DecodedDataInfo VideoLoaderSharded::get_decode_data_info() {
+    return _loaders[_loader_idx]->get_decode_data_info();
 }
 
 VideoLoaderSharded::~VideoLoaderSharded() {
@@ -83,6 +83,7 @@ void VideoLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decod
     // Initialize loader modules
     for (size_t idx = 0; idx < _shard_count; idx++) {
         _loaders[idx]->set_output(_output_tensor);
+        _loaders[idx]->set_gpu_device_id(idx);
         reader_cfg.set_shard_count(_shard_count);
         reader_cfg.set_shard_id(idx);
         _loaders[idx]->initialize(reader_cfg, decoder_cfg, mem_type, batch_size, keep_orig_size);
@@ -93,20 +94,6 @@ void VideoLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decod
 void VideoLoaderSharded::start_loading() {
     for (unsigned i = 0; i < _loaders.size(); i++) {
         _loaders[i]->start_loading();
-        //  Changing thread scheduling policy and it's priority does not help on latest Ubuntu builds
-        //  and needs tweaking the Linux security settings , can be turned on for experimentation
-#if 0
-        // Set thread scheduling policy
-        struct sched_param params;
-        params.sched_priority = sched_get_priority_max(SCHED_FIFO);
-        _loaders[i]->set_cpu_sched_policy(params);
-        // Setting cpu affinity for threads works and can be activated below for experimentation
-        // Set thread affinity thread 0 to core 0 , 1 toc core 1 , ...
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(i, &cpuset);
-        _loaders[i]->set_cpu_affinity(cpuset);
-#endif
     }
 }
 

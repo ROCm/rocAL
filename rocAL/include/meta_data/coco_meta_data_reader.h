@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,10 @@ THE SOFTWARE.
 #pragma once
 #include <map>
 
-#include "commons.h"
-#include "meta_data.h"
-#include "meta_data_reader.h"
-#include "timing_debug.h"
+#include "pipeline/commons.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_reader.h"
+#include "pipeline/timing_debug.h"
 #include "maskApi.h"
 
 class COCOMetaDataReader : public MetaDataReader {
@@ -48,7 +48,6 @@ class COCOMetaDataReader : public MetaDataReader {
    private:
     pMetaDataBatch _output;
     std::string _path;
-    int meta_data_reader_type;
     bool _avoid_class_remapping;
     void add(std::string image_name, BoundingBoxCords bbox, Labels labels, ImgSize image_size, int image_id = 0);
     void add(std::string image_name, BoundingBoxCords bbox, Labels labels, ImgSize image_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, int image_id = 0);  // To add Mask coordinates to Metadata struct
@@ -71,5 +70,5 @@ class COCOMetaDataReader : public MetaDataReader {
     uint32_t _max_width = 0;
     uint32_t _max_height = 0;
     std::map<int, int>::iterator _it_label;
-    TimingDBG _coco_metadata_read_time;
+    TimingDbg _coco_metadata_read_time;
 };

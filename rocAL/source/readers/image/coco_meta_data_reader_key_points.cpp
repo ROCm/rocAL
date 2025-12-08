@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "coco_meta_data_reader_key_points.h"
+#include "meta_data/coco_meta_data_reader_key_points.h"
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <utility>
 
-#include "lookahead_parser.h"
+#include "meta_data/lookahead_parser.h"
 
 using namespace std;
 

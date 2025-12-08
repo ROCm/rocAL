@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include "node_rotate.h"
-#include "exception.h"
+#include "augmentations/geometry_augmentations/node_rotate.h"
+#include "pipeline/exception.h"
 
 RotateNode::RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                     _angle(ROTATE_ANGLE_RANGE[0], ROTATE_ANGLE_RANGE[1]) {}
@@ -47,12 +47,12 @@ void RotateNode::create_node() {
         THROW("Adding the rotate (vxExtRppRotate) node failed: " + TOSTR(status))
 }
 
-void RotateNode::init(float angle, RocalResizeInterpolationType interpolation_type) {
+void RotateNode::init(float angle, ResizeInterpolationType interpolation_type) {
     _angle.set_param(angle);
     _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void RotateNode::init(FloatParam *angle, RocalResizeInterpolationType interpolation_type) {
+void RotateNode::init(FloatParam *angle, ResizeInterpolationType interpolation_type) {
     _angle.set_param(core(angle));
     _interpolation_type = static_cast<int>(interpolation_type);
 }

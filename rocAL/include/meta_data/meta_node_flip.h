@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,11 @@ THE SOFTWARE.
 #include <memory>
 #include <set>
 
-#include "bounding_box_graph.h"
-#include "meta_data.h"
-#include "node.h"
-#include "node_flip.h"
-#include "parameter_vx.h"
+#include "meta_data/bounding_box_graph.h"
+#include "meta_data/meta_data.h"
+#include "pipeline/node.h"
+#include "augmentations/geometry_augmentations/node_flip.h"
+#include "parameters/parameter_vx.h"
 
 class FlipMetaNode : public MetaNode {
    public:
@@ -39,6 +39,5 @@ class FlipMetaNode : public MetaNode {
 
    private:
     void initialize();
-    vx_array _src_width, _src_height;
     std::vector<int> _h_flip_val, _v_flip_val;
 };

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,14 +28,14 @@ THE SOFTWARE.
 #include <cstring>
 #include <map>
 #include <tuple>
-#include "commons.h"
-#include "ffmpeg_video_decoder.h"
-#include "video_reader_factory.h"
-#include "timing_debug.h"
-#include "loader_module.h"
-#include "video_properties.h"
-#include "video_reader.h"
-#include "filesystem.h"
+#include "pipeline/commons.h"
+#include "decoders/video/video_decoder.h"
+#include "readers/video/video_reader_factory.h"
+#include "pipeline/timing_debug.h"
+#include "loaders/loader_module.h"
+#include "readers/video/video_properties.h"
+#include "readers/video/video_reader.h"
+#include "pipeline/filesystem.h"
 
 #ifdef ROCAL_VIDEO
 extern "C" {
@@ -48,7 +48,7 @@ class VideoReadAndDecode {
     ~VideoReadAndDecode();
     size_t count();
     void reset();
-    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size);
+    void create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id = 0);
     void set_video_process_count(size_t video_count) {
         _video_process_count = (video_count <= _max_video_count) ? video_count : _max_video_count;
     }
@@ -99,7 +99,7 @@ class VideoReadAndDecode {
     std::vector<size_t> _sequence_start_frame_num;
     std::vector<std::string> _sequence_video_path;
     std::vector<int> _sequence_video_idx;
-    TimingDBG _file_load_time, _decode_time;
+    TimingDbg _file_load_time, _decode_time;
     size_t _batch_size;
     size_t _sequence_length;
     size_t _stride;
@@ -110,5 +110,6 @@ class VideoReadAndDecode {
     size_t _max_decoded_stride;
     AVPixelFormat _out_pix_fmt;
     DecoderConfig _video_decoder_config;
+    int _device_id = 0;
 };
 #endif

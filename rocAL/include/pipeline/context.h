@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "commons.h"
-#include "graph.h"
-#include "master_graph.h"
+#include "pipeline/commons.h"
+#include "pipeline/graph.h"
+#include "pipeline/master_graph.h"
 
 struct Context {
     explicit Context(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_thread_count, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_type) : affinity(affinity),

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_video_loader_single_shard.h"
+#include "loaders/video/node_video_loader_single_shard.h"
 
-#include "exception.h"
+#include "pipeline/exception.h"
 #ifdef ROCAL_VIDEO
 
 VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {

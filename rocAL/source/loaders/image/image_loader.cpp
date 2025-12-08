@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_loader.h"
+#include "loaders/image/image_loader.h"
 
 #include <chrono>
 #include <thread>
 
-#include "image_read_and_decode.h"
+#include "loaders/image/image_read_and_decode.h"
 #include "vx_ext_amd.h"
 
 ImageLoader::ImageLoader(void *dev_resources) : _circ_buff(dev_resources),
@@ -38,6 +38,10 @@ ImageLoader::ImageLoader(void *dev_resources) : _circ_buff(dev_resources),
     _is_initialized = false;
     _remaining_image_count = 0;
     _device_id = 0;
+#if ENABLE_HIP
+    DeviceResourcesHip *hipres = static_cast<DeviceResourcesHip *>(dev_resources);
+    _hip_stream = hipres->hip_stream;
+#endif
 }
 
 ImageLoader::~ImageLoader() {
@@ -65,10 +69,10 @@ void ImageLoader::set_gpu_device_id(int device_id) {
 size_t
 ImageLoader::remaining_count() {
     if (_external_source_reader) {
-        if ((_image_loader->count() != 0) && !_external_input_eos)
-            return _batch_size;
-        else {
+        if ((_image_loader->count() < _batch_size) && _external_input_eos) {
             return 0;
+        } else {
+            return _batch_size;
         }
     }
     return _remaining_image_count;
@@ -140,6 +144,12 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _image_loader = std::make_shared<ImageReadAndDecode>();
     size_t shard_count = reader_cfg.get_shard_count();
     int device_id = reader_cfg.get_shard_id();
+#if ENABLE_HIP
+    // Set stream in decoder config, to be used by rocJpeg decoder for scaling
+    if (decoder_cfg._type == DecoderType::ROCJPEG) {
+        decoder_cfg.set_hip_stream(_hip_stream);
+    }
+#endif
     try {
         // set the device_id for decoder same as shard_id for number of shards > 1
         if (shard_count > 1)
@@ -152,13 +162,18 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _max_tensor_width = _output_tensor->info().max_shape().at(0);
     _max_tensor_height = _output_tensor->info().max_shape().at(1);
-    _decoded_img_info._image_names.resize(_batch_size);
-    _decoded_img_info._roi_height.resize(_batch_size);
-    _decoded_img_info._roi_width.resize(_batch_size);
-    _decoded_img_info._original_height.resize(_batch_size);
-    _decoded_img_info._original_width.resize(_batch_size);
+    _decoded_data_info._data_names.resize(_batch_size);
+    _decoded_data_info._roi_height.resize(_batch_size);
+    _decoded_data_info._roi_width.resize(_batch_size);
+    _decoded_data_info._original_height.resize(_batch_size);
+    _decoded_data_info._original_width.resize(_batch_size);
     _crop_image_info._crop_image_coords.resize(_batch_size);
-    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    if (decoder_cfg._type == DecoderType::ROCJPEG || decoder_cfg._type == DecoderType::ROCJPEG_CROPPED) {
+        // Initialize circular buffer with HIP memory for rocJPEG hardware decoder
+        _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, true);
+    } else {
+        _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+    }
     _is_initialized = true;
     _image_loader->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
     LOG("Loader module initialized");
@@ -187,13 +202,13 @@ ImageLoader::load_routine() {
         auto load_status = LoaderModuleStatus::NO_MORE_DATA_TO_READ;
         {
             load_status = _image_loader->load(data,
-                                              _decoded_img_info._image_names,
+                                              _decoded_data_info._data_names,
                                               _max_tensor_width,
                                               _max_tensor_height,
-                                              _decoded_img_info._roi_width,
-                                              _decoded_img_info._roi_height,
-                                              _decoded_img_info._original_width,
-                                              _decoded_img_info._original_height,
+                                              _decoded_data_info._roi_width,
+                                              _decoded_data_info._roi_height,
+                                              _decoded_data_info._original_width,
+                                              _decoded_data_info._original_height,
                                               _output_tensor->info().color_format(), _decoder_keep_original);
 
             if (load_status == LoaderModuleStatus::OK) {
@@ -201,7 +216,7 @@ ImageLoader::load_routine() {
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
                     _circ_buff.set_crop_image_info(_crop_image_info);
                 }
-                _circ_buff.set_image_info(_decoded_img_info);
+                _circ_buff.set_decoded_data_info(_decoded_data_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
             }
@@ -233,6 +248,11 @@ ImageLoader::load_routine() {
 bool ImageLoader::is_out_of_data() {
     return (remaining_count() < _batch_size);
 }
+
+size_t ImageLoader::last_batch_padded_size() {
+    return _image_loader->last_batch_padded_size();
+}
+
 LoaderModuleStatus
 ImageLoader::update_output_image() {
     LoaderModuleStatus status = LoaderModuleStatus::OK;
@@ -259,12 +279,12 @@ ImageLoader::update_output_image() {
     if (_stopped)
         return LoaderModuleStatus::OK;
 
-    _output_decoded_img_info = _circ_buff.get_image_info();
+    _output_decoded_data_info = _circ_buff.get_decoded_data_info();
     if (_randombboxcrop_meta_data_reader) {
         _output_cropped_img_info = _circ_buff.get_cropped_image_info();
     }
-    _output_names = _output_decoded_img_info._image_names;
-    _output_tensor->update_tensor_roi(_output_decoded_img_info._roi_width, _output_decoded_img_info._roi_height);
+    _output_names = _output_decoded_data_info._data_names;
+    _output_tensor->update_tensor_roi(_output_decoded_data_info._roi_width, _output_decoded_data_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
         _remaining_image_count -= _batch_size;
@@ -278,40 +298,15 @@ Timing ImageLoader::timing() {
     return t;
 }
 
-LoaderModuleStatus ImageLoader::set_cpu_affinity(cpu_set_t cpu_mask) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_affinity() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    int ret = pthread_setaffinity_np(_load_thread.native_handle(),
-                                     sizeof(cpu_set_t), &cpu_mask);
-    if (ret != 0)
-        WRN("Error calling pthread_setaffinity_np: " + TOSTR(ret));
-#endif
-    return LoaderModuleStatus::OK;
-}
-
-LoaderModuleStatus ImageLoader::set_cpu_sched_policy(struct sched_param sched_policy) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_sched_policy() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    auto ret = pthread_setschedparam(_load_thread.native_handle(), SCHED_FIFO, &sched_policy);
-    if (ret != 0)
-        WRN("Unsuccessful in setting thread realtime priority for loader thread err = " + TOSTR(ret))
-#endif
-    return LoaderModuleStatus::OK;
-}
-
 std::vector<std::string> ImageLoader::get_id() {
     return _output_names;
 }
 
-decoded_image_info ImageLoader::get_decode_image_info() {
-    return _output_decoded_img_info;
+DecodedDataInfo ImageLoader::get_decode_data_info() {
+    return _output_decoded_data_info;
 }
 
-crop_image_info ImageLoader::get_crop_image_info() {
+CropImageInfo ImageLoader::get_crop_image_info() {
     return _output_cropped_img_info;
 }
 

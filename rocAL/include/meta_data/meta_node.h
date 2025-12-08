@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,10 @@ THE SOFTWARE.
 #include <memory>
 #include <set>
 
-#include "meta_data.h"
-#include "meta_data_graph.h"
-#include "node.h"
-#include "parameter_factory.h"
+#include "meta_data/meta_data.h"
+#include "meta_data/meta_data_graph.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
 
 class MetaNode {
    public:

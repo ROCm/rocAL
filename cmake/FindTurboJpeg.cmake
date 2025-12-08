@@ -2,7 +2,7 @@
 # 
 # MIT License
 # 
-# Copyright (c) 2017 - 2023 Advanced Micro Devices, Inc.
+# Copyright (c) 2017 - 2025 Advanced Micro Devices, Inc.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,8 @@ find_path(TurboJpeg_INCLUDE_DIRS
     HINTS
     $ENV{TURBO_JPEG_PATH}/include
     PATHS
-    ${TURBO_JPEG_PATH}/include
     /usr/include
+    ${TURBO_JPEG_PATH}/include
     /opt/libjpeg-turbo/include
 )
 mark_as_advanced(TurboJpeg_INCLUDE_DIRS)
@@ -46,9 +46,9 @@ find_library(TurboJpeg_LIBRARIES
     $ENV{TURBO_JPEG_PATH}/lib
     $ENV{TURBO_JPEG_PATH}/lib64
     PATHS
+    /usr/lib
     ${TURBO_JPEG_PATH}/lib
     ${TURBO_JPEG_PATH}/lib64
-    /usr/lib
     /opt/libjpeg-turbo/lib
 )
 mark_as_advanced(TurboJpeg_LIBRARIES)

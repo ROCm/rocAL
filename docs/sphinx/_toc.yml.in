@@ -1,23 +1,50 @@
-# Anywhere {branch} is used, the branch name will be substituted.
-# These comments will also be removed.
 defaults:
   numbered: False
-root: doxygen/html/index
+#root: doxygen/html/index
+root: index
 subtrees:
-- caption: User Guide
+
+- caption: Installation
   entries:
-    - file: README
-      subtrees:
-        - entries:
-          - file: user_guide/ch1
-          - file: user_guide/ch2
-          - file: user_guide/ch3
-          - file: user_guide/ch4
-          - file: user_guide/ch5
-          - file: user_guide/ch6
+  - file: install/rocAL-prerequisites.rst
+    title: rocAL prerequisites
+  - file: install/rocAL-package-install.rst
+    title: Installing rocAL with the package installer
+  - file: install/rocAL-build-and-install.rst
+    title: Building and installing rocAL from source
+
+- caption: Conceptual
+  entries:
+  - file: conceptual/overview.rst
+    title: rocAL Overview
+  - file: conceptual/architecture.rst
+    title: Architecture components
+
+- caption: How to
+  entries:
+  - file: how-to/rocAL-pytorch-framework.rst
+    title: Run PyTorch training 
+  - file: how-to/rocAL-tensorflow-framework.rst
+    title: Run TensorFlow training 
+  - file: how-to/rocAL-jax-framework.rst
+    title: Run JAX training
+
 - caption: Examples
   entries:
-    - file: examples
-- caption: About
+  - file: examples/examples.rst
+    title: Framework integration examples
+  
+- caption: Reference
   entries:
-    - file: license
+  - file: reference/rocAL-and-RNNT.rst
+    title: RNNT dataloading
+  - file: reference/rocAL-cpp-api.rst
+    title: C++ API overview
+  - file: reference/rocAL-cpp-api-list.rst
+    title: C++ reference
+  - file: reference/rocAL-python-api.rst
+    title: Python API overview
+  - file: reference/rocAL-python-api-list.rst
+    title: Python API reference
+
+  - file: license.rst

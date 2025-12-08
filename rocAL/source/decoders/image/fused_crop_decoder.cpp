@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,11 @@ THE SOFTWARE.
 */
 
 
-#include <commons.h>
+#include "pipeline/commons.h"
 #include <stdio.h>
 #include <string.h>
-#include "fused_crop_decoder.h"
-#include "libjpeg_extra.h"
+#include "decoders/image/fused_crop_decoder.h"
+#include "decoders/libjpeg/libjpeg_extra.h"
 
 
 FusedCropTJDecoder::FusedCropTJDecoder() {

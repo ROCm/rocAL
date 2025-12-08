@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,21 +26,21 @@ THE SOFTWARE.
 #include <string>
 #include <utility>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 #define DEFAULT_DBG_TIMING 1
 /*! \brief Debugging RocalDbgTiming class
  *
  * Can be used anywhere in the code for adding RocalDbgTiming for debugging and profiling
  */
-class TimingDBG {
+class TimingDbg {
    public:
     //! Constrcutor
     /*!
     \param name Name of the timer,
     \param enable enables the timer module, if not set, timer is disabled
     */
-    explicit TimingDBG(std::string name, bool enable = DEFAULT_DBG_TIMING) : _accumulated_time(_t_start - _t_start),
+    explicit TimingDbg(std::string name, bool enable = DEFAULT_DBG_TIMING) : _accumulated_time(_t_start - _t_start),
                                                                              _count(0),
                                                                              _enable(enable),
                                                                              _name(std::move(name)) {}

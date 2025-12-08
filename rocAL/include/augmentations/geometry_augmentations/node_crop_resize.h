@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,25 +21,32 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node_crop.h"
-#include "parameter_crop_factory.h"
-#include "parameter_factory.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_crop_factory.h"
+#include "parameters/parameter_factory.h"
+
+#define NUM_ATTEMPTS 100
 
 class CropResizeNode : public CropNode {
    public:
     CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     CropResizeNode() = delete;
     void init(float area, float aspect_ratio, float x_center_drift, float y_center_drift);
+    void init(std::vector<float>& area_factor, std::vector<float>& aspect_ratio,
+              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
     void init(FloatParam *area, FloatParam *aspect_ratio, FloatParam *x_drift_factor, FloatParam *y_drift_factor);
+    void init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift,
+              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
-    std::shared_ptr<RocalRandomCropParam> get_crop_param() { return _crop_param; }
+    std::shared_ptr<CropParam> get_crop_param() { return _crop_param; }
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    std::shared_ptr<RocalRandomCropParam> _crop_param;
+    std::shared_ptr<CropParam> _crop_param;  // For random crop generation
     vx_array _dst_roi_width, _dst_roi_height;
+    int _interpolation_type = 1;  // Linear interpolation by default
 };

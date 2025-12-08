@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,10 @@ THE SOFTWARE.
 
 #include <memory>
 
-#include "bounding_box_graph.h"
-#include "exception.h"
-#include "meta_data_graph.h"
-#include "meta_data_reader.h"
+#include "meta_data/bounding_box_graph.h"
+#include "pipeline/exception.h"
+#include "meta_data/meta_data_graph.h"
+#include "meta_data/meta_data_reader.h"
 
 std::shared_ptr<MetaDataGraph> create_meta_data_graph(const MetaDataConfig& config) {
     switch (config.type()) {

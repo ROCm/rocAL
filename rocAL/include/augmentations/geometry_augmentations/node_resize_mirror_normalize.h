@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +21,16 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
+#include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
 class ResizeMirrorNormalizeNode : public Node {
    public:
     ResizeMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResizeMirrorNormalizeNode() = delete;
-    void init(unsigned dest_width, unsigned dest_height, RocalResizeScalingMode scaling_mode, std::vector<unsigned> max_size,
-              RocalResizeInterpolationType interpolation_type, std::vector<float> &mean, std::vector<float> &std_dev, IntParam *mirror);
+    void init(unsigned dest_width, unsigned dest_height, ResizeScalingMode scaling_mode, std::vector<unsigned> max_size,
+              ResizeInterpolationType interpolation_type, std::vector<float> &mean, std::vector<float> &std_dev, IntParam *mirror);
     void adjust_out_roi_size();
     vx_array get_mirror() { return _mirror.default_array(); }
 
@@ -39,12 +39,12 @@ class ResizeMirrorNormalizeNode : public Node {
     void update_node() override;
 
    private:
-    vx_array _mean_vx_array, _std_dev_vx_array, _mirror_vx_array, _dst_roi_width, _dst_roi_height;
+    vx_array _mean_vx_array, _std_dev_vx_array, _dst_roi_width, _dst_roi_height;
     std::vector<float> _mean, _std_dev;
     int _interpolation_type;
     ParameterVX<int> _mirror;
     constexpr static int _mirror_range[2] = {0, 1};
-    RocalResizeScalingMode _scaling_mode;
+    ResizeScalingMode _scaling_mode;
     unsigned _src_width, _src_height, _dst_width, _dst_height, _out_width, _out_height;
     unsigned _max_width = 0, _max_height = 0;
     std::vector<unsigned> _dst_roi_width_vec, _dst_roi_height_vec;

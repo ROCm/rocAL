@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,12 @@ class Parameter {
 
     /// used to internally renew state of the parameter if needed (for random parameters)
     virtual void renew(){};
+
+    /// allocates memory for the array with specified size
+    virtual void create_array(unsigned size){};
+
+    /// used to fetch the updated param values
+    virtual std::vector<T> get_array() { return {}; };
 
     virtual ~Parameter() {}
     ///

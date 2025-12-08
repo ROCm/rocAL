@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,15 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "cifar10_meta_data_reader.h"
+#include "meta_data/cifar10_meta_data_reader.h"
 
 #include <string.h>
 
 #include <algorithm>
-#include "commons.h"
-#include "exception.h"
-#include "filesystem.h"
-#include "cifar10_meta_data_reader.h"
+#include "pipeline/commons.h"
+#include "pipeline/exception.h"
+#include "pipeline/filesystem.h"
 
 using namespace std;
 

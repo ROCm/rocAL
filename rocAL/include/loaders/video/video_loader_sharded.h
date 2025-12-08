@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -41,9 +41,9 @@ class VideoLoaderSharded : public LoaderModule {
     void reset() override;
     void start_loading() override;
     std::vector<std::string> get_id() override;
-    decoded_image_info get_decode_image_info() override;
+    DecodedDataInfo get_decode_data_info() override;
     void set_prefetch_queue_depth(size_t prefetch_queue_depth) override;
-    crop_image_info get_crop_image_info() override { return _crop_img_info; }
+    CropImageInfo get_crop_image_info() override { return _crop_img_info; }
     void set_random_bbox_data_reader(std::shared_ptr<RandomBBoxCrop_MetaDataReader> randombboxcrop_meta_data_reader) override{};
     std::vector<size_t> get_sequence_start_frame_number() override;
     std::vector<std::vector<float>> get_sequence_frame_timestamps() override;
@@ -61,6 +61,6 @@ class VideoLoaderSharded : public LoaderModule {
     void fast_forward_through_empty_loaders();
     size_t _prefetch_queue_depth;  // Used for circular buffer's internal buffer
     Tensor* _output_tensor;
-    crop_image_info _crop_img_info;
+    CropImageInfo _crop_img_info;
 };
 #endif

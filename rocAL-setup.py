@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2022 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,75 +22,112 @@ import os
 import sys
 import argparse
 import platform
+import traceback
 if sys.version_info[0] < 3:
     import commands
 else:
     import subprocess
 
-__author__ = "Kiriti Nagesh Gowda"
-__copyright__ = "Copyright 2022 - 2023, AMD ROCm Augmentation Library"
-__license__ = "MIT"
-__version__ = "1.0.2"
-__maintainer__ = "Kiriti Nagesh Gowda"
+libraryName = "rocAL"
+
+__copyright__ = f"Copyright(c) 2018 - 2025, AMD ROCm {libraryName}"
+__version__ = "4.1.0"
 __email__ = "mivisionx.support@amd.com"
 __status__ = "Shipping"
+
+# ANSI Escape codes for info messages
+TEXT_WARNING = "\033[93m\033[1m"
+TEXT_ERROR = "\033[91m\033[1m"
+TEXT_INFO = "\033[1m"
+TEXT_DEFAULT = "\033[0m"
+
+def info(msg):
+    print(f"{TEXT_INFO}INFO:{TEXT_DEFAULT} {msg}")
+
+def warn(msg):
+    print(f"{TEXT_WARNING}WARNING:{TEXT_DEFAULT} {msg}")
+
+def error(msg):
+    print(f"{TEXT_ERROR}ERROR:{TEXT_DEFAULT} {msg}")
+
+# error check for calls
+def ERROR_CHECK(waitval):
+    if(waitval != 0): # return code and signal flags
+        error('ERROR_CHECK failed with status:'+str(waitval))
+        traceback.print_stack()
+        status = ((waitval >> 8) | waitval) & 255 # combine exit code and wait flags into single non-zero byte
+        exit(status)
+
+def install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, package_list):
+    cmd_str = 'sudo ' + linuxFlag + ' ' + linuxSystemInstall + \
+        ' ' + linuxSystemInstall_check+' install '
+    for i in range(len(package_list)):
+        cmd_str += package_list[i] + " "
+    ERROR_CHECK(os.system(cmd_str))
 
 # Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--directory', 	type=str, default='~/rocal-deps',
                     help='Setup home directory - optional (default:~/)')
-parser.add_argument('--opencv',    	type=str, default='4.6.0',
-                    help='OpenCV Version - optional (default:4.6.0)')
-parser.add_argument('--protobuf',  	type=str, default='3.12.4',
-                    help='ProtoBuf Version - optional (default:3.12.4)')
-parser.add_argument('--rpp',   		type=str, default='master',
-                    help='RPP Version - optional (default:master)')
-parser.add_argument('--mivisionx',   		type=str, default='master',
-                    help='MIVisionX Version - optional (default:master)')
-parser.add_argument('--pybind11',   type=str, default='v2.10.4',
-                    help='PyBind11 Version - optional (default:v2.10.4)')
-parser.add_argument('--reinstall', 	type=str, default='no',
-                    help='Remove previous setup and reinstall - optional (default:no) [options:yes/no]')
-parser.add_argument('--backend', 	type=str, default='HIP',
-                    help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/OCL/HIP]')
 parser.add_argument('--rocm_path', 	type=str, default='/opt/rocm',
                     help='ROCm Installation Path - optional (default:/opt/rocm) - ROCm Installation Required')
+parser.add_argument('--backend', 	type=str, default='HIP',
+                    help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/OCL/HIP]')
+parser.add_argument('--reinstall', 	type=str, default='OFF',
+                    help='Remove previous setup and reinstall - optional (default:OFF) [options:ON/OFF]')
 args = parser.parse_args()
 
 setupDir = args.directory
-opencvVersion = args.opencv
-ProtoBufVersion = args.protobuf
-rppVersion = args.rpp
-mivisionxVersion = args.mivisionx
-pybind11Version = args.pybind11
-reinstall = args.reinstall
-backend = args.backend
 ROCM_PATH = args.rocm_path
+backend = args.backend.upper()
+reinstall = args.reinstall.upper()
 
+
+if reinstall not in ('OFF', 'ON'):
+    error(
+        "ERROR: Re-Install Option Not Supported - [Supported Options: OFF or ON]\n")
+    parser.print_help()
+    exit(-1)
+if backend not in ('OCL', 'HIP', 'CPU'):
+    error(
+        "ERROR: Backend Option Not Supported - [Supported Options: CPU or OCL or HIP]\n")
+    parser.print_help()
+    exit(-1)
+
+# override default path if env path set 
 if "ROCM_PATH" in os.environ:
     ROCM_PATH = os.environ.get('ROCM_PATH')
-print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
+info("ROCm PATH set to -- "+ROCM_PATH+"\n")
 
-if reinstall not in ('no', 'yes'):
-    print(
-        "ERROR: Re-Install Option Not Supported - [Supported Options: no or yes]")
-    exit()
-if backend not in ('OCL', 'HIP', 'CPU'):
-    print(
-        "ERROR: Backend Option Not Supported - [Supported Options: CPU or OCL or HIP]")
-    exit()
 
 # check ROCm installation
-if os.path.exists(ROCM_PATH):
-    print("\nROCm Installation Found -- "+ROCM_PATH+"\n")
+if os.path.exists(ROCM_PATH) and backend != 'CPU':
+    info("ROCm Installation Found -- "+ROCM_PATH+"\n")
     os.system('echo ROCm Info -- && '+ROCM_PATH+'/bin/rocminfo')
 else:
-    print("\nWARNING: ROCm Not Found at -- "+ROCM_PATH+"\n")
-    print(
-        "WARNING: Set ROCm Path with \"--rocm_path\" option for full installation [Default:/opt/rocm]\n")
+    if backend != 'CPU':
+        warn("\nWARNING: ROCm Not Found at -- "+ROCM_PATH+"\n")
+        warn(
+            "WARNING: If ROCm installed, set ROCm Path with \"--rocm_path\" option for full installation [Default:/opt/rocm]\n")
+        warn("WARNING: Limited dependencies will be installed\n")
+        backend = 'CPU'
+    else:
+        info("STATUS: CPU Backend Install\n")
+    neuralNetInstall = 'OFF'
+    inferenceInstall = 'OFF'
 
-# get platfrom info
-platfromInfo = platform.platform()
+# Setup Directory for Deps
+if setupDir == '~/rocal-deps':
+    setupDir_deps = setupDir
+else:
+    setupDir_deps = setupDir+'/rocal-deps'
+
+# setup directory path
+deps_dir = os.path.expanduser(setupDir_deps)
+deps_dir = os.path.abspath(deps_dir)
+
+# get platform info
+platformInfo = platform.platform()
 
 # sudo requirement check
 sudoLocation = ''
@@ -104,322 +141,282 @@ else:
     if sudoLocation != '/usr/bin/sudo':
         status, userName = subprocess.getstatusoutput("whoami")
 
-# Setup Directory for Deps
-if setupDir == '~/rocal-deps':
-    setupDir_deps = setupDir
-else:
-    setupDir_deps = setupDir+'/rocal-deps'
-
-# setup directory path
-deps_dir = os.path.expanduser(setupDir_deps)
-deps_dir = os.path.abspath(deps_dir)
+# check os version
+os_info_data = 'NOT Supported'
+if os.path.exists('/etc/os-release'):
+    with open('/etc/os-release', 'r') as os_file:
+        os_info_data = os_file.read().replace('\n', ' ')
+        os_info_data = os_info_data.replace('"', '')
 
 # setup for Linux
 linuxSystemInstall = ''
 linuxCMake = 'cmake'
 linuxSystemInstall_check = ''
 linuxFlag = ''
-if "centos" in platfromInfo or "redhat" in platfromInfo or os.path.exists('/usr/bin/yum'):
+sudoValidate = 'sudo -v'
+osUpdate = ''
+if "centos" in os_info_data or "redhat" in os_info_data or "Oracle" in os_info_data:
     linuxSystemInstall = 'yum -y'
     linuxSystemInstall_check = '--nogpgcheck'
-    if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
-        linuxCMake = 'cmake3'
-        os.system(linuxSystemInstall+' install cmake3')
-    if not "centos" in platfromInfo or not "redhat" in platfromInfo:
-        platfromInfo = platfromInfo+'-redhat'
-elif "Ubuntu" in platfromInfo or os.path.exists('/usr/bin/apt-get'):
+    osUpdate = 'makecache'
+    if "VERSION_ID=8" in os_info_data:
+        platformInfo = platformInfo+'-centos-8-based'
+    elif "VERSION_ID=9" in os_info_data:
+        platformInfo = platformInfo+'-centos-9-based'
+    else:
+        platformInfo = platformInfo+'-centos-undefined-version'
+elif "Ubuntu" in os_info_data:
     linuxSystemInstall = 'apt-get -y'
     linuxSystemInstall_check = '--allow-unauthenticated'
+    osUpdate = 'update'
     linuxFlag = '-S'
-    if not "Ubuntu" in platfromInfo:
-        platfromInfo = platfromInfo+'-Ubuntu'
-elif os.path.exists('/usr/bin/zypper'):
+    if "VERSION_ID=22" in os_info_data:
+        platformInfo = platformInfo+'-ubuntu-22'
+    elif "VERSION_ID=24" in os_info_data:
+        platformInfo = platformInfo+'-ubuntu-24'
+    else:
+        platformInfo = platformInfo+'-ubuntu-undefined-version'
+elif "SLES" in os_info_data:
     linuxSystemInstall = 'zypper -n'
     linuxSystemInstall_check = '--no-gpg-checks'
-    platfromInfo = platfromInfo+'-SLES'
+    osUpdate = 'refresh'
+    platformInfo = platformInfo+'-sles'
+elif "Mariner" in os_info_data:
+    linuxSystemInstall = 'tdnf -y'
+    linuxSystemInstall_check = '--nogpgcheck'
+    platformInfo = platformInfo+'-mariner'
+    osUpdate = 'makecache'
 else:
-    print("\nrocAL Setup on "+platfromInfo+" is unsupported\n")
-    print("\nrocAL Setup Supported on: Ubuntu 20/22; CentOS 7/8; RedHat 7/8; & SLES 15-SP4\n")
-    exit()
+    error("rocAL Setup on "+platformInfo+" is unsupported\n")
+    error("rocAL Setup Supported on: Ubuntu 22/24, RedHat 8/9, & SLES 15\n")
+    exit(-1)
 
 # rocAL Setup
-print("\nrocAL Setup on: "+platfromInfo+"\n")
+info(f"{libraryName} Setup on: "+platformInfo)
+info(f"{libraryName} Dependencies Installation with rocAL-setup.py V-"+__version__)
 
 if userName == 'root':
-    os.system(linuxSystemInstall+' update')
-    os.system(linuxSystemInstall+' install sudo')
+    ERROR_CHECK(os.system(linuxSystemInstall+' '+osUpdate))
+    ERROR_CHECK(os.system(linuxSystemInstall+' install sudo'))
 
 # Delete previous install
-if os.path.exists(deps_dir) and reinstall == 'yes':
-    os.system('sudo -v')
-    os.system('sudo rm -rf '+deps_dir)
-    print("\nrocAL Setup: Removing Previous Install -- "+deps_dir+"\n")
+if reinstall == 'ON':
+    ERROR_CHECK(os.system(sudoValidate))
+    if os.path.exists(deps_dir):
+        ERROR_CHECK(os.system('sudo rm -rf '+deps_dir))
+        info("rocAL Setup: Removing Previous Install -- "+deps_dir+"\n")
 
-# Re-Install
+# common packages
+coreCommonPackages = [
+    'cmake',
+    'wget',
+    'unzip',
+    'pkg-config',
+    'inxi'
+]
+
+# rocm pacakges
+rocmDebianPackages = [
+    'half',
+    'hip-dev',
+    'mivisionx-dev',
+    'rocjpeg-dev',
+    'rocdecode-dev'
+]
+
+rocjpegPackage = "rocjpeg-devel"
+rocdecodePackage = "rocdecode-devel"
+if "mariner" in platformInfo:
+    rocjpegPackage = "mivisionx-devel" # TBD - rocJPEG unsupported on Mariner
+    rocdecodePackage = "mivisionx-devel" # TBD - rocDecode unsupported on Mariner
+rocmRPMPackages = [
+    'half',
+    'hip-devel',
+    'mivisionx-devel',
+    str(rocjpegPackage),
+    str(rocdecodePackage)
+]
+
+# core package
+coreDebianPackages = [
+    'nasm',
+    'yasm',
+    'liblmdb-dev',
+    #'rapidjson-dev',
+    'libsndfile1-dev', # for audio features
+    'python3-dev',
+    'python3-pip',
+    'python3-protobuf',
+    'libprotobuf-dev',
+    'libprotoc-dev',
+    'protobuf-compiler',
+    'libturbojpeg0-dev'
+]
+
+libsndFile = "libsndfile-devel"
+libPythonProto = "python3-protobuf"
+libProtoCompiler = "protobuf-compiler"
+libTurboJPEG = "turbojpeg-devel"
+if "sles" in platformInfo:
+    libProtoCompiler = "libprotobuf-c-devel"
+    libsndFile = "cmake" # TBD - libsndfile-devel  fails to install in SLES
+    libTurboJPEG = "cmake" # TBD libturbojpeg0 dev/devel package unavailable in SLES
+if "centos-8" in platformInfo:
+    libTurboJPEG = "cmake" # TurboJPEG >=2.0.0 unavailable on CentOS 8
+coreRPMPackages = [
+    'nasm',
+    'yasm',
+    'lmdb-devel',
+    'jsoncpp-devel',
+    #'rapidjson-devel',
+    str(libsndFile), # for audio features
+    'python3-devel',
+    'python3-pip',
+    str(libPythonProto),
+    'protobuf-devel',
+    str(libProtoCompiler),
+    str(libTurboJPEG)
+]
+
+pip3Packages = [
+    'pytest~=7.0.0',
+    'wheel~=0.37.0'
+]
+
+openclDebianPackages = [
+    'ocl-icd-opencl-dev'
+]
+
+openclRPMPackages = [
+    'ocl-icd-devel'
+]
+
+opencvDebianPackages = [
+    'libopencv-dev'
+]
+
+opencvRPMPackages = [
+    'gtk2-devel',
+    'libjpeg-devel',
+    'libpng-devel',
+    'libtiff-devel',
+    'libavc1394'
+]
+
+# update
+ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' '+osUpdate))
+
+ERROR_CHECK(os.system(sudoValidate))
+# common packages
+install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, coreCommonPackages)
+# HIP Backend support
+if backend == 'HIP':
+    if "ubuntu" in platformInfo:
+        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, rocmDebianPackages)
+        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, coreDebianPackages)
+    else:
+        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, rocmRPMPackages)
+        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, coreRPMPackages)
+
+# Install OpenCL ICD Loader
+if backend == 'OCL':
+    if "ubuntu" in platformInfo:
+        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, openclDebianPackages)
+    else:
+        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, openclRPMPackages)
+
+# OpenCV
+if "ubuntu" in platformInfo:
+    install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, opencvDebianPackages)
+
+#pip3 packages
+for i in range(len(pip3Packages)):
+    ERROR_CHECK(os.system('pip3 install '+ pip3Packages[i]))
+        
 if os.path.exists(deps_dir):
-    print("\nrocAL Setup: Re-Installing Libraries from -- "+deps_dir+"\n")
-    # opencv
-    if os.path.exists(deps_dir+'/build/OpenCV'):
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/build/OpenCV; sudo ' +
-                  linuxFlag+' make install -j8)')
-
-    # ProtoBuf
-    if os.path.exists(deps_dir+'/protobuf-'+ProtoBufVersion):
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
-                  '; sudo '+linuxFlag+' make install -j8)')
-
-    # RPP
-    if os.path.exists(deps_dir+'/rpp/build-'+backend):
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/rpp/build-'+backend+'; sudo ' +
-                  linuxFlag+' make install -j8)')
-
-    # FFMPEG
-    if os.path.exists(deps_dir+'/FFmpeg-n4.4.2'):
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo ' +
-                  linuxFlag+' make install -j8)')
-
-    # MIVisionX
-    if os.path.exists(deps_dir+'/MIVisionX/build-'+backend):
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/MIVisionX/build-'+backend+'; sudo ' +
-                  linuxFlag+' make install -j8)')
-
-    print("\nrocAL Dependencies Re-Installed with rocAL-setup.py V-"+__version__+"\n")
-
+    info("rocAL Setup: Re-Installed Libraries\n")
 # Clean Install
 else:
-    print("\nrocAL Dependencies Installation with rocAL-setup.py V-"+__version__+"\n")
-    os.system('mkdir '+deps_dir)
-    # Create Build folder
-    os.system('(cd '+deps_dir+'; mkdir build )')
-    # install pre-reqs
-    os.system('sudo -v')
-    os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-              linuxSystemInstall_check+' install gcc cmake git wget unzip pkg-config inxi mivisionx python3 python3-pip')
+    info("rocAL Dependencies Clean Installation with rocAL-setup.py V-"+__version__+"\n")
+    ERROR_CHECK(os.system(sudoValidate))
+    # Create deps & build folder
+    ERROR_CHECK(os.system('mkdir '+deps_dir))
+    ERROR_CHECK(os.system('(cd '+deps_dir+'; mkdir build )'))
 
-    # Get Installation Source
-    os.system(
-        '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )')
-    os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )')
-    os.system(
-        '(cd '+deps_dir+'; wget https://github.com/protocolbuffers/protobuf/archive/v'+ProtoBufVersion+'.zip )')
-    os.system('(cd '+deps_dir+'; unzip v'+ProtoBufVersion+'.zip )')
-    os.system(
-        '(cd '+deps_dir+'; wget https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n4.4.2.zip && unzip n4.4.2.zip )')
+    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.2
+    if ("sles" in platformInfo) or ("centos-8" in platformInfo):
+        turboJpegVersion = '3.0.2'
+        ERROR_CHECK(os.system(
+                    '(cd '+deps_dir+'; git clone -b '+turboJpegVersion+' https://github.com/libjpeg-turbo/libjpeg-turbo.git )'))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
+                    ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j$(nproc); sudo make install )'))
 
+    # PyBind11 - https://github.com/pybind/pybind11 -- v2.11.1
+    pybind11Version = 'v2.11.1'
+    ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
+            linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j$(nproc); sudo make install)'))
+    
+    # dlpack - https://github.com/dmlc/dlpack
+    if "ubuntu" in platformInfo:
+        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install libdlpack-dev'))
+    elif "sles" in platformInfo:
+        ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install dlpack-devel'))
+    else:
+        ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone -b v1.0 https://github.com/dmlc/dlpack.git)'))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'/dlpack; mkdir -p build && cd build; '+linuxCMake+' ..; make -j$(nproc); sudo make install)'))
+
+    # RapidJSON - Source TBD: Package install of RapidJSON has compile issues - https://github.com/Tencent/rapidjson.git -- master
+    ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
+            linuxCMake+' ../; make -j$(nproc); sudo make install)'))
+    
+    # libtar - https://repo.or.cz/libtar.git ; version - v1.2.20
+    libtar_version = 'v1.2.20'
+    ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                        ' install autoconf libtool'))
+    ERROR_CHECK(os.system(
+        '(cd '+deps_dir+'; git clone -b '+ libtar_version+' https://repo.or.cz/libtar.git )'))
+    ERROR_CHECK(os.system('(cd '+deps_dir+'/libtar; '+
+            ' autoreconf --force --install; CFLAGS="-fPIC" ./configure; make -j$(nproc); sudo make install )'))
+    
+    # Install OpenCV -- TBD cleanup
+    ERROR_CHECK(os.system('(cd '+deps_dir+'/build; mkdir OpenCV )'))
     # Install
-    # package dependencies
-    os.system('sudo -v')
-    if "centos" in platfromInfo or "redhat" in platfromInfo:
-        if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' + linuxSystemInstall_check +
-                      ' install kernel-devel libsqlite3x-devel bzip2-devel openssl-devel python3-devel autoconf automake libtool curl make g++ unzip')
-        elif "centos-8" in platfromInfo or "redhat-8" in platfromInfo:
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' + linuxSystemInstall_check +
-                      ' install kernel-devel libsqlite3x-devel bzip2-devel openssl-devel python3-devel autoconf automake libtool curl make gcc-c++ unzip')
-    elif "Ubuntu" in platfromInfo:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install sqlite3 libsqlite3-dev libbz2-dev libssl-dev python3-dev autoconf automake libtool')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install curl make g++ unzip libomp-dev libpthread-stubs0-dev')
-    elif "SLES" in platfromInfo:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install sqlite3 sqlite3-devel libbz2-devel libopenssl-devel python3-devel autoconf automake libtool curl make gcc-c++ unzip')
-    # Install half.hpp
-    os.system(
-        '(cd '+deps_dir+'; wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip )')
-    os.system('(cd '+deps_dir+'; unzip half-1.12.0.zip -d half-files )')
-    os.system('sudo -v')
-    os.system(
-        '(cd '+deps_dir+'; sudo mkdir -p /usr/local/include/half; sudo cp half-files/include/half.hpp /usr/local/include/half )')
-    # Install ProtoBuf
-    os.system('(cd '+deps_dir+'/protobuf-' +
-              ProtoBufVersion+'; ./autogen.sh )')
-    os.system('(cd '+deps_dir+'/protobuf-' +
-              ProtoBufVersion+'; ./configure )')
-    os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion+'; make -j8 )')
-    os.system('(cd '+deps_dir+'/protobuf-' +
-              ProtoBufVersion+'; make check -j8 )')
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
-              '; sudo '+linuxFlag+' make install )')
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'/protobuf-'+ProtoBufVersion +
-              '; sudo '+linuxFlag+' ldconfig )')
-
-    # Install OpenCV
-    os.system('(cd '+deps_dir+'/build; mkdir OpenCV )')
-    # Install pre-reqs
-    os.system('sudo -v')
-    if "Ubuntu" in platfromInfo:
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy ')
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev unzip')
-    elif "centos" in platfromInfo or "redhat" in platfromInfo:
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' groupinstall \'Development Tools\'')
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install gtk2-devel libjpeg-devel libpng-devel libtiff-devel libavc1394 wget unzip')
-    elif "SLES" in platfromInfo:
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install -t pattern devel_basis')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install gtk2-devel libjpeg-devel libpng-devel libtiff-devel libavc1394 wget unzip')
-    # OpenCV 4.6.0
-    os.system('(cd '+deps_dir+'/build/OpenCV; '+linuxCMake +
-              ' -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF  -D CMAKE_INSTALL_PREFIX=/usr/local ../../opencv-'+opencvVersion+' )')
-    os.system('(cd '+deps_dir+'/build/OpenCV; make -j8 )')
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'/build/OpenCV; sudo '+linuxFlag+' make install )')
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'/build/OpenCV; sudo '+linuxFlag+' ldconfig )')
-
-    if "Ubuntu" in platfromInfo:
-        # Install Packages for rocAL
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install libgflags-dev libgoogle-glog-dev liblmdb-dev rapidjson-dev')
-        # Yasm/Nasm for TurboJPEG
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                  ' '+linuxSystemInstall_check+' install nasm yasm')
-        # clang
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install clang')
-    elif "redhat" in platfromInfo or "SLES" in platfromInfo or "centos" in platfromInfo:
-        # Nasm & Yasm
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                  ' '+linuxSystemInstall_check+' install nasm yasm')
-        # JSON-cpp
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install jsoncpp-devel')
-        # lmbd
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' ' +
-                  linuxSystemInstall_check+' install lmdb-devel rapidjson-devel')
-
-    # turbo-JPEG - https://github.com/libjpeg-turbo/libjpeg-turbo.git -- 3.0.1
-    os.system(
-        '(cd '+deps_dir+'; git clone -b 3.0.1 https://github.com/libjpeg-turbo/libjpeg-turbo.git )')
-    os.system('(cd '+deps_dir+'/libjpeg-turbo; mkdir build; cd build; '+linuxCMake +
-              ' -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_STATIC=FALSE -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib -DWITH_JPEG8=TRUE ..; make -j 4; sudo make install )')
-    # RPP
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b '+rppVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git; cd rpp; mkdir build-'+backend+'; cd build-'+backend+'; ' +
-              linuxCMake+' -DBACKEND='+backend+' -DCMAKE_INSTALL_PREFIX='+ROCM_PATH+' ../; make -j4; sudo make install)')
-    # RapidJSON
-    os.system('sudo -v')
-    if "Ubuntu" in platfromInfo:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall + ' ' +
-                  linuxSystemInstall_check+' install -y rapidjson-dev')
+    if "ubuntu" in platformInfo:
+        info("STATUS: rocAL Setup: OpenCV Package installed for Ubuntu\n")
     else:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall + ' ' +
-                  linuxSystemInstall_check+' install -y rapidjson-devel')
-    os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +
-              linuxCMake+' ../; make -j4; sudo make install)')
-    # PyBind11
-    os.system('sudo -v')
-    os.system('pip install pytest==7.3.1')
-    os.system('(cd '+deps_dir+'; git clone -b '+pybind11Version+' https://github.com/pybind/pybind11; cd pybind11; mkdir build; cd build; ' +
-              linuxCMake+' -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../; make -j4; sudo make install)')
-    # CuPy Install
-    os.system('sudo -v')
-    os.system(linuxSystemInstall+' update')
-    if "Ubuntu" in platfromInfo:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                  ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev python3-dev')
-    else:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall +
-                  ' '+linuxSystemInstall_check+' install -y git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-devel hipcub-devel python3-devel')
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b v12.2.0 https://github.com/ROCmSoftwarePlatform/cupy.git; export CUPY_INSTALL_USE_HIP=1; export ROCM_HOME=/opt/rocm; cd cupy; git submodule update --init; pip install -e . --no-cache-dir -vvvv)')
-    os.system('pip install numpy==1.21')
+        if "centos" in platformInfo:
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                ' groupinstall \'Development Tools\''))
+        elif "sles" in platformInfo:
+            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
+                ' install -t pattern devel_basis'))
 
-    # Install ffmpeg
-    if "Ubuntu" in platfromInfo:
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install autoconf automake build-essential git-core libass-dev libfreetype6-dev')
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install libsdl2-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev')
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo zlib1g-dev')
-        os.system('sudo -v')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install nasm yasm libx264-dev libx265-dev libnuma-dev libfdk-aac-dev')
-    else:
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install autoconf automake bzip2 bzip2-devel freetype-devel')
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install gcc-c++ libtool make pkgconfig zlib-devel')
-        # Nasm
-        os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                  ' install nasm')
-        if "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
-            # Yasm
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install http://repo.okay.com.mx/centos/7/x86_64/release/okay-release-1-1.noarch.rpm')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' --enablerepo=extras install epel-release')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install yasm')
-            # libx264 & libx265
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install libx264-devel libx265-devel')
-            # libfdk_aac
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install https://forensics.cert.org/cert-forensics-tools-release-el7.rpm')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' --enablerepo=forensics install fdk-aac')
-            # libASS
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install libass-devel')
-        elif "centos-8" in platfromInfo or "redhat-8" in platfromInfo:
-            # el8 x86_64 packages
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-8.noarch.rpm https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-8.noarch.rpm')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/SDL2-2.0.10-2.el8.x86_64.rpm')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install ffmpeg ffmpeg-devel')
-        elif "SLES" in platfromInfo:
-            # FFMPEG-4 packages
-            os.system(
-                'sudo zypper ar -cfp 90 \'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Leap_$releasever/Essentials\' packman-essentials')
-            os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                      ' install ffmpeg-4')
+        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, opencvRPMPackages)
+        # OpenCV 4.6.0
+        # Get Source and install
+        opencvVersion = '4.6.0'
+        ERROR_CHECK(os.system(
+            '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; '+linuxCMake +
+                        ' -D WITH_EIGEN=OFF \
+                        -D WITH_GTK=ON \
+                        -D WITH_JPEG=ON \
+                        -D BUILD_JPEG=ON \
+                        -D WITH_OPENCL=OFF \
+                        -D WITH_OPENCLAMDFFT=OFF \
+                        -D WITH_OPENCLAMDBLAS=OFF \
+                        -D WITH_VA_INTEL=OFF \
+                        -D WITH_OPENCL_SVM=OFF  \
+                        -D CMAKE_INSTALL_PREFIX=/usr/local \
+                        -D BUILD_LIST=core,features2d,highgui,imgcodecs,imgproc,photo,video,videoio  \
+                        -D CMAKE_PLATFORM_NO_VERSIONED_SONAME=ON \
+                        ../../opencv-'+opencvVersion+' )'))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; make -j$(nproc))'))
+        ERROR_CHECK(os.system(sudoValidate))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
+        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
 
-    # FFMPEG 4 from source -- for Ubuntu, CentOS 7, & RedHat 7
-    if "Ubuntu" in platfromInfo or "centos-7" in platfromInfo or "redhat-7" in platfromInfo:
-        os.system('sudo -v')
-        os.system(
-            '(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo '+linuxFlag+' ldconfig )')
-        os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"; ./configure --enable-shared --disable-static --enable-libx264 --enable-libx265 --enable-libfdk-aac --enable-libass --enable-gpl --enable-nonfree)')
-        os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; make -j8 )')
-        os.system('sudo -v')
-        os.system('(cd '+deps_dir+'/FFmpeg-n4.4.2; sudo ' +
-                  linuxFlag+' make install )')
-
-    # MIVisionX
-    os.system('sudo -v')
-    os.system('(cd '+deps_dir+'; git clone -b '+mivisionxVersion+' https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git; cd MIVisionX; mkdir build-'+backend+'; cd build-'+backend+'; ' +
-              linuxCMake+' -DBACKEND='+backend+' -DROCAL=OFF ../; make -j4; sudo make install)')
-
-    print("\nrocAL Dependencies Installed with rocAL-setup.py V-"+__version__+"\n")
+info(f"{libraryName} Dependencies Installed with rocAL-setup.py V-"+__version__+" on "+platformInfo+"\n")

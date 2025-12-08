@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
-#include <graph.h>
-#include "node_resize_crop_mirror.h"
-#include "exception.h"
+#include "pipeline/graph.h"
+#include "augmentations/geometry_augmentations/node_resize_crop_mirror.h"
+#include "pipeline/exception.h"
 
 ResizeCropMirrorNode::ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs),
                                                                                                                         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1]) {
@@ -83,7 +83,7 @@ void ResizeCropMirrorNode::update_node() {
     }
 }
 
-void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror, RocalResizeInterpolationType interpolation_type) {
+void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror, ResizeInterpolationType interpolation_type) {
     _crop_param->crop_w = crop_w;
     _crop_param->crop_h = crop_h;
     _crop_param->x1 = 0;
@@ -92,7 +92,7 @@ void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntPar
     _interpolation_type = static_cast<int>(interpolation_type);
 }
 
-void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror, RocalResizeInterpolationType interpolation_type) {
+void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror, ResizeInterpolationType interpolation_type) {
     _crop_param->set_crop_height_factor(core(crop_h_factor));
     _crop_param->set_crop_width_factor(core(crop_w_factor));
     _crop_param->set_random();

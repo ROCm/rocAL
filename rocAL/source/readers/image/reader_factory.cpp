@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,20 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "reader_factory.h"
+#include "readers/image/reader_factory.h"
 
 #include <memory>
 #include <stdexcept>
 
-#include "caffe2_lmdb_record_reader.h"
-#include "caffe_lmdb_record_reader.h"
-#include "cifar10_data_reader.h"
-#include "coco_file_source_reader.h"
-#include "external_source_reader.h"
-#include "file_source_reader.h"
-#include "mxnet_recordio_reader.h"
-#include "sequence_file_source_reader.h"
-#include "tf_record_reader.h"
+#include "readers/file_source_reader.h"
+#include "readers/image/caffe2_lmdb_record_reader.h"
+#include "readers/image/caffe_lmdb_record_reader.h"
+#include "readers/image/cifar10_data_reader.h"
+#include "readers/image/coco_file_source_reader.h"
+#include "readers/image/external_source_reader.h"
+#include "readers/image/mxnet_recordio_reader.h"
+#include "readers/video/sequence_file_source_reader.h"
+#include "readers/image/tf_record_reader.h"
+#include "readers/webdataset_source_reader.h"
+#include "readers/image/numpy_data_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config) {
     switch (config.type()) {
@@ -89,6 +91,20 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
             auto ret = std::make_shared<ExternalSourceReader>();
             if (ret->initialize(config) != Reader::Status::OK)
                 throw std::runtime_error("ExternalSourceReader cannot access the storage");
+            return ret;
+        } break;
+#ifdef ENABLE_WDS
+        case StorageType::WEBDATASET_RECORDS: {
+            auto ret = std::make_shared<WebDatasetSourceReader>();
+            if (ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("WebDatasetSourceReader cannot access the storage");
+            return ret;
+        } break;
+#endif
+        case StorageType::NUMPY_DATA: {
+            auto ret = std::make_shared<NumpyDataReader>();
+            if (ret->initialize(config) != Reader::Status::OK)
+                throw std::runtime_error("NumpyDataReader cannot access the storage");
             return ret;
         } break;
         default:

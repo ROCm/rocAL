@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "mxnet_meta_data_reader.h"
+#include "meta_data/mxnet_meta_data_reader.h"
 
 #include <memory.h>
 #include <stdint.h>
-#include "filesystem.h"
+#include "pipeline/filesystem.h"
 
 using namespace std;
 

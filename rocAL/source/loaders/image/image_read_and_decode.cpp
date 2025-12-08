@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_read_and_decode.h"
+#include "loaders/image/image_read_and_decode.h"
 
+#include <omp.h>
 #include <cstring>
 #include <iterator>
 
-#include "decoder_factory.h"
-#include "external_source_reader.h"
+#include "decoders/image/decoder_factory.h"
+#include "readers/image/external_source_reader.h"
 
 std::tuple<Decoder::ColorFormat, unsigned>
 interpret_color_format(RocalColorFormat color_format) {
@@ -77,18 +78,27 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _original_width.resize(_batch_size);
     _decoder_config = decoder_config;
     _random_crop_dec_param = nullptr;
-    if (_decoder_config._type == DecoderType::FUSED_TURBO_JPEG) {
+    _device_id = device_id;
+    if (_decoder_config._type == DecoderType::FUSED_TURBO_JPEG || _decoder_config._type == DecoderType::ROCJPEG_CROPPED) {
         auto random_aspect_ratio = decoder_config.get_random_aspect_ratio();
         auto random_area = decoder_config.get_random_area();
         AspectRatioRange aspect_ratio_range = std::make_pair((float)random_aspect_ratio[0], (float)random_aspect_ratio[1]);
         AreaRange area_range = std::make_pair((float)random_area[0], (float)random_area[1]);
-        _random_crop_dec_param = new RocalRandomCropDecParam(aspect_ratio_range, area_range, (int64_t)decoder_config.get_seed(), decoder_config.get_num_attempts(), _batch_size);
+        _random_crop_dec_param = std::make_shared<RocalRandomCropDecParam>(aspect_ratio_range, area_range, decoder_config.get_num_attempts(), _batch_size);
     }
     if ((_decoder_config._type != DecoderType::SKIP_DECODE)) {
-        for (int i = 0; i < batch_size; i++) {
-            _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
-            _decoder[i] = create_decoder(decoder_config);
-            _decoder[i]->initialize(device_id);
+        if (_decoder_config._type == DecoderType::ROCJPEG || _decoder_config._type == DecoderType::ROCJPEG_CROPPED) {
+            for (int i = 0; i < batch_size; i++) {
+                _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
+            }
+            _rocjpeg_decoder = create_decoder(decoder_config);
+            _rocjpeg_decoder->initialize(device_id, batch_size);
+        } else {
+            for (int i = 0; i < batch_size; i++) {
+                _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
+                _decoder[i] = create_decoder(decoder_config);
+                _decoder[i]->initialize(device_id);
+            }
         }
     }
     _num_threads = reader_config.get_cpu_num_threads();
@@ -126,6 +136,7 @@ void ImageReadAndDecode::feed_external_input(const std::vector<std::string>& inp
 void ImageReadAndDecode::reset() {
     // TODO: Reload images from the folder if needed
     _reader->reset();
+    _set_device_id = false;
 }
 
 size_t
@@ -145,6 +156,11 @@ ImageReadAndDecode::get_batch_random_bbox_crop_coords() {
 
 void ImageReadAndDecode::set_batch_random_bbox_crop_coords(std::vector<std::vector<float>> crop_coords) {
     _crop_coords_batch = crop_coords;
+}
+
+size_t
+ImageReadAndDecode::last_batch_padded_size() {
+    return _reader->last_batch_padded_size();
 }
 
 LoaderModuleStatus
@@ -171,7 +187,7 @@ ImageReadAndDecode::load(unsigned char *buff,
     const unsigned output_planes = std::get<1>(ret);
     const bool keep_original = decoder_keep_original;
     const size_t image_size = max_decoded_width * max_decoded_height * output_planes * sizeof(unsigned char);
-    bool skip_decode = false;
+    bool skip_decode = _decoder_config._type == DecoderType::SKIP_DECODE;
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing
@@ -274,54 +290,116 @@ ImageReadAndDecode::load(unsigned char *buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-#pragma omp parallel for num_threads(_num_threads)  // default(none) TBD: option disabled in Ubuntu 20.04
-        for (size_t i = 0; i < _batch_size; i++) {
-            // initialize the actual decoded height and width with the maximum
-            _actual_decoded_width[i] = max_decoded_width;
-            _actual_decoded_height[i] = max_decoded_height;
-            int original_width, original_height, jpeg_sub_samp;
-            if (_decoder[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
-                                         &jpeg_sub_samp) != Decoder::Status::OK) {
-                // Substituting the image which failed decoding with other image from the same batch
-                int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
-                while ((j >= 0)) {
-                    if (_decoder[i]->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
-                                                 &jpeg_sub_samp) == Decoder::Status::OK) {
-                        _image_names[i] = _image_names[j];
-                        _compressed_buff[i] = _compressed_buff[j];
-                        _actual_read_size[i] = _actual_read_size[j];
-                        _compressed_image_size[i] = _compressed_image_size[j];
-                        break;
+        if (_decoder_config._type != DecoderType::ROCJPEG && _decoder_config._type != DecoderType::ROCJPEG_CROPPED) {
+#pragma omp parallel for num_threads(_num_threads)
+            for (size_t i = 0; i < _batch_size; i++) {
+                // initialize the actual decoded height and width with the maximum
+                _actual_decoded_width[i] = max_decoded_width;
+                _actual_decoded_height[i] = max_decoded_height;
+                int original_width, original_height, jpeg_sub_samp;
+                if (_decoder[i]->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
+                                            &jpeg_sub_samp) != Decoder::Status::OK) {
+                    // Substituting the image which failed decoding with other image from the same batch
+                    int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
+                    while ((j >= 0)) {
+                        if (_decoder[i]->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
+                                                    &jpeg_sub_samp) == Decoder::Status::OK) {
+                            _image_names[i] = _image_names[j];
+                            _compressed_buff[i] = _compressed_buff[j];
+                            _actual_read_size[i] = _actual_read_size[j];
+                            _compressed_image_size[i] = _compressed_image_size[j];
+                            break;
 
-                    } else
-                        j--;
-                    if (j < 0) {
-                        THROW("All images in the batch failed decoding\n");
+                        } else
+                            j--;
+                        if (j < 0) {
+                            THROW("All images in the batch failed decoding\n");
+                        }
+                    }
+                }
+                _original_height[i] = original_height;
+                _original_width[i] = original_width;
+                // decode the image and get the actual decoded image width and height
+                size_t scaledw, scaledh;
+                if (_decoder[i]->is_cropped_decoder()) {
+                    if (_randombboxcrop_meta_data_reader) {
+                        _decoder[i]->set_bbox_coords(_bbox_coords[i]);
+                    } else if (_random_crop_dec_param) {
+                        Shape dec_shape = {_original_height[i], _original_width[i]};
+                        auto crop_window = _random_crop_dec_param->generate_crop_window(dec_shape, i);
+                        _decoder[i]->set_crop_window(crop_window);
+                    }
+                }
+                if (_decoder[i]->decode(_compressed_buff[i].data(), _compressed_image_size[i], _decompressed_buff_ptrs[i],
+                                        max_decoded_width, max_decoded_height,
+                                        original_width, original_height,
+                                        scaledw, scaledh,
+                                        decoder_color_format, _decoder_config, keep_original) != Decoder::Status::OK) {
+                }
+                _actual_decoded_width[i] = scaledw;
+                _actual_decoded_height[i] = scaledh;
+            }
+        } else if (_decoder_config._type == DecoderType::ROCJPEG || _decoder_config._type == DecoderType::ROCJPEG_CROPPED) {
+#if ENABLE_HIP
+            // Set device ID for load routine thread once
+            if (!_set_device_id) {
+                hipError_t hip_status = hipSetDevice(_device_id);
+                if (hip_status != hipSuccess) {     
+                    THROW("hipSetDevice failed");
+                }
+                _set_device_id = true;
+            }
+#endif
+            // Iterate through each image in the batch and obtain the decode info
+            for (size_t i = 0; i < _batch_size; i++) {
+                _actual_decoded_width[i] = max_decoded_width;
+                _actual_decoded_height[i] = max_decoded_height;
+                int original_width, original_height, decoded_width, decoded_height;
+                if (_rocjpeg_decoder->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
+                                            &decoded_width, &decoded_height, 
+                                            max_decoded_width, max_decoded_height, decoder_color_format, i) != Decoder::Status::OK) {
+                    // Substituting the image which failed decoding with other image from the same batch
+                    int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
+                    while ((j >= 0)) {
+                        if (_rocjpeg_decoder->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
+                                                    &decoded_width, &decoded_height, 
+                                                    max_decoded_width, max_decoded_height, decoder_color_format, i) == Decoder::Status::OK) {
+                            _image_names[i] = _image_names[j];
+                            _compressed_buff[i] = _compressed_buff[j];
+                            _actual_read_size[i] = _actual_read_size[j];
+                            _compressed_image_size[i] = _compressed_image_size[j];
+                            break;
+                        } else
+                            j--;
+                        if (j < 0) {
+                            THROW("All images in the batch failed decoding with rocJpeg decoder\n");
+                        }
+                    }
+                }
+                _original_height[i] = original_height;
+                _original_width[i] = original_width;
+                _actual_decoded_width[i] = decoded_width;
+                _actual_decoded_height[i] = decoded_height;
+
+                if (_rocjpeg_decoder->is_cropped_decoder()) {
+                    if (_randombboxcrop_meta_data_reader) {
+                        _rocjpeg_decoder->set_bbox_coords(_bbox_coords[i]);
+                    } else if (_random_crop_dec_param) {
+                        Shape dec_shape = {_original_height[i], _original_width[i]};
+                        auto crop_window = _random_crop_dec_param->generate_crop_window(dec_shape, i);
+                        _rocjpeg_decoder->set_crop_window(crop_window);
                     }
                 }
             }
-            _original_height[i] = original_height;
-            _original_width[i] = original_width;
-            // decode the image and get the actual decoded image width and height
-            size_t scaledw, scaledh;
-            if (_decoder[i]->is_partial_decoder()) {
-                if (_randombboxcrop_meta_data_reader) {
-                    _decoder[i]->set_bbox_coords(_bbox_coords[i]);
-                } else if (_random_crop_dec_param) {
-                    Shape dec_shape = {_original_height[i], _original_width[i]};
-                    auto crop_window = _random_crop_dec_param->generate_crop_window(dec_shape, i);
-                    _decoder[i]->set_crop_window(crop_window);
-                }
+            
+            if (_rocjpeg_decoder->decode_batch(_decompressed_buff_ptrs,
+                                               max_decoded_width, max_decoded_height,
+                                               _original_width, _original_height,
+                                               _actual_decoded_width, _actual_decoded_height) != Decoder::Status::OK) {
+
             }
-            if (_decoder[i]->decode(_compressed_buff[i].data(), _compressed_image_size[i], _decompressed_buff_ptrs[i],
-                                    max_decoded_width, max_decoded_height,
-                                    original_width, original_height,
-                                    scaledw, scaledh,
-                                    decoder_color_format, _decoder_config, keep_original) != Decoder::Status::OK) {
-            }
-            _actual_decoded_width[i] = scaledw;
-            _actual_decoded_height[i] = scaledh;
         }
+
         for (size_t i = 0; i < _batch_size; i++) {
             names[i] = _image_names[i];
             roi_width[i] = _actual_decoded_width[i];

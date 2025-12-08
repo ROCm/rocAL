@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_source_evaluator.h"
+#include "loaders/image_source_evaluator.h"
 
-#include "decoder_factory.h"
-#include "reader_factory.h"
+#include "decoders/image/decoder_factory.h"
+#include "readers/image/reader_factory.h"
 void ImageSourceEvaluator::set_size_evaluation_policy(MaxSizeEvaluationPolicy arg) {
     _width_max.set_policy(arg);
     _height_max.set_policy(arg);

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,9 @@ THE SOFTWARE.
 #include <cmath>
 #include <VX/vx.h>
 #include <VX/vx_compatibility.h>
-#include <graph.h>
-#include "parameter_rocal_crop.h"
-#include "commons.h"
+#include "pipeline/graph.h"
+#include "parameters/parameter_rocal_crop.h"
+#include "pipeline/commons.h"
 
 void RocalCropParam::set_crop_height_factor(Parameter<float>* crop_h_factor) {
     if (!crop_h_factor)

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,15 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "ffmpeg_video_decoder.h"
+#include "decoders/video/ffmpeg_video_decoder.h"
 
-#include <commons.h>
+#include "pipeline/commons.h"
 #include <stdio.h>
 
 #ifdef ROCAL_VIDEO
+
+#define DECODER_ERROR_RETURN(err_msg, status) \
+    do {                                      \
+        ERR(err_msg)                          \
+        Release();                            \
+        return status;                        \
+    } while (0);
+
 FFmpegVideoDecoder::FFmpegVideoDecoder(){};
 
-int FFmpegVideoDecoder::seek_frame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) {
+int FFmpegVideoDecoder::SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) {
     auto seek_time = av_rescale_q((int64_t)frame_number, av_inv_q(avg_frame_rate), AV_TIME_BASE_Q);
     int64_t select_frame_pts = av_rescale_q((int64_t)frame_number, av_inv_q(avg_frame_rate), time_base);
     int ret = av_seek_frame(_fmt_ctx, -1, seek_time, AVSEEK_FLAG_BACKWARD);
@@ -53,7 +61,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
             return Status::FAILED;
         }
     }
-    int select_frame_pts = seek_frame(_video_stream->avg_frame_rate, _video_stream->time_base, seek_frame_number);
+    int select_frame_pts = SeekFrame(_video_stream->avg_frame_rate, _video_stream->time_base, seek_frame_number);
     if (select_frame_pts < 0) {
         ERR("Error in seeking frame..Unable to seek the given frame in a video");
         return Status::FAILED;
@@ -79,7 +87,10 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
             status = Status::FAILED;
             break;
         }
-        if (ret == 0 && pkt.stream_index != _video_stream_idx) continue;
+        if (ret == 0 && pkt.stream_index != _video_stream_idx) {
+            av_packet_unref(&pkt);
+            continue;
+        }
         end_of_stream = (ret == AVERROR_EOF);
         if (end_of_stream) {
             // null packet for bumping process
@@ -128,7 +139,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsig
 }
 
 // Initialize will open a new decoder and initialize the context
-VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename) {
+VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, int device_id) {
     VideoDecoder::Status status = Status::OK;
     int ret;
     AVDictionary *opts = NULL;
@@ -136,55 +147,44 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename) {
     // open input file, and initialize the context required for decoding
     _fmt_ctx = avformat_alloc_context();
     _src_filename = src_filename;
-    if (avformat_open_input(&_fmt_ctx, src_filename, NULL, NULL) < 0) {
-        ERR("Couldn't Open video file " + STR(src_filename));
-        return Status::FAILED;
-    }
-    if (avformat_find_stream_info(_fmt_ctx, NULL) < 0) {
-        ERR("av_find_stream_info error");
-        return Status::FAILED;
-    }
+    if (avformat_open_input(&_fmt_ctx, src_filename, NULL, NULL) < 0)
+        DECODER_ERROR_RETURN("Couldn't Open video file " + STR(src_filename), Status::FAILED)
+    if (avformat_find_stream_info(_fmt_ctx, NULL) < 0)
+        DECODER_ERROR_RETURN("av_find_stream_info error", Status::FAILED)
     ret = av_find_best_stream(_fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     if (ret < 0) {
-        ERR("Could not find %s stream in input file " +
-            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " " + STR(src_filename));
-        return Status::FAILED;
+        DECODER_ERROR_RETURN("Could not find stream in input file " +
+            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " " + STR(src_filename), Status::FAILED)
     }
     _video_stream_idx = ret;
     _video_stream = _fmt_ctx->streams[_video_stream_idx];
-    if (!_video_stream) {
-        ERR("Could not find video stream in the input, aborting");
-        return Status::FAILED;
-    }
+    if (!_video_stream)
+        DECODER_ERROR_RETURN("Could not find video stream in the input, aborting", Status::FAILED)
 
     // find decoder for the stream
     _decoder = avcodec_find_decoder(_video_stream->codecpar->codec_id);
     if (!_decoder) {
-        ERR("Failed to find " +
-            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec");
-        return Status::FAILED;
+        DECODER_ERROR_RETURN("Failed to find " +
+            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec", Status::FAILED)
     }
 
     // Allocate a codec context for the decoder
     _video_dec_ctx = avcodec_alloc_context3(_decoder);
     if (!_video_dec_ctx) {
-        ERR("Failed to allocate the " +
-            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec context");
-        return Status::NO_MEMORY;
+        DECODER_ERROR_RETURN("Failed to allocate the " +
+            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec context", Status::NO_MEMORY)
     }
 
     // Copy codec parameters from input stream to output codec context
     if ((ret = avcodec_parameters_to_context(_video_dec_ctx, _video_stream->codecpar)) < 0) {
-        ERR("Failed to copy " +
-            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec parameters to decoder context");
-        return Status::FAILED;
+        DECODER_ERROR_RETURN("Failed to copy " +
+            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec parameters to decoder context", Status::FAILED)
     }
 
     // Init the decoders
     if ((ret = avcodec_open2(_video_dec_ctx, _decoder, &opts)) < 0) {
-        ERR("Failed to open " +
-            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec");
-        return Status::FAILED;
+        DECODER_ERROR_RETURN("Failed to open " +
+            STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec", Status::FAILED)
     }
     _dec_pix_fmt = _video_dec_ctx->pix_fmt;
     _codec_width = _video_stream->codecpar->width;
@@ -192,7 +192,7 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename) {
     return status;
 }
 
-void FFmpegVideoDecoder::release() {
+void FFmpegVideoDecoder::Release() {
     if (_video_dec_ctx)
         avcodec_free_context(&_video_dec_ctx);
     if (_fmt_ctx)
@@ -200,6 +200,6 @@ void FFmpegVideoDecoder::release() {
 }
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder() {
-    release();
+    Release();
 }
 #endif

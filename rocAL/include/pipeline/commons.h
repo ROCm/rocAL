@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,13 @@ THE SOFTWARE.
  */
 
 #pragma once
+#include <random>
 #include <vector>
 
-#include "exception.h"
-#include "log.h"
-#include "filesystem.h"
+#include "pipeline/exception.h"
+#include "pipeline/log.h"
+#include "pipeline/filesystem.h"
+#include "pipeline/enum_registry.h"
 
 // Calculated from the largest resize shorter dimension in imagenet validation dataset
 #define MAX_ASPECT_RATIO 6.0f
@@ -46,8 +48,14 @@ enum class RocalTensorlayout {
     NCHW,
     NFHWC,
     NFCHW,
+    NHW,
+    NFT,
+    NTF,
+    NDHWC,
+    NCDHW,
     NONE
 };
+REGISTER_ENUM(RocalTensorlayout)
 
 /*! \brief Tensor data type
  *
@@ -59,13 +67,16 @@ enum class RocalTensorDataType {
     UINT8,
     INT8,
     UINT32,
-    INT32
+    INT32,
+    INT16
 };
+REGISTER_ENUM(RocalTensorDataType)
 
 enum class RocalAffinity {
     GPU = 0,
     CPU
 };
+REGISTER_ENUM(RocalAffinity)
 
 /*! \brief Color formats currently supported by Rocal SDK as input/output
  *
@@ -76,6 +87,7 @@ enum class RocalColorFormat {
     U8,
     RGB_PLANAR,
 };
+REGISTER_ENUM(RocalColorFormat)
 
 /*! \brief Memory type, host or device
  *
@@ -86,15 +98,17 @@ enum class RocalMemType {
     OCL,
     HIP
 };
+REGISTER_ENUM(RocalMemType)
 
 /*! \brief Decoder mode for Video decoding
  *
  *  Currently supports Software decoding, will support Hardware decoding in future
  */
 enum class DecodeMode {
-    HW_VAAPI = 0,
+    ROCDECODE = 0,
     CPU
 };
+REGISTER_ENUM(DecodeMode)
 
 /*! \brief Tensor ROI type
  *
@@ -104,6 +118,7 @@ enum class RocalROIType {
     LTRB = 0,
     XYWH
 };
+REGISTER_ENUM(RocalROIType)
 
 /*! \brief Tensor ROI in LTRB format
  *
@@ -154,3 +169,114 @@ struct Timing {
     long long unsigned video_decode_time= 0;
     long long unsigned video_process_time= 0;
 };
+
+/*! \brief Tensor Last Batch Policy Type enum
+ These policies the last batch policies determine the behavior when there are not enough samples in the epoch to fill the last batch
+        FILL - The last batch is filled by either repeating the last sample or by wrapping up the data set.
+        DROP - The last batch is dropped if it cannot be fully filled with data from the current epoch.
+        PARTIAL - The last batch is partially filled with the remaining data from the current epoch, keeping the rest of the samples empty. (currently this policy works similar to FILL in rocAL, PARTIAL policy needs to be handled in the pytorch iterator)
+ */
+enum class RocalBatchPolicy {
+    FILL = 0,
+    DROP,
+    PARTIAL
+};
+REGISTER_ENUM(RocalBatchPolicy)
+
+template <typename RNG = std::mt19937>
+class BatchRNG {
+   public:
+    /**
+     * @brief Used to keep batch of RNGs
+     *
+     * @param seed Used to generate seed_seq to initialize batch of RNGs
+     * @param batch_size How many RNGs to store
+     * @param state_size How many seed are used to initialize one RNG. Used to
+     * lower probablity of collisions between seeds used to initialize RNGs in
+     * different operators.
+     */
+    BatchRNG(int64_t seed = 1, int batch_size = 1, int state_size = 4)
+        : _seed(seed) {
+        std::seed_seq seq{_seed};
+        std::vector<uint32_t> seeds(batch_size * state_size);
+        seq.generate(seeds.begin(), seeds.end());
+        _rngs.reserve(batch_size);
+        for (int i = 0; i < batch_size * state_size; i += state_size) {
+            std::seed_seq s(seeds.begin() + i, seeds.begin() + i + state_size);
+            _rngs.emplace_back(s);
+        }
+    }
+
+    /**
+     * Returns engine corresponding to given sample ID
+     */
+    RNG &operator[](int sample) noexcept { return _rngs[sample]; }
+
+   private:
+    int64_t _seed;
+    std::vector<RNG> _rngs;
+};
+
+/*! \brief MissingComponentsBehaviour for Webdataset
+ *
+ */
+enum class MissingComponentsBehaviour {
+    MISSING_COMPONENT_ERROR = 0,
+    MISSING_COMPONENT_SKIP,
+    MISSING_COMPONENT_EMPTY
+};
+REGISTER_ENUM(MissingComponentsBehaviour)
+
+/*! \brief Internal Resize Scaling Mode enum
+ * Internal version of RocalResizeScalingMode for use within rocAL implementation
+ */
+enum class ResizeScalingMode {
+    DEFAULT = 0,
+    STRETCH,
+    NOT_SMALLER,
+    NOT_LARGER,
+    MIN_MAX
+};
+REGISTER_ENUM(ResizeScalingMode)
+
+/*! \brief Internal Resize Interpolation Type enum
+ * Internal version of RocalResizeInterpolationType for use within rocAL implementation
+ */
+enum class ResizeInterpolationType {
+    NEAREST_NEIGHBOR = 0,
+    LINEAR,
+    CUBIC,
+    LANCZOS,
+    GAUSSIAN,
+    TRIANGULAR
+};
+REGISTER_ENUM(ResizeInterpolationType)
+
+/*! \brief Internal Mel Scale Formula enum
+ * Internal version of RocalMelScaleFormula for use within rocAL implementation
+ */
+enum class MelScaleFormula {
+    SLANEY = 0,
+    HTK
+};
+REGISTER_ENUM(MelScaleFormula)
+
+/*! \brief Internal Audio Border Type enum
+ * Internal version of RocalAudioBorderType for use within rocAL implementation
+ */
+enum class AudioBorderType {
+    ZERO = 0,
+    CLAMP,
+    REFLECT
+};
+REGISTER_ENUM(AudioBorderType)
+
+/*! \brief Internal Out Of Bounds Policy enum
+ * Internal version of RocalOutOfBoundsPolicy for use within rocAL implementation
+ */
+enum class OutOfBoundsPolicy {
+    PAD = 0,
+    TRIMTOSHAPE,
+    ERROR
+};
+REGISTER_ENUM(OutOfBoundsPolicy)

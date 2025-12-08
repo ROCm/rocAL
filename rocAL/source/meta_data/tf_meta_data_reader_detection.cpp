@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "tf_meta_data_reader_detection.h"
+#include "meta_data/tf_meta_data_reader_detection.h"
 
 #include <google/protobuf/message_lite.h>
 #include <stdint.h>
@@ -127,12 +127,12 @@ void TFMetaDataReaderDetection::read_record(std::ifstream &file_contents, uint f
     file_contents.read(data, data_length);
     if (!file_contents)
         THROW("TFMetaDataReaderDetection: Error in reading TF records")
-    tensorflow::Example single_example;
+    rocal::tensorflow::Example single_example;
     single_example.ParseFromArray(data, data_length);
-    tensorflow::Features features = single_example.features();
+    rocal::tensorflow::Features features = single_example.features();
 
     auto feature = features.feature();
-    tensorflow::Feature single_feature, sf_xmin, sf_ymin, sf_xmax, sf_ymax, sf_fname, sf_label, sf_height, sf_width;
+    rocal::tensorflow::Feature single_feature, sf_xmin, sf_ymin, sf_xmax, sf_ymax, sf_fname, sf_label, sf_height, sf_width;
 
     single_feature = feature.at(user_filename_key);
     std::string fname = single_feature.bytes_list().value()[0];

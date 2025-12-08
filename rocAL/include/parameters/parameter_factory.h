@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,10 @@ THE SOFTWARE.
 #include <set>
 #include <thread>
 
-#include "parameter_random.h"
-#include "parameter_simple.h"
+#include "parameters/parameter_random.h"
+#include "parameters/parameter_simple.h"
+
+const int MAX_SEEDS = 1024;
 
 enum class RocalParameterType {
     DETERMINISTIC = 0,
@@ -72,6 +74,7 @@ class ParameterFactory {
     void set_seed(unsigned seed);
     unsigned get_seed();
     void generate_seed();
+    int64_t get_seed_from_seedsequence();
 
     template <typename T>
     Parameter<T>* create_uniform_rand_param(T start, T end) {
@@ -101,7 +104,10 @@ class ParameterFactory {
    private:
     long long unsigned _seed;
     std::set<pParamCore> _parameters;  //<! Keeps the random generators used to randomized the augmentation parameters
+    std::set<pParam> _params;          //<! Used for storing IntParam and FloatParam objects to be deleted in dtor
     static ParameterFactory* _instance;
     static std::mutex _mutex;
     ParameterFactory();
+    std::vector<int64_t> _seed_vector;
+    int _seed_sequence_idx = 0;
 };

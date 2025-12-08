@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ from rocal_pybind.types import CPU
 from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
-from rocal_pybind.types import UINT8
+from rocal_pybind.types import INT16
 
 #  RocalOutputMemType
 from rocal_pybind.types import HOST_MEMORY
@@ -58,10 +58,17 @@ from rocal_pybind.types import GRAY
 from rocal_pybind.types import RGB_PLANAR
 
 #     RocalTensorLayout
+from rocal_pybind.types import NONE
 from rocal_pybind.types import NHWC
 from rocal_pybind.types import NCHW
 from rocal_pybind.types import NFHWC
 from rocal_pybind.types import NFCHW
+from rocal_pybind.types import NHW
+from rocal_pybind.types import NDHWC
+from rocal_pybind.types import NCDHW
+#     RocalSpectrogramLayout
+from rocal_pybind.types import NFT
+from rocal_pybind.types import NTF
 
 #     RocalDecodeDevice
 from rocal_pybind.types import HARDWARE_DECODE
@@ -70,9 +77,10 @@ from rocal_pybind.types import SOFTWARE_DECODE
 #     RocalDecodeDevice
 from rocal_pybind.types import DECODER_TJPEG
 from rocal_pybind.types import DECODER_OPENCV
-from rocal_pybind.types import DECODER_HW_JEPG
 from rocal_pybind.types import DECODER_VIDEO_FFMPEG_SW
-from rocal_pybind.types import DECODER_VIDEO_FFMPEG_HW
+from rocal_pybind.types import DECODER_AUDIO_GENERIC
+from rocal_pybind.types import DECODER_VIDEO_ROCDECODE
+from rocal_pybind.types import DECODER_ROCJPEG
 
 #     RocalResizeScalingMode
 from rocal_pybind.types import SCALING_MODE_DEFAULT
@@ -89,7 +97,7 @@ from rocal_pybind.types import LANCZOS_INTERPOLATION
 from rocal_pybind.types import GAUSSIAN_INTERPOLATION
 from rocal_pybind.types import TRIANGULAR_INTERPOLATION
 
-# Rocal External Source Mode
+#     Rocal External Source Mode
 from rocal_pybind.types import EXTSOURCE_FNAME
 from rocal_pybind.types import EXTSOURCE_RAW_COMPRESSED
 from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
@@ -98,6 +106,30 @@ from rocal_pybind.types import EXTSOURCE_RAW_UNCOMPRESSED
 from rocal_pybind.types import OUT_BOX
 from rocal_pybind.types import OUT_ANCHORSHAPE
 from rocal_pybind.types import OUT_STARTEND
+
+#     RocalAudioBorderType
+from rocal_pybind.types import ZERO
+from rocal_pybind.types import CLAMP
+from rocal_pybind.types import REFLECT
+
+#     RocalOutOfBoundsPolicy
+from rocal_pybind.types import PAD
+from rocal_pybind.types import TRIMTOSHAPE
+from rocal_pybind.types import ERROR
+
+#     RocalMelScaleFormula
+from rocal_pybind.types import MELSCALE_SLANEY
+from rocal_pybind.types import MELSCALE_HTK
+
+#     RocalLastBatchPolicy
+from rocal_pybind.types import LAST_BATCH_FILL
+from rocal_pybind.types import LAST_BATCH_DROP
+from rocal_pybind.types import LAST_BATCH_PARTIAL
+
+#     RocalMissingComponentsBehaviour
+from rocal_pybind.types import MISSING_COMPONENT_ERROR
+from rocal_pybind.types import MISSING_COMPONENT_SKIP
+from rocal_pybind.types import MISSING_COMPONENT_EMPTY
 
 _known_types = {
 
@@ -112,7 +144,7 @@ _known_types = {
     UINT8: ("UINT8", UINT8),
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
-    UINT8: ("UINT8", UINT8),
+    INT16: ("INT16", INT16),
     HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
     DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
@@ -123,10 +155,14 @@ _known_types = {
     MAX_SIZE_ORIG: ("MAX_SIZE_ORIG", MAX_SIZE_ORIG),
     USER_GIVEN_SIZE_ORIG: ("USER_GIVEN_SIZE_ORIG", USER_GIVEN_SIZE_ORIG),
 
+    NONE: ("NONE", NONE),
     NHWC: ("NHWC", NHWC),
     NCHW: ("NCHW", NCHW),
     NFHWC: ("NFHWC", NFHWC),
     NFCHW: ("NFCHW", NFCHW),
+    NHW: ("NHW", NHW),
+    NDHWC: ("NDHWC", NDHWC),
+    NCDHW: ("NCDHW", NCDHW),
     BGR: ("BGR", BGR),
     RGB: ("RGB", RGB),
     GRAY: ("GRAY", GRAY),
@@ -137,9 +173,10 @@ _known_types = {
 
     DECODER_TJPEG: ("DECODER_TJPEG", DECODER_TJPEG),
     DECODER_OPENCV: ("DECODER_OPENCV", DECODER_OPENCV),
-    DECODER_HW_JEPG: ("DECODER_HW_JEPG", DECODER_HW_JEPG),
     DECODER_VIDEO_FFMPEG_SW: ("DECODER_VIDEO_FFMPEG_SW", DECODER_VIDEO_FFMPEG_SW),
-    DECODER_VIDEO_FFMPEG_HW: ("DECODER_VIDEO_FFMPEG_HW", DECODER_VIDEO_FFMPEG_HW),
+    DECODER_AUDIO_GENERIC: ("DECODER_AUDIO_GENERIC", DECODER_AUDIO_GENERIC),
+    DECODER_VIDEO_ROCDECODE: ("DECODER_VIDEO_ROCDECODE", DECODER_VIDEO_ROCDECODE),
+    DECODER_ROCJPEG: ("DECODER_ROCJPEG", DECODER_ROCJPEG),
 
     NEAREST_NEIGHBOR_INTERPOLATION: ("NEAREST_NEIGHBOR_INTERPOLATION", NEAREST_NEIGHBOR_INTERPOLATION),
     LINEAR_INTERPOLATION: ("LINEAR_INTERPOLATION", LINEAR_INTERPOLATION),
@@ -161,6 +198,27 @@ _known_types = {
     OUT_BOX: ("OUT_BOX", OUT_BOX),
     OUT_ANCHORSHAPE: ("OUT_ANCHORSHAPE", OUT_ANCHORSHAPE),
     OUT_STARTEND: ("OUT_STARTEND", OUT_STARTEND),
+    ZERO: ("ZERO", ZERO),
+    CLAMP: ("CLAMP", CLAMP),
+    REFLECT: ("REFLECT", REFLECT),
+
+    PAD: ("PAD", PAD),
+    TRIMTOSHAPE: ("TRIMTOSHAPE", TRIMTOSHAPE),
+    ERROR: ("ERROR", ERROR),
+
+    NTF: ("NTF", NTF),
+    NFT: ("NFT", NFT),
+
+    MELSCALE_SLANEY: ("MELSCALE_SLANEY", MELSCALE_SLANEY),
+    MELSCALE_HTK: ("MELSCALE_HTK", MELSCALE_HTK),
+
+    LAST_BATCH_FILL : ("LAST_BATCH_FILL", LAST_BATCH_FILL),
+    LAST_BATCH_DROP : ("LAST_BATCH_DROP", LAST_BATCH_DROP),
+    LAST_BATCH_PARTIAL : ("LAST_BATCH_PARTIAL", LAST_BATCH_PARTIAL),
+
+    MISSING_COMPONENT_ERROR : ("MISSING_COMPONENT_ERROR", MISSING_COMPONENT_ERROR),
+    MISSING_COMPONENT_SKIP : ("MISSING_COMPONENT_SKIP", MISSING_COMPONENT_SKIP),
+    MISSING_COMPONENT_EMPTY : ("MISSING_COMPONENT_EMPTY", MISSING_COMPONENT_EMPTY),
 }
 
 def data_type_function(dtype):

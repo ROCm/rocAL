@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,13 @@ THE SOFTWARE.
 
 #if ENABLE_HIP
 // device manager functions for HIP backend
-#include "device_manager_hip.h"
+#include "device/device_manager_hip.h"
 
 #include <vx_ext_amd.h>
 
 #include <iostream>
 
-#include "commons.h"
+#include "pipeline/commons.h"
 
 DeviceManagerHip::~DeviceManagerHip() {
     hipError_t err;

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "node_warp_affine.h"
+#include "augmentations/geometry_augmentations/node_warp_affine.h"
 
 #include <vx_ext_rpp.h>
 
-#include "exception.h"
+#include "pipeline/exception.h"
 
 WarpAffineNode::WarpAffineNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                           _x0(COEFFICIENT_RANGE_1[0], COEFFICIENT_RANGE_1[1]),
@@ -79,7 +79,7 @@ void WarpAffineNode::update_affine_array() {
         THROW(" vxCopyArrayRange failed in the WarpAffine(vxExtRppWarpAffinePD) node: " + TOSTR(affine_status))
 }
 
-void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, float o1, RocalResizeInterpolationType interpolation_type) {
+void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, float o1, ResizeInterpolationType interpolation_type) {
     _x0.set_param(x0);
     _x1.set_param(x1);
     _y0.set_param(y0);
@@ -90,7 +90,7 @@ void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, floa
 }
 
 void WarpAffineNode::init(FloatParam* x0, FloatParam* x1, FloatParam* y0, FloatParam* y1,
-                          FloatParam* o0, FloatParam* o1, RocalResizeInterpolationType interpolation_type) {
+                          FloatParam* o0, FloatParam* o1, ResizeInterpolationType interpolation_type) {
     _x0.set_param(core(x0));
     _x1.set_param(core(x1));
     _y0.set_param(core(y0));

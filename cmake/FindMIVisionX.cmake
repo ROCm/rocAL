@@ -2,7 +2,7 @@
 # 
 # MIT License
 # 
-# Copyright (c) 2017 - 2023 Advanced Micro Devices, Inc.
+# Copyright (c) 2017 - 2025 Advanced Micro Devices, Inc.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -64,19 +64,6 @@ find_library(VXRPP_LIBRARIES
 )
 mark_as_advanced(VXRPP_LIBRARIES)
 
-find_path(MIVisionX_LIBRARIES_DIRS
-    NAMES libopenvx${SHARED_LIB_TYPE}
-    HINTS
-    $ENV{ROCM_PATH}/lib
-    $ENV{ROCM_PATH}/lib64
-    $ENV{MIVisionX_PATH}/lib
-    PATHS
-    ${MIVisionX_PATH}/lib
-    /usr/lib
-    ${ROCM_PATH}/lib
-)
-mark_as_advanced(MIVisionX_LIBRARIES_DIRS)
-
 if(OPENVX_LIBRARIES AND MIVisionX_INCLUDE_DIRS)
     set(MIVisionX_FOUND TRUE)
 endif( )
@@ -86,19 +73,36 @@ find_package_handle_standard_args( MIVisionX
     FOUND_VAR  MIVisionX_FOUND 
     REQUIRED_VARS
         OPENVX_LIBRARIES
-        VXRPP_LIBRARIES  
+        VXRPP_LIBRARIES
         MIVisionX_INCLUDE_DIRS
-        MIVisionX_LIBRARIES_DIRS
 )
 
 set(MIVisionX_FOUND ${MIVisionX_FOUND} CACHE INTERNAL "")
 set(OPENVX_LIBRARIES ${OPENVX_LIBRARIES} CACHE INTERNAL "")
 set(VXRPP_LIBRARIES ${VXRPP_LIBRARIES} CACHE INTERNAL "")
 set(MIVisionX_INCLUDE_DIRS ${MIVisionX_INCLUDE_DIRS} CACHE INTERNAL "")
-set(MIVisionX_LIBRARIES_DIRS ${MIVisionX_LIBRARIES_DIRS} CACHE INTERNAL "")
 
 if(MIVisionX_FOUND)
-    message("-- ${White}Using MIVisionX -- \n\tLibraries:${OPENVX_LIBRARIES} \n\tIncludes:${MIVisionX_INCLUDE_DIRS}${ColourReset}")    
+    if(VXRPP_LIBRARIES)
+        if(EXISTS "${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_version.h")
+            # Find RPP Version
+            file(READ "${MIVisionX_INCLUDE_DIRS}/vx_ext_rpp_version.h" VX_EXT_RPP_VERSION_FILE)
+            string(REGEX MATCH "VX_EXT_RPP_VERSION_MAJOR ([0-9]*)" _ ${VX_EXT_RPP_VERSION_FILE})
+            set(VX_EXT_RPP_VERSION_MAJOR ${CMAKE_MATCH_1} CACHE INTERNAL "")
+            string(REGEX MATCH "VX_EXT_RPP_VERSION_MINOR ([0-9]*)" _ ${VX_EXT_RPP_VERSION_FILE})
+            set(VX_EXT_RPP_VERSION_MINOR ${CMAKE_MATCH_1} CACHE INTERNAL "")
+            string(REGEX MATCH "VX_EXT_RPP_VERSION_PATCH ([0-9]*)" _ ${VX_EXT_RPP_VERSION_FILE})
+            set(VX_EXT_RPP_VERSION_PATCH ${CMAKE_MATCH_1} CACHE INTERNAL "")
+            message("-- ${White}Found VX RPP Version: ${VX_EXT_RPP_VERSION_MAJOR}.${VX_EXT_RPP_VERSION_MINOR}.${VX_EXT_RPP_VERSION_PATCH}${ColourReset}")
+            message("-- ${White}Using MIVisionX -- \n\tLibraries:${OPENVX_LIBRARIES} \n\tIncludes:${MIVisionX_INCLUDE_DIRS}${ColourReset}")
+        else()
+            set(VX_EXT_RPP_VERSION_MAJOR 0)
+            set(VX_EXT_RPP_VERSION_MINOR 0)
+            set(VX_EXT_RPP_VERSION_PATCH 0)
+        endif()
+    else()
+        message("-- ${Yellow}VX RPP - Not Found${ColourReset}")
+    endif()
 else()
     if(MIVisionX_FIND_REQUIRED)
         message(FATAL_ERROR "{Red}FindMIVisionX -- NOT FOUND${ColourReset}")

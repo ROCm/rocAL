@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,19 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "node_crop.h"
-#include "parameter_crop_factory.h"
-#include "parameter_factory.h"
-#include "parameter_vx.h"
-#include "rocal_api_types.h"
+#include "augmentations/geometry_augmentations/node_crop.h"
+#include "parameters/parameter_crop_factory.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
 class ResizeCropMirrorNode : public CropNode {
    public:
     ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResizeCropMirrorNode() = delete;
     void init(unsigned int crop_h, unsigned int crop_w, IntParam *mirror,
-              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
+              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
     void init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror,
-              RocalResizeInterpolationType interpolation_type = RocalResizeInterpolationType::ROCAL_LINEAR_INTERPOLATION);
+              ResizeInterpolationType interpolation_type = ResizeInterpolationType::LINEAR);
     unsigned int get_dst_width() { return _outputs[0]->info().max_shape()[0]; }
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }

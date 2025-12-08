@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@
 #
 # @brief File containing iterators for generic use case
 
-import cupy as cp
 import numpy as np
 import rocal_pybind as b
 import amd.rocal.types as types
@@ -122,43 +121,24 @@ class ROCALGenericIterator(object):
             self.output_list = []
             for i in range(len(self.output_tensor_list)):
                 self.dimensions = self.output_tensor_list[i].dimensions()
-                if self.device == "cpu":
-                    self.dtype = self.output_tensor_list[i].dtype()
-                    self.output = np.empty(self.dimensions, dtype=self.dtype)
-                    self.labels = np.empty(self.labels_size, dtype=self.dtype)
-                else:
-                    self.dtype = self.output_tensor_list[i].dtype()
-                    with cp.cuda.Device(device=self.device_id):
-                        self.output = cp.empty(
-                            self.dimensions, dtype=self.dtype)
-                        self.labels = cp.empty(
-                            self.labels_size, dtype=self.dtype)
-
-                if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data(self.output)
-                else:
-                    self.output_tensor_list[i].copy_data(self.output.data.ptr)
+                self.dtype = self.output_tensor_list[i].dtype()
+                self.output = np.empty(self.dimensions, dtype=self.dtype)
+                # returned as numpy always - no ROCM CuPy support available
+                self.output_tensor_list[i].copy_data(self.output)
                 self.output_list.append(self.output)
         else:
             for i in range(len(self.output_tensor_list)):
-                if self.device == "cpu":
-                    self.output_tensor_list[i].copy_data(self.output_list[i])
-                else:
-                    self.output_tensor_list[i].copy_data(
-                        self.output_list[i].data.ptr)
+                self.output_tensor_list[i].copy_data(self.output_list[i])
         if (self.loader._is_external_source_operator):
             self.labels = self.loader.get_image_labels()
-            if self.device == "cpu":
-                self.labels_tensor = self.labels.astype(dtype=np.int_)
-            else:
-                with cp.cuda.Device(device=self.device_id):
-                    self.labels_tensor = self.labels.astype(dtype=cp.int_)
+            self.labels_tensor = self.labels.astype(dtype=np.int_)
             return self.output_list, self.labels_tensor
 
         if self.loader._name == "labelReader":
             if self.loader._one_hot_encoding == True:
+                self.labels = np.empty(self.labels_size, dtype="int32")
                 self.loader.get_one_hot_encoded_labels(
-                    self.labels, self.device)
+                        self.labels.ctypes.data, self.loader._output_memory_type)
                 self.labels_tensor = self.labels.reshape(
                     -1, self.batch_size, self.loader._num_classes)
             else:
@@ -167,11 +147,7 @@ class ROCALGenericIterator(object):
                         for i in range(self.batch_size):
                             draw_patches(output[i], i)
                 self.labels = self.loader.get_image_labels()
-                if self.device == "cpu":
-                    self.labels_tensor = self.labels.astype(dtype=np.int_)
-                else:
-                    with cp.cuda.Device(device=self.device_id):
-                        self.labels_tensor = self.labels.astype(dtype=cp.int_)
+                self.labels_tensor = self.labels.astype(dtype=np.int_)
 
         return self.output_list, self.labels_tensor
 
@@ -190,7 +166,7 @@ class ROCALGenericIterator(object):
 
 class ROCALClassificationIterator(ROCALGenericIterator):
     """!ROCAL iterator for classification tasks for generic use case. It returns 2 outputs
-    (data and label) in the form of numpy/cupy Tensor.
+    (data and label) in the form of numpy Tensor.
 
     Calling
 
@@ -241,6 +217,55 @@ class ROCALClassificationIterator(ROCALGenericIterator):
         super(ROCALClassificationIterator, self).__init__(pipe, tensor_layout=pipe._tensor_layout, tensor_dtype=pipe._tensor_dtype,
                                                           multiplier=pipe._multiplier, offset=pipe._offset, display=display, device=device, device_id=device_id)
 
+
+class ROCALNumpyIterator(object):
+    def __init__(self, pipeline):
+        self.loader = pipeline
+        self.output_list = None
+        self.batch_size = self.loader._batch_size
+        self.len = b.getRemainingImages(self.loader._handle)
+        self.last_batch_policy = self.loader._last_batch_policy
+        self.last_batch_size = None
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self.loader.rocal_run() != 0:
+            raise StopIteration
+        self.output_tensor_list = self.loader.get_output_tensors()
+
+        if self.output_list is None:  # Checking if output_list is empty and initializing the buffers
+            self.output_list = []
+            for i in range(len(self.output_tensor_list)):
+                dimensions = self.output_tensor_list[i].dimensions()
+                dtype = self.output_tensor_list[i].dtype()
+                output = np.empty(dimensions, dtype=dtype)
+                # returned as numpy always - no ROCM CuPy support available
+                self.output_tensor_list[i].copy_data(output)
+                self.output_list.append(output)
+        else:
+            for i in range(len(self.output_tensor_list)):
+                self.output_tensor_list[i].copy_data(self.output_list[i])
+        # Check if last batch policy is partial and only return the valid images in last batch
+        if (self.last_batch_policy is (types.LAST_BATCH_PARTIAL)) and b.getRemainingImages(self.loader._handle) < self.batch_size:
+            if (self.last_batch_size is None):
+                self.last_batch_size = self.batch_size - \
+                    b.getLastBatchPaddedSize(self.loader._handle)
+            return [inner_list[0:self.last_batch_size, :] for inner_list in self.output_list]
+        return self.output_list
+
+    def reset(self):
+        b.rocalResetLoaders(self.loader._handle)
+
+    def __iter__(self):
+        return self
+
+    def __len__(self):
+        return self.len // self.batch_size
+
+    def __del__(self):
+        b.rocalRelease(self.loader._handle)
 
 def draw_patches(img, idx):
     # image is expected as an array

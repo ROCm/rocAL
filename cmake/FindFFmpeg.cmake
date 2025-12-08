@@ -2,7 +2,7 @@
 # 
 # MIT License
 # 
-# Copyright (c) 2017 - 2023 Advanced Micro Devices, Inc.
+# Copyright (c) 2017 - 2025 Advanced Micro Devices, Inc.
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -161,7 +161,13 @@ else()
     set(FFMPEG_FOUND FALSE)
     message( "-- ${Yellow}NOTE: FindFFmpeg failed to find -- FFMPEG${ColourReset}" )
   endif()
-  
+
+  if(_FFMPEG_AVCODEC_VERSION VERSION_LESS 59.18.100 OR _FFMPEG_AVFORMAT_VERSION VERSION_LESS 59.16.100 OR _FFMPEG_AVUTIL_VERSION VERSION_LESS 57.17.100)
+    set(FFMPEG_VERSION_4 TRUE CACHE INTERNAL "")
+  else()
+    set(FFMPEG_VERSION_4 FALSE CACHE INTERNAL "")
+  endif()
+
   if(FFMPEG_FOUND)
     set(FFMPEG_INCLUDE_DIR ${AVFORMAT_INCLUDE_DIR} CACHE INTERNAL "")
     set(FFMPEG_LIBRARIES 

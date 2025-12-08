@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "image_loader_sharded.h"
+#include "loaders/image/image_loader_sharded.h"
 
 ImageLoaderSharded::ImageLoaderSharded(void* dev_resources) : _dev_resources(dev_resources) {
     _loader_idx = 0;
@@ -38,11 +38,11 @@ std::vector<std::string> ImageLoaderSharded::get_id() {
     return _loaders[_loader_idx]->get_id();
 }
 
-decoded_image_info ImageLoaderSharded::get_decode_image_info() {
-    return _loaders[_loader_idx]->get_decode_image_info();
+DecodedDataInfo ImageLoaderSharded::get_decode_data_info() {
+    return _loaders[_loader_idx]->get_decode_data_info();
 }
 
-crop_image_info ImageLoaderSharded::get_crop_image_info() {
+CropImageInfo ImageLoaderSharded::get_crop_image_info() {
     return _loaders[_loader_idx]->get_crop_image_info();
 }
 
@@ -96,22 +96,6 @@ void ImageLoaderSharded::initialize(ReaderConfig reader_cfg, DecoderConfig decod
 void ImageLoaderSharded::start_loading() {
     for (unsigned i = 0; i < _loaders.size(); i++) {
         _loaders[i]->start_loading();
-        //  Changing thread scheduling policy and it's priority does not help on latest Ubuntu builds
-        //  and needs tweaking the Linux security settings , can be turned on for experimentation
-#if 0
-        // Set thread scheduling policy
-        struct sched_param params;
-        params.sched_priority = sched_get_priority_max(SCHED_FIFO);
-        _loaders[i]->set_cpu_sched_policy(params);
-#endif
-        // Setting cpu affinity for threads works and can be activated below for experimentation
-#if 0
-        // Set thread affinity thread 0 to core 0 , 1 toc core 1 , ...
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(i, &cpuset);
-        _loaders[i]->set_cpu_affinity(cpuset);
-#endif
     }
 }
 
@@ -160,6 +144,17 @@ Timing ImageLoaderSharded::timing() {
     t.read_time = max_read_time;
     t.process_time = swap_handle_time;
     return t;
+}
+
+size_t ImageLoaderSharded::last_batch_padded_size() {
+    size_t last_batch_padded_size = 0;
+    for (auto& loader : _loaders) {
+        if (last_batch_padded_size == 0)
+            last_batch_padded_size = loader->last_batch_padded_size();
+        if (last_batch_padded_size != loader->last_batch_padded_size())
+            THROW("All loaders must have the same last batch padded size");
+    }
+    return last_batch_padded_size;
 }
 
 void ImageLoaderSharded::feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer, const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) {

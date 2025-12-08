@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include <VX/vx_types.h>
+#include "pipeline/graph.h"
 
-#include "parameter_factory.h"
+#include "parameters/parameter_factory.h"
 enum class RocalCropType {
     ROCALCROP = 0,
     RANDOMCROP,
@@ -44,6 +44,7 @@ class CropParam {
     // V Y directoin
    public:
     CropParam() = delete;
+    virtual ~CropParam() = default;
     CropParam(unsigned int batch_size) : batch_size(batch_size), _random(false), _is_fixed_crop(false) {
         x_drift_factor = default_x_drift_factor();
         y_drift_factor = default_y_drift_factor();
@@ -62,8 +63,11 @@ class CropParam {
     }
     void set_x_drift_factor(Parameter<float> *x_drift);
     void set_y_drift_factor(Parameter<float> *y_drift);
+    virtual void set_area_factor(Parameter<float>* crop_h_factor) {};  // Used in RocalRandomCropParam
+    virtual void set_aspect_ratio(Parameter<float>* crop_w_factor) {}; // Used in RocalRandomCropParam
     const Roi2DCords *in_roi;
     unsigned int x1, y1, x2, y2;
+    unsigned int crop_w, crop_h, crop_d;  // Used by CropResize node for setting crop region
     const unsigned int batch_size;
     void set_batch_size(unsigned int batch_size);
     vx_array x1_arr, y1_arr, croph_arr, cropw_arr, x2_arr, y2_arr;

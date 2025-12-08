@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,6 @@ THE SOFTWARE.
 #pragma once
 
 #include <exception>
-#include "image_reader.h"
+#include "readers/image/image_reader.h"
 
 std::shared_ptr<Reader> create_reader(ReaderConfig config);
