@@ -79,7 +79,7 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
 }
 
 void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    constexpr size_t kExpectedArgCount = 23;
+    constexpr size_t kExpectedArgCount = 25;
     if (arguments.size() != kExpectedArgCount)
         THROW("ImageLoaderNode expected " + std::to_string(kExpectedArgCount) + " arguments, received " + std::to_string(arguments.size()));
     ShardingInfo sharding_info(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>());
