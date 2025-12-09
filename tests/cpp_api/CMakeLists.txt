@@ -291,7 +291,7 @@ add_test(
     checkpoint_restore
   COMMAND
     "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/restore_checkpoint_test"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/restore_checkpoint_test"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command "restore_checkpoint_test"
