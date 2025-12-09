@@ -1818,7 +1818,7 @@ void MasterGraph::feed_external_input(const std::vector<std::string>& input_imag
     }
 }
 
-void MasterGraph::serialize(size_t &serialized_string_size) {
+void MasterGraph::serialize(size_t *serialized_string_size) {
     if (!serialized_string_size) {
         THROW("serialized_string_size pointer is null");
     }
@@ -1827,7 +1827,7 @@ void MasterGraph::serialize(size_t &serialized_string_size) {
     _pipeline_serializer.serialize_operators(_pipeline_operators);
     _pipeline_serializer.serialize_output_tensors(_internal_tensor_list);
     _pipeline_serializer.serialize_to_string(_serialized_pipeline);
-    serialized_string_size = _serialized_pipeline.size();
+    *serialized_string_size = _serialized_pipeline.size();
 }
 
 uint64_t MasterGraph::compute_pipeline_signature() const {
