@@ -111,6 +111,13 @@ class ParameterFactory {
     // Checkpointing: snapshot RNG states of random parameters (deterministic params ignored)
     std::vector<std::string> snapshot_rngs();
     void restore_rngs(const std::vector<std::string>& rng_states);
+    // Reset internal RNG parameter tracking used for checkpointing.
+    // NOTE: This does NOT delete any parameters or affect their lifetime.
+    // It only clears the ordering metadata (_param_list) used to align
+    // RNG snapshots with parameters. Intended for use when a new
+    // checkpoint-enabled pipeline is constructed, under the assumption
+    // that checkpointed pipelines are executed serially.
+    void reset_param_list();
     // Destroy the singleton instance completely (called when pipeline is released)
     static void destroy_instance();
 

@@ -234,6 +234,11 @@ void ParameterFactory::restore_rngs(const std::vector<std::string>& rng_states) 
     }
 }
 
+void ParameterFactory::reset_param_list() {
+    _param_list.clear();
+    _seed_sequence_idx = 0;
+}
+
 void ParameterFactory::destroy_instance() {
     std::lock_guard<std::mutex> lock(_mutex);
     if (_instance != nullptr) {

@@ -173,6 +173,14 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 #endif
         }
         ParameterFactory::instance()->set_seed(0);  // Setting default seed for ParameterFactory instance. User can set the seed manually by calling rocalSetSeed(seed_value)
+
+        // When checkpointing is enabled, ensure that RNG checkpoint tracking
+        // starts fresh for this pipeline. This clears only the internal
+        // ordering metadata used for RNG snapshots and does not delete any
+        // parameters or affect existing parameter handles.
+        if (_checkpointing_enabled) {
+            ParameterFactory::instance()->reset_param_list();
+        }
     } catch (const std::exception &e) {
         release();
         throw;
@@ -357,8 +365,6 @@ void MasterGraph::release() {
     // shut_down loader:: required for releasing any allocated resourses
     for (auto &loader_module : _loader_modules)
         loader_module->shut_down();
-    // Destroy ParameterFactory singleton to allow new pipelines to have completely fresh state
-    ParameterFactory::destroy_instance();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_HIP
