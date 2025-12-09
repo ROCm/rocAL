@@ -371,7 +371,7 @@ MetaDataNamePair &RingBuffer::get_meta_data() {
 void RingBuffer::init_iteration_data() {
     _iteration_data.resize(BUFF_DEPTH);
 
-    // Allocate the Iteration data
+    // Allocate the iteration data
     for (auto& iter_data : _iteration_data) {
         iter_data = std::make_shared<IterationData>();
     }

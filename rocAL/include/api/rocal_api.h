@@ -78,7 +78,7 @@ THE SOFTWARE.
  * \param [in] cpu_thread_count number of cpu threads
  * \param [in] prefetch_queue_depth The depth of the prefetch queue.
  * \param [in] output_tensor_data_type RocalTensorOutputType: Defines whether the output of rocal tensor is FP32 or FP16.
- * \param [in] enable_checkpointing is enabled to store the state of each operator in tge pipeline for every iteration
+ * \param [in] enable_checkpointing is enabled to store the state of each operator in the pipeline for every iteration
  * \return A \ref RocalContext - The context for the pipeline
  */
 extern "C" RocalContext ROCAL_API_CALL rocalCreate(size_t batch_size, RocalProcessMode affinity, int gpu_id = 0, size_t cpu_thread_count = 1, size_t prefetch_queue_depth = 3, RocalTensorOutputType output_tensor_data_type = RocalTensorOutputType::ROCAL_FP32, bool enable_checkpointing = false);
