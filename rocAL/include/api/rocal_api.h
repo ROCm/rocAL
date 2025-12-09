@@ -133,9 +133,47 @@ extern "C" RocalStatus ROCAL_API_CALL rocalSerialize(RocalContext rocal_context,
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedString(RocalContext rocal_context, char* serialized_string);
 
-
+/*!
+ * \brief Serialize the current pipeline state into an opaque checkpoint blob.
+ * \ingroup group_rocal
+ *
+ * This API captures the internal runtime state of the pipeline (for example,
+ * loader position, operator state and random number generator state) into an
+ * opaque binary checkpoint blob. The size of the blob is returned in
+ * serialized_ckpt_string_size and the binary data can subsequently be obtained
+ * via rocalGetSerializedCheckpointString().
+ *
+ * Checkpointing must be enabled when creating the context (see the
+ * enable_checkpointing parameter of rocalCreate) and the pipeline must have
+ * run at least once; otherwise this function will fail and return
+ * ROCAL_RUNTIME_ERROR.
+ *
+ * \param [in] rocal_context the rocAL context
+ * \param [out] serialized_ckpt_string_size number of bytes in the serialized checkpoint blob
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
+ */
 extern "C" RocalStatus ROCAL_API_CALL rocalCheckpoint(RocalContext rocal_context, size_t* serialized_ckpt_string_size);
 
+/*!
+ * \brief Copy the last serialized checkpoint blob into a user buffer.
+ * \ingroup group_rocal
+ *
+ * This API copies the checkpoint data produced by rocalCheckpoint() into the
+ * user-provided buffer. The buffer must be pre-allocated with size at least
+ * serialized_ckpt_string_size bytes as returned by rocalCheckpoint().
+ *
+ * \warning The checkpoint blob is binary data and is not null-terminated. The
+ * caller is responsible for treating it as raw bytes and for ensuring the
+ * destination buffer has sufficient capacity (at least serialized_ckpt_string_size
+ * bytes). Passing an insufficiently sized buffer will result in buffer overflow
+ * and undefined behavior.
+ *
+ * \param [in] rocal_context the rocAL context
+ * \param [out] serialized_ckpt_string destination buffer to receive the serialized
+ *              checkpoint blob. Must be pre-allocated with at least
+ *              serialized_ckpt_string_size bytes.
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
+ */
 extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_ckpt_string);
 
 extern "C" RocalStatus ROCAL_API_CALL rocalRestoreFromSerializedCheckpoint(RocalContext rocal_context, const char* serialized_ckpt_string, size_t serialized_ckpt_size);
