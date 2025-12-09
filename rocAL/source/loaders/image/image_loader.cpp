@@ -92,7 +92,7 @@ void ImageLoader::reset() {
     _circ_buff.reset();
 
     // Reset is called after each epoch, hence increase the epoch count
-    // Set the ieration_count to 0
+    // Set the iteration_count to 0
     _epoch_count++;
     _iteration_count = 0;
     
