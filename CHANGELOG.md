@@ -2,7 +2,7 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## (Unreleased) rocAL 2.5.0
+## rocAL 2.5.0 for ROCm 7.2.0
 
 ### Added
 * `EnumRegistry` to register all the enums present in rocAL.
@@ -19,6 +19,15 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds support to track operators in MasterGraph with unique naming.
 * Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
 * Add support to store the pipeline into protobuf format.
+
+### Resolved issues
+* Use HIP memory for fused crop rocjpeg decoder
+* Resolve an issue in numpy loader where ROI is updated incorrectly
+* Resolve an issue in CropResize node where crop_w and crop_h values were not correctly updated
+
+### Known issues
+* Package installation on SLES requires manually installing `TurboJPEG`.
+* Package installation on CentOS, RedHat, and SLES requires manually installing the `FFMPEG Dev` package.
 
 ## rocAL 2.4.0 for ROCm 7.1.0
 
