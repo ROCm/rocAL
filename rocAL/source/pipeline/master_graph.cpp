@@ -1815,7 +1815,7 @@ void MasterGraph::feed_external_input(const std::vector<std::string>& input_imag
     }
 }
 
-void MasterGraph::serialize(size_t *serialized_string_size) {
+void MasterGraph::serialize(size_t &serialized_string_size) {
     if (!serialized_string_size) {
         THROW("serialized_string_size pointer is null");
     }
