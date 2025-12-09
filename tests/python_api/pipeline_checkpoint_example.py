@@ -112,7 +112,7 @@ def main():
     ckpt_path = os.path.join(
         os.path.dirname(__file__), f"checkpoint.bin"
     )
-    
+
     print("\n========== Creating and Checkpointing Pipeline ==========")
     serialized_ckpt, used_path = create_and_checkpoint(
         bs, rocal_device, rocal_cpu, img_folder, ckpt_path=ckpt_path
