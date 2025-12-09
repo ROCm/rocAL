@@ -101,7 +101,7 @@ int main(int argc, const char **argv) {
     auto handle = rocalCreate(inputBatchSize, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1, 3, ROCAL_FP32, true);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
-        std::cout << "Could not create the Rocal contex\n";
+        std::cout << "Could not create the Rocal context\n";
         return -1;
     }
 
