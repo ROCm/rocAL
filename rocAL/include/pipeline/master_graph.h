@@ -160,7 +160,7 @@ public:
     /*
      * Serialize API
      */
-    void serialize(size_t &serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
+    void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
     // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
     std::string& get_serialized_string() { return _serialized_pipeline; }
 
