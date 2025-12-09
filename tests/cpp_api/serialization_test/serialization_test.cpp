@@ -123,7 +123,7 @@ int main(int argc, const char **argv) {
     
     std::cout << "Serialized string size: " << serialized_string_size << " bytes" << std::endl;
     
-        // Allocate buffer for the serialized string
+    // Allocate buffer for the serialized string
     std::string serialized_pipe_string(serialized_string_size, '\0');
     
     // Get the actual serialized string

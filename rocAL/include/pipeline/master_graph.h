@@ -158,7 +158,7 @@ public:
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
-    /**
+    /*
      * Serialize API
      */
     void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
@@ -169,7 +169,6 @@ public:
     void deserialize(rocal_proto::PipelineDef *pipe_def);
     void restore_from_serialized_checkpoint(const std::string &serialized_ckpt);
     Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
-    void deserialize_args_from_protobuf(const rocal_proto::OperatorDef& opdef, std::vector<Argument>& arguments);
 private:
     Status update_node_parameters();
     std::shared_ptr<Checkpoint> create_checkpoint();
@@ -187,6 +186,7 @@ private:
     bool no_more_processed_data();
     // is_out_of_data() is called to check the remaining batch count from each loader module, if any of the loader module has consumed all the batches it returns true.
     bool is_out_of_data();
+    // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
     inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
@@ -199,7 +199,7 @@ private:
     std::list<std::shared_ptr<Node>> _root_nodes;                                 //!< List of all root nodes (image/video loaders)
     std::list<std::shared_ptr<Node>> _meta_data_nodes;                            //!< List of nodes where meta data has to be updated after augmentation
     std::map<Tensor *, std::shared_ptr<Node>> _tensor_map;                        //!< key: tensor, value : Parent node
-    std::map<std::string, Tensor *> _pipeline_tensors;                        
+    std::map<std::string, Tensor *> _pipeline_tensors;                        //!< Maps tensor names to tensor pointers during deserialization
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
     TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder

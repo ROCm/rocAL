@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include "loaders/image/node_image_loader.h"
 
 #include "pipeline/exception.h"
+
+REGISTER_LOADER_NODE(ImageLoaderNode)
 #include "rocal.pb.h"
 
 ImageLoaderNode::ImageLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
@@ -77,8 +79,12 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
 }
 
 void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    std::cerr << "Arguments count : " << arguments.size() << "\n";
-    // auto shard_cnt = arguments[0].Get<unsigned>();
+    constexpr size_t kExpectedArgCount = 23;
+    if (arguments.size() != kExpectedArgCount)
+        THROW("ImageLoaderNode expected " + std::to_string(kExpectedArgCount) + " arguments, received " + std::to_string(arguments.size()));
+    ShardingInfo sharding_info(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>());
+    std::string file_prefix = arguments[17].Get<std::string>();
+
     this->init(arguments[0].Get<unsigned>(), arguments[1].Get<unsigned>(), arguments[2].Get<std::string>(),
                arguments[3].Get<std::string>(), arguments[4].Get<std::map<std::string, std::string>>(), arguments[5].Get<StorageType>(),
                arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(), 

@@ -80,5 +80,4 @@ class NumpyLoader : public LoaderModule {
     size_t _file_counter = 0;      //!< How many numpy files have been loaded already
     size_t _remaining_file_count;  //!< How many numpy files are there yet to be loaded
     int _device_id;
-    std::vector<std::vector<unsigned>> _tensor_roi;
 };

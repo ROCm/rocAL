@@ -114,12 +114,12 @@ rocalVerify(RocalContext p_context) {
 
 RocalStatus ROCAL_API_CALL
 rocalSerialize(RocalContext rocal_context, size_t *serialized_string_size) {
-    auto context = static_cast<Context*>(rocal_context);
+    auto context = static_cast<Context *>(rocal_context);
     try {
         if (!serialized_string_size) {
-            THROW("Serialized size pointer is null")
+            return ROCAL_INVALID_PARAMETER_TYPE;
         }
-        context->master_graph->serialize(*serialized_string_size);
+        context->master_graph->serialize(serialized_string_size);
     } catch (const std::exception& e) {
         context->capture_error(e.what());
         ERR(e.what())
@@ -190,7 +190,7 @@ rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
     auto context = static_cast<Context*>(rocal_context);
     try {
         if (!serialized_string) {
-            THROW("String copy failed, Invalid pointer passed for serialize")
+            THROW("String copy failed, Invalid pointer passed for serialize.")
         }
 
         auto& serialize_pipe_string = context->master_graph->get_serialized_string();
