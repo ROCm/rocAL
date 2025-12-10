@@ -269,7 +269,7 @@ def main():
                                        num_shards=world_size,
                                        random_shuffle=False)
         elif reader_type == "web_dataset":
-            jpegs = fn.readers.webdataset(path=data_path, ext=[{'JPEG', 'cls'}])
+            jpegs = fn.readers.webdataset(path=data_path, ext=['JPEG', 'cls'])
             images = fn.decoders.image(jpegs,
                                        file_root=data_path,
                                        device=decoder_device,
@@ -334,7 +334,7 @@ def main():
                                  output_dtype=tensor_dtype)
         elif augmentation_name == "vignette":
             output = fn.vignette(images,
-                                 vignette=float(50),
+                                 vignette=50.0,
                                  output_layout=tensor_layout,
                                  output_dtype=tensor_dtype)
         elif augmentation_name == "jitter":
