@@ -112,6 +112,10 @@ public:
     }
 
     // Constructors
+    /**
+     * @brief Default constructor for Argument.
+     */
+    Argument() {}
 
     /**
      * @brief Unified template constructor for all data types
@@ -120,8 +124,6 @@ public:
      * @param val The value to store
      * @throws std::runtime_error if the type is unknown or unsupported
      */
-    Argument() {}
-
     template <typename T>
     explicit Argument(std::string name, T&& val) : arg_name(std::move(name)) {
 
