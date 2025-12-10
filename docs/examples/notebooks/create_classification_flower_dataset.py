@@ -5,12 +5,12 @@ import sys
 import warnings
 from scipy.io import loadmat
 import pandas as pd
-import splitfolders
 
 path = os.getcwd()
 os.system('pip install split_folders')
 if not os.path.exists("dataset_flower"):
     os.mkdir("dataset_flower")
+import splitfolders
 os.chdir("dataset_flower")
 os.system("wget https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz")
 os.system("tar -xvf 102flowers.tgz")

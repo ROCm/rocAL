@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <array>
 #include <vx_ext_rpp.h>
 #include "augmentations/color_augmentations/node_brightness.h"
 #include "pipeline/exception.h"
@@ -53,12 +54,29 @@ void BrightnessNode::init(float alpha, float beta, int conditional_execution) {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
     _conditional_execution.set_param(conditional_execution);
+
+    std::array<std::string, 3> arg_names = {"alpha", "beta", "conditional_execution"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta, conditional_execution);
 }
 
 void BrightnessNode::init(FloatParam *alpha, FloatParam *beta, IntParam *conditional_execution) {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
-    _conditional_execution.set_param(core(conditional_execution));
+    if (conditional_execution)
+        _conditional_execution.set_param(core(conditional_execution));
+    else
+        _conditional_execution.set_param(CONDITIONAL_EXECUTION_RANGE[0]);
+
+    std::array<std::string, 3> arg_names = {"alpha", "beta", "conditional_execution"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta, conditional_execution);
+}
+
+void BrightnessNode::init(float alpha, float beta) {
+    init(alpha, beta, CONDITIONAL_EXECUTION_RANGE[0]);
+}
+
+void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
+    init(alpha, beta, nullptr);
 }
 
 void BrightnessNode::update_node() {

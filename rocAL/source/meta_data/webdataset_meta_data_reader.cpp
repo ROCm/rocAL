@@ -308,6 +308,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &folder_path) {
             entry_name_list.push_back(entry_name);
         }
         std::sort(entry_name_list.begin(), entry_name_list.end());
+        closedir(_sub_dir);
         _wds_shards.reserve(entry_name_list.size());
         // Create n such std-streams for n paths
         for (auto &path : entry_name_list)
@@ -327,6 +328,7 @@ void WebDataSetMetaDataReader::read_all(const std::string &folder_path) {
             _index_name_list.push_back(entry_name);
         }
         std::sort(_index_name_list.begin(), _index_name_list.end());
+        closedir(_sub_dir);
         if ((_sub_dir = opendir( folder_path.c_str())) == nullptr)
             THROW(
                 "WebDatasetSourceReader :: ERROR: Failed opening the "
@@ -340,11 +342,11 @@ void WebDataSetMetaDataReader::read_all(const std::string &folder_path) {
             entry_name_list.push_back(entry_name);
         }
         std::sort(entry_name_list.begin(), entry_name_list.end());
+        closedir(_sub_dir);
         _wds_shards.reserve(entry_name_list.size());
         for (auto &path : entry_name_list)
             _wds_shards.emplace_back(std::make_unique<std::ifstream>( folder_path + path, std::ios::binary));
     }
-    closedir(_sub_dir);
 
     std::vector<SampleDescription> unfiltered_samples;
     std::vector<ComponentDescription> unfiltered_components;

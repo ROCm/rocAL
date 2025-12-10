@@ -69,10 +69,10 @@ void ImageLoader::set_gpu_device_id(int device_id) {
 size_t
 ImageLoader::remaining_count() {
     if (_external_source_reader) {
-        if ((_image_loader->count() != 0) && !_external_input_eos)
-            return _batch_size;
-        else {
+        if ((_image_loader->count() < _batch_size) && _external_input_eos) {
             return 0;
+        } else {
+            return _batch_size;
         }
     }
     return _remaining_image_count;
@@ -146,7 +146,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     int device_id = reader_cfg.get_shard_id();
 #if ENABLE_HIP
     // Set stream in decoder config, to be used by rocJpeg decoder for scaling
-    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
+    if (decoder_cfg._type == DecoderType::ROCJPEG) {
         decoder_cfg.set_hip_stream(_hip_stream);
     }
 #endif
@@ -168,7 +168,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
     _crop_image_info._crop_image_coords.resize(_batch_size);
-    if (decoder_cfg._type == DecoderType::ROCJPEG_DEC) {
+    if (decoder_cfg._type == DecoderType::ROCJPEG || decoder_cfg._type == DecoderType::ROCJPEG_CROPPED) {
         // Initialize circular buffer with HIP memory for rocJPEG hardware decoder
         _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, true);
     } else {
@@ -296,31 +296,6 @@ Timing ImageLoader::timing() {
     auto t = _image_loader->timing();
     t.process_time = _swap_handle_time.get_timing();
     return t;
-}
-
-LoaderModuleStatus ImageLoader::set_cpu_affinity(cpu_set_t cpu_mask) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_affinity() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    int ret = pthread_setaffinity_np(_load_thread.native_handle(),
-                                     sizeof(cpu_set_t), &cpu_mask);
-    if (ret != 0)
-        WRN("Error calling pthread_setaffinity_np: " + TOSTR(ret));
-#endif
-    return LoaderModuleStatus::OK;
-}
-
-LoaderModuleStatus ImageLoader::set_cpu_sched_policy(struct sched_param sched_policy) {
-    if (!_internal_thread_running)
-        THROW("set_cpu_sched_policy() should be called after start_loading function is called")
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#else
-    auto ret = pthread_setschedparam(_load_thread.native_handle(), SCHED_FIFO, &sched_policy);
-    if (ret != 0)
-        WRN("Unsuccessful in setting thread realtime priority for loader thread err = " + TOSTR(ret))
-#endif
-    return LoaderModuleStatus::OK;
 }
 
 std::vector<std::string> ImageLoader::get_id() {

@@ -19,6 +19,10 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.10)
+include( utils.cmake )
+set( ROCAL "rocal" )
+set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
+set( BUILD_DEBIAN_PKGING_FLAG ON CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
   set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -31,16 +35,16 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS ON)
-if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
-  set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
-  set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
-elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+  set(CMAKE_C_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang)
+  set(CMAKE_CXX_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
   set(CMAKE_C_COMPILER clang)
   set(CMAKE_CXX_COMPILER clang++)
 endif()
 
 # rocAL Version
-set(VERSION "2.3.0")
+set(VERSION "2.5.0")
 # Set Project Version and Language
 project(rocal VERSION ${VERSION} LANGUAGES CXX)
 
@@ -97,9 +101,7 @@ endif()
 if(NOT DEFINED BACKEND)
   set(BACKEND "HIP")   # set default backend to HIP
 else()
-  if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
-    set(BACKEND "OPENCL")
-  elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+  if("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
     set(BACKEND "HIP")
   elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
     set(BACKEND "CPU")
@@ -130,8 +132,10 @@ else()
 endif()
 message("-- ${BoldBlue}rocAL Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
+# CMake Config location
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 find_package(HALF QUIET)
 
 if(HALF_FOUND)
@@ -168,12 +172,14 @@ include(CTest)
 add_subdirectory(tests/cpp_api)
 
 # set package information
+set(PKG_MAINTAINER_NM  "rocAL Support")
+set(PKG_MAINTAINER_EMAIL  "mivisionx.support@amd.com")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_LICENSE       "MIT")
-set(CPACK_PACKAGE_CONTACT       "rocAL Support <mivisionx.support@amd.com>")
+set(CPACK_PACKAGE_CONTACT "${PKG_MAINTAINER_NM} <${PKG_MAINTAINER_EMAIL}>")
 set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rocAL")
@@ -181,9 +187,11 @@ set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rocAL")
 if(ENABLE_ASAN_PACKAGING)
   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "AMD rocAL address sanitizer libraries")
   set(CPACK_RPM_PACKAGE_SUMMARY "AMD rocAL address sanitizer libraries")
+  set( COMP_TYPE "asan" )
 else()
   set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "AMD rocAL is a comprehensive augmentation library")
   set(CPACK_RPM_PACKAGE_SUMMARY "AMD rocAL is a comprehensive augmentation library")
+  set( COMP_TYPE "runtime" )
 endif()
 
 if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
@@ -207,28 +215,21 @@ if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
 endif()
 
 # Set the dependent packages
-set(ROCAL_DEBIAN_PACKAGE_LIST  "mivisionx")
-set(ROCAL_RPM_PACKAGE_LIST     "mivisionx")
+set(ROCAL_DEBIAN_PACKAGE_LIST  "hip-runtime-amd, openmp-extras-runtime, mivisionx, libturbojpeg:amd64 | libturbojpeg0")
+set(ROCAL_RPM_PACKAGE_LIST     "hip-runtime-amd, openmp-extras-runtime, mivisionx")
 # Set the dev dependent packages
-set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
-set(ROCAL_RPM_DEV_PACKAGE_LIST  "mivisionx-devel, lmdb-devel, protobuf-devel")
+set(ROCAL_DEBIAN_DEV_PACKAGE_LIST  "half, hip-dev, openmp-extras-dev, mivisionx-dev, liblmdb-dev, libprotobuf-dev, libturbojpeg0-dev")
+set(ROCAL_RPM_DEV_PACKAGE_LIST  "half, hip-devel, openmp-extras-devel, mivisionx-devel, lmdb-devel, protobuf-devel")
 
 # Add OS specific dependencies
 if (EXISTS "/etc/os-release")
   file(READ "/etc/os-release" OS_RELEASE)
   string(REGEX MATCH "rhel" RHEL_FOUND ${OS_RELEASE})
   string(REGEX MATCH "Mariner" MARINER_FOUND ${OS_RELEASE})
-  string(REGEX MATCH "Ubuntu" UBUNTU_FOUND ${OS_RELEASE})
-  string(REGEX MATCH "Debian" DEBIAN_FOUND ${OS_RELEASE})
   # Add TurboJPEG
   if(RHEL_FOUND)
     set(ROCAL_RPM_PACKAGE_LIST     "${ROCAL_RPM_PACKAGE_LIST}, turbojpeg")
     set(ROCAL_RPM_DEV_PACKAGE_LIST  "${ROCAL_RPM_DEV_PACKAGE_LIST}, turbojpeg-devel")
-  endif()
-  if(UBUNTU_FOUND)
-    set(ROCAL_DEBIAN_PACKAGE_LIST   "${ROCAL_DEBIAN_PACKAGE_LIST}, libturbojpeg:amd64")
-  elseif(DEBIAN_FOUND)
-    set(ROCAL_DEBIAN_PACKAGE_LIST   "${ROCAL_DEBIAN_PACKAGE_LIST}, libturbojpeg0")
   endif()
   # Add rocDecode and rocJpeg deps for Non-Mariner
   if(NOT MARINER_FOUND)
@@ -337,17 +338,19 @@ else()
 endif()
 endif()
 
+configure_pkg( ${ROCAL} ${COMP_TYPE} ${CPACK_PACKAGE_VERSION} ${PKG_MAINTAINER_NM} ${PKG_MAINTAINER_EMAIL} )
+
 include(CPack)
 
 cpack_add_component(runtime
                   DISPLAY_NAME "rocAL Runtime Package"
-                  DESCRIPTION "AMD rocAL is a comprehensive augmentation library. \
-rocAL runtime package provides rocAL libraries and license.txt")
+                 DESCRIPTION "Augmentation library. \
+Package provides rocAL libraries and license.txt")
 
 cpack_add_component(dev
                   DISPLAY_NAME "rocAL Develop Package"
-                  DESCRIPTION "AMD rocAL is a comprehensive augmentation library. \
-rocAL develop package provides rocAL libraries, header files, samples, and license.txt")
+                 DESCRIPTION "Augmentation library. \
+Provides libraries, headers, samples, and license.txt")
 
 cpack_add_component(asan
                   DISPLAY_NAME "rocAL ASAN Package"

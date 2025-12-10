@@ -51,139 +51,6 @@ THE SOFTWARE.
 HWRocJpegDecoder::HWRocJpegDecoder() {
 };
 
-/**
- * @brief Gets the channel pitch and sizes.
- *
- * This function gets the channel pitch and sizes based on the specified output format, chroma subsampling,
- * output image, and channel sizes.
- *
- * @param output_format The output format.
- * @param subsampling The chroma subsampling.
- * @param widths The array to store the channel widths.
- * @param heights The array to store the channel heights.
- * @param num_channels The number of channels.
- * @param output_image The output image.
- * @param channel_sizes The array to store the channel sizes.
- * @return The channel pitch.
- */
-int GetChannelPitchAndSizes(RocJpegDecodeParams decode_params, RocJpegChromaSubsampling subsampling, uint32_t *widths, uint32_t *heights,
-                            uint32_t &num_channels, RocJpegImage &output_image, uint32_t *channel_sizes) {
-    bool is_roi_valid = false;
-    uint32_t roi_width = decode_params.crop_rectangle.right - decode_params.crop_rectangle.left;
-    uint32_t roi_height = decode_params.crop_rectangle.bottom - decode_params.crop_rectangle.top;
-    if (roi_width > 0 && roi_height > 0 && roi_width <= widths[0] && roi_height <= heights[0]) {
-        is_roi_valid = true; 
-    }
-
-    switch (decode_params.output_format) {
-        case ROCJPEG_OUTPUT_NATIVE:
-            switch (subsampling) {
-                case ROCJPEG_CSS_444:
-                    num_channels = 3;
-                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-                    channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-                    break;
-                case ROCJPEG_CSS_440:
-                    num_channels = 3;
-                    output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-                    channel_sizes[2] = channel_sizes[1] = output_image.pitch[0] * ((is_roi_valid ? roi_height : heights[0]) >> 1);
-                    break;
-                case ROCJPEG_CSS_422:
-                    num_channels = 1;
-                    output_image.pitch[0] = (is_roi_valid ? roi_width : widths[0]) * 2;
-                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-                    break;
-                case ROCJPEG_CSS_420:
-                    num_channels = 2;
-                    output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-                    channel_sizes[1] = output_image.pitch[1] * ((is_roi_valid ? roi_height : heights[0]) >> 1);
-                    break;
-                case ROCJPEG_CSS_400:
-                    num_channels = 1;
-                    output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-                    channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-                    break;
-                default:
-                    std::cout << "Unknown chroma subsampling!" << std::endl;
-                    return EXIT_FAILURE;
-            }
-            break;
-        case ROCJPEG_OUTPUT_YUV_PLANAR:
-            if (subsampling == ROCJPEG_CSS_400) {
-                num_channels = 1;
-                output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-                channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-            } else {
-                num_channels = 3;
-                output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-                output_image.pitch[1] = is_roi_valid ? roi_width : widths[1];
-                output_image.pitch[2] = is_roi_valid ? roi_width : widths[2];
-                channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-                channel_sizes[1] = output_image.pitch[1] * (is_roi_valid ? roi_height : heights[1]);
-                channel_sizes[2] = output_image.pitch[2] * (is_roi_valid ? roi_height : heights[2]);
-            }
-            break;
-        case ROCJPEG_OUTPUT_Y:
-            num_channels = 1;
-            output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-            channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-            break;
-        case ROCJPEG_OUTPUT_RGB:
-            num_channels = 1;
-            output_image.pitch[0] = (is_roi_valid ? roi_width : widths[0]) * 3;
-            channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-            break;
-        case ROCJPEG_OUTPUT_RGB_PLANAR:
-            num_channels = 3;
-            output_image.pitch[2] = output_image.pitch[1] = output_image.pitch[0] = is_roi_valid ? roi_width : widths[0];
-            channel_sizes[2] = channel_sizes[1] = channel_sizes[0] = output_image.pitch[0] * (is_roi_valid ? roi_height : heights[0]);
-            break;
-        default:
-            std::cout << "Unknown output format!" << std::endl;
-            return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
-}
-
-/**
- * @brief Gets the chroma subsampling string.
- *
- * This function gets the chroma subsampling string based on the specified subsampling value.
- *
- * @param subsampling The chroma subsampling value.
- * @param chroma_sub_sampling The string to store the chroma subsampling.
- */
-void GetChromaSubsamplingStr(RocJpegChromaSubsampling subsampling, std::string &chroma_sub_sampling) {
-    switch (subsampling) {
-        case ROCJPEG_CSS_444:
-            chroma_sub_sampling = "YUV 4:4:4";
-            break;
-        case ROCJPEG_CSS_440:
-            chroma_sub_sampling = "YUV 4:4:0";
-            break;
-        case ROCJPEG_CSS_422:
-            chroma_sub_sampling = "YUV 4:2:2";
-            break;
-        case ROCJPEG_CSS_420:
-            chroma_sub_sampling = "YUV 4:2:0";
-            break;
-        case ROCJPEG_CSS_411:
-            chroma_sub_sampling = "YUV 4:1:1";
-            break;
-        case ROCJPEG_CSS_400:
-            chroma_sub_sampling = "YUV 4:0:0";
-            break;
-        case ROCJPEG_CSS_UNKNOWN:
-            chroma_sub_sampling = "UNKNOWN";
-            break;
-        default:
-            chroma_sub_sampling = "";
-            break;
-    }
-}
-
 void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     int num_devices;
     CHECK_HIP(hipGetDeviceCount(&num_devices));
@@ -210,6 +77,7 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _src_hstride.resize(_batch_size);
     _src_img_offset.resize(_batch_size);
     _decode_params.resize(_batch_size);
+    _image_needs_rescaling.resize(_batch_size);
 
     // Allocate mem for width and height arrays for src and dst
     if (!_dev_src_width) CHECK_HIP(hipMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
@@ -280,6 +148,7 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
         _resize_batch = true;   // If the size of any image in the batch is greater than max size, resize the complete batch
         max_widths[0] = (widths[0] + 8) &~ 7;
         max_heights[0] = (heights[0] + 8) &~ 7;
+        _image_needs_rescaling[index] = true;
     }
 
     if (GetChannelPitchAndSizes(_decode_params[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
@@ -345,8 +214,12 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
         for (unsigned i = 0; i < _batch_size; i++) {
                 _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
                 _src_img_offset[i] = src_offset;
-                unsigned pitch_width = (original_image_width[i] + 8) &~ 7;
-                unsigned pitch_height = (original_image_height[i] + 8) &~ 7;
+
+                // For images having original width and height greater than the max decode width and height
+                // the buffer size is strided according to the original width and height, and pitch is set accordingly
+                // For other images the max decode width and height dims are used for the stride
+                unsigned pitch_width = _image_needs_rescaling[i] ? (original_image_width[i] + 8) & ~7 : max_decoded_width;
+                unsigned pitch_height = _image_needs_rescaling[i] ? (original_image_height[i] + 8) & ~7 : max_decoded_height;
                 src_offset += (pitch_width * pitch_height * _num_channels);
                 img_buff += (pitch_width * pitch_height * _num_channels);
                 _src_hstride[i] = pitch_width * _num_channels;
@@ -374,6 +247,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
                             max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
     }
     _resize_batch = false;  // Need to reset this value for every batch
+    _rocjpeg_image_buff_size = 0;
 
     return Status::OK;
 }

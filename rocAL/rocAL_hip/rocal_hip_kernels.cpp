@@ -36,6 +36,9 @@ typedef struct { uint   data[ 6]; } d_uint6_s;
 #define LOCAL_THREADS_X                 16                  // default rpp hip thread launch config - local threads x = 16
 #define LOCAL_THREADS_Y                 16                  // default rpp hip thread launch config - local threads x = 16
 #define LOCAL_THREADS_Z                  1                  // default rpp hip thread launch config - local threads x = 16
+#define MAKE_FLOAT4(val) make_float4(val, val, val, val)
+#define MAKE_FLOAT2(val) make_float2(val, val)
+#define MAKE_FLOAT3(val) make_float3(val, val, val)
 
 __global__ void __attribute__((visibility("default")))
 Hip_CopyInt8ToNHWC_fp32(
@@ -311,21 +314,21 @@ int HipExecCopyInt8ToNCHW(
 __device__ void resize_roi_and_srclocs_hip_compute(int4 *src_roi_ptr_i4, uint2 *dst_dims_wh, int id_x, int id_y, d_float16 *loc_src_f16) {
     float w_ratio = (float)(src_roi_ptr_i4->z - src_roi_ptr_i4->x + 1) / dst_dims_wh->x;
     float h_ratio = (float)(src_roi_ptr_i4->w - src_roi_ptr_i4->y + 1) / dst_dims_wh->y;
-    float4 w_offset_f4 = (float4)((w_ratio - 1) * 0.5f);
-    float4 h_offset_f4 = (float4)((h_ratio - 1) * 0.5f);
+    float4 w_offset_f4 = MAKE_FLOAT4((w_ratio - 1) * 0.5f);
+    float4 h_offset_f4 = MAKE_FLOAT4((h_ratio - 1) * 0.5f);
 
     d_float8 increment_f8, loc_dst_f8x, loc_dst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    loc_dst_f8x.f4[0] = (float4)id_x + increment_f8.f4[0];
-    loc_dst_f8x.f4[1] = (float4)id_x + increment_f8.f4[1];
-    loc_dst_f8y.f4[0] = (float4)id_y;
-    loc_dst_f8y.f4[1] = (float4)id_y;
+    loc_dst_f8x.f4[0] = MAKE_FLOAT4(id_x) + increment_f8.f4[0];
+    loc_dst_f8x.f4[1] = MAKE_FLOAT4(id_x) + increment_f8.f4[1];
+    loc_dst_f8y.f4[0] = MAKE_FLOAT4(id_y);
+    loc_dst_f8y.f4[1] = MAKE_FLOAT4(id_y);
 
-    loc_src_f16->f8[0].f4[0] = (loc_dst_f8x.f4[0] * (float4)w_ratio) + w_offset_f4 + (float4)src_roi_ptr_i4->x;  // Compute src x locations in float for dst x locations [0-3]
-    loc_src_f16->f8[0].f4[1] = (loc_dst_f8x.f4[1] * (float4)w_ratio) + w_offset_f4 + (float4)src_roi_ptr_i4->x;  // Compute src x locations in float for dst x locations [4-7]
-    loc_src_f16->f8[1].f4[0] = (loc_dst_f8y.f4[0] * (float4)h_ratio) + h_offset_f4 + (float4)src_roi_ptr_i4->y;  // Compute src y locations in float for dst y locations [0-3]
-    loc_src_f16->f8[1].f4[1] = (loc_dst_f8y.f4[1] * (float4)h_ratio) + h_offset_f4 + (float4)src_roi_ptr_i4->y;  // Compute src y locations in float for dst y locations [4-7]
+    loc_src_f16->f8[0].f4[0] = (loc_dst_f8x.f4[0] * MAKE_FLOAT4(w_ratio)) + w_offset_f4 + MAKE_FLOAT4(src_roi_ptr_i4->x);  // Compute src x locations in float for dst x locations [0-3]
+    loc_src_f16->f8[0].f4[1] = (loc_dst_f8x.f4[1] * MAKE_FLOAT4(w_ratio)) + w_offset_f4 + MAKE_FLOAT4(src_roi_ptr_i4->x);  // Compute src x locations in float for dst x locations [4-7]
+    loc_src_f16->f8[1].f4[0] = (loc_dst_f8y.f4[0] * MAKE_FLOAT4(h_ratio)) + h_offset_f4 + MAKE_FLOAT4(src_roi_ptr_i4->y);  // Compute src y locations in float for dst y locations [0-3]
+    loc_src_f16->f8[1].f4[1] = (loc_dst_f8y.f4[1] * MAKE_FLOAT4(h_ratio)) + h_offset_f4 + MAKE_FLOAT4(src_roi_ptr_i4->y);  // Compute src y locations in float for dst y locations [4-7]
 }
 
 // float bilinear interpolation computation
@@ -357,7 +360,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
     uint2 src_u2;
     int2 loc_src1_i2, loc_src2_i2;
     rpp_hip_roi_range_check(loc_src_floor_f2, roi_ptr_src_i4, &loc_src1_i2);
-    *loc_src_floor_f2 = *loc_src_floor_f2 + (float2)1.0f;
+    *loc_src_floor_f2 = *loc_src_floor_f2 + MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(loc_src_floor_f2, roi_ptr_src_i4, &loc_src2_i2);
     int2 src_inter_row_loc_i2, src_inter_col_loc_i2;
     src_inter_row_loc_i2.x = loc_src1_i2.y * src_stride_h;
@@ -394,7 +397,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_pkd3(T *src_ptr, u
     loc_src_floor_f2.x = floorf(loc_src_x);
     loc_src_floor_f2.y = floorf(loc_src_y);
     if (check_range && ((loc_src_floor_f2.x < roi_ptr_src_i4->x) || (loc_src_floor_f2.y < roi_ptr_src_i4->y) || (loc_src_floor_f2.x > roi_ptr_src_i4->z) || (loc_src_floor_f2.y > roi_ptr_src_i4->w))) {
-        *dst_f3 = (float3) 0.0f;
+        *dst_f3 = MAKE_FLOAT3(0.0f);
     } else {
         weighted_wh_f2.x = loc_src_x - loc_src_floor_f2.x;
         weighted_wh_f2.y = loc_src_y - loc_src_floor_f2.y;

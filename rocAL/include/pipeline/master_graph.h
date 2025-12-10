@@ -56,6 +56,8 @@ THE SOFTWARE.
 #endif
 #include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
+#include "pipeline/pipeline_operator.h"
+
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
 #define BBOX_COUNT 4
@@ -102,7 +104,7 @@ struct CacheEntry {
 };
 
 class MasterGraph {
-   public:
+public:
     enum class Status { OK = 0,
                         NOT_RUNNING = 1,
                         NO_MORE_DATA = 2,
@@ -136,7 +138,7 @@ class MasterGraph {
     template <typename T, typename M>
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
-    Tensor *create_loader_output_tensor(const TensorInfo &info);
+    Tensor *create_internal_tensor(const TensorInfo &info);  // Creates a regular (non-virtual) tensor and adds it to _internal_tensors vector
     TensorListVector * create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     TensorListVector * create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
     TensorListVector * create_coco_meta_data_reader(const char *source_path, bool is_output, MetaDataReaderType reader_type, MetaDataType label_type, bool ltrb_bbox = true, bool is_box_encoder = false,
@@ -194,7 +196,7 @@ class MasterGraph {
         return _device.resources()->cmd_queue;
     }
 #endif
-   private:
+private:
     Status update_node_parameters();
     void create_single_graph();
     void create_multiple_graphs();
@@ -209,6 +211,8 @@ class MasterGraph {
     bool no_more_processed_data();
     // is_out_of_data() is called to check the remaining batch count from each loader module, if any of the loader module has consumed all the batches it returns true.
     bool is_out_of_data();
+    // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
+    inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
@@ -232,8 +236,6 @@ class MasterGraph {
     std::vector<size_t> _meta_data_buffer_size;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU
-#elif ENABLE_OPENCL
-    DeviceManager _device;                                                        //!< Keeps the device related constructs needed for running on GPU
 #endif
     std::shared_ptr<Graph> _graph = nullptr;
     std::vector<std::shared_ptr<Graph>> _graphs;                                  //!< Keeps a list of the Graph instances, a graph is created for each loader
@@ -299,12 +301,19 @@ class MasterGraph {
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
+    std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
+    int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries
+    int _tensor_idx = 0; // Index/counter used to uniquely name Tensor instances created in the pipeline
+    bool _set_device_id = false;
 };
 
 template <typename T>
 std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
     auto node = std::make_shared<T>(inputs, outputs);
     _nodes.push_back(node);
+
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
     for (auto &input : inputs) {
         if (_tensor_map.find(input) == _tensor_map.end())
@@ -346,6 +355,10 @@ inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
+
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
@@ -437,8 +450,10 @@ template<> inline std::shared_ptr<CIFAR10LoaderSingleShardNode> MasterGraph::add
 #else
     auto node = std::make_shared<CIFAR10LoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    _loader_module = node->get_loader_module();
-    _loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));

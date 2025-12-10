@@ -24,7 +24,9 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 
 import os
+import shutil
 import cv2
+import numpy as np
 from parse_config import parse_args
 
 
@@ -47,6 +49,7 @@ def main():
     local_rank = args.local_rank
     world_size = args.world_size
     output_layout = types.NHWC if args.NHWC else types.NCHW
+    augmentation_name = args.augmentation_name
 
     try:
         path = "output_folder/numpy_reader/"
@@ -55,15 +58,29 @@ def main():
     except OSError as error:
         print(error)
 
+    if augmentation_name == "log1p":
+        # Create int16 numpy files since log1p only supports int16 inputs
+        new_data_path = 'log1p_inputs'
+        if os.path.exists(new_data_path):
+            shutil.rmtree(new_data_path)
+        os.makedirs(new_data_path)
+        for i in range(10):
+            np_array = np.random.randn(128, 128, 128, 4)
+            np.save(os.path.join(new_data_path, f'{i}.npy'), np_array.astype(np.int16))
+        data_path = new_data_path
+
     pipeline = Pipeline(batch_size=batch_size, num_threads=num_threads,
                         device_id=local_rank, seed=random_seed, rocal_cpu=rocal_cpu)
 
     with pipeline:
         numpy_reader_output = fn.readers.numpy(
             file_root=data_path, shard_id=local_rank, num_shards=world_size, output_layout=types.NHWC)
-        resize_output = fn.resize(
-            numpy_reader_output, resize_width=400, resize_height=400, output_layout=output_layout)
-        pipeline.set_outputs(resize_output)
+        if augmentation_name == "log1p":
+            output = fn.log1p(numpy_reader_output)
+        else:
+            output = fn.resize(
+                numpy_reader_output, resize_width=400, resize_height=400, output_layout=output_layout)
+        pipeline.set_outputs(output)
 
     pipeline.build()
 
@@ -75,7 +92,8 @@ def main():
             if i == 0 and args.print_tensor:
                 print(batch)
             for img in batch:
-                draw_patches(img, cnt, args)
+                if args.display:
+                    draw_patches(img, cnt, args)
                 cnt += 1
         numpyIteratorPipeline.reset()
     print("##############################  NUMPY READER SUCCESS  ############################")

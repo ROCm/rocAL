@@ -241,3 +241,12 @@ To run the cifar10 reader test
 python cifar10_reader.py cifar-10-batches-bin/ <cpu/gpu> <batch_size>
 ```
 The reader outputs will be saved to the output_folder/cifar10_reader path
+
+## JAX Iterator Test
+
+This test runs a pipeline making use of the JAX iterator. To run the test, 
+
+```bash
+python jax_classification_reader.py <path to image folder> <batch_size>
+```
+The iterator outputs will be saved to the output_folder/jax_outputs path

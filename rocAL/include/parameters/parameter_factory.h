@@ -104,6 +104,7 @@ class ParameterFactory {
    private:
     long long unsigned _seed;
     std::set<pParamCore> _parameters;  //<! Keeps the random generators used to randomized the augmentation parameters
+    std::set<pParam> _params;          //<! Used for storing IntParam and FloatParam objects to be deleted in dtor
     static ParameterFactory* _instance;
     static std::mutex _mutex;
     ParameterFactory();

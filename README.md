@@ -64,7 +64,7 @@ rocAL can be currently used to perform the following operations either with rand
 * Linux distribution
   + Ubuntu - `22.04` / `24.04`
   + RedHat - `8` / `9`
-  + SLES - `15-SP5`
+  + SLES - `15 SP7`
 
 ### Hardware
 
@@ -89,6 +89,11 @@ rocAL can be currently used to perform the following operations either with rand
 
   ```shell
   sudo apt install cmake
+  ```
+
+* HIP
+  ```shell
+  sudo apt install hip-dev
   ```
 
 * [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
@@ -175,7 +180,6 @@ For your convenience, we provide the setup script,[rocAL-setup.py](https://githu
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
                       --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
-                      --ffmpeg    [FFMPEG Installation - optional (default:OFF)[options:ON/OFF]]
                       --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 
@@ -185,7 +189,7 @@ The installation process uses the following steps:
 
 * [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
 
-* Install ROCm `6.4.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
+* Install ROCm `7.0.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 
 >[!IMPORTANT]
 > Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
@@ -237,9 +241,6 @@ To build rocAL from source and install, follow the steps below:
 ```shell
 git clone https://github.com/ROCm/rocAL.git
 ```
-
->[!NOTE] 
-> rocAL has support for two GPU backends: **OPENCL** and **HIP**:
 
 #### HIP Backend
 
@@ -364,10 +365,11 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * Linux distribution
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15-SP5`
-* ROCm: rocm-core - `6.4.0`+
+  * SLES - `15-SP7`
+* ROCm: rocm-core - `7.0.0`+
 * MIVisionX - `mivisionx-dev`/`mivisionx-devel`
 * rocDecode - `rocdecode-dev`/`rocdecode-devel`
+* rocJPEG - `rocjpeg-dev`/`rocjpeg-devel`
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * TurboJPEG - `libturbojpeg0-dev`/`turbojpeg-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
@@ -376,5 +378,5 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * OpenCV - `libopencv-dev` / [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
 * Libtar - [v1.2.20](https://repo.or.cz/libtar.git)
-* rocAL Setup Script - `V3.0.0`
+* rocAL Setup Script - `V4.1.0`
 * Dependencies for all the above packages

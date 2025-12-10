@@ -187,7 +187,5 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
         mat_output[i].release();
     }
     rocalRelease(handle);
-    if (!output)
-        return -1;
     return 0;
 }

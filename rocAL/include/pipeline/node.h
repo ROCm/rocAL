@@ -23,10 +23,14 @@ THE SOFTWARE.
 #pragma once
 #include <memory>
 #include <set>
+#include <array>
+#include <utility>
 
 #include "pipeline/graph.h"
 #include "meta_data/meta_data_graph.h"
 #include "pipeline/tensor.h"
+#include "pipeline/argument.h"
+
 class Node {
    public:
     Node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : _inputs(inputs),
@@ -38,7 +42,8 @@ class Node {
     std::vector<Tensor *> input() { return _inputs; };
     std::vector<Tensor *> output() { return _outputs; };
     void add_next(const std::shared_ptr<Node> &node);   // Adds the Node next to the current Node
-    void add_previous(const std::shared_ptr<Node> &node);   // Adds the Node preceeding the current Node
+    void add_previous(const std::shared_ptr<Node> &node);   // Adds the Node preceding the current Node
+    void release();
     std::shared_ptr<Graph> graph() { return _graph; }
     void set_meta_data(pMetaDataBatch meta_data_info) { _meta_data_info = meta_data_info; }
     bool _is_ssd = false;
@@ -46,6 +51,8 @@ class Node {
     const Roi2DCords *get_dst_roi() { return _outputs[0]->info().roi().get_2D_roi(); }
     void set_graph_id(int id) { _graph_id = id; }
     int get_graph_id() { return _graph_id; }
+    virtual std::string node_name() const { return ""; }
+    const std::vector<Argument>& get_args_list() const { return _args; }
 
    protected:
     virtual void create_node() = 0;
@@ -59,4 +66,16 @@ class Node {
     std::vector<std::shared_ptr<Node>> _next;   // Stores the reference to a list of next Nodes
     std::vector<std::shared_ptr<Node>> _prev;   // Stores the reference to a list of previous Nodes
     int _graph_id = -1;
+    std::vector<Argument> _args;
+    /**
+     * @brief Template function to set node arguments using variadic templates and fold expressions.
+     * 
+     * This function creates Argument objects for each argument-name pair and stores them in the node.
+     * It uses fold expressions to expand the parameter pack at compile time.
+     */
+    template <size_t N, size_t... Indices, typename... Args>
+    void set_node_arguments(const std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
+        // Fold expression to create Argument object for each argument in the node
+        (this->_args.push_back(Argument(arg_names[Indices], std::forward<Args>(args))), ...);
+    }
 };

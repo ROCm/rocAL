@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "decoders/image/open_cv_decoder.h"
 #include "decoders/image/turbo_jpeg_decoder.h"
 #include "decoders/image/rocjpeg_decoder.h"
+#include "decoders/image/rocjpeg_fused_crop_decoder.h"
 
 #include "pipeline/commons.h"
 
@@ -39,13 +40,16 @@ std::shared_ptr<Decoder> create_decoder(DecoderConfig config) {
             return std::make_shared<FusedCropTJDecoder>();
             break;
 #if ENABLE_OPENCV
-        case DecoderType::OPENCV_DEC:
+        case DecoderType::OPENCV:
             return std::make_shared<CVDecoder>();
             break;
 #endif
 #if ENABLE_ROCJPEG
-        case DecoderType::ROCJPEG_DEC:
+        case DecoderType::ROCJPEG:
             return std::make_shared<HWRocJpegDecoder>(config.get_hip_stream());
+            break;
+        case DecoderType::ROCJPEG_CROPPED:
+            return std::make_shared<FusedCropRocJpegDecoder>();
             break;
 #endif
         default:

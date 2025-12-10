@@ -280,21 +280,18 @@ enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_SW
      */
     ROCAL_DECODER_VIDEO_FFMPEG_SW = 2,
-    /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_HW
-     */
-    ROCAL_DECODER_VIDEO_FFMPEG_HW = 3,
     /*! \brief AMD ROCAL_DECODER_AUDIO_GENERIC
      * Uses SndFile library to read audio files
      */
-    ROCAL_DECODER_AUDIO_GENERIC = 4,
+    ROCAL_DECODER_AUDIO_GENERIC = 3,
     /*! \brief AMD ROCAL_DECODER_VIDEO_ROCDECODE
      * Uses rocDecode library to decode videos on hardware
      */
-    ROCAL_DECODER_VIDEO_ROCDECODE = 5,
+    ROCAL_DECODER_VIDEO_ROCDECODE = 4,
     /*! \brief AMD ROCAL_DECODER_ROCJPEG
      * Uses rocJpeg library to decode images on hardware
      */
-    ROCAL_DECODER_ROCJPEG = 6
+    ROCAL_DECODER_ROCJPEG = 5
 };
 
 enum RocalOutputMemType {
@@ -509,6 +506,21 @@ enum RocalMissingComponentsBehaviour {
     /*! \brief ROCAL_MISSING_COMPONENT_EMPTY
      */
     ROCAL_MISSING_COMPONENT_EMPTY = 2
+};
+
+struct CameraMatrix {
+    float fx;
+    float cx;
+    float fy;
+    float cy;
+};
+
+struct DistortionCoeffs {
+    float k1;
+    float k2;
+    float p1;
+    float p2;
+    float k3;
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
