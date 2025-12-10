@@ -114,7 +114,7 @@ do
         # tf detection
         ./unit_tests 5 "$tf_detection_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}" $width $height 40 $device $rgb 0 $display
         ./unit_tests 5 "$tf_detection_path" "${output_path}ColorTemp_${rgb_name[$rgb]}_${device_name}" $width $height 43 $device $rgb 0 $display
-        ./unit_tests 5 "$tf_detection_path" "${output_path}FogRandom_${rgb_name[$rgb]}_${device_name}" $width $height 44 $device $rgb 0 $display
+        ./unit_tests 5 "$tf_detection_path" "${output_path}Fog_${rgb_name[$rgb]}_${device_name}" $width $height 44 $device $rgb 0 $display
 
         # caffe classification
         ./unit_tests 6 "$caffe_classification_path" "${output_path}Rotate_${rgb_name[$rgb]}_${device_name}" $width $height 31 $device $rgb 0 $display
