@@ -1,0 +1,216 @@
+# Copyright (c) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+import random
+import sys
+import os
+import cv2
+import tempfile
+from amd.rocal.plugin.pytorch import ROCALClassificationIterator
+from amd.rocal.pipeline import Pipeline
+import amd.rocal.fn as fn
+import amd.rocal.types as types
+
+
+def save_output_images(img, idx, output_dir, device=True, layout="NCHW"):
+    """Save output images for verification"""
+    import cv2
+    if device is False:
+        image = img.cpu().numpy()
+    else:
+        image = img.numpy()
+    if layout == "NCHW":
+        image = image.transpose([1, 2, 0])
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(os.path.join(output_dir, f"serialize_test_{idx}.png"), image)
+
+
+def create_test_pipeline(data_path, rocal_cpu=True, batch_size=2):
+    """Create a test pipeline with supported augmentations"""
+    num_threads = 1
+    device_id = 0
+    random_seed = random.SystemRandom().randint(0, 2**32 - 1)
+    local_rank = 0
+    world_size = 1
+
+    # Create pipeline
+    pipeline = Pipeline(
+        batch_size=batch_size, 
+        num_threads=num_threads, 
+        device_id=device_id, 
+        seed=random_seed, 
+        rocal_cpu=rocal_cpu
+    )
+
+    with pipeline:
+        # File reader
+        jpegs, labels = fn.readers.file(file_root=data_path)
+        
+        # Image decoder
+        decode = fn.decoders.image(
+            jpegs, 
+            output_type=types.RGB,
+            file_root=data_path, 
+            shard_id=local_rank, 
+            num_shards=world_size, 
+            random_shuffle=True
+        )
+        
+        # Brightness augmentation
+        brightness = fn.brightness(
+            decode,
+            brightness=0.5,
+            output_layout=types.NCHW,
+            output_dtype=types.UINT8
+        )
+        
+        pipeline.set_outputs(brightness)
+
+    return pipeline
+
+
+def test_pipeline_serialization(data_path, rocal_cpu=True, batch_size=2):
+    """Test pipeline serialization functionality"""
+    print(f">>> Testing Pipeline Serialization on {'CPU' if rocal_cpu else 'GPU'}")
+    
+    # Create output directory
+    output_dir = "output_folder/serialize_test"
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+    except OSError as error:
+        print(f"Error creating output directory: {error}")
+        return False
+
+    try:
+        # Create and build pipeline
+        print("Creating test pipeline...")
+        pipeline = create_test_pipeline(data_path, rocal_cpu, batch_size)
+        pipeline.build()
+        
+        # Test serialization
+        print("\n=== Testing Pipeline Serialization ===")
+        
+        # Test 1: Serialize to string
+        print("Test 1: Serializing pipeline to string...")
+        serialized_string = pipeline.serialize()
+        
+        if serialized_string is None or len(serialized_string) == 0:
+            print("ERROR: Failed to serialize pipeline - empty result")
+            return False
+            
+        print(f"Serialized string size: {len(serialized_string)} bytes")
+        print("Serialization to string: SUCCESS")
+        
+        # Test 2: Serialize to file
+        print("\nTest 2: Serializing pipeline to file...")
+        serialize_file = os.path.join(output_dir, "pipeline_serialized.bin")
+        serialized_string_file = pipeline.serialize(filename=serialize_file)
+        
+        if not os.path.exists(serialize_file):
+            print("ERROR: Serialized file was not created")
+            return False
+            
+        print(f"Serialized file created: {serialize_file}")
+        print(f"File size: {os.path.getsize(serialize_file)} bytes")
+        print("Serialization to file: SUCCESS")
+        
+        # Test 3: Display serialized content (first 500 chars for readability)
+        print("\n=== Serialized Pipeline Content (Preview) ===")
+        try:
+            # Try to decode as text for preview
+            preview_text = serialized_string.decode('utf-8', errors='ignore')[:500]
+            print(preview_text)
+            if len(serialized_string) > 500:
+                print("... (truncated)")
+        except:
+            # If binary, show hex representation
+            print("Binary content (hex preview):")
+            print(serialized_string[:100].hex())
+            if len(serialized_string) > 100:
+                print("... (truncated)")
+        print("=== End of Serialized Content Preview ===")
+        
+        # Test 4: Test pipeline execution after serialization
+        print("\n=== Testing Pipeline Execution After Serialization ===")
+        
+        # Create iterator and run a few iterations
+        imageIteratorPipeline = ROCALClassificationIterator(pipeline)
+        
+        print(f"Available images: {pipeline.get_remaining_images()}")
+        
+        iteration_count = 0        
+        for i, batch_data in enumerate(imageIteratorPipeline):
+                
+            print(f"\nIteration {iteration_count + 1}:")
+            images, labels = batch_data
+            
+            print(f"  Batch shape: {images[0].shape} images")
+            print(f"  Labels: {labels}")
+            
+            # Save a sample image from the batch
+            if len(images) > 0:
+                save_output_images(
+                    images[0][0],
+                    iteration_count, 
+                    output_dir, 
+                    device=rocal_cpu, 
+                    layout="NCHW"
+                )
+                
+            iteration_count += 1
+            
+        imageIteratorPipeline.reset()
+        print("Pipeline execution after serialization: SUCCESS")        
+        return True
+        
+    except Exception as e:
+        print(f"ERROR: Exception during serialization test: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def main():
+    """Main function to run serialization tests"""
+    if len(sys.argv) < 2:
+        print('Usage: python pipeline_serialize_test.py <image_folder> [cpu/gpu] [batch_size]')
+        sys.exit(1)
+    
+    # Parse arguments
+    data_path = sys.argv[1]
+    rocal_cpu = True if len(sys.argv) < 3 or sys.argv[2] == "cpu" else False
+    batch_size = int(sys.argv[3]) if len(sys.argv) > 3 else 2
+    
+    # Validate data path
+    if not os.path.exists(data_path):
+        print(f"ERROR: Data path does not exist: {data_path}")
+        sys.exit(1)
+    
+    # Run the test
+    success = test_pipeline_serialization(data_path, rocal_cpu, batch_size)
+    
+    if success:
+        print("SERIALIZATION TESTS PASSED!")
+    else:
+        print("SERIALIZATION TESTS FAILED")
+
+
+if __name__ == '__main__':
+    main()
