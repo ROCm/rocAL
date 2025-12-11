@@ -275,7 +275,7 @@ class Pipeline(object):
     
     def serialize(self, filename=None):
         """
-        Serialize the pipeline and stores into protobuffers
+        Serialize the pipeline and store into protobuffers
         return:
         The serialized string of the pipeline object
         """

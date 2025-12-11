@@ -22,16 +22,13 @@ import random
 import sys
 import os
 import cv2
-import tempfile
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 
-
 def save_output_images(img, idx, output_dir, device=True, layout="NCHW"):
     """Save output images for verification"""
-    import cv2
     if device is False:
         image = img.cpu().numpy()
     else:
