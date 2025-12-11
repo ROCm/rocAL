@@ -27,8 +27,6 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 #include "augmentations/node_copy.h"
 
-REGISTER_NODE(CopyNode)
-
 CopyNode::CopyNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void CopyNode::create_node() {
