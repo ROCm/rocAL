@@ -76,17 +76,17 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
 }
 
 void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    constexpr size_t kExpectedArgCount = 23;
-    if (arguments.size() != kExpectedArgCount)
-        THROW("ImageLoaderNode expected " + std::to_string(kExpectedArgCount) + " arguments, received " + std::to_string(arguments.size()));
-    ShardingInfo sharding_info(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>());
-    std::string file_prefix = arguments[17].Get<std::string>();
+    constexpr size_t expected_arg_count = 23;
+    if (arguments.size() != expected_arg_count)
+        THROW("ImageLoaderNode expected " + std::to_string(expected_arg_count) + " arguments, received " + std::to_string(arguments.size()));
+    ShardingInfo sharding_info(arguments[13].get<RocalBatchPolicy>(), arguments[14].get<bool>(), arguments[15].get<bool>(), arguments[16].get<int32_t>());
+    std::string file_prefix = arguments[17].get<std::string>();
 
-    this->init(arguments[0].Get<unsigned>(), arguments[1].Get<unsigned>(), arguments[2].Get<std::string>(),
-               arguments[3].Get<std::string>(), arguments[4].Get<std::map<std::string, std::string>>(), arguments[5].Get<StorageType>(),
-               arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(),
-               meta_data_reader, arguments[12].Get<bool>(), sharding_info, file_prefix.c_str(),
-               arguments[18].Get<unsigned>(), arguments[19].Get<unsigned>(), arguments[20].Get<unsigned>(), arguments[21].Get<ExternalSourceFileMode>(), arguments[22].Get<std::string>());
+    this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<std::string>(),
+               arguments[3].get<std::string>(), arguments[4].get<std::map<std::string, std::string>>(), arguments[5].get<StorageType>(),
+               arguments[6].get<DecoderType>(), arguments[7].get<bool>(), arguments[8].get<bool>(), arguments[9].get<size_t>(), arguments[10].get<RocalMemType>(),
+               meta_data_reader, arguments[12].get<bool>(), sharding_info, file_prefix.c_str(),
+               arguments[18].get<unsigned>(), arguments[19].get<unsigned>(), arguments[20].get<unsigned>(), arguments[21].get<ExternalSourceFileMode>(), arguments[22].get<std::string>());
 }
 
 std::shared_ptr<LoaderModule> ImageLoaderNode::get_loader_module() {

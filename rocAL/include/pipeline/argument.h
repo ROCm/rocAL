@@ -62,13 +62,13 @@ public:
      * them as the requested type. It supports scalar types, vectors, maps, and parameter
      * pointer types.
      * 
-     * @tparam T The type to which the argument value should be cast. Supported types include:
+     * @tparam T The type to which the argument value should be cast.
      * @return The value of the argument as type T.
      * @note For parameter pointer types (FloatParam*, IntParam*), nullptr is returned
      *       if the argument is a null pointer.
      */
     template <typename T>
-    T Get() const {
+    T get() const {
         if constexpr (std::is_same_v<T, FloatParam*> || std::is_same_v<T, IntParam*>) {
             if (is_null_ptr) {
                 return nullptr;
@@ -79,7 +79,7 @@ public:
                 return std::get<IntParam*>(param);
         } else if constexpr (std::is_same_v<T, std::map<std::string, std::string>>) {
             if ((values.size() % 2) != 0)
-                THROW("Corrupted map payload for argument : " + arg_name);
+                THROW("Corrupted map payload for argument : " + arg_name + ".");
             std::map<std::string, std::string> feature_map;
             for (size_t i = 0; i < values.size(); i += 2) {
                 const auto& key = std::any_cast<const std::string&>(values[i]);
@@ -102,7 +102,7 @@ public:
                 return result;
             } else if (!is_vector) {
                 if (values.empty()) {
-                    THROW("Value not present for the given argument : " + arg_name)
+                    THROW("Value not present for the given argument : " + arg_name + ".")
                 }
                 return std::any_cast<T>(values[0]);
             } else {
@@ -322,7 +322,7 @@ private:
 
 template <typename... Args, std::size_t... I>
 std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments, std::index_sequence<I...>) {
-    return std::make_tuple(arguments[I].Get<Args>()...);
+    return std::make_tuple(arguments[I].get<Args>()...);
 }
 
 /**
