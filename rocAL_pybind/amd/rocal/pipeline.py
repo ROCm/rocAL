@@ -68,9 +68,11 @@ class Pipeline(object):
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, 
                  reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None,
-                 is_serialized_pipeline=False): 
+                 deserialized_pipeline_handle=None): 
         
-        if (not is_serialized_pipeline):
+        if (deserialized_pipeline_handle is not None):
+            self._handle = deserialized_pipeline_handle
+        else:
             if (rocal_cpu):
                 self._handle = b.rocalCreate(
                     batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
@@ -78,10 +80,10 @@ class Pipeline(object):
                 self._handle = b.rocalCreate(
                     batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
 
-            if (b.getStatus(self._handle) == types.OK):
-                print("Pipeline has been created succesfully")
-            else:
-                raise Exception("Failed creating the pipeline")
+        if (b.getStatus(self._handle) == types.OK):
+            print("Pipeline has been created succesfully")
+        else:
+            raise Exception("Failed creating the pipeline")
 
         self._check_ops = ["CropMirrorNormalize"]
         self._check_crop_ops = ["Resize"]
@@ -294,22 +296,18 @@ class Pipeline(object):
     def deserialize(cls, serialized_pipeline=None, filename=None):
         """
         Deserialize the pipeline from the protobuffers and recontruct the pipeline
+        The returned pipeline is deserialized and build
         return:
         The pipeline object
         """
         pipe_params = b.RocalPipelineParams()
         ret = b.rocalDeserialize(serialized_pipeline, len(serialized_pipeline), pipe_params)
-        obj = cls(is_serialized_pipeline=True, batch_size=pipe_params.batch_size, num_threads=pipe_params.num_threads,
+        pipe_obj = cls(deserialized_pipeline_handle=ret, batch_size=pipe_params.batch_size, num_threads=pipe_params.num_threads,
                   device_id=pipe_params.device_id, seed=pipe_params.seed, prefetch_queue_depth=pipe_params.prefetch_queue_depth,
                   rocal_cpu=pipe_params.rocal_cpu)
-        
-        obj._handle = ret
-        if (b.getStatus(obj._handle) == types.OK):
-            print("Pipeline has been created succesfully")
-        else:
-            raise Exception("Failed creating the pipeline")
+        pipe_obj.build()
 
-        return obj
+        return pipe_obj
 
 def _discriminate_args(func, **func_kwargs):
     """!Split args on those applicable to Pipeline constructor and the decorated function."""
