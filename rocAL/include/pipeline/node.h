@@ -55,7 +55,7 @@ class Node {
     virtual std::string node_name() const { return ""; }
     const std::vector<Argument>& get_args_list() const { return _args; }
     // Returns the LoaderModule associated with this node, Derived LoaderNodes should override this method.
-    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("Not Implemented"); }
+    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("get_loader_module() is not implemented for the Node"); }
 
    protected:
     virtual void create_node() = 0;

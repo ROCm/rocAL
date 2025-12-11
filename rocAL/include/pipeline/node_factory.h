@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <functional>
 #include <string>
 #include <vector>
@@ -82,8 +82,8 @@ public:
     }
 
 private:
-    std::map<std::string, LoaderCreator> _loader_node_registry;
-    std::map<std::string, AugmentationCreator> _node_registry;
+    std::unordered_map<std::string, LoaderCreator> _loader_node_registry;
+    std::unordered_map<std::string, AugmentationCreator> _node_registry;
 };
 
 /*!
