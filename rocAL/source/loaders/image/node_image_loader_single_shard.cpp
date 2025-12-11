@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(ImageLoaderSingleShardNode)
+
 ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }
@@ -73,6 +75,19 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
                                mem_type,
                                _batch_size, decoder_keep_original);
     _loader_module->start_loading();
+}
+
+void ImageLoaderSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    constexpr size_t kExpectedArgCount = 23;
+    if (arguments.size() != kExpectedArgCount)
+        THROW("ImageLoaderSingleShardNode expected " + std::to_string(kExpectedArgCount) + " arguments, received " + std::to_string(arguments.size()));
+    ShardingInfo sharding_info(arguments[13].Get<RocalBatchPolicy>(), arguments[14].Get<bool>(), arguments[15].Get<bool>(), arguments[16].Get<int32_t>());
+
+    this->init(arguments[0].Get<unsigned>(), arguments[1].Get<unsigned>(), arguments[2].Get<unsigned>(), arguments[3].Get<std::string>(),
+               arguments[4].Get<std::string>(), arguments[5].Get<StorageType>(), arguments[6].Get<DecoderType>(), arguments[7].Get<bool>(), arguments[8].Get<bool>(), 
+               arguments[9].Get<size_t>(), arguments[10].Get<RocalMemType>(), meta_data_reader, arguments[12].Get<bool>(), sharding_info,
+               arguments[17].Get<std::map<std::string, std::string>>(), arguments[18].Get<unsigned>(), arguments[19].Get<unsigned>(), arguments[20].Get<unsigned>(), 
+               arguments[21].Get<ExternalSourceFileMode>(), arguments[22].Get<std::string>());
 }
 
 std::shared_ptr<LoaderModule> ImageLoaderSingleShardNode::get_loader_module() {
