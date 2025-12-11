@@ -167,7 +167,7 @@ def test_serialization(data_path, rocal_cpu=True, batch_size=2):
         print(f"ERROR: Exception during serialization test: {str(e)}")
         import traceback
         traceback.print_exc()
-        return False
+        return None
 
 
 def main():
@@ -178,7 +178,7 @@ def main():
     
     # Parse arguments
     data_path = sys.argv[1]
-    rocal_cpu = True if len(sys.argv) < 3 or sys.argv[2] == "cpu" else False
+    rocal_cpu =  (sys.argv[2].lower() == "cpu") if len(sys.argv) > 2 else True
     batch_size = int(sys.argv[3]) if len(sys.argv) > 3 else 2
     
     # Validate data path

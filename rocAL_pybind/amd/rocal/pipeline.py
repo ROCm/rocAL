@@ -276,8 +276,12 @@ class Pipeline(object):
     def serialize(self, filename=None):
         """
         Serialize the pipeline and store into protobuffers
-        return:
-        The serialized string of the pipeline object
+        
+        Args:
+            filename (str, optional): Optional output path to write the serialized data to file
+            
+        Returns:
+            bytes: The serialized pipeline as protobuf payload
         """
         serialized_str = b.rocalSerialize(self._handle)
         if filename:
