@@ -52,6 +52,23 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
     reader_cfg.set_external_filemode(external_file_mode);
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
+
+    std::array<std::string, 23> arg_names = {
+        "shard_id", "shard_count", "cpu_num_threads", "source_path",
+        "json_path", "storage_type", "decoder_type", "shuffle", "loop",
+        "load_batch_count", "mem_type", "meta_data_reader", "decoder_keep_orig",
+        "last_batch_policy", "pad_last_batch_repeated", "stick_to_shard", "shard_size",
+        "feature_key_map", "sequence_length", "step", "stride",
+        "external_file_mode", "index_path"
+    };
+
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, shard_id, 
+                       shard_count, cpu_num_threads, source_path, json_path, storage_type, 
+                       decoder_type, shuffle, loop, load_batch_count, mem_type, meta_data_reader, decoder_keep_original, 
+                       sharding_info.last_batch_policy, sharding_info.pad_last_batch_repeated, 
+                       sharding_info.stick_to_shard, sharding_info.shard_size, feature_key_map,
+                       sequence_length, step, stride, external_file_mode, index_path);
+
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type),
                                mem_type,
                                _batch_size, decoder_keep_original);
