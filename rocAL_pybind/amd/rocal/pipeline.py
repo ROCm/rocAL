@@ -272,7 +272,14 @@ class Pipeline(object):
                 return b.getOutputTensors(self._handle)
         except:
             raise StopIteration
-
+    
+    def serialize(self):
+        """
+        Serialize the pipeline and stores into protobuffers
+        return:
+        The serialized string of the pipeline object
+        """
+        return b.rocalSerialize(self._handle)
 
 def _discriminate_args(func, **func_kwargs):
     """!Split args on those applicable to Pipeline constructor and the decorated function."""
