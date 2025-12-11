@@ -30,22 +30,13 @@ void PipelineSerializer::serialize_to_string(std::string& serialized_string) {
     }
 }
 
-void PipelineSerializer::serialize_to_file(const std::string& file_path) {
-    std::ofstream ofs(file_path, std::ios::binary);
-    if (!ofs) {
-        THROW("Failed to open file for writing serialized pipeline: " + file_path);
-    }
-    if (!_pipeline_proto.SerializeToOstream(&ofs)) {
-        THROW("Failed to serialize pipeline to file: " + file_path);
-    }
-}
-
-void PipelineSerializer::serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth) {
+void PipelineSerializer::serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth, size_t seed) {
     _pipeline_proto.set_num_threads(static_cast<uint64_t>(num_threads));
     _pipeline_proto.set_batch_size(static_cast<uint64_t>(batch_size));
     _pipeline_proto.set_device_id(device_id);
     _pipeline_proto.set_rocal_cpu(device_type == RocalMemType::HOST);
     _pipeline_proto.set_prefetch_queue_depth(static_cast<uint64_t>(prefetch_queue_depth));
+    _pipeline_proto.set_seed(static_cast<uint64_t>(seed));
 }
 
 void set_tensor_proto(rocal_proto::InputOutput *in_out_proto, Tensor *tensor, bool is_input) {
