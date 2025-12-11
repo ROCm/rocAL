@@ -279,7 +279,7 @@ class Pipeline(object):
         return:
         The serialized string of the pipeline object
         """
-        serialized_str = b.serializePipeline(self._handle)
+        serialized_str = b.rocalSerialize(self._handle)
         if filename:
             with open(filename, 'wb') as f:
                 f.write(serialized_str)
