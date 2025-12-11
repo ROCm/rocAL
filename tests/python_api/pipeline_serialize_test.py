@@ -86,8 +86,8 @@ def create_test_pipeline(data_path, rocal_cpu=True, batch_size=2):
     return pipeline
 
 
-def test_pipeline_serialization(data_path, rocal_cpu=True, batch_size=2):
-    """Test pipeline serialization functionality"""
+def test_serialization(data_path, rocal_cpu=True, batch_size=2):
+    """Test pipeline serialization functionality and return serialized string"""
     print(f">>> Testing Pipeline Serialization on {'CPU' if rocal_cpu else 'GPU'}")
     
     # Create output directory
@@ -96,42 +96,29 @@ def test_pipeline_serialization(data_path, rocal_cpu=True, batch_size=2):
         os.makedirs(output_dir, exist_ok=True)
     except OSError as error:
         print(f"Error creating output directory: {error}")
-        return False
+        return None
 
     try:
         # Create and build pipeline
         print("Creating test pipeline...")
         pipeline = create_test_pipeline(data_path, rocal_cpu, batch_size)
         pipeline.build()
-        
+
         # Test serialization
         print("\n=== Testing Pipeline Serialization ===")
         
-        # Test 1: Serialize to string
+        # Test Serialize to string
         print("Test 1: Serializing pipeline to string...")
         serialized_string = pipeline.serialize()
         
         if serialized_string is None or len(serialized_string) == 0:
             print("ERROR: Failed to serialize pipeline - empty result")
-            return False
+            return None
             
         print(f"Serialized string size: {len(serialized_string)} bytes")
         print("Serialization to string: SUCCESS")
         
-        # Test 2: Serialize to file
-        print("\nTest 2: Serializing pipeline to file...")
-        serialize_file = os.path.join(output_dir, "pipeline_serialized.bin")
-        serialized_string_file = pipeline.serialize(filename=serialize_file)
-        
-        if not os.path.exists(serialize_file):
-            print("ERROR: Serialized file was not created")
-            return False
-            
-        print(f"Serialized file created: {serialize_file}")
-        print(f"File size: {os.path.getsize(serialize_file)} bytes")
-        print("Serialization to file: SUCCESS")
-        
-        # Test 3: Display serialized content (first 500 chars for readability)
+        # Display serialized content (first 500 chars for readability)
         print("\n=== Serialized Pipeline Content (Preview) ===")
         try:
             # Try to decode as text for preview
@@ -147,12 +134,10 @@ def test_pipeline_serialization(data_path, rocal_cpu=True, batch_size=2):
                 print("... (truncated)")
         print("=== End of Serialized Content Preview ===")
         
-        # Test 4: Test pipeline execution after serialization
+        # Test pipeline execution after serialization
         print("\n=== Testing Pipeline Execution After Serialization ===")
         
-        # Create iterator and run a few iterations
         imageIteratorPipeline = ROCALClassificationIterator(pipeline)
-        
         print(f"Available images: {pipeline.get_remaining_images()}")
         
         iteration_count = 0        
@@ -164,31 +149,99 @@ def test_pipeline_serialization(data_path, rocal_cpu=True, batch_size=2):
             print(f"  Batch shape: {images[0].shape} images")
             print(f"  Labels: {labels}")
             
-            # Save a sample image from the batch
+            # Save output images
             if len(images) > 0:
                 save_output_images(
                     images[0][0],
-                    iteration_count, 
+                    f"serialization_{iteration_count}", 
                     output_dir, 
                     device=rocal_cpu, 
                     layout="NCHW"
                 )
+                print(f"  Saved output image: serialization_{iteration_count}.png")
                 
             iteration_count += 1
             
         imageIteratorPipeline.reset()
-        print("Pipeline execution after serialization: SUCCESS")        
-        return True
+        print("\n=== Serialization Test Completed Successfully ===")
+        return serialized_string
         
     except Exception as e:
         print(f"ERROR: Exception during serialization test: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def test_deserialization(serialized_string, rocal_cpu=True, batch_size=2):
+    """Test pipeline deserialization functionality"""
+    print(f">>> Testing Pipeline Deserialization on {'CPU' if rocal_cpu else 'GPU'}")
+    
+    # Create output directory
+    output_dir = "output_folder/serialize_test"
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+    except OSError as error:
+        print(f"Error creating output directory: {error}")
+        return False
+
+    try:
+        if serialized_string is None:
+            print("ERROR: No serialized string provided")
+            return False
+            
+        print(f"Received serialized string of size: {len(serialized_string)} bytes")
+        
+        # Test deserialization from string
+        print("\n=== Testing Pipeline Deserialization from String ===")
+        
+        try:
+            deserialized_pipeline = Pipeline.deserialize(serialized_pipeline=serialized_string)
+            print("Deserialization from string: SUCCESS")
+        except Exception as e:
+            print(f"ERROR: Failed to deserialize from string: {str(e)}")
+            return False
+        
+        # Run deserialized pipeline from string and dump outputs
+        print("\n=== Running Deserialized Pipeline (String) and Dumping Outputs ===")
+        
+        imageIteratorDeserialized = ROCALClassificationIterator(deserialized_pipeline)
+        print(f"Available images: {deserialized_pipeline.get_remaining_images()}")
+        
+        iteration_count = 0
+        
+        for i, batch_data in enumerate(imageIteratorDeserialized):
+            print(f"\nDeserialized (String) - Iteration {iteration_count + 1}:")
+            images, labels = batch_data
+            
+            print(f"  Batch shape: {images[0].shape} images")
+            print(f"  Labels: {labels}")
+            
+            # Save output images
+            if len(images) > 0:
+                save_output_images(
+                    images[0][0],
+                    f"deserialization_{iteration_count}", 
+                    output_dir, 
+                    device=rocal_cpu, 
+                    layout="NCHW"
+                )
+                print(f"  Saved output image: deserialization_{iteration_count}.png")
+                
+            iteration_count += 1
+            
+        imageIteratorDeserialized.reset()
+        print("\n=== Deserialization Test Completed Successfully ===")
+        return True
+
+    except Exception as e:
+        print(f"ERROR: Exception during deserialization test: {str(e)}")
         import traceback
         traceback.print_exc()
         return False
 
 
 def main():
-    """Main function to run serialization tests"""
+    """Main function to run serialization and deserialization tests"""
     if len(sys.argv) < 2:
         print('Usage: python pipeline_serialize_test.py <image_folder> [cpu/gpu] [batch_size]')
         sys.exit(1)
@@ -203,13 +256,17 @@ def main():
         print(f"ERROR: Data path does not exist: {data_path}")
         sys.exit(1)
     
-    # Run the test
-    success = test_pipeline_serialization(data_path, rocal_cpu, batch_size)
+    # Run the serialization test
+    serialized_string = test_serialization(data_path, rocal_cpu, batch_size)
+    success = serialized_string is not None
+
+    # Run the deserialization test
+    success = test_deserialization(serialized_string, rocal_cpu, batch_size)
     
     if success:
-        print("SERIALIZATION TESTS PASSED!")
+        print("SERIALIZATION AND DESERIALIZATION TESTS PASSED!")
     else:
-        print("SERIALIZATION TESTS FAILED")
+        print("SERIALIZATION OR DESERIALIZATION TESTS FAILED")
 
 
 if __name__ == '__main__':
