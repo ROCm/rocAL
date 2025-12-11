@@ -301,6 +301,16 @@ class Pipeline(object):
         The pipeline object
         """
         pipe_params = b.RocalPipelineParams()
+        if (serialized_pipeline is None) == (filename is None):
+            raise ValueError(
+                "serialized_pipeline and filename arguments are mutually exclusive. "
+                "Atleast one of them should be defined."
+            )
+
+        if filename is not None:
+            with open(filename, "rb") as pipeline_file:
+                serialized_pipeline = pipeline_file.read()
+
         ret = b.rocalDeserialize(serialized_pipeline, len(serialized_pipeline), pipe_params)
         pipe_obj = cls(deserialized_pipeline_handle=ret, batch_size=pipe_params.batch_size, num_threads=pipe_params.num_threads,
                   device_id=pipe_params.device_id, seed=pipe_params.seed, prefetch_queue_depth=pipe_params.prefetch_queue_depth,
