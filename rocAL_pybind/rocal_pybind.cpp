@@ -301,6 +301,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         rocalGetSerializedString(context, serialized_string.data());
         return py::bytes(serialized_string);  // Returned by value
     }, "Returns the serialized pipeline as string");
+    m.def("rocalDeserialize", &rocalDeserialize, "Creates context from the serialized string", py::return_value_policy::reference);
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)
