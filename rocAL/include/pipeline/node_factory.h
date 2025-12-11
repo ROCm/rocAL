@@ -68,7 +68,7 @@ public:
         if (it != _loader_node_registry.end()) {
             return it->second(output_tensor, dev_resource);
         } else {
-            THROW("Node not found in the registry: " + name);
+            THROW("LoaderNode not found in the registry: " + name);
         }
     }
 
