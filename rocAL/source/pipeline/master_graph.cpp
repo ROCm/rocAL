@@ -1809,10 +1809,10 @@ void MasterGraph::serialize(size_t *serialized_string_size) {
 
 Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output) {
     if (output.is_argument_input())
-        THROW("The tensor is an input, it is already created in the pipeline")
+        THROW("The tensor is an input, it is already created in the pipeline.")
 
     if (_pipeline_tensors.find(output.name()) != _pipeline_tensors.end()) {
-        THROW("The tensor is already created and present in the pipeline")
+        THROW("The tensor is already created and present in the pipeline.")
     }
     // dims
     std::vector<size_t> dims;
@@ -1820,8 +1820,8 @@ Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &outp
         dims.push_back(dim);
     }
 
-    if (!dims.size())
-        THROW("Empty tensor dims")
+    if (dims.empty())
+        THROW("Empty tensor dims.")
     
     // Update the N dim to the batch size set in the pipeline
     dims[0] = _user_batch_size;
@@ -1960,7 +1960,7 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                     }
                 }
                 std::vector<Tensor *> outputs_vector;
-                if (inputs_vector.size() > 0) {
+                if (!inputs_vector.empty()) {
                     // Handle multiple outputs
                     for (const auto& op_output : op_def.outputs()) {
                         Tensor* output_tensor = nullptr;
@@ -1991,7 +1991,7 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                         outputs_vector.push_back(output_tensor);
                     }
                 } else {
-                    THROW("Input not available for this Augmentation Node -> " + op_def.name())
+                    THROW("Input not available for this Augmentation Node -> " + op_def.name() + ".")
                 }
                 // Create the node with all inputs and outputs
                 auto node = this->add_node(get_node_name(op_def.name()), inputs_vector, outputs_vector);
@@ -2010,7 +2010,7 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
         if (_pipeline_tensors.find(pipe_out.name()) != _pipeline_tensors.end()) {
             this->set_output(_pipeline_tensors[pipe_out.name()]);
         } else {
-            THROW("The required output tensor is not present in the reconstructed pipeline")
+            THROW("The required output tensor is not present in the reconstructed pipeline.")
         }
     }
 }
