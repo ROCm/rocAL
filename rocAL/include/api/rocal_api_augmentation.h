@@ -1486,7 +1486,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilterFixed(RocalContext cont
                                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-                                                               /*! \brief Non-linear blend of two input images using per-sample stddev parameter.
+/*! \brief Non-linear blend of two input images using per-sample stddev parameter.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input1 Input1 Rocal tensor
