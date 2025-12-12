@@ -1438,7 +1438,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGridMask(RocalContext context, RocalT
  * \param [in] input Input Rocal tensor
  * \param [in] is_output Is the output tensor part of the graph output
  * \param [in] kernel_size Median filter kernel size (pixels)
- * \param [in] border_type Border handling policy (implementation specific)
+ * \param [in] border_type Border handling policy
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor

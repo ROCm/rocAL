@@ -30,7 +30,7 @@ class NonLinearBlendNode : public Node {
     explicit NonLinearBlendNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
     NonLinearBlendNode() = delete;
 
-    // Fixed vs dynamic stddev init
+    // Fixed and dynamic stddev init
     void init(float stddev);
     void init(FloatParam* stddev);
 

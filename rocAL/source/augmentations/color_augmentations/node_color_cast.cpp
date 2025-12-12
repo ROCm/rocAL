@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_color_cast.h"
 #include "pipeline/exception.h"
 
-namespace {
 static void fill_rgb_for_batch(std::vector<float> &rgb_out, unsigned batch_size, const std::vector<float> &rgb_in) {
     rgb_out.resize(batch_size * 3);
     if (rgb_in.size() == 3) {
@@ -45,7 +44,6 @@ static void fill_rgb_for_batch(std::vector<float> &rgb_out, unsigned batch_size,
               std::to_string(rgb_in.size()));
     }
 }
-}  // namespace
 
 ColorCastNode::ColorCastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs),
