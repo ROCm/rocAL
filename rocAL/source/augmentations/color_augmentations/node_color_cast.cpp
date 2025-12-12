@@ -61,7 +61,7 @@ void ColorCastNode::create_node() {
     _rgb_vx_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * 3);
     status |= vxAddArrayItems(_rgb_vx_array, _rgb.size(), _rgb.data(), sizeof(vx_float32));
     if (status != 0)
-        THROW(" vxAddArrayItems failed in the ColorCast (vxExtRppColorCast) node: " + TOSTR(status) + "  " + TOSTR(status))
+        THROW(" vxAddArrayItems failed in the ColorCast (vxExtRppColorCast) node: " + TOSTR(status))
 
     // Layouts & ROI type
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
