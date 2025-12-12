@@ -325,24 +325,6 @@ def main():
                              window_size=5,
                              output_layout=tensor_layout,
                              output_dtype=tensor_dtype)
-        elif augmentation_name == "median_filter":
-            output = fn.median_filter(images,
-                                      kernel_size=3,
-                                      border_type=0,
-                                      output_layout=tensor_layout,
-                                      output_dtype=tensor_dtype)
-        elif augmentation_name == "gaussian_filter":
-            output = fn.gaussian_filter(images,
-                                        stddev=1.0,
-                                        kernel_size=3,
-                                        output_layout=tensor_layout,
-                                        output_dtype=tensor_dtype)
-        elif augmentation_name == "gaussian_filter_fixed":
-            output = fn.gaussian_filter_fixed(images,
-                                              stddev=1.0,
-                                              kernel_size=3,
-                                              output_layout=tensor_layout,
-                                              output_dtype=tensor_dtype)
         elif augmentation_name == "warp_affine":
             output = fn.warp_affine(images, dest_height=416, dest_width=416, matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
                                     output_layout=tensor_layout, output_dtype=tensor_dtype, interpolation_type=types.LINEAR_INTERPOLATION)
@@ -389,15 +371,6 @@ def main():
             output = fn.pixelate(images,
                                  output_layout=tensor_layout,
                                  output_dtype=tensor_dtype)
-        elif augmentation_name == "grid_mask":
-            output = fn.grid_mask(images,
-                                  tile_width=32,
-                                  grid_ratio=0.5,
-                                  grid_angle=0.0,
-                                  translate_x=0,
-                                  translate_y=0,
-                                  output_layout=tensor_layout,
-                                  output_dtype=tensor_dtype)
         elif augmentation_name == "exposure":
             output = fn.exposure(images,
                                  exposure=1.0,
@@ -421,12 +394,6 @@ def main():
                                     saturation=0.25,
                                     output_layout=tensor_layout,
                                     output_dtype=tensor_dtype)
-        elif augmentation_name == "color_cast":
-            output = fn.color_cast(images,
-                                   alpha=0.5,
-                                   rgb=[0.25, 0.10, 0.00],
-                                   output_layout=tensor_layout,
-                                   output_dtype=tensor_dtype)
         elif augmentation_name == "crop":
             output = fn.crop(images,
                              crop=(3, 224, 224),
@@ -501,18 +468,6 @@ def main():
                               ratio=0.5,
                               output_layout=tensor_layout,
                               output_dtype=tensor_dtype)
-        elif augmentation_name == "non_linear_blend":
-            output1 = fn.rotate(images,
-                                angle=45.0,
-                                dest_width=416,
-                                dest_height=416,
-                                output_layout=tensor_layout,
-                                output_dtype=tensor_dtype)
-            output = fn.non_linear_blend(images,
-                                         output1,
-                                         stddev=0.2,
-                                         output_layout=tensor_layout,
-                                         output_dtype=tensor_dtype)
         elif augmentation_name == "resize_crop":
             output = fn.resize_crop(images,
                                     resize_width=416,
@@ -538,6 +493,45 @@ def main():
                              output_dtype=tensor_dtype)
             num_classes = len(next(os.walk(data_path))[1])
             labels_onehot = fn.one_hot(labels, num_classes=num_classes)
+        elif augmentation_name == "color_cast":
+            output = fn.color_cast(images,
+                                   alpha=0.5,
+                                   rgb=[12.0, 0.0, 100.0],
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
+        elif augmentation_name == "grid_mask":
+            output = fn.grid_mask(images,
+                                  tile_width=40,
+                                  grid_ratio=0.6,
+                                  grid_angle=0.5,
+                                  translate_x=0,
+                                  translate_y=0,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "non_linear_blend":
+            output1 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=416,
+                                dest_height=416,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.non_linear_blend(images,
+                                         output1,
+                                         stddev=50.0,
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype)
+        elif augmentation_name == "median_filter":
+            output = fn.median_filter(images,
+                                      kernel_size=3,
+                                      border_type=0,
+                                      output_layout=tensor_layout,
+                                      output_dtype=tensor_dtype)
+        elif augmentation_name == "gaussian_filter":
+            output = fn.gaussian_filter(images,
+                                        stddev=5.0,
+                                        kernel_size=3,
+                                        output_layout=tensor_layout,
+                                        output_dtype=tensor_dtype)
 
         if output_set == 0:
             pipe.set_outputs(output)

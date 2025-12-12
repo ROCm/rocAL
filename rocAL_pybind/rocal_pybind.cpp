@@ -1164,22 +1164,16 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("transpose", &rocalTranspose,
           py::return_value_policy::reference);
     m.def("log1p", &rocalLog1p,
-    py::return_value_policy::reference);
-    m.def("colorCast", &rocalColorCast,
           py::return_value_policy::reference);
-    m.def("colorCastFixed", &rocalColorCastFixed,
+    m.def("colorCast", &rocalColorCast,
           py::return_value_policy::reference);
     m.def("gridMask", &rocalGridMask,
           py::return_value_policy::reference);
     m.def("gaussianFilter", &rocalGaussianFilter,
           py::return_value_policy::reference);
-    m.def("gaussianFilterFixed", &rocalGaussianFilterFixed,
-          py::return_value_policy::reference);
     m.def("medianFilter", &rocalMedianFilter,
           py::return_value_policy::reference);
     m.def("nonLinearBlend", &rocalNonLinearBlend,
-          py::return_value_policy::reference);
-    m.def("nonLinearBlendFixed", &rocalNonLinearBlendFixed,
           py::return_value_policy::reference);
 }
 }  // namespace rocal
