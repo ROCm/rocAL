@@ -44,6 +44,7 @@ class ImageLoaderNode : public Node {
               const char *prefix = "", unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0, ExternalSourceFileMode external_file_mode = ExternalSourceFileMode::NONE, const std::string &index_path = "");
 
     std::shared_ptr<LoaderModule> get_loader_module();
+    std::string node_name() const override { return "ImageLoaderNode"; }
 
    protected:
     void create_node() override{};
