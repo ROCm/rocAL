@@ -225,7 +225,8 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}ColorCastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 64 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ColorCast_${rgb_name[$rgb]}_${device_name}" $width $height 65 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}GridMask_${rgb_name[$rgb]}_${device_name}" $width $height 66 $device $rgb 1 $display
-        # ./unit_tests 2 "$coco_detection_path" "${output_path}NonLinearBlend_${rgb_name[$rgb]}_${device_name}" $width $height 66 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}NonLinearBlendRandom_${rgb_name[$rgb]}_${device_name}" $width $height 67 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}NonLinearBlend_${rgb_name[$rgb]}_${device_name}" $width $height 68 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}MedianFilter_${rgb_name[$rgb]}_${device_name}" $width $height 69 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}GaussianFilterRandom_${rgb_name[$rgb]}_${device_name}" $width $height 70 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}GaussianFilter_${rgb_name[$rgb]}_${device_name}" $width $height 71 $device $rgb 1 $display
