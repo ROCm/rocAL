@@ -40,6 +40,7 @@ class NonLinearBlendNode : public Node {
 
    private:
     ParameterVX<float> _stddev;
-    // Conservative default range; actual values are user-controlled
+    // Suggested default range for stddev; actual values are fully user-controlled and not restricted to this range.
+    // User-provided values outside this range are accepted without clamping or rejection.
     constexpr static float STDDEV_RANGE[2] = {0.05f, 0.50f};
 };
