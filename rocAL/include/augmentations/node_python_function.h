@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
+#ifdef ROCAL_PYTHON_FUNCTION
 #ifndef ROCAL_PY_MAX_TENSOR_DIMS
 #define ROCAL_PY_MAX_TENSOR_DIMS 5
 #endif
@@ -66,6 +67,7 @@ Returns:
 - VX_ERROR_INVALID_REFERENCE if src_ptr, dst_ptr, or params is null
 */
 vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const RocalPyExecParams* params);
+#endif
 
 class PythonFunctionNode : public Node {
    public:

@@ -1321,18 +1321,50 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     if not callable(function):
         raise TypeError(f"Expected callable function, got {type(function).__name__}")
     
-    # Validate function has correct signature (accepts one argument)
+    # Validate function has correct signature: exactly one REQUIRED POSITONAL argument
     import inspect
     try:
         sig = inspect.signature(function)
     except (ValueError, TypeError):
-        # If we can't inspect, we'll let it fail at runtime
+        # Some callables (builtins or C-extensions) may not yield a signature.
+        # If we can't inspect, we let it fail at runtime.
         pass
     else:
         params = list(sig.parameters.values())
-        if not params:
-            raise ValueError("Python function must accept exactly one argument (the input batch)")
-    
+
+        # Count required positional parameters: POSITIONAL_ONLY or POSITIONAL_OR_KEYWORD without default
+        REQUIRED_POSITIONAL_KINDS = {
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        }
+        num_required_positional = sum(
+            1
+            for p in params
+            if p.kind in REQUIRED_POSITIONAL_KINDS and p.default is inspect.Parameter.empty
+        )
+
+        # Disallow any required keyword-only parameters
+        num_required_keyword_only = sum(
+            1
+            for p in params
+            if p.kind == inspect.Parameter.KEYWORD_ONLY and p.default is inspect.Parameter.empty
+        )
+
+        if num_required_positional != 1:
+            raise ValueError(
+                f"Python function must accept exactly one required positional argument "
+                f"(the input batch). Found {num_required_positional} in signature {sig}."
+            )
+
+        if num_required_keyword_only > 0:
+            raise ValueError(
+                f"Python function must not require keyword-only arguments; "
+                f"found {num_required_keyword_only} required keyword-only parameter(s) in signature {sig}."
+            )
+
+        # Optional parameters (positional with defaults or keyword-only with defaults) are fine.
+        # *args (VAR_POSITIONAL) and **kwargs (VAR_KEYWORD) are also fine.
+
     function_id = id(function)
     # Pin the callable to prevent GC; backend uses raw id(pointer)
     if not hasattr(Pipeline._current_pipeline, "_pyfunc_refs"):

@@ -118,6 +118,7 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
         // Build shape/strides (in bytes) for input view
         const size_t input_ndim = params->in_desc.num_dims;
         const size_t output_ndim = params->out_desc.num_dims;
+
         std::vector<ssize_t> input_shape(input_ndim);
         std::vector<ssize_t> input_strides(input_ndim);
         for (size_t i = 0; i < input_ndim; ++i) {
@@ -147,27 +148,34 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
         // Call the python function
         py::object result_obj = python_function(input_numpy_batch);
 
-        // Ensure contiguous result for memcpy
-        py::array result_array = py::cast<py::array>(result_obj);
-        py::array result_contig = result_array;
+        // Ensure python returned a NumPy array
+        if (!py::isinstance<py::array>(result_obj)) {
+            ERR(std::string("Python function did not return a NumPy array. Got: ") +
+                std::string(py::str(result_obj.get_type())));
+            return VX_ERROR_INVALID_TYPE;
+        }
 
-        if (!(result_array.flags() & py::array::c_style)) {
-            // Not C-contiguous, need to make it contiguous
-            py::module numpy_module = py::module::import("numpy");
-            py::object ascontiguous_fn = numpy_module.attr("ascontiguousarray");
-            result_contig = ascontiguous_fn(result_array).cast<py::array>();
+        // Safe typed wrapper (no conversion) since we've already validated it is an ndarray
+        py::array result_array = py::reinterpret_borrow<py::array>(result_obj);
+
+        // Ensure contiguous result for memcpy
+        py::array result_contig = py::array::ensure(result_array, py::array::c_style);
+        if (!result_contig) {
+            ERR("Failed to obtain a C-contiguous array from Python result.");
+            return VX_ERROR_INVALID_TYPE;
         }
 
         // Validate output against out_desc
         py::buffer_info buf = result_contig.request();
         if (buf.ndim != static_cast<int>(output_ndim)) {
-            ERR(std::string("Dimension mismatch - expected ") + std::to_string(output_ndim) + " dimensions, got " + std::to_string(buf.ndim));
+            ERR(std::string("Dimension mismatch - expected ") + std::to_string(output_ndim) +
+                " dimensions, got " + std::to_string(buf.ndim));
             return VX_ERROR_INVALID_DIMENSION;
         }
         // Compare shape
         for (size_t i = 0; i < output_ndim; ++i) {
-            size_t expected = params->out_desc.shape[i];
-            size_t got = static_cast<size_t>(buf.shape[i]);
+            const size_t expected = params->out_desc.shape[i];
+            const size_t got = static_cast<size_t>(buf.shape[i]);
             if (expected != got) {
                 ERR(std::string("Shape mismatch at dimension ") + std::to_string(i) +
                     " - expected " + std::to_string(expected) +
@@ -175,48 +183,25 @@ vx_status rocal_process_python_function(void* src_ptr, void* dst_ptr, const Roca
                 return VX_ERROR_INVALID_DIMENSION;
             }
         }
+
         // Verify returned array dtype matches expected dtype
         py::dtype expected_dtype = py::dtype(output_np.first);
         py::dtype got_dtype = result_contig.dtype();
-        std::string expected_kind = std::string(py::str(expected_dtype.attr("kind")));
-        std::string got_kind = std::string(py::str(got_dtype.attr("kind")));
-        if (expected_kind != got_kind) {
-            ERR(std::string("Data type kind mismatch - expected kind '") + expected_kind +
-                "', got '" + got_kind + "'");
-            return VX_ERROR_INVALID_TYPE;
-        }
-        if (static_cast<size_t>(buf.itemsize) != output_itemsize) {
-            ERR(std::string("Data type size mismatch - expected ") + std::to_string(output_itemsize) +
-            " bytes, got " + std::to_string(buf.itemsize) + " bytes");
+
+        // Portable dtype equality check
+        bool dtype_ok = py::bool_(got_dtype.attr("__eq__")(expected_dtype));
+        if (!dtype_ok) {
+            ERR(std::string("Dtype mismatch - expected ") + std::string(py::str(expected_dtype)) +
+                ", got " + std::string(py::str(got_dtype)));
             return VX_ERROR_INVALID_TYPE;
         }
 
         // Calculate expected destination buffer size
         size_t dst_total_bytes = output_itemsize;
-        for (size_t i = 0; i < output_ndim; ++i) {
+        for (size_t i = 0; i < output_ndim; ++i)
             dst_total_bytes *= params->out_desc.shape[i];
-        }
+        std::memcpy(dst_ptr, buf.ptr, dst_total_bytes);
 
-        // Calculate actual output buffer size
-        size_t output_total_bytes = static_cast<size_t>(buf.itemsize);
-        for (auto dim : buf.shape) output_total_bytes *= static_cast<size_t>(dim);
-
-        // Validate destination buffer has enough memory
-        if (output_total_bytes > dst_total_bytes) {
-            std::stringstream ss;
-            ss << "Output buffer too small - expected at least " << output_total_bytes 
-               << " bytes, but destination has only " << dst_total_bytes << " bytes";
-            ERR(ss.str());
-            return VX_ERROR_INVALID_DIMENSION;
-        }
-
-        std::memcpy(dst_ptr, buf.ptr, output_total_bytes);
-
-        // Explicitly drop references before releasing GIL
-        result_contig = py::array();
-        result_array = py::array();
-        python_function = py::object();
-        input_numpy_batch = py::array();
     } catch (const py::error_already_set& e) {
         // Python exception occurred
         ERR("Python error: " + std::string(e.what()) + "\n");
