@@ -97,14 +97,24 @@ public:
                 std::vector<ElementType> result;
                 result.reserve(values.size());
                 for (const auto& v : values) {
-                    result.push_back(std::any_cast<ElementType>(v));
+                    if constexpr (std::is_enum_v<ElementType>) {
+                        // For enum vectors, cast through int
+                        result.push_back(static_cast<ElementType>(std::any_cast<int>(v)));
+                    } else {
+                        result.push_back(std::any_cast<ElementType>(v));
+                    }
                 }
                 return result;
             } else if (!is_vector) {
                 if (values.empty()) {
                     THROW("Value not present for the given argument : " + arg_name + ".")
                 }
-                return std::any_cast<T>(values[0]);
+                if constexpr (std::is_enum_v<std::decay_t<T>>) {
+                    // For enum types, cast through int since constructFromEnum stores as int
+                    return static_cast<T>(std::any_cast<int>(values[0]));
+                } else {
+                    return std::any_cast<T>(values[0]);
+                }
             } else {
                 THROW("Unsupported type requested for argument : " + arg_name + " of type " + type_name);
             }
