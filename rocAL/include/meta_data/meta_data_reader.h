@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <string>
 #include <set>
 #include "meta_data/meta_data.h"
+#include "pipeline/enum_registry.h"
 
 enum class MetaDataReaderType {
     FOLDER_BASED_LABEL_READER = 0,  // Used for imagenet-like dataset
@@ -44,6 +45,7 @@ enum class MetaDataReaderType {
     MXNET_META_DATA_READER,
     WEBDATASET_META_DATA_READER
 };
+REGISTER_ENUM(MetaDataReaderType)
 
 struct MetaDataConfig {
    private:

@@ -23,11 +23,6 @@ THE SOFTWARE.
 MedianFilterNode::MedianFilterNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
-void MedianFilterNode::init(int kernel_size, int border_type) {
-    _kernel_size = kernel_size;
-    _border_type = border_type;
-}
-
 void MedianFilterNode::create_node() {
     if (_node)
         return;
@@ -41,8 +36,7 @@ void MedianFilterNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &roi_type);
     vx_scalar kernel_size_vx = vxCreateScalar(ctx, VX_TYPE_UINT32, &_kernel_size);
-    vx_int32 border_i32 = static_cast<vx_int32>(_border_type);
-    vx_scalar border_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &border_i32);
+    vx_scalar border_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &_border_type);
 
     _node = vxExtRppMedianFilter(_graph->get(),
                                  _inputs[0]->handle(),
@@ -58,6 +52,9 @@ void MedianFilterNode::create_node() {
         THROW("Adding the median filter (vxExtRppMedianFilter) node failed: " + TOSTR(status))
 }
 
-void MedianFilterNode::update_node() {
-    // No dynamic per-sample parameters to update
+void MedianFilterNode::init(int kernel_size, int border_type) {
+    _kernel_size = kernel_size;
+    _border_type = static_cast<int>(border_type);
 }
+
+void MedianFilterNode::update_node() {}
