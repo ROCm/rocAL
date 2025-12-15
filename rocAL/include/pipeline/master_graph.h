@@ -113,7 +113,7 @@ public:
     vx_context get_vx_context() { return _context; }
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    std::shared_ptr<Node> add_node(std::string node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node = false);
+    std::shared_ptr<Node> add_node(const std::string& node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node = false);
     template <typename T, typename M>
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
