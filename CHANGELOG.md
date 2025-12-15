@@ -2,7 +2,7 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## rocAL 2.6.0 (Unreleased)
+## (Unreleased) rocAL 2.6.0
 
 ### Added
 * Multi-version python `.so` build support for rocal pybind. Supports python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13
