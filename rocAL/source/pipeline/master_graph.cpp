@@ -1967,16 +1967,15 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                         
                         // Try to reuse input tensor info if compatible, otherwise create new tensor
                         bool tensor_info_compatible = false;
-                        if (!inputs_vector.empty()) {
-                            // Check compatibility with first input tensor as reference
-                            Tensor* reference_input = inputs_vector[0];
-                            auto node_name = get_node_name(op_def.name());
-                            bool is_geometric_aug = std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), node_name) != GEOMETRIC_AUGMENTATIONS.end();
-                            if (reference_input && check_tensor_info(reference_input->info(), op_output)
-                                && !is_geometric_aug) {
-                                output_tensor = create_tensor(reference_input->info(), false);
-                                tensor_info_compatible = true;
-                            }
+                        
+                        // Check compatibility with first input tensor as reference
+                        Tensor* reference_input = inputs_vector[0];
+                        auto node_name = get_node_name(op_def.name());
+                        bool is_geometric_aug = std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), node_name) != GEOMETRIC_AUGMENTATIONS.end();
+                        if (reference_input && check_tensor_info(reference_input->info(), op_output)
+                            && !is_geometric_aug) {
+                            output_tensor = create_tensor(reference_input->info(), false);
+                            tensor_info_compatible = true;
                         }
                         
                         if (!tensor_info_compatible) {

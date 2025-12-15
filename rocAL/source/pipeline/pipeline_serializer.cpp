@@ -301,7 +301,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                 std::any enum_value = EnumRegistry::getInstance().convertIntToEnum(arg.sub_type_name, enum_val.value());
                 arg.values.push_back(enum_value);
             } else {
-                THROW("Invalid instance name set to the argument: " + arg.sub_type_name);
+                THROW("Enum type '" + arg.sub_type_name + "' is not registered. Please ensure the enum is properly registered with EnumRegistry before deserialization.");
             }
         } else if (arg.is_parameter) {
             const auto& param = proto_arg.param();
@@ -316,6 +316,8 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                     arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_custom_int_rand_param(values.data(),
                                                                       freqs.data(),
                                                                       values.size()));
+                } else {
+                    THROW("Invalid parameter sub-type '" + arg.sub_type_name + "' for int parameter '" + arg.arg_name + "'. Expected: SimpleParameter, UniformRand, or CustomRand");
                 }
             } else if (arg.type_name == "float") {
                 if (arg.sub_type_name == "SimpleParameter") {
@@ -328,8 +330,11 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                     arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_custom_float_rand_param(values.data(),
                                                                       freqs.data(),
                                                                       values.size()));
+                } else {
+                    THROW("Invalid parameter sub-type '" + arg.sub_type_name + "' for float parameter '" + arg.arg_name + "'. Expected: SimpleParameter, UniformRand, or CustomRand");
                 }
             } else {
+                // For unsupported parameter types, set as null pointer
                 arg.is_null_ptr = true;
             }
         } else if (arg.is_vector) {
