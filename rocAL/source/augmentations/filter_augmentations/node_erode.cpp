@@ -25,10 +25,6 @@ THE SOFTWARE.
 ErodeNode::ErodeNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
-void ErodeNode::init(unsigned kernel_size) {
-    _kernel_size = kernel_size;
-}
-
 void ErodeNode::create_node() {
     if (_node)
         return;
@@ -56,6 +52,8 @@ void ErodeNode::create_node() {
         THROW("Adding the erode (vxExtRppErode) node failed: " + TOSTR(status))
 }
 
-void ErodeNode::update_node() {
-    // No dynamic per-sample parameters to update
+void ErodeNode::init(unsigned kernel_size) {
+    _kernel_size = kernel_size;
 }
+
+void ErodeNode::update_node() {}

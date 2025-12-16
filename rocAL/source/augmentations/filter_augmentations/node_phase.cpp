@@ -53,6 +53,4 @@ void PhaseNode::create_node() {
         THROW("Adding the phase (vxExtRppPhase) node failed: " + TOSTR(status))
 }
 
-void PhaseNode::update_node() {
-    // No dynamic per-sample parameters to update
-}
+void PhaseNode::update_node() {}
