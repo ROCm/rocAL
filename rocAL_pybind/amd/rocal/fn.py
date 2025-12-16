@@ -1409,9 +1409,9 @@ def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC
     max = b.createFloatParameter(max) if isinstance(max, float) else max
     kwargs_pybind = {
         "input_image": inputs[0],
-        "is_output": False,
         "min": min,
         "max": max,
+        "is_output": False,
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
