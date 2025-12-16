@@ -1405,8 +1405,6 @@ def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC
 
         @return    Thresholded image
     """
-    min = b.createFloatParameter(min) if isinstance(min, float) else min
-    max = b.createFloatParameter(max) if isinstance(max, float) else max
     kwargs_pybind = {
         "input_image": inputs[0],
         "min": min,
