@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+#define INIT_ARGS_COUNT 23  // Modify in accordance with number of args in init
+
 REGISTER_LOADER_NODE(ImageLoaderNode)
 
 ImageLoaderNode::ImageLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
@@ -53,7 +55,7 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
 
-    std::array<std::string, 23> arg_names = {
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
         "internal_shard_count", "cpu_num_threads", "source_path",
         "json_path", "feature_key_map", "storage_type", "decoder_type",
         "shuffle", "loop", "load_batch_count", "mem_type", "meta_data_reader", "decoder_keep_orig",
@@ -62,6 +64,7 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
         "external_file_mode", "index_path"
     };
 
+    // NOTE : Add the new arguments when modifying init function
     set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, internal_shard_count, 
                        cpu_num_threads, source_path, json_path, feature_key_map, storage_type, 
                        decoder_type, shuffle, loop, load_batch_count, mem_type, meta_data_reader, decoder_keep_orig, 
@@ -76,9 +79,9 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
 }
 
 void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    constexpr size_t expected_arg_count = 23;
-    if (arguments.size() != expected_arg_count)
-        THROW("ImageLoaderNode expected " + std::to_string(expected_arg_count) + " arguments, received " + std::to_string(arguments.size()));
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("ImageLoaderNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) + 
+              "Ensure all arguments present in init are accounted for");
     ShardingInfo sharding_info(arguments[13].get<RocalBatchPolicy>(), arguments[14].get<bool>(), arguments[15].get<bool>(), arguments[16].get<int32_t>());
     std::string file_prefix = arguments[17].get<std::string>();
 
