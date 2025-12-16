@@ -34,9 +34,9 @@ void fill_vector_with_threshold_values(std::vector<float>& threshold_batch,
     size_t threshold_vec_size = threshold_batch.size();
     
     if (threshold_values.size() == no_of_channels) {
-        for (int i = 0; i < threshold_vec_size; i+=no_of_channels) {
-            for (int c = 0; c < no_of_channels; c++) {
-                threshold_batch[i + c] = threshold_values[c];
+        for (int batch_channel_idx = 0; batch_channel_idx < threshold_vec_size; batch_channel_idx += no_of_channels) {
+            for (int channel_idx = 0; channel_idx < no_of_channels; channel_idx++) {
+                threshold_batch[batch_channel_idx + channel_idx] = threshold_values[channel_idx];
             }
         }
     } else if (threshold_values.size() == threshold_vec_size) {

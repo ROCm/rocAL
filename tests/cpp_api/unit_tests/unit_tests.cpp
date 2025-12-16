@@ -960,7 +960,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 max_threshold = {100.0f, 100.0f, 100.0f};
             } else {
                 min_threshold = {30.0f};
-                max_threshold = {100.0f};       
+                max_threshold = {100.0f};
             }
 
             output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
@@ -972,7 +972,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                                         0.005f, 0.005f, 1.0f};
             output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
 
-        }break;
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
