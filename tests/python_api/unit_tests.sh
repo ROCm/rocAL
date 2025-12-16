@@ -171,6 +171,13 @@ do
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name gaussian_filter --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}GaussianFilter_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name non_linear_blend --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}NonLinearBlend_${rgb_name[$rgb]}_${device_name}"
 
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name dilate --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Dilate_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name erode --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Erode_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name magnitude --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Magnitude_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name phase --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Phase_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name threshold --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name warp_perspective --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}"
+
         # Special Case - One Hot Encoded Labels
         python"$ver" unit_test.py --image-dataset-path "$one_hot_data_path" --augmentation-name one_hot --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}OneHot_${rgb_name[$rgb]}_${device_name}"
 

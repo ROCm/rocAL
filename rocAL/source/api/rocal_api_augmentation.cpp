@@ -2802,8 +2802,8 @@ rocalThreshold(
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
-    auto context   = static_cast<Context*>(p_context);
-    auto input     = static_cast<Tensor*>(p_input);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
     try {
         RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);

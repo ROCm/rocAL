@@ -325,66 +325,6 @@ def main():
                              window_size=5,
                              output_layout=tensor_layout,
                              output_dtype=tensor_dtype)
-        elif augmentation_name == "dilate":
-            # Morphological dilate; fallback to copy if bindings not available
-            try:
-                output = fn.dilate(images,
-                                   kernel_size=3,
-                                   output_layout=tensor_layout,
-                                   output_dtype=tensor_dtype)
-            except Exception as e:
-                print("fn.dilate not available -- falling back to copy:", e)
-                output = fn.copy(images,
-                                 output_layout=tensor_layout,
-                                 output_dtype=tensor_dtype)
-        elif augmentation_name == "erode":
-            # Morphological erode; fallback to copy if bindings not available
-            try:
-                output = fn.erode(images,
-                                  kernel_size=3,
-                                  output_layout=tensor_layout,
-                                  output_dtype=tensor_dtype)
-            except Exception as e:
-                print("fn.erode not available -- falling back to copy:", e)
-                output = fn.copy(images,
-                                 output_layout=tensor_layout,
-                                 output_dtype=tensor_dtype)
-        elif augmentation_name == "magnitude":
-            # Create a second tensor by rotating; then compute magnitude; fallback if not available
-            try:
-                images2 = fn.rotate(images,
-                                    angle=15.0,
-                                    dest_width=max_width if max_width else 416,
-                                    dest_height=max_height if max_height else 416,
-                                    output_layout=tensor_layout,
-                                    output_dtype=tensor_dtype)
-                output = fn.magnitude(images,
-                                      images2,
-                                      output_layout=tensor_layout,
-                                      output_dtype=tensor_dtype)
-            except Exception as e:
-                print("fn.magnitude not available -- falling back to copy:", e)
-                output = fn.copy(images,
-                                 output_layout=tensor_layout,
-                                 output_dtype=tensor_dtype)
-        elif augmentation_name == "phase":
-            # Create a second tensor by rotating; then compute phase; fallback if not available
-            try:
-                images2 = fn.rotate(images,
-                                    angle=-15.0,
-                                    dest_width=max_width if max_width else 416,
-                                    dest_height=max_height if max_height else 416,
-                                    output_layout=tensor_layout,
-                                    output_dtype=tensor_dtype)
-                output = fn.phase(images,
-                                  images2,
-                                  output_layout=tensor_layout,
-                                  output_dtype=tensor_dtype)
-            except Exception as e:
-                print("fn.phase not available -- falling back to copy:", e)
-                output = fn.copy(images,
-                                 output_layout=tensor_layout,
-                                 output_dtype=tensor_dtype)
         elif augmentation_name == "gaussian_filter":
             output = fn.gaussian_filter(images,
                                         stddev=1.0,
@@ -397,25 +337,9 @@ def main():
                                               kernel_size=3,
                                               output_layout=tensor_layout,
                                               output_dtype=tensor_dtype)
-        elif augmentation_name == "threshold":
-            output = fn.threshold(images,
-                                  min=64.0,
-                                  max=192.0,
-                                  output_layout=tensor_layout,
-                                  output_dtype=tensor_dtype)
         elif augmentation_name == "warp_affine":
             output = fn.warp_affine(images, dest_height=416, dest_width=416, matrix=[1.0, 1.0, 0.5, 0.5, 7.0, 7.0],
                                     output_layout=tensor_layout, output_dtype=tensor_dtype, interpolation_type=types.LINEAR_INTERPOLATION)
-        elif augmentation_name == "warp_perspective":
-            output = fn.warp_perspective(images,
-                                         dest_height=416,
-                                         dest_width=416,
-                                         perspective=[1.0, 0.0, 0.0,
-                                                      0.0, 1.0, 0.0,
-                                                      0.001, 0.001, 1.0],
-                                         output_layout=tensor_layout,
-                                         output_dtype=tensor_dtype,
-                                         interpolation_type=types.LINEAR_INTERPOLATION)
         elif augmentation_name == "fish_eye":
             output = fn.fish_eye(images,
                                  output_layout=tensor_layout,
@@ -620,6 +544,59 @@ def main():
                                         kernel_size=3,
                                         output_layout=tensor_layout,
                                         output_dtype=tensor_dtype)
+        elif augmentation_name == "dilate":
+            output = fn.dilate(images,
+                                kernel_size=3,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "erode":
+            output = fn.erode(images,
+                                kernel_size=3,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "magnitude":
+            images2 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=max_width if max_width else 416,
+                                dest_height=max_height if max_height else 416,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.magnitude(images,
+                                    images2,
+                                    output_layout=tensor_layout,
+                                    output_dtype=tensor_dtype)
+        elif augmentation_name == "phase":
+            images2 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=max_width if max_width else 416,
+                                dest_height=max_height if max_height else 416,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.phase(images,
+                                images2,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "threshold":
+            min_val = [30.0]
+            max_val = [100.0]
+            if color_format == types.RGB:
+                min_val = [30.0, 30.0, 30.0]
+                max_val = [100.0, 100.0, 100.0]
+            output = fn.threshold(images,
+                                  min=min_val,
+                                  max=max_val,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "warp_perspective":
+            output = fn.warp_perspective(images,
+                                         dest_height=416,
+                                         dest_width=416,
+                                         perspective=[0.93, 0.5, 0.0,
+                                                      -0.5, 0.93, 0.0,
+                                                      0.005, 0.005, 1.0],
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype,
+                                         interpolation_type=types.LINEAR_INTERPOLATION)
 
         if output_set == 0:
             pipe.set_outputs(output)
