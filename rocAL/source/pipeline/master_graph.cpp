@@ -1792,3 +1792,15 @@ void MasterGraph::feed_external_input(const std::vector<std::string>& input_imag
         }
     }
 }
+
+void MasterGraph::serialize(size_t *serialized_string_size) {
+    if (!serialized_string_size) {
+        THROW("serialized_string_size pointer is null");
+    }
+    _pipeline_serializer.reset();
+    _pipeline_serializer.serialize_pipeline_config(_cpu_num_threads, _user_batch_size, _gpu_id, _mem_type, _prefetch_queue_depth, ParameterFactory::instance()->get_seed());
+    _pipeline_serializer.serialize_operators(_pipeline_operators);
+    _pipeline_serializer.serialize_output_tensors(_internal_tensor_list);
+    _pipeline_serializer.serialize_to_string(_serialized_pipeline);
+    *serialized_string_size = _serialized_pipeline.size();
+}
