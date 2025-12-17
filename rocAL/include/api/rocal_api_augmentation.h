@@ -1627,9 +1627,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWarpPerspective(RocalContext context,
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output Is the output tensor part of the graph output
- * \param [in] anchor_box_info Flattened LTRB anchors: either [4*num_boxes] replicated or [batch*4*num_boxes]
- * \param [in] colors Flattened RGB colors per box: either [3*num_boxes] replicated or [batch*3*num_boxes]
- * \param [in] num_boxes Per-sample number of boxes: either [1] to replicate or [batch]
+ * \param [in] anchor_box_info LTRB anchors: either [4*num_boxes] replicated or [batch*4*num_boxes]
+ * \param [in] colors RGB colors per box: either [3*num_boxes] replicated or [batch*3*num_boxes]
+ * \param [in] num_boxes Number of boxes to be erased
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
