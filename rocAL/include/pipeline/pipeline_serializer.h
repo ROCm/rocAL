@@ -41,12 +41,6 @@ public:
 
     // Serialization methods
     /**
-     * @brief Serialize the current PipelineDef into a file on disk.
-     * @param file_path Path to save the serialized pipeline (binary payload)
-     */
-    void serialize_to_file(const std::string& file_path);
-
-    /**
      * @brief Serialize the current PipelineDef into a binary string.
      * @param serialized_string Output string containing the serialized pipeline
      */
@@ -55,7 +49,7 @@ public:
     /**
      * @brief Serialize global pipeline configuration.
      */
-    void serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth);
+    void serialize_pipeline_config(size_t num_threads, size_t batch_size, int device_id, RocalMemType device_type, size_t prefetch_queue_depth, size_t seed);
     /**
      * @brief Serialize pipeline output tensors (shape, dtype, device, layout).
      */
