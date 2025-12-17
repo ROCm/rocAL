@@ -1,0 +1,99 @@
+/*
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+syntax = "proto2";
+
+package rocal_proto;
+
+// Stores the Input/Output tensors
+message InputOutput {
+  required string name = 1;
+  required bool is_argument_input = 2;
+  required int32 device = 3;
+  optional int32 dtype = 4;
+  optional int32 layout = 5;
+  optional int32 color_format = 6;
+  repeated uint64 dims = 7;
+  required uint32 num_dims = 8;
+}
+
+message EnumType {
+  required string name = 1;
+  required int32 value = 2;
+}
+
+// Vector containers for Arguments (use these when passing vectors)
+message FloatVector {
+  repeated float values = 1;
+}
+
+message IntVector {
+  repeated int64 values = 1;
+}
+
+message StringVector {
+  repeated string values = 1;
+}
+
+// Stores a single argument
+message Arguments {
+  required string name = 1;
+  optional string type = 2;
+  optional string instance_name = 3;
+  repeated float floats = 4;
+  repeated int64 ints = 5;
+  repeated string strings = 6;
+  repeated bool bools = 7;
+  repeated uint64 uints = 8;
+  optional EnumType enum_value = 10;
+
+  // vector storage
+  optional bool is_vector = 11;
+
+  // Vector payloads (use these when the argument carries vectors)
+  repeated FloatVector float_vectors = 12;
+  repeated IntVector int_vectors = 13;
+  repeated StringVector string_vectors = 14;
+}
+
+// Stores info about each operator in pipeline
+message OperatorDef {
+  required string name = 1;
+  optional string module_name = 2;
+  // Arguments
+  repeated Arguments args = 3;
+  // Inputs
+  repeated InputOutput inputs = 4;
+  repeated InputOutput outputs = 5;
+}
+
+// Stores pipeline arguments and a list of nodes/operators
+message PipelineDef {
+  optional uint64 num_threads = 1;
+  required uint64 batch_size = 2;
+  optional int32 device_id = 3;
+  optional int64 seed = 4;
+  optional bool rocal_cpu = 5;
+  optional uint64 prefetch_queue_depth = 6;
+  repeated OperatorDef operators = 7;
+  repeated InputOutput pipe_outputs = 8;
+}
