@@ -27,10 +27,10 @@ void BitwiseOpsNode::create_node() {
 
     // pSrcRoi is carried in _inputs[0] ROI tensor
     _node = vxExtRppBitwiseOps(_graph->get(),
-                               _inputs[0]->handle(),      // pSrc1
-                               (_operator == BitwiseOp::NOT ? nullptr : _inputs[1]->handle()), // pSrc2 (optional for NOT)
-                               _inputs[0]->get_roi_tensor(), // pSrcRoi (per-sample ROI for inputs)
-                               _outputs[0]->handle(),     // pDst
+                               _inputs[0]->handle(),
+                               (_operator == BitwiseOp::NOT ? nullptr : _inputs[1]->handle()),
+                               _inputs[0]->get_roi_tensor(),
+                               _outputs[0]->handle(),
                                input_layout_vx,
                                output_layout_vx,
                                roi_type_vx,
@@ -41,6 +41,4 @@ void BitwiseOpsNode::create_node() {
         THROW("Adding the bitwise ops (vxExtRppBitwiseOps) node failed: " + TOSTR(status))
 }
 
-void BitwiseOpsNode::update_node() {
-    // No per-iteration dynamic parameters
-}
+void BitwiseOpsNode::update_node() { }

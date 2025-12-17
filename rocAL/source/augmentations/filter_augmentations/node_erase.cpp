@@ -181,12 +181,12 @@ void EraseNode::init(std::vector<float> anchor,
     // Keep fill pattern for colors; create_node expands it to per-box/channel
     _fill_values = std::move(fill_value);
 
-    // Normalize num_boxes to batch size
+    // Replicate num boxes for each image or copy the per sample input provided
     _num_boxes_vec.clear();
     if (num_boxes.size() == 1) {
         _num_boxes_vec.assign(static_cast<size_t>(_batch_size), static_cast<int>(num_boxes[0]));
     } else if (num_boxes.size() == static_cast<size_t>(_batch_size)) {
-        _num_boxes_vec.assign(num_boxes.begin(), num_boxes.end());
+        _num_boxes_vec = num_boxes;
     } else {
         THROW("num_boxes vector length must be 1 or equal to batch size");
     }
@@ -195,7 +195,6 @@ void EraseNode::init(std::vector<float> anchor,
     std::vector<int> prefix(static_cast<size_t>(_batch_size) + 1, 0);
     for (int i = 0; i < _batch_size; ++i) prefix[i + 1] = prefix[i] + _num_boxes_vec[i];
     _total_boxes = static_cast<size_t>(prefix[_batch_size]);
-    std::cerr << "Total Boxes " << _total_boxes << "\n";
 
     auto channels = _inputs[0]->info().get_channels();
     _fill_values_vec.resize(static_cast<size_t>(_total_boxes) * channels);
@@ -208,7 +207,6 @@ void EraseNode::init(std::vector<float> anchor,
     }
     else if (num_boxes.size() == 1 &&
             fill_sz == static_cast<size_t>(num_boxes[0]) * channels) {
-        std::cerr << "Comes over here-----\n";
         // Single-sample per-box per-channel replicated across batch.
         // All samples must have the same nb equal to num_boxes[0].
         const int nb_single = num_boxes[0];
@@ -220,16 +218,14 @@ void EraseNode::init(std::vector<float> anchor,
             std::copy_n(src, static_cast<size_t>(nb_single) * channels, dst);
             dst += static_cast<size_t>(nb_single) * channels;
         }
-    }
-    else if (fill_sz == static_cast<size_t>(channels)) {
+    } else if (fill_sz == static_cast<size_t>(channels)) {
         // Per-channel pattern replicated to each box
         float* dst = _fill_values_vec.data();
         for (int b = 0; b < _total_boxes; ++b) {
             std::copy_n(_fill_values.data(), channels, dst);
             dst += channels;
         }
-    }
-    else if (fill_sz == static_cast<size_t>(_batch_size)) {
+    } else if (fill_sz == static_cast<size_t>(_batch_size)) {
         // Per-sample scalar replicated across its boxes (and channels)
         float* dst = _fill_values_vec.data();
         for (int i = 0; i < _batch_size; ++i) {
@@ -239,12 +235,10 @@ void EraseNode::init(std::vector<float> anchor,
             std::fill_n(dst, count, v);
             dst += count;
         }
-    }
-    else if (fill_sz == static_cast<size_t>(_total_boxes) * channels) {
+    } else if (fill_sz == static_cast<size_t>(_total_boxes) * channels) {
         // Fully specified flattened values
-        std::copy(_fill_values.begin(), _fill_values.end(), _fill_values_vec.begin());
-    }
-    else if (fill_sz == static_cast<size_t>(_batch_size) * channels) {
+        _fill_values_vec = _fill_values;
+    } else if (fill_sz == static_cast<size_t>(_batch_size) * channels) {
         // Per-sample per-channel pattern replicated across that sample’s boxes
         float* dst = _fill_values_vec.data();
         const float* src = _fill_values.data();
@@ -254,15 +248,14 @@ void EraseNode::init(std::vector<float> anchor,
                 dst += channels;
             }
         }
-    }
-    else {
+    } else {
         THROW("Invalid number of values passed for fill value");
     }
-    
+
     // Build contiguous [x1, y1, w, h] for all boxes
     _anchor_vec.assign(_total_boxes * 4, 0.0f);
 
-    // Case 1: single-sample vectors replicated across batch
+    // Single-sample vectors replicated across batch
     if (num_boxes.size() == 1 &&
         anchor.size() == static_cast<size_t>(num_boxes[0]) * 2 &&
         shape.size()  == static_cast<size_t>(num_boxes[0]) * 2) {
@@ -279,7 +272,7 @@ void EraseNode::init(std::vector<float> anchor,
             }
         }
     }
-    // Case 2: fully specified per-sample concatenated anchor/shape
+    // Fully specified per-sample concatenated anchor/shape
     else if (anchor.size() == _total_boxes * 2 && shape.size() == _total_boxes * 2) {
         for (int i = 0; i < _batch_size; ++i) {
             const int nb = _num_boxes_vec[i];

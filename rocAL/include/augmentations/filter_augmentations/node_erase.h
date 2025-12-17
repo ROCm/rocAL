@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,24 +28,14 @@ THE SOFTWARE.
 #include "pipeline/node.h"
 #include "parameters/parameter_vx.h"
 
-// Erase augmentation node: wraps MIVisionX vxExtRppErase
-// Inputs:
-//   - _inputs[0]: source tensor
-//   - anchor_box_info: aux tensor holding per-sample per-box LTRB anchors
-//   - colors: aux tensor holding per-sample per-box RGB colors
-//   - _num_boxes: per-sample number of boxes (vx_array)
-// Output:
-//   - _outputs[0]: destination tensor
 class EraseNode : public Node {
    public:
     EraseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     EraseNode() = delete;
     ~EraseNode();
 
-    // Overloads for dynamic vs fixed parameters
     void init(Tensor *anchor_box_info, Tensor *colors, int num_boxes_fixed);
     void init(Tensor *anchor_box_info, Tensor *colors, IntParam *num_boxes_param);
-    // New: raw vector-based init (replicates across batch as needed)
     void init(std::vector<float> anchor,
               std::vector<float> shape,
               std::vector<unsigned> num_boxes,

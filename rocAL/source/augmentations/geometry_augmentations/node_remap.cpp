@@ -85,9 +85,7 @@ void RemapNode::create_node() {
 
     // Scalars for interpolation, layout and ROI
     vx_context vx_ctx = vxGetContext((vx_reference)_graph->get());
-
-    vx_scalar interpolation_vx =
-        vxCreateScalar(vx_ctx, VX_TYPE_INT32, &_interpolation_type);
+    vx_scalar interpolation_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &_interpolation_type);
 
     int input_layout  = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
@@ -98,16 +96,8 @@ void RemapNode::create_node() {
     vx_scalar roi_type_vx      = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &roi_type);
 
     // Construct the RPP Remap node
-    _node = vxExtRppRemap(_graph->get(),
-                          _inputs[0]->handle(),
-                          _inputs[0]->get_roi_tensor(),
-                          _outputs[0]->handle(),
-                          _row_tbl,
-                          _col_tbl,
-                          interpolation_vx,
-                          input_layout_vx,
-                          output_layout_vx,
-                          roi_type_vx);
+    _node = vxExtRppRemap(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _row_tbl,
+                          _col_tbl, interpolation_vx, input_layout_vx, output_layout_vx, roi_type_vx);
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) {
