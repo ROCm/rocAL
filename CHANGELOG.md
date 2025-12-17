@@ -2,6 +2,18 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
+## (Unreleased) rocAL 2.6.0
+
+### Added
+* `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
+
+### Changes
+* Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
+* Add support to store the pipeline into protobuf format.
+
+### Removed
+
+
 ## rocAL 2.5.0 for ROCm 7.2.0
 
 ### Added
