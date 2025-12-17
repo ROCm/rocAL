@@ -12,19 +12,75 @@ All rights reserved.
 RicapNode::RicapNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
+// Unified helper function to create and populate a tensor with optional replication
+template<typename T>
+vx_tensor RicapNode::create_tensor_with_replication(
+    const std::vector<T>& input_vec,
+    vx_size N,
+    vx_size elems_per_sample,
+    void** backing_ptr,
+    RocalMemType mem_type,
+    vx_enum vx_data_type,
+    std::vector<vx_size>&& dims) {
+    
+    // Calculate total elements needed
+    const size_t total_elements = N * elems_per_sample;
+    const bool needs_replication = (input_vec.size() == elems_per_sample);
+    
+    // Validate input size
+    if (!(needs_replication || input_vec.size() == total_elements)) {
+        THROW("Tensor data size mismatch. Expected " + TOSTR(total_elements) + 
+              " or " + TOSTR(elems_per_sample) + ", got " + TOSTR(input_vec.size()));
+    }
+    
+    // Setup dimensions and strides based on number of dimensions
+    std::vector<vx_size> strides(dims.size(), 0);
+    auto num_dims = dims.size();
+    strides[0] = sizeof(T);
+    for (int i = 1; i < dims.size(); i++) {
+        strides[i] = strides[i - 1] * dims[i - 1];
+    }
+
+    // Allocate backing buffer
+    size_t bytes = sizeof(T) * total_elements;
+    allocate_host_or_pinned_mem(backing_ptr, bytes, mem_type);
+    
+    // Fill backing buffer with data (with replication if needed)
+    T* ptr = static_cast<T*>(*backing_ptr);
+    if (needs_replication) {
+        // Replicate the data for each sample in the batch
+        for (vx_size n = 0; n < N; ++n) {
+            std::copy(input_vec.begin(), input_vec.end(), ptr + n * elems_per_sample);
+        }
+    } else {
+        // Direct copy of all data
+        std::copy(input_vec.begin(), input_vec.end(), ptr);
+    }
+    
+    // Create tensor from handle
+    vx_context ctx = vxGetContext((vx_reference)_graph->get());
+    vx_enum vx_mem = (mem_type == RocalMemType::HIP) ? VX_MEMORY_TYPE_HIP : VX_MEMORY_TYPE_HOST;
+    vx_tensor tensor = vxCreateTensorFromHandle(ctx, num_dims, dims.data(), vx_data_type, 0, strides.data(), *backing_ptr, vx_mem);
+    
+    if (!tensor) THROW("vxCreateTensorFromHandle failed");
+    
+    vx_status status = vxGetStatus((vx_reference)tensor);
+    if (status != VX_SUCCESS) THROW("vxCreateTensorFromHandle failed: " + TOSTR(status));
+    
+    return tensor;
+}
+
 void RicapNode::create_node() {
     if (_node)
         return;
 
-    // Determine effective batch (sequence-aware)
-    const auto& dims_in = _inputs[0]->info().dims();
-    if (dims_in.empty())
-        THROW("Invalid input dims for Ricap");
-    vx_size N = static_cast<vx_size>(dims_in[0]);
+    
+    vx_size N = static_cast<vx_size>(_inputs[0]->info().dims()[0]);
     auto layout = _inputs[0]->info().layout();
+    
+    // Check for unsupported layouts
     if (layout == RocalTensorlayout::NFCHW || layout == RocalTensorlayout::NFHWC) {
-        if (dims_in.size() < 2) THROW("Invalid sequence dims for Ricap");
-        N = static_cast<vx_size>(dims_in[0] * dims_in[1]);
+        THROW("NFHWC and NFCHW types are unsupported for Ricap augmentation");
     }
 
     // Validate inputs
@@ -33,82 +89,32 @@ void RicapNode::create_node() {
     if (_crop_rois_vec.empty())
         THROW("Ricap requires non-empty crop_rois vector of length 16 or N*16");
 
-    // Determine mem type and VX mem
+    // Determine memory type
     auto mem_type = _inputs[0]->info().mem_type();
-    vx_enum vx_mem = (mem_type == RocalMemType::HIP) ? VX_MEMORY_TYPE_HIP : VX_MEMORY_TYPE_HOST;
-
-    // 1) Create permutation vx_array (length = N*4, replicate if needed)
-    {
-        std::vector<vx_uint32> perm(N * 4, 0);
-        if (_permutation_vec.size() == 4) {
-            for (vx_size n = 0; n < N; ++n) {
-                for (int k = 0; k < 4; ++k)
-                    perm[n * 4 + k] = static_cast<vx_uint32>(_permutation_vec[k]);
-            }
-        } else if (_permutation_vec.size() == N * 4) {
-            for (vx_size i = 0; i < N * 4; ++i)
-                perm[i] = static_cast<vx_uint32>(_permutation_vec[i]);
-        } else {
-            THROW("Ricap permutation vector size must be 4 or N*4. Got " + TOSTR(_permutation_vec.size()) + ", expected " + TOSTR(N * 4));
-        }
-
-        _perm_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, perm.size());
-        if (!_perm_array_vx) THROW("vxCreateArray for permutation failed");
-        vx_status s = vxGetStatus((vx_reference)_perm_array_vx);
-        if (s != VX_SUCCESS) THROW("Permutation array creation failed: " + TOSTR(s));
-        s = vxAddArrayItems(_perm_array_vx, perm.size(), perm.data(), sizeof(vx_uint32));
-        if (s != VX_SUCCESS) THROW("vxAddArrayItems for permutation failed: " + TOSTR(s));
-    }
-
-    // 2) Create crop-roi tensor (dims [N, 16], 4 ROIs per sample x 4 ints per ROI), replicate if vector has only 16
-    {
-        const vx_size elems_per_sample = 16;  // 4 ROIs x 4 ints
-        const bool replicate = (_crop_rois_vec.size() == elems_per_sample);
-        const size_t total_expected = static_cast<size_t>(N) * elems_per_sample;
-        if (!(replicate || _crop_rois_vec.size() == total_expected)) {
-            THROW("Ricap crop_rois vector size mismatch. Expected " + TOSTR(total_expected) + " or 16, got " + TOSTR(_crop_rois_vec.size()));
-        }
-
-        vx_size dims[2] = {N, elems_per_sample};
-        vx_size stride[2];
-        stride[0] = sizeof(vx_int32);
-        stride[1] = stride[0] * dims[0];
-
-        // Allocate backing buffer and create tensor from handle
-        size_t bytes = stride[1] * dims[1];
-        allocate_host_or_pinned_mem(&_crop_rois_ptr, bytes, mem_type);
-
-        vx_tensor tensor_vx = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
-                                                       2, dims, VX_TYPE_INT32, 0, stride, _crop_rois_ptr, vx_mem);
-        if (!tensor_vx) THROW("vxCreateTensorFromHandle for ricap ROI tensor failed");
-        vx_status s = vxGetStatus((vx_reference)tensor_vx);
-        if (s != VX_SUCCESS) THROW("vxCreateTensorFromHandle ROI failed: " + TOSTR(s));
-
-        // Fill backing buffer following the declared strides
-        int* iptr = static_cast<int*>(_crop_rois_ptr);
-        for (vx_size n = 0; n < N; ++n) {
-            const int* src = replicate ? _crop_rois_vec.data() : (&_crop_rois_vec[n * elems_per_sample]);
-            for (vx_size k = 0; k < elems_per_sample; ++k) {
-                iptr[n * elems_per_sample + k] = src[k];
-            }
-        }
-        _crop_rois_t = tensor_vx;
-    }
-
-    // 3) Prepare scalars
+    
+    
+    // Create permutation tensor (1D tensor with 4 elements per sample)
+    _perm_tensor_vx = create_tensor_with_replication<uint32_t>(
+        _permutation_vec, N, 4, &_perm_ptr, mem_type, VX_TYPE_UINT32, {N, 4});
+    
+    // Create crop ROI tensor (2D tensor with 16 elements per sample: 4 ROIs x 4 values)
+    _crop_rois_t = create_tensor_with_replication<int>(
+        _crop_rois_vec, N, 16, &_crop_rois_ptr, mem_type, VX_TYPE_INT32, {N, 16});
+    // Create scalars for layout and ROI type
     vx_context vx_ctx = vxGetContext((vx_reference)_graph->get());
     int input_layout  = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type      = static_cast<int>(_inputs[0]->info().roi_type());
+    
     vx_scalar input_layout_vx  = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &input_layout);
     vx_scalar output_layout_vx = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx      = vxCreateScalar(vx_ctx, VX_TYPE_INT32, &roi_type);
 
-    // 4) Create VX node
+    // Create the Ricap node
     _node = vxExtRppRicap(_graph->get(),
                           _inputs[0]->handle(),
                           _outputs[0]->handle(),
-                          _perm_array_vx,
+                          _perm_tensor_vx,
                           _crop_rois_t,
                           input_layout_vx,
                           output_layout_vx,
@@ -120,23 +126,21 @@ void RicapNode::create_node() {
     }
 }
 
-void RicapNode::update_node() {
-    // No dynamic attributes to update per frame
-}
-
 void RicapNode::init(const std::vector<unsigned>& permutation,
                      const std::vector<int>& crop_rois) {
     _permutation_vec = permutation;
     _crop_rois_vec = crop_rois;
 }
 
+void RicapNode::update_node() {}
+
 RicapNode::~RicapNode() {
     if (_inputs.empty() || !_inputs[0]) return;
     auto mem_type = _inputs[0]->info().mem_type();
 
-    if (_perm_array_vx) {
-        vxReleaseArray(&_perm_array_vx);
-        _perm_array_vx = nullptr;
+    if (_perm_tensor_vx) {
+        vxReleaseTensor(&_perm_tensor_vx);
+        _perm_tensor_vx = nullptr;
     }
     if (_crop_rois_t) {
         vxReleaseTensor(&_crop_rois_t);
@@ -145,14 +149,21 @@ RicapNode::~RicapNode() {
 
     if (mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
-        if (_crop_rois_ptr)  {
+        if (_perm_ptr) {
+            hipError_t err = hipHostFree(_perm_ptr);
+            if (err != hipSuccess)
+                std::cerr << "\n[ERR] hipHostFree failed for perm_ptr: " << std::to_string(err) << "\n";
+        }
+        if (_crop_rois_ptr) {
             hipError_t err = hipHostFree(_crop_rois_ptr);
             if (err != hipSuccess)
-                std::cerr << "\n[ERR] hipHostFree failed " << std::to_string(err) << "\n";
+                std::cerr << "\n[ERR] hipHostFree failed for crop_rois_ptr: " << std::to_string(err) << "\n";
         }
 #endif
     } else {
+        if (_perm_ptr) free(_perm_ptr);
         if (_crop_rois_ptr) free(_crop_rois_ptr);
     }
+    _perm_ptr = nullptr;
     _crop_rois_ptr = nullptr;
 }

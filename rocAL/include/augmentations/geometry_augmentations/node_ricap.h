@@ -31,14 +31,26 @@ protected:
     void update_node() override;
 
 private:
+    // Unified helper method for tensor creation with optional replication
+    template<typename T>
+    vx_tensor create_tensor_with_replication(
+        const std::vector<T>& input_vec,
+        vx_size N,
+        vx_size elems_per_sample,
+        void** backing_ptr,
+        RocalMemType mem_type,
+        vx_enum vx_data_type,
+        std::vector<vx_size>&& num_dims);
+
     // Parameter storage from API
     std::vector<unsigned> _permutation_vec;
     std::vector<int> _crop_rois_vec;
 
     // Internal VX objects created in create_node()
-    vx_array _perm_array_vx = nullptr;
+    vx_tensor _perm_tensor_vx = nullptr;
     vx_tensor _crop_rois_t = nullptr;
 
-    // Backing buffer for ROI tensor (host or pinned)
+    // Backing buffers for tensors (host or pinned)
+    void* _perm_ptr = nullptr;
     void* _crop_rois_ptr = nullptr;
 };
