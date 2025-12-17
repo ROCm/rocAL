@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_color_cast.h"
 #include "pipeline/exception.h"
 
-namespace {
 static void fill_rgb_for_batch(std::vector<float> &rgb_out, unsigned batch_size, const std::vector<float> &rgb_in) {
     rgb_out.resize(batch_size * 3);
     if (rgb_in.size() == 3) {
@@ -39,16 +38,12 @@ static void fill_rgb_for_batch(std::vector<float> &rgb_out, unsigned batch_size,
         // Copy per-sample triplets
         rgb_out = rgb_in;
     } else {
-        // Invalid size, default to zeros
-        for (unsigned i = 0; i < batch_size; ++i) {
-            unsigned base = i * 3;
-            rgb_out[base + 0] = 0.0f;
-            rgb_out[base + 1] = 0.0f;
-            rgb_out[base + 2] = 0.0f;
-        }
+        // Invalid size - fail fast instead of silently defaulting to zeros
+        THROW("ColorCast: Invalid RGB array size. Expected 3 (single triplet) or " + 
+              std::to_string(batch_size * 3) + " (per-sample triplets), got " + 
+              std::to_string(rgb_in.size()));
     }
 }
-}  // namespace
 
 ColorCastNode::ColorCastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs),
@@ -66,7 +61,7 @@ void ColorCastNode::create_node() {
     _rgb_vx_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * 3);
     status |= vxAddArrayItems(_rgb_vx_array, _rgb.size(), _rgb.data(), sizeof(vx_float32));
     if (status != 0)
-        THROW(" vxAddArrayItems failed in the ColorCast (vxExtRppColorCast) node: " + TOSTR(status) + "  " + TOSTR(status))
+        THROW(" vxAddArrayItems failed in the ColorCast (vxExtRppColorCast) node: " + TOSTR(status))
 
     // Layouts & ROI type
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
@@ -96,11 +91,4 @@ void ColorCastNode::init(float alpha, std::vector<float> rgb) {
 
 void ColorCastNode::update_node() {
     _alpha.update_array();
-    // Update the RGB array content if present
-    if (_rgb_vx_array) {
-        vx_status status = VX_SUCCESS;
-        status = vxCopyArrayRange(_rgb_vx_array, 0, _batch_size * 3, sizeof(vx_float32), _rgb.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
-        if (status != 0)
-            THROW(" vxCopyArrayRange failed in update_node (ColorCast): " + TOSTR(status))
-    }
 }

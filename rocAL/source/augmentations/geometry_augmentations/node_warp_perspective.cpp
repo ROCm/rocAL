@@ -30,16 +30,18 @@ WarpPerspectiveNode::WarpPerspectiveNode(const std::vector<Tensor*>& inputs, con
     : Node(inputs, outputs) {
 }
 
-void WarpPerspectiveNode::build_perspective_array() {
-    // Build per-sample perspective array of length 9 * batch_size.
-    // If a single 9-element matrix is provided, replicate across the batch.
+void WarpPerspectiveNode::create_node() {
+    if (_node)
+        return;
+
+    // Build and allocate perspective array
     const size_t expected_len = static_cast<size_t>(_batch_size) * 9;
 
     std::vector<float> data;
     data.resize(expected_len);
 
     if (_perspective.size() == 9) {
-        // Replicate across batch
+        // If a single 9-element matrix is provided, replicate across the batch.
         for (uint i = 0; i < _batch_size; ++i) {
             const size_t base = static_cast<size_t>(i) * 9;
             for (int k = 0; k < 9; ++k) {
@@ -55,48 +57,35 @@ void WarpPerspectiveNode::build_perspective_array() {
 
     // Create vx_array and populate it
     vx_status status;
-    _perspective_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, expected_len);
-    status = vxAddArrayItems(_perspective_array_vx, expected_len, data.data(), sizeof(vx_float32));
+    vx_array perspective_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, expected_len);
+    status = vxAddArrayItems(perspective_array_vx, expected_len, data.data(), sizeof(vx_float32));
     if (status != VX_SUCCESS) {
         THROW("WarpPerspective: vxAddArrayItems failed while creating perspective array: " + TOSTR(status));
     }
-}
-
-void WarpPerspectiveNode::create_node() {
-    if (_node)
-        return;
-
-    // Build and allocate perspective array
-    build_perspective_array();
 
     // Interpolation scalar
-    vx_scalar interpolation_vx =
-        vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
+    vx_scalar interpolation_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &_interpolation_type);
 
     // Layout and ROI type scalars
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
 
-    vx_scalar input_layout_vx =
-        vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
-    vx_scalar output_layout_vx =
-        vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
-    vx_scalar roi_type_vx =
-        vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
+    vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
+    vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
     // Construct the RPP WarpPerspective node
     _node = vxExtRppWarpPerspective(_graph->get(),
                                     _inputs[0]->handle(),
                                     _inputs[0]->get_roi_tensor(),
                                     _outputs[0]->handle(),
-                                    _perspective_array_vx,
+                                    perspective_array_vx,
                                     interpolation_vx,
                                     input_layout_vx,
                                     output_layout_vx,
                                     roi_type_vx);
 
-    vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) {
         THROW("Adding the warp perspective (vxExtRppWarpPerspective) node failed: " + TOSTR(status));
     }

@@ -365,7 +365,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * Linux distribution
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15-SP5`
+  * SLES - `15-SP7`
 * ROCm: rocm-core - `7.0.0`+
 * MIVisionX - `mivisionx-dev`/`mivisionx-devel`
 * rocDecode - `rocdecode-dev`/`rocdecode-devel`

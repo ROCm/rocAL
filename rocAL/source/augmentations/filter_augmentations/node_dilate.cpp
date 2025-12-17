@@ -24,10 +24,6 @@ THE SOFTWARE.
 DilateNode::DilateNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
-void DilateNode::init(unsigned kernel_size) {
-    _kernel_size = kernel_size;
-}
-
 void DilateNode::create_node() {
     if (_node)
         return;
@@ -55,6 +51,8 @@ void DilateNode::create_node() {
         THROW("Adding the dilate (vxExtRppDilate) node failed: " + TOSTR(status))
 }
 
-void DilateNode::update_node() {
-    // No dynamic per-sample parameters to update
+void DilateNode::init(unsigned kernel_size) {
+    _kernel_size = kernel_size;
 }
+
+void DilateNode::update_node() {}

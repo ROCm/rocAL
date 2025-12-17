@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +34,9 @@ void fill_vector_with_threshold_values(std::vector<float>& threshold_batch,
     size_t threshold_vec_size = threshold_batch.size();
     
     if (threshold_values.size() == no_of_channels) {
-        for (int i = 0; i < threshold_vec_size; i+=no_of_channels) {
-            for (int c = 0; c < no_of_channels; c++) {
-                threshold_batch[i + c] = threshold_values[c];
+        for (int batch_channel_idx = 0; batch_channel_idx < threshold_vec_size; batch_channel_idx += no_of_channels) {
+            for (int channel_idx = 0; channel_idx < no_of_channels; channel_idx++) {
+                threshold_batch[batch_channel_idx + channel_idx] = threshold_values[channel_idx];
             }
         }
     } else if (threshold_values.size() == threshold_vec_size) {
@@ -49,9 +49,6 @@ void fill_vector_with_threshold_values(std::vector<float>& threshold_batch,
 void ThresholdNode::create_node() {
     if (_node)
         return;
-
-    std::vector<float> min_vec, max_vec;
-
 
     // Create per-sample arrays for min and max threshold values
     auto no_of_channels = _inputs[0]->info().get_channels();

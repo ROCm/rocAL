@@ -54,6 +54,4 @@ void MagnitudeNode::create_node() {
         THROW("Adding the magnitude (vxExtRppMagnitude) node failed: " + TOSTR(status))
 }
 
-void MagnitudeNode::update_node() {
-    // No dynamic per-sample parameters to update
-}
+void MagnitudeNode::update_node() {}
