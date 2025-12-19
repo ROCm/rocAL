@@ -51,7 +51,7 @@ int main(int argc, const char **argv) {
 
     int argIdx = 1;
     const char *folderPath = argv[argIdx++];
-    bool processing_device = 0;
+    int processing_device = 0;
 
     if (argc > argIdx)
         processing_device = atoi(argv[argIdx++]);
