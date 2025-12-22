@@ -1800,7 +1800,7 @@ void MasterGraph::serialize(size_t *serialized_string_size) {
         THROW("serialized_string_size pointer is null");
     }
     _pipeline_serializer.reset();
-    _pipeline_serializer.serialize_pipeline_config(_cpu_num_threads, _user_batch_size, _gpu_id, _mem_type, _prefetch_queue_depth);
+    _pipeline_serializer.serialize_pipeline_config(_cpu_num_threads, _user_batch_size, _gpu_id, _mem_type, _prefetch_queue_depth, ParameterFactory::instance()->get_seed());
     _pipeline_serializer.serialize_operators(_pipeline_operators);
     _pipeline_serializer.serialize_output_tensors(_internal_tensor_list);
     _pipeline_serializer.serialize_to_string(_serialized_pipeline);
@@ -1816,7 +1816,7 @@ Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &outp
     }
     // dims
     std::vector<size_t> dims;
-    for (auto& dim : output.dims()) {
+    for (const auto& dim : output.dims()) {
         dims.push_back(dim);
     }
 
@@ -1834,26 +1834,21 @@ Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &outp
     
     auto info = TensorInfo(dims, mem_type, data_type, layout, color_format);
     Tensor *out = nullptr;
-    
+
     // only for loader
     if (is_loader_output) {
         out = this->create_internal_tensor(info);
-        _pipeline_tensors[output.name()] = out;
     } else {
         out = this->create_tensor(info, false);
-        _pipeline_tensors[output.name()] = out;
     }
+    _pipeline_tensors[output.name()] = out;
     return out;
 }
 
-// Helper function to extract prefix before the first underscore
-inline std::string get_prefix_before_underscore(const std::string& str) {
-    size_t underscore_pos = str.find('_');
-    return (underscore_pos != std::string::npos) ? str.substr(0, underscore_pos) : str;
-}
-
+// Helper function to extract the name of the node before the first underscore
 inline std::string get_node_name(const std::string& op_name) {
-    return get_prefix_before_underscore(op_name);
+    size_t underscore_pos = op_name.find('_');
+    return (underscore_pos != std::string::npos) ? op_name.substr(0, underscore_pos) : op_name;
 }
 
 // Array of geometric augmentation node names that may change tensor dimensions
@@ -1868,7 +1863,7 @@ inline bool check_tensor_info(const TensorInfo& input_info, const rocal_proto::I
     if (input_info.num_of_dims() != output.dims_size())
         return false;
     // Excluding N dim, as the batch size can be different as set by the user
-    for (int i = 1; i < input_info.num_of_dims(); i++) {
+    for (size_t i = 1; i < input_info.num_of_dims(); i++) {
         if (input_info.dims()[i] != output.dims(i))
             return false;
     }
@@ -1888,12 +1883,12 @@ inline bool check_tensor_info(const TensorInfo& input_info, const rocal_proto::I
     return true;
 }
 
-std::shared_ptr<Node> MasterGraph::add_node(std::string node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node) {
+std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node) {
     
     std::shared_ptr<Node> node = nullptr;
 
     if (is_loader_node) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
         node = NodeFactory::instance().create_loader_node(node_name, outputs[0], (void *)_device.resources());
 #else
         node = NodeFactory::instance().create_loader_node(node_name, outputs[0], nullptr);
@@ -1933,7 +1928,7 @@ std::shared_ptr<Node> MasterGraph::add_node(std::string node_name, const std::ve
 
 void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
     _pipeline_tensors.clear();
-    for (auto& op_def : pipe_def->operators()) {
+    for (const auto& op_def : pipe_def->operators()) {
         if (op_def.has_module_name()) {
             if (op_def.module_name() == "reader") {
                 if (get_node_name(op_def.name()) == "LabelReader") {
@@ -1967,15 +1962,15 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                         
                         // Try to reuse input tensor info if compatible, otherwise create new tensor
                         bool tensor_info_compatible = false;
-                        if (!inputs_vector.empty()) {
-                            // Check compatibility with first input tensor as reference
-                            Tensor* reference_input = inputs_vector[0];
-                            bool is_geometric_aug = std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), get_node_name(op_def.name())) != GEOMETRIC_AUGMENTATIONS.end();
-                            if (reference_input && check_tensor_info(reference_input->info(), op_output)
-                                && !is_geometric_aug) {
-                                output_tensor = create_tensor(reference_input->info(), false);
-                                tensor_info_compatible = true;
-                            }
+                        
+                        // Check compatibility with first input tensor as reference
+                        Tensor* reference_input = inputs_vector[0];
+                        auto node_name = get_node_name(op_def.name());
+                        bool is_geometric_aug = std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), node_name) != GEOMETRIC_AUGMENTATIONS.end();
+                        if (reference_input && check_tensor_info(reference_input->info(), op_output)
+                            && !is_geometric_aug) {
+                            output_tensor = create_tensor(reference_input->info(), false);
+                            tensor_info_compatible = true;
                         }
                         
                         if (!tensor_info_compatible) {
