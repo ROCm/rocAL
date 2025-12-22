@@ -527,6 +527,8 @@ struct DistortionCoeffs {
 
 /*! \brief  rocAL RocalPipelineParams struct
  * \ingroup group_rocal_types
+ * \note All fields are marked as optional to allow the pipeline to use default values
+ *       when parameters are not explicitly provided.
  */
 struct RocalPipelineParams {
     std::optional<size_t> batch_size;

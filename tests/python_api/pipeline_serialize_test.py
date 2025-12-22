@@ -22,16 +22,13 @@ import random
 import sys
 import os
 import cv2
-import tempfile
 from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 
-
 def save_output_images(img, idx, output_dir, device=True, layout="NCHW"):
     """Save output images for verification"""
-    import cv2
     if device is False:
         image = img.cpu().numpy()
     else:
@@ -248,7 +245,7 @@ def main():
     
     # Parse arguments
     data_path = sys.argv[1]
-    rocal_cpu = True if len(sys.argv) < 3 or sys.argv[2] == "cpu" else False
+    rocal_cpu =  (sys.argv[2].lower() == "cpu") if len(sys.argv) > 2 else True
     batch_size = int(sys.argv[3]) if len(sys.argv) > 3 else 2
     
     # Validate data path
@@ -258,7 +255,6 @@ def main():
     
     # Run the serialization test
     serialized_string = test_serialization(data_path, rocal_cpu, batch_size)
-    success = serialized_string is not None
 
     # Run the deserialization test
     success = test_deserialization(serialized_string, rocal_cpu, batch_size)
