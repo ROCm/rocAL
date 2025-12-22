@@ -9,7 +9,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Changes
 * Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
-* Add support to store the pipeline into protobuf format.
+* Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
 
 ### Removed
 
