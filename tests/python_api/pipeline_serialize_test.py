@@ -67,7 +67,7 @@ def create_test_pipeline(data_path, rocal_cpu=True, batch_size=2):
             file_root=data_path, 
             shard_id=local_rank, 
             num_shards=world_size, 
-            random_shuffle=True
+            random_shuffle=False
         )
         
         # Brightness augmentation
