@@ -210,7 +210,6 @@ struct PixelwiseMask : public PolygonMask {
         _info.img_id = img_id;
     }
     std::vector<int>& get_pixelwise_label() override { return _pixelwise_label; }
-    void set_pixelwise_label(std::vector<int>& pixelwise_label) override { _pixelwise_label = std::move(pixelwise_label); }
 
    protected:
     std::vector<int> _pixelwise_label = {};
