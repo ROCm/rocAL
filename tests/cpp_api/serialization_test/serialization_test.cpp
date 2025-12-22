@@ -152,7 +152,7 @@ int main(int argc, const char **argv) {
     // This creates a new pipeline context from the previously serialized pipeline configuration
     RocalContext second_handle = rocalDeserialize(serialized_pipe_string.c_str(), 
                                                   serialized_string_size, 
-                                                  pipe_params);
+                                                  &pipe_params);
     
     // Check if deserialization was successful
     if (second_handle == nullptr || rocalGetStatus(second_handle) != ROCAL_OK) {
