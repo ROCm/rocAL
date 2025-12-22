@@ -1896,6 +1896,9 @@ std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const 
         auto loader_module = node->get_loader_module();
         loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
         _loader_modules.emplace_back(loader_module);
+
+        // Assign a unique graph ID to this node based on the current loader count
+        // Each loader has its own graph, and nodes belong to exactly one graph
         node->set_graph_id(_loaders_count++);
         _root_nodes.push_back(node);
         
