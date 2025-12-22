@@ -1821,7 +1821,7 @@ Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &outp
     }
 
     if (dims.empty())
-        THROW("Empty tensor dims")
+        THROW("Empty tensor dims.")
     
     // Update the N dim to the batch size set in the pipeline
     dims[0] = _user_batch_size;
@@ -1834,26 +1834,21 @@ Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &outp
     
     auto info = TensorInfo(dims, mem_type, data_type, layout, color_format);
     Tensor *out = nullptr;
-    
+
     // only for loader
     if (is_loader_output) {
         out = this->create_internal_tensor(info);
-        _pipeline_tensors[output.name()] = out;
     } else {
         out = this->create_tensor(info, false);
-        _pipeline_tensors[output.name()] = out;
     }
+    _pipeline_tensors[output.name()] = out;
     return out;
 }
 
-// Helper function to extract prefix before the first underscore
-inline std::string get_prefix_before_underscore(const std::string& str) {
-    size_t underscore_pos = str.find('_');
-    return (underscore_pos != std::string::npos) ? str.substr(0, underscore_pos) : str;
-}
-
+// Helper function to extract the name of the node before the first underscore
 inline std::string get_node_name(const std::string& op_name) {
-    return get_prefix_before_underscore(op_name);
+    size_t underscore_pos = op_name.find('_');
+    return (underscore_pos != std::string::npos) ? op_name.substr(0, underscore_pos) : op_name;
 }
 
 // Array of geometric augmentation node names that may change tensor dimensions

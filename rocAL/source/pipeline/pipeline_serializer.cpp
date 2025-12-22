@@ -298,8 +298,14 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             const auto& param = proto_arg.param();
             if (arg.type_name == "int") {
                 if (arg.sub_type_name == "SimpleParameter") {
+                    if (param.param_val_int_size() < 1) {
+                        THROW("Invalid parameter: missing value for " + arg.arg_name);
+                    }
                     arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_single_value_int_param(param.param_val_int(0)));
                 } else if (arg.sub_type_name == "UniformRand") {
+                    if (param.param_val_int_size() < 2) {
+                        THROW("Invalid parameter: missing values for UniformRand parameter " + arg.arg_name);
+                    }
                     arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_uniform_int_rand_param(param.param_val_int(0), param.param_val_int(1)));
                 } else if (arg.sub_type_name == "CustomRand") {
                     std::vector<int> values(param.param_val_int().begin(), param.param_val_int().end());
@@ -312,8 +318,14 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                 }
             } else if (arg.type_name == "float") {
                 if (arg.sub_type_name == "SimpleParameter") {
+                    if (param.param_val_float_size() < 1) {
+                        THROW("Invalid parameter: missing value for " + arg.arg_name);
+                    }
                     arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_single_value_float_param(param.param_val_float(0)));
                 } else if (arg.sub_type_name == "UniformRand") {
+                    if (param.param_val_float_size() < 2) {
+                        THROW("Invalid parameter: missing values for UniformRand parameter " + arg.arg_name);
+                    }
                     arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_uniform_float_rand_param(param.param_val_float(0), param.param_val_float(1)));
                 } else if (arg.sub_type_name == "CustomRand") {
                     std::vector<float> values(param.param_val_float().begin(), param.param_val_float().end());
@@ -332,8 +344,8 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             // Handle vector deserialization based on type
             if (arg.type_name == "int" || arg.type_name == "unsigned" || arg.type_name == "size_t" || arg.type_name == "shared_ptr") {
                 // Deserialize integer vectors - expect exactly one vector
-                if (proto_arg.int_vectors_size() != 1) {
-                    THROW("Expected exactly one int vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.int_vectors_size()));
+                if (proto_arg.int_vectors_size() > 1) {
+                    THROW("Expected at most one int vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.int_vectors_size()));
                 }
                 const auto& int_vec = proto_arg.int_vectors(0);
                 for (auto val : int_vec.values()) {
@@ -349,8 +361,8 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                 }
             } else if (arg.type_name == "float") {
                 // Deserialize float vectors - expect exactly one vector
-                if (proto_arg.float_vectors_size() != 1) {
-                    THROW("Expected exactly one float vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.float_vectors_size()));
+                if (proto_arg.float_vectors_size() > 1) {
+                    THROW("Expected at most one float vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.float_vectors_size()));
                 }
                 const auto& float_vec = proto_arg.float_vectors(0);
                 for (auto val : float_vec.values()) {
@@ -358,8 +370,8 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                 }
             } else if (arg.type_name == "char_str" || arg.type_name == "string" || arg.type_name == "map_string") {
                 // Deserialize string vectors - expect exactly one vector
-                if (proto_arg.string_vectors_size() != 1) {
-                    THROW("Expected exactly one string vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.string_vectors_size()));
+                if (proto_arg.string_vectors_size() > 1) {
+                    THROW("Expected at most one string vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.string_vectors_size()));
                 }
                 const auto& string_vec = proto_arg.string_vectors(0);
                 for (const auto& val : string_vec.values()) {
