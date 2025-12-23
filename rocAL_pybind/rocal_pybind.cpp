@@ -753,17 +753,17 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("LAST_BATCH_DROP", ROCAL_LAST_BATCH_DROP)
         .value("LAST_BATCH_PARTIAL", ROCAL_LAST_BATCH_PARTIAL)
         .export_values();
+    py::enum_<RocalMissingComponentsBehaviour>(types_m, "RocalMissingComponentsBehaviour", "Rocal Missing components behavior")
+        .value("MISSING_COMPONENT_ERROR", ROCAL_MISSING_COMPONENT_ERROR)
+        .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
+        .value("MISSING_COMPONENT_EMPTY", ROCAL_MISSING_COMPONENT_EMPTY)
+        .export_values();
     // Bitwise Ops enum
     py::enum_<RocalBitwiseOp>(types_m, "RocalBitwiseOp", "Bitwise operation selector")
         .value("BITWISE_AND", ROCAL_BITWISE_AND)
         .value("BITWISE_OR",  ROCAL_BITWISE_OR)
         .value("BITWISE_XOR", ROCAL_BITWISE_XOR)
         .value("BITWISE_NOT", ROCAL_BITWISE_NOT)
-        .export_values();
-    py::enum_<RocalMissingComponentsBehaviour>(types_m, "RocalMissingComponentsBehaviour", "Rocal Missing components behavior")
-        .value("MISSING_COMPONENT_ERROR", ROCAL_MISSING_COMPONENT_ERROR)
-        .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
-        .value("MISSING_COMPONENT_EMPTY", ROCAL_MISSING_COMPONENT_EMPTY)
         .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())

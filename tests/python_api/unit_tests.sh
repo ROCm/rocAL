@@ -178,6 +178,15 @@ do
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name threshold --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name warp_perspective --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}"
 
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name remap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Remap_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name crop_and_patch --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name ricap --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_and --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseAnd_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_or --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseOr_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_xor --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseXor_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name bitwise_not --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}BitwiseNot_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name erase --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Erase_${rgb_name[$rgb]}_${device_name}"
+
         # Special Case - One Hot Encoded Labels
         python"$ver" unit_test.py --image-dataset-path "$one_hot_data_path" --augmentation-name one_hot --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}OneHot_${rgb_name[$rgb]}_${device_name}"
 
