@@ -53,7 +53,7 @@ void MedianFilterNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the median filter (vxExtRppMedianFilter) node failed: " + TOSTR(status))
 #else
-    THROW("MedianFilterNode: vxExtRppMedianFilter requires amd_rpp version >= 3.2.0");
+    THROW("MedianFilterNode: vxExtRppMedianFilter requires amd_rpp version >= 3.1.2");
 #endif
 }
 

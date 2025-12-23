@@ -58,7 +58,7 @@ void NonLinearBlendNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the NonLinearBlend (vxExtRppNonLinearBlend) node failed: " + TOSTR(status))
 #else
-    THROW("NonLinearBlendNode: vxExtRppNonLinearBlend requires amd_rpp version >= 3.2.0");
+    THROW("NonLinearBlendNode: vxExtRppNonLinearBlend requires amd_rpp version >= 3.1.2");
 #endif
 }
 
