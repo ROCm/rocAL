@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_warp_perspective.h"
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 
 #include "pipeline/exception.h"
 
@@ -34,6 +35,7 @@ void WarpPerspectiveNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 3)
     // Build and allocate perspective array
     const size_t expected_len = static_cast<size_t>(_batch_size) * 9;
 
@@ -89,6 +91,9 @@ void WarpPerspectiveNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) {
         THROW("Adding the warp perspective (vxExtRppWarpPerspective) node failed: " + TOSTR(status));
     }
+#else
+    THROW("WarpPerspectiveNode: vxExtRppWarpPerspective requires amd_rpp version >= 3.1.3");
+#endif
 }
 
 void WarpPerspectiveNode::init(const std::vector<float>& perspective_matrix, ResizeInterpolationType interpolation_type) {

@@ -18,6 +18,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/filter_augmentations/node_phase.h"
 #include "pipeline/exception.h"
 
@@ -28,6 +29,7 @@ void PhaseNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 3)
     if (_inputs.size() < 2)
         THROW("Phase node needs two input tensors")
 
@@ -51,6 +53,9 @@ void PhaseNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the phase (vxExtRppPhase) node failed: " + TOSTR(status))
+#else
+    THROW("PhaseNode: vxExtRppPhase requires amd_rpp version >= 3.1.3");
+#endif
 }
 
 void PhaseNode::update_node() {}
