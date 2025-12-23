@@ -19,6 +19,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/filter_augmentations/node_magnitude.h"
 #include "pipeline/exception.h"
 
@@ -29,6 +30,7 @@ void MagnitudeNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 3)
     if (_inputs.size() < 2)
         THROW("Magnitude node needs two input tensors")
 
@@ -52,6 +54,9 @@ void MagnitudeNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the magnitude (vxExtRppMagnitude) node failed: " + TOSTR(status))
+#else
+    THROW("MagnitudeNode: vxExtRppMagnitude requires amd_rpp version >= 3.1.3");
+#endif
 }
 
 void MagnitudeNode::update_node() {}

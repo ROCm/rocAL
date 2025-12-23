@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/filter_augmentations/node_threshold.h"
 #include "pipeline/exception.h"
 
@@ -50,6 +51,7 @@ void ThresholdNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 3)
     // Create per-sample arrays for min and max threshold values
     auto no_of_channels = _inputs[0]->info().get_channels();
     auto array_size = _batch_size * no_of_channels;
@@ -95,6 +97,9 @@ void ThresholdNode::create_node() {
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the threshold (vxExtRppThreshold) node failed: " + TOSTR(status))
+#else
+    THROW("ThresholdNode: vxExtRppThreshold requires amd_rpp version >= 3.1.3");
+#endif
 }
 
 void ThresholdNode::init(std::vector<float>& min_val, std::vector<float>& max_val) {

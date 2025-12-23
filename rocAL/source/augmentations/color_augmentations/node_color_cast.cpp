@@ -21,8 +21,11 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
+#include <algorithm>
 #include "augmentations/color_augmentations/node_color_cast.h"
 #include "pipeline/exception.h"
+#include "pipeline/tensor.h"
 
 static void fill_rgb_for_batch(std::vector<float> &rgb_out, unsigned batch_size, const std::vector<float> &rgb_in) {
     rgb_out.resize(batch_size * 3);
@@ -53,15 +56,41 @@ void ColorCastNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
     // Create per-sample arrays
     _alpha.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
 
-    // Create and populate the RGB array (flat size = batch_size * 3)
-    vx_status status = VX_SUCCESS;
-    _rgb_vx_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, _batch_size * 3);
-    status |= vxAddArrayItems(_rgb_vx_array, _rgb.size(), _rgb.data(), sizeof(vx_float32));
-    if (status != 0)
-        THROW(" vxAddArrayItems failed in the ColorCast (vxExtRppColorCast) node: " + TOSTR(status))
+    // Create vx_tensor for the RGB values
+    const vx_size num_of_dims = 2;
+    vx_size stride[num_of_dims];
+    std::vector<size_t> rgb_tensor_dims = {_batch_size, 3};
+    
+    // Calculate strides for uint8 data type
+    stride[0] = sizeof(vx_uint8);
+    stride[1] = stride[0] * rgb_tensor_dims[0];
+    
+    // Determine memory type based on input tensor
+    vx_enum mem_type = VX_MEMORY_TYPE_HOST;
+    if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
+        mem_type = VX_MEMORY_TYPE_HIP;
+    
+    // Allocate pinned memory for RGB values
+    size_t rgb_buffer_size = rgb_tensor_dims[1] * stride[1];
+    allocate_host_or_pinned_mem(&_rgb_memory, rgb_buffer_size, _inputs[0]->info().mem_type());
+    
+    // Convert float RGB values to uint8 and store in the allocated memory
+    vx_uint8* rgb_uint8_ptr = static_cast<vx_uint8*>(_rgb_memory);
+    for (size_t i = 0; i < _rgb.size(); ++i) {
+        rgb_uint8_ptr[i] = static_cast<vx_uint8>(_rgb[i]);
+    }
+
+    // Create tensor from the allocated memory
+    _rgb_tensor = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()), num_of_dims, 
+                                           rgb_tensor_dims.data(), VX_TYPE_UINT8, 0,
+                                           stride, _rgb_memory, mem_type);
+    vx_status status;
+    if ((status = vxGetStatus((vx_reference)_rgb_tensor)) != VX_SUCCESS)
+        THROW("Error: vxCreateTensorFromHandle(_rgb_tensor) failed: " + TOSTR(status))
 
     // Layouts & ROI type
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
@@ -71,12 +100,14 @@ void ColorCastNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    // Build node
     _node = vxExtRppColorCast(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                              _rgb_vx_array, _alpha.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
+                              _rgb_tensor, _alpha.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
     vx_status nstatus;
     if ((nstatus = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the ColorCast (vxExtRppColorCast) node failed: " + TOSTR(nstatus))
+#else
+    THROW("ColorCastNode: vxExtRppColorCast requires amd_rpp version >= 3.2.0");
+#endif
 }
 
 void ColorCastNode::init(FloatParam *alpha_param, std::vector<float> rgb) {
@@ -91,4 +122,17 @@ void ColorCastNode::init(float alpha, std::vector<float> rgb) {
 
 void ColorCastNode::update_node() {
     _alpha.update_array();
+}
+
+ColorCastNode::~ColorCastNode() {
+    if (_inputs[0]->info().mem_type() == RocalMemType::HIP) {
+#if ENABLE_HIP
+        hipError_t err = hipHostFree(_rgb_memory);
+        if (err != hipSuccess)
+            std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
+#endif
+    } else {
+        if (_rgb_memory) free(_rgb_memory);
+    }
+    if (_rgb_tensor) vxReleaseTensor(&_rgb_tensor);
 }

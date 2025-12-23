@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/color_augmentations/node_non_linear_blend.h"
 #include "pipeline/exception.h"
 
@@ -33,6 +34,7 @@ void NonLinearBlendNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
     if (_inputs.size() < 2)
         THROW("NonLinearBlend node needs two input images")
 
@@ -55,6 +57,9 @@ void NonLinearBlendNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the NonLinearBlend (vxExtRppNonLinearBlend) node failed: " + TOSTR(status))
+#else
+    THROW("NonLinearBlendNode: vxExtRppNonLinearBlend requires amd_rpp version >= 3.2.0");
+#endif
 }
 
 void NonLinearBlendNode::init(float stddev) {

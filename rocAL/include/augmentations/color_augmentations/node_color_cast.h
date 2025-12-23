@@ -29,6 +29,7 @@ class ColorCastNode : public Node {
    public:
     ColorCastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ColorCastNode() = delete;
+    ~ColorCastNode();
 
     // Per-sample alpha as random parameter, and RGB triplet(s)
     void init(FloatParam *alpha_param, std::vector<float> rgb);
@@ -40,12 +41,9 @@ class ColorCastNode : public Node {
     void update_node() override;
 
    private:
-    // Per-sample alpha (size batch_size)
     ParameterVX<float> _alpha;
-    // Flat RGB triplets (size batch_size * 3)
     std::vector<float> _rgb;
-    vx_array _rgb_vx_array = nullptr;
-
-    // Reasonable range for alpha [0, 1]
+    vx_tensor _rgb_tensor = nullptr;
+    void* _rgb_memory = nullptr;
     constexpr static float ALPHA_RANGE[2] = {0.0f, 1.0f};
 };

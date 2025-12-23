@@ -18,6 +18,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/filter_augmentations/node_dilate.h"
 #include "pipeline/exception.h"
 
@@ -28,6 +29,7 @@ void DilateNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 3)
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -49,6 +51,9 @@ void DilateNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the dilate (vxExtRppDilate) node failed: " + TOSTR(status))
+#else
+    THROW("DilateNode: vxExtRppDilate requires amd_rpp version >= 3.1.3");
+#endif
 }
 
 void DilateNode::init(unsigned kernel_size) {

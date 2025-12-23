@@ -17,6 +17,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/filter_augmentations/node_median_filter.h"
 #include "pipeline/exception.h"
 
@@ -27,6 +28,7 @@ void MedianFilterNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -50,6 +52,9 @@ void MedianFilterNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the median filter (vxExtRppMedianFilter) node failed: " + TOSTR(status))
+#else
+    THROW("MedianFilterNode: vxExtRppMedianFilter requires amd_rpp version >= 3.2.0");
+#endif
 }
 
 void MedianFilterNode::init(int kernel_size, int border_type) {
