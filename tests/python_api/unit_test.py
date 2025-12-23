@@ -557,8 +557,8 @@ def main():
         elif augmentation_name == "magnitude":
             images2 = fn.rotate(images,
                                 angle=45.0,
-                                dest_width=max_width if max_width else 416,
-                                dest_height=max_height if max_height else 416,
+                                dest_width=max_width,
+                                dest_height=max_height,
                                 output_layout=tensor_layout,
                                 output_dtype=tensor_dtype)
             output = fn.magnitude(images,
@@ -568,8 +568,8 @@ def main():
         elif augmentation_name == "phase":
             images2 = fn.rotate(images,
                                 angle=45.0,
-                                dest_width=max_width if max_width else 416,
-                                dest_height=max_height if max_height else 416,
+                                dest_width=max_width,
+                                dest_height=max_height,
                                 output_layout=tensor_layout,
                                 output_dtype=tensor_dtype)
             output = fn.phase(images,
