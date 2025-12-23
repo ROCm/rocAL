@@ -33,7 +33,6 @@ THE SOFTWARE.
 #include "opencv2/opencv.hpp"
 using namespace cv;
 
-#if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
 #define CV_BGR2GRAY COLOR_BGR2GRAY
 #define CV_GRAY2RGB COLOR_GRAY2RGB
@@ -41,7 +40,6 @@ using namespace cv;
 #define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
-#endif
 
 int main(int argc, const char **argv) {
     // check command-line usage
@@ -206,11 +204,7 @@ int main(int argc, const char **argv) {
             out_filename = std::string(outName) + std::to_string(iter) + ".png";  // in case the user specifies non png filename
 
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
-#ifdef USE_OPENCV_4
             cv::cvtColor(mat_output, mat_color, cv::COLOR_RGB2BGR);
-#else
-            cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-#endif
             cv::imwrite(out_filename, mat_color, compression_params);
         } else {
             cv::imwrite(out_filename, mat_output, compression_params);
