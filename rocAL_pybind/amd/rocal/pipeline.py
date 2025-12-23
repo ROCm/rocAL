@@ -70,7 +70,7 @@ class Pipeline(object):
                  reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None,
                  deserialized_pipeline_handle=None): 
         
-        if (deserialized_pipeline_handle is not None):
+        if deserialized_pipeline_handle is not None:
             self._handle = deserialized_pipeline_handle
         else:
             if (rocal_cpu):
@@ -299,7 +299,7 @@ class Pipeline(object):
     @classmethod
     def deserialize(cls, serialized_pipeline=None, filename=None, **kwargs):
         """
-        Deserialize the pipeline from the protobuffers and recontruct the pipeline
+        Deserialize the pipeline from the protobuffers and reconstruct the pipeline
         The returned pipeline is deserialized and build
         return:
         The pipeline object
@@ -308,7 +308,7 @@ class Pipeline(object):
         if (serialized_pipeline is None) == (filename is None):
             raise ValueError(
                 "serialized_pipeline and filename arguments are mutually exclusive. "
-                "Atleast one of them should be defined."
+                "At least one of them should be defined."
             )
 
         for key, value in kwargs.items():

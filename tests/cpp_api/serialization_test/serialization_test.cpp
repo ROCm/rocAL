@@ -301,11 +301,11 @@ int main(int argc, const char **argv) {
         RocalTensorList deserialized_labels = rocalGetImageLabels(second_handle);
         
         // Get image names from deserialized pipeline
-        int ImageNameLenDeserialized[inputBatchSize];
-        unsigned imagename_size_deserialized = rocalGetImageNameLen(second_handle, ImageNameLenDeserialized);
-        std::vector<char> imageNamesDeserialized(imagename_size_deserialized);
-        rocalGetImageName(second_handle, imageNamesDeserialized.data());
-        std::string imageNamesStrDeserialized(imageNamesDeserialized.data());
+        int image_name_len_deserialized[inputBatchSize];
+        unsigned imagename_size_deserialized = rocalGetImageNameLen(second_handle, image_name_len_deserialized);
+        std::vector<char> image_name_deserialized(imagename_size_deserialized);
+        rocalGetImageName(second_handle, image_name_deserialized.data());
+        std::string image_name_str_deserialized(image_name_deserialized.data());
         
         // Parse and display image names and labels from deserialized pipeline
         int pos = 0;
@@ -314,8 +314,8 @@ int main(int argc, const char **argv) {
         names_deserialized.resize(inputBatchSize);
         
         for (int i = 0; i < inputBatchSize; i++) {
-            names_deserialized[i] = imageNamesStrDeserialized.substr(pos, ImageNameLenDeserialized[i]);
-            pos += ImageNameLenDeserialized[i];
+            names_deserialized[i] = image_name_str_deserialized.substr(pos, image_name_len_deserialized[i]);
+            pos += image_name_len_deserialized[i];
             std::cout << "  Deserialized - Image: " << names_deserialized[i] << " | Label: " << labels_buffer_deserialized[i] << std::endl;
         }
         
