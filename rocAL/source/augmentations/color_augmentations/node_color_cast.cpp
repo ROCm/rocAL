@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include <algorithm>
 #include "augmentations/color_augmentations/node_color_cast.h"
 #include "pipeline/exception.h"
@@ -55,6 +56,7 @@ void ColorCastNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
     // Create per-sample arrays
     _alpha.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
 
@@ -103,6 +105,9 @@ void ColorCastNode::create_node() {
     vx_status nstatus;
     if ((nstatus = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the ColorCast (vxExtRppColorCast) node failed: " + TOSTR(nstatus))
+#else
+    THROW("ColorCastNode: vxExtRppColorCast requires amd_rpp version >= 3.2.0");
+#endif
 }
 
 void ColorCastNode::init(FloatParam *alpha_param, std::vector<float> rgb) {

@@ -17,6 +17,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/filter_augmentations/node_gaussian_filter.h"
 #include "pipeline/exception.h"
 
@@ -37,6 +38,7 @@ void GaussianFilterNode::init(FloatParam* stddev_param, int kernel_size) {
 void GaussianFilterNode::create_node() {
     if (_node)
         return;
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
 
     // Per-sample stddev array
     _stddev.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
@@ -64,6 +66,9 @@ void GaussianFilterNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the gaussian filter (vxExtRppGaussianFilter) node failed: " + TOSTR(status))
+#else
+    THROW("GaussianFilterNode: vxExtRppGaussianFilter requires amd_rpp version >= 3.2.0");
+#endif
 }
 
 void GaussianFilterNode::update_node() {
