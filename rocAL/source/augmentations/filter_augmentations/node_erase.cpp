@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include <vx_ext_amd.h>
 #include "augmentations/filter_augmentations/node_erase.h"
 #include "pipeline/exception.h"
@@ -53,6 +54,7 @@ void EraseNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 4)
     // Tensor layout and ROI type
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
@@ -170,6 +172,9 @@ void EraseNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the erase (vxExtRppErase) node failed: " + TOSTR(status))
+#else
+    THROW("EraseNode: vxExtRppErase requires amd_rpp version >= 3.1.4");
+#endif
 }
 
  // New: raw vector-based init (replicates across batch if needed)

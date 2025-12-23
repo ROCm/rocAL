@@ -3,12 +3,14 @@ Copyright (c) 2025
 Advanced Micro Devices, Inc. All rights reserved.
 */
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/filter_augmentations/node_bitwise_ops.h"
 #include "pipeline/exception.h"
 
 void BitwiseOpsNode::create_node() {
     if (_node) return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 4)
     // For AND/OR/XOR require two inputs; for NOT allow a single input
     if ( (_operator != BitwiseOp::NOT && _inputs.size() < 2) ||
          (_operator == BitwiseOp::NOT && _inputs.size() < 1) )
@@ -39,6 +41,9 @@ void BitwiseOpsNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the bitwise ops (vxExtRppBitwiseOps) node failed: " + TOSTR(status))
+#else
+    THROW("BitwiseOpsNode: vxExtRppBitwiseOps requires amd_rpp version >= 3.1.4");
+#endif
 }
 
 void BitwiseOpsNode::update_node() { }

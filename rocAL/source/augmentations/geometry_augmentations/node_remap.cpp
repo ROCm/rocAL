@@ -6,6 +6,7 @@ All rights reserved.
 #include "augmentations/geometry_augmentations/node_remap.h"
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include <vx_ext_amd.h>
 #include "pipeline/exception.h"
 
@@ -16,6 +17,7 @@ void RemapNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 4)
     // Validate vectors
     if (_row_remap_vec.empty() || _col_remap_vec.empty())
         THROW("Remap node requires non-empty row and col remap vectors")
@@ -103,6 +105,9 @@ void RemapNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) {
         THROW("Adding the remap (vxExtRppRemap) node failed: " + TOSTR(status));
     }
+#else
+    THROW("RemapNode: vxExtRppRemap requires amd_rpp version >= 3.1.4");
+#endif
 }
 
 void RemapNode::update_node() {}

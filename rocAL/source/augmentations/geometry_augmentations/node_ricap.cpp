@@ -6,6 +6,7 @@ All rights reserved.
 #include "augmentations/geometry_augmentations/node_ricap.h"
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include <vx_ext_amd.h>
 #include "pipeline/exception.h"
 
@@ -74,7 +75,7 @@ void RicapNode::create_node() {
     if (_node)
         return;
 
-    
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 4)
     vx_size N = static_cast<vx_size>(_inputs[0]->info().dims()[0]);
     auto layout = _inputs[0]->info().layout();
     
@@ -124,6 +125,9 @@ void RicapNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS) {
         THROW("Adding the ricap (vxExtRppRicap) node failed: " + TOSTR(status));
     }
+#else
+    THROW("RicapNode: vxExtRppRicap requires amd_rpp version >= 3.1.4");
+#endif
 }
 
 void RicapNode::init(const std::vector<unsigned>& permutation,
