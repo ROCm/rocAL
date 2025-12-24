@@ -52,8 +52,18 @@ public:
     bool is_vector = false;               ///< True if the argument contains vector data
     bool is_parameter = false;            ///< True if the argument is a parameter object
     bool is_null_ptr = false;             ///< True if the argument represents a null pointer
+    bool is_tensor = false;               ///< True if the argument is a tensor reference
     std::vector<std::any> values;         ///< Storage for argument values
     pParam param;                         ///< Parameter stored for parameter-type arguments
+    std::string tensor_name;              ///< Name of the tensor for tensor reference arguments
+
+    // Method to get tensor name for external resolution
+    std::string GetTensorName() const {
+        if (!is_tensor) {
+            THROW("Argument is not a tensor type")
+        }
+        return tensor_name;
+    }
 
     /**
      * @brief Retrieves the value of the argument as the specified type.
@@ -329,6 +339,22 @@ private:
         }
         param = parameter;
         is_parameter = true;
+    }
+
+    // Constructor for Tensor* arguments - stores tensor name for later resolution
+    explicit inline Argument(std::string name, Tensor* tensor_ptr)
+        : arg_name(std::move(name)) {
+        type_name = "tensor";
+        is_tensor = true;
+        if (tensor_ptr == nullptr) {
+            is_null_ptr = true;
+            type_name = "nullptr";
+            return;
+        }
+        // Store the tensor name for later resolution during deserialization
+        // The actual tensor pointer will be resolved from MasterGraph's _pipeline_tensors map
+        tensor_name = tensor_ptr->tensor_name(); // This will be set during serialization with the actual tensor name
+        values.push_back(static_cast<Tensor*>(tensor_ptr)); // Store the pointer temporarily
     }
 };
 

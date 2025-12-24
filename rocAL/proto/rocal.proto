@@ -81,6 +81,9 @@ message Arguments {
   repeated FloatVector float_vectors = 12;
   repeated IntVector int_vectors = 13;
   repeated StringVector string_vectors = 14;
+  
+  // Tensor reference storage
+  optional InputOutput tensor_ref = 15;
 }
 
 // Stores info about each operator in pipeline

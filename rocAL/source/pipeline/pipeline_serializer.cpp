@@ -159,6 +159,26 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
         if (op_arg.is_parameter) {
             rocal_proto::Parameter *param = arg->mutable_param();
             serialize_parameter_to_protobuf(param, op_arg);
+        } else if (op_arg.type_name == "tensor") {
+            // Serialize tensor reference as InputOutput inside the argument
+            if (op_arg.is_vector) {
+                THROW("Vector of tensors is not supported for Argument " + op_arg.arg_name + ".");
+            }
+            if (op_arg.values.empty()) {
+                THROW("Tensor argument " + op_arg.arg_name + " has no Tensor* value to serialize.");
+            }
+            Tensor *tensor_ptr = nullptr;
+            try {
+                tensor_ptr = std::any_cast<Tensor*>(op_arg.values[0]);
+            } catch (const std::bad_any_cast&) {
+                THROW("Failed to cast value of tensor argument '" + op_arg.arg_name + "' to Tensor*.");
+            }
+            if (!tensor_ptr) {
+                THROW("Tensor argument '" + op_arg.arg_name + "' has null Tensor*.");
+            }
+            rocal_proto::InputOutput *tensor_ref = arg->mutable_tensor_ref();
+            // Mark as argument input and populate required InputOutput fields using the tensor info
+            set_tensor_proto(tensor_ref, tensor_ptr, true);
         } else if (op_arg.type_name == "enum") {
             if (op_arg.values.empty()) {
                 THROW("Enum argument " + op_arg.arg_name + " has no values.");
@@ -406,6 +426,17 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
         } else if (arg.type_name == "size_t") {
             for (auto u : proto_arg.uints()) {
                 arg.values.push_back(static_cast<size_t>(u));
+            }
+        } else if (arg.type_name == "tensor") {
+            // Handle tensor reference deserialization
+            if (proto_arg.has_tensor_ref()) {
+                arg.is_tensor = true;
+                arg.tensor_name = proto_arg.tensor_ref().name();
+                // The actual tensor pointer will be resolved externally using the tensor name
+                // Store a placeholder value to indicate this is a tensor argument
+                arg.values.push_back(static_cast<void*>(nullptr));
+            } else {
+                THROW("Tensor argument " + arg.arg_name + " missing tensor_ref in protobuf");
             }
         } else if (arg.type_name == "nullptr") {
             arg.is_null_ptr = true;
