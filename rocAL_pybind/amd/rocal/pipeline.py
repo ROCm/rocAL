@@ -226,8 +226,8 @@ class Pipeline(object):
     def get_select_mask(self, mask_ids):
         return b.getSelectMask(self._handle, mask_ids)
 
-    def get_random_object_bbox(self, format):
-        return b.getRandomObjectBBox(self._handle, format)
+    def get_random_object_bbox(self, format, k_largest=-1, foreground_prob=1.0, cache_objects=False):
+        return b.getRandomObjectBBox(self._handle, format, k_largest, foreground_prob, cache_objects)
     
     def get_image_labels(self):
         return b.getImageLabels(self._handle)

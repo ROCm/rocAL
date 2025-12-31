@@ -389,9 +389,10 @@ void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool i
 
 RocalTensorList
     ROCAL_API_CALL
-    RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format) {
+    RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format,
+                          int k_largest, float foreground_prob, bool cache_objects) {
     if (p_context == nullptr)
-        THROW("Invalid rocal context passed to rocalGetPixelwiseLabels")
+        THROW("Invalid rocal context passed to RocalRandomObjectBBox")
     auto context = static_cast<Context*>(p_context);
     auto meta_data = context->master_graph->meta_data();
     size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
@@ -399,7 +400,9 @@ RocalTensorList
         THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
     if (!meta_data.second)
         THROW("No mask has been loaded for this output image")
-    return context->master_graph->get_random_object_bbox(context->master_graph->mask_meta_data(false), (RandomObjectBBoxFormat)format);
+    return context->master_graph->get_random_object_bbox(context->master_graph->mask_meta_data(false),
+                                                         (RandomObjectBBoxFormat)format,
+                                                         k_largest, foreground_prob, cache_objects);
 }
 
 void

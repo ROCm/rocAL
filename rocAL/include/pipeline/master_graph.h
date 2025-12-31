@@ -82,6 +82,36 @@ const __m256i avx_pkdMaskB = _mm256_setr_epi32(0x80808002, 0x80808005, 0x8080800
                                                0x80808005, 0x80808008, 0x8080800B);
 #endif
 
+// Cache entry for random_object_bbox caching
+struct RandomObjectBBoxCacheEntry {
+    std::set<int> labels;
+    std::unordered_map<int, std::vector<std::vector<std::pair<unsigned, unsigned>>>> class_boxes;
+    std::unordered_map<int, int> total_boxes;
+
+    bool Get(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes, int label) const {
+        auto it = class_boxes.find(label);
+        if (it == class_boxes.end())
+            return false;
+        boxes = it->second;
+        return true;
+    }
+
+    void Put(int label, const std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes) {
+        class_boxes[label] = boxes;
+    }
+};
+
+// Simple hash for caching
+inline size_t fast_hash_buffer(const void* data, size_t size) {
+    const uint8_t* bytes = static_cast<const uint8_t*>(data);
+    size_t hash = 0xcbf29ce484222325ULL;  // FNV-1a offset basis
+    for (size_t i = 0; i < size; ++i) {
+        hash ^= bytes[i];
+        hash *= 0x100000001b3ULL;  // FNV-1a prime
+    }
+    return hash;
+}
+
 class MasterGraph {
 public:
     enum class Status { OK = 0,
@@ -145,7 +175,8 @@ public:
     TensorList *bbox_meta_data();
     TensorList *mask_meta_data(bool is_polygon_mask);
     TensorList *get_random_mask_pixel(rocalTensorList *input);
-    TensorList *get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format);
+    TensorList *get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format,
+                                       int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
     TensorList *matched_index_meta_data();
     TensorListVector * ascii_values_meta_data(); // Gets the pointer to a batch of ASCII values of all samples in the batch
     void set_loop(bool val) { _loop = val; }
@@ -183,10 +214,15 @@ private:
     // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
     inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
     int64_t find_pixel(std::vector<int> start, std::vector<int> foreground_count, int64_t val, int count);
-    void merge_row(int *in1, int *in2, int *out1, int *out2, unsigned n);
+    // Connected components helper functions using disjoint-set (union-find)
+    int disjoint_get_group(const int &x) { return x; }
+    int disjoint_set_group(int &x, int new_id);
+    int disjoint_find(int *items, int x);
+    int disjoint_merge(int *items, int x, int y);
+    void merge_row(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
     void filter_by_label(int *in_row, int *out_row, unsigned N, int label);
     int compact_rows(int *in, unsigned height, unsigned width);
-    void label_row(int *in_row, int *label_base, int *out_row, unsigned length);
+    void label_row(const int *label_base, const int *in_row, int *out_row, unsigned length);
     void get_label_boundingboxes(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes,
                                  std::vector<std::pair<unsigned, unsigned>> ranges,
                                  std::vector<unsigned> hits,
@@ -194,6 +230,7 @@ private:
                                  std::vector<unsigned> origin,
                                  unsigned width);
     bool hit(std::vector<unsigned> &hits, unsigned idx);
+    int pick_box(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes, std::mt19937 &rng, int k_largest);
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
@@ -220,6 +257,7 @@ private:
     TensorList _random_object_bbox_list;
     std::vector<size_t> _meta_data_buffer_size;
     std::vector<std::vector<unsigned>> _output_random_object_bbox;
+    std::unordered_map<size_t, RandomObjectBBoxCacheEntry> _random_object_bbox_cache;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU
 #endif

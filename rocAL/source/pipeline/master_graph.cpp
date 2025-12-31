@@ -450,33 +450,58 @@ MasterGraph::reset() {
     return Status::OK;
 }
 
-void MasterGraph::merge_row(int *in1, int *in2, int *out1, int *out2, unsigned n) {
+// Disjoint-set (union-find) helper functions for connected components
+int MasterGraph::disjoint_set_group(int &x, int new_id) {
+    int old = x;
+    x = new_id;
+    return old;
+}
+
+int MasterGraph::disjoint_find(int *items, int x) {
+    int x0 = x;
+    // find the root label
+    for (;;) {
+        int g = disjoint_get_group(items[x]);
+        if (g == x)
+            break;
+        x = g;
+    }
+    int r = x;
+    // path compression: assign all intermediate labels to the root
+    x = x0;
+    while (x != disjoint_get_group(items[x])) {
+        x0 = disjoint_set_group(items[x], r);
+        x = x0;
+    }
+    return r;
+}
+
+int MasterGraph::disjoint_merge(int *items, int x, int y) {
+    x = disjoint_find(items, x);
+    y = disjoint_find(items, y);
+    if (x < y) {
+        disjoint_set_group(items[y], x);
+        return x;
+    } else if (y < x) {
+        disjoint_set_group(items[x], y);
+        return y;
+    } else {
+        // already merged
+        return x;
+    }
+}
+
+void MasterGraph::merge_row(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n) {
     int bg_label = -1;
     int prev1 = bg_label;
     int prev2 = bg_label;
-    for (unsigned i = 0, in_offset = 0, out_offset = 0; i < n; i++, in_offset += 1, out_offset += 1) {
-        int &o1 = out1[out_offset];
-        int &o2 = out2[out_offset];
+    for (unsigned i = 0; i < n; i++) {
+        int o1 = out1[i];
+        int o2 = out2[i];
         if (o1 != prev1 || o2 != prev2) {
             if (o1 != bg_label) {
-                if (in1[in_offset] == in2[in_offset]) {
-                    if (o1 < o2) {
-                        unsigned j = 0;
-                        for (; j <= out_offset; j++) {
-                            if (o2 == out2[j]) {
-                                break;
-                            }
-                        }
-                        out2[j] = o1;
-                    } else {
-                        unsigned j = 0;
-                        for (; j <= out_offset; j++) {
-                            if (o1 == out1[j]) {
-                                break;
-                            }
-                        }
-                        out1[j] = o2;
-                    }
+                if (in1[i] == in2[i]) {
+                    disjoint_merge(label_base, o1, o2);
                 }
             }
             prev1 = o1;
@@ -533,7 +558,7 @@ int MasterGraph::compact_rows(int *in, unsigned height, unsigned width) {
     return counter;
 }
 
-void MasterGraph::label_row(int *in_row, int *label_base, int *out_row, unsigned length) {
+void MasterGraph::label_row(const int *label_base, const int *in_row, int *out_row, unsigned length) {
     int curr_label = -1;
     int bg_label = -1;
     int prev = 0;
@@ -620,7 +645,42 @@ void MasterGraph::get_label_boundingboxes(std::vector<std::vector<std::pair<unsi
     }
 }
 
-TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format) {
+int MasterGraph::pick_box(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes, std::mt19937 &rng, int k_largest) {
+    int n = boxes.size();
+    if (n <= 0)
+        return -1;
+
+    if (k_largest > 0 && k_largest < n) {
+        // Sort by volume (descending) and pick from k_largest
+        std::vector<std::pair<int64_t, int>> vol_idx;
+        vol_idx.resize(n);
+        for (int i = 0; i < n; i++) {
+            if (boxes[i].size() < 2) {
+                vol_idx[i] = {0, i};
+                continue;
+            }
+            // Calculate volume: (hi - lo) for each dimension
+            int64_t volume = 1;
+            for (size_t d = 0; d < boxes[i][0].first; d++) {
+                // boxes[i][0] = lo, boxes[i][1] = hi
+            }
+            // For 2D: width * height
+            int64_t width = boxes[i][1].second - boxes[i][0].second;
+            int64_t height = boxes[i][1].first - boxes[i][0].first;
+            volume = width * height;
+            vol_idx[i] = {-volume, i};  // negative for descending sort
+        }
+        std::sort(vol_idx.begin(), vol_idx.end());
+        std::uniform_int_distribution<int> dist(0, std::min(n, k_largest) - 1);
+        return vol_idx[dist(rng)].second;
+    } else {
+        std::uniform_int_distribution<int> dist(0, n - 1);
+        return dist(rng);
+    }
+}
+
+TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format,
+                                                int k_largest, float foreground_prob, bool cache_objects) {
     SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
     if (_output_random_object_bbox.size() != 0) {
         for (unsigned i = 0; i < _user_batch_size; i++) {
@@ -629,119 +689,217 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
     }
     _output_random_object_bbox.clear();
     _output_random_object_bbox.resize(_user_batch_size, std::vector<unsigned>(4, 0));
+
+    std::uniform_real_distribution<float> foreground_dist(0.0f, 1.0f);
+
     for (unsigned id = 0; id < _user_batch_size; id++) {
         int *in_mask_buffer = (int *)(input->at(id)->buffer());
-        std::set<int> unique_labels;
-        int prev_label = 0;
         unsigned width = input->at(id)->dims().at(0);
         unsigned height = input->at(id)->dims().at(1);
         unsigned buffer_size = width * height;
-        for (unsigned i = 0; i < buffer_size; i++) {
-            if (prev_label != in_mask_buffer[i] && in_mask_buffer[i] != 0) {
-                if (unique_labels.find(in_mask_buffer[i]) == unique_labels.end()) {
+        auto &rng = rngs[id];
+
+        // Check foreground probability - if random value >= foreground_prob, return full image
+        bool select_foreground = foreground_dist(rng) < foreground_prob;
+
+        if (!select_foreground) {
+            // Return full image bounding box
+            switch (format) {
+                case RandomObjectBBoxFormat::OUT_BOX:
+                case RandomObjectBBoxFormat::OUT_STARTEND:
+                    _output_random_object_bbox[id][0] = 0;
+                    _output_random_object_bbox[id][1] = 0;
+                    _output_random_object_bbox[id][2] = height;
+                    _output_random_object_bbox[id][3] = width;
+                    break;
+                case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+                    _output_random_object_bbox[id][0] = 0;
+                    _output_random_object_bbox[id][1] = 0;
+                    _output_random_object_bbox[id][2] = height;
+                    _output_random_object_bbox[id][3] = width;
+                    break;
+                default:
+                    assert(!"Unreachable code");
+            }
+            continue;
+        }
+
+        // Check cache if enabled
+        RandomObjectBBoxCacheEntry *cache_entry = nullptr;
+        size_t hash = 0;
+        if (cache_objects) {
+            hash = fast_hash_buffer(in_mask_buffer, buffer_size * sizeof(int));
+            cache_entry = &_random_object_bbox_cache[hash];
+        }
+
+        // Find unique labels
+        std::set<int> unique_labels;
+        if (cache_entry && !cache_entry->labels.empty()) {
+            unique_labels = cache_entry->labels;
+        } else {
+            int prev_label = 0;
+            for (unsigned i = 0; i < buffer_size; i++) {
+                if (prev_label != in_mask_buffer[i] && in_mask_buffer[i] != 0) {
                     unique_labels.insert(in_mask_buffer[i]);
                 }
+                prev_label = in_mask_buffer[i];
             }
-            prev_label = in_mask_buffer[i];
+            if (cache_entry) {
+                cache_entry->labels = unique_labels;
+            }
         }
-        auto rng = rngs[id];
+
+        // If no foreground labels found, return full image
         if (unique_labels.empty()) {
             switch (format) {
                 case RandomObjectBBoxFormat::OUT_BOX:
                 case RandomObjectBBoxFormat::OUT_STARTEND:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
-                    _output_random_object_bbox[id][2] = width;
-                    _output_random_object_bbox[id][3] = height;
+                    _output_random_object_bbox[id][2] = height;
+                    _output_random_object_bbox[id][3] = width;
                     break;
                 case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
-                    _output_random_object_bbox[id][2] = width;
-                    _output_random_object_bbox[id][3] = height;
+                    _output_random_object_bbox[id][2] = height;
+                    _output_random_object_bbox[id][3] = width;
                     break;
                 default:
                     assert(!"Unreachable code");
             }
             continue;
         }
-        auto dist = std::uniform_int_distribution<int64_t>(0, unique_labels.size() - 1);
-        auto it = next(unique_labels.begin(), dist(rng));
+
+        // Select a random label from the set (FIX: properly select from actual labels, not a range)
+        auto label_dist = std::uniform_int_distribution<size_t>(0, unique_labels.size() - 1);
+        auto it = std::next(unique_labels.begin(), label_dist(rng));
         int label_selected = (*it);
-        int *in_filtered_buffer = (int *)malloc(buffer_size * sizeof(int));
-        int *out_mask_buffer = (int *)malloc(buffer_size * sizeof(int));
-        filter_by_label(in_mask_buffer, in_filtered_buffer, buffer_size, label_selected);
-        int *in_filtered_row = in_filtered_buffer;
-        int *out_row = out_mask_buffer;
-        for (unsigned i = 0; i < height; i++) {
-            label_row(in_filtered_row, out_mask_buffer, out_row, width);
-            if (i >= 1) {
-                merge_row(in_filtered_row - width, in_filtered_row, out_row - width, out_row, width);
+
+        // Check if we have cached boxes for this label
+        std::vector<std::vector<std::pair<unsigned, unsigned>>> boxes;
+        int nbox = 0;
+
+        if (cache_entry && cache_entry->total_boxes.count(label_selected)) {
+            // Use cached data
+            nbox = cache_entry->total_boxes[label_selected];
+            if (nbox > 0 && cache_entry->Get(boxes, label_selected)) {
+                // Boxes loaded from cache
             }
-            in_filtered_row += width;
-            out_row += width;
         }
-        int nbox = compact_rows(out_mask_buffer, height, width);
-        if (nbox == 0) {
+
+        if (nbox == 0 || boxes.empty()) {
+            // Compute connected components
+            std::vector<int> in_filtered_buffer(buffer_size);
+            std::vector<int> out_mask_buffer(buffer_size, -1);
+
+            filter_by_label(in_mask_buffer, in_filtered_buffer.data(), buffer_size, label_selected);
+
+            int *in_filtered_row = in_filtered_buffer.data();
+            int *out_row = out_mask_buffer.data();
+
+            for (unsigned i = 0; i < height; i++) {
+                label_row(out_mask_buffer.data(), in_filtered_row, out_row, width);
+                if (i >= 1) {
+                    merge_row(out_mask_buffer.data(), in_filtered_row - width, in_filtered_row, out_row - width, out_row, width);
+                }
+                in_filtered_row += width;
+                out_row += width;
+            }
+
+            nbox = compact_rows(out_mask_buffer.data(), height, width);
+
+            if (nbox == 0) {
+                switch (format) {
+                    case RandomObjectBBoxFormat::OUT_BOX:
+                    case RandomObjectBBoxFormat::OUT_STARTEND:
+                        _output_random_object_bbox[id][0] = 0;
+                        _output_random_object_bbox[id][1] = 0;
+                        _output_random_object_bbox[id][2] = height;
+                        _output_random_object_bbox[id][3] = width;
+                        break;
+                    case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+                        _output_random_object_bbox[id][0] = 0;
+                        _output_random_object_bbox[id][1] = 0;
+                        _output_random_object_bbox[id][2] = height;
+                        _output_random_object_bbox[id][3] = width;
+                        break;
+                    default:
+                        assert(!"Unreachable code");
+                }
+                if (cache_entry) {
+                    cache_entry->total_boxes[label_selected] = 0;
+                }
+                continue;
+            }
+
+            // Get bounding boxes for each connected component
+            std::vector<std::pair<unsigned, unsigned>> ranges(nbox);
+            std::vector<unsigned> hits((nbox / 32 + !!(nbox % 32)));
+            boxes.resize(nbox);
+
+            out_row = out_mask_buffer.data();
+            for (unsigned i = 0; i < height; i++) {
+                get_label_boundingboxes(boxes, ranges, hits, out_row, std::vector<unsigned>{i, 0}, width);
+                out_row += width;
+            }
+
+            // Cache the results
+            if (cache_entry) {
+                cache_entry->total_boxes[label_selected] = nbox;
+                cache_entry->Put(label_selected, boxes);
+            }
+        }
+
+        // Pick a box using k_largest if specified
+        int pick_box_id = pick_box(boxes, rng, k_largest);
+
+        if (pick_box_id < 0 || pick_box_id >= static_cast<int>(boxes.size()) || boxes[pick_box_id].size() < 2) {
+            // No valid box found, return full image
             switch (format) {
                 case RandomObjectBBoxFormat::OUT_BOX:
                 case RandomObjectBBoxFormat::OUT_STARTEND:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
-                    _output_random_object_bbox[id][2] = width;
-                    _output_random_object_bbox[id][3] = height;
+                    _output_random_object_bbox[id][2] = height;
+                    _output_random_object_bbox[id][3] = width;
                     break;
                 case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
-                    _output_random_object_bbox[id][2] = width;
-                    _output_random_object_bbox[id][3] = height;
+                    _output_random_object_bbox[id][2] = height;
+                    _output_random_object_bbox[id][3] = width;
                     break;
                 default:
                     assert(!"Unreachable code");
             }
-            free(in_filtered_buffer);
-            free(out_mask_buffer);
             continue;
         }
-        std::vector<std::vector<std::pair<unsigned, unsigned>>> boxes;
-        std::vector<std::pair<unsigned, unsigned>> ranges;
-        std::vector<unsigned> hits;
-        boxes.resize(nbox);
-        ranges.resize(nbox);
-        hits.resize((nbox / 32 + !!(nbox % 32)));
-        out_row = out_mask_buffer;
-        for (unsigned i = 0; i < height; i++) {
-            get_label_boundingboxes(boxes, ranges, hits, out_row, std::vector<unsigned>{i, 0}, width);
-            out_row += width;
-        }
-        std::uniform_int_distribution<int> dist_nbox(0, nbox - 1);
-        auto pick_box_id = dist_nbox(rng);
-        auto pick_box = boxes[pick_box_id];
+
+        auto &selected_box = boxes[pick_box_id];
         switch (format) {
             case RandomObjectBBoxFormat::OUT_BOX:
-                _output_random_object_bbox[id][0] = pick_box[0].first;
-                _output_random_object_bbox[id][2] = pick_box[1].first;
-                _output_random_object_bbox[id][1] = pick_box[0].second;
-                _output_random_object_bbox[id][3] = pick_box[1].second;
+                _output_random_object_bbox[id][0] = selected_box[0].first;
+                _output_random_object_bbox[id][2] = selected_box[1].first;
+                _output_random_object_bbox[id][1] = selected_box[0].second;
+                _output_random_object_bbox[id][3] = selected_box[1].second;
                 break;
             case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
-                _output_random_object_bbox[id][0] = pick_box[0].first;
-                _output_random_object_bbox[id][2] = pick_box[1].first - pick_box[0].first;
-                _output_random_object_bbox[id][1] = pick_box[0].second;
-                _output_random_object_bbox[id][3] = pick_box[1].second - pick_box[0].second;
+                // FIX: Calculate shape as hi - lo (not lo - hi)
+                _output_random_object_bbox[id][0] = selected_box[0].first;   // anchor row
+                _output_random_object_bbox[id][1] = selected_box[0].second;  // anchor col
+                _output_random_object_bbox[id][2] = selected_box[1].first - selected_box[0].first;   // height (hi.row - lo.row)
+                _output_random_object_bbox[id][3] = selected_box[1].second - selected_box[0].second; // width (hi.col - lo.col)
                 break;
             case RandomObjectBBoxFormat::OUT_STARTEND:
-                _output_random_object_bbox[id][0] = pick_box[0].first;
-                _output_random_object_bbox[id][2] = pick_box[1].first;
-                _output_random_object_bbox[id][1] = pick_box[0].second;
-                _output_random_object_bbox[id][3] = pick_box[1].second;
+                _output_random_object_bbox[id][0] = selected_box[0].first;
+                _output_random_object_bbox[id][2] = selected_box[1].first;
+                _output_random_object_bbox[id][1] = selected_box[0].second;
+                _output_random_object_bbox[id][3] = selected_box[1].second;
                 break;
             default:
                 assert(!"Unreachable code");
         }
-        free(in_filtered_buffer);
-        free(out_mask_buffer);
     }
     // Get bbox buffer from ring buffer
     auto random_tensor_dims = {(size_t)4};

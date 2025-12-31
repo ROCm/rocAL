@@ -1067,8 +1067,9 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         }
         return per_image_select_mask;
     });
-    m.def("getRandomObjectBBox", [](RocalContext context, RocalRandomObjectBBoxFormat format) {
-        rocalTensorList *boxes = RocalRandomObjectBBox(context, format);
+    m.def("getRandomObjectBBox", [](RocalContext context, RocalRandomObjectBBoxFormat format,
+                                     int k_largest, float foreground_prob, bool cache_objects) {
+        rocalTensorList *boxes = RocalRandomObjectBBox(context, format, k_largest, foreground_prob, cache_objects);
         py::list boxes_list;
         py::array_t<unsigned> boxes_array;
         for (int i = 0; i < boxes->size(); i++) {
@@ -1083,7 +1084,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
             boxes_list.append(boxes_array);
         }
         return boxes_list;
-    });
+    }, py::arg("context"), py::arg("format"), py::arg("k_largest") = -1,
+       py::arg("foreground_prob") = 1.0f, py::arg("cache_objects") = false);
     m.def("getOneHotEncodedLabels", &wrapper_one_hot_label_copy, py::return_value_policy::reference);
     // rocal_api_data_loaders.h
     m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",

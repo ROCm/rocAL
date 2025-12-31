@@ -346,7 +346,11 @@ extern "C" void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_cont
 
 /// \param rocal_context
 /// \param format RocalRandomObjectBBoxFormat
-extern "C" RocalTensorList ROCAL_API_CALL RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format);
+/// \param k_largest If specified, only k_largest boxes by volume are considered (-1 means all)
+/// \param foreground_prob Probability of selecting a foreground object (1.0 = always foreground)
+/// \param cache_objects If true, cache object bounding boxes for repeated inputs
+extern "C" RocalTensorList ROCAL_API_CALL RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format,
+                                                                 int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
 
 /*! \brief creates webdataset reader
  * \ingroup group_rocal_meta_data

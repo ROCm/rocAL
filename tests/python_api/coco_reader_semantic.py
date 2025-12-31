@@ -118,18 +118,17 @@ class ROCALCOCOIterator(object):
         self.bboxes = self.loader.get_bounding_box_cords()
         self.loader.get_image_id(self.image_id)
         image_id_tensor = torch.tensor(self.image_id)
-        image_size_tensor = torch.tensor(self.img_size).view(-1, self.bs, 2)
         pixelwise_labels = self.loader.get_pixelwise_labels()
         random_mask_pixel = self.loader.get_random_mask_pixel()
-        random_object_bbox = self.loader.get_random_object_bbox(types.OUT_BOX)
-        select_mask_polygons = self.loader.get_select_mask(self.select_mask_ids)
+        # random_object_bbox = self.loader.get_random_object_bbox(types.OUT_BOX)
+        # select_mask_polygons = self.loader.get_select_mask(self.select_mask_ids)
 
         for i in range(self.bs):
             if self.display:
                 img = self.output
                 draw_patches(img[i], self.image_id[i],
                              self.bboxes[i], self.device, self.tensor_dtype, self.tensor_format)
-        return (self.output), self.bboxes, self.labels, image_id_tensor, image_size_tensor, pixelwise_labels, random_mask_pixel, random_object_bbox, select_mask_polygons
+        return (self.output), self.bboxes, self.labels, image_id_tensor, pixelwise_labels, random_mask_pixel
 
     def reset(self):
         self.loader.rocal_reset_loaders()
@@ -235,15 +234,14 @@ def main():
             if args.print_tensor:
                 print("**************", i, "*******************")
                 print("**************starts*******************")
-                print("\nIMAGES : \n", it[0])
-                print("\nBBOXES:\n", it[1])
+                # print("\nIMAGES : \n", it[0])
+                # print("\nBBOXES:\n", it[1])
                 print("\nLABELS:\n", it[2])
                 print("\nIMAGE ID:\n", it[3])
-                print("\nIMAGE SIZE:\n", it[4])
-                print("\nPIXELWISE MASK UNIQUE VALUES:\n", [np.unique(mask) for mask in it[5]])
-                print("\nRANDOM MASK PIXELS:\n", it[6])
-                print("\nRANDOM OBJECT BBOXES:\n", it[7])
-                print("\nSELECT MASK POLYGONS:\n", it[8])
+                print("\nPIXELWISE MASK UNIQUE VALUES:\n", [np.unique(mask) for mask in it[4]])
+                print("\nRANDOM MASK PIXELS:\n", it[5])
+                # print("\nRANDOM OBJECT BBOXES:\n", it[6])
+                # print("\nSELECT MASK POLYGONS:\n", it[7])
                 print("**************ends*******************")
                 print("**************", i, "*******************")
         data_loader.reset()
