@@ -165,7 +165,12 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *rle_
     pixelwise_labels.resize(h * w);
     if (rle_in) {
         for (unsigned int i = 0; i < bb_coords.size(); i++) {
-            bb_labels[i] = _label_info.find(bb_labels[i])->second;
+            auto it_label = _label_info.find(bb_labels[i]);
+            if (it_label != _label_info.end() && !_avoid_class_remapping) {
+                bb_labels[i] = it_label->second;
+            } else if (it_label != _label_info.end()) {
+                bb_labels[i] = it_label->first;
+            }
         }
     }
     // Generate FromPoly for all polygons in image
@@ -194,9 +199,11 @@ void COCOMetaDataReader::generate_pixelwise_mask(std::string filename, RLE *rle_
 
     if (rle_in) {
         const auto &rle = rle_in;
-        auto mask_idx = bb_labels.size();
-        int label = bb_labels[mask_idx];
-        rleInit(&r_out[label], rle->h, rle->w, rle->m, rle->cnts);
+        if (!bb_labels.empty()) {
+            auto mask_idx = bb_labels.size() - 1;
+            int label = bb_labels[mask_idx];
+            rleInit(&r_out[label], rle->h, rle->w, rle->m, rle->cnts);
+        }
     }
 
     for (const auto &rles : FromPoly)
@@ -448,11 +455,12 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                                 }
                             }
                             if (!rle_str.empty()) {
-                                rleInit(R, h, w, rle_uints.size(), const_cast<uint *>(rle_uints.data()));
-                            } else if (!rle_uints.empty()) {
                                 rleFrString(R, const_cast<char *>(rle_str.c_str()), h, w);
+                                rle_flag = true;
+                            } else if (!rle_uints.empty()) {
+                                rleInit(R, h, w, rle_uints.size(), const_cast<uint *>(rle_uints.data()));
+                                rle_flag = true;
                             }
-                            rle_flag = true;
                         } else {
                             RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
                             parser.EnterArray();
