@@ -37,7 +37,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: serialization_test <image_dataset_folder - required> <processing_device=1/cpu=0>\n";
+        std::cout << "Usage: serialization_test <image_dataset_folder - required> <processing_device:gpu=1/cpu=0>\n";
         return -1;
     }
 
