@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_snow.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SnowNode)
+
 SnowNode::SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _snow_value(SNOW_VALUE_RANGE[0], SNOW_VALUE_RANGE[1]) {}
 
@@ -47,12 +49,24 @@ void SnowNode::create_node() {
 
 void SnowNode::init(float snow_value) {
     _snow_value.set_param(snow_value);
+    // Add all arguments as part of the Node
+    std::array<std::string, 1> arg_names = {"snow_value"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, snow_value);
 }
 
 void SnowNode::init(FloatParam *snow_value_param) {
     _snow_value.set_param(core(snow_value_param));
+    // Add all arguments as part of the Node
+    std::array<std::string, 1> arg_names = {"snow_value_param"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, snow_value_param);
 }
 
 void SnowNode::update_node() {
     _snow_value.update_array();
+}
+
+void SnowNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<SnowNode, float>(this, arguments)) return;
+    if (init_args<SnowNode, FloatParam*>(this, arguments)) return;
+    THROW("Unsupported argument types for SnowNode");
 }

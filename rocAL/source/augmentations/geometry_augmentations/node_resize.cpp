@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ResizeNode)
+
 ResizeNode::ResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void ResizeNode::create_node() {
@@ -93,6 +95,15 @@ void ResizeNode::init(unsigned dest_width, unsigned dest_height, ResizeScalingMo
         _max_width = max_size[0];
         _max_height = max_size[1];
     }
+
+    // Add all arguments as part of the Node
+    std::array<std::string, 5> arg_names = {"dest_width", "dest_height", "scaling_mode", "max_size", "interpolation_type"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, dest_width, dest_height, scaling_mode, max_size, interpolation_type);
+}
+
+void ResizeNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<ResizeNode, unsigned, unsigned, ResizeScalingMode, const std::vector<unsigned>, ResizeInterpolationType>(this, arguments)) return;
+    THROW("Unsupported argument types for ResizeNode");
 }
 
 void ResizeNode::adjust_out_roi_size() {

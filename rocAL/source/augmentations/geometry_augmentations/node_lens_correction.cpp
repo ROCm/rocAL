@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_lens_correction.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(LensCorrectionNode)
+
 LensCorrectionNode::LensCorrectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {
     _camera_matrix.resize(_batch_size * 9);
     _distortion_coeffs.resize(_batch_size * 8);
@@ -78,4 +80,12 @@ void LensCorrectionNode::init(std::vector<CameraMatrix> camera_matrix, std::vect
         _distortion_coeffs[dist_coeff_index + 6] = 0;
         _distortion_coeffs[dist_coeff_index + 7] = 0;
     }
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"camera_matrix", "distortion_coeffs"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, camera_matrix, distortion_coeffs);
+}
+
+void LensCorrectionNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<LensCorrectionNode, std::vector<CameraMatrix>, std::vector<DistortionCoeffs>>(this, arguments)) return;
+    THROW("Unsupported argument types for LensCorrectionNode");
 }

@@ -34,6 +34,8 @@ class UniformDistributionNode : public Node {
     UniformDistributionNode() = delete;
     void init(std::vector<float> &range);
     void update_param();
+    void initialize_args(std::vector<Argument> &arguments) override;
+    std::string node_name() const override { return "UniformDistributionNode"; }
 
    protected:
     void create_node() override;

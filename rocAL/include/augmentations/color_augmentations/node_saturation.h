@@ -31,6 +31,8 @@ class SaturationNode : public Node {
     SaturationNode() = delete;
     void init(float sat);
     void init(FloatParam *sat);
+    void initialize_args(std::vector<Argument> &arguments) override;
+    std::string node_name() const override { return "SaturationNode"; }
 
    protected:
     void create_node() override;

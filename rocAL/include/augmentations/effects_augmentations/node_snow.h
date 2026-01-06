@@ -32,6 +32,8 @@ class SnowNode : public Node {
     SnowNode() = delete;
     void init(float snow_value);
     void init(FloatParam *snow_value_param);
+    void initialize_args(std::vector<Argument> &arguments) override;
+    std::string node_name() const override { return "SnowNode"; }
 
    protected:
     void create_node() override;

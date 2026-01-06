@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 #include "pipeline/graph.h"
 
+REGISTER_NODE(CropResizeNode)
+
 CropResizeNode::CropResizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs) {
 }
 
@@ -84,6 +86,9 @@ void CropResizeNode::init(float area, float aspect_ratio, float x_center_drift, 
     _crop_param->set_aspect_ratio(ParameterFactory::instance()->create_single_value_param(aspect_ratio));
     _crop_param->set_x_drift_factor(ParameterFactory::instance()->create_single_value_param(x_center_drift));
     _crop_param->set_y_drift_factor(ParameterFactory::instance()->create_single_value_param(y_center_drift));
+    // Add all arguments as part of the Node
+    std::array<std::string, 4> arg_names = {"area", "aspect_ratio", "x_center_drift", "y_center_drift"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, area, aspect_ratio, x_center_drift, y_center_drift);
 }
 
 void CropResizeNode::init(FloatParam *area, FloatParam *aspect_ratio, FloatParam *x_center_drift, FloatParam *y_center_drift) {
@@ -92,6 +97,9 @@ void CropResizeNode::init(FloatParam *area, FloatParam *aspect_ratio, FloatParam
     _crop_param->set_aspect_ratio(core(aspect_ratio));
     _crop_param->set_x_drift_factor(core(x_center_drift));
     _crop_param->set_y_drift_factor(core(y_center_drift));
+    // Add all arguments as part of the Node
+    std::array<std::string, 4> arg_names = {"area", "aspect_ratio", "x_center_drift", "y_center_drift"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, area, aspect_ratio, x_center_drift, y_center_drift);
 }
 
 void CropResizeNode::init(std::vector<float>& area_factor, std::vector<float>& aspect_ratio, ResizeInterpolationType interpolation_type) {
@@ -99,6 +107,9 @@ void CropResizeNode::init(std::vector<float>& area_factor, std::vector<float>& a
     auto area_factor_range = std::make_pair((float)area_factor[0], (float)area_factor[1]);
     _crop_param = std::make_shared<RocalRandomCropDecParam>(aspect_ratio_range, area_factor_range, NUM_ATTEMPTS, _batch_size);
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    std::array<std::string, 3> arg_names = {"area_factor", "aspect_ratio", "interpolation_type"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, area_factor, aspect_ratio, interpolation_type);
 }
 
 void CropResizeNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, float y_drift, ResizeInterpolationType interpolation_type) {
@@ -113,4 +124,15 @@ void CropResizeNode::init(unsigned int crop_h, unsigned int crop_w, float x_drif
     _crop_param->set_x_drift_factor(core(x_drift_param));
     _crop_param->set_y_drift_factor(core(y_drift_param));
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    std::array<std::string, 5> arg_names = {"crop_h", "crop_w", "x_drift", "y_drift", "interpolation_type"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h, crop_w, x_drift, y_drift, interpolation_type);
+}
+
+void CropResizeNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<CropResizeNode, float, float, float, float>(this, arguments)) return;
+    if (init_args<CropResizeNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, arguments)) return;
+    if (init_args<CropResizeNode, std::vector<float>, std::vector<float>, ResizeInterpolationType>(this, arguments)) return;
+    if (init_args<CropResizeNode, unsigned int, unsigned int, float, float, ResizeInterpolationType>(this, arguments)) return;
+    THROW("Unsupported argument types for CropResizeNode");
 }

@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_blend.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(BlendNode)
+
 BlendNode::BlendNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                   _ratio(RATIO_RANGE[0], RATIO_RANGE[1]) {
 }
@@ -50,10 +52,23 @@ void BlendNode::create_node() {
 
 void BlendNode::init(float ratio) {
     _ratio.set_param(ratio);
+
+    // Add all arguments as part of the Node
+    std::array<std::string, 1> arg_names = {"ratio"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, ratio);
 }
 
 void BlendNode::init(FloatParam *ratio) {
     _ratio.set_param(core(ratio));
+    // Add all arguments as part of the Node
+    std::array<std::string, 1> arg_names = {"ratio"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, ratio);
+}
+
+void BlendNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<BlendNode, float>(this, arguments)) return;
+    if (init_args<BlendNode, FloatParam*>(this, arguments)) return;
+    THROW("Unsupported argument types for BlendNode");
 }
 
 void BlendNode::update_node() {

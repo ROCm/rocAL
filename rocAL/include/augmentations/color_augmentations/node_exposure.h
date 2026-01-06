@@ -32,6 +32,8 @@ class ExposureNode : public Node {
     ExposureNode() = delete;
     void init(float exposure_factor);
     void init(FloatParam *exposure_factor_param);
+    void initialize_args(std::vector<Argument> &arguments) override;
+    std::string node_name() const override { return "ExposureNode"; }
 
    protected:
     void create_node() override;

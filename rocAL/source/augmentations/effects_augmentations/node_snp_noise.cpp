@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_snp_noise.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SnPNoiseNode)
+
 SnPNoiseNode::SnPNoiseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                       _noise_prob(NOISE_PROB_RANGE[0], NOISE_PROB_RANGE[1]),
                                                                                                       _salt_prob(SALT_PROB_RANGE[0], SALT_PROB_RANGE[1]),
@@ -59,6 +61,9 @@ void SnPNoiseNode::init(float noise_prob, float salt_prob, float salt_value, flo
     _salt_value.set_param(salt_value);
     _pepper_value.set_param(pepper_value);
     _seed = seed;
+    // Add all arguments as part of the Node
+    std::array<std::string, 5> arg_names = {"noise_prob", "salt_prob", "salt_value", "pepper_value", "seed"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, noise_prob, salt_prob, salt_value, pepper_value, seed);
 }
 
 void SnPNoiseNode::init(FloatParam* noise_prob_param, FloatParam* salt_prob_param,
@@ -68,6 +73,15 @@ void SnPNoiseNode::init(FloatParam* noise_prob_param, FloatParam* salt_prob_para
     _salt_value.set_param(core(salt_value_param));
     _pepper_value.set_param(core(pepper_value_param));
     _seed = seed;
+    // Add all arguments as part of the Node
+    std::array<std::string, 5> arg_names = {"noise_prob_param", "salt_prob_param", "salt_value_param", "pepper_value_param", "seed"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, noise_prob_param, salt_prob_param, salt_value_param, pepper_value_param, seed);
+}
+
+void SnPNoiseNode::initialize_args(std::vector<Argument>& arguments) {
+    if (init_args<SnPNoiseNode, float, float, float, float, int>(this, arguments)) return;
+    if (init_args<SnPNoiseNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*, int>(this, arguments)) return;
+    THROW("Unsupported argument types for SnPNoiseNode");
 }
 
 void SnPNoiseNode::update_node() {

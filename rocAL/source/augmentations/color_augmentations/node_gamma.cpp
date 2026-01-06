@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_gamma.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(GammaNode)
+
 GammaNode::GammaNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                   _gamma(GAMMA_RANGE[0], GAMMA_RANGE[1]) {}
 
@@ -50,12 +52,24 @@ void GammaNode::create_node() {
 
 void GammaNode::init(float gamma) {
     _gamma.set_param(gamma);
+    // Add all arguments as part of the Node
+    std::array<std::string, 1> arg_names = {"gamma"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, gamma);
 }
 
 void GammaNode::init(FloatParam *gamma_param) {
     _gamma.set_param(core(gamma_param));
+    // Add all arguments as part of the Node
+    std::array<std::string, 1> arg_names = {"gamma_param"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, gamma_param);
 }
 
 void GammaNode::update_node() {
     _gamma.update_array();
+}
+
+void GammaNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<GammaNode, float>(this, arguments)) return;
+    if (init_args<GammaNode, FloatParam*>(this, arguments)) return;
+    THROW("Unsupported argument types for GammaNode");
 }

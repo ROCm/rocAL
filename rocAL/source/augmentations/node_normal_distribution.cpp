@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 #include "parameters/parameter_factory.h"
 
+REGISTER_NODE(NormalDistributionNode)
+
 NormalDistributionNode::NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void NormalDistributionNode::create_node() {
@@ -59,4 +61,12 @@ void NormalDistributionNode::init(float mean, float std_dev) {
     BatchRNG<std::mt19937> rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
     _rngs = rng;
     update_param();
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"mean", "std_dev"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, mean, std_dev);
 }
+
+void NormalDistributionNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<NormalDistributionNode, float, float>(this, arguments)) return;
+    THROW("Unsupported argument types for NormalDistributionNode");
+};

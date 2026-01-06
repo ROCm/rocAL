@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(RandomCropNode)
+
 RandomCropNode::RandomCropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs) {
     _crop_param = std::make_shared<RocalRandomCropParam>(_batch_size);
 }
@@ -76,4 +78,12 @@ void RandomCropNode::init(FloatParam *crop_area_factor, FloatParam *crop_aspect_
     _crop_param->set_area_factor(core(crop_area_factor));
     _crop_param->set_aspect_ratio(core(crop_aspect_ratio));
     _num_of_attempts = num_of_attempts;
+    // Add all arguments as part of the Node
+    std::array<std::string, 5> arg_names = {"crop_area_factor", "crop_aspect_ratio", "x_drift", "y_drift", "num_of_attempts"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_area_factor, crop_aspect_ratio, x_drift, y_drift, num_of_attempts);
 }
+
+void RandomCropNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<RandomCropNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*, int>(this, arguments)) return;
+    THROW("Unsupported argument types for RandomCropNode");
+};

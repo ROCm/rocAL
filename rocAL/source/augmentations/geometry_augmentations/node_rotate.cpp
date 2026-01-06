@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_rotate.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(RotateNode)
+
 RotateNode::RotateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                     _angle(ROTATE_ANGLE_RANGE[0], ROTATE_ANGLE_RANGE[1]) {}
 
@@ -50,13 +52,25 @@ void RotateNode::create_node() {
 void RotateNode::init(float angle, ResizeInterpolationType interpolation_type) {
     _angle.set_param(angle);
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"angle", "interpolation_type"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, angle, interpolation_type);
 }
 
 void RotateNode::init(FloatParam *angle, ResizeInterpolationType interpolation_type) {
     _angle.set_param(core(angle));
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    std::array<std::string, 2> arg_names = {"angle", "interpolation_type"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, angle, interpolation_type);
 }
 
 void RotateNode::update_node() {
     _angle.update_array();
+}
+
+void RotateNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<RotateNode, float, ResizeInterpolationType>(this, arguments)) return;
+    if (init_args<RotateNode, FloatParam*, ResizeInterpolationType>(this, arguments)) return;
+    THROW("Unsupported argument types for RotateNode");
 }

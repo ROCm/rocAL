@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_resize_crop_mirror.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ResizeCropMirrorNode)
+
 ResizeCropMirrorNode::ResizeCropMirrorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs),
                                                                                                                         _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1]) {
     _crop_param = std::make_shared<RocalCropParam>(_batch_size);
@@ -90,6 +92,9 @@ void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntPar
     _crop_param->y1 = 0;
     _mirror.set_param(core(mirror));
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    std::array<std::string, 4> arg_names = {"crop_h", "crop_w", "mirror", "interpolation_type"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h, crop_w, mirror, interpolation_type);
 }
 
 void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror, ResizeInterpolationType interpolation_type) {
@@ -98,4 +103,13 @@ void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_fa
     _crop_param->set_random();
     _mirror.set_param(core(mirror));
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    std::array<std::string, 4> arg_names = {"crop_h_factor", "crop_w_factor", "mirror", "interpolation_type"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h_factor, crop_w_factor, mirror, interpolation_type);
 }
+
+void ResizeCropMirrorNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<ResizeCropMirrorNode, unsigned int, unsigned int, IntParam*, ResizeInterpolationType>(this, arguments)) return;
+    if (init_args<ResizeCropMirrorNode, FloatParam*, FloatParam*, IntParam*, ResizeInterpolationType>(this, arguments)) return;
+    THROW("Unsupported argument types for ResizeCropMirrorNode");
+};

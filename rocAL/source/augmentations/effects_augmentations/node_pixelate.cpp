@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(PixelateNode)
+
 PixelateNode::PixelateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void PixelateNode::create_node() {
@@ -48,6 +50,15 @@ void PixelateNode::create_node() {
 
 void PixelateNode::init(float pixelatePercent) {
     _pixelatePercent = pixelatePercent;
+    // Add all arguments as part of the Node
+    std::array<std::string, 1> arg_names = {"pixelatePercent"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, pixelatePercent);
+
 }
 
 void PixelateNode::update_node() {}
+
+void PixelateNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<PixelateNode, float>(this, arguments)) return;
+    THROW("Unsupported argument types for PixelateNode");
+}

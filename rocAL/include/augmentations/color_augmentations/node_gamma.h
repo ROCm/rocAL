@@ -31,6 +31,8 @@ class GammaNode : public Node {
     GammaNode() = delete;
     void init(float gamma);
     void init(FloatParam *gamma_param);
+    void initialize_args(std::vector<Argument> &arguments) override;
+    std::string node_name() const override { return "GammaNode"; }
 
    protected:
     void update_node() override;

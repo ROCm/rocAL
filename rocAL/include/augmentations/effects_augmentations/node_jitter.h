@@ -31,6 +31,8 @@ class JitterNode : public Node {
     JitterNode() = delete;
     void init(int kernel_size, int seed);
     void init(IntParam *kernel_size, int seed);
+    void initialize_args(std::vector<Argument> &arguments) override;
+    std::string node_name() const override { return "JitterNode"; }
 
    protected:
     void create_node() override;
