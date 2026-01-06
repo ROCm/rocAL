@@ -50,8 +50,8 @@ include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
 link_directories(${ROCM_PATH}/lib)
 
 # Source files
-file(GLOB My_Source_Files ./*.cpp)
-add_executable(${PROJECT_NAME} ${My_Source_Files})
+file(GLOB Source_Files ./*.cpp)
+add_executable(${PROJECT_NAME} ${Source_Files})
 
 # OpenCV configuration
 if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 4)
