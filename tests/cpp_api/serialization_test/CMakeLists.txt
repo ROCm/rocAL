@@ -50,21 +50,16 @@ include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
 link_directories(${ROCM_PATH}/lib)
 
 # Source files
-file(GLOB My_Source_Files ./*.cpp)
-add_executable(${PROJECT_NAME} ${My_Source_Files})
+file(GLOB Source_Files ./*.cpp)
+add_executable(${PROJECT_NAME} ${Source_Files})
 
 # OpenCV configuration
-if(${OpenCV_VERSION_MAJOR} EQUAL 3 OR ${OpenCV_VERSION_MAJOR} EQUAL 4)
+if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 4)
     message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
     include_directories(${OpenCV_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-    if(${OpenCV_VERSION_MAJOR} EQUAL 4)
-        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=1)
-    else()
-        target_compile_definitions(${PROJECT_NAME} PUBLIC USE_OPENCV_4=0)
-    endif()
 else()
-    message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported")
+    message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X is not supported. OpenCV 4.0 or higher is required.")
 endif()
 
 # Compiler flags
