@@ -1293,7 +1293,7 @@ def color_cast(*inputs, alpha=1.0, rgb=[0.0, 0.0, 0.0], device=None, output_layo
         @return    Image with color cast applied
     """
     alpha = b.createFloatParameter(alpha) if isinstance(alpha, float) else alpha
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "p_alpha": alpha, "rgb": rgb,
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "alpha": alpha, "rgb": rgb,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     color_cast_image = b.colorCast(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (color_cast_image)
@@ -1356,7 +1356,7 @@ def gaussian_filter(*inputs, stddev=None, kernel_size=3, device=None, output_lay
     """!Applies gaussian filter to images with per-sample stddev parameter.
 
         @param inputs                                                                the input image passed to the augmentation
-        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam
+        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam.
         @param kernel_size (int, default = 3)                                        gaussian filter kernel size (pixels), typically odd: 3,5,7
         @param device (string, optional, default = None)                             Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
@@ -1397,8 +1397,8 @@ def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC
     """!Applies thresholding to images with per-sample min/max parameters.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param min (float or FloatParam, optional, default = None)                    per-sample minimum threshold; if float, wrapped into a FloatParam
-        @param max (float or FloatParam, optional, default = None)                    per-sample maximum threshold; if float, wrapped into a FloatParam
+        @param min (list of floats, optional, default = None)                         minimum thresholds per channel or per sample (length = channels or batch*channels)
+        @param max (list of floats, optional, default = None)                         maximum thresholds per channel or per sample (length = channels or batch*channels)
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
