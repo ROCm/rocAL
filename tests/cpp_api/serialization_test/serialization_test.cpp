@@ -30,16 +30,8 @@ THE SOFTWARE.
 #include <memory>
 
 #include "rocal_api.h"
-
-#ifdef USE_OPENCV_4
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#else
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#endif
+#include "opencv2/opencv.hpp"
+using namespace cv;
 
 int main(int argc, const char **argv) {
     // check command-line usage
@@ -204,11 +196,7 @@ int main(int argc, const char **argv) {
             out_filename = std::string(outName) + std::to_string(iter) + ".png";  // in case the user specifies non png filename
 
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
-#ifdef USE_OPENCV_4
             cv::cvtColor(mat_output, mat_color, cv::COLOR_RGB2BGR);
-#else
-            cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-#endif
             cv::imwrite(out_filename, mat_color, compression_params);
         } else {
             cv::imwrite(out_filename, mat_output, compression_params);
