@@ -37,24 +37,23 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: serialization_test <image_dataset_folder - required> <processing_device=1/cpu=0>\n";
+        std::cout << "Usage: serialization_test <image_dataset_folder - required> <processing_device:gpu=1/cpu=0>\n";
         return -1;
     }
 
     int argIdx = 1;
     const char *folderPath = argv[argIdx++];
-    bool processing_device = 0;
+    bool use_gpu = false;
 
     if (argc > argIdx)
-        processing_device = atoi(argv[argIdx++]);
+        use_gpu = (atoi(argv[argIdx++]) == 1);
 
     const int inputBatchSize = 2;
     RocalImageColor color_format = RocalImageColor::ROCAL_COLOR_RGB24;
-    std::cout << ">>> Running serialization test on " << (processing_device ? "GPU" : "CPU") << std::endl;
-
+    std::cout << ">>> Running serialization test on " << (use_gpu ? "GPU" : "CPU") << std::endl;
     // Create rocAL context
     auto handle = rocalCreate(inputBatchSize, 
-                             processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 
+                             use_gpu ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 
                              0, 1);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
