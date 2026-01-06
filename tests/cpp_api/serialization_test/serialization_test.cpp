@@ -37,13 +37,13 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: serialization_test <image_dataset_folder - required> <processing_device=1/cpu=0>\n";
+        std::cout << "Usage: serialization_test <image_dataset_folder - required> <processing_device:gpu=1/cpu=0>\n";
         return -1;
     }
 
     int argIdx = 1;
     const char *folderPath = argv[argIdx++];
-    bool processing_device = 0;
+    int processing_device = 0;
 
     if (argc > argIdx)
         processing_device = atoi(argv[argIdx++]);
