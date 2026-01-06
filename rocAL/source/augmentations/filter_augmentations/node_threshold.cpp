@@ -28,15 +28,15 @@ THE SOFTWARE.
 ThresholdNode::ThresholdNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs) {}
 
-void fill_vector_with_threshold_values(std::vector<float>& threshold_batch, 
-        std::vector<float>& threshold_values,
-        size_t no_of_channels) {
+void fill_vector_with_threshold_values(std::vector<float>& threshold_batch,
+                                       std::vector<float>& threshold_values,
+                                       size_t no_of_channels) {
 
     size_t threshold_vec_size = threshold_batch.size();
-    
+
     if (threshold_values.size() == no_of_channels) {
-        for (int batch_channel_idx = 0; batch_channel_idx < threshold_vec_size; batch_channel_idx += no_of_channels) {
-            for (int channel_idx = 0; channel_idx < no_of_channels; channel_idx++) {
+        for (size_t batch_channel_idx = 0; batch_channel_idx < threshold_vec_size; batch_channel_idx += no_of_channels) {
+            for (size_t channel_idx = 0; channel_idx < no_of_channels; channel_idx++) {
                 threshold_batch[batch_channel_idx + channel_idx] = threshold_values[channel_idx];
             }
         }
@@ -60,18 +60,22 @@ void ThresholdNode::create_node() {
     max_array.resize(array_size, 0.0f);
     fill_vector_with_threshold_values(min_array, _min, no_of_channels);
     fill_vector_with_threshold_values(max_array, _max, no_of_channels);
-    
+
     // Create vx_array and populate it
     vx_status status;
-    vx_array min_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, array_size);
+    vx_context ctx = vxGetContext((vx_reference)_graph->get());
+    vx_array min_array_vx = vxCreateArray(ctx, VX_TYPE_FLOAT32, array_size);
     status = vxAddArrayItems(min_array_vx, array_size, min_array.data(), sizeof(vx_float32));
     if (status != VX_SUCCESS) {
+        vxReleaseArray(&min_array_vx);
         THROW("Threshold: vxAddArrayItems failed while creating min array: " + TOSTR(status));
     }
 
-    vx_array max_array_vx = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, array_size);
+    vx_array max_array_vx = vxCreateArray(ctx, VX_TYPE_FLOAT32, array_size);
     status = vxAddArrayItems(max_array_vx, array_size, max_array.data(), sizeof(vx_float32));
     if (status != VX_SUCCESS) {
+        vxReleaseArray(&min_array_vx);
+        vxReleaseArray(&max_array_vx);
         THROW("Threshold: vxAddArrayItems failed while creating max array: " + TOSTR(status));
     }
 
@@ -80,9 +84,9 @@ void ThresholdNode::create_node() {
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
 
-    vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
-    vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
-    vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
+    vx_scalar input_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &input_layout);
+    vx_scalar output_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &output_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &roi_type);
 
     // Create Threshold node via MIVisionX RPP extension
     _node = vxExtRppThreshold(_graph->get(),
@@ -96,7 +100,7 @@ void ThresholdNode::create_node() {
                               roi_type_vx);
 
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the threshold (vxExtRppThreshold) node failed: " + TOSTR(status))
+        THROW("Adding the threshold (vxExtRppThreshold) node failed: " + TOSTR(status));
 #else
     THROW("ThresholdNode: vxExtRppThreshold requires amd_rpp version >= 3.1.3");
 #endif

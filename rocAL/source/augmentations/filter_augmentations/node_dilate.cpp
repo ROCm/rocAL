@@ -50,7 +50,7 @@ void DilateNode::create_node() {
                            roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the dilate (vxExtRppDilate) node failed: " + TOSTR(status))
+        THROW("Adding the dilate (vxExtRppDilate) node failed: " + TOSTR(status));
 #else
     THROW("DilateNode: vxExtRppDilate requires amd_rpp version >= 3.1.3");
 #endif
