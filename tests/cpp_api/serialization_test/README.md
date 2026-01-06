@@ -13,6 +13,13 @@ The test validates the `rocalSerialize` and `rocalGetSerializedString` APIs by:
 3. Retrieving and printing the serialized pipeline string
 4. Running a few iterations to verify the pipeline works correctly
 
+## Pre-requisites
+
+* Ubuntu Linux, version `22.04` or later
+* rocAL library
+* [OpenCV 4.0+](https://github.com/opencv/opencv/releases/tag/4.0.0)
+* ROCm Performance Primitives ([RPP](https://github.com/ROCm/rpp))
+
 ## Building
 
 ```bash
