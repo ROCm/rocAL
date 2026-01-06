@@ -106,7 +106,7 @@ void ColorCastNode::create_node() {
     if ((nstatus = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the ColorCast (vxExtRppColorCast) node failed: " + TOSTR(nstatus))
 #else
-    THROW("ColorCastNode: vxExtRppColorCast requires amd_rpp version >= 3.2.0");
+    THROW("ColorCastNode: vxExtRppColorCast requires amd_rpp version >= 3.1.2");
 #endif
 }
 
