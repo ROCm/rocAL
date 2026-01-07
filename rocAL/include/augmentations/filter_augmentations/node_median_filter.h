@@ -25,7 +25,7 @@ public:
     MedianFilterNode() = delete;
 
     // Fixed parameters
-    void init(int kernel_size, int border_type);
+    void init(int kernel_size, ImageBorderType border_type);
 
 protected:
     void create_node() override;

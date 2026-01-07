@@ -26,9 +26,9 @@ public:
     GaussianFilterNode() = delete;
 
     // Dynamic per-sample stddev with fixed kernel size
-    void init(FloatParam* stddev_param, int kernel_size, int border_type);
+    void init(FloatParam* stddev_param, int kernel_size, ImageBorderType border_type);
     // Fixed stddev with fixed kernel size
-    void init(float stddev, int kernel_size, int border_type);
+    void init(float stddev, int kernel_size, ImageBorderType border_type);
 
 protected:
     void create_node() override;

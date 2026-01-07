@@ -1446,7 +1446,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGridMask(RocalContext context, RocalT
 extern "C" RocalTensor ROCAL_API_CALL rocalMedianFilter(RocalContext context, RocalTensor input,
                                                         bool is_output,
                                                         unsigned kernel_size = 3,
-                                                        int border_type = 0,
+                                                        RocalImageBorderType border_type = RocalImageBorderType::ROCAL_REPLICATE,
                                                         RocalTensorLayout output_layout = ROCAL_NONE,
                                                         RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -1466,7 +1466,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilter(RocalContext context, 
                                                           bool is_output,
                                                           RocalFloatParam stddev = NULL,
                                                           unsigned kernel_size = 3,
-                                                          int border_type = 0,
+                                                          RocalImageBorderType border_type = RocalImageBorderType::ROCAL_REPLICATE,
                                                           RocalTensorLayout output_layout = ROCAL_NONE,
                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -1485,7 +1485,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilter(RocalContext context, 
 extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilterFixed(RocalContext context, RocalTensor input,
                                                                float stddev,
                                                                unsigned kernel_size,
-                                                               int border_type,
+                                                               RocalImageBorderType border_type,
                                                                bool is_output,
                                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);

@@ -2500,7 +2500,7 @@ rocalMedianFilter(
     RocalTensor p_input,
     bool is_output,
     unsigned kernel_size,
-    int border_type,
+    RocalImageBorderType border_type,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -2517,7 +2517,7 @@ rocalMedianFilter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<MedianFilterNode>({input}, {output})
-            ->init(kernel_size, border_type);
+            ->init(kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2531,7 +2531,7 @@ rocalGaussianFilter(
     bool is_output,
     RocalFloatParam p_stddev,
     unsigned kernel_size,
-    int border_type,
+    RocalImageBorderType border_type,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -2549,7 +2549,7 @@ rocalGaussianFilter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<GaussianFilterNode>({input}, {output})
-            ->init(stddev, kernel_size, border_type);
+            ->init(stddev, kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2562,7 +2562,7 @@ rocalGaussianFilterFixed(
     RocalTensor p_input,
     float stddev,
     unsigned kernel_size,
-    int border_type,
+    RocalImageBorderType border_type,
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -2580,7 +2580,7 @@ rocalGaussianFilterFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<GaussianFilterNode>({input}, {output})
-            ->init(stddev, kernel_size, border_type);
+            ->init(stddev, kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

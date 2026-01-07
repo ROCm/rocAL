@@ -57,7 +57,7 @@ void MedianFilterNode::create_node() {
 #endif
 }
 
-void MedianFilterNode::init(int kernel_size, int border_type) {
+void MedianFilterNode::init(int kernel_size, ImageBorderType border_type) {
     _kernel_size = kernel_size;
     _border_type = static_cast<int>(border_type);
 }

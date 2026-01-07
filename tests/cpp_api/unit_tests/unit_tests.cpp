@@ -919,17 +919,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 69: {
             std::cout << "Running rocalMedianFilter" << std::endl;
             int kernel = 3;
-            int border_type = 0;
+            auto border_type = RocalImageBorderType::ROCAL_REPLICATE;
             output = rocalMedianFilter(handle, input, true, kernel, border_type, output_tensor_layout, output_tensor_dtype);
         } break;
         case 70: {
             std::cout << "Running rocalGaussianFilter" << std::endl;
             // Use existing float_param defined earlier as per-sample stddev
-            output = rocalGaussianFilter(handle, input, true, nullptr, 3, 0, output_tensor_layout, output_tensor_dtype);
+            output = rocalGaussianFilter(handle, input, true, nullptr, 3, RocalImageBorderType::ROCAL_REPLICATE, output_tensor_layout, output_tensor_dtype);
         } break;
         case 71: {
             std::cout << "Running rocalGaussianFilterFixed" << std::endl;
-            output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, 0, true, output_tensor_layout, output_tensor_dtype);
+            output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, RocalImageBorderType::ROCAL_REPLICATE, true, output_tensor_layout, output_tensor_dtype);
         } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";

@@ -1361,12 +1361,12 @@ def grid_mask(*inputs, tile_width=16, grid_ratio=0.5, grid_angle=0.0, translate_
     grid_mask_image = b.gridMask(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (grid_mask_image)
 
-def median_filter(*inputs, kernel_size=3, border_type=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def median_filter(*inputs, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies median filter to images.
 
         @param inputs                                                                the input image passed to the augmentation
         @param kernel_size (int, default = 3)                                        median filter kernel size (pixels), typically odd: 3,5,7
-        @param border_type (int, default = 0)                                        border handling policy (implementation specific)
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
         @param device (string, optional, default = None)                             Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
@@ -1385,13 +1385,13 @@ def median_filter(*inputs, kernel_size=3, border_type=0, device=None, output_lay
     return (output_image)
 
 
-def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies gaussian filter to images with per-sample stddev parameter.
 
         @param inputs                                                                the input image passed to the augmentation
         @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam
         @param kernel_size (int, default = 3)                                        gaussian filter kernel size (pixels), typically odd: 3,5,7
-        @param border_type (int, default = 0)                                        border handling policy (implementation specific)
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
         @param device (string, optional, default = None)                             Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output

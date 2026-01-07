@@ -524,13 +524,14 @@ def main():
         elif augmentation_name == "median_filter":
             output = fn.median_filter(images,
                                       kernel_size=3,
-                                      border_type=0,
+                                      border_type=types.REPLICATE,
                                       output_layout=tensor_layout,
                                       output_dtype=tensor_dtype)
         elif augmentation_name == "gaussian_filter":
             output = fn.gaussian_filter(images,
                                         stddev=5.0,
                                         kernel_size=3,
+                                        border_type=types.REPLICATE,
                                         output_layout=tensor_layout,
                                         output_dtype=tensor_dtype)
 
