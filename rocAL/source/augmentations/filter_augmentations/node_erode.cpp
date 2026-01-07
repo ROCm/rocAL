@@ -51,7 +51,7 @@ void ErodeNode::create_node() {
                           roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the erode (vxExtRppErode) node failed: " + TOSTR(status))
+        THROW("Adding the erode (vxExtRppErode) node failed: " + TOSTR(status));
 #else
     THROW("ErodeNode: vxExtRppErode requires amd_rpp version >= 3.1.3");
 #endif

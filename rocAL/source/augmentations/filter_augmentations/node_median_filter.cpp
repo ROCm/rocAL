@@ -53,11 +53,11 @@ void MedianFilterNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the median filter (vxExtRppMedianFilter) node failed: " + TOSTR(status))
 #else
-    THROW("MedianFilterNode: vxExtRppMedianFilter requires amd_rpp version >= 3.2.0");
+    THROW("MedianFilterNode: vxExtRppMedianFilter requires amd_rpp version >= 3.1.2");
 #endif
 }
 
-void MedianFilterNode::init(int kernel_size, int border_type) {
+void MedianFilterNode::init(int kernel_size, ImageBorderType border_type) {
     _kernel_size = kernel_size;
     _border_type = static_cast<int>(border_type);
 }

@@ -464,6 +464,22 @@ enum RocalLastBatchPolicy {
     ROCAL_LAST_BATCH_PARTIAL = 2
 };
 
+
+/*! \brief rocAL Image Border Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalImageBorderType {
+    /*! \brief AMD ROCAL_REPLICATE
+     */
+    ROCAL_REPLICATE = 0,
+    /*! \brief AMD ROCAL_CONSTANT
+     */
+    ROCAL_CONSTANT = 1,
+    /*! \brief AMD ROCAL_REFLECT_NO_EDGE
+     */
+    ROCAL_REFLECT_NO_EDGE = 2
+};
+
 /*! \brief  rocAL RocalShardingInfo enum
  * \ingroup group_rocal_types
  */

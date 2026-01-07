@@ -10,7 +10,7 @@ fi
 # Path to inputs and outputs
 one_hot_data_path=${ROCAL_DATA_PATH}/rocal_data/images_jpg/labels_folder/
 image_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
-web_dataset_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/
+web_dataset_path=${ROCAL_DATA_PATH}/rocal_data/web_dataset/tar_file/
 coco_detection_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/images/
 coco_json_path=${ROCAL_DATA_PATH}/rocal_data/coco/coco_10_img/annotations/coco_data.json
 tf_classification_path=${ROCAL_DATA_PATH}/rocal_data/tf/classification/
@@ -160,7 +160,7 @@ do
         python"$ver" unit_test.py --image-dataset-path "$tf_classification_path" --reader-type "tf_classification" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 1 --scaling-mode 2 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_notsmaller_tfClassification"
         python"$ver" unit_test.py --image-dataset-path "$tf_detection_path" --reader-type "tf_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 1 --scaling-mode 3 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bilinear_notlarger_tfDetection"
         python"$ver" unit_test.py --image-dataset-path "$caffe_classification_path" --reader-type "caffe_classification" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 2 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_bicubic_default_caffeClassification"
-        # python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 0 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_nearestneighbor_default_caffeDetection"
+        python"$ver" unit_test.py --image-dataset-path "$caffe_detection_path" --reader-type "caffe_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 0 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_nearestneighbor_default_caffeDetection"
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 3 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_lanczos_default_caffe2Classification"
         python"$ver" unit_test.py --image-dataset-path "$caffe2_detection_path" --reader-type "caffe2_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 5 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_default_caffe2Detection"
         python"$ver" unit_test.py --image-dataset-path "$mxnet_path" --reader-type "mxnet" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 4 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_gaussian_default_mxnet"

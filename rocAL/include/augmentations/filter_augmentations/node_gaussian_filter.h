@@ -26,9 +26,9 @@ public:
     GaussianFilterNode() = delete;
 
     // Dynamic per-sample stddev with fixed kernel size
-    void init(FloatParam* stddev_param, int kernel_size);
+    void init(FloatParam* stddev_param, int kernel_size, ImageBorderType border_type);
     // Fixed stddev with fixed kernel size
-    void init(float stddev, int kernel_size);
+    void init(float stddev, int kernel_size, ImageBorderType border_type);
 
 protected:
     void create_node() override;
@@ -38,6 +38,7 @@ private:
     // Per-sample stddev (size batch_size)
     ParameterVX<float> _stddev;
     unsigned _kernel_size = 3;
+    int _border_type = 0;
 
     // Reasonable range for stddev > 0
     constexpr static float STDDEV_RANGE[2] = {0.01f, 64.0f};

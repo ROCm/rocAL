@@ -187,27 +187,60 @@ def lens_correction(*inputs, camera_matrix=None, distortion_coeffs=None, device=
     """!Applies lens correction effect on images.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param camera_matrix (list, optional, default = None)                         camera matrix for the entire batch of images
-        @param distortion_coeffs (list, optional, default = None)                     distortion coefficients for the entire batch of images
+        @param camera_matrix (list or list of lists, optional, default = None)        camera matrix for the entire batch of images. Can be a single list [fx, cx, fy, cy] for all images or a list of lists [[fx, cx, fy, cy], ...] for each image in the batch
+        @param distortion_coeffs (list or list of lists, optional, default = None)    distortion coefficients for the entire batch of images. Can be a single list [k1, k2, p1, p2, k3] for all images or a list of lists [[k1, k2, p1, p2, k3], ...] for each image in the batch
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
 
         @return  Image with lens correction effect
     """
-    if isinstance(camera_matrix, list):
-        cameraMatrix = b.CameraMatrix()
-        cameraMatrix.fx = camera_matrix[0]
-        cameraMatrix.cx = camera_matrix[1]
-        cameraMatrix.fy = camera_matrix[2]
-        cameraMatrix.cy = camera_matrix[3]
-    if isinstance(distortion_coeffs, list):
-        distortionCoeffs = b.DistortionCoeffs()
-        distortionCoeffs.k1 = distortion_coeffs[0]
-        distortionCoeffs.k2 = distortion_coeffs[1]
-        distortionCoeffs.p1 = distortion_coeffs[2]
-        distortionCoeffs.p2 = distortion_coeffs[3]
-        distortionCoeffs.k3 = distortion_coeffs[4]
+    cameraMatrix = []
+    distortionCoeffs = []
+    
+    # Handle camera_matrix - check if it's a batch (list of lists) or single list
+    if isinstance(camera_matrix, list) and len(camera_matrix) > 0:
+        if isinstance(camera_matrix[0], list):
+            # Batch mode: list of lists - create a vector of CameraMatrix structs
+            for cam_mat in camera_matrix:
+                cam = b.CameraMatrix()
+                cam.fx = cam_mat[0]
+                cam.cx = cam_mat[1]
+                cam.fy = cam_mat[2]
+                cam.cy = cam_mat[3]
+                cameraMatrix.append(cam)
+        else:
+            # Single mode: single list - create one CameraMatrix struct in a list
+            # The C++ API will replicate this for all images in the batch
+            cam = b.CameraMatrix()
+            cam.fx = camera_matrix[0]
+            cam.cx = camera_matrix[1]
+            cam.fy = camera_matrix[2]
+            cam.cy = camera_matrix[3]
+            cameraMatrix.append(cam)
+    
+    # Handle distortion_coeffs - check if it's a batch (list of lists) or single list
+    if isinstance(distortion_coeffs, list) and len(distortion_coeffs) > 0:
+        if isinstance(distortion_coeffs[0], list):
+            # Batch mode: list of lists - create a vector of DistortionCoeffs structs
+            for dist_coef in distortion_coeffs:
+                dist = b.DistortionCoeffs()
+                dist.k1 = dist_coef[0]
+                dist.k2 = dist_coef[1]
+                dist.p1 = dist_coef[2]
+                dist.p2 = dist_coef[3]
+                dist.k3 = dist_coef[4]
+                distortionCoeffs.append(dist)
+        else:
+            # Single mode: single list - create one DistortionCoeffs struct in a list
+            # The C++ API will replicate this for all images in the batch
+            dist = b.DistortionCoeffs()
+            dist.k1 = distortion_coeffs[0]
+            dist.k2 = distortion_coeffs[1]
+            dist.p1 = distortion_coeffs[2]
+            dist.p2 = distortion_coeffs[3]
+            dist.k3 = distortion_coeffs[4]
+            distortionCoeffs.append(dist)
 
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "camera_matrix": cameraMatrix, "distortion_coeffs": distortionCoeffs, "is_output": False,
@@ -1293,7 +1326,7 @@ def color_cast(*inputs, alpha=1.0, rgb=[0.0, 0.0, 0.0], device=None, output_layo
         @return    Image with color cast applied
     """
     alpha = b.createFloatParameter(alpha) if isinstance(alpha, float) else alpha
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "p_alpha": alpha, "rgb": rgb,
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "alpha": alpha, "rgb": rgb,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     color_cast_image = b.colorCast(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (color_cast_image)
@@ -1328,12 +1361,12 @@ def grid_mask(*inputs, tile_width=16, grid_ratio=0.5, grid_angle=0.0, translate_
     grid_mask_image = b.gridMask(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (grid_mask_image)
 
-def median_filter(*inputs, kernel_size=3, border_type=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def median_filter(*inputs, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies median filter to images.
 
         @param inputs                                                                the input image passed to the augmentation
         @param kernel_size (int, default = 3)                                        median filter kernel size (pixels), typically odd: 3,5,7
-        @param border_type (int, default = 0)                                        border handling policy (implementation specific)
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
         @param device (string, optional, default = None)                             Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
@@ -1352,12 +1385,13 @@ def median_filter(*inputs, kernel_size=3, border_type=0, device=None, output_lay
     return (output_image)
 
 
-def gaussian_filter(*inputs, stddev=None, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies gaussian filter to images with per-sample stddev parameter.
 
         @param inputs                                                                the input image passed to the augmentation
-        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam
+        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam.
         @param kernel_size (int, default = 3)                                        gaussian filter kernel size (pixels), typically odd: 3,5,7
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
         @param device (string, optional, default = None)                             Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
@@ -1370,6 +1404,7 @@ def gaussian_filter(*inputs, stddev=None, kernel_size=3, device=None, output_lay
         "is_output": False,
         "stddev": stddev,
         "kernel_size": kernel_size,
+        "border_type": border_type,
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
@@ -1397,8 +1432,8 @@ def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC
     """!Applies thresholding to images with per-sample min/max parameters.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param min (float or FloatParam, optional, default = None)                    per-sample minimum threshold; if float, wrapped into a FloatParam
-        @param max (float or FloatParam, optional, default = None)                    per-sample maximum threshold; if float, wrapped into a FloatParam
+        @param min (list of floats, optional, default = None)                         minimum thresholds per channel or per sample (length = channels or batch*channels)
+        @param max (list of floats, optional, default = None)                         maximum thresholds per channel or per sample (length = channels or batch*channels)
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output

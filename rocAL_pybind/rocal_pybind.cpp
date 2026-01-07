@@ -758,6 +758,11 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
         .value("MISSING_COMPONENT_EMPTY", ROCAL_MISSING_COMPONENT_EMPTY)
         .export_values();
+    py::enum_<RocalImageBorderType>(types_m,"RocalImageBorderType", "Rocal Image Border Type")
+        .value("REPLICATE", ROCAL_REPLICATE)
+        .value("CONSTANT", ROCAL_CONSTANT)
+        .value("REFLECT_NO_EDGE", ROCAL_REFLECT_NO_EDGE)
+        .export_values();
     // Bitwise Ops enum
     py::enum_<RocalBitwiseOp>(types_m, "RocalBitwiseOp", "Bitwise operation selector")
         .value("BITWISE_AND", ROCAL_BITWISE_AND)

@@ -53,7 +53,7 @@ void MagnitudeNode::create_node() {
                               roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the magnitude (vxExtRppMagnitude) node failed: " + TOSTR(status))
+        THROW("Adding the magnitude (vxExtRppMagnitude) node failed: " + TOSTR(status));
 #else
     THROW("MagnitudeNode: vxExtRppMagnitude requires amd_rpp version >= 3.1.3");
 #endif

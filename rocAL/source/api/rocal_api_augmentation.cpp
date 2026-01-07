@@ -1506,13 +1506,11 @@ rocalLensCorrection(
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
-        if (camera_matrix.size() != context->user_batch_size()) {
-            ERR("User should pass camera matrix for all images in a batch")
-            return output;
+        if (camera_matrix.size() != context->user_batch_size() && camera_matrix.size() != 1) {
+            THROW("Camera matrix size must be either 1 (for all images) or equal to batch size (" + std::to_string(context->user_batch_size()) + "). Provided size: " + std::to_string(camera_matrix.size()))
         }
-        if (distortion_coeffs.size() != context->user_batch_size()) {
-            ERR("User should pass distortion coefficients for all images in a batch")
-            return output;
+        if (distortion_coeffs.size() != context->user_batch_size() && distortion_coeffs.size() != 1) {
+            THROW("Distortion coefficients size must be either 1 (for all images) or equal to batch size (" + std::to_string(context->user_batch_size()) + "). Provided size: " + std::to_string(distortion_coeffs.size()))
         }
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
@@ -2501,7 +2499,7 @@ rocalMedianFilter(
     RocalTensor p_input,
     bool is_output,
     unsigned kernel_size,
-    int border_type,
+    RocalImageBorderType border_type,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -2518,7 +2516,7 @@ rocalMedianFilter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<MedianFilterNode>({input}, {output})
-            ->init(kernel_size, border_type);
+            ->init(kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2532,6 +2530,7 @@ rocalGaussianFilter(
     bool is_output,
     RocalFloatParam p_stddev,
     unsigned kernel_size,
+    RocalImageBorderType border_type,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -2549,7 +2548,7 @@ rocalGaussianFilter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<GaussianFilterNode>({input}, {output})
-            ->init(stddev, kernel_size);
+            ->init(stddev, kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2562,6 +2561,7 @@ rocalGaussianFilterFixed(
     RocalTensor p_input,
     float stddev,
     unsigned kernel_size,
+    RocalImageBorderType border_type,
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -2579,7 +2579,7 @@ rocalGaussianFilterFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<GaussianFilterNode>({input}, {output})
-            ->init(stddev, kernel_size);
+            ->init(stddev, kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
