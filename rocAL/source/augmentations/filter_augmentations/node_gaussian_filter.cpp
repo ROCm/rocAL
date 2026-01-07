@@ -25,14 +25,16 @@ GaussianFilterNode::GaussianFilterNode(const std::vector<Tensor*>& inputs, const
     : Node(inputs, outputs),
       _stddev(STDDEV_RANGE[0], STDDEV_RANGE[1]) {}
 
-void GaussianFilterNode::init(float stddev, int kernel_size) {
+void GaussianFilterNode::init(float stddev, int kernel_size, ImageBorderType border_type) {
     _stddev.set_param(stddev);
     _kernel_size = kernel_size;
+    _border_type = static_cast<int>(border_type);
 }
 
-void GaussianFilterNode::init(FloatParam* stddev_param, int kernel_size) {
+void GaussianFilterNode::init(FloatParam* stddev_param, int kernel_size, ImageBorderType border_type) {
     _stddev.set_param(core(stddev_param));
     _kernel_size = kernel_size;
+    _border_type = static_cast<int>(border_type);
 }
 
 void GaussianFilterNode::create_node() {
@@ -52,6 +54,7 @@ void GaussianFilterNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &roi_type);
     vx_scalar kernel_size_vx = vxCreateScalar(ctx, VX_TYPE_UINT32, &_kernel_size);
+    vx_scalar border_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &_border_type);
 
     _node = vxExtRppGaussianFilter(_graph->get(),
                                    _inputs[0]->handle(),
@@ -59,6 +62,7 @@ void GaussianFilterNode::create_node() {
                                    _outputs[0]->handle(),
                                    _stddev.default_array(),
                                    kernel_size_vx,
+                                   border_type_vx,
                                    input_layout_vx,
                                    output_layout_vx,
                                    roi_type_vx);
