@@ -23,6 +23,10 @@ THE SOFTWARE.
 #include "loaders/audio/node_audio_loader.h"
 #include "pipeline/exception.h"
 
+#define INIT_ARGS_COUNT 15  // Modify in accordance with number of args in init
+
+REGISTER_LOADER_NODE(AudioLoaderNode)
+
 #ifdef ROCAL_AUDIO
 
 AudioLoaderNode::AudioLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
@@ -46,6 +50,22 @@ void AudioLoaderNode::Init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_cpu_num_threads(cpu_num_threads);
     reader_cfg.set_file_list_path(file_list_path);
     reader_cfg.set_sharding_info(sharding_info);
+
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
+        "internal_shard_count", "cpu_num_threads", "source_path",
+        "file_list_path", "storage_type", "decoder_type",
+        "shuffle", "loop", "load_batch_count", "mem_type",
+        "meta_data_reader", "last_batch_policy", "pad_last_batch_repeated",
+        "stick_to_shard", "shard_size"
+    };
+
+    // NOTE : Add the new arguments when modifying init function
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, internal_shard_count,
+                       cpu_num_threads, source_path, file_list_path, storage_type,
+                       decoder_type, shuffle, loop, load_batch_count, mem_type, meta_data_reader,
+                       sharding_info.last_batch_policy, sharding_info.pad_last_batch_repeated,
+                       sharding_info.stick_to_shard, sharding_info.shard_size);
+
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size, false);
     _loader_module->start_loading();
 }
@@ -59,4 +79,25 @@ std::shared_ptr<LoaderModule> AudioLoaderNode::GetLoaderModule() {
 AudioLoaderNode::~AudioLoaderNode() {
     _loader_module = nullptr;
 }
+
+void AudioLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("AudioLoaderNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
+              "Ensure all arguments present in init are accounted for");
+
+    ShardingInfo sharding_info(arguments[11].get<RocalBatchPolicy>(), arguments[12].get<bool>(),
+                               arguments[13].get<bool>(), arguments[14].get<int32_t>());
+
+    this->Init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<std::string>(),
+               arguments[3].get<std::string>(), arguments[4].get<StorageType>(), arguments[5].get<DecoderType>(),
+               arguments[6].get<bool>(), arguments[7].get<bool>(), arguments[8].get<size_t>(), arguments[9].get<RocalMemType>(),
+               meta_data_reader, sharding_info);
+}
+
+std::shared_ptr<LoaderModule> AudioLoaderNode::get_loader_module() {
+    if (!_loader_module)
+        WRN("AudioLoaderNode's loader module is null, not initialized");
+    return _loader_module;
+}
+
 #endif

@@ -24,6 +24,10 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+#define INIT_ARGS_COUNT 15  // Modify in accordance with number of args in init
+
+REGISTER_LOADER_NODE(NumpyLoaderSingleShardNode)
+
 NumpyLoaderSingleShardNode::NumpyLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<NumpyLoader>(device_resources);
 }
@@ -47,6 +51,16 @@ void NumpyLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, c
     reader_cfg.set_sharding_info(sharding_info);
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::SKIP_DECODE), mem_type, _batch_size);
     _loader_module->start_loading();
+
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
+        "shard_id", "shard_count", "source_path", "files", "storage_type", "decoder_type",
+        "shuffle", "loop", "load_batch_count", "mem_type", "seed", "last_batch_policy",
+        "pad_last_batch_repeated", "stick_to_shard", "shard_size"
+    };
+    // NOTE : Add the new arguments when modifying init function
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, shard_id, shard_count, source_path, files,
+                       storage_type, decoder_type, shuffle, loop, load_batch_count, mem_type, seed, sharding_info.last_batch_policy,
+                       sharding_info.pad_last_batch_repeated, sharding_info.stick_to_shard, sharding_info.shard_size);
 }
 
 std::shared_ptr<LoaderModule> NumpyLoaderSingleShardNode::get_loader_module() {
@@ -57,4 +71,17 @@ std::shared_ptr<LoaderModule> NumpyLoaderSingleShardNode::get_loader_module() {
 
 NumpyLoaderSingleShardNode::~NumpyLoaderSingleShardNode() {
     _loader_module = nullptr;
+}
+
+void NumpyLoaderSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    (void)meta_data_reader;
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("NumpyLoaderSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
+              ". Ensure all arguments present in init are accounted for");
+
+    ShardingInfo sharding_info(arguments[11].get<RocalBatchPolicy>(), arguments[12].get<bool>(), arguments[13].get<bool>(), arguments[14].get<int32_t>());
+    this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<std::string>(),
+               arguments[3].get<std::vector<std::string>>(), arguments[4].get<StorageType>(), arguments[5].get<DecoderType>(),
+               arguments[6].get<bool>(), arguments[7].get<bool>(), arguments[8].get<size_t>(), arguments[9].get<RocalMemType>(),
+               arguments[10].get<unsigned>(), sharding_info);
 }

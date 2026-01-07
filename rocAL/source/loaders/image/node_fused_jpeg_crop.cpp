@@ -24,6 +24,10 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+#define INIT_ARGS_COUNT 18  // Modify in accordance with number of args in init
+
+REGISTER_LOADER_NODE(FusedJpegCropNode)
+
 FusedJpegCropNode::FusedJpegCropNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }
@@ -53,6 +57,18 @@ void FusedJpegCropNode::init(unsigned internal_shard_count, unsigned cpu_num_thr
                                mem_type,
                                _batch_size);
     _loader_module->start_loading();
+
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
+        "internal_shard_count", "cpu_num_threads", "source_path", "json_path", "storage_type",
+        "decoder_type", "shuffle", "loop", "load_batch_count", "mem_type", "meta_data_reader",
+        "num_attempts", "random_area", "random_aspect_ratio", "last_batch_policy",
+        "pad_last_batch_repeated", "stick_to_shard", "shard_size"
+    };
+    // NOTE: Update arg_names when modifying init
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, internal_shard_count, cpu_num_threads,
+                       source_path, json_path, storage_type, decoder_type, shuffle, loop, load_batch_count, mem_type,
+                       meta_data_reader, num_attempts, random_area, random_aspect_ratio, sharding_info.last_batch_policy,
+                       sharding_info.pad_last_batch_repeated, sharding_info.stick_to_shard, sharding_info.shard_size);
 }
 
 std::shared_ptr<LoaderModule> FusedJpegCropNode::get_loader_module() {
@@ -63,4 +79,19 @@ std::shared_ptr<LoaderModule> FusedJpegCropNode::get_loader_module() {
 
 FusedJpegCropNode::~FusedJpegCropNode() {
     _loader_module = nullptr;
+}
+
+void FusedJpegCropNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("FusedJpegCropNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
+              ". Ensure all arguments present in init are accounted for");
+
+    auto random_area = arguments[12].get<std::vector<float>>();
+    auto random_aspect_ratio = arguments[13].get<std::vector<float>>();
+    ShardingInfo sharding_info(arguments[14].get<RocalBatchPolicy>(), arguments[15].get<bool>(), arguments[16].get<bool>(), arguments[17].get<int32_t>());
+
+    this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<std::string>(),
+               arguments[3].get<std::string>(), arguments[4].get<StorageType>(), arguments[5].get<DecoderType>(),
+               arguments[6].get<bool>(), arguments[7].get<bool>(), arguments[8].get<size_t>(), arguments[9].get<RocalMemType>(),
+               meta_data_reader, arguments[11].get<unsigned>(), random_area, random_aspect_ratio, sharding_info);
 }

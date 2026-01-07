@@ -24,6 +24,10 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+#define INIT_ARGS_COUNT 19  // Modify in accordance with number of args in init
+
+REGISTER_LOADER_NODE(FusedJpegCropSingleShardNode)
+
 FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }
@@ -56,6 +60,18 @@ void FusedJpegCropSingleShardNode::init(unsigned shard_id, unsigned shard_count,
                                mem_type,
                                _batch_size);
     _loader_module->start_loading();
+
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
+        "shard_id", "shard_count", "cpu_num_threads", "source_path", "json_path", "storage_type",
+        "decoder_type", "shuffle", "loop", "load_batch_count", "mem_type", "meta_data_reader",
+        "num_attempts", "area_factor", "aspect_ratio", "last_batch_policy",
+        "pad_last_batch_repeated", "stick_to_shard", "shard_size"
+    };
+    // NOTE: Update arg_names when modifying init
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, shard_id, shard_count, cpu_num_threads,
+                       source_path, json_path, storage_type, decoder_type, shuffle, loop, load_batch_count, mem_type,
+                       meta_data_reader, num_attempts, area_factor, aspect_ratio, sharding_info.last_batch_policy,
+                       sharding_info.pad_last_batch_repeated, sharding_info.stick_to_shard, sharding_info.shard_size);
 }
 
 std::shared_ptr<LoaderModule> FusedJpegCropSingleShardNode::get_loader_module() {
@@ -66,4 +82,19 @@ std::shared_ptr<LoaderModule> FusedJpegCropSingleShardNode::get_loader_module() 
 
 FusedJpegCropSingleShardNode::~FusedJpegCropSingleShardNode() {
     _loader_module = nullptr;
+}
+
+void FusedJpegCropSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("FusedJpegCropSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
+              ". Ensure all arguments present in init are accounted for");
+
+    auto area_factor = arguments[13].get<std::vector<float>>();
+    auto aspect_ratio = arguments[14].get<std::vector<float>>();
+    ShardingInfo sharding_info(arguments[15].get<RocalBatchPolicy>(), arguments[16].get<bool>(), arguments[17].get<bool>(), arguments[18].get<int32_t>());
+
+    this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<unsigned>(), arguments[3].get<std::string>(),
+               arguments[4].get<std::string>(), arguments[5].get<StorageType>(), arguments[6].get<DecoderType>(), arguments[7].get<bool>(),
+               arguments[8].get<bool>(), arguments[9].get<size_t>(), arguments[10].get<RocalMemType>(), meta_data_reader,
+               arguments[12].get<unsigned>(), area_factor, aspect_ratio, sharding_info);
 }
