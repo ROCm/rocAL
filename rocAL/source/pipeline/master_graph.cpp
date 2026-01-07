@@ -1937,8 +1937,12 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
             } else if (op_def.module_name() == "loader") {
                 // fetch the output tensor details and create it
                 auto output_tensor = create_operator_output(op_def.outputs()[0], true);
-
-                auto loader_node = this->add_node(get_node_name(op_def.name()), {}, {output_tensor}, true);
+                auto node_name = get_node_name(op_def.name());
+                // For Audio loader nodes, explicitly allocate the resample rate
+                if (node_name == "AudioLoaderNode" || node_name == "AudioLoaderSingleShardNode") {
+                    output_tensor->reset_audio_sample_rate();
+                }
+                auto loader_node = this->add_node(node_name, {}, {output_tensor}, true);
 
                 std::vector<Argument> args_list;
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
