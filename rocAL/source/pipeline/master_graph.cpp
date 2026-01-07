@@ -1944,6 +1944,17 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
                     THROW("Failed to deserialize arguments for loader : " + op_def.name());
 
+                // Extract the loop argument from args_list and set it in MasterGraph
+                for (const auto& arg : args_list) {
+                    if (arg.arg_name == "loop") {
+                        try {
+                            _loop = arg.get<bool>();
+                            break;
+                        } catch (const std::exception& e) {
+                            THROW("Failed to extract loop value");
+                        }
+                    }
+                }
                 loader_node->initialize_args(args_list, _meta_data_reader);
             } else {
                 std::vector<Tensor *> inputs_vector;
