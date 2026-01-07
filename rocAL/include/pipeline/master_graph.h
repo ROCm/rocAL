@@ -469,7 +469,7 @@ template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const s
 #else
     auto node = std::make_shared<AudioLoaderNode>(outputs[0], nullptr);
 #endif
-    auto loader_module = node->GetLoaderModule();
+    auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
@@ -486,7 +486,7 @@ template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_n
 #else
     auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    auto loader_module = node->GetLoaderModule();
+    auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);

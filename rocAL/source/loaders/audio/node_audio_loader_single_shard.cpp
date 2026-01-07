@@ -71,9 +71,9 @@ void AudioLoaderSingleShardNode::Init(unsigned shard_id, unsigned shard_count, u
     _loader_module->start_loading();
 }
 
-std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::GetLoaderModule() {
+std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
     if (!_loader_module)
-        WRN("AudioLoaderSingleShardNode's loader module is null, not initialized")
+        WRN("AudioLoaderSingleShardNode's loader module is null, not initialized");
     return _loader_module;
 }
 
@@ -92,12 +92,6 @@ void AudioLoaderSingleShardNode::initialize_args(std::vector<Argument> &argument
     this->Init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<unsigned>(),
                arguments[3].get<std::string>(), arguments[4].get<std::string>(), arguments[5].get<StorageType>(), arguments[6].get<DecoderType>(), 
                arguments[7].get<bool>(), arguments[8].get<bool>(), arguments[9].get<size_t>(), arguments[10].get<RocalMemType>(), meta_data_reader, sharding_info);
-}
-
-std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
-    if (!_loader_module)
-        WRN("AudioLoaderSingleShardNode's loader module is null, not initialized");
-    return _loader_module;
 }
 
 #endif
