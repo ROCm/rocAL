@@ -2531,6 +2531,7 @@ rocalGaussianFilter(
     bool is_output,
     RocalFloatParam p_stddev,
     unsigned kernel_size,
+    int border_type,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -2548,7 +2549,7 @@ rocalGaussianFilter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<GaussianFilterNode>({input}, {output})
-            ->init(stddev, kernel_size);
+            ->init(stddev, kernel_size, border_type);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2561,6 +2562,7 @@ rocalGaussianFilterFixed(
     RocalTensor p_input,
     float stddev,
     unsigned kernel_size,
+    int border_type,
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -2578,7 +2580,7 @@ rocalGaussianFilterFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph
             ->add_node<GaussianFilterNode>({input}, {output})
-            ->init(stddev, kernel_size);
+            ->init(stddev, kernel_size, border_type);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

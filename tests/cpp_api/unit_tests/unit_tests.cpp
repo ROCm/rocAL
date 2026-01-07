@@ -925,11 +925,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         case 70: {
             std::cout << "Running rocalGaussianFilter" << std::endl;
             // Use existing float_param defined earlier as per-sample stddev
-            output = rocalGaussianFilter(handle, input, true, nullptr, 3, output_tensor_layout, output_tensor_dtype);
+            output = rocalGaussianFilter(handle, input, true, nullptr, 3, 0, output_tensor_layout, output_tensor_dtype);
         } break;
         case 71: {
             std::cout << "Running rocalGaussianFilterFixed" << std::endl;
-            output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, true, output_tensor_layout, output_tensor_dtype);
+            output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, 0, true, output_tensor_layout, output_tensor_dtype);
         } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";

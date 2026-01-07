@@ -1385,12 +1385,13 @@ def median_filter(*inputs, kernel_size=3, border_type=0, device=None, output_lay
     return (output_image)
 
 
-def gaussian_filter(*inputs, stddev=None, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies gaussian filter to images with per-sample stddev parameter.
 
         @param inputs                                                                the input image passed to the augmentation
         @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam
         @param kernel_size (int, default = 3)                                        gaussian filter kernel size (pixels), typically odd: 3,5,7
+        @param border_type (int, default = 0)                                        border handling policy (implementation specific)
         @param device (string, optional, default = None)                             Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
@@ -1403,6 +1404,7 @@ def gaussian_filter(*inputs, stddev=None, kernel_size=3, device=None, output_lay
         "is_output": False,
         "stddev": stddev,
         "kernel_size": kernel_size,
+        "border_type": border_type,
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }

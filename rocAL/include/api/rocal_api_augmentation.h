@@ -1457,6 +1457,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMedianFilter(RocalContext context, Ro
  * \param [in] is_output Is the output tensor part of the graph output
  * \param [in] stddev Per-sample standard deviation parameter
  * \param [in] kernel_size Gaussian filter kernel size (pixels)
+ * \param [in] border_type Border handling policy
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -1465,6 +1466,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilter(RocalContext context, 
                                                           bool is_output,
                                                           RocalFloatParam stddev = NULL,
                                                           unsigned kernel_size = 3,
+                                                          int border_type = 0,
                                                           RocalTensorLayout output_layout = ROCAL_NONE,
                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -1474,6 +1476,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilter(RocalContext context, 
  * \param [in] input Input Rocal tensor
  * \param [in] stddev Fixed standard deviation value
  * \param [in] kernel_size Gaussian filter kernel size (pixels)
+ * \param [in] border_type Border handling policy
  * \param [in] is_output Is the output tensor part of the graph output
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
@@ -1482,6 +1485,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilter(RocalContext context, 
 extern "C" RocalTensor ROCAL_API_CALL rocalGaussianFilterFixed(RocalContext context, RocalTensor input,
                                                                float stddev,
                                                                unsigned kernel_size,
+                                                               int border_type,
                                                                bool is_output,
                                                                RocalTensorLayout output_layout = ROCAL_NONE,
                                                                RocalTensorOutputType output_datatype = ROCAL_UINT8);
