@@ -269,9 +269,9 @@ def main():
                                        num_shards=world_size,
                                        random_shuffle=False)
         elif reader_type == "web_dataset":
-            jpegs = fn.readers.webdataset(path=data_path, ext=[{'jpg', 'cls'}])
+            jpegs = fn.readers.webdataset(path=data_path, ext=[{'JPEG', 'cls'}])
             images = fn.decoders.image(jpegs,
-                                       path=data_path,
+                                       file_root=data_path,
                                        device=decoder_device,
                                        max_decoded_width=max_width,
                                        max_decoded_height=max_height,
@@ -334,6 +334,7 @@ def main():
                                  output_dtype=tensor_dtype)
         elif augmentation_name == "vignette":
             output = fn.vignette(images,
+                                 vignette=50.0,
                                  output_layout=tensor_layout,
                                  output_dtype=tensor_dtype)
         elif augmentation_name == "jitter":
@@ -452,8 +453,8 @@ def main():
                                            output_dtype=tensor_dtype)
         elif augmentation_name == "lens_correction":
             output = fn.lens_correction(images,
-                                        strength=2.9,
-                                        zoom=1.2,
+                                        camera_matrix=[534.07088364, 341.53407554, 534.11914595, 232.94565259],
+                                        distortion_coeffs=[-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798],
                                         output_layout=tensor_layout,
                                         output_dtype=tensor_dtype)
         elif augmentation_name == "blend":
