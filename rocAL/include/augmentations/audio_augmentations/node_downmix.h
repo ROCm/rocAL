@@ -27,6 +27,9 @@ class DownmixNode : public Node {
    public:
     DownmixNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     DownmixNode() = delete;
+    void init() {}
+    void initialize_args(std::vector<Argument> &arguments) override;
+    std::string node_name() const override { return "DownmixNode"; }
 
    protected:
     void create_node() override;

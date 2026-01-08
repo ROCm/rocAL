@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(MelFilterBankNode)
+
 MelFilterBankNode::MelFilterBankNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void MelFilterBankNode::create_node() {
@@ -60,4 +62,12 @@ void MelFilterBankNode::init(float freq_high, float freq_low, MelScaleFormula me
     _nfilter = nfilter;
     _normalize = normalize;
     _sample_rate = sample_rate;
+    // Add all arguments as part of the Node
+    std::array<std::string, 6> arg_names = {"freq_high", "freq_low", "mel_formula", "nfilter", "normalize", "sample_rate"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, freq_high, freq_low, mel_formula, nfilter, normalize, sample_rate);
+}
+
+void MelFilterBankNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<MelFilterBankNode, float, float, MelScaleFormula, int, bool, float>(this, arguments)) return;
+    THROW("Unsupported argument types for MelFilterBankNode");
 }

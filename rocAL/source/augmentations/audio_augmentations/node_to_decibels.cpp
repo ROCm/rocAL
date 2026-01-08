@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ToDecibelsNode)
+
 ToDecibelsNode::ToDecibelsNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void ToDecibelsNode::create_node() {
@@ -53,4 +55,12 @@ void ToDecibelsNode::init(float cutoff_db, float multiplier, float reference_mag
     _cutoff_db = cutoff_db;
     _multiplier = multiplier;
     _reference_magnitude = reference_magnitude;
+    // Add all arguments as part of the Node
+    std::array<std::string, 3> arg_names = {"cutoff_db", "multiplier", "reference_magnitude"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, cutoff_db, multiplier, reference_magnitude);
+}
+
+void ToDecibelsNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<ToDecibelsNode, float, float, float>(this, arguments)) return;
+    THROW("Unsupported argument types for ToDecibelsNode");
 }

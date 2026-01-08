@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(NonSilentRegionDetectionNode)
+
 NonSilentRegionDetectionNode::NonSilentRegionDetectionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void NonSilentRegionDetectionNode::create_node() {
@@ -46,9 +48,17 @@ void NonSilentRegionDetectionNode::create_node() {
 
 void NonSilentRegionDetectionNode::update_node() {}
 
-void NonSilentRegionDetectionNode::init(float cutoff_db, float reference_power, int window_length, int reset_interval) {
+void NonSilentRegionDetectionNode::init(float cutoff_db, float reference_power, int reset_interval, int window_length) {
     _cutoff_db = cutoff_db;
     _reference_power = reference_power;
     _window_length = window_length;
     _reset_interval = reset_interval;
+    // Add all arguments as part of the Node
+    std::array<std::string, 4> arg_names = {"cutoff_db", "reference_power", "reset_interval", "window_length"};
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, cutoff_db, reference_power, reset_interval, window_length);
+}
+
+void NonSilentRegionDetectionNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<NonSilentRegionDetectionNode, float, float, int, int>(this, arguments)) return;
+    THROW("Unsupported argument types for NonSilentRegionDetectionNode");
 }
