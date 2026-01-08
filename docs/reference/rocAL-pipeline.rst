@@ -44,6 +44,4 @@ Once these parameters are set, the pipeline can be built and run:
 
 The output of the pipeline is the output of the original function.
 
-
-.. |decoder.py| replace:: ``decoder.py``
-.. _decoder.py: https://github.com/ROCm/rocAL/tree/develop/tests/python_api/decoder.py
+``pipeline.run()`` doesn't need to be called explicitly if an iterator is being used. The rocAL iterators call ``pipeline.rocal_run()`` internally, eliminating the need to call ``pipeline.run()``.
