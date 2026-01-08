@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <vx_ext_rpp_version.h>
 #include "meta_data/augmentations_meta_nodes.h"
 #include "augmentations/augmentations_nodes.h"
 #include "pipeline/commons.h"
@@ -2217,6 +2218,7 @@ rocalTensorSum(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -2229,6 +2231,9 @@ rocalTensorSum(
         output_info.set_dims(new_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorStatisticsNode>({input}, {output})->init(TensorStatisticsType::SUM);
+#else
+        THROW("rocalTensorSum requires amd_rpp version >= 3.2.0");
+#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2248,6 +2253,7 @@ rocalTensorMin(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -2260,6 +2266,9 @@ rocalTensorMin(
         output_info.set_dims(new_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorStatisticsNode>({input}, {output})->init(TensorStatisticsType::MIN);
+#else
+        THROW("rocalTensorMin requires amd_rpp version >= 3.2.0");
+#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2279,6 +2288,7 @@ rocalTensorMax(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -2291,6 +2301,9 @@ rocalTensorMax(
         output_info.set_dims(new_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorStatisticsNode>({input}, {output})->init(TensorStatisticsType::MAX);
+#else
+        THROW("rocalTensorMax requires amd_rpp version >= 3.2.0");
+#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2310,6 +2323,7 @@ rocalTensorMean(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -2322,6 +2336,9 @@ rocalTensorMean(
         output_info.set_dims(new_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorStatisticsNode>({input}, {output})->init(TensorStatisticsType::MEAN);
+#else
+        THROW("rocalTensorMean requires amd_rpp version >= 3.2.0");
+#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2343,6 +2360,7 @@ rocalTensorStdDev(
     auto input = static_cast<Tensor*>(p_input);
     auto mean_tensor = static_cast<Tensor*>(p_mean_tensor);
     try {
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -2355,6 +2373,9 @@ rocalTensorStdDev(
         output_info.set_dims(new_dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorStatisticsNode>({input, mean_tensor}, {output})->init(TensorStatisticsType::STDDEV);
+#else
+        THROW("rocalTensorStdDev requires amd_rpp version >= 3.2.0");
+#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
