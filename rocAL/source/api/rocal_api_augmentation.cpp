@@ -1111,6 +1111,212 @@ rocalSnPNoiseFixed(
 }
 
 RocalTensor ROCAL_API_CALL
+rocalLut(
+    RocalContext p_context,
+    RocalTensor p_input,
+    uint8_t* lut_data,
+    bool is_output,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<LutNode>({input}, {output})->init(lut_data);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalPosterize(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    RocalIntParam p_num_bits,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto num_bits = static_cast<IntParam*>(p_num_bits);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<PosterizeNode>({input}, {output})->init(num_bits);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalPosterizeFixed(
+    RocalContext p_context,
+    RocalTensor p_input,
+    unsigned int num_bits,
+    bool is_output,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<PosterizeNode>({input}, {output})->init(num_bits);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalSolarize(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    RocalFloatParam p_threshold,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto threshold = static_cast<FloatParam*>(p_threshold);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SolarizeNode>({input}, {output})->init(threshold);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalSolarizeFixed(
+    RocalContext p_context,
+    RocalTensor p_input,
+    float threshold,
+    bool is_output,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SolarizeNode>({input}, {output})->init(threshold);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalJpegCompressionDistortion(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    RocalIntParam p_quality,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto quality = static_cast<IntParam*>(p_quality);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<JpegCompressionDistortionNode>({input}, {output})->init(quality);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalJpegCompressionDistortionFixed(
+    RocalContext p_context,
+    RocalTensor p_input,
+    unsigned int quality,
+    bool is_output,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<JpegCompressionDistortionNode>({input}, {output})->init(quality);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
 rocalFlip(
     RocalContext p_context,
     RocalTensor p_input,
@@ -1399,6 +1605,35 @@ rocalColorTempFixed(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorTemperatureNode>({input}, {output})->init(adj_value_param);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalChannelPermute(
+    RocalContext p_context,
+    RocalTensor p_input,
+    std::vector<unsigned int>& permutation,
+    bool is_output,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<ChannelPermuteNode>({input}, {output})->init(permutation);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2431,6 +2666,38 @@ RocalTensor rocalLog1p(RocalContext p_context,
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<Log1pNode>({input}, {output});
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalColorToGreyscale(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        // Set output channels to 1 for greyscale
+        std::vector<size_t> new_dims = output_info.dims();
+        new_dims[output_info.get_channel_index()] = 1;
+        output_info.set_dims(new_dims);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<ColorToGreyscaleNode>({input}, {output});
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

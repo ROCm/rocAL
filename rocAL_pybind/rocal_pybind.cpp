@@ -1125,6 +1125,14 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("snpNoise", &rocalSnPNoise,
           py::return_value_policy::reference);
+    m.def("lut", &rocalLut,
+          py::return_value_policy::reference);
+    m.def("posterize", &rocalPosterize,
+          py::return_value_policy::reference);
+    m.def("solarize", &rocalSolarize,
+          py::return_value_policy::reference);
+    m.def("jpegCompressionDistortion", &rocalJpegCompressionDistortion,
+          py::return_value_policy::reference);
     m.def("exposure", &rocalExposure,
           py::return_value_policy::reference);
     m.def("pixelate", &rocalPixelate,
@@ -1134,6 +1142,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("randomCrop", &rocalRandomCrop,
           py::return_value_policy::reference);
     m.def("colorTemp", &rocalColorTemp,
+          py::return_value_policy::reference);
+    m.def("channelPermute", &rocalChannelPermute,
+          py::return_value_policy::reference);
+    m.def("colorToGreyscale", &rocalColorToGreyscale,
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);

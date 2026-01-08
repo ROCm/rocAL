@@ -599,6 +599,118 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Applies Lookup Table (LUT) transformation on images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] lut_data pointer to the LUT data array
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalLut(RocalContext context, RocalTensor input,
+                                               uint8_t* lut_data,
+                                               bool is_output,
+                                               RocalTensorLayout output_layout = ROCAL_NONE,
+                                               RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies posterize effect on images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] num_bits number of bits to reduce color channels to
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalPosterize(RocalContext context, RocalTensor input,
+                                                     bool is_output,
+                                                     RocalIntParam num_bits = NULL,
+                                                     RocalTensorLayout output_layout = ROCAL_NONE,
+                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies posterize effect on images with fixed parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] num_bits number of bits to reduce color channels to
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalPosterizeFixed(RocalContext context, RocalTensor input,
+                                                          unsigned int num_bits,
+                                                          bool is_output,
+                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies solarize effect on images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] threshold threshold value for solarization
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSolarize(RocalContext context, RocalTensor input,
+                                                    bool is_output,
+                                                    RocalFloatParam threshold = NULL,
+                                                    RocalTensorLayout output_layout = ROCAL_NONE,
+                                                    RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies solarize effect on images with fixed parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] threshold threshold value for solarization
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSolarizeFixed(RocalContext context, RocalTensor input,
+                                                         float threshold,
+                                                         bool is_output,
+                                                         RocalTensorLayout output_layout = ROCAL_NONE,
+                                                         RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies JPEG compression distortion on images.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] quality JPEG compression quality (1-100)
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalJpegCompressionDistortion(RocalContext context, RocalTensor input,
+                                                                     bool is_output,
+                                                                     RocalIntParam quality = NULL,
+                                                                     RocalTensorLayout output_layout = ROCAL_NONE,
+                                                                     RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies JPEG compression distortion on images with fixed parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] quality JPEG compression quality (1-100)
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalJpegCompressionDistortionFixed(RocalContext context, RocalTensor input,
+                                                                          unsigned int quality,
+                                                                          bool is_output,
+                                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 /*! \brief Applies snow effect on images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
@@ -706,6 +818,22 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTemp(RocalContext context, Rocal
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalColorTempFixed(RocalContext context, RocalTensor input,
                                                           int adjustment, bool is_output,
+                                                          RocalTensorLayout output_layout = ROCAL_NONE,
+                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Permutes the channels of the input image.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] permutation The permutation of channels
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalChannelPermute(RocalContext context, RocalTensor input,
+                                                          std::vector<unsigned int>& permutation,
+                                                          bool is_output,
                                                           RocalTensorLayout output_layout = ROCAL_NONE,
                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -1371,5 +1499,19 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTranspose(RocalContext context, Rocal
 extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
+
+/*! \brief Converts a color image to greyscale.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalColorToGreyscale(RocalContext context, RocalTensor input,
+                                                            bool is_output,
+                                                            RocalTensorLayout output_layout = ROCAL_NONE,
+                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

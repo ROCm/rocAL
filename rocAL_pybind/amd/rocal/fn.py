@@ -1123,6 +1123,119 @@ def snp_noise(*inputs, p_noise=0.0, p_salt=0.0, noise_val=0.0, salt_val=0.0,
     return (snp_noise_added_image)
 
 
+def lut(*inputs, lut_data, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies a Lookup Table (LUT) transformation to the input image.
+
+        @param inputs (list)                                                          The input image to which LUT is applied.
+        @param lut_data (list)                                                        LUT data array (256 values for 8-bit images).
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Image with LUT transformation applied.
+    """
+    kwargs_pybind = {"input_image": inputs[0], "lut_data": lut_data, "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    lut_image = b.lut(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (lut_image)
+
+
+def posterize(*inputs, num_bits=4, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies posterize effect to the input image.
+
+        @param inputs (list)                                                          The input image to which posterize is applied.
+        @param num_bits (int, optional, default = 4)                                  Number of bits to reduce color channels to.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Image with posterize effect applied.
+    """
+    num_bits = b.createIntParameter(num_bits) if isinstance(num_bits, int) else num_bits
+
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "num_bits": num_bits,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    posterized_image = b.posterize(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (posterized_image)
+
+
+def solarize(*inputs, threshold=128.0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies solarize effect to the input image.
+
+        @param inputs (list)                                                          The input image to which solarize is applied.
+        @param threshold (float, optional, default = 128.0)                           Threshold value for solarization.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Image with solarize effect applied.
+    """
+    threshold = b.createFloatParameter(threshold) if isinstance(threshold, float) else threshold
+
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "threshold": threshold,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    solarized_image = b.solarize(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (solarized_image)
+
+
+def jpeg_compression_distortion(*inputs, quality=75, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies JPEG compression distortion to the input image.
+
+        @param inputs (list)                                                          The input image to which JPEG compression is applied.
+        @param quality (int, optional, default = 75)                                  JPEG compression quality (1-100).
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Image with JPEG compression distortion applied.
+    """
+    quality = b.createIntParameter(quality) if isinstance(quality, int) else quality
+
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "quality": quality,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    compressed_image = b.jpegCompressionDistortion(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (compressed_image)
+
+
+def channel_permute(*inputs, permutation, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Permutes the channels of the input image.
+
+        @param inputs (list)                                                          The input image to which channel permute is applied.
+        @param permutation (list)                                                     The permutation of channels.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Image with channels permuted.
+    """
+    kwargs_pybind = {"input_image": inputs[0], "permutation": permutation, "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    permuted_image = b.channelPermute(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (permuted_image)
+
+
+def color_to_greyscale(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Converts a color image to greyscale.
+
+        @param inputs (list)                                                          The input color image to convert.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Greyscale image.
+    """
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    greyscale_image = b.colorToGreyscale(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (greyscale_image)
+
+
 def box_iou_matcher(*inputs, anchors, high_threshold=0.5,
                     low_threshold=0.4, allow_low_quality_matches=True, device=None):
     """!Applies box IoU matching to the input image.
