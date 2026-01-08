@@ -51,6 +51,98 @@ void set_tensor_proto(rocal_proto::InputOutput *in_out_proto, Tensor *tensor, bo
     in_out_proto->set_is_argument_input(is_input);
 }
 
+// Template helper function to add parameter values based on type
+template<typename T>
+void add_param_value(rocal_proto::Parameter *parameter, const T& value) {
+    if constexpr (std::is_same_v<T, int>) {
+        parameter->add_param_val_int(value);
+    } else if constexpr (std::is_same_v<T, float>) {
+        parameter->add_param_val_float(value);
+    }
+}
+
+// Template function to safely extract and cast parameter core
+template<typename T>
+auto extract_param_core(const Argument &op_arg) {
+    if constexpr (std::is_same_v<T, int>) {
+        auto param = std::get<IntParam *>(op_arg.param);
+        return param->core;
+    } else if constexpr (std::is_same_v<T, float>) {
+        auto param = std::get<FloatParam *>(op_arg.param);
+        return param->core;
+    } else {
+        THROW("Extract_param_core only supports int and float types.")
+    }
+}
+
+// Template function to handle SimpleParameter serialization
+template<typename T>
+void serialize_simple_parameter(rocal_proto::Parameter *parameter, const Argument &op_arg) {
+    auto param_core = extract_param_core<T>(op_arg);
+    auto simple_param = dynamic_cast<SimpleParameter<T> *>(param_core);
+    if (!simple_param) {
+        THROW("Failed to cast parameter '" + op_arg.arg_name + "' to SimpleParameter type.");
+    }
+    add_param_value(parameter, simple_param->get());
+}
+
+// Template function to handle UniformRand serialization
+template<typename T>
+void serialize_uniform_rand(rocal_proto::Parameter *parameter, const Argument &op_arg) {
+    auto param_core = extract_param_core<T>(op_arg);
+    auto uniform_param = dynamic_cast<UniformRand<T> *>(param_core);
+    if (!uniform_param) {
+        THROW("Failed to cast parameter '" + op_arg.arg_name + "' to UniformRand type.");
+    }
+    auto uniform_range = uniform_param->get_start_and_end();
+    add_param_value(parameter, uniform_range.first);
+    add_param_value(parameter, uniform_range.second);
+}
+
+// Template function to handle CustomRand serialization
+template<typename T>
+void serialize_custom_rand(rocal_proto::Parameter *parameter, const Argument &op_arg) {
+    auto param_core = extract_param_core<T>(op_arg);
+    auto random_param = dynamic_cast<CustomRand<T> *>(param_core);
+    if (!random_param) {
+        THROW("Failed to cast parameter '" + op_arg.arg_name + "' to CustomRand type.");
+    }
+    // Add values
+    auto values_vec = random_param->get_values();
+    for (const auto &val : values_vec) {
+        add_param_value(parameter, val);
+    }
+    
+    // Add frequencies
+    auto frequency_vec = random_param->get_frequencies();
+    for (const auto &val : frequency_vec) {
+        parameter->add_frequency(val);
+    }
+    
+    parameter->set_size(random_param->size());
+}
+
+// Type dispatcher function to handle different data types
+template<typename T>
+void serialize_parameter_by_type(rocal_proto::Parameter *parameter, const Argument &op_arg) {
+    if (op_arg.sub_type_name == "SimpleParameter") {
+        serialize_simple_parameter<T>(parameter, op_arg);
+    } else if (op_arg.sub_type_name == "UniformRand") {
+        serialize_uniform_rand<T>(parameter, op_arg);
+    } else if (op_arg.sub_type_name == "CustomRand") {
+        serialize_custom_rand<T>(parameter, op_arg);
+    }
+}
+
+// Main function with improved structure and error handling
+void serialize_parameter_to_protobuf(rocal_proto::Parameter *parameter, const Argument &op_arg) {
+    if (op_arg.type_name == "int") {
+        serialize_parameter_by_type<int>(parameter, op_arg);
+    } else if (op_arg.type_name == "float") {
+        serialize_parameter_by_type<float>(parameter, op_arg);
+    }
+}
+
 void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef) {
 
     // Iterate through each argument to store in the protobuffers
@@ -65,13 +157,11 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
             arg->set_instance_name(op_arg.sub_type_name);
 
         if (op_arg.is_parameter) {
-            THROW("Parameter types are unsupported for Argument " + op_arg.arg_name);
-            // TODO - Will be enabled later
-            // rocal_proto::Parameter *param = arg->mutable_param();
-            // serialize_parameter_to_protobuf(param, op_arg);
+            rocal_proto::Parameter *param = arg->mutable_param();
+            serialize_parameter_to_protobuf(param, op_arg);
         } else if (op_arg.type_name == "enum") {
             if (op_arg.values.empty()) {
-                THROW("Enum argument " + op_arg.arg_name + " has no values");
+                THROW("Enum argument " + op_arg.arg_name + " has no values.");
             }
             rocal_proto::EnumType* enum_arg = arg->mutable_enum_value();
             enum_arg->set_name(op_arg.sub_type_name);
@@ -90,7 +180,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
                                || op_arg.type_name == "map_string") {
                         static_cast<void>(arg->add_string_vectors());
                     } else {
-                        THROW("Vector type not supported for Argument " + op_arg.arg_name + " with type " + op_arg.type_name);
+                        THROW("Vector type not supported for Argument " + op_arg.arg_name + " with type " + op_arg.type_name + ".");
                     }
                 } else {
                     if (op_arg.type_name == "int" || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t") {
@@ -117,7 +207,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
                             vec->add_values(std::any_cast<std::string>(v));
                         }
                     } else {
-                        THROW("Vector type not supported for Argument " + op_arg.arg_name + " with type " + op_arg.type_name);
+                        THROW("Vector type not supported for Argument " + op_arg.arg_name + " with type " + op_arg.type_name + ".");
                     }
                 }
             } else {
@@ -139,7 +229,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
                     } else if (op_arg.type_name == "size_t") {
                         arg->add_uints(std::any_cast<size_t>(v));
                     } else {
-                        THROW("Invalid type specified for the Argument " + op_arg.arg_name);
+                        THROW("Invalid type specified for the Argument " + op_arg.arg_name + ".");
                     }
                 }
             }
