@@ -52,7 +52,7 @@ THE SOFTWARE.
 #endif
 #include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
-#include "pipeline/pipeline_operator.h"
+#include "pipeline/pipeline_serializer.h"
 
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
@@ -153,6 +153,13 @@ public:
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
+    /*
+     * Serialize API
+     */
+    void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
+    // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
+    std::string& get_serialized_string() { return _serialized_pipeline; }
+
 private:
     Status update_node_parameters();
     void create_single_graph();
@@ -241,6 +248,10 @@ private:
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
     int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries
+    // Helper used to build protobuf payloads of the pipeline
+    PipelineSerializer _pipeline_serializer;
+    // Stores the serialized binary string representation of the pipeline
+    std::string _serialized_pipeline;
     int _tensor_idx = 0; // Index/counter used to uniquely name Tensor instances created in the pipeline
     bool _set_device_id = false;
 };

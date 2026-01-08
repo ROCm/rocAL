@@ -57,23 +57,48 @@ void LensCorrectionNode::create_node() {
 }
 
 void LensCorrectionNode::init(std::vector<CameraMatrix> camera_matrix, std::vector<DistortionCoeffs> distortion_coeffs) {
+    // Handle camera_matrix: if size is 1, replicate for all images in batch
+    std::vector<CameraMatrix> camera_matrix_batch;
+    if (camera_matrix.size() == 1) {
+        // Single camera matrix provided - replicate for all images in batch
+        camera_matrix_batch.resize(_batch_size, camera_matrix[0]);
+    } else if (camera_matrix.size() == _batch_size) {
+        // Camera matrix provided for each image in batch
+        camera_matrix_batch = camera_matrix;
+    } else {
+        THROW("Camera matrix size must be either 1 (to replicate for all images) or equal to batch size (" + TOSTR(_batch_size) + ")")
+    }
+    
+    // Handle distortion_coeffs: if size is 1, replicate for all images in batch
+    std::vector<DistortionCoeffs> distortion_coeffs_batch;
+    if (distortion_coeffs.size() == 1) {
+        // Single distortion coefficients provided - replicate for all images in batch
+        distortion_coeffs_batch.resize(_batch_size, distortion_coeffs[0]);
+    } else if (distortion_coeffs.size() == _batch_size) {
+        // Distortion coefficients provided for each image in batch
+        distortion_coeffs_batch = distortion_coeffs;
+    } else {
+        THROW("Distortion coefficients size must be either 1 (to replicate for all images) or equal to batch size (" + TOSTR(_batch_size) + ")")
+    }
+    
+    // Fill the arrays with the camera matrix and distortion coefficients
     for (unsigned i = 0; i < _batch_size; i++) {
         unsigned camera_matrix_index = i * 9;
         unsigned dist_coeff_index = i * 8;
-        _camera_matrix[camera_matrix_index + 0] = camera_matrix[i].fx;
+        _camera_matrix[camera_matrix_index + 0] = camera_matrix_batch[i].fx;
         _camera_matrix[camera_matrix_index + 1] = 0;
-        _camera_matrix[camera_matrix_index + 2] = camera_matrix[i].cx;
+        _camera_matrix[camera_matrix_index + 2] = camera_matrix_batch[i].cx;
         _camera_matrix[camera_matrix_index + 3] = 0;
-        _camera_matrix[camera_matrix_index + 4] = camera_matrix[i].fy;
-        _camera_matrix[camera_matrix_index + 5] = camera_matrix[i].cy;
+        _camera_matrix[camera_matrix_index + 4] = camera_matrix_batch[i].fy;
+        _camera_matrix[camera_matrix_index + 5] = camera_matrix_batch[i].cy;
         _camera_matrix[camera_matrix_index + 6] = 0;
         _camera_matrix[camera_matrix_index + 7] = 0;
         _camera_matrix[camera_matrix_index + 8] = 1;
-        _distortion_coeffs[dist_coeff_index + 0] = distortion_coeffs[i].k1;
-        _distortion_coeffs[dist_coeff_index + 1] = distortion_coeffs[i].k2;
-        _distortion_coeffs[dist_coeff_index + 2] = distortion_coeffs[i].p1;
-        _distortion_coeffs[dist_coeff_index + 3] = distortion_coeffs[i].p2;
-        _distortion_coeffs[dist_coeff_index + 4] = distortion_coeffs[i].k3;
+        _distortion_coeffs[dist_coeff_index + 0] = distortion_coeffs_batch[i].k1;
+        _distortion_coeffs[dist_coeff_index + 1] = distortion_coeffs_batch[i].k2;
+        _distortion_coeffs[dist_coeff_index + 2] = distortion_coeffs_batch[i].p1;
+        _distortion_coeffs[dist_coeff_index + 3] = distortion_coeffs_batch[i].p2;
+        _distortion_coeffs[dist_coeff_index + 4] = distortion_coeffs_batch[i].k3;
         _distortion_coeffs[dist_coeff_index + 5] = 0;
         _distortion_coeffs[dist_coeff_index + 6] = 0;
         _distortion_coeffs[dist_coeff_index + 7] = 0;
