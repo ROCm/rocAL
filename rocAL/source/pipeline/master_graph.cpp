@@ -21,10 +21,12 @@ THE SOFTWARE.
 */
 #include <algorithm>
 #include <array>
+#include <set>
 #include <omp.h>
 #include <vx_ext_amd.h>
 #include <VX/vx_types.h>
 #include <cstring>
+#include <sstream>
 #include <sched.h>
 #include <half/half.hpp>
 #include "pipeline/master_graph.h"
@@ -1066,6 +1068,23 @@ TensorListVector* MasterGraph::create_coco_meta_data_reader(const char *source_p
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("CocoMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("is_output", is_output));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.push_back(Argument("metadata_type", metadata_type));
+    reader_op->arguments.push_back(Argument("ltrb_bbox", ltrb_bbox));
+    reader_op->arguments.push_back(Argument("is_box_encoder", is_box_encoder));
+    reader_op->arguments.push_back(Argument("avoid_class_remapping", avoid_class_remapping));
+    reader_op->arguments.push_back(Argument("aspect_ratio_grouping", aspect_ratio_grouping));
+    reader_op->arguments.push_back(Argument("is_box_iou_matcher", is_box_iou_matcher));
+    reader_op->arguments.push_back(Argument("sigma", sigma));
+    reader_op->arguments.push_back(Argument("pose_output_width", pose_output_width));
+    reader_op->arguments.push_back(Argument("pose_output_height", pose_output_height));
+    _pipeline_operators.push_back(reader_op);
+
     if (!ltrb_bbox) _augmented_meta_data->set_xywh_bbox();
     std::vector<size_t> dims;
     size_t max_objects = static_cast<size_t>(is_box_encoder ? MAX_SSD_ANCHORS : MAX_OBJECTS);
@@ -1167,6 +1186,13 @@ TensorListVector* MasterGraph::create_tf_record_meta_data_reader(const char *sou
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("Caffe2LmdbRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.push_back(Argument("label_type", label_type));
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1213,6 +1239,20 @@ TensorListVector* MasterGraph::create_webdataset_reader(
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
 
+    auto flatten_extensions = [](const std::vector<std::set<std::string>>& exts) {
+        std::vector<std::string> flattened;
+        flattened.reserve(exts.size());
+        for (const auto& ext_set : exts) {
+            std::string combined;
+            for (auto it = ext_set.begin(); it != ext_set.end(); ++it) {
+                if (it != ext_set.begin()) combined += ",";
+                combined += *it;
+            }
+            flattened.push_back(std::move(combined));
+        }
+        return flattened;
+    };
+
     bool generate_index = (index_path[0] == '\0') ? true : false;
     if (generate_index)
         std::cerr << "Index file is not provided, it may take some time to infer it from the tar file";
@@ -1240,6 +1280,14 @@ TensorListVector* MasterGraph::create_webdataset_reader(
     }
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("WebdatasetReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("index_path", index_path));
+    reader_op->arguments.push_back(Argument("extensions", flatten_extensions(extensions)));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.push_back(Argument("missing_component_behaviour", missing_component_behaviour));
+    _pipeline_operators.push_back(reader_op);
 
     return &_metadata_output_tensor_list;
 }
@@ -1269,6 +1317,17 @@ TensorListVector* MasterGraph::create_video_label_reader(const char *source_path
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
     _meta_data_reader->read_all(source_path);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("VideoLabelReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.push_back(Argument("sequence_length", sequence_length));
+    reader_op->arguments.push_back(Argument("frame_step", frame_step));
+    reader_op->arguments.push_back(Argument("frame_stride", frame_stride));
+    reader_op->arguments.push_back(Argument("file_list_frame_num", file_list_frame_num));
+    _pipeline_operators.push_back(reader_op);
+
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
 
     return &_metadata_output_tensor_list;
@@ -1297,6 +1356,12 @@ TensorListVector* MasterGraph::create_mxnet_label_reader(const char *source_path
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("MxnetLabelReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("is_output", is_output));
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1309,6 +1374,22 @@ void MasterGraph::create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType
     RandomBBoxCrop_MetaDataConfig config(label_type, reader_type, all_boxes_overlap, no_crop, aspect_ratio, has_shape, crop_width, crop_height, num_attempts, scaling, total_num_attempts, seed);
     _randombboxcrop_meta_data_reader = create_meta_data_reader(config, _random_bbox_crop_cords_data);
     _randombboxcrop_meta_data_reader->set_meta_data(_meta_data_reader);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("RandomBBoxCropReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.push_back(Argument("label_type", label_type));
+    reader_op->arguments.push_back(Argument("all_boxes_overlap", all_boxes_overlap));
+    reader_op->arguments.push_back(Argument("no_crop", no_crop));
+    reader_op->arguments.push_back(Argument("aspect_ratio", aspect_ratio));
+    reader_op->arguments.push_back(Argument("has_shape", has_shape));
+    reader_op->arguments.push_back(Argument("crop_width", crop_width));
+    reader_op->arguments.push_back(Argument("crop_height", crop_height));
+    reader_op->arguments.push_back(Argument("num_attempts", num_attempts));
+    reader_op->arguments.push_back(Argument("scaling", scaling));
+    reader_op->arguments.push_back(Argument("total_num_attempts", total_num_attempts));
+    reader_op->arguments.push_back(Argument("seed", static_cast<int>(seed)));
+    _pipeline_operators.push_back(reader_op);
 }
 
 void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale) {
@@ -1375,6 +1456,13 @@ TensorListVector* MasterGraph::create_caffe2_lmdb_record_meta_data_reader(const 
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("Caffe2LmdbRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.push_back(Argument("label_type", label_type));
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1423,6 +1511,13 @@ TensorListVector* MasterGraph::create_caffe_lmdb_record_meta_data_reader(const c
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("CaffeLmdbRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.push_back(Argument("label_type", label_type));
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1447,6 +1542,12 @@ TensorListVector* MasterGraph::create_cifar10_label_reader(const char *source_pa
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("Cifar10LabelReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.push_back(Argument("source_path", source_path));
+    reader_op->arguments.push_back(Argument("file_prefix", file_prefix));
+    _pipeline_operators.push_back(reader_op);
 
     return &_metadata_output_tensor_list;
 }
@@ -1936,8 +2037,105 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
     for (const auto& op_def : pipe_def->operators()) {
         if (op_def.has_module_name()) {
             if (op_def.module_name() == "reader") {
-                if (get_node_name(op_def.name()) == "LabelReader") {
-                    create_label_reader(op_def.args()[0].strings(0).c_str(), static_cast<MetaDataReaderType>(op_def.args()[1].enum_value().value()));
+                std::vector<Argument> args_list;
+                if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
+                    THROW("Failed to deserialize arguments for reader : " + op_def.name());
+
+                auto get_argument = [&](const std::string& arg_name) -> const Argument& {
+                    for (const auto& arg : args_list) {
+                        if (arg.arg_name == arg_name) return arg;
+                    }
+                    THROW("Missing argument '" + arg_name + "' for reader : " + op_def.name());
+                };
+
+                auto reader_name = get_node_name(op_def.name());
+                if (reader_name == "LabelReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto reader_type = get_argument("reader_type").get<MetaDataReaderType>();
+                    create_label_reader(source_path.c_str(), reader_type);
+                } else if (reader_name == "CocoMetaDataReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto is_output = get_argument("is_output").get<bool>();
+                    auto reader_type = get_argument("reader_type").get<MetaDataReaderType>();
+                    auto metadata_type = get_argument("metadata_type").get<MetaDataType>();
+                    auto ltrb_bbox = get_argument("ltrb_bbox").get<bool>();
+                    auto is_box_encoder = get_argument("is_box_encoder").get<bool>();
+                    auto avoid_class_remapping = get_argument("avoid_class_remapping").get<bool>();
+                    auto aspect_ratio_grouping = get_argument("aspect_ratio_grouping").get<bool>();
+                    auto is_box_iou_matcher = get_argument("is_box_iou_matcher").get<bool>();
+                    auto sigma = get_argument("sigma").get<float>();
+                    auto pose_output_width = get_argument("pose_output_width").get<unsigned>();
+                    auto pose_output_height = get_argument("pose_output_height").get<unsigned>();
+                    create_coco_meta_data_reader(source_path.c_str(), is_output, reader_type, metadata_type, ltrb_bbox, is_box_encoder, avoid_class_remapping, aspect_ratio_grouping, is_box_iou_matcher, sigma, pose_output_width, pose_output_height);
+                } else if (reader_name == "TFRecordMetaDataReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto reader_type = get_argument("reader_type").get<MetaDataReaderType>();
+                    auto label_type = get_argument("label_type").get<MetaDataType>();
+                    auto feature_key_map = get_argument("feature_key_map").get<std::map<std::string, std::string>>();
+                    create_tf_record_meta_data_reader(source_path.c_str(), reader_type, label_type, feature_key_map);
+                } else if (reader_name == "WebdatasetReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto index_path = get_argument("index_path").get<std::string>();
+                    auto flat_extensions = get_argument("extensions").get<std::vector<std::string>>();
+                    auto reader_type = get_argument("reader_type").get<MetaDataReaderType>();
+                    auto missing_component_behaviour = get_argument("missing_component_behaviour").get<MissingComponentsBehaviour>();
+                    auto parse_extensions = [](const std::vector<std::string>& flattened) {
+                        std::vector<std::set<std::string>> exts;
+                        exts.reserve(flattened.size());
+                        for (const auto& group : flattened) {
+                            std::set<std::string> ext_set;
+                            std::stringstream ss(group);
+                            std::string token;
+                            while (std::getline(ss, token, ',')) {
+                                if (!token.empty()) ext_set.insert(token);
+                            }
+                            exts.push_back(std::move(ext_set));
+                        }
+                        return exts;
+                    };
+                    create_webdataset_reader(source_path.c_str(), index_path.c_str(), parse_extensions(flat_extensions), reader_type, missing_component_behaviour);
+                } else if (reader_name == "VideoLabelReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto reader_type = get_argument("reader_type").get<MetaDataReaderType>();
+                    auto sequence_length = get_argument("sequence_length").get<unsigned>();
+                    auto frame_step = get_argument("frame_step").get<unsigned>();
+                    auto frame_stride = get_argument("frame_stride").get<unsigned>();
+                    auto file_list_frame_num = get_argument("file_list_frame_num").get<bool>();
+                    create_video_label_reader(source_path.c_str(), reader_type, sequence_length, frame_step, frame_stride, file_list_frame_num);
+                } else if (reader_name == "MxnetLabelReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto is_output = get_argument("is_output").get<bool>();
+                    create_mxnet_label_reader(source_path.c_str(), is_output);
+                } else if (reader_name == "RandomBBoxCropReader") {
+                    auto reader_type = get_argument("reader_type").get<RandomBBoxCrop_MetaDataReaderType>();
+                    auto label_type = get_argument("label_type").get<RandomBBoxCrop_MetaDataType>();
+                    auto all_boxes_overlap = get_argument("all_boxes_overlap").get<bool>();
+                    auto no_crop = get_argument("no_crop").get<bool>();
+                    auto aspect_ratio = get_argument("aspect_ratio").get<FloatParam*>();
+                    auto has_shape = get_argument("has_shape").get<bool>();
+                    auto crop_width = get_argument("crop_width").get<int>();
+                    auto crop_height = get_argument("crop_height").get<int>();
+                    auto num_attempts = get_argument("num_attempts").get<int>();
+                    auto scaling = get_argument("scaling").get<FloatParam*>();
+                    auto total_num_attempts = get_argument("total_num_attempts").get<int>();
+                    auto seed = get_argument("seed").get<int>();
+                    create_randombboxcrop_reader(reader_type, label_type, all_boxes_overlap, no_crop, aspect_ratio, has_shape, crop_width, crop_height, num_attempts, scaling, total_num_attempts, seed);
+                } else if (reader_name == "Caffe2LmdbRecordMetaDataReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto reader_type = get_argument("reader_type").get<MetaDataReaderType>();
+                    auto label_type = get_argument("label_type").get<MetaDataType>();
+                    create_caffe2_lmdb_record_meta_data_reader(source_path.c_str(), reader_type, label_type);
+                } else if (reader_name == "CaffeLmdbRecordMetaDataReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto reader_type = get_argument("reader_type").get<MetaDataReaderType>();
+                    auto label_type = get_argument("label_type").get<MetaDataType>();
+                    create_caffe_lmdb_record_meta_data_reader(source_path.c_str(), reader_type, label_type);
+                } else if (reader_name == "Cifar10LabelReader") {
+                    auto source_path = get_argument("source_path").get<std::string>();
+                    auto file_prefix = get_argument("file_prefix").get<std::string>();
+                    create_cifar10_label_reader(source_path.c_str(), file_prefix.c_str());
+                } else {
+                    THROW("Unsupported reader type: " + reader_name);
                 }
             } else if (op_def.module_name() == "loader") {
                 // fetch the output tensor details and create it
