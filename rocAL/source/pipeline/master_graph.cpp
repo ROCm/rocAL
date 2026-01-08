@@ -1858,6 +1858,11 @@ static const std::array<std::string, 8> GEOMETRIC_AUGMENTATIONS = {
     "CropMirrorNormalizeNode", "ResizeCropMirrorNode"
 };
 
+// Array of random distribution nodes, for which only internal tensor is created
+static const std::array<std::string, 2> RANDOM_DIST_NODES = {
+    "UniformDistributionNode", "NormalDistributionNode"
+};
+
 inline bool check_tensor_info(const TensorInfo& input_info, const rocal_proto::InputOutput &output) {
     
     if (input_info.num_of_dims() != output.dims_size())
@@ -1982,6 +1987,15 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                         Tensor* reference_input = inputs_vector[0];
                         auto node_name = get_node_name(op_def.name());
                         bool is_geometric_aug = std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), node_name) != GEOMETRIC_AUGMENTATIONS.end();
+                        bool is_random_dist = std::find(RANDOM_DIST_NODES.begin(), RANDOM_DIST_NODES.end(), node_name) != RANDOM_DIST_NODES.end();
+                        
+                        // If the node uses uniform or normal random distribution, create only an internal tensor
+                        if (is_random_dist) {
+                            output_tensor = create_operator_output(op_def.outputs()[0], true);
+                            tensor_info_compatible = true;
+                        }
+
+                        // If the node uses geometric augmentations, create a new tensor with info different from the input
                         if (reference_input && check_tensor_info(reference_input->info(), op_output)
                             && !is_geometric_aug) {
                             output_tensor = create_tensor(reference_input->info(), false);
