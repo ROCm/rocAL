@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/color_augmentations/node_channel_permute.h"
 #include "pipeline/exception.h"
 
@@ -30,9 +31,10 @@ void ChannelPermuteNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
     // Create array for permutation tensor - needs to be batchSize * 3
     _permutation_array = vxCreateArray(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, _batch_size * 3);
-    
+
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     vx_scalar input_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &input_layout);
@@ -42,6 +44,9 @@ void ChannelPermuteNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the channel permute (vxExtRppChannelPermute) node failed: " + TOSTR(status))
+#else
+    THROW("ChannelPermuteNode: vxExtRppChannelPermute requires vx_rpp version >= 3.1.6");
+#endif
 }
 
 void ChannelPermuteNode::init(std::vector<unsigned> &permutation_order) {

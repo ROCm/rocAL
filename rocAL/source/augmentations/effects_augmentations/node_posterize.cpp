@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/effects_augmentations/node_posterize.h"
 #include "pipeline/exception.h"
 
@@ -31,6 +32,7 @@ void PosterizeNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
     _level_bits.create_array(_graph, VX_TYPE_UINT8, _batch_size);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
@@ -44,6 +46,9 @@ void PosterizeNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the Posterize (vxExtRppPosterize) node failed: " + TOSTR(status))
+#else
+    THROW("PosterizeNode: vxExtRppPosterize requires vx_rpp version >= 3.1.6");
+#endif
 }
 
 void PosterizeNode::init(int level_bits) {

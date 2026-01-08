@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 
 #include "augmentations/color_augmentations/node_color_to_greyscale.h"
 #include "pipeline/exception.h"
@@ -32,6 +33,7 @@ void ColorToGreyscaleNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
     vx_context context = vxGetContext((vx_reference)_graph->get());
     int subpixel = static_cast<int>(_layout);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
@@ -47,6 +49,9 @@ void ColorToGreyscaleNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the ColorToGreyscale (vxExtRppColorToGreyscale) node failed: " + TOSTR(status));
+#else
+    THROW("ColorToGreyscaleNode: vxExtRppColorToGreyscale requires vx_rpp version >= 3.1.6");
+#endif
 }
 
 void ColorToGreyscaleNode::init(SubpixelLayout layout) {
