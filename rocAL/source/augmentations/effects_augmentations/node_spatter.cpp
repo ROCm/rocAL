@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 
 #include "augmentations/effects_augmentations/node_spatter.h"
 #include "pipeline/exception.h"
@@ -32,6 +33,7 @@ void SpatterNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
     vx_context context = vxGetContext((vx_reference)_graph->get());
     _color_array = vxCreateArray(context, VX_TYPE_UINT8, 3);
     vxAddArrayItems(_color_array, 3, _color.data(), sizeof(uint8_t));
@@ -48,6 +50,9 @@ void SpatterNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the Spatter (vxExtRppSpatter) node failed: " + TOSTR(status));
+#else
+    THROW("SpatterNode: vxExtRppSpatter requires vx_rpp version >= 3.1.5");
+#endif
 }
 
 void SpatterNode::init(uint8_t red, uint8_t green, uint8_t blue) {

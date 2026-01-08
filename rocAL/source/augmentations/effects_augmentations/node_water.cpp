@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/effects_augmentations/node_water.h"
 #include "pipeline/exception.h"
 
@@ -36,13 +37,14 @@ void WaterNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
     _amplitude_x.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _amplitude_y.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _frequency_x.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _frequency_y.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _phase_x.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _phase_y.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
-    
+
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -58,6 +60,9 @@ void WaterNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the water (vxExtRppWater) node failed: " + TOSTR(status))
+#else
+    THROW("WaterNode: vxExtRppWater requires vx_rpp version >= 3.1.5");
+#endif
 }
 
 void WaterNode::init(float amplitude_x, float amplitude_y, float frequency_x, float frequency_y, float phase_x, float phase_y) {

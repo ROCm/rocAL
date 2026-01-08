@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 
 #include "augmentations/color_augmentations/node_color_jitter.h"
 #include "pipeline/exception.h"
@@ -36,6 +37,7 @@ void ColorJitterNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
     _brightness.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _contrast.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _hue.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
@@ -55,6 +57,9 @@ void ColorJitterNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the ColorJitter (vxExtRppColorJitter) node failed: " + TOSTR(status));
+#else
+    THROW("ColorJitterNode: vxExtRppColorJitter requires vx_rpp version >= 3.1.5");
+#endif
 }
 
 void ColorJitterNode::init(float brightness, float contrast, float hue, float saturation) {

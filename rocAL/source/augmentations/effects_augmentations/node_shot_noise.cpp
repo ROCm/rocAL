@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/effects_augmentations/node_shot_noise.h"
 #include "pipeline/exception.h"
 
@@ -31,6 +32,7 @@ void ShotNoiseNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
     _noise_factor.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     vx_scalar seed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_seed);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
@@ -45,6 +47,9 @@ void ShotNoiseNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the ShotNoise (vxExtRppShotNoise) node failed: " + TOSTR(status))
+#else
+    THROW("ShotNoiseNode: vxExtRppShotNoise requires vx_rpp version >= 3.1.5");
+#endif
 }
 
 void ShotNoiseNode::init(float noise_factor, int seed) {
