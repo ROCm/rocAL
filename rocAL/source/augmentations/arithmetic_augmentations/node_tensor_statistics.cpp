@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 
 #include <functional>
 
@@ -44,6 +45,7 @@ inline void tensor_reduction_create(Node *node,
                                     std::function<vx_node(vx_graph, vx_tensor, vx_tensor, vx_tensor, vx_scalar, vx_scalar)> create_fn) {
     if (vx_node_ref)
         return;
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
     int input_layout = static_cast<int>(input->info().layout());
     int roi_type = static_cast<int>(input->info().roi_type());
     vx_context context = vxGetContext((vx_reference)graph);
@@ -51,6 +53,9 @@ inline void tensor_reduction_create(Node *node,
     vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
     vx_node_ref = create_fn(graph, input_tensor, input_roi, output_tensor, input_layout_vx, roi_type_vx);
     validate_status(vx_node_ref);
+#else
+    THROW("TensorStatistics: tensor reduction operations require vx_rpp version >= 3.1.7");
+#endif
 }
 }  // namespace
 
@@ -119,6 +124,8 @@ TensorStdDevNode::TensorStdDevNode(const std::vector<Tensor *> &inputs, const st
 void TensorStdDevNode::create_node() {
     if (_node)
         return;
+
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
     vx_context context = vxGetContext((vx_reference)_graph->get());
@@ -132,4 +139,7 @@ void TensorStdDevNode::create_node() {
                                  input_layout_vx,
                                  roi_type_vx);
     validate_status(_node);
+#else
+    THROW("TensorStdDevNode: vxExtRppTensorStdDev requires vx_rpp version >= 3.1.7");
+#endif
 }
