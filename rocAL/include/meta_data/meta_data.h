@@ -72,11 +72,13 @@ enum class MetaDataType {
     KeyPoints,
     AsciiValue
 };
+REGISTER_ENUM(MetaDataType)
 
 enum class BoundingBoxType {
     XYWH = 0,
     LTRB
 };
+REGISTER_ENUM(BoundingBoxType)
 
 typedef struct
 {
