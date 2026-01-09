@@ -116,7 +116,7 @@ public:
      * \param enumTypeName The name of the enum type
      * \return true if the enum type is registered, false otherwise
      */
-    bool isEnumRegistered(const std::string& enumTypeName) const {
+    bool isEnumRegistered(const std::string& enumTypeName) const noexcept {
         return _name_to_converter_map.find(enumTypeName) != _name_to_converter_map.end();
     }
 
