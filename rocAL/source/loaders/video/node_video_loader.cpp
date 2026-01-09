@@ -22,10 +22,17 @@ THE SOFTWARE.
 
 #include "loaders/video/node_video_loader.h"
 
+#include <array>
 #include <memory>
 #include <numeric>
 #include <sstream>
+#include "pipeline/exception.h"
+#include "readers/video/video_properties.h"
 #ifdef ROCAL_VIDEO
+
+#define INIT_ARGS_COUNT 13  // Modify in accordance with number of args in init
+
+REGISTER_LOADER_NODE(VideoLoaderNode)
 
 VideoLoaderNode::VideoLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<VideoLoaderSharded>(device_resources);
@@ -47,6 +54,16 @@ void VideoLoaderNode::init(unsigned internal_shard_count, const std::string &sou
     reader_cfg.set_frame_step(step);
     reader_cfg.set_frame_stride(stride);
     reader_cfg.set_video_properties(video_prop);
+
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
+        "internal_shard_count", "source_path", "storage_type", "decoder_type", "decoder_mode",
+        "sequence_length", "step", "stride", "file_list_frame_num",
+        "shuffle", "loop", "load_batch_count", "mem_type"};
+
+    // NOTE : Update arg_names when modifying init
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, internal_shard_count, source_path, storage_type, decoder_type,
+                       decoder_mode, sequence_length, step, stride, video_prop.file_list_frame_num, shuffle, loop, load_batch_count, mem_type);
+
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }
@@ -59,6 +76,22 @@ std::shared_ptr<LoaderModule> VideoLoaderNode::get_loader_module() {
 
 VideoLoaderNode::~VideoLoaderNode() {
     _loader_module = nullptr;
+}
+
+void VideoLoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    (void)meta_data_reader;
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("VideoLoaderNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
+              "Ensure all arguments present in init are accounted for");
+
+    auto source_path = arguments[1].get<std::string>();
+    auto file_list_frame_num = arguments[8].get<bool>();
+
+    VideoProperties video_prop;
+    find_video_properties(video_prop, source_path.c_str(), file_list_frame_num);
+    this->init(arguments[0].get<unsigned>(), source_path, arguments[2].get<StorageType>(), arguments[3].get<DecoderType>(), arguments[4].get<DecodeMode>(),
+               arguments[5].get<unsigned>(), arguments[6].get<unsigned>(), arguments[7].get<unsigned>(), video_prop, arguments[9].get<bool>(),
+               arguments[10].get<bool>(), arguments[11].get<size_t>(), arguments[12].get<RocalMemType>());
 }
 
 #endif

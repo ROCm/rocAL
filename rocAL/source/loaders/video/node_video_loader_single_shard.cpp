@@ -22,8 +22,14 @@ THE SOFTWARE.
 
 #include "loaders/video/node_video_loader_single_shard.h"
 
+#include <array>
 #include "pipeline/exception.h"
+#include "readers/video/video_properties.h"
 #ifdef ROCAL_VIDEO
+
+#define INIT_ARGS_COUNT 14  // Modify in accordance with number of args in init
+
+REGISTER_LOADER_NODE(VideoLoaderSingleShardNode)
 
 VideoLoaderSingleShardNode::VideoLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<VideoLoader>(device_resources);
@@ -48,6 +54,15 @@ void VideoLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, c
     reader_cfg.set_frame_step(step);
     reader_cfg.set_frame_stride(stride);
     reader_cfg.set_video_properties(video_prop);
+
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
+        "shard_id", "shard_count", "source_path", "storage_type", "decoder_type",
+        "decoder_mode", "sequence_length", "step", "stride", "file_list_frame_num",
+        "shuffle", "loop", "load_batch_count", "mem_type"};
+
+    // NOTE : Update arg_names when modifying init
+    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, shard_id, shard_count, source_path, storage_type, decoder_type,
+                       decoder_mode, sequence_length, step, stride, video_prop.file_list_frame_num, shuffle, loop, load_batch_count, mem_type);
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }
@@ -60,5 +75,22 @@ std::shared_ptr<LoaderModule> VideoLoaderSingleShardNode::get_loader_module() {
 
 VideoLoaderSingleShardNode::~VideoLoaderSingleShardNode() {
     _loader_module = nullptr;
+}
+
+void VideoLoaderSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    (void)meta_data_reader;
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("VideoLoaderSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
+              "Ensure all arguments present in init are accounted for");
+
+    auto source_path = arguments[2].get<std::string>();
+    auto file_list_frame_num = arguments[9].get<bool>();
+
+    VideoProperties video_prop;
+    find_video_properties(video_prop, source_path.c_str(), file_list_frame_num);
+
+    this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), source_path, arguments[3].get<StorageType>(), arguments[4].get<DecoderType>(),
+               arguments[5].get<DecodeMode>(), arguments[6].get<unsigned>(), arguments[7].get<unsigned>(), arguments[8].get<unsigned>(), video_prop,
+               arguments[10].get<bool>(), arguments[11].get<bool>(), arguments[12].get<size_t>(), arguments[13].get<RocalMemType>());
 }
 #endif

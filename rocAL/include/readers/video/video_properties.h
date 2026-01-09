@@ -39,6 +39,7 @@ extern "C" {
 typedef struct VideoProperties {
     unsigned width, height, videos_count;
     float frame_rate = 0;
+    bool file_list_frame_num = true;  // Indicates whether the start and end frame numbers are provided in the text file or not. If not, start and end timestamps are expected to be provided in the text file.
     std::vector<size_t> frames_count;
     std::vector<std::string> video_file_names;
     std::vector<std::tuple<unsigned, unsigned>> start_end_frame_num;
