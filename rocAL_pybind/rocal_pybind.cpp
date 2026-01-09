@@ -1125,7 +1125,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("snpNoise", &rocalSnPNoise,
           py::return_value_policy::reference);
-    m.def("lut", &rocalLut,
+    m.def("lut", &rocalLUT,
           py::return_value_policy::reference);
     m.def("posterize", &rocalPosterize,
           py::return_value_policy::reference);

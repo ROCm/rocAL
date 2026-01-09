@@ -1112,10 +1112,9 @@ rocalSnPNoiseFixed(
 }
 
 RocalTensor ROCAL_API_CALL
-rocalLut(
+rocalLUT(
     RocalContext p_context,
     RocalTensor p_input,
-    uint8_t* lut_data,
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
@@ -1127,16 +1126,14 @@ rocalLut(
     try {
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-        if (op_tensor_layout == RocalTensorlayout::NONE)
-            op_tensor_layout = input->info().layout();
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<LutNode>({input}, {output})->init(lut_data);
+        context->master_graph->add_node<LutNode>({input}, {output});
 #else
-        THROW("rocalLut requires vx_rpp version >= 3.1.6");
+        THROW("rocalLUT requires vx_rpp version >= 3.1.6");
 #endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
@@ -2710,7 +2707,7 @@ rocalColorToGreyscale(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
-    RocalTensorLayout output_layout,
+    int subpixel_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
@@ -2719,19 +2716,29 @@ rocalColorToGreyscale(
     auto input = static_cast<Tensor*>(p_input);
     try {
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
-        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
-        if (op_tensor_layout == RocalTensorlayout::NONE)
-            op_tensor_layout = input->info().layout();
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
-        output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
-        // Set output channels to 1 for greyscale
-        std::vector<size_t> new_dims = output_info.dims();
-        new_dims[output_info.get_channel_index()] = 1;
-        output_info.set_dims(new_dims);
+        RocalTensorlayout input_layout = input->info().layout();
+        // RPP color_to_greyscale requires output layout to be NCHW with c=1
+        if (input_layout == RocalTensorlayout::NHWC) {
+            // First convert layout from NHWC to NCHW
+            output_info.set_tensor_layout(RocalTensorlayout::NCHW);
+            // Now dims are in NCHW format [N, C, H, W], set C=1 for greyscale
+            std::vector<size_t> dims = output_info.dims();
+            dims[1] = 1;
+            output_info.set_dims(dims);
+        } else if (input_layout == RocalTensorlayout::NCHW) {
+            std::vector<size_t> dims = output_info.dims();
+            dims[1] = 1;
+            output_info.set_dims(dims);
+        } else {
+            THROW("ColorToGreyscale only supports NHWC or NCHW layouts")
+        }
+        output_info.set_color_format(RocalColorFormat::U8);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<ColorToGreyscaleNode>({input}, {output});
+        ColorToGreyscaleNode::SubpixelLayout layout = static_cast<ColorToGreyscaleNode::SubpixelLayout>(subpixel_layout);
+        context->master_graph->add_node<ColorToGreyscaleNode>({input}, {output})->init(layout);
 #else
         THROW("rocalColorToGreyscale requires vx_rpp version >= 3.1.6");
 #endif

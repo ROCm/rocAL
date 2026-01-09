@@ -1123,18 +1123,20 @@ def snp_noise(*inputs, p_noise=0.0, p_salt=0.0, noise_val=0.0, salt_val=0.0,
     return (snp_noise_added_image)
 
 
-def lut(*inputs, lut_data, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
-    """!Applies a Lookup Table (LUT) transformation to the input image.
+def lut(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies Look-Up Table (LUT) transformation to the input image.
 
-        @param inputs (list)                                                          The input image to which LUT is applied.
-        @param lut_data (list)                                                        LUT data array (256 values for 8-bit images).
-        @param device (string, optional, default = None)                              Parameter unused for augmentation.
-        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
-        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+    @param inputs (list)                                                          The input image to which LUT transformation is applied.
+    @param device (string, optional, default = None)                              Parameter unused for augmentation
+    @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
+    @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output. Default is types.UINT8.
 
-        @return    Image with LUT transformation applied.
+    @return    images with LUT transformation applied (inverted: output[i] = 255 - input[i] for 8-bit data).
+
+    @note The LUT tensor is created internally with an inverted transformation.
     """
-    kwargs_pybind = {"input_image": inputs[0], "lut_data": lut_data, "is_output": False,
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     lut_image = b.lut(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
@@ -1219,18 +1221,18 @@ def channel_permute(*inputs, permutation, device=None, output_layout=types.NHWC,
     return (permuted_image)
 
 
-def color_to_greyscale(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
-    """!Converts a color image to greyscale.
+def color_to_greyscale(*inputs, subpixel_layout=0, device=None, output_dtype=types.UINT8):
+    """!Converts color images to greyscale.
 
-        @param inputs (list)                                                          The input color image to convert.
+        @param inputs (list)                                                          The input image to convert.
+        @param subpixel_layout (int, optional, default = 0)                           Source subpixel layout (0 for RGB, 1 for BGR).
         @param device (string, optional, default = None)                              Parameter unused for augmentation.
-        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
         @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
 
         @return    Greyscale image.
     """
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False,
-                     "output_layout": output_layout, "output_dtype": output_dtype}
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "subpixel_layout": subpixel_layout,
+                     "output_dtype": output_dtype}
     greyscale_image = b.colorToGreyscale(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (greyscale_image)
