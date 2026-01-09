@@ -884,40 +884,40 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
             output = rocalRandomResizedCrop(handle, input, resize_w, resize_h, true, area_factor, aspect_ratio);
         } break;
-        case 74: {
+        case 75: {
             std::cout << "Running rocalChannelPermute" << std::endl;
             std::vector<unsigned> permutation_order = {2, 1, 0};  // RGB to BGR
             output = rocalChannelPermute(handle, input, permutation_order, true);
         } break;
-        case 75: {
+        case 76: {
             std::cout << "Running rocalJpegCompressionDistortion" << std::endl;
             output = rocalJpegCompressionDistortion(handle, input, true);
         } break;
-        case 76: {
+        case 77: {
             std::cout << "Running rocalJpegCompressionDistortionFixed" << std::endl;
             output = rocalJpegCompressionDistortionFixed(handle, input, 50, true);
         } break;
-        case 77: {
+        case 78: {
             std::cout << "Running rocalLUT" << std::endl;
             output = rocalLUT(handle, input, true);
         } break;
-        case 78: {
+        case 79: {
             std::cout << "Running rocalPosterize" << std::endl;
             output = rocalPosterize(handle, input, true);
         } break;
-        case 79: {
+        case 80: {
             std::cout << "Running rocalPosterizeFixed" << std::endl;
             output = rocalPosterizeFixed(handle, input, 3, true);
         } break;
-        case 80: {
+        case 81: {
             std::cout << "Running rocalSolarize" << std::endl;
             output = rocalSolarize(handle, input, true);
         } break;
-        case 81: {
+        case 82: {
             std::cout << "Running rocalSolarizeFixed" << std::endl;
             output = rocalSolarizeFixed(handle, input, 0.5f, true);
         } break;
-        case 82: {
+        case 83: {
             std::cout << "Running rocalColorToGreyscale" << std::endl;
             output = rocalColorToGreyscale(handle, input, true);
         } break;
