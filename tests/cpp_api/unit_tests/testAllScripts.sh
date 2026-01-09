@@ -223,6 +223,9 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}Nop_${rgb_name[$rgb]}_${device_name}" $width $height 61 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
 
+        # Set 3 tensor reduction augmentation tests
+        ./unit_tests 0 "$image_path" "${output_path}TensorReduction_${rgb_name[$rgb]}_${device_name}" $width $height 84 $device $rgb 0 $display
+
         # to_tensor coverage tests
         for ((memcpy_backend=0;memcpy_backend<=1;memcpy_backend++))
         do
