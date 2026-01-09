@@ -1182,6 +1182,9 @@ def spatter(*inputs, red=65, green=50, blue=23, device=None, output_layout=types
 
         @return    Image with spatter effect applied.
     """
+    red = b.createIntParameter(red) if isinstance(red, int) else red
+    green = b.createIntParameter(green) if isinstance(green, int) else green
+    blue = b.createIntParameter(blue) if isinstance(blue, int) else blue
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "red": red, "green": green, "blue": blue,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     spatter_image = b.spatter(

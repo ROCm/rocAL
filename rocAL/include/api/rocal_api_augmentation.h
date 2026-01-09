@@ -764,9 +764,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRainFixed(RocalContext context, Rocal
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalSpatter(RocalContext context, RocalTensor input,
                                                    bool is_output,
-                                                   uint8_t red = 65, uint8_t green = 50, uint8_t blue = 23,
+                                                   RocalIntParam red = NULL, RocalIntParam green = NULL, RocalIntParam blue = NULL,
                                                    RocalTensorLayout output_layout = ROCAL_NONE,
                                                    RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies spatter effect on images with fixed parameters.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] red red channel value of the spatter color
+ * \param [in] green green channel value of the spatter color
+ * \param [in] blue blue channel value of the spatter color
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSpatterFixed(RocalContext context, RocalTensor input,
+                                                        uint8_t red, uint8_t green, uint8_t blue,
+                                                        bool is_output,
+                                                        RocalTensorLayout output_layout = ROCAL_NONE,
+                                                        RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Adjusts the color temperature in images.
  * \ingroup group_rocal_augmentations

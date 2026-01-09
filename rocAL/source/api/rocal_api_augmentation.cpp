@@ -1489,9 +1489,47 @@ rocalSpatter(
     RocalContext p_context,
     RocalTensor p_input,
     bool is_output,
+    RocalIntParam p_red,
+    RocalIntParam p_green,
+    RocalIntParam p_blue,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto red = static_cast<IntParam*>(p_red);
+    auto green = static_cast<IntParam*>(p_green);
+    auto blue = static_cast<IntParam*>(p_blue);
+    try {
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+        if (op_tensor_layout == RocalTensorlayout::NONE)
+            op_tensor_layout = input->info().layout();
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_datatype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SpatterNode>({input}, {output})->init(red, green, blue);
+#else
+        THROW("rocalSpatter requires vx_rpp version >= 3.1.5");
+#endif
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalSpatterFixed(
+    RocalContext p_context,
+    RocalTensor p_input,
     uint8_t red,
     uint8_t green,
     uint8_t blue,
+    bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1511,7 +1549,7 @@ rocalSpatter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SpatterNode>({input}, {output})->init(red, green, blue);
 #else
-        THROW("rocalSpatter requires vx_rpp version >= 3.1.5");
+        THROW("rocalSpatterFixed requires vx_rpp version >= 3.1.5");
 #endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);

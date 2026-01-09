@@ -26,18 +26,25 @@ THE SOFTWARE.
 
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
+#include "parameters/parameter_factory.h"
+#include "parameters/parameter_vx.h"
 
 class SpatterNode : public Node {
    public:
     SpatterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SpatterNode() = delete;
     void init(uint8_t red, uint8_t green, uint8_t blue);
+    void init(IntParam *red, IntParam *green, IntParam *blue);
 
    protected:
     void create_node() override;
-    void update_node() override {}
+    void update_node() override;
 
    private:
-    std::array<uint8_t, 3> _color;
+    ParameterVX<int> _red_param;
+    ParameterVX<int> _green_param;
+    ParameterVX<int> _blue_param;
+    constexpr static int COLOR_RANGE[2] = {0, 255};
     vx_array _color_array;
+    std::array<vx_uint8, 3> _color;
 };

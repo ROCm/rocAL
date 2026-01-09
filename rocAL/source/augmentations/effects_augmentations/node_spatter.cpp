@@ -27,7 +27,12 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 
 SpatterNode::SpatterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
-    : Node(inputs, outputs), _color{0, 0, 0}, _color_array(nullptr) {}
+    : Node(inputs, outputs),
+      _red_param(COLOR_RANGE[0], COLOR_RANGE[1]),
+      _green_param(COLOR_RANGE[0], COLOR_RANGE[1]),
+      _blue_param(COLOR_RANGE[0], COLOR_RANGE[1]),
+      _color_array(nullptr),
+      _color({0, 0, 0}) {}
 
 void SpatterNode::create_node() {
     if (_node)
@@ -35,8 +40,15 @@ void SpatterNode::create_node() {
 
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
     vx_context context = vxGetContext((vx_reference)_graph->get());
+
+    // Create parameter arrays for random value generation
+    _red_param.create_array(_graph, VX_TYPE_INT32, _batch_size);
+    _green_param.create_array(_graph, VX_TYPE_INT32, _batch_size);
+    _blue_param.create_array(_graph, VX_TYPE_INT32, _batch_size);
+
+    // Create a single color array with 3 elements (R, G, B)
     _color_array = vxCreateArray(context, VX_TYPE_UINT8, 3);
-    vxAddArrayItems(_color_array, 3, _color.data(), sizeof(uint8_t));
+    vxAddArrayItems(_color_array, 3, _color.data(), sizeof(vx_uint8));
 
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
@@ -46,7 +58,7 @@ void SpatterNode::create_node() {
     vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
 
     _node = vxExtRppSpatter(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                             _color_array, input_layout_vx, output_layout_vx, roi_type_vx);
+                            _color_array, input_layout_vx, output_layout_vx, roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the Spatter (vxExtRppSpatter) node failed: " + TOSTR(status));
@@ -56,5 +68,27 @@ void SpatterNode::create_node() {
 }
 
 void SpatterNode::init(uint8_t red, uint8_t green, uint8_t blue) {
-    _color = {red, green, blue};
+    _red_param.set_param(static_cast<int>(red));
+    _green_param.set_param(static_cast<int>(green));
+    _blue_param.set_param(static_cast<int>(blue));
+}
+
+void SpatterNode::init(IntParam *red, IntParam *green, IntParam *blue) {
+    _red_param.set_param(core(red));
+    _green_param.set_param(core(green));
+    _blue_param.set_param(core(blue));
+}
+
+void SpatterNode::update_node() {
+    // Update the parameter arrays to generate new random values if using IntParam
+    _red_param.update_array();
+    _green_param.update_array();
+    _blue_param.update_array();
+
+    // Get the generated values from ParameterVX and update the color array
+    _color[0] = static_cast<vx_uint8>(_red_param.default_value());
+    _color[1] = static_cast<vx_uint8>(_green_param.default_value());
+    _color[2] = static_cast<vx_uint8>(_blue_param.default_value());
+
+    vxCopyArrayRange(_color_array, 0, 3, sizeof(vx_uint8), _color.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
 }
