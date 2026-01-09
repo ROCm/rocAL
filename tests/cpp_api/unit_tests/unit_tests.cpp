@@ -895,7 +895,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 65: {
             std::cout << "Running rocalGaussianNoiseFixed" << std::endl;
-            output = rocalGaussianNoiseFixed(handle, input, 0.0f, 0.2f, true, 1255459);
+            output = rocalGaussianNoiseFixed(handle, input, true, 0.0f, 0.2f, 1255459);
         } break;
         case 66: {
             std::cout << "Running rocalShotNoise" << std::endl;
