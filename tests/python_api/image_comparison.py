@@ -93,7 +93,7 @@ def main():
     failed_case_list = []
     golden_output_dir_list = os.listdir(ref_output_path)
     rocal_output_dir_list = os.listdir(rocal_output_path)
-    randomized_augmentation = ["Snow", "Rain", "Jitter", "SNPNoise"]
+    randomized_augmentation = ["Snow", "Rain", "Jitter", "SNPNoise", "Fog"]
     spl_case_meta_data = ["OneHot"]
     golden_file_path = ""
     for aug_name in rocal_output_dir_list:
