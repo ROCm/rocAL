@@ -48,13 +48,32 @@ def draw_patches(img, idx, args=None):
     # image is expected as a tensor, bboxes as numpy
     if args.fp16:
         img = (img).astype('uint8')
-    if not args.color_format:
+    if img.ndim == 3:
+        img = img[:, :, :, None]
+
+    def _infer_nchw(tensor):
+        if tensor.ndim != 4:
+            return False
+        # Heuristic: channel dimension is usually small (1/3) and spatial dims are larger.
+        c_first = tensor.shape[1] in (1, 3) and tensor.shape[-1] not in (1, 3)
+        c_last = tensor.shape[-1] in (1, 3) and tensor.shape[1] not in (1, 3)
+        if c_first and not c_last:
+            return True
+        if c_last and not c_first:
+            return False
+        # Ambiguous fallback to CLI expectation.
+        return bool(args) and (not args.color_format)
+
+    if _infer_nchw(img):
         img = img.transpose([0, 2, 3, 1])
+
+    channels = img.shape[-1] if img.ndim == 4 else 1
+    is_color = channels == 3
     images_list = []
     for im in img:
         images_list.append(im)
     img = cv2.vconcat(images_list)
-    if args.color_format:
+    if is_color:
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     else:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -344,7 +363,7 @@ def main():
                                output_dtype=tensor_dtype)
         elif augmentation_name == "channel_permute":
             output = fn.channel_permute(images,
-                                        permutation_order=[2, 1, 0],
+                                        permutation=[2, 1, 0],
                                         output_layout=tensor_layout,
                                         output_dtype=tensor_dtype)
         elif augmentation_name == "lut":
@@ -353,7 +372,7 @@ def main():
                             output_dtype=tensor_dtype)
         elif augmentation_name == "posterize":
             output = fn.posterize(images,
-                                  level_bits=3,
+                                  num_bits=3,
                                   output_layout=tensor_layout,
                                   output_dtype=tensor_dtype)
         elif augmentation_name == "solarize":

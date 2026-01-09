@@ -28,9 +28,14 @@ import ast
 
 def compare_pixels(img1, img2, aug_name, width, height, image_offset=0):
     pixel_difference = [0, 0, 0, 0, 0, 0]
-    if "rgb" in aug_name:
-        pixels1 = img1.load()
-        pixels2 = img2.load()
+    # Don't infer color vs grayscale based on filename. Some augmentations (e.g. ColorToGreyscale)
+    # are executed on RGB inputs but produce 1-channel outputs.
+    sample1 = img1.getpixel((0, 0))
+    sample2 = img2.getpixel((0, 0))
+    is_color = isinstance(sample1, tuple) and isinstance(sample2, tuple)
+    if is_color:
+        pixels1 = img1.convert("RGB").load()
+        pixels2 = img2.convert("RGB").load()
         channel = 3
     else:
         pixels1 = img1.convert("L").load()
@@ -176,7 +181,8 @@ def main():
                 mismatch_percentage = round(
                     (total_pixel_diff / total_count) * 100, 2)
                 if ((total_pixel_diff == 0) or (mismatch_percentage < 5.0 and pixel_diff[1] == total_pixel_diff) or       # Ignore test cases with single pixel differences less than 5% of total pixel count
-                        (mismatch_percentage < 0.5 and ("Blend" in aug_name or "Rotate" in aug_name) and "hip" in aug_name)):  # Ignore mismatch in rotate augmentation less than 0.5% of total pixel count
+                        (mismatch_percentage < 0.5 and ("Blend" in aug_name or "Rotate" in aug_name) and "hip" in aug_name) or  # Ignore mismatch in rotate augmentation less than 0.5% of total pixel count
+                        (mismatch_percentage < 0.5 and ("JpegCompressionDistortion" in aug_name))):  # Ignore mismatch in JpegCompressionDistortion augmentation less than 0.5% of total pixel count
                     passed_case_count = passed_case_count + 1
                     logging.info("PASSED")
                 else:

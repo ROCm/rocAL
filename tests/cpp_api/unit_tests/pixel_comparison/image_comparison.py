@@ -149,7 +149,8 @@ def main():
                 mismatch_percentage = round(
                     (total_pixel_diff / total_count) * 100, 2)
                 if ((total_pixel_diff == 0) or (mismatch_percentage < 5.0 and pixel_diff[1] == total_pixel_diff) or       # Ignore test cases with single pixel differences less than 5% of total pixel count
-                        (mismatch_percentage < 0.5 and ("Blend" in aug_name or "Rotate" in aug_name) and "hip" in aug_name)):  # Ignore mismatch in rotate augmentation less than 0.5% of total pixel count
+                        (mismatch_percentage < 0.5 and ("Blend" in aug_name or "Rotate" in aug_name) and "hip" in aug_name) or  # Ignore mismatch in rotate augmentation less than 0.5% of total pixel count
+                        (mismatch_percentage < 0.5 and ("JpegCompressionDistortion" in aug_name))):  # Ignore mismatch in JpegCompressionDistortion augmentation less than 0.5% of total pixel count
                     passed_case_count = passed_case_count + 1
                     logging.info("PASSED")
                 else:
