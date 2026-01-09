@@ -223,7 +223,6 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}Nop_${rgb_name[$rgb]}_${device_name}" $width $height 61 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
 
-        # Set 2 augmentation tests - random variants
         ./unit_tests 0 "$image_path" "${output_path}ChannelPermute_${rgb_name[$rgb]}_${device_name}" $width $height 75 $device $rgb 1 $display
         ./unit_tests 6 "$caffe_classification_path" "${output_path}JpegCompressionDistortionRandom_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}LUT_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
@@ -231,7 +230,6 @@ do
         ./unit_tests 15 "$coco_detection_path" "${output_path}SolarizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 81 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}ColorToGreyscale_${rgb_name[$rgb]}_${device_name}" $width $height 83 $device $rgb 0 $display
 
-        # Set 2 augmentation tests - fixed variants
         ./unit_tests 6 "$caffe_classification_path" "${output_path}JpegCompressionDistortion_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 0 $display
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Posterize_${rgb_name[$rgb]}_${device_name}" $width $height 80 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}Solarize_${rgb_name[$rgb]}_${device_name}" $width $height 82 $device $rgb 0 $display
