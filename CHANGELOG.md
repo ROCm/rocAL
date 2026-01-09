@@ -6,6 +6,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Added
 * `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
+* Serialization test to validate pipeline serialization functionality.
 
 ### Changes
 * Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
