@@ -113,7 +113,7 @@ public:
             // Handle scalar types - return the single stored value
             else if (!is_vector) {
                 if (values.empty()) {
-                    THROW("Value not present for the given argument : " + arg_name + ".")
+                    THROW("Value not present for the given argument : " + arg_name + ".");
                 }
                 return std::any_cast<T>(values[0]);
             } 

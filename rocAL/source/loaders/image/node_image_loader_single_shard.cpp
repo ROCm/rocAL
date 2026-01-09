@@ -83,7 +83,7 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
 void ImageLoaderSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
     if (arguments.size() != INIT_ARGS_COUNT)
         THROW("ImageLoaderSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) + 
-              "Ensure all arguments present in init are accounted for");
+              ".Ensure all arguments present in init are accounted for");
     ShardingInfo sharding_info(arguments[13].get<RocalBatchPolicy>(), arguments[14].get<bool>(), arguments[15].get<bool>(), arguments[16].get<int32_t>());
 
     this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<unsigned>(), arguments[3].get<std::string>(),
