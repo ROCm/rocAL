@@ -294,6 +294,22 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("rocalVerify", &rocalVerify);
     m.def("rocalRun", &rocalRun, py::return_value_policy::reference);
     m.def("rocalRelease", &rocalRelease, py::return_value_policy::reference);
+    m.def("rocalSerialize", [](RocalContext context) {
+        size_t size;
+        RocalStatus status = rocalSerialize(context, &size);
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to serialize pipeline");
+        }
+        // Allocate size+1 bytes to handle null terminator safely
+        std::vector<char> buffer(size + 1, '\0');
+        status = rocalGetSerializedString(context, buffer.data());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to get serialized string");
+        }
+
+        // Return only the first 'size' bytes as Python bytes object
+        return py::bytes(buffer.data(), size);
+    }, "Returns the serialized pipeline as string");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)
