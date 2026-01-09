@@ -14,6 +14,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Removed building wheels for python.
 * `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
 * Serialization test to validate pipeline serialization functionality.
+* Python support and example to test serialization
 
 ### Changes
 * Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
