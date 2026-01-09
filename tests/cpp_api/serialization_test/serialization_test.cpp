@@ -167,9 +167,6 @@ int main(int argc, const char **argv) {
 
         // Copy Image data from handle
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
-        std::vector<int> compression_params;
-        compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
-        compression_params.push_back(9);
         mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
         if (display_all)
@@ -177,9 +174,9 @@ int main(int argc, const char **argv) {
 
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
             cv::cvtColor(mat_output, mat_color, cv::COLOR_RGB2BGR);
-            cv::imwrite(out_filename, mat_color, compression_params);
+            cv::imwrite(out_filename, mat_color);
         } else {
-            cv::imwrite(out_filename, mat_output, compression_params);
+            cv::imwrite(out_filename, mat_output);
         }
         col_counter = (col_counter + 1) % number_of_cols;
     }
