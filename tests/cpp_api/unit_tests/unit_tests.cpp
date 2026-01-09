@@ -884,7 +884,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
             output = rocalRandomResizedCrop(handle, input, resize_w, resize_h, true, area_factor, aspect_ratio);
         } break;
-        case 84: {
+        case 83: {
             std::cout << "Running tensor reduction augmentations" << std::endl;
             auto tensor_sum = rocalTensorSum(handle, input, false, ROCAL_NONE, ROCAL_FP32);
             auto tensor_min = rocalTensorMin(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
