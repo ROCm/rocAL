@@ -342,6 +342,34 @@ def main():
                                kernel_size=3,
                                output_layout=tensor_layout,
                                output_dtype=tensor_dtype)
+        elif augmentation_name == "channel_permute":
+            output = fn.channel_permute(images,
+                                        permutation_order=[2, 1, 0],
+                                        output_layout=tensor_layout,
+                                        output_dtype=tensor_dtype)
+        elif augmentation_name == "lut":
+            output = fn.lut(images,
+                            output_layout=tensor_layout,
+                            output_dtype=tensor_dtype)
+        elif augmentation_name == "posterize":
+            output = fn.posterize(images,
+                                  level_bits=3,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "solarize":
+            output = fn.solarize(images,
+                                 threshold=0.5,
+                                 output_layout=tensor_layout,
+                                 output_dtype=tensor_dtype)
+        elif augmentation_name == "jpeg_compression_distortion":
+            output = fn.jpeg_compression_distortion(images,
+                                                    quality=50,
+                                                    output_layout=tensor_layout,
+                                                    output_dtype=tensor_dtype)
+        elif augmentation_name == "color_to_greyscale":
+            output = fn.color_to_greyscale(images,
+                                           subpixel_layout=0,
+                                           output_dtype=tensor_dtype)
         elif augmentation_name == "snp_noise":
             output = fn.snp_noise(images,
                                   p_noise=0.2,
