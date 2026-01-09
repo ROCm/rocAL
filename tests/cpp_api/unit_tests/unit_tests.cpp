@@ -918,10 +918,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalSolarizeFixed(handle, input, 0.5f, true);
         } break;
         case 82: {
-            std::cout << "Running rocalLog" << std::endl;
-            output = rocalLog(handle, input, true);
-        } break;
-        case 83: {
             std::cout << "Running rocalColorToGreyscale" << std::endl;
             output = rocalColorToGreyscale(handle, input, true);
         } break;
