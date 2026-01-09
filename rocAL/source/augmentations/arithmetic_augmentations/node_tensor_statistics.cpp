@@ -57,6 +57,28 @@ inline void tensor_reduction_create(Node *node,
     THROW("TensorStatistics: tensor reduction operations require vx_rpp version >= 3.1.7");
 #endif
 }
+
+inline void tensor_stddev_create(vx_node &vx_node_ref,
+                                 vx_tensor input_tensor,
+                                 vx_tensor input_roi,
+                                 vx_tensor output_tensor,
+                                 vx_tensor mean_tensor,
+                                 vx_graph graph,
+                                 Tensor *input) {
+    if (vx_node_ref)
+        return;
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
+    int input_layout = static_cast<int>(input->info().layout());
+    int roi_type = static_cast<int>(input->info().roi_type());
+    vx_context context = vxGetContext((vx_reference)graph);
+    vx_scalar input_layout_vx = vxCreateScalar(context, VX_TYPE_INT32, &input_layout);
+    vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
+    vx_node_ref = vxExtRppTensorStdDev(graph, input_tensor, input_roi, output_tensor, mean_tensor, input_layout_vx, roi_type_vx);
+    validate_status(vx_node_ref);
+#else
+    THROW("TensorStdDevNode: vxExtRppTensorStdDev requires vx_rpp version >= 3.1.7");
+#endif
+}
 }  // namespace
 
 TensorSumNode::TensorSumNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
@@ -122,24 +144,11 @@ void TensorMeanNode::create_node() {
 TensorStdDevNode::TensorStdDevNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void TensorStdDevNode::create_node() {
-    if (_node)
-        return;
-
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
-    int input_layout = static_cast<int>(_inputs[0]->info().layout());
-    int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
-    vx_context context = vxGetContext((vx_reference)_graph->get());
-    vx_scalar input_layout_vx = vxCreateScalar(context, VX_TYPE_INT32, &input_layout);
-    vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
-    _node = vxExtRppTensorStdDev(_graph->get(),
-                                 _inputs[0]->handle(),
-                                 _inputs[0]->get_roi_tensor(),
-                                 _outputs[0]->handle(),
-                                 _inputs[1]->handle(),
-                                 input_layout_vx,
-                                 roi_type_vx);
-    validate_status(_node);
-#else
-    THROW("TensorStdDevNode: vxExtRppTensorStdDev requires vx_rpp version >= 3.1.7");
-#endif
+    tensor_stddev_create(_node,
+                         _inputs[0]->handle(),
+                         _inputs[0]->get_roi_tensor(),
+                         _outputs[0]->handle(),
+                         _inputs[1]->handle(),
+                         _graph->get(),
+                         _inputs[0]);
 }
