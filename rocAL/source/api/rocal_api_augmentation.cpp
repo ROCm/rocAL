@@ -2692,7 +2692,11 @@ RocalTensor rocalLog(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     try {
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
-        RocalTensorDataType op_tensor_data_type = RocalTensorDataType::FP32;
+        // Preserve FP16 inputs, promote everything else to FP32 to avoid precision loss.
+        RocalTensorDataType input_dtype = static_cast<RocalTensorDataType>(input->data_type());
+        RocalTensorDataType op_tensor_data_type = (input_dtype == RocalTensorDataType::FP16)
+                                                      ? RocalTensorDataType::FP16
+                                                      : RocalTensorDataType::FP32;
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_data_type);
         output = context->master_graph->create_tensor(output_info, is_output);
