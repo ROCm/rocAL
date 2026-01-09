@@ -161,7 +161,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
             serialize_parameter_to_protobuf(param, op_arg);
         } else if (op_arg.type_name == "enum") {
             if (op_arg.values.empty()) {
-                THROW("Enum argument " + op_arg.arg_name + " has no values.");
+                THROW("Enum argument '" + op_arg.arg_name + "' requires at least one value.");
             }
             rocal_proto::EnumType* enum_arg = arg->mutable_enum_value();
             enum_arg->set_name(op_arg.sub_type_name);
