@@ -294,6 +294,22 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.def("rocalVerify", &rocalVerify);
     m.def("rocalRun", &rocalRun, py::return_value_policy::reference);
     m.def("rocalRelease", &rocalRelease, py::return_value_policy::reference);
+    m.def("rocalSerialize", [](RocalContext context) {
+        size_t size;
+        RocalStatus status = rocalSerialize(context, &size);
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to serialize pipeline");
+        }
+        // Allocate size+1 bytes to handle null terminator safely
+        std::vector<char> buffer(size + 1, '\0');
+        status = rocalGetSerializedString(context, buffer.data());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to get serialized string");
+        }
+
+        // Return only the first 'size' bytes as Python bytes object
+        return py::bytes(buffer.data(), size);
+    }, "Returns the serialized pipeline as string");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)
@@ -1125,6 +1141,12 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("snpNoise", &rocalSnPNoise,
           py::return_value_policy::reference);
+    m.def("gaussianNoise", &rocalGaussianNoise,
+          py::return_value_policy::reference);
+    m.def("shotNoise", &rocalShotNoise,
+          py::return_value_policy::reference);
+    m.def("water", &rocalWater,
+          py::return_value_policy::reference);
     m.def("lut", &rocalLUT,
           py::return_value_policy::reference);
     m.def("posterize", &rocalPosterize,
@@ -1142,6 +1164,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("randomCrop", &rocalRandomCrop,
           py::return_value_policy::reference);
     m.def("colorTemp", &rocalColorTemp,
+          py::return_value_policy::reference);
+    m.def("colorJitter", &rocalColorJitter,
+          py::return_value_policy::reference);
+    m.def("spatter", &rocalSpatter,
           py::return_value_policy::reference);
     m.def("channelPermute", &rocalChannelPermute,
           py::return_value_policy::reference);
@@ -1176,6 +1202,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("transpose", &rocalTranspose,
           py::return_value_policy::reference);
     m.def("log1p", &rocalLog1p,
-    py::return_value_policy::reference);
+          py::return_value_policy::reference);
+    m.def("log", &rocalLog,
+          py::return_value_policy::reference);
 }
 }  // namespace rocal
