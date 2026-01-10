@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "augmentations/arithmetic_augmentations/node_tensor_statistics.h"
 #include "pipeline/exception.h"
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
 namespace {
 inline void validate_status(vx_node node) {
     vx_status status = vxGetStatus((vx_reference)node);
@@ -45,7 +46,6 @@ inline void tensor_reduction_create(Node *node,
                                     std::function<vx_node(vx_graph, vx_tensor, vx_tensor, vx_tensor, vx_scalar, vx_scalar)> create_fn) {
     if (vx_node_ref)
         return;
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
     int input_layout = static_cast<int>(input->info().layout());
     int roi_type = static_cast<int>(input->info().roi_type());
     vx_context context = vxGetContext((vx_reference)graph);
@@ -53,9 +53,6 @@ inline void tensor_reduction_create(Node *node,
     vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
     vx_node_ref = create_fn(graph, input_tensor, input_roi, output_tensor, input_layout_vx, roi_type_vx);
     validate_status(vx_node_ref);
-#else
-    THROW("TensorStatistics: tensor reduction operations require vx_rpp version >= 3.1.7");
-#endif
 }
 
 inline void tensor_stddev_create(vx_node &vx_node_ref,
@@ -67,7 +64,6 @@ inline void tensor_stddev_create(vx_node &vx_node_ref,
                                  Tensor *input) {
     if (vx_node_ref)
         return;
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
     int input_layout = static_cast<int>(input->info().layout());
     int roi_type = static_cast<int>(input->info().roi_type());
     vx_context context = vxGetContext((vx_reference)graph);
@@ -75,9 +71,6 @@ inline void tensor_stddev_create(vx_node &vx_node_ref,
     vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
     vx_node_ref = vxExtRppTensorStdDev(graph, input_tensor, input_roi, output_tensor, mean_tensor, input_layout_vx, roi_type_vx);
     validate_status(vx_node_ref);
-#else
-    THROW("TensorStdDevNode: vxExtRppTensorStdDev requires vx_rpp version >= 3.1.7");
-#endif
 }
 }  // namespace
 
@@ -152,3 +145,7 @@ void TensorStdDevNode::create_node() {
                          _graph->get(),
                          _inputs[0]);
 }
+
+#else
+    THROW("Tensor reduction operations require vx_rpp version >= 3.1.7");
+#endif
