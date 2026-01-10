@@ -140,6 +140,23 @@ extern "C" RocalStatus ROCAL_API_CALL rocalSerialize(RocalContext rocal_context,
 extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedString(RocalContext rocal_context, char* serialized_string);
 
 /*!
+ * \brief Deserialize a pipeline from a serialized binary string.
+ * \ingroup group_rocal
+ *
+ * Constructs a rocAL pipeline from the serialized input and returns a new
+ * context. Caller-provided fields in \p pipe_params take precedence over values
+ * stored in the serialized pipeline; any remaining unset fields are populated
+ * from the deserialized pipeline metadata.
+ *
+ * \param [in] serialized_pipeline pointer to the serialized pipeline buffer.
+ * \param [in] serialized_string_size size in bytes of the serialized pipeline buffer.
+ * \param [in,out] pipe_params pointer to \ref RocalPipelineParams used to override
+ *              pipeline configuration; must not be nullptr.
+ * \return A \ref RocalContext representing the newly created pipeline context, or nullptr on failure.
+ */
+extern "C" RocalContext ROCAL_API_CALL rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size, RocalPipelineParams* pipe_params);
+
+/*!
  * \brief Serialize the current pipeline state into an opaque checkpoint blob.
  * \ingroup group_rocal
  *
@@ -182,8 +199,18 @@ extern "C" RocalStatus ROCAL_API_CALL rocalCheckpoint(RocalContext rocal_context
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_ckpt_string);
 
+/*!
+ * \brief Restore pipeline state from a serialized checkpoint blob.
+ * \ingroup group_rocal
+ *
+ * Restores the pipeline runtime state from a checkpoint blob previously produced by
+ * rocalCheckpoint()/rocalGetSerializedCheckpointString().
+ *
+ * \param [in] rocal_context the rocAL context
+ * \param [in] serialized_ckpt_string pointer to checkpoint blob bytes
+ * \param [in] serialized_ckpt_size size in bytes of the checkpoint blob
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
+ */
 extern "C" RocalStatus ROCAL_API_CALL rocalRestoreFromSerializedCheckpoint(RocalContext rocal_context, const char* serialized_ckpt_string, size_t serialized_ckpt_size);
-
-extern "C" RocalContext ROCAL_API_CALL rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size, RocalPipelineParams& pipe_params);
 
 #endif

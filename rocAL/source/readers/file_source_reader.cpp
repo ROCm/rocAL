@@ -67,7 +67,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
         std::mt19937 engine(_seed);
         _rng = engine;
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                     _file_names.begin() + _shard_end_idx_vector[_shard_id], engine);
+                     _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
     }
 
     return ret;
@@ -143,7 +143,7 @@ void FileSourceReader::reset() {
         _rng = engine;
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
                      _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(),
-                     engine);
+                     _rng);
     }
 
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id

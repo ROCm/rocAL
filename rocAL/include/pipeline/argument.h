@@ -62,14 +62,16 @@ public:
      * them as the requested type. It supports scalar types, vectors, maps, and parameter
      * pointer types.
      * 
-     * @tparam T The type to which the argument value should be cast. Supported types include:
+     * @tparam T The type to which the argument value should be cast.
      * @return The value of the argument as type T.
      * @note For parameter pointer types (FloatParam*, IntParam*), nullptr is returned
      *       if the argument is a null pointer.
      */
     template <typename T>
-    T Get() const {
+    T get() const {
+        // Handle parameter pointer types (FloatParam* or IntParam*)
         if constexpr (std::is_same_v<T, FloatParam*> || std::is_same_v<T, IntParam*>) {
+            // Return nullptr if the parameter was null
             if (is_null_ptr) {
                 return nullptr;
             }
@@ -77,9 +79,13 @@ public:
                 return std::get<FloatParam*>(param);
             else if constexpr (std::is_same_v<T, IntParam*>)
                 return std::get<IntParam*>(param);
-        } else if constexpr (std::is_same_v<T, std::map<std::string, std::string>>) {
+        } 
+        // Handle string-to-string map type
+        else if constexpr (std::is_same_v<T, std::map<std::string, std::string>>) {
+            // Validate that we have key-value pairs (even number of elements)
             if ((values.size() % 2) != 0)
-                THROW("Corrupted map payload for argument : " + arg_name);
+                THROW("Corrupted map payload for argument : " + arg_name + ".");
+            // Reconstruct the map from alternating key-value elements in the values vector
             std::map<std::string, std::string> feature_map;
             for (size_t i = 0; i < values.size(); i += 2) {
                 const auto& key = std::any_cast<const std::string&>(values[i]);
@@ -87,10 +93,13 @@ public:
                 feature_map.emplace(key, value);
             }
             return feature_map;
-        } else {
+        } 
+        // Handle all other types (scalars, vectors, etc.)
+        else {
             if (is_null_ptr || is_parameter)
                 THROW("Type mismatch: cannot retrieve non-parameter type from a parameter argument (arg_name: '" + arg_name + "', type_name: '" + type_name + "')");
 
+            // Handle vector types - reconstruct vector from stored elements
             if constexpr (is_vector_type<std::decay_t<T>>::value) {
                 using ElementType = typename std::decay_t<T>::value_type;
 
@@ -100,18 +109,25 @@ public:
                     result.push_back(std::any_cast<ElementType>(v));
                 }
                 return result;
-            } else if (!is_vector) {
+            } 
+            // Handle scalar types - return the single stored value
+            else if (!is_vector) {
                 if (values.empty()) {
-                    THROW("Value not present for the given argument : " + arg_name)
+                    THROW("Value not present for the given argument : " + arg_name + ".")
                 }
                 return std::any_cast<T>(values[0]);
-            } else {
+            } 
+            else {
                 THROW("Unsupported type requested for argument : " + arg_name + " of type " + type_name);
             }
         }
     }
 
     // Constructors
+    /**
+     * @brief Default constructor for Argument.
+     */
+    Argument() {}
 
     /**
      * @brief Unified template constructor for all data types
@@ -120,8 +136,6 @@ public:
      * @param val The value to store
      * @throws std::runtime_error if the type is unknown or unsupported
      */
-    Argument() {}
-
     template <typename T>
     explicit Argument(std::string name, T&& val) : arg_name(std::move(name)) {
 
@@ -320,7 +334,7 @@ private:
 
 template <typename... Args, std::size_t... I>
 std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments, std::index_sequence<I...>) {
-    return std::make_tuple(arguments[I].Get<Args>()...);
+    return std::make_tuple(arguments[I].get<Args>()...);
 }
 
 /**

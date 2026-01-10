@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <functional>
 #include <string>
 #include <vector>
@@ -68,7 +68,7 @@ public:
         if (it != _loader_node_registry.end()) {
             return it->second(output_tensor, dev_resource);
         } else {
-            THROW("Node not found in the registry: " + name);
+            THROW("LoaderNode not found in the registry: " + name);
         }
     }
 
@@ -82,8 +82,8 @@ public:
     }
 
 private:
-    std::map<std::string, LoaderCreator> _loader_node_registry;
-    std::map<std::string, AugmentationCreator> _node_registry;
+    std::unordered_map<std::string, LoaderCreator> _loader_node_registry;
+    std::unordered_map<std::string, AugmentationCreator> _node_registry;
 };
 
 /*!

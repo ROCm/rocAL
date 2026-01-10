@@ -116,7 +116,8 @@ public:
     vx_context get_vx_context() { return _context; }
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    std::shared_ptr<Node> add_node(std::string node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node = false);
+    // Creates and adds a node to the pipeline graph by name during deserialization
+    std::shared_ptr<Node> add_node(const std::string& node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node = false);
     template <typename T, typename M>
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     bool is_checkpointing_enabled() const { return _checkpointing_enabled; }
@@ -164,11 +165,11 @@ public:
     void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
     // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
     std::string& get_serialized_string() { return _serialized_pipeline; }
+    void deserialize(rocal_proto::PipelineDef *pipe_def);
+    Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
+    void restore_from_serialized_checkpoint(const std::string &serialized_ckpt);
     void get_serialized_checkpoint(size_t &serialized_ckpt_string_size);
     const std::string& get_serialized_checkpoint_string() const { return _serialized_checkpoint; }
-    void deserialize(rocal_proto::PipelineDef *pipe_def);
-    void restore_from_serialized_checkpoint(const std::string &serialized_ckpt);
-    Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
 private:
     Status update_node_parameters();
     std::shared_ptr<Checkpoint> create_checkpoint();
@@ -344,8 +345,10 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
-    // Track loader nodes for checkpointing/serialization
+
+    // Add each operator to the pipeline operators list
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
+
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
