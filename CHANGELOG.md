@@ -2,15 +2,27 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
-## (Unreleased) rocAL 2.5.0
+## (Unreleased) rocAL 2.6.0
+
+### Added
+* `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
+* Serialization test to validate pipeline serialization functionality.
+* Python support and example to test serialization
+
+### Changes
+* Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
+* Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
+
+### Removed
+
+
+## rocAL 2.5.0 for ROCm 7.2.0
 
 ### Added
 * `EnumRegistry` to register all the enums present in rocAL.
 * `Argument` class which stores the value and type of each argument in the Node.
 * Support to store the arguments in the Node class.
 * `PipelineOperator` class to represent operators in the pipeline with metadata.
-* `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
-* Serialization test to validate pipeline serialization functionality.
 
 ### Changes
 * OpenCL backend support - deprecated
@@ -18,9 +30,15 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Refactor external enum usage in rocAL, to maintain separation between external and internal enums.
 * Introduced the following enums ResizeScalingMode, ResizeInterpolationType, MelScaleFormula, AudioBorderType, OutOfBoundsPolicy in commons.h.
 * Adds support to track operators in MasterGraph with unique naming.
-* Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
-* Add support to store the pipeline into protobuf format.
-* Adds template-based serialization functions for different parameter types to convert to protobuf format.
+
+### Resolved issues
+* Use HIP memory for fused crop rocjpeg decoder
+* Resolve an issue in numpy loader where ROI is updated incorrectly
+* Resolve an issue in CropResize node where crop_w and crop_h values were not correctly updated
+
+### Known issues
+* Package installation on SLES requires manually installing `TurboJPEG`.
+* Package installation on CentOS, RedHat, and SLES requires manually installing the `FFMPEG Dev` package.
 
 ## rocAL 2.4.0 for ROCm 7.1.0
 

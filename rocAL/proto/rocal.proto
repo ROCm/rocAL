@@ -27,14 +27,13 @@ package rocal_proto;
 // Stores the Input/Output tensors
 message InputOutput {
   required string name = 1;
-  optional string type = 2;
-  required bool is_argument_input = 3;
-  required int32 device = 4;
-  optional int32 dtype = 5;
-  optional int32 layout = 6;
-  optional int32 color_format = 7;
-  repeated uint64 dims = 8;
-  required uint32 num_dims = 9;
+  required bool is_argument_input = 2;
+  required int32 device = 3;
+  optional int32 dtype = 4;
+  optional int32 layout = 5;
+  optional int32 color_format = 6;
+  repeated uint64 dims = 7;
+  required uint32 num_dims = 8;
 }
 
 message Parameter {

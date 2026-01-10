@@ -116,6 +116,8 @@ public:
     vx_context get_vx_context() { return _context; }
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    // Creates and adds a node to the pipeline graph by name during deserialization
+    std::shared_ptr<Node> add_node(const std::string& node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node = false);
     template <typename T, typename M>
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     bool is_checkpointing_enabled() const { return _checkpointing_enabled; }
@@ -163,7 +165,8 @@ public:
     void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
     // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
     std::string& get_serialized_string() { return _serialized_pipeline; }
-
+    void deserialize(rocal_proto::PipelineDef *pipe_def);
+    Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
     void get_serialized_checkpoint(size_t &serialized_ckpt_string_size);
     const std::string& get_serialized_checkpoint_string() const { return _serialized_checkpoint; }
 private:
@@ -196,6 +199,7 @@ private:
     std::list<std::shared_ptr<Node>> _root_nodes;                                 //!< List of all root nodes (image/video loaders)
     std::list<std::shared_ptr<Node>> _meta_data_nodes;                            //!< List of nodes where meta data has to be updated after augmentation
     std::map<Tensor *, std::shared_ptr<Node>> _tensor_map;                        //!< key: tensor, value : Parent node
+    std::map<std::string, Tensor *> _pipeline_tensors;                        //!< Maps tensor names to tensor pointers during deserialization
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
     TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder
@@ -340,6 +344,10 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
+
     // Track loader nodes for checkpointing/serialization
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)

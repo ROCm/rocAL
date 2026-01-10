@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_brightness.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(BrightnessNode)
+
 BrightnessNode::BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
                                                                                                             _beta(BETA_RANGE[0], BETA_RANGE[1]) {}
@@ -63,6 +65,12 @@ void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
     // Add all arguments as part of the Node
     std::array<std::string, 2> arg_names = {"alpha", "beta"};
     set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta);
+}
+
+void BrightnessNode::initialize_args(std::vector<Argument> &arguments) {
+    if (init_args<BrightnessNode, float, float>(this, arguments)) return;
+    if (init_args<BrightnessNode, FloatParam*, FloatParam*>(this, arguments)) return;
+    THROW("Unsupported argument types for BrightnessNode");
 }
 
 void BrightnessNode::update_node() {

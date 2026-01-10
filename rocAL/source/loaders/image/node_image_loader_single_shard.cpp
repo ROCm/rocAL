@@ -25,6 +25,10 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 #include "rocal.pb.h"
 
+#define INIT_ARGS_COUNT 25  // Modify in accordance with number of args in init
+
+REGISTER_LOADER_NODE(ImageLoaderSingleShardNode)
+
 ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }
@@ -54,11 +58,12 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
     reader_cfg.set_external_filemode(external_file_mode);
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
+
     reader_cfg.enable_checkpointing(enable_checkpointing);
     reader_cfg.set_seed(seed);
 
     // Add all arguments as part of the operator
-    std::array<std::string, 25> arg_names = {
+    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
         "shard_id", "shard_count", "cpu_num_threads", "source_path", "json_path",
         "storage_type", "decoder_type", "shuffle", "loop",
         "load_batch_count", "mem_type", "meta_data_reader", "decoder_keep_original", 
@@ -82,6 +87,19 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
                                mem_type,
                                _batch_size, decoder_keep_original);
     _loader_module->start_loading();
+}
+
+void ImageLoaderSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    if (arguments.size() != INIT_ARGS_COUNT)
+        THROW("ImageLoaderSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) + 
+              "Ensure all arguments present in init are accounted for");
+    ShardingInfo sharding_info(arguments[13].get<RocalBatchPolicy>(), arguments[14].get<bool>(), arguments[15].get<bool>(), arguments[16].get<int32_t>());
+
+    this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<unsigned>(), arguments[3].get<std::string>(),
+               arguments[4].get<std::string>(), arguments[5].get<StorageType>(), arguments[6].get<DecoderType>(), arguments[7].get<bool>(), arguments[8].get<bool>(), 
+               arguments[9].get<size_t>(), arguments[10].get<RocalMemType>(), meta_data_reader, arguments[12].get<bool>(), sharding_info,
+               arguments[17].get<std::map<std::string, std::string>>(), arguments[18].get<unsigned>(), arguments[19].get<unsigned>(), arguments[20].get<unsigned>(), 
+               arguments[21].get<ExternalSourceFileMode>(), arguments[22].get<std::string>());
 }
 
 std::shared_ptr<LoaderModule> ImageLoaderSingleShardNode::get_loader_module() {

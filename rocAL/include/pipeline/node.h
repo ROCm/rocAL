@@ -27,9 +27,10 @@ THE SOFTWARE.
 #include <utility>
 
 #include "pipeline/graph.h"
-#include "meta_data/meta_data_graph.h"
+#include "loaders/loader_module.h"
 #include "pipeline/tensor.h"
 #include "pipeline/argument.h"
+#include "pipeline/node_factory.h"
 #include "pipeline/checkpoint.h"
 
 class Node {
@@ -54,6 +55,16 @@ class Node {
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
     const std::vector<Argument>& get_args_list() const { return _args; }
+    // Returns the LoaderModule associated with this node, Derived LoaderNodes should override this method.
+    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("get_loader_module() is not implemented for the Node"); }
+    virtual void initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) { 
+        THROW("initialize_args not implemented for the LoaderNode type: " + node_name() + 
+              ". Derived LoaderNode must override this method to handle deserialization with metadata reader."); 
+    }
+    virtual void initialize_args(std::vector<Argument> &arguments) { 
+        THROW("initialize_args(arguments) not implemented for node type: " + node_name() + 
+              ". Derived Nodes must override this method to handle deserialization.");
+    }
     virtual void save_state(std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) {}
     virtual std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) { return ""; }
 
