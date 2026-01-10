@@ -1118,13 +1118,16 @@ rocalLUT(
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalLUT requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
@@ -1132,9 +1135,6 @@ rocalLUT(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<LutNode>({input}, {output});
-#else
-        THROW("rocalLUT requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1149,6 +1149,10 @@ rocalPosterize(
     RocalIntParam p_num_bits,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalPosterize requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -1156,7 +1160,6 @@ rocalPosterize(
     auto input = static_cast<Tensor*>(p_input);
     auto num_bits = static_cast<IntParam*>(p_num_bits);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1166,9 +1169,6 @@ rocalPosterize(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PosterizeNode>({input}, {output})->init(num_bits);
-#else
-        THROW("rocalPosterize requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1183,13 +1183,16 @@ rocalPosterizeFixed(
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalPosterizeFixed requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1199,9 +1202,6 @@ rocalPosterizeFixed(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PosterizeNode>({input}, {output})->init(num_bits);
-#else
-        THROW("rocalPosterizeFixed requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1216,6 +1216,10 @@ rocalSolarize(
     RocalFloatParam p_threshold,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalSolarize requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -1223,7 +1227,6 @@ rocalSolarize(
     auto input = static_cast<Tensor*>(p_input);
     auto threshold = static_cast<FloatParam*>(p_threshold);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1233,9 +1236,6 @@ rocalSolarize(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SolarizeNode>({input}, {output})->init(threshold);
-#else
-        THROW("rocalSolarize requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1250,13 +1250,16 @@ rocalSolarizeFixed(
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalSolarizeFixed requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1266,9 +1269,6 @@ rocalSolarizeFixed(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SolarizeNode>({input}, {output})->init(threshold);
-#else
-        THROW("rocalSolarizeFixed requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1283,6 +1283,10 @@ rocalJpegCompressionDistortion(
     RocalIntParam p_quality,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalJpegCompressionDistortion requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -1290,7 +1294,6 @@ rocalJpegCompressionDistortion(
     auto input = static_cast<Tensor*>(p_input);
     auto quality = static_cast<IntParam*>(p_quality);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1300,9 +1303,6 @@ rocalJpegCompressionDistortion(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<JpegCompressionDistortionNode>({input}, {output})->init(quality);
-#else
-        THROW("rocalJpegCompressionDistortion requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1317,13 +1317,16 @@ rocalJpegCompressionDistortionFixed(
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalJpegCompressionDistortionFixed requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1333,9 +1336,6 @@ rocalJpegCompressionDistortionFixed(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<JpegCompressionDistortionNode>({input}, {output})->init(quality);
-#else
-        THROW("rocalJpegCompressionDistortionFixed requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1645,13 +1645,16 @@ rocalChannelPermute(
     bool is_output,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalChannelPermute requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1661,9 +1664,6 @@ rocalChannelPermute(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ChannelPermuteNode>({input}, {output})->init(permutation);
-#else
-        THROW("rocalChannelPermute requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2709,13 +2709,16 @@ rocalColorToGreyscale(
     bool is_output,
     int subpixel_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
+    THROW("rocalColorToGreyscale requires vx_rpp version >= 3.1.6");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 6)
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info = input->info();
         output_info.set_data_type(op_tensor_datatype);
@@ -2739,9 +2742,6 @@ rocalColorToGreyscale(
         output = context->master_graph->create_tensor(output_info, is_output);
         ColorToGreyscaleNode::SubpixelLayout layout = static_cast<ColorToGreyscaleNode::SubpixelLayout>(subpixel_layout);
         context->master_graph->add_node<ColorToGreyscaleNode>({input}, {output})->init(layout);
-#else
-        THROW("rocalColorToGreyscale requires vx_rpp version >= 3.1.6");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
