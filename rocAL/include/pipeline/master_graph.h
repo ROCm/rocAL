@@ -56,7 +56,7 @@ THE SOFTWARE.
 #endif
 #include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
-#include "pipeline/pipeline_operator.h"
+#include "pipeline/pipeline_serializer.h"
 
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
@@ -175,6 +175,13 @@ public:
                              RocalTensorlayout layout, bool eos);
     void set_external_source_reader_flag() { _external_source_reader = true; }
     size_t bounding_box_batch_count(pMetaDataBatch meta_data_batch);
+    /*
+     * Serialize API
+     */
+    void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
+    // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
+    std::string& get_serialized_string() { return _serialized_pipeline; }
+
     Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, int *crop_shape);
     TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
     void update_roi_random_crop();
@@ -303,6 +310,10 @@ private:
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
     int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries
+    // Helper used to build protobuf payloads of the pipeline
+    PipelineSerializer _pipeline_serializer;
+    // Stores the serialized binary string representation of the pipeline
+    std::string _serialized_pipeline;
     int _tensor_idx = 0; // Index/counter used to uniquely name Tensor instances created in the pipeline
     bool _set_device_id = false;
 };
@@ -377,6 +388,10 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
+
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 

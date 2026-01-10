@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/effects_augmentations/node_gaussian_noise.h"
 #include "pipeline/exception.h"
 
@@ -33,6 +34,7 @@ void GaussianNoiseNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 8)
     _mean.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _stddev.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _conditional_execution.create_array(_graph, VX_TYPE_INT32, _batch_size);
@@ -48,7 +50,10 @@ void GaussianNoiseNode::create_node() {
                           _stddev.default_array(), _conditional_execution.default_array(), seed, input_layout_vx, output_layout_vx, roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the Noise (vxExtRppGaussianNoise) node failed: " + TOSTR(status))
+        THROW("Adding the GaussianNoise (vxExtRppGaussianNoise) node failed: " + TOSTR(status))
+#else
+    THROW("GaussianNoiseNode: vxExtRppGaussianNoise requires vx_rpp version >= 3.1.8");
+#endif
 }
 
 void GaussianNoiseNode::init(float mean, float stddev, int seed, int conditional_execution) {

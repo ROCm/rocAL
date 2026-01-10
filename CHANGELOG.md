@@ -2,6 +2,22 @@
 
 Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/projects/rocAL/](https://rocm.docs.amd.com/projects/rocAL/en/latest/).
 
+## (Unreleased) rocAL 2.6.0
+
+### Added
+* `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
+* Serialization test to validate pipeline serialization functionality.
+* Python support and example to test serialization.
+* Introduce `NodeFactory` for dynamic node registration and creation.
+
+### Changes
+* Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
+* Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
+* Update EnumRegistry to support enum value lookup by type name.
+
+### Removed
+
+
 ## rocAL 2.5.0 for ROCm 7.2.0
 
 ### Added

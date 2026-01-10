@@ -49,3 +49,4 @@ class BrightnessNode : public Node {
     constexpr static float BETA_RANGE[2] = {0, 25};
     constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};
 };
+

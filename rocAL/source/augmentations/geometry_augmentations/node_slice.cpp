@@ -84,7 +84,6 @@ void SliceNode::create_node() {
                           _inputs[0]->handle(),
                           _inputs[0]->get_roi_tensor(),
                           _outputs[0]->handle(),
-                          _outputs[0]->get_roi_tensor(),
                           _anchor->handle(),
                           shape_tensor,
                           _fill_values_array,
@@ -141,7 +140,7 @@ void SliceNode::create_shape_tensor() {
         THROW("Slice node expects valid shape dimensions when using vector-based API");
 
     vx_size num_of_dims = 2;
-    vx_size stride[num_of_dims];
+    std::vector<vx_size> stride(num_of_dims);
     std::vector<size_t> _shape_tensor_dims = {_batch_size, _shape_vec.size()};
     stride[0] = sizeof(vx_int32);
     stride[1] = stride[0] * _shape_tensor_dims[0];
@@ -151,7 +150,7 @@ void SliceNode::create_shape_tensor() {
     allocate_host_or_pinned_mem(&_shape_array, stride[1] * _shape_vec.size(), _inputs[0]->info().mem_type());
 
     _shape_tensor_handle = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()), num_of_dims, _shape_tensor_dims.data(), VX_TYPE_INT32, 0,
-                                                    stride, reinterpret_cast<void *>(_shape_array), mem_type);
+                                                    stride.data(), reinterpret_cast<void *>(_shape_array), mem_type);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_shape_tensor_handle)) != VX_SUCCESS)
         THROW("Error: vxCreateTensorFromHandle(_shape: failed " + TOSTR(status))
