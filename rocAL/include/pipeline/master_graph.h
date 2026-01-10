@@ -348,8 +348,6 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
     // Add each operator to the pipeline operators list
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
 
-    // Track loader nodes for checkpointing/serialization
-    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 

@@ -91,15 +91,22 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
 
 void ImageLoaderSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
     if (arguments.size() != INIT_ARGS_COUNT)
-        THROW("ImageLoaderSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) + 
-              "Ensure all arguments present in init are accounted for");
+        THROW("ImageLoaderSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
+              ". Ensure all arguments present in init are accounted for");
     ShardingInfo sharding_info(arguments[13].get<RocalBatchPolicy>(), arguments[14].get<bool>(), arguments[15].get<bool>(), arguments[16].get<int32_t>());
+    const bool enable_checkpointing = arguments[17].get<bool>();
+    const unsigned seed = arguments[18].get<unsigned>();
+    const std::map<std::string, std::string> feature_key_map = arguments[19].get<std::map<std::string, std::string>>();
+    const unsigned sequence_length = arguments[20].get<unsigned>();
+    const unsigned step = arguments[21].get<unsigned>();
+    const unsigned stride = arguments[22].get<unsigned>();
+    const ExternalSourceFileMode external_file_mode = arguments[23].get<ExternalSourceFileMode>();
+    const std::string index_path = arguments[24].get<std::string>();
 
     this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<unsigned>(), arguments[3].get<std::string>(),
                arguments[4].get<std::string>(), arguments[5].get<StorageType>(), arguments[6].get<DecoderType>(), arguments[7].get<bool>(), arguments[8].get<bool>(), 
                arguments[9].get<size_t>(), arguments[10].get<RocalMemType>(), meta_data_reader, arguments[12].get<bool>(), sharding_info,
-               arguments[17].get<std::map<std::string, std::string>>(), arguments[18].get<unsigned>(), arguments[19].get<unsigned>(), arguments[20].get<unsigned>(), 
-               arguments[21].get<ExternalSourceFileMode>(), arguments[22].get<std::string>());
+               enable_checkpointing, seed, feature_key_map, sequence_length, step, stride, external_file_mode, index_path);
 }
 
 std::shared_ptr<LoaderModule> ImageLoaderSingleShardNode::get_loader_module() {
