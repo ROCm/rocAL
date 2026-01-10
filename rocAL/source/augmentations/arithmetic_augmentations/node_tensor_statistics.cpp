@@ -146,6 +146,4 @@ void TensorStdDevNode::create_node() {
                          _inputs[0]);
 }
 
-#else
-    THROW("Tensor reduction operations require vx_rpp version >= 3.1.7");
 #endif

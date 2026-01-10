@@ -2236,22 +2236,22 @@ RocalTensor ROCAL_API_CALL rocalTensorSum(RocalContext p_context,
                                           bool is_output,
                                           RocalTensorLayout output_layout,
                                           RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
+    THROW("rocalTensorSum requires vx_rpp version >= 3.1.7");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
         auto dims = compute_reduction_dims(input->info());
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info(dims, context->master_graph->mem_type(), op_tensor_data_type, RocalTensorlayout::NONE);
         output_info.set_dims(dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorSumNode>({input}, {output});
-#else
-        THROW("rocalTensorSum requires vx_rpp version >= 3.1.7");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2263,22 +2263,22 @@ RocalTensor ROCAL_API_CALL rocalTensorMin(RocalContext p_context,
                                           bool is_output,
                                           RocalTensorLayout output_layout,
                                           RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
+    THROW("rocalTensorMin requires vx_rpp version >= 3.1.7");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
         auto dims = compute_reduction_dims(input->info());
         RocalTensorDataType op_tensor_data_type = clamp_minmax_dtype(output_datatype, input->info());
         TensorInfo output_info(dims, context->master_graph->mem_type(), op_tensor_data_type, RocalTensorlayout::NONE);
         output_info.set_dims(dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMinNode>({input}, {output});
-#else
-        THROW("rocalTensorMin requires vx_rpp version >= 3.1.7");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2290,22 +2290,22 @@ RocalTensor ROCAL_API_CALL rocalTensorMax(RocalContext p_context,
                                           bool is_output,
                                           RocalTensorLayout output_layout,
                                           RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
+    THROW("rocalTensorMax requires vx_rpp version >= 3.1.7");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
         auto dims = compute_reduction_dims(input->info());
         RocalTensorDataType op_tensor_data_type = clamp_minmax_dtype(output_datatype, input->info());
         TensorInfo output_info(dims, context->master_graph->mem_type(), op_tensor_data_type, RocalTensorlayout::NONE);
         output_info.set_dims(dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMaxNode>({input}, {output});
-#else
-        THROW("rocalTensorMax requires vx_rpp version >= 3.1.7");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2317,22 +2317,22 @@ RocalTensor ROCAL_API_CALL rocalTensorMean(RocalContext p_context,
                                            bool is_output,
                                            RocalTensorLayout output_layout,
                                            RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
+    THROW("rocalTensorMean requires vx_rpp version >= 3.1.7");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
         auto dims = compute_reduction_dims(input->info());
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info(dims, context->master_graph->mem_type(), op_tensor_data_type, RocalTensorlayout::NONE);
         output_info.set_dims(dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMeanNode>({input}, {output});
-#else
-        THROW("rocalTensorMean requires vx_rpp version >= 3.1.7");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -2345,6 +2345,10 @@ RocalTensor ROCAL_API_CALL rocalTensorStdDev(RocalContext p_context,
                                              bool is_output,
                                              RocalTensorLayout output_layout,
                                              RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
+    THROW("rocalTensorStdDev requires vx_rpp version >= 3.1.7");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -2353,16 +2357,12 @@ RocalTensor ROCAL_API_CALL rocalTensorStdDev(RocalContext p_context,
     auto input = static_cast<Tensor*>(p_input);
     auto mean_tensor = static_cast<Tensor*>(p_mean_tensor);
     try {
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
         auto dims = compute_reduction_dims(input->info());
         RocalTensorDataType op_tensor_data_type = static_cast<RocalTensorDataType>(output_datatype);
         TensorInfo output_info(dims, context->master_graph->mem_type(), op_tensor_data_type, RocalTensorlayout::NONE);
         output_info.set_dims(dims);
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorStdDevNode>({input, mean_tensor}, {output});
-#else
-        THROW("rocalTensorStdDev requires vx_rpp version >= 3.1.7");
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
