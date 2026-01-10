@@ -144,7 +144,7 @@ def restore_and_compare(bs, rocal_device, rocal_cpu, img_folder, serialized_ckpt
         batch = iterator.next()
         [image], label = batch
         image_names = _get_image_names(pipe_restored)
-        for idx in range(batch_size):
+        for idx in range(bs):
             print(image_names[idx], label[idx])
 
     del iterator

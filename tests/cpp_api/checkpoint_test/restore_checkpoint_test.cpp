@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include <vector>
 
 #include "rocal_api.h"
-#define TEST_2
+
 
 #include "opencv2/opencv.hpp"
 using namespace cv;
