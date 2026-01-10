@@ -165,6 +165,23 @@ do
         python"$ver" unit_test.py --image-dataset-path "$caffe2_detection_path" --reader-type "caffe2_detection" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 5 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_triangular_default_caffe2Detection"
         python"$ver" unit_test.py --image-dataset-path "$mxnet_path" --reader-type "mxnet" --augmentation-name resize --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb --interpolation-type 4 --scaling-mode 0 --$backend_arg -f "${output_path}Resize_${rgb_name[$rgb]}_${device_name}_gaussian_default_mxnet"
 
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name gaussian_noise --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}GaussianNoise_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name shot_noise --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ShotNoise_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name spatter --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Spatter_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name water --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Water_${rgb_name[$rgb]}_${device_name}"
+        if [ $rgb -eq 1 ]; then
+            python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name color_jitter --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ColorJitter_${rgb_name[$rgb]}_${device_name}"
+        fi
+
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name jpeg_compression_distortion --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}JpegCompressionDistortion_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name lut --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}LUT_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name posterize --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Posterize_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name solarize --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Solarize_${rgb_name[$rgb]}_${device_name}"
+        if [ $rgb -eq 1 ]; then
+            python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name channel_permute --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ChannelPermute_${rgb_name[$rgb]}_${device_name}"
+            python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name color_to_greyscale --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ColorToGreyscale_${rgb_name[$rgb]}_${device_name}"
+        fi
+
         # Special Case - One Hot Encoded Labels
         python"$ver" unit_test.py --image-dataset-path "$one_hot_data_path" --augmentation-name one_hot --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}OneHot_${rgb_name[$rgb]}_${device_name}"
 

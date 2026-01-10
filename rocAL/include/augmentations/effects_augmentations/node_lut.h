@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,23 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
+
 #include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
+class LutNode : public Node {
    public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
-
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    std::string node_name() const override { return "BrightnessNode"; }
+    LutNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    LutNode() = delete;
+    ~LutNode();
 
    protected:
     void create_node() override;
     void update_node() override;
+    void create_lut_tensor();
+    void init_lut_buffer();
 
    private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+    vx_tensor _lut_tensor;
+    void *_lut_buffer = nullptr;
+    size_t _lut_size = 256;  // Default LUT size for 8-bit data
 };
