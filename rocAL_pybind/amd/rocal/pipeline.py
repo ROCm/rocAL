@@ -66,19 +66,25 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=0, device_id=0, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None,
-                 enable_checkpointing=False): 
-        if (rocal_cpu):
-            self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, 
+                 reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None,
+                 deserialized_pipeline_handle=None, enable_checkpointing=False): 
+        
+        if deserialized_pipeline_handle is not None:
+            self._handle = deserialized_pipeline_handle
         else:
-            self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
+            if (rocal_cpu):
+                self._handle = b.rocalCreate(
+                    batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
+            else:
+                self._handle = b.rocalCreate(
+                    batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
 
         if (b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
         else:
             raise Exception("Failed creating the pipeline")
+
         self._check_ops = ["CropMirrorNormalize"]
         self._check_crop_ops = ["Resize"]
         self._check_ops_decoder = [
@@ -303,6 +309,40 @@ class Pipeline(object):
             with open(filename, 'wb') as f:
                 f.write(serialized_str)
         return serialized_str
+
+    @classmethod
+    def deserialize(cls, serialized_pipeline=None, filename=None, **kwargs):
+        """
+        Deserialize the pipeline from the protobuffers and reconstruct the pipeline
+        The returned pipeline is deserialized and build
+        return:
+        The pipeline object
+        """
+        pipe_params = b.RocalPipelineParams()
+        if (serialized_pipeline is None) == (filename is None):
+            raise ValueError(
+                "serialized_pipeline and filename arguments are mutually exclusive. "
+                "At least one of them should be defined."
+            )
+
+        for key, value in kwargs.items():
+            if hasattr(pipe_params, key):
+                setattr(pipe_params, key, value)
+            else:
+                # Handle the case of an unexpected keyword argument
+                print(f"Warning: Ignoring unexpected keyword argument '{key}'")
+
+        if filename is not None:
+            with open(filename, "rb") as pipeline_file:
+                serialized_pipeline = pipeline_file.read()
+
+        ret = b.rocalDeserialize(serialized_pipeline, len(serialized_pipeline), pipe_params)
+        pipe_obj = cls(deserialized_pipeline_handle=ret, batch_size=pipe_params.batch_size, num_threads=pipe_params.num_threads,
+                  device_id=pipe_params.device_id, seed=pipe_params.seed, prefetch_queue_depth=pipe_params.prefetch_queue_depth,
+                  rocal_cpu=pipe_params.rocal_cpu)
+        pipe_obj.build()
+
+        return pipe_obj
 
 def _discriminate_args(func, **func_kwargs):
     """!Split args on those applicable to Pipeline constructor and the decorated function."""
