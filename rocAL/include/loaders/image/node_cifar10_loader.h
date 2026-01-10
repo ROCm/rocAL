@@ -41,7 +41,7 @@ class Cifar10LoaderNode : public Node {
     /// for example if there are 10 images in the dataset and load_batch_count is 3, the loader repeats 2 images as if there are 12 images available.
     void init(const std::string &source_path, const std::string &json_path, StorageType storage_type, bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix);
 
-    std::shared_ptr<LoaderModule> get_loader_module();
+    std::shared_ptr<LoaderModule> get_loader_module() override;
 
    protected:
     void create_node() override{};

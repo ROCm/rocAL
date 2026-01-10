@@ -27,9 +27,10 @@ THE SOFTWARE.
 #include <utility>
 
 #include "pipeline/graph.h"
-#include "meta_data/meta_data_graph.h"
+#include "loaders/loader_module.h"
 #include "pipeline/tensor.h"
 #include "pipeline/argument.h"
+#include "pipeline/node_factory.h"
 
 class Node {
    public:
@@ -53,6 +54,8 @@ class Node {
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
     const std::vector<Argument>& get_args_list() const { return _args; }
+    // Returns the LoaderModule associated with this node, Derived LoaderNodes should override this method.
+    virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("get_loader_module() is not implemented for the Node"); }
 
    protected:
     virtual void create_node() = 0;
