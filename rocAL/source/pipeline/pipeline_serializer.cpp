@@ -299,7 +299,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             if (arg.type_name == "int") {
                 if (arg.sub_type_name == "SimpleParameter") {
                     if (param.param_val_int_size() < 1) {
-                        THROW("Invalid parameter: missing value for " + arg.arg_name);
+                        THROW("Invalid parameter: missing value for int SimpleParameter '" + arg.arg_name + "'");
                     }
                     arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_single_value_int_param(param.param_val_int(0)));
                 } else if (arg.sub_type_name == "UniformRand") {
@@ -319,7 +319,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             } else if (arg.type_name == "float") {
                 if (arg.sub_type_name == "SimpleParameter") {
                     if (param.param_val_float_size() < 1) {
-                        THROW("Invalid parameter: missing value for " + arg.arg_name);
+                        THROW("Invalid parameter: missing value for float SimpleParameter '" + arg.arg_name + "'");
                     }
                     arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_single_value_float_param(param.param_val_float(0)));
                 } else if (arg.sub_type_name == "UniformRand") {
