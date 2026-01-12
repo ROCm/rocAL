@@ -1821,7 +1821,7 @@ Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &outp
     }
 
     if (dims.empty())
-        THROW("Empty tensor dims.")
+        THROW(std::string("Empty tensor dims for tensor: ") + output.name())
     
     // Update the N dim to the batch size set in the pipeline
     dims[0] = _user_batch_size;
@@ -2008,7 +2008,7 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
         if (_pipeline_tensors.find(pipe_out.name()) != _pipeline_tensors.end()) {
             this->set_output(_pipeline_tensors[pipe_out.name()]);
         } else {
-            THROW("The required output tensor is not present in the reconstructed pipeline.")
+            THROW("The required output tensor '" + pipe_out.name() + "' is not present in the reconstructed pipeline.")
         }
     }
 }
