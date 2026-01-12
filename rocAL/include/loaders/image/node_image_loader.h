@@ -43,7 +43,7 @@ class ImageLoaderNode : public Node {
               DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig = false, const ShardingInfo& sharding_info = ShardingInfo(), 
               const char *prefix = "", unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0, ExternalSourceFileMode external_file_mode = ExternalSourceFileMode::NONE, const std::string &index_path = "");
 
-    std::shared_ptr<LoaderModule> get_loader_module();
+    std::shared_ptr<LoaderModule> get_loader_module() override;
     std::string node_name() const override { return "ImageLoaderNode"; }
 
    protected:
