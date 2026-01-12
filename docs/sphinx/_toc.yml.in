@@ -21,6 +21,8 @@ subtrees:
 
 - caption: How to
   entries:
+  - file: how-to/rocAL-use-pipeline.rst
+    title: Create and run the pipeline
   - file: how-to/rocAL-pytorch-framework.rst
     title: Run PyTorch training 
   - file: how-to/rocAL-tensorflow-framework.rst

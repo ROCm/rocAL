@@ -6,13 +6,13 @@
 The rocAL pipeline
 ********************
 
-rocAL pipelines are used to load, decode, and augment images and video that will be used in training and inference. 
+rocAL pipelines are used to load, decode, and augment audio, video, and image files that will be used in training and inference. 
 
-Video and image data is passed through the pipeline in batches. The next batch is prefetched and loaded while the initial batch is being processed. 
+Audio, video, and image data is passed through the pipeline in batches. The next batch is prefetched and loaded while the initial batch is being processed. 
 
 Pipelines are created from graph definition functions written by the user that have been decorated with ``@pipeline_def``. The ``@pipeline_def`` decorator converts a graph definition function into a pipeline factory.
 
-Graph definition functions need to load a file, decode it, and augment it. The return value is the result of the augmentation.
+Graph definition functions need to load a file, decode it, and :doc:`augment it <../conceptual/rocAL-operators>`. The return value is the result of the augmentation.
 
 For example, the ``my_pipe()`` function defines a graph that flips an image: 
 
