@@ -1809,10 +1809,10 @@ void MasterGraph::serialize(size_t *serialized_string_size) {
 
 Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output) {
     if (output.is_argument_input())
-        THROW("The tensor is an input, it is already created in the pipeline.")
+        THROW("The tensor '" + output.name() + "' is an input, it is already created in the pipeline.")
 
     if (_pipeline_tensors.find(output.name()) != _pipeline_tensors.end()) {
-        THROW("The tensor is already created and present in the pipeline.")
+        THROW("The tensor '" + output.name() + "' is already created and present in the pipeline.")
     }
     // dims
     std::vector<size_t> dims;
