@@ -1354,7 +1354,7 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     if not callable(function):
         raise TypeError(f"Expected callable function, got {type(function).__name__}")
     
-    # Validate function has correct signature: exactly one REQUIRED POSITONAL argument
+    # Validate function has correct signature: exactly one REQUIRED POSITIONAL argument
     import inspect
     try:
         sig = inspect.signature(function)
