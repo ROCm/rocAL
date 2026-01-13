@@ -272,7 +272,22 @@ class Pipeline(object):
                 return b.getOutputTensors(self._handle)
         except:
             raise StopIteration
-
+    
+    def serialize(self, filename=None):
+        """
+        Serialize the pipeline and store into protobuffers
+        
+        Args:
+            filename (str, optional): Optional output path to write the serialized data to file
+            
+        Returns:
+            bytes: The serialized pipeline as protobuf payload
+        """
+        serialized_str = b.rocalSerialize(self._handle)
+        if filename:
+            with open(filename, 'wb') as f:
+                f.write(serialized_str)
+        return serialized_str
 
 def _discriminate_args(func, **func_kwargs):
     """!Split args on those applicable to Pipeline constructor and the decorated function."""

@@ -44,7 +44,7 @@ class NumpyLoaderSingleShardNode : public Node {
     void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::vector<std::string> &files,
               StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
               size_t load_batch_count, RocalMemType mem_type, unsigned seed = 0, const ShardingInfo& sharding_info = ShardingInfo());
-    std::shared_ptr<LoaderModule> get_loader_module();
+    std::shared_ptr<LoaderModule> get_loader_module() override;
 
    protected:
     void create_node() override {};
