@@ -42,6 +42,6 @@ class SnowNode : public Node {
     ParameterVX<float> _brightness_coefficient;
     ParameterVX<int> _dark_mode;
     constexpr static float SNOW_VALUE_RANGE[2] = {0.1, 0.8};
-    constexpr static float BRIGHTNESS_COEFFICIENT_RANGE[2] = {2.0, 2.0};
-    constexpr static int DARK_MODE_RANGE[2] = {0, 0};
+    constexpr static float BRIGHTNESS_COEFFICIENT_RANGE[2] = {1.0, 4.0};
+    constexpr static int DARK_MODE_RANGE[2] = {0, 1};
 };
