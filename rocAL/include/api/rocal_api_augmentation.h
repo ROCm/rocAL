@@ -1372,4 +1372,18 @@ extern "C" RocalTensor ROCAL_API_CALL rocalLog1p(RocalContext p_context,
                                                        RocalTensor p_input,
                                                        bool is_output);
 
+/*! \brief Executes the python function using its function ID and returns the output.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] function_id Memory address of the python function object, i.e. the value returned by id(python_function).
+ * \param [in] output_dims Dimensions(excluding batch dim) of the output tensor
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalPythonFunction(RocalContext context, RocalTensor input, bool is_output, unsigned long long function_id,
+                                                          std::vector<size_t> output_dims = {}, RocalTensorLayout output_layout = ROCAL_NONE, RocalTensorOutputType output_datatype = ROCAL_FP32);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H

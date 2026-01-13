@@ -6,6 +6,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Added
 * `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
+* Python function execution support in rocAL.
 * Serialization test to validate pipeline serialization functionality.
 * Python support and example to test serialization.
 * Introduce `NodeFactory` for dynamic node registration and creation.

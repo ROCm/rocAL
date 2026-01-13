@@ -1312,3 +1312,103 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
     log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return log_output
+
+def python_function(*inputs, function, output_dims = [], dtype=None, layout=None):
+    """
+    Invokes a user supplied Python callable on the entire batch (host/CPU only).
+    The callable is identified by its Python id() and executed in the backend kernel.
+    - Input is exposed as a NumPy view of the batch (no copy for input).
+    - The callable must return a NumPy array with matching batch size.
+    - output_dims defaults to input tensor dimensions when not provided.
+    
+    @param inputs (list)                                    The input tensor to process
+    @param function (callable)                              Python function to apply to the batch
+    @param output_dims (list, optional, default = [])       Output tensor dimensions (defaults to input tensor dimensions if not provided)
+    @param dtype (type, optional, default = None)           Output data type (defaults to pipeline dtype)
+    @param layout (type, optional, default = None)          Output tensor layout (defaults to pipeline layout)
+    
+    @return    Transformed tensor after applying the Python function
+    
+    Examples
+    --------
+    >>> def custom_transform(batch):
+    ...     return (batch * 2.0 + 1.0).astype(np.float32)
+    >>> 
+    >>> output = fn.python_function(input_tensor, function=custom_transform, dtype=types.FLOAT)
+    
+    Notes
+    -----
+    - This operation accepts only a single input tensor
+    - This operation is CPU-only and requires the GIL for execution
+    - The input is provided as a zero-copy NumPy view when possible
+    - The function must maintain the batch dimension size
+    - For best performance, avoid heavy computations in the Python function
+    """
+    # Validate inputs
+    if not inputs:
+        raise ValueError("python_function requires at least one input tensor")
+    if len(inputs) != 1:
+        raise ValueError("python_function requires only one input tensor")
+    
+    # Validate that function is callable
+    if not callable(function):
+        raise TypeError(f"Expected callable function, got {type(function).__name__}")
+    
+    # Validate function has correct signature: exactly one REQUIRED POSITIONAL argument
+    import inspect
+    try:
+        sig = inspect.signature(function)
+    except (ValueError, TypeError):
+        # Some callables (builtins or C-extensions) may not yield a signature.
+        # If we can't inspect, we let it fail at runtime.
+        pass
+    else:
+        params = list(sig.parameters.values())
+
+        # Count required positional parameters: POSITIONAL_ONLY or POSITIONAL_OR_KEYWORD without default
+        REQUIRED_POSITIONAL_KINDS = {
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        }
+        num_required_positional = sum(
+            1
+            for p in params
+            if p.kind in REQUIRED_POSITIONAL_KINDS and p.default is inspect.Parameter.empty
+        )
+
+        # Disallow any required keyword-only parameters
+        num_required_keyword_only = sum(
+            1
+            for p in params
+            if p.kind == inspect.Parameter.KEYWORD_ONLY and p.default is inspect.Parameter.empty
+        )
+
+        if num_required_positional != 1:
+            raise ValueError(
+                f"Python function must accept exactly one required positional argument "
+                f"(the input batch). Found {num_required_positional} in signature {sig}."
+            )
+
+        if num_required_keyword_only > 0:
+            raise ValueError(
+                f"Python function must not require keyword-only arguments; "
+                f"found {num_required_keyword_only} required keyword-only parameter(s) in signature {sig}."
+            )
+
+        # Optional parameters (positional with defaults or keyword-only with defaults) are fine.
+        # *args (VAR_POSITIONAL) and **kwargs (VAR_KEYWORD) are also fine.
+
+    function_id = id(function)
+    # Pin the callable to prevent GC; backend uses raw id(pointer)
+    if not hasattr(Pipeline._current_pipeline, "_pyfunc_refs"):
+        Pipeline._current_pipeline._pyfunc_refs = []
+    Pipeline._current_pipeline._pyfunc_refs.append(function)
+    
+    if layout is None:
+        layout = Pipeline._current_pipeline._tensor_layout
+    if dtype is None:
+        dtype = Pipeline._current_pipeline._tensor_dtype
+        
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "function_id": function_id, "output_dims": output_dims, "layout": layout, "dtype": dtype}
+    output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return output
