@@ -484,13 +484,16 @@ struct RocalShardingInfo {
         : last_batch_policy(RocalLastBatchPolicy::ROCAL_LAST_BATCH_FILL),
           pad_last_batch_repeated(false),
           stick_to_shard(true),
-          shard_size(-1) {}
+          shard_size(-1)
+    {}
 
     // Constructor that initializes all members
-    RocalShardingInfo(RocalLastBatchPolicy last_batch_policy,
-                      bool pad_last_batch_repeated,
-                      bool stick_to_shard,
-                      int shard_size)
+    RocalShardingInfo(
+        RocalLastBatchPolicy last_batch_policy,
+        bool pad_last_batch_repeated,
+        bool stick_to_shard,
+        int shard_size
+    )
         : last_batch_policy(last_batch_policy),
           pad_last_batch_repeated(pad_last_batch_repeated),
           stick_to_shard(stick_to_shard),

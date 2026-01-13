@@ -438,7 +438,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
                 exit(0);
             }
-            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/instances_train2017.json";
+            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/annotations/person_keypoints_val2017.json";
             rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true);
             rocalSetRandomPixelMaskConfig(handle, true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
