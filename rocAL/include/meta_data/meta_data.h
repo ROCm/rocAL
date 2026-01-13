@@ -289,7 +289,7 @@ class MetaDataBatch {
 
    protected:
     MetaDataInfoBatch _info_batch;
-    MetaDataType _type;
+    MetaDataType _type = MetaDataType::Label;
 };
 
 class AsciiValueBatch : public MetaDataBatch {
@@ -321,6 +321,7 @@ class AsciiValueBatch : public MetaDataBatch {
             std::shared_ptr<MetaDataBatch> ascii_value_batch_instance = std::make_shared<AsciiValueBatch>();
             ascii_value_batch_instance->resize(this->size());
             ascii_value_batch_instance->get_info_batch() = this->get_info_batch();
+            ascii_value_batch_instance->set_metadata_type(this->get_metadata_type());
             return ascii_value_batch_instance;
         }
     }
@@ -394,6 +395,7 @@ class LabelBatch : public MetaDataBatch {
             std::shared_ptr<MetaDataBatch> label_batch_instance = std::make_shared<LabelBatch>();
             label_batch_instance->resize(this->size());
             label_batch_instance->get_info_batch() = this->get_info_batch();  // Copy only info to newly created instance excluding the metadata values
+            label_batch_instance->set_metadata_type(this->get_metadata_type());
             return label_batch_instance;
         }
     }
@@ -454,6 +456,7 @@ class BoundingBoxBatch : public LabelBatch {
             std::shared_ptr<MetaDataBatch> bbox_batch_instance = std::make_shared<BoundingBoxBatch>();
             bbox_batch_instance->resize(this->size());
             bbox_batch_instance->get_info_batch() = this->get_info_batch();  // Copy only info to newly created instance excluding the metadata values
+            bbox_batch_instance->set_metadata_type(this->get_metadata_type());
             return bbox_batch_instance;
         }
     }
@@ -534,6 +537,7 @@ struct PolygonMaskBatch : public BoundingBoxBatch {
             std::shared_ptr<MetaDataBatch> mask_batch_instance = std::make_shared<PolygonMaskBatch>();
             mask_batch_instance->resize(this->size());
             mask_batch_instance->get_info_batch() = this->get_info_batch();  // Copy only info to newly created instance excluding the metadata values
+            mask_batch_instance->set_metadata_type(this->get_metadata_type());
             return mask_batch_instance;
         }
     }
@@ -612,6 +616,7 @@ class PixelwiseMaskBatch : public PolygonMaskBatch {
             std::shared_ptr<MetaDataBatch> mask_batch_instance = std::make_shared<PixelwiseMaskBatch>();
             mask_batch_instance->resize(this->size());
             mask_batch_instance->get_info_batch() = this->get_info_batch();
+            mask_batch_instance->set_metadata_type(this->get_metadata_type());
             return mask_batch_instance;
         }
     }
@@ -692,6 +697,7 @@ class KeyPointBatch : public BoundingBoxBatch {
             std::shared_ptr<MetaDataBatch> joints_batch_instance = std::make_shared<KeyPointBatch>();
             joints_batch_instance->resize(this->size());
             joints_batch_instance->get_info_batch() = this->get_info_batch();  // Copy only info to newly created instance excluding the metadata values
+            joints_batch_instance->set_metadata_type(this->get_metadata_type());
             return joints_batch_instance;
         }
     }

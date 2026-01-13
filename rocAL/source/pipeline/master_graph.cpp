@@ -644,9 +644,11 @@ void MasterGraph::get_label_boundingboxes(std::vector<std::vector<std::pair<unsi
                     boxes[i].push_back(lo);
                     boxes[i].push_back(hi);
                 } else {
-                    // expand existing
-                    boxes[i][0] = min(boxes[i][0], lo);
-                    boxes[i][1] = max(boxes[i][1], hi);
+                    // expand existing (element-wise min/max, not lexicographic)
+                    boxes[i][0].first = std::min(boxes[i][0].first, lo.first);
+                    boxes[i][0].second = std::min(boxes[i][0].second, lo.second);
+                    boxes[i][1].first = std::max(boxes[i][1].first, hi.first);
+                    boxes[i][1].second = std::max(boxes[i][1].second, hi.second);
                 }
             }
             mask >>= 1;

@@ -284,23 +284,37 @@ RocalMetaData
 unsigned
     ROCAL_API_CALL
     rocalGetMaskCount(RocalContext p_context, int* buf) {
-    if (p_context == nullptr)
-        THROW("Invalid rocal context passed to rocalGetMaskCount")
     unsigned size = 0, count = 0;
+    if (p_context == nullptr)
+        return 0;
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
-    if (context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
-    if (!meta_data.second)
-        THROW("No mask has been loaded for this output image")
-    for (unsigned i = 0; i < meta_data_batch_size; i++) {
-        unsigned object_count = meta_data.second->get_labels_batch()[i].size();
-        for (unsigned int j = 0; j < object_count; j++) {
-            unsigned polygon_count = meta_data.second->get_mask_polygons_count_batch()[i][j];
-            buf[count++] = polygon_count;
-            size += polygon_count;
+    try {
+        if (buf == nullptr)
+            THROW("Invalid output pointer passed to rocalGetMaskCount")
+        auto meta_data = context->master_graph->meta_data();
+        if (!meta_data.second)
+            THROW("No mask has been loaded for this output image")
+        if (meta_data.second->get_metadata_type() != MetaDataType::PolygonMask)
+            THROW("rocalGetMaskCount is only valid for PolygonMask metadata")
+        size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
+        if (context->user_batch_size() != meta_data_batch_size)
+            THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
+        auto &polygon_counts_batch = meta_data.second->get_mask_polygons_count_batch();
+        if (polygon_counts_batch.size() != meta_data_batch_size)
+            THROW("Polygon count batch size mismatch")
+        for (unsigned i = 0; i < meta_data_batch_size; i++) {
+            unsigned object_count = meta_data.second->get_labels_batch()[i].size();
+            if (polygon_counts_batch[i].size() < object_count)
+                THROW("Polygon count size mismatch for sample " + TOSTR(i))
+            for (unsigned int j = 0; j < object_count; j++) {
+                unsigned polygon_count = polygon_counts_batch[i][j];
+                buf[count++] = polygon_count;
+                size += polygon_count;
+            }
         }
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        return 0;
     }
     return size;
 }
@@ -309,35 +323,62 @@ RocalTensorList
     ROCAL_API_CALL
     rocalGetMaskCoordinates(RocalContext p_context, int* bufcount) {
     if (p_context == nullptr)
-        THROW("Invalid rocal context passed to rocalGetMaskCoordinates")
+        return nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
-    if (context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
-    if (!meta_data.second)
-        THROW("No mask has been loaded for this output image")
-    int size = 0;
-    for (unsigned image_idx = 0; image_idx < meta_data_batch_size; image_idx++) {
-        unsigned object_count = meta_data.second->get_labels_batch()[image_idx].size();
-        for (unsigned int i = 0; i < object_count; i++) {
-            unsigned polygon_count = meta_data.second->get_mask_polygons_count_batch()[image_idx][i];
-            for (unsigned int j = 0; j < polygon_count; j++) {
-                unsigned polygon_size = meta_data.second->get_mask_vertices_count_batch()[image_idx][i][j];
-                bufcount[size++] = polygon_size;
+    try {
+        if (bufcount == nullptr)
+            THROW("Invalid output pointer passed to rocalGetMaskCoordinates")
+        auto meta_data = context->master_graph->meta_data();
+        if (!meta_data.second)
+            THROW("No mask has been loaded for this output image")
+        if (meta_data.second->get_metadata_type() != MetaDataType::PolygonMask)
+            THROW("rocalGetMaskCoordinates is only valid for PolygonMask metadata")
+        size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
+        if (context->user_batch_size() != meta_data_batch_size)
+            THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
+        auto &polygon_counts_batch = meta_data.second->get_mask_polygons_count_batch();
+        auto &vertices_counts_batch = meta_data.second->get_mask_vertices_count_batch();
+        if (polygon_counts_batch.size() != meta_data_batch_size || vertices_counts_batch.size() != meta_data_batch_size)
+            THROW("Polygon count batch size mismatch")
+        int size = 0;
+        for (unsigned image_idx = 0; image_idx < meta_data_batch_size; image_idx++) {
+            unsigned object_count = meta_data.second->get_labels_batch()[image_idx].size();
+            if (polygon_counts_batch[image_idx].size() < object_count || vertices_counts_batch[image_idx].size() < object_count)
+                THROW("Polygon metadata size mismatch for sample " + TOSTR(image_idx))
+            for (unsigned int i = 0; i < object_count; i++) {
+                unsigned polygon_count = polygon_counts_batch[image_idx][i];
+                if (vertices_counts_batch[image_idx][i].size() < polygon_count)
+                    THROW("Vertices count size mismatch for sample " + TOSTR(image_idx))
+                for (unsigned int j = 0; j < polygon_count; j++) {
+                    unsigned polygon_size = vertices_counts_batch[image_idx][i][j];
+                    bufcount[size++] = polygon_size;
+                }
             }
         }
+        return context->master_graph->mask_meta_data(true);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        return nullptr;
     }
-    return context->master_graph->mask_meta_data(true);
 }
 
 RocalTensorList
     ROCAL_API_CALL
     rocalGetPixelwiseMaskLabels(RocalContext p_context) {
     if (p_context == nullptr)
-        THROW("Invalid rocal context passed to rocalGetPixelwiseMaskLabels")
+        return nullptr;
     auto context = static_cast<Context*>(p_context);
-    return context->master_graph->mask_meta_data(false);
+    try {
+        auto meta_data = context->master_graph->meta_data();
+        if (!meta_data.second)
+            THROW("No mask has been loaded for this output image")
+        if (meta_data.second->get_metadata_type() != MetaDataType::PixelwiseMask)
+            THROW("rocalGetPixelwiseMaskLabels is only valid for PixelwiseMask metadata")
+        return context->master_graph->mask_meta_data(false);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        return nullptr;
+    }
 }
 
 RocalTensorList
@@ -348,36 +389,50 @@ RocalTensorList
                     std::vector<std::vector<int>>& sel_mask_ids,
                     bool reindex_mask) {
     if (p_context == nullptr)
-        THROW("Invalid rocal context passed to rocalSelectMask")
+        return nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
-    if (context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
-    if (!meta_data.second)
-        THROW("No mask has been loaded for this output image")
-    return context->master_graph->get_select_mask_polygon(context->master_graph->mask_meta_data(true),
-                                                          meta_data.second->get_mask_polygons_count_batch(),
-                                                          meta_data.second->get_mask_vertices_count_batch(),
-                                                          mask_ids,
-                                                          sel_vertices_counts,
-                                                          sel_mask_ids,
-                                                          reindex_mask);
+    try {
+        auto meta_data = context->master_graph->meta_data();
+        if (!meta_data.second)
+            THROW("No mask has been loaded for this output image")
+        if (meta_data.second->get_metadata_type() != MetaDataType::PolygonMask)
+            THROW("rocalSelectMask is only valid for PolygonMask metadata")
+        size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
+        if (context->user_batch_size() != meta_data_batch_size)
+            THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
+        return context->master_graph->get_select_mask_polygon(context->master_graph->mask_meta_data(true),
+                                                              meta_data.second->get_mask_polygons_count_batch(),
+                                                              meta_data.second->get_mask_vertices_count_batch(),
+                                                              mask_ids,
+                                                              sel_vertices_counts,
+                                                              sel_mask_ids,
+                                                              reindex_mask);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        return nullptr;
+    }
 }
 
 RocalTensorList
     ROCAL_API_CALL
     rocalRandomMaskPixel(RocalContext p_context) {
     if (p_context == nullptr)
-        THROW("Invalid rocal context passed to rocalGetPixelwiseLabels")
+        return nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
-    if (context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
-    if (!meta_data.second)
-        THROW("No mask has been loaded for this output image")
-    return context->master_graph->get_random_mask_pixel(context->master_graph->mask_meta_data(false));
+    try {
+        auto meta_data = context->master_graph->meta_data();
+        if (!meta_data.second)
+            THROW("No mask has been loaded for this output image")
+        if (meta_data.second->get_metadata_type() != MetaDataType::PixelwiseMask)
+            THROW("rocalRandomMaskPixel is only valid for PixelwiseMask metadata")
+        size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
+        if (context->user_batch_size() != meta_data_batch_size)
+            THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
+        return context->master_graph->get_random_mask_pixel(context->master_graph->mask_meta_data(false));
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        return nullptr;
+    }
 }
 
 void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground, unsigned int value, bool is_threshold) {
@@ -392,17 +447,24 @@ RocalTensorList
     RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format,
                           int k_largest, float foreground_prob, bool cache_objects) {
     if (p_context == nullptr)
-        THROW("Invalid rocal context passed to RocalRandomObjectBBox")
+        return nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto meta_data = context->master_graph->meta_data();
-    size_t meta_data_batch_size = meta_data.second->get_mask_cords_batch().size();
-    if (context->user_batch_size() != meta_data_batch_size)
-        THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
-    if (!meta_data.second)
-        THROW("No mask has been loaded for this output image")
-    return context->master_graph->get_random_object_bbox(context->master_graph->mask_meta_data(false),
-                                                         (RandomObjectBBoxFormat)format,
-                                                         k_largest, foreground_prob, cache_objects);
+    try {
+        auto meta_data = context->master_graph->meta_data();
+        if (!meta_data.second)
+            THROW("No mask has been loaded for this output image")
+        if (meta_data.second->get_metadata_type() != MetaDataType::PixelwiseMask)
+            THROW("RocalRandomObjectBBox is only valid for PixelwiseMask metadata")
+        size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
+        if (context->user_batch_size() != meta_data_batch_size)
+            THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
+        return context->master_graph->get_random_object_bbox(context->master_graph->mask_meta_data(false),
+                                                             (RandomObjectBBoxFormat)format,
+                                                             k_largest, foreground_prob, cache_objects);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        return nullptr;
+    }
 }
 
 void
