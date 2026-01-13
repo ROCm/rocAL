@@ -78,7 +78,9 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
  * \ingroup group_rocal_meta_data
  * \param [in] rocal_context rocal context
  * \param [in] source_path path to the coco json file
- * \param [in] mask enable polygon masks
+ * \param [in] is_output if set to true, the reader is set as output for the pipeline
+ * \param [in] is_polygon_mask enable polygon mask metadata output (mutually exclusive with is_pixelwise_mask)
+ * \param [in] is_pixelwise_mask enable pixelwise mask metadata output (mutually exclusive with is_polygon_mask)
  * \param [in] ltrb If set to True, bboxes are returned as [left, top, right, bottom]. If set to False, the bboxes are returned as [x, y, width, height]
  * \param [in] is_box_encoder If set to True, bboxes are returned as encoded bboxes using the anchors
  * \param [in] avoid_class_remapping If set to True, classes are returned directly. Otherwise, classes are mapped to consecutive values
@@ -197,7 +199,7 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p
 /*! \brief get pixelwise mask labels
  * \ingroup group_rocal_meta_data
  * \param [in] rocal_context rocal context
- * \return RocalTensorList of pixelwise mask labels associated with bounding box coordinates
+ * \return RocalTensorList of per-pixel label masks (valid only for PixelwiseMask metadata)
  */
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetPixelwiseMaskLabels(RocalContext p_context);
 
@@ -324,31 +326,46 @@ extern "C" void ROCAL_API_CALL rocalBoxIouMatcher(RocalContext p_context, std::v
  */
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_context);
 
-/// \param rocal_context
-/// \param mask_ids The list of polygon id provided by user
-/// \param sel_vertices_count List of vertices count for the selected polygons
-/// \param sel_mask_ids List of Polygons ids for the selected polygons
-/// \param reindex_mask If it is true, selected polygon id's reindexed from 0 to the count. If False, it will be same as mask_ids.
+/*! \brief Select polygons by mask id from PolygonMask metadata
+ * \ingroup group_rocal_meta_data
+ * \param [in] p_context rocAL context
+ * \param [in] mask_ids list of polygon IDs to select
+ * \param [out] sel_vertices_count vertices count for each selected polygon (per image)
+ * \param [out] sel_mask_ids polygon IDs for each selected polygon (per image)
+ * \param [in] reindex_mask if true, reindex selected polygon IDs from 0..N-1; if false, keep original mask_ids
+ * \return RocalTensorList of selected polygon coordinates (valid only for PolygonMask metadata)
+ */
 extern "C" RocalTensorList ROCAL_API_CALL rocalSelectMask(RocalContext p_context,
                                                           std::vector<int> mask_ids,
                                                           std::vector<std::vector<int>> &sel_vertices_count,
                                                           std::vector<std::vector<int>> &sel_mask_ids,
                                                           bool reindex_mask = false);
 
-/// \param rocal_context
+/*! \brief Pick a random pixel coordinate from PixelwiseMask metadata
+ * \ingroup group_rocal_meta_data
+ * \param [in] p_context rocAL context
+ * \return RocalTensorList of 2D coordinates (x, y) per image (valid only for PixelwiseMask metadata)
+ */
 extern "C" RocalTensorList ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context);
 
-/// \param rocal_context
-/// \param is_foreground Select pixel from foreground if it is true
-/// \param value Select pixel coordinate whose value is equal to it
-/// \param is_threshold Select pixel coordinate whose value is greater than given value param when bool is set as true
+/*! \brief Configure random pixel selection for rocalRandomMaskPixel
+ * \ingroup group_rocal_meta_data
+ * \param [in] p_context rocAL context
+ * \param [in] is_foreground if true, select pixels from foreground (value > 0)
+ * \param [in] value if is_threshold is false, select pixels whose value equals this
+ * \param [in] is_threshold if true, select pixels whose value is greater than value; if false, equals value
+ */
 extern "C" void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground = false, unsigned int value = 0, bool is_threshold = true);
 
-/// \param rocal_context
-/// \param format RocalRandomObjectBBoxFormat
-/// \param k_largest If specified, only k_largest boxes by volume are considered (-1 means all)
-/// \param foreground_prob Probability of selecting a foreground object (1.0 = always foreground)
-/// \param cache_objects If true, cache object bounding boxes for repeated inputs
+/*! \brief Get a random object bounding box from PixelwiseMask metadata
+ * \ingroup group_rocal_meta_data
+ * \param [in] p_context rocAL context
+ * \param [in] format output format (see RocalRandomObjectBBoxFormat)
+ * \param [in] k_largest if specified, only k_largest boxes by area are considered (-1 means all)
+ * \param [in] foreground_prob probability of selecting a foreground object (1.0 = always foreground)
+ * \param [in] cache_objects if true, cache object bounding boxes for repeated inputs
+ * \return RocalTensorList of 4-element bounding boxes per image (valid only for PixelwiseMask metadata)
+ */
 extern "C" RocalTensorList ROCAL_API_CALL RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format,
                                                                  int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
 
