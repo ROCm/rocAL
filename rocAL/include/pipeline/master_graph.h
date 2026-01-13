@@ -197,7 +197,7 @@ public:
     int labelMergeFunc(const u_int8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
     bool hit(std::vector<unsigned>& hits, unsigned idx);
     void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> ranges, std::vector<unsigned> hits, int *in, std::vector<int> origin, unsigned width);
-    int pick_box(std::vector<std::vector<std::vector<unsigned>>> boxes, std::mt19937 &rng, int k_largest = -1);
+    int pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest = -1);
 #if ENABLE_OPENCL
         cl_command_queue get_ocl_cmd_q() {
         return _device.resources()->cmd_queue;

@@ -1656,9 +1656,9 @@ void MasterGraph::update_random_object_bbox() {
     std::vector<size_t> max_size = _random_object_bbox_label_tensor->info().max_shape();
     auto single_image_size = _random_object_bbox_label_tensor->data_size() / _user_batch_size;
     auto input_dims = _random_object_bbox_label_tensor->num_of_dims() - 1;
-    uint seed = std::time(0);
+    int64_t seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
-    std::uniform_real_distribution<> foreground(0, 1);
+    std::uniform_real_distribution<float> foreground(0.0f, 1.0f);
     int *box1_buf = static_cast<int *>(_random_object_bbox_box1_buf);
     int *box2_buf = static_cast<int *>(_random_object_bbox_box2_buf);
 #pragma omp parallel for num_threads(_user_batch_size)
@@ -1682,14 +1682,6 @@ void MasterGraph::update_random_object_bbox() {
         int selected_label = -1;
         std::vector<std::vector<std::vector<unsigned>>> boxes;  // total - lo,hi - 4D
         if (fg) {
-            if (cache_entry && !cache_entry->labels.empty()) {
-                auto labels_found = cache_entry->labels;
-                if(labels_found.size() == 1) { selected_label = *labels_found.begin(); }
-                else {
-                    std::uniform_int_distribution<int> class_dist{1, *labels_found.rbegin()};
-                    selected_label = class_dist(_rng[i]);
-                }
-            }
             total_box = labelMergeFunc(label, selected_label, roi_size, max_size, output_compact, _rng[i], cache_entry);
         }
         if (total_box) {
@@ -1729,7 +1721,7 @@ void MasterGraph::update_random_object_bbox() {
                 for (uint j = 0; j < input_dims; j++) {
                     if(chosen_box_idx >= 0) {
                         box1_buf[sample_idx + j] = boxes[chosen_box_idx][0][j];
-                        box2_buf[sample_idx + j] = boxes[chosen_box_idx][0][j] - boxes[chosen_box_idx][1][j];
+                        box2_buf[sample_idx + j] = boxes[chosen_box_idx][1][j] - boxes[chosen_box_idx][0][j];
                     }
                     else {
                         box1_buf[sample_idx + j] = 0;
@@ -1764,10 +1756,8 @@ void MasterGraph::update_random_object_bbox() {
     }
 }
 
-int MasterGraph::pick_box(std::vector<std::vector<std::vector<unsigned>>> boxes, std::mt19937 &rng, int k_largest) {
-    auto beg = boxes.begin();
-    auto end = boxes.end();
-    int n = end - beg;
+int MasterGraph::pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest) {
+    int n = boxes.size();
     if (n <= 0)
         return -1;
     if (k_largest > 0 && k_largest < n) {
@@ -1781,7 +1771,7 @@ int MasterGraph::pick_box(std::vector<std::vector<std::vector<unsigned>>> boxes,
                {
                    return hi - lo;
                });
-            auto volume_val = 1;
+            int64_t volume_val = 1;
             for (auto val : crop_region) {
                 volume_val *= val;
             }
@@ -1943,23 +1933,38 @@ int MasterGraph::labelMergeFunc(const u_int8_t *input, int &selected_label, std:
     output_filtered.resize(total_buf_size);
     output_compact.resize(total_buf_size);
     std::fill(output_filtered.begin(), output_filtered.end(), 0);
-    std::fill(output_compact.begin(), output_compact.end(), 0);
-    if(selected_label == -1) {
-    std::set<int> labels_found;
-    findLabels(input, labels_found, size, max_size);
-    labels_found.erase(0); // Removing background class
-    if (!labels_found.size()) return 0;   // All labels belongs to background
-        if (cache_entry && cache_entry->labels.empty())
-            cache_entry->labels = labels_found;
-    if(labels_found.size() == 1) { selected_label = *labels_found.begin(); }
-    else {
-        std::uniform_int_distribution<int> class_dist{1, *labels_found.rbegin()};
-        selected_label = class_dist(rng);
+    std::fill(output_compact.begin(), output_compact.end(), -1);
+
+    if (selected_label == -1) {
+        const std::set<int> *labels_ptr = nullptr;
+        std::set<int> labels_found;
+
+        if (cache_entry && !cache_entry->labels.empty()) {
+            labels_ptr = &cache_entry->labels;
+        } else {
+            findLabels(input, labels_found, size, max_size);
+            labels_found.erase(0);  // remove background label
+            if (labels_found.empty())
+                return 0;  // all labels belong to background
+            if (cache_entry && cache_entry->labels.empty())
+                cache_entry->labels = labels_found;
+            labels_ptr = &labels_found;
+        }
+
+        if (labels_ptr->size() == 1) {
+            selected_label = *labels_ptr->begin();
+        } else {
+            std::uniform_int_distribution<size_t> label_dist(0, labels_ptr->size() - 1);
+            selected_label = *std::next(labels_ptr->begin(), label_dist(rng));
         }
     }
     if (cache_entry) {
-        if(cache_entry->total_boxes.count(selected_label)) {
-            return cache_entry->total_boxes[selected_label];
+        auto it = cache_entry->total_boxes.find(selected_label);
+        if (it != cache_entry->total_boxes.end()) {
+            int cached_total = it->second;
+            if (cached_total == 0 || cache_entry->class_boxes.count(selected_label)) {
+                return cached_total;
+            }
         }
     }
     filterByLabel(input, output_filtered, size, max_size, selected_label);
@@ -1993,44 +1998,49 @@ int MasterGraph::labelMergeFunc(const u_int8_t *input, int &selected_label, std:
             }
         }
     }
-    std::set<int> label_set;
-    int bg_label = 0;
-    int old_bg_label = -1;
-    int prev = old_bg_label;
-    int remapped = old_bg_label;
+    constexpr int kBackground = -1;
+    std::set<int> roots;
+    int prev = kBackground;
+    int remapped = kBackground;
     for (int64_t i = 0; i < total_buf_size; i++) {
-        if (output_compact[i] != old_bg_label) {
-            if (output_compact[i] != prev) {
-                prev = output_compact[i];
-                // look up `ds` only when the value changes - this saves a lot of lookups
-                remapped = disjointFind(output_compact.data(), i);
-                // no need to assign labels[i] = remapped; find did it
-                label_set.insert(remapped);
-            } else {
-                output_compact[i] = remapped;
-            }
+        int curr = output_compact[i];
+        if (curr == kBackground) {
+            prev = kBackground;
+            continue;
+        }
+        if (curr != prev) {
+            prev = curr;
+            remapped = disjointFind(output_compact.data(), static_cast<int>(i));
+            roots.insert(remapped);
+        } else {
+            output_compact[i] = remapped;
         }
     }
+
     std::map<int, int> label_map;
-    int next_label = 0;
-    for (auto old : label_set) {
-        if (next_label == bg_label)
-            next_label++;
-        label_map[old] = next_label++;
+    int counter = 0;
+    for (int root : roots) {
+        label_map[root] = counter++;
     }
-    label_map[old_bg_label] = bg_label;
-    prev = output_compact[0];
-    remapped = label_map.find(prev)->second;
-    for (auto &label : output_compact) {
-        if (label != prev) {
-            prev = label;
-            remapped = label_map.find(prev)->second;
+
+    prev = kBackground;
+    remapped = kBackground;
+    for (int64_t i = 0; i < total_buf_size; i++) {
+        int curr = output_compact[i];
+        if (curr == kBackground) {
+            prev = kBackground;
+            continue;
         }
-        label = remapped;
+        if (curr != prev) {
+            prev = curr;
+            remapped = label_map[curr];
+        }
+        output_compact[i] = remapped;
     }
+
     if (cache_entry)
-        cache_entry->total_boxes[selected_label] = label_set.size();
-    return label_set.size();
+        cache_entry->total_boxes[selected_label] = counter;
+    return counter;
 }
 
 bool MasterGraph::hit(std::vector<unsigned> &hits, unsigned idx) {
