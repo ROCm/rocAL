@@ -20,6 +20,12 @@
 
 cmake_minimum_required(VERSION 3.13)
 
+# Allow target_link_libraries() to add libraries to targets defined
+# in other directories (needed to adjust 'rocal' from this directory).
+if(POLICY CMP0079)
+    cmake_policy(SET CMP0079 NEW)
+endif()
+
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -184,6 +190,18 @@ if(${BUILD_ROCAL_PYBIND})
             message("-- ${Yellow}NOTE: Python${PY_VERSION} Not Found, not building rocAL pybind for Python${PY_VERSION}${ColourReset}")
             continue()
         else()
+            # Enable PythonFunction operator in core rocAL library when building pybind
+            # and all Python/pybind11/MIVisionX conditions are satisfied.
+            if (VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.1")
+                target_compile_definitions(rocal PUBLIC ROCAL_PYTHON_FUNCTION)
+                target_include_directories(rocal PRIVATE ${Python3_INCLUDE_DIRS} ${pybind11_INCLUDE_DIRS})
+                target_link_libraries(rocal ${Python3_LIBRARIES})
+                message("-- ${White}rocAL PythonFunction operator enabled for pybind${ColourReset}")
+            else()
+                message("-- ${Yellow}NOTE: rocAL PythonFunction operator disabled - requires Python3, pybind11 and MIVisionX vx_rpp >= 3.1.1${ColourReset}")
+            endif()
+
+
             message("-- ${Green}NOTE: Python ${PY_VERSION} Found, building rocAL pybind for ${Python3_EXECUTABLE}${ColourReset}")
             # ----- Create a unique pybind module target for this Python -----
             set(mod_tgt "rocal_pybind_${PY_VERSION}")                # CMake target name
