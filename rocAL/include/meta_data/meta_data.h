@@ -538,7 +538,7 @@ struct PolygonMaskBatch : public BoundingBoxBatch {
         }
     }
     void copy_data(std::vector<void*> buffer) override {
-        if (buffer.size() < 2)
+        if (buffer.size() < 3)
             THROW("The buffers are insufficient")  // TODO -change
         int* labels_buffer = (int*)buffer[0];
         float* bbox_buffer = (float*)buffer[1];
@@ -616,7 +616,7 @@ class PixelwiseMaskBatch : public PolygonMaskBatch {
         }
     }
     void copy_data(std::vector<void*> buffer) override {
-        if (buffer.size() < 2)
+        if (buffer.size() < 3)
             THROW("The buffers are insufficient")  // TODO -change
         int* labels_buffer = (int*)buffer[0];
         float* bbox_buffer = (float*)buffer[1];
@@ -632,6 +632,7 @@ class PixelwiseMaskBatch : public PolygonMaskBatch {
         }
     }
     std::vector<size_t>& get_buffer_size() override {
+        _buffer_size.clear();
         size_t size = 0;
         for (auto label : _label_ids)
             size += label.size();

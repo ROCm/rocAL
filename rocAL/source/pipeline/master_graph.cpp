@@ -517,44 +517,54 @@ void MasterGraph::filter_by_label(int *in_row, int *out_row, unsigned N, int lab
 }
 
 int MasterGraph::compact_rows(int *in, unsigned height, unsigned width) {
+    constexpr int kBackground = -1;
+    int64_t volume = static_cast<int64_t>(height) * static_cast<int64_t>(width);
+    if (volume <= 0) {
+        return 0;
+    }
+
+    // Find pass (union-find path compression) similar to DALI's connected_components::CompactLabels.
+    // This updates the per-pixel labels to their root labels with minimal calls to disjoint_find.
+    std::set<int> roots;
+    int prev = kBackground;
+    int remapped = kBackground;
+    for (int64_t i = 0; i < volume; i++) {
+        int curr = in[i];
+        if (curr == kBackground) {
+            prev = kBackground;
+            continue;
+        }
+        if (curr != prev) {
+            prev = curr;
+            remapped = disjoint_find(in, static_cast<int>(i));
+            roots.insert(remapped);
+        } else {
+            in[i] = remapped;
+        }
+    }
+
+    // Remap root labels to a compact 0..N-1 range.
     std::map<int, int> labelmap;
     int counter = 0;
-    for (unsigned i = 0; i < height; i++) {
-        unsigned j = 0;
-        int *in_row = in + (i * width);
-        while (j < width) {
-            if (in_row[j] != -1) {
-                int val = in_row[j];
-                if (labelmap.find(val) == labelmap.end()) {
-                    labelmap[val] = counter++;
-                }
-                j++;
-                while (j < width && in_row[j] != -1) {
-                    in_row[j] = val;
-                    j++;
-                }
-                j++;
-            } else {
-                j++;
-            }
-        }
+    for (int root : roots) {
+        labelmap[root] = counter++;
     }
-    for (unsigned i = 0; i < height; i++) {
-        unsigned j = 0;
-        int *in_row = in + (i * width);
-        while (j < width) {
-            if (in_row[j] != -1) {
-                int val = labelmap[in_row[j]];
-                while (j < width && in_row[j] != -1) {
-                    in_row[j] = val;
-                    j++;
-                }
-                j++;
-            } else {
-                j++;
-            }
+
+    prev = kBackground;
+    remapped = kBackground;
+    for (int64_t i = 0; i < volume; i++) {
+        int curr = in[i];
+        if (curr == kBackground) {
+            prev = kBackground;
+            continue;
         }
+        if (curr != prev) {
+            prev = curr;
+            remapped = labelmap[curr];
+        }
+        in[i] = remapped;
     }
+
     return counter;
 }
 
@@ -659,15 +669,10 @@ int MasterGraph::pick_box(std::vector<std::vector<std::pair<unsigned, unsigned>>
                 vol_idx[i] = {0, i};
                 continue;
             }
-            // Calculate volume: (hi - lo) for each dimension
-            int64_t volume = 1;
-            for (size_t d = 0; d < boxes[i][0].first; d++) {
-                // boxes[i][0] = lo, boxes[i][1] = hi
-            }
             // For 2D: width * height
-            int64_t width = boxes[i][1].second - boxes[i][0].second;
-            int64_t height = boxes[i][1].first - boxes[i][0].first;
-            volume = width * height;
+            int64_t width = static_cast<int64_t>(boxes[i][1].second) - static_cast<int64_t>(boxes[i][0].second);
+            int64_t height = static_cast<int64_t>(boxes[i][1].first) - static_cast<int64_t>(boxes[i][0].first);
+            int64_t volume = width * height;
             vol_idx[i] = {-volume, i};  // negative for descending sort
         }
         std::sort(vol_idx.begin(), vol_idx.end());

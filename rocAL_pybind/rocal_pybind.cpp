@@ -1038,7 +1038,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     });
     m.def("getSelectMask", [](RocalContext context, std::vector<int> mask_ids) {
         rocalTensorList *bbox_labels = rocalGetBoundingBoxLabel(context);
-        rocalTensorList *bbox_coords = rocalGetBoundingBoxCords(context);
 
         std::vector<std::vector<int>> sel_vertices_counts;
         std::vector<std::vector<int>> sel_mask_ids;
@@ -1055,13 +1054,25 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
             auto sel_mask_ids_per_image = sel_mask_ids[i];
             int cnt = 0;
             py::dict mask_select_polygon_dict;
-            for (int j = 0; j < mask_ids.size(); j++) {
-                py::list select_mask_polygon_list;
-                for (int k = 0; k < sel_vertices_count_per_image[j]; k++) {
-                    select_mask_polygon_list.append(select_mask_polygon_buffer[cnt++]);
+            for (auto mask_id : mask_ids) {
+                std::string key = std::to_string(mask_id);
+                mask_select_polygon_dict[py::str(key)] = py::list();
+            }
+
+            if (sel_vertices_count_per_image.size() != sel_mask_ids_per_image.size()) {
+                throw std::runtime_error("Internal error: select_masks vertices_count/mask_id mismatch");
+            }
+
+            for (size_t poly_idx = 0; poly_idx < sel_vertices_count_per_image.size(); poly_idx++) {
+                int ncoords = sel_vertices_count_per_image[poly_idx];
+                int mask_id = sel_mask_ids_per_image[poly_idx];
+                py::list polygon_coords;
+                for (int k = 0; k < ncoords; k++) {
+                    polygon_coords.append(select_mask_polygon_buffer[cnt++]);
                 }
-                std::string key = std::to_string(mask_ids[j]);
-                mask_select_polygon_dict[py::str(key)] = select_mask_polygon_list;
+                std::string key = std::to_string(mask_id);
+                auto polygons = mask_select_polygon_dict[py::str(key)].cast<py::list>();
+                polygons.append(polygon_coords);
             }
             per_image_select_mask.append(mask_select_polygon_dict);
         }

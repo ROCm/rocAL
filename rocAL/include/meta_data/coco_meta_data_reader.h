@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <cstdint>
 #include <map>
+#include <unordered_map>
 
 #include "pipeline/commons.h"
 #include "meta_data/meta_data.h"
@@ -46,17 +48,26 @@ class COCOMetaDataReader : public MetaDataReader {
     COCOMetaDataReader();
 
    private:
+    struct RLEMaskInfo {
+        int mask_idx = -1;
+        int h = -1;
+        int w = -1;
+        std::string counts_str;
+        std::vector<uint32_t> counts;
+    };
+
     pMetaDataBatch _output;
     std::string _path;
     bool _avoid_class_remapping;
     void add(std::string image_name, BoundingBoxCords bbox, Labels labels, ImgSize image_size, int image_id = 0);
     void add(std::string image_name, BoundingBoxCords bbox, Labels labels, ImgSize image_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, int image_id = 0);  // To add Mask coordinates to Metadata struct
     bool exists(const std::string& image_name) override;
-    void generate_pixelwise_mask(std::string filename, RLE* rle_in);
+    void generate_pixelwise_mask(const std::string& filename, const std::vector<RLEMaskInfo>* rle_masks);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
     std::map<std::string, ImgSize> _map_img_sizes;
     std::map<int, std::string> _map_image_names_to_id;  // Maps image names to their image IDs
+    std::unordered_map<std::string, std::vector<RLEMaskInfo>> _rle_masks_by_image;
     std::map<std::string, ImgSize>::iterator itr;
     std::map<int, int> _label_info = {{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}, {6, 6}, {7, 7}, {8, 8},  \
     {9, 9}, {10, 10}, {11, 11}, {13, 12}, {14, 13}, {15, 14}, {16, 15}, {17, 16},  \
