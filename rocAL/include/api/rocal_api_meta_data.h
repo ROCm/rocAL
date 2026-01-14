@@ -86,7 +86,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTFReaderDetection(RocalContex
  * \param [in] is_box_iou_matcher If set to True, box iou matcher which returns matched indices is enabled in the pipeline
  * \return RocalMetaData object, can be used to inquire about the rocal's output (processed) tensors
  */
-extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool mask = false, bool ltrb = true, bool is_box_encoder = false, bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, bool is_box_iou_matcher = false);
+extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal_context, const char* source_path, bool is_output, bool is_polygon_mask = false, bool is_pixelwise_mask = false, bool ltrb = true, bool is_box_encoder = false, bool avoid_class_remapping = false, bool aspect_ratio_grouping = false, bool is_box_iou_matcher = false);
 
 /*! \brief create coco reader key points
  * \ingroup group_rocal_meta_data
@@ -193,6 +193,13 @@ extern "C" unsigned ROCAL_API_CALL rocalGetMaskCount(RocalContext p_context, int
  * \return The tensorlist with the mask coordinates
  */
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetMaskCoordinates(RocalContext p_context, int* bufcount);
+
+/*! \brief get pixelwise mask labels
+ * \ingroup group_rocal_meta_data
+ * \param [in] rocal_context rocal context
+ * \return RocalTensorList of pixelwise mask labels associated with bounding box coordinates
+ */
+extern "C" RocalTensorList ROCAL_API_CALL rocalGetPixelwiseMaskLabels(RocalContext p_context);
 
 /*! \brief get bounding box label
  * \ingroup group_rocal_meta_data
@@ -316,6 +323,34 @@ extern "C" void ROCAL_API_CALL rocalBoxIouMatcher(RocalContext p_context, std::v
  * \return RocalTensorList of matched indices
  */
 extern "C" RocalTensorList ROCAL_API_CALL rocalGetMatchedIndices(RocalContext p_context);
+
+/// \param rocal_context
+/// \param mask_ids The list of polygon id provided by user
+/// \param sel_vertices_count List of vertices count for the selected polygons
+/// \param sel_mask_ids List of Polygons ids for the selected polygons
+/// \param reindex_mask If it is true, selected polygon id's reindexed from 0 to the count. If False, it will be same as mask_ids.
+extern "C" RocalTensorList ROCAL_API_CALL rocalSelectMask(RocalContext p_context,
+                                                          std::vector<int> mask_ids,
+                                                          std::vector<std::vector<int>> &sel_vertices_count,
+                                                          std::vector<std::vector<int>> &sel_mask_ids,
+                                                          bool reindex_mask = false);
+
+/// \param rocal_context
+extern "C" RocalTensorList ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context);
+
+/// \param rocal_context
+/// \param is_foreground Select pixel from foreground if it is true
+/// \param value Select pixel coordinate whose value is equal to it
+/// \param is_threshold Select pixel coordinate whose value is greater than given value param when bool is set as true
+extern "C" void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground = false, unsigned int value = 0, bool is_threshold = true);
+
+/// \param rocal_context
+/// \param format RocalRandomObjectBBoxFormat
+/// \param k_largest If specified, only k_largest boxes by volume are considered (-1 means all)
+/// \param foreground_prob Probability of selecting a foreground object (1.0 = always foreground)
+/// \param cache_objects If true, cache object bounding boxes for repeated inputs
+extern "C" RocalTensorList ROCAL_API_CALL RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format,
+                                                                 int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
 
 /*! \brief creates webdataset reader
  * \ingroup group_rocal_meta_data

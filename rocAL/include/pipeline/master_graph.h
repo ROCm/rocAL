@@ -21,8 +21,10 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <cstdint>
 #include <list>
 #include <map>
+#include <set>
 #include <unordered_map>
 #include <memory>
 #include <variant>
@@ -57,6 +59,7 @@ THE SOFTWARE.
 #include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
 #include "pipeline/pipeline_serializer.h"
+#include "pipeline/seed_rng.h"
 
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
@@ -103,6 +106,35 @@ struct CacheEntry {
     }
 };
 
+// Cache entry for 2D random_object_bbox caching
+struct RandomObjectBBoxCacheEntry {
+    std::set<int> labels;
+    std::unordered_map<int, std::vector<std::vector<std::pair<unsigned, unsigned>>>> class_boxes;
+    std::unordered_map<int, int> total_boxes;
+
+    bool Get(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes, int label) const {
+        auto it = class_boxes.find(label);
+        if (it == class_boxes.end())
+            return false;
+        boxes = it->second;
+        return true;
+    }
+
+    void Put(int label, const std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes) {
+        class_boxes[label] = boxes;
+    }
+};
+
+// Simple hash for caching
+inline size_t fast_hash_buffer(const void* data, size_t size) {
+    const uint8_t* bytes = static_cast<const uint8_t*>(data);
+    size_t hash = 0xcbf29ce484222325ULL;  // FNV-1a offset basis
+    for (size_t i = 0; i < size; ++i) {
+        hash ^= bytes[i];
+        hash *= 0x100000001b3ULL;  // FNV-1a prime
+    }
+    return hash;
+}
 class MasterGraph {
 public:
     enum class Status { OK = 0,
@@ -153,9 +185,21 @@ public:
     void box_iou_matcher(std::vector<float> &anchors, float high_threshold, float low_threshold, bool allow_low_quality_matches);
     void create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType reader_type, RandomBBoxCrop_MetaDataType label_type, bool all_boxes_overlap, bool no_crop, FloatParam *aspect_ratio, bool has_shape, int crop_width, int crop_height, int num_attempts, FloatParam *scaling, int total_num_attempts, int64_t seed = 0);
     const std::pair<ImageNameBatch, pMetaDataBatch> &meta_data();
+    TensorList *get_select_mask_polygon(rocalTensorList *mask_data,
+                                        std::vector<std::vector<int>> polygon_counts,
+                                        std::vector<std::vector<std::vector<int>>> vertices_counts,
+                                        std::vector<int> mask_ids,
+                                        std::vector<std::vector<int>> &sel_vertices_counts,
+                                        std::vector<std::vector<int>> &sel_mask_ids,
+                                        bool reindex_mask);
+    void set_random_mask_pixel_config(bool is_foreground, int value, bool is_threshold);
+    
     TensorList *labels_meta_data();
     TensorList *bbox_meta_data();
-    TensorList *mask_meta_data();
+    TensorList *mask_meta_data(bool is_polygon_mask);
+    TensorList *get_random_mask_pixel(rocalTensorList *input);
+    TensorList *get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format,
+                                       int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
     TensorList *matched_index_meta_data();
     TensorListVector * ascii_values_meta_data(); // Gets the pointer to a batch of ASCII values of all samples in the batch
     void set_loop(bool val) { _loop = val; }
@@ -186,17 +230,18 @@ public:
     TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
     void update_roi_random_crop();
     void update_random_object_bbox();
-    void findLabels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
-    void filterByLabel(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
-    void labelRow(const int *label_base, const int *in_row, int *out_row, unsigned length);
-    int disjointGetGroup(const int &x) { return x; }
-    int disjointSetGroup(int &x, int new_id);
-    int disjointFind(int *items, int x);
-    int disjointMerge(int *items, int x, int y);
-    void mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
-    int labelMergeFunc(const u_int8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
-    bool hit(std::vector<unsigned>& hits, unsigned idx);
-    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> ranges, std::vector<unsigned> hits, int *in, std::vector<int> origin, unsigned width);
+    void find_labels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
+    void filter_by_label(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
+    void label_row(const int *label_base, const int *in_row, int *out_row, unsigned length);
+    int disjoint_get_group(const int &x) { return x; }
+    int disjoint_set_group(int &x, int new_id);
+    int disjoint_find(int *items, int x);
+    int disjoint_merge(int *items, int x, int y);
+    void merge_row(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
+    int label_merge_func(const u_int8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
+    // n-D random_object_bbox helpers (2D helpers are declared privately below)
+    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> ranges,
+                                 std::vector<unsigned> hits, int *in, std::vector<int> origin, unsigned width);
     int pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest = -1);
 #if ENABLE_OPENCL
         cl_command_queue get_ocl_cmd_q() {
@@ -220,6 +265,18 @@ private:
     bool is_out_of_data();
     // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
     inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
+    int64_t find_pixel(std::vector<int> start, std::vector<int> foreground_count, int64_t val, int count);
+    // 2D connected components helpers (shared union-find uses disjoint_*/merge_row/label_row)
+    void filter_by_label(int *in_row, int *out_row, unsigned N, int label);
+    int compact_rows(int *in, unsigned height, unsigned width);
+    void get_label_boundingboxes(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes,
+                                 std::vector<std::pair<unsigned, unsigned>> ranges,
+                                 std::vector<unsigned> hits,
+                                 int *in,
+                                 std::vector<unsigned> origin,
+                                 unsigned width);
+    bool hit(std::vector<unsigned> &hits, unsigned idx);
+    int pick_box(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes, std::mt19937 &rng, int k_largest);
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
@@ -239,8 +296,14 @@ private:
     std::vector<TensorList> _ascii_tensor_list; // TensorList to store the ASCII values of all samples in a batch
     TensorList _bbox_tensor_list;
     TensorList _mask_tensor_list;
-    TensorList _matches_tensor_list;                                                  //!< The count of total number of extensions used in the webdataset reader
+    TensorList _matches_tensor_list;
+    TensorList _random_mask_pixel_list;
+    TensorList _select_mask_polygon_list;
+    std::vector<std::vector<float>> _output_select_mask_polygon;
+    TensorList _random_object_bbox_list;
     std::vector<size_t> _meta_data_buffer_size;
+    std::vector<std::vector<unsigned>> _output_random_object_bbox;
+    std::unordered_map<size_t, RandomObjectBBoxCacheEntry> _random_object_bbox_cache;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU
 #endif
@@ -304,6 +367,10 @@ private:
     float _foreground_prob;
     bool _cache_boxes;
     std::unordered_map<fast_hash_t, CacheEntry> _boxes_cache;
+    int _random_mask_pixel_value = 0;
+    bool _is_random_mask_pixel_threshold = false;
+    bool _is_random_mask_pixel_foreground = false;
+    std::vector<unsigned> output_random_mask_pixel;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif

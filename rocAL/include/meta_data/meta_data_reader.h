@@ -109,5 +109,6 @@ class MetaDataReader {
     virtual ImgSize lookup_image_size(const std::string& image_name) { return {}; }
     virtual void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { return; }
     virtual bool get_aspect_ratio_grouping() const { return {}; }
-    virtual std::vector<std::string> get_relative_file_path() { return {}; } // Returns the relative file_path's of the reader 
+    virtual std::pair<uint32_t, uint32_t> get_max_size() { return std::pair<uint32_t, uint32_t>(); }
+    virtual std::vector<std::string> get_relative_file_path() { return {}; }  // Returns the relative file_path's of the reader
 };

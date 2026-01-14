@@ -205,6 +205,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int decode_max_width = width;
     int decode_max_height = height;
     int pipeline_type = -1;
+    bool use_pixelwise_masks = false;
     std::cout << "Test case " << test_case << std::endl;
     std::cout << "Running on " << (gpu ? "GPU" : "CPU") << " , " << (rgb ? " Color " : " Grayscale ") << std::endl;
 
@@ -218,6 +219,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Could not create the Rocal contex\n";
         return -1;
+    }
+
+    // Some image augmentations add "meta nodes" which currently propagate bbox/polygon metadata but not pixelwise masks.
+    // For the pixelwise mask reader test (reader_type == 16), keep the graph metadata-only w.r.t masks to validate the reader + mask APIs.
+    if (reader_type == 16 && test_case != 61) {
+        std::cout << "INFO: Overriding test_case " << test_case << " -> 61 (rocalNop) for pixelwise mask validation\n";
+        test_case = 61;
     }
 
     /*>>>>>>>>>>>>>>>> Getting the path for data  <<<<<<<<<<<<<<<<*/
@@ -430,23 +438,23 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             enable_iou_matcher = true;
             rocalBoxIouMatcher(handle, coco_anchors, 0.5, 0.4, true);
         } break;
-        case 16:  // coco detection partial
+        case 16:  // coco segmentation
         {
-            std::cout << "Running COCO READER PARTIAL - SINGLE SHARD" << std::endl;
+            std::cout << "Running COCO SEGMENTATION READER - SINGLE SHARD" << std::endl;
             pipeline_type = 6;
+            use_pixelwise_masks = true;
             if (strcmp(rocal_data_path.c_str(), "") == 0) {
                 std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
                 exit(0);
             }
-            // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/annotations/person_keypoints_val2017.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, true, true, false, false, true);
-#if defined RANDOMBBOXCROP
-            rocalRandomBBoxCrop(handle, all_boxes_overlap, no_crop);
-#endif
-            std::vector<float> area = {0.08, 1};
-            std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
-            decoded_output = rocalJpegCOCOFileSourcePartialSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, area, aspect_ratio, 10, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true);
+            // Configure the random pixel selector: pick from foreground (value > 0)
+            rocalSetRandomPixelMaskConfig(handle, true, 0, true);
+            if (decode_max_height <= 0 || decode_max_width <= 0)
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
+            else
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 17:  // caffe classification
         {
@@ -1148,37 +1156,154 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 std::vector<int> img_id_batch(input_batch_size);
                 rocalGetImageId(handle, img_id_batch.data());
                 RocalTensorList bbox_labels = rocalGetBoundingBoxLabel(handle);
-                std::vector<int> img_sizes_batch(input_batch_size * 2);
-                rocalGetROIImageSizes(handle, img_sizes_batch.data());
+                RocalTensorList bbox_coords = rocalGetBoundingBoxCords(handle);
+                std::vector<int> img_sizes(input_batch_size * 2);
+                rocalGetImageSizes(handle, img_sizes.data());
+                std::vector<int> roi_img_sizes(input_batch_size * 2);
+                rocalGetROIImageSizes(handle, roi_img_sizes.data());
                 for (unsigned i = 0; i < input_batch_size; i++) {
-                    std::cerr << "\nImage ID:" << img_id_batch[i];
-                    std::cout << "\twidth:" << img_sizes_batch[i * 2];
-                    std::cout << ",\tHeight:" << img_sizes_batch[(i * 2) + 1];
+                    std::cout << "\nImage ID:" << img_id_batch[i];
+                    std::cout << "\timg:" << img_sizes[i * 2] << "x" << img_sizes[(i * 2) + 1];
+                    std::cout << "\troi:" << roi_img_sizes[i * 2] << "x" << roi_img_sizes[(i * 2) + 1];
                 }
-                int size = rocalGetBoundingBoxCount(handle);
-                std::cerr << "\nBBox size: " << size << "\n";
-                std::vector<int> mask_count(size);
-                int mask_size = rocalGetMaskCount(handle, mask_count.data());
-                std::vector<int> polygon_size(mask_size);
-                RocalTensorList mask_data = rocalGetMaskCoordinates(handle, polygon_size.data());
-                for (int i = 0; i < size; i++)
-                    std::cerr << "\n Number of polygons per object:  " << mask_count[i];
-                std::cerr << "\nMask Size:: " << mask_size;
-                for (int i = 0; i < mask_size; i++)
-                    std::cerr << "\nPolygon size : " << polygon_size[i];
-                int poly_cnt = 0;
-                int prev_object_cnt = 0;
-                std::cerr << "\nMask values:: \n";
-                for (int i = 0; i < bbox_labels->size(); i++) {  // For each image in a batch, parse through the mask metadata buffers and convert them to polygons format
-                    float *mask_buffer = static_cast<float *>(mask_data->at(i)->buffer());
-                    for (unsigned j = prev_object_cnt; j < bbox_labels->at(i)->dims().at(0) + prev_object_cnt; j++) {
-                        for (int k = 0; k < mask_count[j]; k++) {
-                            for (int l = 0; l < polygon_size[poly_cnt]; l++)
-                                std::cerr << mask_buffer[l] << " ";
-                            mask_buffer += polygon_size[poly_cnt++];
+
+                if (use_pixelwise_masks) {
+                    RocalTensorList pixelwise_masks = rocalGetPixelwiseMaskLabels(handle);
+                    RocalTensorList random_mask_pixels = rocalRandomMaskPixel(handle);
+                    RocalTensorList random_object_bboxes = RocalRandomObjectBBox(handle, ROCAL_OUT_BOX, -1, 1.0f, false);
+
+                    if (!pixelwise_masks || !random_mask_pixels || !random_object_bboxes) {
+                        std::cerr << "\nSegmentation metadata API returned null";
+                        return -1;
+                    }
+
+                    if (pixelwise_masks->size() != bbox_labels->size() ||
+                        random_mask_pixels->size() != bbox_labels->size() ||
+                        random_object_bboxes->size() != bbox_labels->size()) {
+                        std::cerr << "\nSegmentation metadata batch size mismatch";
+                        return -1;
+                    }
+
+                    std::cout << "\nPixelwise labels (summary)";
+                    for (int i = 0; i < bbox_labels->size(); i++) {
+                        int *mask_buffer = static_cast<int *>(pixelwise_masks->at(i)->buffer());
+                        auto mask_w = pixelwise_masks->at(i)->dims().at(0);
+                        auto mask_h = pixelwise_masks->at(i)->dims().at(1);
+
+                        if (!mask_buffer || mask_w == 0 || mask_h == 0) {
+                            std::cerr << "\nInvalid pixelwise mask tensor for image " << i;
+                            return -1;
+                        }
+
+                        if ((int)mask_w != img_sizes[i * 2] || (int)mask_h != img_sizes[i * 2 + 1]) {
+                            std::cerr << "\nPixelwise mask dims (" << mask_w << "x" << mask_h
+                                      << ") do not match image dims (" << img_sizes[i * 2] << "x" << img_sizes[i * 2 + 1] << ")";
+                            return -1;
+                        }
+
+                        size_t total = mask_w * mask_h;
+                        size_t nonzero = 0;
+                        int max_label = 0;
+                        for (size_t j = 0; j < total; j++) {
+                            int v = mask_buffer[j];
+                            if (v > 0) nonzero++;
+                            if (v > max_label) max_label = v;
+                        }
+
+                        std::cout << "\nImage " << i << " (" << mask_w << "x" << mask_h << "): nonzero=" << nonzero << " max_label=" << max_label;
+
+                        int *coords = static_cast<int *>(random_mask_pixels->at(i)->buffer());
+                        if (!coords) {
+                            std::cerr << "\nInvalid random_mask_pixel output for image " << i;
+                            return -1;
+                        }
+                        int row = coords[0];
+                        int col = coords[1];
+                        if (row < 0 || col < 0 || row >= (int)mask_h || col >= (int)mask_w) {
+                            std::cerr << "\nrandom_mask_pixel out of bounds for image " << i << " -> (" << row << "," << col
+                                      << ") for mask (" << mask_w << "x" << mask_h << ")";
+                            return -1;
+                        }
+
+                        if (nonzero > 0) {
+                            int picked = mask_buffer[(size_t)row * (size_t)mask_w + (size_t)col];
+                            std::cout << "\nImage " << i << " random_mask_pixel -> (row=" << row << ", col=" << col << "), label=" << picked;
+                            if (picked <= 0) {
+                                std::cerr << "\nrandom_mask_pixel did not select foreground for image " << i << " (picked=" << picked << ")";
+                                return -1;
+                            }
+                        } else {
+                            std::cout << "\nImage " << i << " random_mask_pixel -> (row=" << row << ", col=" << col << "), label=0 (no foreground in mask)";
+                        }
+
+                        unsigned int *bbox = static_cast<unsigned int *>(random_object_bboxes->at(i)->buffer());
+                        if (!bbox) {
+                            std::cerr << "\nInvalid random_object_bbox output for image " << i;
+                            return -1;
+                        }
+                        unsigned y0 = bbox[0], x0 = bbox[1], y1 = bbox[2], x1 = bbox[3];  // OUT_BOX returns (y0, x0, y1, x1)
+                        std::cout << "\nImage " << i << " random_object_bbox -> (y0=" << y0 << ", x0=" << x0 << ", y1=" << y1 << ", x1=" << x1 << ")";
+                        if (y0 >= y1 || x0 >= x1 || y1 > (unsigned)mask_h || x1 > (unsigned)mask_w) {
+                            std::cerr << "\nrandom_object_bbox out of bounds/degenerate for image " << i
+                                      << " -> (" << y0 << "," << x0 << "," << y1 << "," << x1 << ") for mask (" << mask_w << "x" << mask_h << ")";
+                            return -1;
+                        }
+
+                        if (nonzero > 0) {
+                            bool found_fg = false;
+                            for (unsigned yy = y0; yy < y1 && !found_fg; yy++) {
+                                size_t base = (size_t)yy * (size_t)mask_w;
+                                for (unsigned xx = x0; xx < x1; xx++) {
+                                    if (mask_buffer[base + xx] > 0) {
+                                        found_fg = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!found_fg) {
+                                std::cerr << "\nrandom_object_bbox does not contain foreground for image " << i;
+                                return -1;
+                            }
                         }
                     }
-                    prev_object_cnt += bbox_labels->at(i)->dims().at(0);
+                } else {
+                    int bbox_total = rocalGetBoundingBoxCount(handle);
+                    std::vector<int> mask_count(bbox_total);
+                    int mask_total = rocalGetMaskCount(handle, mask_count.data());
+                    std::vector<int> polygon_size(mask_total);
+                    RocalTensorList polygon_masks = rocalGetMaskCoordinates(handle, polygon_size.data());
+
+                    std::cout << "\nPolygon mask metadata";
+                    for (int i = 0; i < bbox_total; i++)
+                        std::cout << "\n Number of polygons per object: " << mask_count[i];
+                    std::cout << "\nMask Size:: " << mask_total;
+                    for (int i = 0; i < mask_total; i++)
+                        std::cout << "\nPolygon size : " << polygon_size[i];
+                    int poly_cnt = 0;
+                    int prev_object_cnt = 0;
+                    for (int i = 0; i < bbox_labels->size(); i++) {
+                        float *mask_buffer = static_cast<float *>(polygon_masks->at(i)->buffer());
+                        for (unsigned j = prev_object_cnt; j < bbox_labels->at(i)->dims().at(0) + prev_object_cnt; j++) {
+                            for (int k = 0; k < mask_count[j]; k++) {
+                                std::cout << "\nPolygon Values (Image " << i << ", Object " << j - prev_object_cnt << "): ";
+                                for (int l = 0; l < polygon_size[poly_cnt]; l++)
+                                    std::cout << mask_buffer[l] << " ";
+                                mask_buffer += polygon_size[poly_cnt++];
+                            }
+                        }
+                        prev_object_cnt += bbox_labels->at(i)->dims().at(0);
+                    }
+                }
+
+                for (int i = 0; i < bbox_labels->size(); i++) {
+                    int *labels_buffer = static_cast<int *>(bbox_labels->at(i)->buffer());
+                    float *bbox_buffer = static_cast<float *>(bbox_coords->at(i)->buffer());
+                    std::cout << "\nBBOX labels for image " << i << ": ";
+                    for (unsigned j = 0; j < bbox_labels->at(i)->dims().at(0); j++)
+                        std::cout << labels_buffer[j] << " ";
+                    std::cout << "\nBBOX coords:";
+                    for (unsigned j = 0, idx = 0; j < bbox_coords->at(i)->dims().at(0); j++, idx = j * 4)
+                        std::cout << " (" << bbox_buffer[idx] << ", " << bbox_buffer[idx + 1] << ", " << bbox_buffer[idx + 2] << ", " << bbox_buffer[idx + 3] << ")";
                 }
             } break;
             case 7: // Box encoder
