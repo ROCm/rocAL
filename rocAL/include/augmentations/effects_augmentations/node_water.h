@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,32 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
+
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
+class WaterNode : public Node {
    public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
-
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    std::string node_name() const override { return "BrightnessNode"; }
+    WaterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    WaterNode() = delete;
+    void init(float amplitude_x, float amplitude_y, float frequency_x, float frequency_y, float phase_x, float phase_y);
+    void init(FloatParam *amplitude_x_param, FloatParam *amplitude_y_param, 
+              FloatParam *frequency_x_param, FloatParam *frequency_y_param,
+              FloatParam *phase_x_param, FloatParam *phase_y_param);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+    ParameterVX<float> _amplitude_x;
+    ParameterVX<float> _amplitude_y;
+    ParameterVX<float> _frequency_x;
+    ParameterVX<float> _frequency_y;
+    ParameterVX<float> _phase_x;
+    ParameterVX<float> _phase_y;
+    constexpr static float AMPLITUDE_RANGE[2] = {0.0, 10.0};
+    constexpr static float FREQUENCY_RANGE[2] = {0.0, 1.0};
+    constexpr static float PHASE_RANGE[2] = {0.0, 6.28318};  // 0 to 2*PI
 };

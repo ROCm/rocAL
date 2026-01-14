@@ -40,7 +40,7 @@ class CIFAR10LoaderSingleShardNode : public Node {
     /// \param mem_type Memory type, host or device
     /// \param sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix, const ShardingInfo& sharding_info = ShardingInfo());
-    std::shared_ptr<LoaderModule> get_loader_module();
+    std::shared_ptr<LoaderModule> get_loader_module() override;
 
    protected:
     void create_node() override {};
