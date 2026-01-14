@@ -44,7 +44,7 @@ class FusedJpegCropNode : public Node {
               DecoderType decoder_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
               unsigned num_attempts, std::vector<float> &random_area, std::vector<float> &random_aspect_ratio, const ShardingInfo& sharding_info = ShardingInfo());
 
-    std::shared_ptr<LoaderModule> get_loader_module();
+    std::shared_ptr<LoaderModule> get_loader_module() override;
 
    protected:
     void create_node() override{};
