@@ -251,3 +251,21 @@ if(rocjpeg_FOUND)
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
 endif()
+
+# 17 - serialization_test_cpu
+add_test(
+  NAME
+    serialization_test_cpu
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/serialization_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/serialization_test"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "serialization_test"
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
+)
+# 18 - serialization_test_gpu
+add_test(NAME serialization_test_gpu 
+              COMMAND serialization_test 
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/serialization_test)
