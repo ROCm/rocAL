@@ -20,12 +20,6 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-# Allow target_link_libraries() to add libraries to targets defined
-# in other directories (needed to adjust 'rocal' from this directory).
-if(POLICY CMP0079)
-    cmake_policy(SET CMP0079 NEW)
-endif()
-
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
