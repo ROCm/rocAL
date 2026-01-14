@@ -153,10 +153,16 @@ message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Pack
 message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
 
 add_subdirectory(rocAL)
+
+if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.13"))
+  message("-- ${Red}NOTE: rocAL pybind supported on Python versions - 3.8, 3.9, 3.10, 3.11, 3.12, 3.13. Not Found, Please provide supported version${ColourReset}")
+  set(BUILD_PYPACKAGE OFF)
+endif()
+
 if(BUILD_PYPACKAGE)
   add_subdirectory(rocAL_pybind)
 else()
-  message("-- ${Cyan}rocAL Python Module turned OFF by user option -D BUILD_PYPACKAGE=OFF ${ColourReset}")
+  message("-- ${Yellow}rocAL Python Module turned OFF by user option -D BUILD_PYPACKAGE=OFF or unsupported Python version${ColourReset}")
 endif()
 
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/

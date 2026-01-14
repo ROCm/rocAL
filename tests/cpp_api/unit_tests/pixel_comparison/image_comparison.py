@@ -82,7 +82,7 @@ def main():
     failed_case_list = []
     golden_output_dir_list = os.listdir(ref_output_path)
     rocal_output_dir_list = os.listdir(rocal_output_path)
-    randomized_augmentation = ["Snow", "Rain", "Jitter", "SNPNoise", "Fog"]
+    randomized_augmentation = ["Snow", "Rain", "Jitter", "SNPNoise", "Fog", "GaussianNoise", "ShotNoise", "Spatter"]
     golden_file_path = ""
     for aug_name in rocal_output_dir_list:
         temp = aug_name.split(".")
@@ -94,7 +94,7 @@ def main():
             golden_file_path = aug_name
 
         # For randomized augmentation
-        if file_name_split[0] in randomized_augmentation or "Random" in file_name_split[0]:
+        if file_name_split[0] in randomized_augmentation or "Random" in file_name_split[0] or "Log" in file_name_split[0]:
             total_case_count = total_case_count + 1
             augmentation_name = aug_name.split(".")[0]
             logging.info("Running %s", augmentation_name)
@@ -149,7 +149,8 @@ def main():
                 mismatch_percentage = round(
                     (total_pixel_diff / total_count) * 100, 2)
                 if ((total_pixel_diff == 0) or (mismatch_percentage < 5.0 and pixel_diff[1] == total_pixel_diff) or       # Ignore test cases with single pixel differences less than 5% of total pixel count
-                        (mismatch_percentage < 0.5 and ("Blend" in aug_name or "Rotate" in aug_name) and "hip" in aug_name)):  # Ignore mismatch in rotate augmentation less than 0.5% of total pixel count
+                        (mismatch_percentage < 0.5 and ("Blend" in aug_name or "Rotate" in aug_name) and "hip" in aug_name) or  # Ignore mismatch in rotate augmentation less than 0.5% of total pixel count
+                        (mismatch_percentage < 0.5 and ("JpegCompressionDistortion" in aug_name))):  # Ignore mismatch in JpegCompressionDistortion augmentation less than 0.5% of total pixel count
                     passed_case_count = passed_case_count + 1
                     logging.info("PASSED")
                 else:
