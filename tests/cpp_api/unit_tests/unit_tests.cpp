@@ -424,7 +424,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, false, false, true, true);  // Enable Box IOU matcher
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, false, true, false, false, true, true);  // Enable Box IOU matcher
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
             else
@@ -547,7 +547,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             }
             // setting the default json path to ROCAL_DATA_PATH coco sample train annotation
             std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img/annotations/coco_data.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true, true);  // Enable IOU matcher
+            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, false, true, true);  // Enable Box encoder
             if (decode_max_height <= 0 || decode_max_width <= 0)
                 decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
             else
