@@ -81,7 +81,7 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
     # Set supported GPU Targets
     if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
-        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx950;gfx1200;gfx1201")
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1151;gfx950;gfx1200;gfx1201")
     endif()
 
     # Set AMD GPU_TARGETS
@@ -252,11 +252,12 @@ if(${BUILD_ROCAL})
     protobuf_generate_cpp(TF_PROTO_SRCS TF_PROTO_HEADERS proto/example.proto proto/feature.proto)
     protobuf_generate_cpp(CAFFE2_PROTO_SRCS CAFFE2_PROTO_HEADERS proto/caffe2_protos.proto)
     protobuf_generate_cpp(CAFFE_PROTO_SRCS CAFFE_PROTO_HEADERS proto/caffe_protos.proto)
+    protobuf_generate_cpp(ROCAL_PROTO_SRCS ROCAL_PROTO_HEADERS proto/rocal.proto)
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
-                                ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${rocdecode_SRCS})
+                                ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${rocdecode_SRCS} ${ROCAL_PROTO_SRCS} ${ROCAL_PROTO_HEADERS})
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
         add_dependencies(${PROJECT_NAME} rocAL_hip)
@@ -323,7 +324,7 @@ if(${BUILD_ROCAL})
     endif()
     
     # Audio features for rocAL
-    if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "1" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
+    if(VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.0")
         if(NOT SNDFILE_FOUND)
             message("-- ${Yellow}NOTE: rocAL built without SndFile - Audio functionalities will not be supported${ColourReset}")
             set(AUDIO_SUPPORT FALSE)

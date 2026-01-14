@@ -187,27 +187,60 @@ def lens_correction(*inputs, camera_matrix=None, distortion_coeffs=None, device=
     """!Applies lens correction effect on images.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param camera_matrix (list, optional, default = None)                         camera matrix for the entire batch of images
-        @param distortion_coeffs (list, optional, default = None)                     distortion coefficients for the entire batch of images
+        @param camera_matrix (list or list of lists, optional, default = None)        camera matrix for the entire batch of images. Can be a single list [fx, cx, fy, cy] for all images or a list of lists [[fx, cx, fy, cy], ...] for each image in the batch
+        @param distortion_coeffs (list or list of lists, optional, default = None)    distortion coefficients for the entire batch of images. Can be a single list [k1, k2, p1, p2, k3] for all images or a list of lists [[k1, k2, p1, p2, k3], ...] for each image in the batch
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
 
         @return  Image with lens correction effect
     """
-    if isinstance(camera_matrix, list):
-        cameraMatrix = b.CameraMatrix()
-        cameraMatrix.fx = camera_matrix[0]
-        cameraMatrix.cx = camera_matrix[1]
-        cameraMatrix.fy = camera_matrix[2]
-        cameraMatrix.cy = camera_matrix[3]
-    if isinstance(distortion_coeffs, list):
-        distortionCoeffs = b.DistortionCoeffs()
-        distortionCoeffs.k1 = distortion_coeffs[0]
-        distortionCoeffs.k2 = distortion_coeffs[1]
-        distortionCoeffs.p1 = distortion_coeffs[2]
-        distortionCoeffs.p2 = distortion_coeffs[3]
-        distortionCoeffs.k3 = distortion_coeffs[4]
+    cameraMatrix = []
+    distortionCoeffs = []
+    
+    # Handle camera_matrix - check if it's a batch (list of lists) or single list
+    if isinstance(camera_matrix, list) and len(camera_matrix) > 0:
+        if isinstance(camera_matrix[0], list):
+            # Batch mode: list of lists - create a vector of CameraMatrix structs
+            for cam_mat in camera_matrix:
+                cam = b.CameraMatrix()
+                cam.fx = cam_mat[0]
+                cam.cx = cam_mat[1]
+                cam.fy = cam_mat[2]
+                cam.cy = cam_mat[3]
+                cameraMatrix.append(cam)
+        else:
+            # Single mode: single list - create one CameraMatrix struct in a list
+            # The C++ API will replicate this for all images in the batch
+            cam = b.CameraMatrix()
+            cam.fx = camera_matrix[0]
+            cam.cx = camera_matrix[1]
+            cam.fy = camera_matrix[2]
+            cam.cy = camera_matrix[3]
+            cameraMatrix.append(cam)
+    
+    # Handle distortion_coeffs - check if it's a batch (list of lists) or single list
+    if isinstance(distortion_coeffs, list) and len(distortion_coeffs) > 0:
+        if isinstance(distortion_coeffs[0], list):
+            # Batch mode: list of lists - create a vector of DistortionCoeffs structs
+            for dist_coef in distortion_coeffs:
+                dist = b.DistortionCoeffs()
+                dist.k1 = dist_coef[0]
+                dist.k2 = dist_coef[1]
+                dist.p1 = dist_coef[2]
+                dist.p2 = dist_coef[3]
+                dist.k3 = dist_coef[4]
+                distortionCoeffs.append(dist)
+        else:
+            # Single mode: single list - create one DistortionCoeffs struct in a list
+            # The C++ API will replicate this for all images in the batch
+            dist = b.DistortionCoeffs()
+            dist.k1 = distortion_coeffs[0]
+            dist.k2 = distortion_coeffs[1]
+            dist.p1 = distortion_coeffs[2]
+            dist.p2 = distortion_coeffs[3]
+            dist.k3 = distortion_coeffs[4]
+            distortionCoeffs.append(dist)
 
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "camera_matrix": cameraMatrix, "distortion_coeffs": distortionCoeffs, "is_output": False,
@@ -1279,3 +1312,103 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
     log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return log_output
+
+def python_function(*inputs, function, output_dims = [], dtype=None, layout=None):
+    """
+    Invokes a user supplied Python callable on the entire batch (host/CPU only).
+    The callable is identified by its Python id() and executed in the backend kernel.
+    - Input is exposed as a NumPy view of the batch (no copy for input).
+    - The callable must return a NumPy array with matching batch size.
+    - output_dims defaults to input tensor dimensions when not provided.
+    
+    @param inputs (list)                                    The input tensor to process
+    @param function (callable)                              Python function to apply to the batch
+    @param output_dims (list, optional, default = [])       Output tensor dimensions (defaults to input tensor dimensions if not provided)
+    @param dtype (type, optional, default = None)           Output data type (defaults to pipeline dtype)
+    @param layout (type, optional, default = None)          Output tensor layout (defaults to pipeline layout)
+    
+    @return    Transformed tensor after applying the Python function
+    
+    Examples
+    --------
+    >>> def custom_transform(batch):
+    ...     return (batch * 2.0 + 1.0).astype(np.float32)
+    >>> 
+    >>> output = fn.python_function(input_tensor, function=custom_transform, dtype=types.FLOAT)
+    
+    Notes
+    -----
+    - This operation accepts only a single input tensor
+    - This operation is CPU-only and requires the GIL for execution
+    - The input is provided as a zero-copy NumPy view when possible
+    - The function must maintain the batch dimension size
+    - For best performance, avoid heavy computations in the Python function
+    """
+    # Validate inputs
+    if not inputs:
+        raise ValueError("python_function requires at least one input tensor")
+    if len(inputs) != 1:
+        raise ValueError("python_function requires only one input tensor")
+    
+    # Validate that function is callable
+    if not callable(function):
+        raise TypeError(f"Expected callable function, got {type(function).__name__}")
+    
+    # Validate function has correct signature: exactly one REQUIRED POSITIONAL argument
+    import inspect
+    try:
+        sig = inspect.signature(function)
+    except (ValueError, TypeError):
+        # Some callables (builtins or C-extensions) may not yield a signature.
+        # If we can't inspect, we let it fail at runtime.
+        pass
+    else:
+        params = list(sig.parameters.values())
+
+        # Count required positional parameters: POSITIONAL_ONLY or POSITIONAL_OR_KEYWORD without default
+        REQUIRED_POSITIONAL_KINDS = {
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        }
+        num_required_positional = sum(
+            1
+            for p in params
+            if p.kind in REQUIRED_POSITIONAL_KINDS and p.default is inspect.Parameter.empty
+        )
+
+        # Disallow any required keyword-only parameters
+        num_required_keyword_only = sum(
+            1
+            for p in params
+            if p.kind == inspect.Parameter.KEYWORD_ONLY and p.default is inspect.Parameter.empty
+        )
+
+        if num_required_positional != 1:
+            raise ValueError(
+                f"Python function must accept exactly one required positional argument "
+                f"(the input batch). Found {num_required_positional} in signature {sig}."
+            )
+
+        if num_required_keyword_only > 0:
+            raise ValueError(
+                f"Python function must not require keyword-only arguments; "
+                f"found {num_required_keyword_only} required keyword-only parameter(s) in signature {sig}."
+            )
+
+        # Optional parameters (positional with defaults or keyword-only with defaults) are fine.
+        # *args (VAR_POSITIONAL) and **kwargs (VAR_KEYWORD) are also fine.
+
+    function_id = id(function)
+    # Pin the callable to prevent GC; backend uses raw id(pointer)
+    if not hasattr(Pipeline._current_pipeline, "_pyfunc_refs"):
+        Pipeline._current_pipeline._pyfunc_refs = []
+    Pipeline._current_pipeline._pyfunc_refs.append(function)
+    
+    if layout is None:
+        layout = Pipeline._current_pipeline._tensor_layout
+    if dtype is None:
+        dtype = Pipeline._current_pipeline._tensor_dtype
+        
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "function_id": function_id, "output_dims": output_dims, "layout": layout, "dtype": dtype}
+    output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return output

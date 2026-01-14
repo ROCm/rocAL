@@ -109,4 +109,33 @@ extern "C" RocalStatus ROCAL_API_CALL rocalRun(RocalContext context);
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalRelease(RocalContext rocal_context);
 
+/*!
+ * \brief Serialize the current pipeline into an opaque binary string.
+ * \ingroup group_rocal
+ * \param [in] rocal_context the rocAL context
+ * \param [out] serialized_string_size number of bytes in the serialized string
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalSerialize(RocalContext rocal_context, size_t* serialized_string_size);
+
+/*!
+ * \brief Copy the last serialized pipeline string into a user buffer.
+ * \ingroup group_rocal
+ *
+ * This API copies the serialized pipeline string produced by rocalSerialize()
+ * into the user-provided buffer. The buffer must be pre-allocated with size
+ * at least serialized_string_size + 1 bytes to accommodate the null terminator.
+ *
+ * \warning The caller is responsible for ensuring the destination buffer has
+ * sufficient capacity (at least serialized_string_size + 1 bytes as returned by
+ * rocalSerialize). Passing an insufficiently sized buffer will result in buffer
+ * overflow and undefined behavior.
+ *
+ * \param [in] rocal_context the rocAL context
+ * \param [out] serialized_string destination buffer to receive the serialized string (null-terminated).
+ *              Must be pre-allocated with at least serialized_string_size + 1 bytes.
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedString(RocalContext rocal_context, char* serialized_string);
+
 #endif
