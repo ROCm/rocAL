@@ -14,21 +14,24 @@ To create and use a pipeline in your rocAL application, you'll need to import ``
 
   from amd.rocal.pipeline import pipeline_def
 
-Iterators also need to be imported. If you're using :doc:`PyTorch for training <./rocAL-pytorch-framework>`, use the ``ROCALClassificationIterator`` in ``amd.rocal.plugin.pytorch``:
+There are two ways to run a pipeline. The first is using the ``pipeline.run()`` function. This function will run the pipeline exactly once on one batch of files. The second way is to use an iterator that runs all batches of files through the pipeline.
+
+Audio, video, and image iterators are available, with some iterators designed to work with specific framework integrations. For example, if you're using :doc:`PyTorch for training <./rocAL-pytorch-framework>`, you would import the ``ROCALClassificationIterator`` in ``amd.rocal.plugin.pytorch``:
 
 .. code:: python
 
   from amd.rocal.plugin.pytorch import ROCALClassificationIterator
 
-Otherwise, use the generic iterator, ``ROCALClassificationIterator``, in ``amd.rocal.plugin.generic``:
+Generic iterators are imported from ``amd.rocal.plugin.generic``:
 
 .. code:: python
 
   from amd.rocal.plugin.generic import ROCALClassificationIterator
 
+
 A pipeline is created by decorating a graph definition function with ``@pipeline_def``. 
  
-Graph definition functions are user-defined functions that import audio, video, and image files, decode them, and augment them. The ``@pipeline_def`` decorator turns a graph definition function into a pipeline factory. The output of the graph definition function becomes the output of the pipeline.
+Graph definition functions are user-defined functions that import audio, video, or image files, decode them, and augment them. The ``@pipeline_def`` decorator turns a graph definition function into a pipeline factory. The output of the graph definition function becomes the output of the pipeline.
 
 For example, in |decoder.py|_ the graph definition function, ``image_decoder_pipeline``, reads in an image file, decodes it, and resizes it. It then returns the resized image:
 
@@ -50,11 +53,9 @@ For example, in |decoder.py|:
 
 See the :doc:`pipeline API reference <../doxygen/html/pipeline_8py>` for the complete list of parameters.
 
-Once the pipeline is created, ``pipeline.build()`` is called to build the pipeline before the pipeline is run. 
+Once the pipeline is created, ``pipeline.build()`` is called to build the pipeline. The pipeline can only be run after it's been built.
 
-The ``pipeline.run()`` function can be used to explicitly run the pipeline or the pipeline can be run through an iterator.
-
-For example, in |decoder.py| the pipeline is built and run in the ``show_pipeline_output()`` function. The ``build()`` function is called explicitly to build the pipeline. The pipeline is then run as part of the backend of the ``ROCALClassificationIterator``:
+Use an iterator to run the pipeline over every batch of files. In |decoder.py|, the pipeline is run using ``ROCALClassificationIterator``. 
 
 .. code:: python
 
@@ -71,10 +72,10 @@ For example, in |decoder.py| the pipeline is built and run in the ``show_pipelin
     pipe = image_decoder_pipeline(batch_size=bs, num_threads=1, device_id=gpu_id, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC,reverse_channels=True, mean = [0, 0, 0], std=[255,255,255], device=rocal_device, path=img_folder)
     show_pipeline_output(pipe, device=rocal_device)
 
-The pipeline runs until all the input files have been processed.
+The iterator will run the pipeline until all batches of files have been processed.
 
-.. |inference_pipeline.py| replace:: ``decoder.py``
-.. _inference_pipeline.py: https://github.com/ROCm/rocAL/tree/develop/docs/examples/image_processing/inference_pipeline.py
+.. |pipeline.py| replace:: ``pipeline.py``
+.. _pipeline.py: https://github.com/ROCm/rocAL/tree/develop/tests/python_api/pipeline.py
 
 .. |decoder.py| replace:: ``decoder.py``
 .. _decoder.py: https://github.com/ROCm/rocAL/tree/develop/tests/python_api/decoder.py

@@ -8,7 +8,7 @@ The rocAL pipeline
 
 rocAL pipelines are used to load, decode, and augment audio, video, and image files that will be used in training and inference. 
 
-Audio, video, and image data is passed through the pipeline in batches. The next batch is prefetched and loaded while the initial batch is being processed. 
+Audio, video, and image data is passed through the pipeline in batches. 
 
 Pipelines are created from graph definition functions written by the user that have been decorated with ``@pipeline_def``. The ``@pipeline_def`` decorator converts a graph definition function into a pipeline factory.
 
@@ -35,13 +35,15 @@ In addition to the graph, parameters such as the batch size, device ID, and tens
 
 See the :doc:`pipeline API reference <../doxygen/html/pipeline_8py>` for more information on the parameters that are needed to build a pipeline.
 
-Once these parameters are set, the pipeline can be built and run:
+The pipeline is built using ``pipe.build()`` before being run.
+
+There are two ways to run a pipeline. The first is using the ``pipeline.run()`` function. This function will run the pipeline exactly once on a single batch of files. The second way is to use an iterator that prefetches and loads the next batch of files while the initial batch is being processed. 
 
 .. code:: python
 
     pipe.build()
-    flipped, img = pipe.run()
+    data_loader = ROCALClassificationIterator(pipe, device=device)
+    images = next(iter(data_loader))
 
-The output of the pipeline is the output of the original function.
+The output of the pipeline is the output of the graph definition function.
 
-``pipeline.run()`` doesn't need to be called explicitly if an iterator is being used. The rocAL iterators call ``pipeline.rocal_run()`` internally, eliminating the need to call ``pipeline.run()``.
