@@ -2436,3 +2436,49 @@ RocalTensor rocalLog1p(RocalContext p_context,
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalPythonFunction(
+        RocalContext p_context,
+        RocalTensor p_input,
+        bool is_output,
+        unsigned long long function_id,
+        std::vector<size_t> output_dims,
+        RocalTensorLayout output_layout,
+        RocalTensorOutputType output_datatype)
+{
+#ifdef ROCAL_PYTHON_FUNCTION
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input   = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
+
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+        output_info.set_tensor_layout(op_tensor_layout);
+        // If user passes dimensions of the output tensor, set the TensorInfo dims accordingly
+        // The user passed output dimensions won't contain the batch dimension, so it should be added
+        if (!output_dims.empty()) {
+            std::vector<size_t> dims = output_info.dims();
+            if (output_dims.size() != dims.size() - 1)
+                THROW("User passed output dimensions size does not match with the input tensor dimensions")
+            for (size_t i = 1; i < dims.size(); i++)
+                dims[i] = output_dims[i - 1];
+            if (dims != output_info.dims())
+                output_info.set_dims(dims);  // Only modify output tensor dims if it does not match the user specified dims
+        }
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<PythonFunctionNode>({input}, {output})->init(function_id);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+#else
+        THROW("PythonFunction node is not enabled since python/pybind11 is not present")
+#endif
+}
