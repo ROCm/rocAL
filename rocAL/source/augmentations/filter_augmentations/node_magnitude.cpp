@@ -32,7 +32,7 @@ void MagnitudeNode::create_node() {
 
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 3)
     if (_inputs.size() < 2)
-        THROW("Magnitude node needs two input tensors")
+        THROW("Magnitude node needs two input tensors");
 
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
