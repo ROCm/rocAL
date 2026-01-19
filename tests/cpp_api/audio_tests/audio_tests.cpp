@@ -151,11 +151,6 @@ int main(int argc, const char **argv) {
     if (argc > argIdx)
         qa_mode = atoi(argv[argIdx++]);
 
-    if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
-        std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
-        gpu = false;
-    }
-
     int return_val = test(test_case, path, qa_mode, downmix, gpu);
     return return_val;
 }
