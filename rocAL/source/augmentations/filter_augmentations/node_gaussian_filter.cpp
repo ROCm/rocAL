@@ -69,7 +69,7 @@ void GaussianFilterNode::create_node() {
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the gaussian filter (vxExtRppGaussianFilter) node failed: " + TOSTR(status))
+        THROW("Adding the gaussian filter (vxExtRppGaussianFilter) node failed: " + TOSTR(status));
 #else
     THROW("GaussianFilterNode: vxExtRppGaussianFilter requires amd_rpp version >= 3.1.2");
 #endif

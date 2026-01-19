@@ -66,7 +66,7 @@ void GridMaskNode::create_node() {
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the grid mask (vxExtRppGridMask) node failed: " + TOSTR(status))
+        THROW("Adding the grid mask (vxExtRppGridMask) node failed: " + TOSTR(status));
 #else
     THROW("GridMaskNode: vxExtRppGridMask requires amd_rpp version >= 3.1.2");
 #endif
