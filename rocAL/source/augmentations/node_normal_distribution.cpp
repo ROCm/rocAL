@@ -37,7 +37,7 @@ void NormalDistributionNode::create_node() {
         update_param();
         _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     }
-    _outputs[0]->swap_handle((void *)_normal_distribution_array.data());
+    _outputs[0]->swap_handle((void *)_normal_distribution_array);
 }
 
 void NormalDistributionNode::update_node() {
@@ -55,8 +55,28 @@ void NormalDistributionNode::update_param() {
 void NormalDistributionNode::init(float mean, float std_dev) {
     _mean = mean;
     _std_dev = std_dev;
-    _normal_distribution_array.resize(_batch_size);
+    if (_outputs[0]->info().mem_type() != RocalMemType::HOST) {
+#if ENABLE_HIP
+        hipError_t err = hipHostMalloc(&_normal_distribution_array, _batch_size * sizeof(float));
+        if (err != hipSuccess || !_normal_distribution_array)
+            THROW("hipHostMalloc of size " + TOSTR(_batch_size * sizeof(float)) + " failed " + TOSTR(err))
+#endif
+    } else {
+        _normal_distribution_array = new float[_batch_size];
+    }
     BatchRNG<std::mt19937> rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
     _rngs = rng;
     update_param();
+}
+
+NormalDistributionNode::~NormalDistributionNode() {
+    if (_outputs[0]->info().mem_type() != RocalMemType::HOST) {
+#if ENABLE_HIP
+        hipError_t err = hipHostFree(_normal_distribution_array);
+        if (err != hipSuccess)
+            std::cerr << "\n[ERR] hipFree failed for normal distribution " << std::to_string(err) << "\n";
+#endif
+    } else {
+        delete[] _normal_distribution_array;
+    }
 }
