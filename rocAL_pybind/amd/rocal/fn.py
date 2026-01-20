@@ -1412,3 +1412,118 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "function_id": function_id, "output_dims": output_dims, "layout": layout, "dtype": dtype}
     output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return output
+
+def color_cast(*inputs, alpha=1.0, rgb=[0.0, 0.0, 0.0], device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies color cast by blending a target RGB color with the input using alpha.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param alpha (float or FloatParam, default = 1.0)                            blending amount for the cast (0..1). If float, wrapped into a FloatParam.
+        @param rgb (list of floats, default = [0.0, 0.0, 0.0])                       target color to cast; can be a single triplet [r,g,b] or per-sample triplets with length batch*3
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image with color cast applied
+    """
+    alpha = b.createFloatParameter(alpha) if isinstance(alpha, float) else alpha
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "p_alpha": alpha, "rgb": rgb,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    color_cast_image = b.colorCast(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (color_cast_image)
+
+def grid_mask(*inputs, tile_width=16, grid_ratio=0.5, grid_angle=0.0, translate_x=0, translate_y=0,
+              device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies GridMask effect by overlaying a grid of tiles with a masked ratio.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param tile_width (int, default = 16)                                        width of each grid tile in pixels
+        @param grid_ratio (float, default = 0.5)                                     ratio of masked area within a tile (0..1)
+        @param grid_angle (float, default = 0.0)                                     angle of the grid in radians
+        @param translate_x (int, default = 0)                                        translation offset in x for the grid origin
+        @param translate_y (int, default = 0)                                        translation offset in y for the grid origin
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image with grid mask effect applied
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "tile_width": tile_width,
+        "grid_ratio": grid_ratio,
+        "grid_angle": grid_angle,
+        "translate_x": translate_x,
+        "translate_y": translate_y,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    grid_mask_image = b.gridMask(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (grid_mask_image)
+
+def median_filter(*inputs, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies median filter to images.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param kernel_size (int, default = 3)                                        median filter kernel size (pixels), typically odd: 3,5,7
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image after median filtering
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "kernel_size": kernel_size,
+        "border_type": border_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.medianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+
+def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies gaussian filter to images with per-sample stddev parameter.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam
+        @param kernel_size (int, default = 3)                                        gaussian filter kernel size (pixels), typically odd: 3,5,7
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image after gaussian filtering
+    """
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "stddev": stddev,
+        "kernel_size": kernel_size,
+        "border_type": border_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.gaussianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def non_linear_blend(*inputs, stddev=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Non-linear blend of two input images using per-sample stddev parameter.
+
+        @param inputs                                                                 list containing two input images
+        @param stddev (float, optional, default = None)                              standard deviation parameter controlling non-linear blend
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    non-linearly blended image
+    """
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "stddev": stddev,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    output_image = b.nonLinearBlend(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)

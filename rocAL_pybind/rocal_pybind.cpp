@@ -790,6 +790,11 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
         .value("MISSING_COMPONENT_EMPTY", ROCAL_MISSING_COMPONENT_EMPTY)
         .export_values();
+    py::enum_<RocalImageBorderType>(types_m,"RocalImageBorderType", "Rocal Image Border Type")
+        .value("REPLICATE", ROCAL_REPLICATE)
+        .value("CONSTANT", ROCAL_CONSTANT)
+        .value("REFLECT_NO_EDGE", ROCAL_REFLECT_NO_EDGE)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -1201,8 +1206,18 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("transpose", &rocalTranspose,
           py::return_value_policy::reference);
     m.def("log1p", &rocalLog1p,
-           py::return_value_policy::reference);
+          py::return_value_policy::reference);
     m.def("pythonFunction", &rocalPythonFunction,
-           py::return_value_policy::reference);
+          py::return_value_policy::reference);
+    m.def("colorCast", &rocalColorCast,
+          py::return_value_policy::reference);
+    m.def("gridMask", &rocalGridMask,
+          py::return_value_policy::reference);
+    m.def("gaussianFilter", &rocalGaussianFilter,
+          py::return_value_policy::reference);
+    m.def("medianFilter", &rocalMedianFilter,
+          py::return_value_policy::reference);
+    m.def("nonLinearBlend", &rocalNonLinearBlend,
+          py::return_value_policy::reference);
 }
 }  // namespace rocal
