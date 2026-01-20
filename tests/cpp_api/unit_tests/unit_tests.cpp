@@ -597,7 +597,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || 
+        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 || test_case == 64 || test_case == 65) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -883,6 +884,52 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::vector<float> area_factor = {0.08, 1};
             std::vector<float> aspect_ratio = {3.0f / 4, 4.0f / 3};
             output = rocalRandomResizedCrop(handle, input, resize_w, resize_h, true, area_factor, aspect_ratio);
+        } break;
+        case 64: {
+            std::cout << "Running rocalColorCast" << std::endl;
+            std::vector<float> rgb = {12.0f, 0.0f, 100.00f};
+            output = rocalColorCast(handle, input, true, nullptr, rgb, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 65: {
+            std::cout << "Running rocalColorCastFixed" << std::endl;
+            std::vector<float> rgb = {12.0f, 0.0f, 100.0f};
+            output = rocalColorCastFixed(handle, input, 0.5f, rgb, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 66: {
+            std::cout << "Running rocalGridMask" << std::endl;
+            unsigned tile_width = 40;
+            float grid_ratio = 0.6f;
+            float grid_angle = 0.5f; // radians
+            unsigned translate_x = 0;
+            unsigned translate_y = 0;
+            output = rocalGridMask(handle, input, true, tile_width, grid_ratio, grid_angle, translate_x, translate_y, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 67: {
+            std::cout << "Running rocalNonLinearBlend" << std::endl;
+            RocalTensor output_1 = rocalRotate(handle, input, false);
+            RocalFloatParam stddev_param = rocalCreateFloatParameter(40.0f);
+            output = rocalNonLinearBlend(handle, input, output_1, true, stddev_param, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 68: {
+            std::cout << "Running rocalNonLinearBlendFixed" << std::endl;
+            RocalTensor output_1 = rocalRotateFixed(handle, input, 45, false);
+            float stddev = 50.0f;
+            output = rocalNonLinearBlendFixed(handle, input, output_1, stddev, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 69: {
+            std::cout << "Running rocalMedianFilter" << std::endl;
+            int kernel = 3;
+            auto border_type = RocalImageBorderType::ROCAL_REPLICATE;
+            output = rocalMedianFilter(handle, input, true, kernel, border_type, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 70: {
+            std::cout << "Running rocalGaussianFilter" << std::endl;
+            // Use existing float_param defined earlier as per-sample stddev
+            output = rocalGaussianFilter(handle, input, true, nullptr, 3, RocalImageBorderType::ROCAL_REPLICATE, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 71: {
+            std::cout << "Running rocalGaussianFilterFixed" << std::endl;
+            output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, RocalImageBorderType::ROCAL_REPLICATE, true, output_tensor_layout, output_tensor_dtype);
         } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
