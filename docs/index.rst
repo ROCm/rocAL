@@ -8,7 +8,7 @@
 rocAL documentation
 ********************************************************************
 
-The ROCm Augmentation Library (rocAL) is a Python library that provides a way to customize video pipelines for different datasets and models, improving the throughput and performance of deep learning applications. rocAL is optimized for loading and pre-processing data for deep learning applications, with support for multiple data formats and augmentations. 
+The ROCm Augmentation Library (rocAL) is a Python library that provides a way to customize audio, video, and image pipelines for different datasets and models, improving the throughput and performance of deep learning applications. rocAL is optimized for loading and pre-processing data for deep learning applications, with support for multiple data formats and augmentations. 
 
 The rocAL public repository is located at `https://github.com/ROCm/rocAL <https://github.com/ROCm/rocAL>`_.
 

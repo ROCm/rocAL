@@ -49,7 +49,7 @@ For example, in |decoder.py|:
 
 .. code:: python
 
-  pipe = image_decoder_pipeline(batch_size=bs, num_threads=1, device_id=gpu_id, rocal_cpu=rocal_cpu, tensor_layout=types.   NHWC, reverse_channels=True, mean = [0, 0, 0], std=[255,255,255], device=rocal_device, path=img_folder)
+  pipe = image_decoder_pipeline(batch_size=bs, num_threads=1, device_id=gpu_id, rocal_cpu=rocal_cpu, tensor_layout=types.NHWC, reverse_channels=True, mean = [0, 0, 0], std=[255,255,255], device=rocal_device, path=img_folder)
 
 See the :doc:`pipeline API reference <../doxygen/html/pipeline_8py>` for the complete list of parameters.
 
