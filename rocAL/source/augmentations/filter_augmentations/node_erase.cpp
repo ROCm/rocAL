@@ -43,7 +43,7 @@ inline vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
         case RocalTensorDataType::INT16:
             return VX_TYPE_INT16;
         default:
-            THROW("Unsupported Tensor type " + TOSTR(data_type))
+            THROW("Unsupported Tensor type " + TOSTR(data_type));
     }
 }
 
@@ -171,7 +171,7 @@ void EraseNode::create_node() {
 
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the erase (vxExtRppErase) node failed: " + TOSTR(status))
+        THROW("Adding the erase (vxExtRppErase) node failed: " + TOSTR(status));
 #else
     THROW("EraseNode: vxExtRppErase requires amd_rpp version >= 3.1.4");
 #endif
