@@ -1489,7 +1489,7 @@ def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=types.REPLI
     """!Applies gaussian filter to images with per-sample stddev parameter.
 
         @param inputs                                                                the input image passed to the augmentation
-        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam.
+        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam. When None, the backend uses its default random parameterization.
         @param kernel_size (int, default = 3)                                        gaussian filter kernel size (pixels), typically odd: 3,5,7
         @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
         @param device (string, optional, default = None)                             Parameter unused for augmentation
