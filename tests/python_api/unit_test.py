@@ -91,7 +91,7 @@ def main():
     if (scaling_mode != types.SCALING_MODE_DEFAULT and interpolation_type !=
             types.LINEAR_INTERPOLATION):
         interpolation_type = types.LINEAR_INTERPOLATION
-    if augmentation_name in ["hue", "saturation", "color_twist"] and color_format == types.GRAY:
+    if augmentation_name in ["hue", "saturation", "color_twist", "color_cast", "non_linear_blend"] and color_format == types.GRAY:
         print("Not a valid option! Exiting!")
         sys.exit(0)
 
@@ -494,6 +494,46 @@ def main():
                              output_dtype=tensor_dtype)
             num_classes = len(next(os.walk(data_path))[1])
             labels_onehot = fn.one_hot(labels, num_classes=num_classes)
+        elif augmentation_name == "color_cast":
+            output = fn.color_cast(images,
+                                   alpha=0.5,
+                                   rgb=[12.0, 0.0, 100.0],
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
+        elif augmentation_name == "grid_mask":
+            output = fn.grid_mask(images,
+                                  tile_width=40,
+                                  grid_ratio=0.6,
+                                  grid_angle=0.5,
+                                  translate_x=0,
+                                  translate_y=0,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "non_linear_blend":
+            output1 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=416,
+                                dest_height=416,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.non_linear_blend(images,
+                                         output1,
+                                         stddev=50.0,
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype)
+        elif augmentation_name == "median_filter":
+            output = fn.median_filter(images,
+                                      kernel_size=3,
+                                      border_type=types.REPLICATE,
+                                      output_layout=tensor_layout,
+                                      output_dtype=tensor_dtype)
+        elif augmentation_name == "gaussian_filter":
+            output = fn.gaussian_filter(images,
+                                        stddev=5.0,
+                                        kernel_size=3,
+                                        border_type=types.REPLICATE,
+                                        output_layout=tensor_layout,
+                                        output_dtype=tensor_dtype)
 
         if output_set == 0:
             pipe.set_outputs(output)
