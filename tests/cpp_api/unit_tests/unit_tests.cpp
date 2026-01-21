@@ -931,6 +931,48 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalGaussianFilterFixed" << std::endl;
             output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, RocalImageBorderType::ROCAL_REPLICATE, true, output_tensor_layout, output_tensor_dtype);
         } break;
+        case 72: {
+            std::cout << "Running rocalDilate" << std::endl;
+            output = rocalDilate(handle, input, true, 3, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 73: {
+            std::cout << "Running rocalErode" << std::endl;
+            output = rocalErode(handle, input, true, 3, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 74: {
+            std::cout << "Running rocalMagnitude" << std::endl;
+            // Create a second tensor by rotating the input; use as second input to magnitude
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45.0f, false);
+            output = rocalMagnitude(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 75: {
+            std::cout << "Running rocalPhase" << std::endl;
+            // Create a second tensor by rotating the input; use as second input to phase
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45.0f, false);
+            output = rocalPhase(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 76: {
+            std::cout << "Running rocalThreshold" << std::endl;
+            std::vector<float> min_threshold;
+            std::vector<float> max_threshold;
+            if (rgb) {
+                min_threshold = {30.0f, 30.0f, 30.0f};
+                max_threshold = {100.0f, 100.0f, 100.0f};
+            } else {
+                min_threshold = {30.0f};
+                max_threshold = {100.0f};
+            }
+
+            output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 77: {
+            std::cout << "Running rocalWarpPerspective" << std::endl;
+            std::vector<float> perspective_1d_matrix = {0.93f, 0.5f, 0.0f,
+                                                        -0.5f, 0.93f, 0.0f,
+                                                        0.005f, 0.005f, 1.0f};
+            output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
+
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

@@ -36,7 +36,7 @@ void NonLinearBlendNode::create_node() {
 
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
     if (_inputs.size() < 2)
-        THROW("NonLinearBlend node needs two input images")
+        THROW("NonLinearBlend node needs two input images");
 
     _stddev.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
 
@@ -56,7 +56,7 @@ void NonLinearBlendNode::create_node() {
                                    input_layout_vx, output_layout_vx, roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the NonLinearBlend (vxExtRppNonLinearBlend) node failed: " + TOSTR(status))
+        THROW("Adding the NonLinearBlend (vxExtRppNonLinearBlend) node failed: " + TOSTR(status));
 #else
     THROW("NonLinearBlendNode: vxExtRppNonLinearBlend requires amd_rpp version >= 3.1.2");
 #endif
