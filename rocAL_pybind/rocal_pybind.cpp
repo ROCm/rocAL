@@ -1219,5 +1219,17 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("nonLinearBlend", &rocalNonLinearBlend,
           py::return_value_policy::reference);
+    m.def("dilate", &rocalDilate,
+          py::return_value_policy::reference);
+    m.def("erode", &rocalErode,
+          py::return_value_policy::reference);
+    m.def("magnitude", &rocalMagnitude,
+          py::return_value_policy::reference);
+    m.def("phase", &rocalPhase,
+          py::return_value_policy::reference);
+    m.def("threshold", &rocalThreshold,
+          py::return_value_policy::reference);
+    m.def("warpPerspective", &rocalWarpPerspective,
+          py::return_value_policy::reference);
 }
 }  // namespace rocal
