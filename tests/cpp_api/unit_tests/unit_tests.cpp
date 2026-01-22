@@ -1142,7 +1142,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             return -1;
         }
         int image_name_length[input_batch_size];
-        /*
         switch (pipeline_type) {
             case 1: {   // classification pipeline
                 RocalTensorList labels = rocalGetImageLabels(handle);
@@ -1323,7 +1322,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 return -1;
             }
         }
-        */
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 

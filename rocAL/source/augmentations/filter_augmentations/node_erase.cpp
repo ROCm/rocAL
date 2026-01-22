@@ -28,25 +28,6 @@ THE SOFTWARE.
 #include "pipeline/tensor.h"
 #include <cstring>
 
-inline vx_enum interpret_tensor_data_type(RocalTensorDataType data_type) {
-    switch (data_type) {
-        case RocalTensorDataType::FP32:
-            return VX_TYPE_FLOAT32;
-        case RocalTensorDataType::FP16:
-            return VX_TYPE_FLOAT16;
-        case RocalTensorDataType::UINT8:
-            return VX_TYPE_UINT8;
-        case RocalTensorDataType::UINT32:
-            return VX_TYPE_UINT32;
-        case RocalTensorDataType::INT32:
-            return VX_TYPE_INT32;
-        case RocalTensorDataType::INT16:
-            return VX_TYPE_INT16;
-        default:
-            THROW("Unsupported Tensor type " + TOSTR(data_type));
-    }
-}
-
 EraseNode::EraseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs) {}
 
@@ -70,16 +51,15 @@ void EraseNode::create_node() {
     vx_enum vx_mem = (mem_type == RocalMemType::HIP) ? VX_MEMORY_TYPE_HIP : VX_MEMORY_TYPE_HOST;
     
     // NumBox tensor handle
-    vx_size num_box_dims[1]   = {_batch_size};
-    vx_size num_box_stride[1] = {0};
-    num_box_stride[0] = sizeof(vx_uint32);
+    vx_size num_box_dims = _batch_size;
+    vx_size num_box_stride = sizeof(vx_uint32);
 
-    size_t bytes_a = num_box_stride[0] * num_box_dims[0];
+    size_t bytes_a = num_box_stride * num_box_dims;
     allocate_host_or_pinned_mem(&_num_box_ptr, bytes_a, mem_type);
     std::memcpy(_num_box_ptr, _num_boxes_vec.data(), bytes_a);
 
     vx_tensor _num_boxes_vx = vxCreateTensorFromHandle(vxGetContext((vx_reference)_graph->get()),
-                                            1, num_box_dims, VX_TYPE_UINT32, 0, num_box_stride, _num_box_ptr, vx_mem);
+                                            1, &num_box_dims, VX_TYPE_UINT32, 0, &num_box_stride, _num_box_ptr, vx_mem);
     if (!_num_boxes_vx) THROW("vxCreateTensorFromHandle for num_box tensor failed");
     {
         vx_status s = vxGetStatus((vx_reference)_num_boxes_vx);
