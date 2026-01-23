@@ -152,6 +152,7 @@ class NumpyDataReader : public Reader {
     bool ensure_hipfile_scratch(size_t size_in_bytes);
     void* _hipfile_handle = nullptr;
     void* _hipfile_scratch = nullptr;
+    void* _hipfile_scratch_alloc = nullptr;
     size_t _hipfile_scratch_size = 0;
     size_t _hipfile_file_size = 0;
     bool _hipfile_scratch_registered = false;

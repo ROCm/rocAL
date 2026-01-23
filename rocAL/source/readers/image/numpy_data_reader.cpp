@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <cassert>
 #include <cerrno>
 #include <cstring>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <math.h>
@@ -32,6 +33,7 @@ THE SOFTWARE.
 #include "readers/image/numpy_data_reader.h"
 
 #if ENABLE_HIP && ENABLE_HIPFILE
+#include <cstdint>
 #include <cstdlib>
 #include <strings.h>
 #include <sys/stat.h>
@@ -65,7 +67,18 @@ THE SOFTWARE.
 
 #if ENABLE_HIP && ENABLE_HIPFILE
 namespace {
+/*
+ * hipFile Integration Notes:
+ * - hipFile enables direct-to-GPU reads (GPU Direct Storage).
+ * - The AMD fastpath requires 4KB-aligned file offsets, buffer offsets, and IO sizes.
+ * - NumPy payload offsets are typically not 4KB-aligned, so we read an aligned window into a
+ *   reusable device scratch buffer and then copy the requested subrange into the final output.
+ * - If HIPFILE_FORCE_COMPAT_MODE=true, hipFile would internally add extra copies, so we bypass it.
+ */
+
+// hipFile fastpath uses 4KB/page alignment when statx dio-align data is unavailable.
 constexpr size_t kHipFileAlignment = 4096;
+// hipFileRead() max transfer size (~2GiB - 4KiB) from hipFile's MAX_RW_COUNT.
 constexpr size_t kHipFileMaxIoSize = 0x7ffff000LU;
 
 inline size_t align_down(size_t value, size_t alignment) {
@@ -73,12 +86,19 @@ inline size_t align_down(size_t value, size_t alignment) {
 }
 
 inline size_t align_up(size_t value, size_t alignment) {
-    return (value + alignment - 1) & ~(alignment - 1);
+    const size_t mask = alignment - 1;
+    if (value > (std::numeric_limits<size_t>::max() - mask)) {
+        return std::numeric_limits<size_t>::max() & ~mask;
+    }
+    return (value + mask) & ~mask;
 }
 
 inline bool hipfile_forced_compat_mode() {
-    const char* v = std::getenv("HIPFILE_FORCE_COMPAT_MODE");
-    return v && (!strcasecmp(v, "true"));
+    static const bool cached = [] {
+        const char* v = std::getenv("HIPFILE_FORCE_COMPAT_MODE");
+        return v && (!strcasecmp(v, "true"));
+    }();
+    return cached;
 }
 }  // namespace
 #endif
@@ -474,7 +494,7 @@ int NumpyDataReader::close() {
 NumpyDataReader::~NumpyDataReader() {
     release();
 #if ENABLE_HIP && ENABLE_HIPFILE
-    if (_hipfile_scratch) {
+    if (_hipfile_scratch_alloc) {
         if (_hipfile_scratch_device_id >= 0) {
             (void)hipSetDevice(_hipfile_scratch_device_id);
         }
@@ -482,7 +502,8 @@ NumpyDataReader::~NumpyDataReader() {
             (void)hipFileBufDeregister(_hipfile_scratch);
             _hipfile_scratch_registered = false;
         }
-        (void)hipFree(_hipfile_scratch);
+        (void)hipFree(_hipfile_scratch_alloc);
+        _hipfile_scratch_alloc = nullptr;
         _hipfile_scratch = nullptr;
         _hipfile_scratch_size = 0;
         _hipfile_scratch_device_id = -1;
@@ -703,7 +724,7 @@ bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
         return _hipfile_scratch_registered;
     }
 
-    if (_hipfile_scratch) {
+    if (_hipfile_scratch_alloc) {
         if (_hipfile_scratch_registered) {
             (void)hipFileBufDeregister(_hipfile_scratch);
             _hipfile_scratch_registered = false;
@@ -711,17 +732,23 @@ bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
         if (_hipfile_scratch_device_id >= 0) {
             (void)hipSetDevice(_hipfile_scratch_device_id);
         }
-        (void)hipFree(_hipfile_scratch);
+        (void)hipFree(_hipfile_scratch_alloc);
+        _hipfile_scratch_alloc = nullptr;
         _hipfile_scratch = nullptr;
         _hipfile_scratch_size = 0;
         _hipfile_scratch_device_id = -1;
     }
 
-    auto hip_status = hipMalloc(&_hipfile_scratch, size_in_bytes);
-    if (hip_status != hipSuccess || !_hipfile_scratch) {
+    const size_t alloc_size = size_in_bytes + (kHipFileAlignment - 1);
+    auto hip_status = hipMalloc(&_hipfile_scratch_alloc, alloc_size);
+    if (hip_status != hipSuccess || !_hipfile_scratch_alloc) {
         WRN("hipMalloc failed for Numpy hipFile scratch buffer: " + TOSTR(hip_status))
         return false;
     }
+
+    const uintptr_t addr = reinterpret_cast<uintptr_t>(_hipfile_scratch_alloc);
+    const uintptr_t aligned_addr = (addr + (kHipFileAlignment - 1)) & ~(static_cast<uintptr_t>(kHipFileAlignment - 1));
+    _hipfile_scratch = reinterpret_cast<void*>(aligned_addr);
     _hipfile_scratch_size = size_in_bytes;
     int device_id = -1;
     if (hipGetDevice(&device_id) == hipSuccess) {
