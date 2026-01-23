@@ -33,10 +33,8 @@ THE SOFTWARE.
 
 #if ENABLE_HIP && ENABLE_HIPFILE
 #include <cstdlib>
-#include <fcntl.h>
 #include <strings.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include <hip/hip_runtime_api.h>
 #include <hipfile.h>
@@ -76,12 +74,6 @@ inline size_t align_down(size_t value, size_t alignment) {
 
 inline size_t align_up(size_t value, size_t alignment) {
     return (value + alignment - 1) & ~(alignment - 1);
-}
-
-inline bool is_device_ptr(const void* ptr) {
-    hipPointerAttribute_t attrs{};
-    auto status = hipPointerGetAttributes(&attrs, ptr);
-    return (status == hipSuccess) && (attrs.type == hipMemoryTypeDevice);
 }
 
 inline bool hipfile_forced_compat_mode() {
@@ -328,7 +320,14 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     auto data_type_size = tensor_data_size(_curr_file_header.type());
 
 #if ENABLE_HIP && ENABLE_HIPFILE
-    if (is_device_ptr(buf)) {
+    if (!_output_is_device_initialized) {
+        hipPointerAttribute_t attrs{};
+        auto status = hipPointerGetAttributes(&attrs, buf);
+        _output_is_device = (status == hipSuccess) && (attrs.type == hipMemoryTypeDevice);
+        _output_is_device_initialized = true;
+    }
+
+    if (_output_is_device) {
         // hipFile path currently supports only contiguous output layouts
         if (!hipfile_forced_compat_mode() && strides_in_dims[0] == _curr_file_header.size() && ensure_hipfile_open() && _hipfile_file_size > 0) {
             const size_t file_size = _hipfile_file_size;
@@ -476,9 +475,8 @@ NumpyDataReader::~NumpyDataReader() {
     release();
 #if ENABLE_HIP && ENABLE_HIPFILE
     if (_hipfile_scratch) {
-        hipPointerAttribute_t attrs{};
-        if (hipPointerGetAttributes(&attrs, _hipfile_scratch) == hipSuccess) {
-            (void)hipSetDevice(attrs.device);
+        if (_hipfile_scratch_device_id >= 0) {
+            (void)hipSetDevice(_hipfile_scratch_device_id);
         }
         if (_hipfile_scratch_registered) {
             (void)hipFileBufDeregister(_hipfile_scratch);
@@ -487,6 +485,7 @@ NumpyDataReader::~NumpyDataReader() {
         (void)hipFree(_hipfile_scratch);
         _hipfile_scratch = nullptr;
         _hipfile_scratch_size = 0;
+        _hipfile_scratch_device_id = -1;
     }
 #endif
 }
@@ -494,11 +493,11 @@ NumpyDataReader::~NumpyDataReader() {
 int NumpyDataReader::release() {
     if (!_current_file_ptr)
         return 0;
-    fclose(_current_file_ptr);
-    _current_file_ptr = nullptr;
 #if ENABLE_HIP && ENABLE_HIPFILE
     close_hipfile();
 #endif
+    fclose(_current_file_ptr);
+    _current_file_ptr = nullptr;
     return 0;
 }
 
@@ -652,10 +651,6 @@ void NumpyDataReader::close_hipfile() {
         hipFileHandleDeregister(reinterpret_cast<hipFileHandle_t>(_hipfile_handle));
         _hipfile_handle = nullptr;
     }
-    if (_hipfile_fd >= 0) {
-        ::close(_hipfile_fd);
-        _hipfile_fd = -1;
-    }
     _hipfile_open_path.clear();
     _hipfile_file_size = 0;
 }
@@ -666,33 +661,18 @@ bool NumpyDataReader::ensure_hipfile_open() {
     }
 
     close_hipfile();
-    if (_last_file_path.empty()) {
+    if (_last_file_path.empty() || !_current_file_ptr) {
         return false;
     }
 
-    int flags = O_RDONLY;
-#ifdef O_CLOEXEC
-    flags |= O_CLOEXEC;
-#endif
-#ifdef O_DIRECT
-    flags |= O_DIRECT;
-#endif
-    _hipfile_fd = ::open(_last_file_path.c_str(), flags);
-    if (_hipfile_fd < 0) {
-        // Fall back to non-O_DIRECT open; hipFile will attempt to open an unbuffered FD internally.
-        int fallback_flags = O_RDONLY;
-#ifdef O_CLOEXEC
-        fallback_flags |= O_CLOEXEC;
-#endif
-        _hipfile_fd = ::open(_last_file_path.c_str(), fallback_flags);
-        if (_hipfile_fd < 0) {
-            WRN("Failed to open file for hipFile: " + _last_file_path + " (" + std::strerror(errno) + ")")
-            return false;
-        }
+    const int client_fd = ::fileno(_current_file_ptr);
+    if (client_fd < 0) {
+        WRN("Failed to get file descriptor for hipFile: " + _last_file_path)
+        return false;
     }
 
     struct stat st {};
-    if (::fstat(_hipfile_fd, &st) == 0 && st.st_size > 0) {
+    if (::fstat(client_fd, &st) == 0 && st.st_size > 0) {
         _hipfile_file_size = static_cast<size_t>(st.st_size);
     } else {
         _hipfile_file_size = 0;
@@ -700,14 +680,12 @@ bool NumpyDataReader::ensure_hipfile_open() {
 
     hipFileDescr_t descr{};
     descr.type = hipFileHandleTypeOpaqueFD;
-    descr.handle.fd = _hipfile_fd;
+    descr.handle.fd = client_fd;
 
     hipFileHandle_t handle = nullptr;
     auto err = hipFileHandleRegister(&handle, &descr);
     if (err.err != hipFileSuccess) {
         WRN("hipFileHandleRegister failed for " + _last_file_path + ": " + std::string(hipFileGetOpErrorString(err.err)))
-        ::close(_hipfile_fd);
-        _hipfile_fd = -1;
         _hipfile_file_size = 0;
         return false;
     }
@@ -722,7 +700,7 @@ bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
         return false;
     }
     if (_hipfile_scratch && _hipfile_scratch_size >= size_in_bytes) {
-        return true;
+        return _hipfile_scratch_registered;
     }
 
     if (_hipfile_scratch) {
@@ -730,9 +708,13 @@ bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
             (void)hipFileBufDeregister(_hipfile_scratch);
             _hipfile_scratch_registered = false;
         }
+        if (_hipfile_scratch_device_id >= 0) {
+            (void)hipSetDevice(_hipfile_scratch_device_id);
+        }
         (void)hipFree(_hipfile_scratch);
         _hipfile_scratch = nullptr;
         _hipfile_scratch_size = 0;
+        _hipfile_scratch_device_id = -1;
     }
 
     auto hip_status = hipMalloc(&_hipfile_scratch, size_in_bytes);
@@ -741,10 +723,17 @@ bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
         return false;
     }
     _hipfile_scratch_size = size_in_bytes;
+    int device_id = -1;
+    if (hipGetDevice(&device_id) == hipSuccess) {
+        _hipfile_scratch_device_id = device_id;
+    }
 
     auto hipfile_err = hipFileBufRegister(_hipfile_scratch, _hipfile_scratch_size, 0);
     _hipfile_scratch_registered = (hipfile_err.err == hipFileSuccess);
-    return true;
+    if (!_hipfile_scratch_registered) {
+        WRN("hipFileBufRegister failed for Numpy hipFile scratch buffer: " + std::string(hipFileGetOpErrorString(hipfile_err.err)))
+    }
+    return _hipfile_scratch_registered;
 }
 #endif
 

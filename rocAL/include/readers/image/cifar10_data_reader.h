@@ -95,11 +95,13 @@ class CIFAR10DataReader : public Reader {
     void close_hipfile();
     bool ensure_hipfile_open();
     bool ensure_hipfile_scratch(size_t size_in_bytes);
-    int _hipfile_fd = -1;
     void* _hipfile_handle = nullptr;
     void* _hipfile_scratch = nullptr;
     size_t _hipfile_scratch_size = 0;
     bool _hipfile_scratch_registered = false;
+    int _hipfile_scratch_device_id = -1;
+    bool _output_is_device = false;
+    bool _output_is_device_initialized = false;
     std::string _hipfile_open_path;
     std::vector<unsigned char> _host_staging;
 #endif
