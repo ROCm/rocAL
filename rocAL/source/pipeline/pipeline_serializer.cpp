@@ -143,10 +143,11 @@ void serialize_parameter_to_protobuf(rocal_proto::Parameter *parameter, const Ar
     }
 }
 
-void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef) {
+void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments_list, rocal_proto::OperatorDef *opdef) {
 
     // Iterate through each argument to store in the protobuffers
-    for (auto &op_arg : arguments_list) {
+    for (auto &arg_pair : arguments_list) {
+        const Argument& op_arg = arg_pair.second;
         rocal_proto::Arguments *arg = opdef->add_args();
         arg->set_name(op_arg.arg_name);
         arg->set_type(op_arg.type_name);

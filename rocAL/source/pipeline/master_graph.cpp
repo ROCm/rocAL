@@ -1182,8 +1182,8 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
     auto reader_op = std::make_shared<PipelineOperator>("LabelReader_" + std::to_string(_op_idx++), "reader");
 
     // Add all arguments as part of the operator
-    reader_op->arguments.push_back(Argument("source_path", source_path));
-    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
 
     _pipeline_operators.push_back(reader_op);
 
