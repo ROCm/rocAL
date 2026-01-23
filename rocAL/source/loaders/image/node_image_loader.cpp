@@ -118,7 +118,7 @@ void ImageLoaderNode::save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
 std::string ImageLoaderNode::serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
     auto loader_state = op_ckpt->GetOperatorCheckpointState<LoaderState>();
     rocal_proto::LoaderState proto_state;
-    proto_state.set_current_epoch(static_cast<int32_t>(loader_state._epoch_number));
+    proto_state.set_current_epoch(static_cast<int32_t>(loader_state.epoch_number));
     // Backward compatibility - keep age as iteration if someone relies on it
     proto_state.set_age(static_cast<int32_t>(loader_state._iteration_number));
     proto_state.set_iteration_number(static_cast<int64_t>(loader_state._iteration_number));

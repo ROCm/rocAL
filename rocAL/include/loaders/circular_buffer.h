@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "device/device_manager_hip.h"
 
 struct LoaderState {
-    int64_t _epoch_number = 0;
+    int64_t epoch_number = 0;
     int64_t _iteration_number = 0;
     std::mt19937 _rng{};
     unsigned _curr_file_idx = 0;  // Current file index in the reader

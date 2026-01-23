@@ -64,8 +64,7 @@ Reader::Status FileSourceReader::initialize(ReaderConfig desc) {
         if (_is_checkpointing_enabled) {
             _backup_file_names = _file_names;
         }
-        std::mt19937 engine(_seed);
-        _rng = engine;
+        _rng.seed(_seed);
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
                      _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
     }
@@ -139,8 +138,7 @@ void FileSourceReader::reset() {
         if (_is_checkpointing_enabled) {
             _file_names = _backup_file_names;
         }
-        std::mt19937 engine(_seed + (++_epoch_counter));
-        _rng = engine;
+        _rng.seed(_seed + (++_epoch_counter));
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
                      _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(),
                      _rng);
