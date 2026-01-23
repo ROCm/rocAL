@@ -154,6 +154,7 @@ class NumpyDataReader : public Reader {
     void* _hipfile_handle = nullptr;
     void* _hipfile_scratch = nullptr;
     size_t _hipfile_scratch_size = 0;
+    size_t _hipfile_file_size = 0;
     bool _hipfile_scratch_registered = false;
     std::string _hipfile_open_path;
     std::vector<unsigned char> _host_staging;
