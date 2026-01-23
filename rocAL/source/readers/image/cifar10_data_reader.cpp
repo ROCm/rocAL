@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <cassert>
+#include <cerrno>
 #include "pipeline/commons.h"
 #include <cstring>
 #include <algorithm>
@@ -28,6 +29,34 @@ THE SOFTWARE.
 #include "readers/image/cifar10_data_reader.h"
 #include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <hip/hip_runtime_api.h>
+#include <hipfile.h>
+#endif
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+namespace {
+constexpr size_t kHipFileAlignment = 4096;
+
+inline size_t align_down(size_t value, size_t alignment) {
+    return value & ~(alignment - 1);
+}
+
+inline size_t align_up(size_t value, size_t alignment) {
+    return (value + alignment - 1) & ~(alignment - 1);
+}
+
+inline bool is_device_ptr(const void* ptr) {
+    hipPointerAttribute_t attrs{};
+    auto status = hipPointerGetAttributes(&attrs, ptr);
+    return (status == hipSuccess) && (attrs.type == hipMemoryTypeDevice);
+}
+}  // namespace
+#endif
 
 CIFAR10DataReader::CIFAR10DataReader() {
     _src_dir = nullptr;
@@ -81,6 +110,7 @@ size_t CIFAR10DataReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     auto file_offset = _file_offsets[_curr_file_idx];
     _last_file_idx = _file_idx[_curr_file_idx];
+    _last_file_offset = file_offset;
     incremenet_read_ptr();
     // update _last_id for the next record
     _last_id = file_path;
@@ -97,6 +127,9 @@ size_t CIFAR10DataReader::open() {
             fclose(_current_fPtr);
             _current_fPtr = nullptr;
         }
+#if ENABLE_HIP && ENABLE_HIPFILE
+        close_hipfile();
+#endif
         _current_fPtr = fopen(file_path.c_str(), "rb");  // Open the file,
         _last_file_name = file_path;
         fseek(_current_fPtr, 0, SEEK_END);  // Take the file read pointer to the end
@@ -130,6 +163,48 @@ size_t CIFAR10DataReader::read_data(unsigned char* buf, size_t read_size) {
     // Requested read size bigger than the raw file size? just read as many bytes as the raw file size
     read_size = (read_size > (_raw_file_size - 1)) ? _raw_file_size - 1 : read_size;
 
+#if ENABLE_HIP && ENABLE_HIPFILE
+    if (is_device_ptr(buf)) {
+        if (ensure_hipfile_open() && ensure_hipfile_scratch(align_up(((_last_file_offset + 1) % kHipFileAlignment) + read_size, kHipFileAlignment))) {
+            const size_t data_offset = static_cast<size_t>(_last_file_offset) + 1;
+            const size_t aligned_file_offset = align_down(data_offset, kHipFileAlignment);
+            const size_t offset_in_scratch = data_offset - aligned_file_offset;
+            const size_t aligned_end = align_up(data_offset + read_size, kHipFileAlignment);
+            const size_t io_size = aligned_end - aligned_file_offset;
+
+            auto nread = hipFileRead(reinterpret_cast<hipFileHandle_t>(_hipfile_handle), _hipfile_scratch, io_size,
+                                     static_cast<hoff_t>(aligned_file_offset), 0);
+            if (nread >= 0 && static_cast<size_t>(nread) >= (offset_in_scratch + read_size)) {
+                auto hip_status =
+                    hipMemcpy(buf, static_cast<unsigned char*>(_hipfile_scratch) + offset_in_scratch, read_size,
+                              hipMemcpyDeviceToDevice);
+                if (hip_status == hipSuccess) {
+                    return read_size;
+                }
+                WRN("hipMemcpyDeviceToDevice failed in CIFAR10DataReader::read_data: " + TOSTR(hip_status))
+            } else {
+                WRN("hipFileRead failed in CIFAR10DataReader::read_data for " + _last_file_name +
+                    " (nread=" + TOSTR(nread) + ", errno=" + TOSTR(errno) + ")")
+            }
+        }
+
+        // Fallback: read to host and copy to device
+        if (_host_staging.size() < read_size) {
+            _host_staging.resize(read_size);
+        }
+        size_t host_read_size = fread(_host_staging.data(), sizeof(unsigned char), read_size, _current_fPtr);
+        if (host_read_size == 0) {
+            return 0;
+        }
+        auto hip_status = hipMemcpy(buf, _host_staging.data(), host_read_size, hipMemcpyHostToDevice);
+        if (hip_status != hipSuccess) {
+            WRN("hipMemcpyHostToDevice failed in CIFAR10DataReader::read_data: " + TOSTR(hip_status))
+            return 0;
+        }
+        return host_read_size;
+    }
+#endif
+
     size_t actual_read_size = fread(buf, sizeof(unsigned char), read_size, _current_fPtr);
     return actual_read_size;
 }
@@ -143,6 +218,18 @@ CIFAR10DataReader::~CIFAR10DataReader() {
         fclose(_current_fPtr);
         _current_fPtr = nullptr;
     }
+#if ENABLE_HIP && ENABLE_HIPFILE
+    close_hipfile();
+    if (_hipfile_scratch) {
+        if (_hipfile_scratch_registered) {
+            (void)hipFileBufDeregister(_hipfile_scratch);
+            _hipfile_scratch_registered = false;
+        }
+        (void)hipFree(_hipfile_scratch);
+        _hipfile_scratch = nullptr;
+        _hipfile_scratch_size = 0;
+    }
+#endif
 }
 
 int CIFAR10DataReader::release() {
@@ -273,3 +360,89 @@ Reader::Status CIFAR10DataReader::open_folder() {
     closedir(_src_dir);
     return Reader::Status::OK;
 }
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+void CIFAR10DataReader::close_hipfile() {
+    if (_hipfile_handle) {
+        hipFileHandleDeregister(reinterpret_cast<hipFileHandle_t>(_hipfile_handle));
+        _hipfile_handle = nullptr;
+    }
+    if (_hipfile_fd >= 0) {
+        ::close(_hipfile_fd);
+        _hipfile_fd = -1;
+    }
+    _hipfile_open_path.clear();
+}
+
+bool CIFAR10DataReader::ensure_hipfile_open() {
+    if (_hipfile_handle && _hipfile_open_path == _last_file_name) {
+        return true;
+    }
+
+    close_hipfile();
+    if (_last_file_name.empty()) {
+        return false;
+    }
+
+    int flags = O_RDONLY;
+#ifdef O_DIRECT
+    flags |= O_DIRECT;
+#endif
+    _hipfile_fd = ::open(_last_file_name.c_str(), flags);
+    if (_hipfile_fd < 0) {
+        // Fall back to non-O_DIRECT open; hipFile will attempt to open an unbuffered FD internally.
+        _hipfile_fd = ::open(_last_file_name.c_str(), O_RDONLY);
+        if (_hipfile_fd < 0) {
+            WRN("Failed to open file for hipFile: " + _last_file_name + " (" + std::strerror(errno) + ")")
+            return false;
+        }
+    }
+
+    hipFileDescr_t descr{};
+    descr.type = hipFileHandleTypeOpaqueFD;
+    descr.handle.fd = _hipfile_fd;
+
+    hipFileHandle_t handle = nullptr;
+    auto err = hipFileHandleRegister(&handle, &descr);
+    if (err.err != hipFileSuccess) {
+        WRN("hipFileHandleRegister failed for " + _last_file_name + ": " + std::string(hipFileGetOpErrorString(err.err)))
+        ::close(_hipfile_fd);
+        _hipfile_fd = -1;
+        return false;
+    }
+
+    _hipfile_handle = handle;
+    _hipfile_open_path = _last_file_name;
+    return true;
+}
+
+bool CIFAR10DataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
+    if (size_in_bytes == 0) {
+        return false;
+    }
+    if (_hipfile_scratch && _hipfile_scratch_size >= size_in_bytes) {
+        return true;
+    }
+
+    if (_hipfile_scratch) {
+        if (_hipfile_scratch_registered) {
+            (void)hipFileBufDeregister(_hipfile_scratch);
+            _hipfile_scratch_registered = false;
+        }
+        (void)hipFree(_hipfile_scratch);
+        _hipfile_scratch = nullptr;
+        _hipfile_scratch_size = 0;
+    }
+
+    auto hip_status = hipMalloc(&_hipfile_scratch, size_in_bytes);
+    if (hip_status != hipSuccess || !_hipfile_scratch) {
+        WRN("hipMalloc failed for CIFAR10 hipFile scratch buffer: " + TOSTR(hip_status))
+        return false;
+    }
+    _hipfile_scratch_size = size_in_bytes;
+
+    auto hipfile_err = hipFileBufRegister(_hipfile_scratch, _hipfile_scratch_size, 0);
+    _hipfile_scratch_registered = (hipfile_err.err == hipFileSuccess);
+    return true;
+}
+#endif

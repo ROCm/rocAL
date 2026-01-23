@@ -30,6 +30,7 @@ THE SOFTWARE.
 NumpyLoader::NumpyLoader(void *dev_resources) : _circ_buff(dev_resources),
                                                 _file_load_time("file load time", DBG_TIMING),
                                                 _swap_handle_time("Swap_handle_time", DBG_TIMING) {
+    _dev_resources = dev_resources;
     _output_tensor = nullptr;
     _mem_type = RocalMemType::HOST;
     _internal_thread_running = false;
@@ -135,7 +136,12 @@ void NumpyLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _decoded_data_info._data_names.resize(_batch_size);
     _decoded_data_info._roi_shape.resize(_batch_size);
-    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
+#if ENABLE_HIP && ENABLE_HIPFILE
+    const bool use_device_write_buffer = (_mem_type == RocalMemType::HIP);
+#else
+    const bool use_device_write_buffer = false;
+#endif
+    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, use_device_write_buffer);
     _is_initialized = true;
     LOG("Loader module initialized");
 }
@@ -153,6 +159,19 @@ LoaderModuleStatus
 NumpyLoader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
+#if ENABLE_HIP
+    if (_mem_type == RocalMemType::HIP) {
+        int device_id = _device_id;
+        if (_dev_resources) {
+            device_id = static_cast<DeviceResourcesHip*>(_dev_resources)->device_id;
+        }
+        hipError_t hip_status = hipSetDevice(device_id);
+        if (hip_status != hipSuccess) {
+            ERR("hipSetDevice failed in NumpyLoader::load_routine: " + TOSTR(hip_status))
+            return LoaderModuleStatus::DEVICE_BUFFER_SWAP_FAILED;
+        }
+    }
+#endif
     // Initially record number of all the numpy arrays that are going to be loaded, this is used to know how many still there
     const std::vector<size_t> tensor_dims = _output_tensor->info().dims();
     auto num_dims = tensor_dims.size() - 1;
