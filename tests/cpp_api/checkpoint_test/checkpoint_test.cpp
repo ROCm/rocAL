@@ -30,21 +30,8 @@ THE SOFTWARE.
 #include <vector>
 
 #include "rocal_api.h"
-#define TEST_2
+#include <opencv2/opencv.hpp>
 
-#include "opencv2/opencv.hpp"
-using namespace cv;
-#if USE_OPENCV_4
-#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
-#define CV_BGR2GRAY COLOR_BGR2GRAY
-#define CV_GRAY2RGB COLOR_GRAY2RGB
-#define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
-#define CV_FILLED FILLED
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
-#define cvDestroyWindow destroyWindow
-#endif
-#define DISPLAY 0
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 3;
@@ -184,7 +171,7 @@ int main(int argc, const char **argv) {
         }
         std::cout << std::endl;
     }
-    // Save checkpoint
+    // Capture a checkpoint mid-run (after 15 iterations) and then continue running to completion.
     size_t size_ckpt;
     rocalCheckpoint(handle, &size_ckpt);
     std::string serialized_ckpt(size_ckpt, '\0');

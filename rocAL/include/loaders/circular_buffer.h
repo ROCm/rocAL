@@ -30,9 +30,9 @@ THE SOFTWARE.
 
 struct LoaderState {
     int64_t epoch_number = 0;
-    int64_t _iteration_number = 0;
-    std::mt19937 _rng{};
-    unsigned _curr_file_idx = 0;  // Current file index in the reader
+    int64_t iteration_number = 0;
+    std::mt19937 rng{};
+    unsigned curr_file_idx = 0;  // Current file index in the reader
 };
 
 struct DecodedDataInfo {

@@ -194,23 +194,21 @@ Parameter<float>* core(FloatParam* arg) {
 
 std::vector<std::string> ParameterFactory::snapshot_rngs() {
     std::vector<std::string> out;
-    {
-        out.reserve(_param_list.size());
-        for (auto &p : _param_list) {
-            std::visit([&](auto* param) {
-                if (!param) {
-                    out.emplace_back(std::string{});
-                    return;
-                }
-                // Verify liveness: ensure the pointer is still tracked. If not, emit empty state.
-                pParamCore key = param;
-                if (_parameters.find(key) == _parameters.end()) {
-                    out.emplace_back(std::string{});
-                    return;
-                }
-                out.emplace_back(param->serialize_rng());
-            }, p);
-        }
+    out.reserve(_param_list.size());
+    for (auto &p : _param_list) {
+        std::visit([&](auto* param) {
+            if (!param) {
+                out.emplace_back(std::string{});
+                return;
+            }
+            // Verify liveness: ensure the pointer is still tracked. If not, emit empty state.
+            pParamCore key = param;
+            if (_parameters.find(key) == _parameters.end()) {
+                out.emplace_back(std::string{});
+                return;
+            }
+            out.emplace_back(param->serialize_rng());
+        }, p);
     }
     return out;
 }

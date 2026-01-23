@@ -83,7 +83,7 @@ class ParameterFactory {
     Parameter<T>* create_uniform_rand_param(T start, T end) {
         auto gen = new UniformRand<T>(start, end, get_seed_from_seedsequence());
         _parameters.insert(gen);
-        // Track creation order for deterministic RNG snapshots across processes
+        // Track creation order for deterministic RNG snapshot ordering (stable across pipeline rebuilds).
         _param_list.push_back(gen);
         return gen;
     }
@@ -91,7 +91,7 @@ class ParameterFactory {
     Parameter<T>* create_single_value_param(T value) {
         auto gen = new SimpleParameter<T>(value);
         _parameters.insert(gen);
-        // Track creation order for deterministic RNG snapshots across processes
+        // Track creation order for deterministic RNG snapshot ordering (stable across pipeline rebuilds).
         _param_list.push_back(gen);
         return gen;
     }

@@ -171,7 +171,7 @@ public:
     const std::string& get_serialized_checkpoint_string() const { return _serialized_checkpoint; }
 private:
     Status update_node_parameters();
-    std::shared_ptr<Checkpoint> create_checkpoint();
+    void create_checkpoint(Checkpoint &ckpt);
     uint64_t compute_pipeline_signature() const;
     void create_single_graph();
     void create_multiple_graphs();

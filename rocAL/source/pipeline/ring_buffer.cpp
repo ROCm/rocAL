@@ -89,17 +89,17 @@ std::vector<void *> RingBuffer::get_meta_write_buffers() {
     return _host_meta_data_buffers[_write_ptr];
 }
 
-std::shared_ptr<IterationData>& RingBuffer::get_iteration_data() {
+std::shared_ptr<IterationData>& RingBuffer::get_write_iteration_data() {
     block_if_full();
     return _iteration_data[_write_ptr];
 }
 
-std::shared_ptr<Checkpoint> RingBuffer::get_current_checkpoint() {
+const std::shared_ptr<Checkpoint>& RingBuffer::get_read_checkpoint() {
     block_if_empty();
     return _iteration_data[_read_ptr]->ckpt;
 }
 
-std::shared_ptr<IterationData> RingBuffer::get_current_iteration_data() {
+const std::shared_ptr<IterationData>& RingBuffer::get_read_iteration_data() {
     block_if_empty();
     return _iteration_data[_read_ptr];
 }

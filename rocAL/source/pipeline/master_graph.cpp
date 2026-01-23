@@ -342,6 +342,7 @@ void MasterGraph::set_output(Tensor *output_tensor) {
 
 void MasterGraph::release() {
     LOG("MasterGraph release ...")
+    // Unblock any threads that might be waiting on ring buffer read/write calls during shutdown.
     _ring_buffer.release_all_blocked_calls();
     stop_processing();
     for (auto &node : _nodes)
@@ -878,7 +879,7 @@ void MasterGraph::output_routine() {
 
             std::shared_ptr<IterationData> reserved_iter_data;
             if (_checkpointing_enabled) {
-                reserved_iter_data = _ring_buffer.get_iteration_data();
+                reserved_iter_data = _ring_buffer.get_write_iteration_data();
             }
 
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
@@ -960,8 +961,12 @@ void MasterGraph::output_routine() {
             if (_checkpointing_enabled) {
                 std::lock_guard<std::mutex> lk(_checkpoint_mutex);
                 if (reserved_iter_data) {
+                    // Attach iteration-local checkpoint + RNG snapshots to the ring-buffer slot being published.
                     reserved_iter_data->iteration_number = _iteration_number++;
-                    reserved_iter_data->ckpt = this->create_checkpoint();
+                    if (!reserved_iter_data->ckpt) {
+                        reserved_iter_data->ckpt = std::make_shared<Checkpoint>();
+                    }
+                    this->create_checkpoint(*reserved_iter_data->ckpt);
                     reserved_iter_data->rng_states = ParameterFactory::instance()->snapshot_rngs();
                 }
             }
@@ -2111,17 +2116,14 @@ uint64_t MasterGraph::compute_pipeline_signature() const {
     return h;
 }
 
-std::shared_ptr<Checkpoint> MasterGraph::create_checkpoint() {
-    auto ckpt = std::make_shared<Checkpoint>();
-
+void MasterGraph::create_checkpoint(Checkpoint &ckpt) {
+    ckpt.Clear();
     for (auto &pipe_op : _pipeline_operators) {
-        auto op_ckpt = ckpt->AddOperatorCheckpoint(pipe_op->operator_name);
+        auto op_ckpt = ckpt.AddOperatorCheckpoint(pipe_op->operator_name);
         if (pipe_op->node) {
             pipe_op->node->save_state(op_ckpt);
         }
     }
-
-    return ckpt;
 }
 
 void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size) {
@@ -2131,7 +2133,7 @@ void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size)
 
     std::lock_guard<std::mutex> lk(_checkpoint_mutex);
 
-    auto ckpt = _ring_buffer.get_current_checkpoint();
+    const auto& ckpt = _ring_buffer.get_read_checkpoint();
     if (!ckpt) {
         THROW("No checkpoint data available. Run the pipeline before requesting a checkpoint.");
     }
@@ -2146,11 +2148,8 @@ void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size)
         op_ckpt->set_operator_state(pipe_op->node->serialize_state(ckpt->GetOperatorCheckpoint(pipe_op->operator_name)));
     }
 
-    auto *ext = checkpoint.mutable_external_ctx();
-    ext->set_pipeline_iteration(static_cast<int64_t>(_iteration_number));
-
     auto *rngs = checkpoint.mutable_aug_rng();
-    auto iter_data = _ring_buffer.get_current_iteration_data();
+    const auto& iter_data = _ring_buffer.get_read_iteration_data();
     if (iter_data && !iter_data->rng_states.empty()) {
         for (auto &s : iter_data->rng_states) {
             rngs->add_rng_mt19937(s);

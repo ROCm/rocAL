@@ -64,10 +64,10 @@ class RingBuffer {
     std::vector<void *> get_meta_write_buffers();
     void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
     void rellocate_meta_data_buffer(void *buffer, size_t buffer_size, unsigned buff_idx);
-    std::shared_ptr<IterationData>& get_iteration_data();
+    std::shared_ptr<IterationData>& get_write_iteration_data();
     void init_iteration_data();
-    std::shared_ptr<Checkpoint> get_current_checkpoint();
-    std::shared_ptr<IterationData> get_current_iteration_data();
+    const std::shared_ptr<Checkpoint>& get_read_checkpoint();
+    const std::shared_ptr<IterationData>& get_read_iteration_data();
     void reset();
     void pop();
     void push();

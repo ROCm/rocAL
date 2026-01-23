@@ -57,6 +57,11 @@ class OperatorCheckpoint {
 
 class Checkpoint {
    public:
+    void Clear() {
+        _op_cpts.clear();
+        _name_to_id.clear();
+    }
+
     std::shared_ptr<OperatorCheckpoint> AddOperatorCheckpoint(std::string op_name) {
         _name_to_id[op_name] = _op_cpts.size();
         _op_cpts.emplace_back(std::make_shared<OperatorCheckpoint>(std::move(op_name)));

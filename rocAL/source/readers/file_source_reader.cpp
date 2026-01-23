@@ -136,6 +136,8 @@ int FileSourceReader::release() {
 void FileSourceReader::reset() {
     if (_shuffle) {
         if (_is_checkpointing_enabled) {
+            // Restore the original file order before reshuffling so that each epoch's shuffle is deterministic
+            // (and can be reproduced during checkpoint restore/resume).
             _file_names = _backup_file_names;
         }
         _rng.seed(_seed + (++_epoch_counter));
