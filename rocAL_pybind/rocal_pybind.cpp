@@ -311,10 +311,11 @@ PYBIND11_MODULE(rocal_pybind, m) {
         return py::bytes(buffer.data(), size);
     }, "Returns the serialized pipeline as string");
     m.def("rocalDeserialize", &rocalDeserialize, "Creates context from the serialized string", py::return_value_policy::reference);
+    // Return the serialized checkpoint blob as Python bytes.
     m.def("checkpoint", [](RocalContext context) {
-        size_t size = 0;
+        size_t size = 0;  // Serialized checkpoint size in bytes.
         rocalCheckpoint(context, &size);
-        std::string serialized_ckpt(size, '\0');
+        std::string serialized_ckpt(size, '\0');  // Buffer for checkpoint bytes.
         if (size > 0) {
             rocalGetSerializedCheckpointString(context, serialized_ckpt.data());
         }

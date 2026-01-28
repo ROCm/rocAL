@@ -219,6 +219,7 @@ rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
     return ROCAL_OK;
 }
 
+// Serialize the current pipeline state into an internal checkpoint blob.
 RocalStatus ROCAL_API_CALL
 rocalCheckpoint(RocalContext rocal_context, size_t *serialized_ckpt_string_size) {
     auto context = static_cast<Context*>(rocal_context);
@@ -235,6 +236,7 @@ rocalCheckpoint(RocalContext rocal_context, size_t *serialized_ckpt_string_size)
     return ROCAL_OK;
 }
 
+// Copy the last serialized checkpoint blob into the user-provided buffer.
 RocalStatus ROCAL_API_CALL
 rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_ckpt_string) {
     auto context = static_cast<Context*>(rocal_context);

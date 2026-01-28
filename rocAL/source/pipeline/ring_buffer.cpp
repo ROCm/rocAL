@@ -89,16 +89,19 @@ std::vector<void *> RingBuffer::get_meta_write_buffers() {
     return _host_meta_data_buffers[_write_ptr];
 }
 
+// Returns the IterationData slot reserved for the next write.
 std::shared_ptr<IterationData>& RingBuffer::get_write_iteration_data() {
     block_if_full();
     return _iteration_data[_write_ptr];
 }
 
+// Returns the checkpoint stored in the current read slot.
 const std::shared_ptr<Checkpoint>& RingBuffer::get_read_checkpoint() {
     block_if_empty();
     return _iteration_data[_read_ptr]->ckpt;
 }
 
+// Returns the IterationData stored in the current read slot.
 const std::shared_ptr<IterationData>& RingBuffer::get_read_iteration_data() {
     block_if_empty();
     return _iteration_data[_read_ptr];
@@ -368,11 +371,12 @@ MetaDataNamePair &RingBuffer::get_meta_data() {
     return _meta_ring_buffer.front();
 }
 
+// Allocate and initialize IterationData entries for all ring buffer slots.
 void RingBuffer::init_iteration_data() {
     _iteration_data.resize(BUFF_DEPTH);
 
     // Allocate the iteration data
-    for (auto& iter_data : _iteration_data) {
+    for (auto& iter_data : _iteration_data) {  // Allocate per-slot iteration data.
         iter_data = std::make_shared<IterationData>();
     }
 }

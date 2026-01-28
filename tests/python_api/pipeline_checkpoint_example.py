@@ -1,5 +1,9 @@
+"""Checkpointing example for the rocAL Python API."""
+
 import sys
 import os
+import gc
+import time
 from amd.rocal.pipeline import pipeline_def, Pipeline
 from amd.rocal.plugin.generic import ROCALGenericIterator
 import amd.rocal.fn as fn

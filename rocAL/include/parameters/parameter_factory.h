@@ -108,9 +108,9 @@ class ParameterFactory {
     IntParam* create_single_value_int_param(int value);
     FloatParam* create_single_value_float_param(float value);
 
-    // Checkpointing: snapshot RNG states of random parameters (deterministic params ignored)
+    /// Checkpointing: snapshot RNG states of random parameters (deterministic params ignored).
     std::vector<std::string> snapshot_rngs();
-    // Destroy the singleton instance completely (called when pipeline is released)
+    /// Destroy the singleton instance completely (called when pipeline is released).
     static void destroy_instance();
 
    private:

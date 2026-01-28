@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #include <opencv2/opencv.hpp>
 
+// Checkpointing smoke test: run a few iterations, capture a checkpoint, then finish.
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 3;
@@ -85,6 +86,7 @@ int main(int argc, const char **argv) {
 
     RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24 : RocalImageColor::ROCAL_COLOR_U8;
 
+    // Create a pipeline context with checkpointing enabled.
     auto handle = rocalCreate(inputBatchSize, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1, 3, ROCAL_FP32, true);
 
     if (rocalGetStatus(handle) != ROCAL_OK) {
