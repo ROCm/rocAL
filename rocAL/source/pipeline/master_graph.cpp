@@ -877,7 +877,7 @@ void MasterGraph::output_routine() {
             auto write_output_buffers = write_buffers.first;
             _rb_block_if_full_time.end();
 
-            std::shared_ptr<IterationData> reserved_iter_data;
+            std::shared_ptr<IterationData> reserved_iter_data;  // Slot for per-iteration checkpoint metadata.
             if (_checkpointing_enabled) {
                 reserved_iter_data = _ring_buffer.get_write_iteration_data();
             }
@@ -959,7 +959,7 @@ void MasterGraph::output_routine() {
             _ring_buffer.push();  // The data and metadata is now stored in output the ring_buffer, increases it's level by 1
 
             if (_checkpointing_enabled) {
-                std::lock_guard<std::mutex> lk(_checkpoint_mutex);
+                std::lock_guard<std::mutex> lk(_checkpoint_mutex);  // Serialize checkpoint slot updates.
                 if (reserved_iter_data) {
                     // Attach iteration-local checkpoint + RNG snapshots to the ring-buffer slot being published.
                     reserved_iter_data->iteration_number = _iteration_number++;
@@ -2037,29 +2037,30 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
     }
 }
 
+// Compute a stable signature of pipeline configuration for checkpoint validation.
 uint64_t MasterGraph::compute_pipeline_signature() const {
-    auto hash_combine = [](uint64_t &h, uint64_t v) {
+    auto hash_combine = [](uint64_t &h, uint64_t v) {  // Hash combiner for 64-bit values.
         h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
     };
-    uint64_t h = 1469598103934665603ULL;  // FNV offset basis
-    std::hash<std::string> Hs;
+    uint64_t h = 1469598103934665603ULL;  // Running hash accumulator (FNV offset basis).
+    std::hash<std::string> Hs;            // String hasher for names/keys.
 
-    auto hash_uint = [&](uint64_t v) {
+    auto hash_uint = [&](uint64_t v) {  // Helper to hash integer fields.
         hash_combine(h, v);
     };
 
-    for (auto &pipe_op : _pipeline_operators) {
+    for (auto &pipe_op : _pipeline_operators) {  // Include each operator in the signature hash.
         hash_combine(h, Hs(pipe_op->module_name));
         hash_combine(h, Hs(pipe_op->operator_name));
 
-        std::vector<Argument> args;
+        std::vector<Argument> args;  // Operator arguments to include in signature.
         if (pipe_op->module_name == "reader") {
             args = pipe_op->arguments;
         } else if (pipe_op->node) {
             args = pipe_op->node->get_args_list();
         }
 
-        for (const auto &arg : args) {
+        for (const auto &arg : args) {  // Include argument metadata and values.
             hash_combine(h, Hs(arg.arg_name));
             hash_combine(h, Hs(arg.type_name));
             hash_combine(h, Hs(arg.sub_type_name));
@@ -2068,8 +2069,8 @@ uint64_t MasterGraph::compute_pipeline_signature() const {
             hash_uint(arg.is_null_ptr ? 1ULL : 0ULL);
             hash_uint(static_cast<uint64_t>(arg.values.size()));
 
-            for (const auto &value : arg.values) {
-                const std::type_info &ti = value.type();
+            for (const auto &value : arg.values) {  // Include serialized argument values.
+                const std::type_info &ti = value.type();  // Type tag for std::any payloads.
                 try {
                     if (ti == typeid(int)) {
                         hash_uint(static_cast<uint64_t>(std::any_cast<int>(value)));
@@ -2080,13 +2081,13 @@ uint64_t MasterGraph::compute_pipeline_signature() const {
                     } else if (ti == typeid(bool)) {
                         hash_uint(std::any_cast<bool>(value) ? 1ULL : 0ULL);
                     } else if (ti == typeid(float)) {
-                        float f = std::any_cast<float>(value);
-                        uint32_t bits;
+                        float f = std::any_cast<float>(value);  // Float payload for bit hashing.
+                        uint32_t bits;                          // Bit representation for the float value.
                         std::memcpy(&bits, &f, sizeof(bits));
                         hash_uint(static_cast<uint64_t>(bits));
                     } else if (ti == typeid(double)) {
-                        double d = std::any_cast<double>(value);
-                        uint64_t bits;
+                        double d = std::any_cast<double>(value);  // Double payload for bit hashing.
+                        uint64_t bits;                            // Bit representation for the double value.
                         std::memcpy(&bits, &d, sizeof(bits));
                         hash_uint(bits);
                     } else if (ti == typeid(std::string)) {
@@ -2100,14 +2101,14 @@ uint64_t MasterGraph::compute_pipeline_signature() const {
     }
 
     // Include output tensor metadata
-    auto &out_list = const_cast<TensorList&>(_internal_tensor_list);
+    auto &out_list = const_cast<TensorList&>(_internal_tensor_list);  // Output tensor list to hash metadata from.
     for (unsigned i = 0; i < out_list.size(); i++) {
-        Tensor *pipe_output = out_list[i];
+        Tensor *pipe_output = out_list[i];  // Output tensor entry to hash.
         hash_uint(static_cast<uint64_t>(pipe_output->info().mem_type()));
         hash_uint(static_cast<uint64_t>(pipe_output->info().data_type()));
         hash_uint(static_cast<uint64_t>(pipe_output->info().layout()));
         hash_uint(static_cast<uint64_t>(pipe_output->info().color_format()));
-        for (auto dim : pipe_output->info().dims()) {
+        for (auto dim : pipe_output->info().dims()) {  // Include tensor dimensions.
             hash_uint(static_cast<uint64_t>(dim));
         }
     }
@@ -2116,47 +2117,49 @@ uint64_t MasterGraph::compute_pipeline_signature() const {
     return h;
 }
 
+// Populate the checkpoint with per-operator state for the current iteration.
 void MasterGraph::create_checkpoint(Checkpoint &ckpt) {
     ckpt.Clear();
-    for (auto &pipe_op : _pipeline_operators) {
-        auto op_ckpt = ckpt.AddOperatorCheckpoint(pipe_op->operator_name);
+    for (auto &pipe_op : _pipeline_operators) {  // Collect per-operator state.
+        auto op_ckpt = ckpt.AddOperatorCheckpoint(pipe_op->operator_name);  // Per-operator checkpoint slot.
         if (pipe_op->node) {
             pipe_op->node->save_state(op_ckpt);
         }
     }
 }
 
+// Serialize the current checkpoint (operator state + RNG snapshots) into a blob.
 void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size) {
     if (!_checkpointing_enabled) {
         THROW("Checkpointing is not enabled for this pipeline");
     }
 
-    std::lock_guard<std::mutex> lk(_checkpoint_mutex);
+    std::lock_guard<std::mutex> lk(_checkpoint_mutex);  // Serialize checkpoint capture/read.
 
-    const auto& ckpt = _ring_buffer.get_read_checkpoint();
+    const auto& ckpt = _ring_buffer.get_read_checkpoint();  // Checkpoint captured for the current read slot.
     if (!ckpt) {
         THROW("No checkpoint data available. Run the pipeline before requesting a checkpoint.");
     }
 
-    rocal_proto::Checkpoint checkpoint;
+    rocal_proto::Checkpoint checkpoint;  // Protobuf container for serialized checkpoint data.
 
-    for (auto &pipe_op : _pipeline_operators) {
+    for (auto &pipe_op : _pipeline_operators) {  // Serialize each operator checkpoint.
         if (!pipe_op->node)
             continue;
-        auto op_ckpt = checkpoint.add_cpts();
+        auto op_ckpt = checkpoint.add_cpts();  // Per-operator checkpoint entry.
         op_ckpt->set_operator_name(pipe_op->operator_name);
         op_ckpt->set_operator_state(pipe_op->node->serialize_state(ckpt->GetOperatorCheckpoint(pipe_op->operator_name)));
     }
 
-    auto *rngs = checkpoint.mutable_aug_rng();
-    const auto& iter_data = _ring_buffer.get_read_iteration_data();
+    auto *rngs = checkpoint.mutable_aug_rng();                   // RNG snapshot message.
+    const auto& iter_data = _ring_buffer.get_read_iteration_data();  // Iteration metadata from ring buffer.
     if (iter_data && !iter_data->rng_states.empty()) {
-        for (auto &s : iter_data->rng_states) {
+        for (auto &s : iter_data->rng_states) {  // Emit captured RNG state strings.
             rngs->add_rng_mt19937(s);
         }
     } else {
-        auto rng_states = ParameterFactory::instance()->snapshot_rngs();
-        for (auto &s : rng_states) {
+        auto rng_states = ParameterFactory::instance()->snapshot_rngs();  // Fallback RNG snapshot if none in ring buffer.
+        for (auto &s : rng_states) {  // Emit fallback RNG state strings.
             rngs->add_rng_mt19937(s);
         }
     }

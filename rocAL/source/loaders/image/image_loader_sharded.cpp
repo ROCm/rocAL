@@ -162,6 +162,8 @@ void ImageLoaderSharded::feed_external_input(const std::vector<std::string>& inp
         loader->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);
 }
 
+// Return loader state for the current shard (used for checkpointing).
+// Returns loader state for the currently active shard.
 const LoaderState& ImageLoaderSharded::get_loader_state() const {
     return _loaders[_loader_idx]->get_loader_state();
 }

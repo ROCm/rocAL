@@ -334,6 +334,7 @@ void ImageLoader::feed_external_input(const std::vector<std::string>& input_imag
     _image_loader->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);
 }
 
+// Returns the most recent loader state captured during loading.
 const LoaderState& ImageLoader::get_loader_state() const {
     return _current_loader_state;
 }

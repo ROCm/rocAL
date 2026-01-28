@@ -28,13 +28,15 @@ THE SOFTWARE.
 #include "pipeline/commons.h"
 #include "device/device_manager_hip.h"
 
+/*! \brief Reader/loader state captured for checkpointing and resume. */
 struct LoaderState {
-    int64_t epoch_number = 0;
-    int64_t iteration_number = 0;
-    std::mt19937 rng{};
-    unsigned curr_file_idx = 0;  // Current file index in the reader
+    int64_t epoch_number = 0;      //!< Epoch number at capture time.
+    int64_t iteration_number = 0;  //!< Iteration number at capture time.
+    std::mt19937 rng{};            //!< Reader RNG state for deterministic resume.
+    unsigned curr_file_idx = 0;    //!< Current file index in the reader.
 };
 
+/*! \brief Decoded batch metadata forwarded through the loader ring buffer. */
 struct DecodedDataInfo {
     std::vector<std::string> _data_names;
     std::vector<uint32_t> _roi_width;
@@ -45,7 +47,7 @@ struct DecodedDataInfo {
     std::vector<uint32_t> _audio_channels; //! Number of audio channels in an audio signal
     std::vector<float> _audio_sample_rates; //! The number of samples of audio carried per second
     std::vector<std::vector<uint32_t>> _roi_shape; //! ROI values for each dimension
-    LoaderState _loader_state;
+    LoaderState _loader_state; //!< Loader state associated with this batch (for checkpointing).
 };
 
 struct CropImageInfo {

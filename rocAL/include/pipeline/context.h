@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "pipeline/master_graph.h"
 
 struct Context {
+    // enable_checkpointing controls capture of operator/loader state for checkpoint APIs.
     explicit Context(size_t batch_size, RocalAffinity affinity, int gpu_id, size_t cpu_thread_count, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_type, bool enable_checkpointing = false) : affinity(affinity),
                                                                                                                                                                             _user_batch_size(batch_size) {
         LOG("Processing on " + STR(((affinity == RocalAffinity::CPU) ? " CPU" : " GPU")))

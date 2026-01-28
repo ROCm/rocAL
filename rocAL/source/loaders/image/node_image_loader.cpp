@@ -85,14 +85,14 @@ void ImageLoaderNode::initialize_args(std::vector<Argument> &arguments, std::sha
         THROW("ImageLoaderNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
               ". Ensure all arguments present in init are accounted for");
     ShardingInfo sharding_info(arguments[13].get<RocalBatchPolicy>(), arguments[14].get<bool>(), arguments[15].get<bool>(), arguments[16].get<int32_t>());
-    const bool enable_checkpointing = arguments[17].get<bool>();
-    const unsigned seed = arguments[18].get<unsigned>();
-    const std::string file_prefix = arguments[19].get<std::string>();
-    const unsigned sequence_length = arguments[20].get<unsigned>();
-    const unsigned step = arguments[21].get<unsigned>();
-    const unsigned stride = arguments[22].get<unsigned>();
-    const ExternalSourceFileMode external_file_mode = arguments[23].get<ExternalSourceFileMode>();
-    const std::string index_path = arguments[24].get<std::string>();
+    const bool enable_checkpointing = arguments[17].get<bool>();                  // Checkpointing flag from serialized args.
+    const unsigned seed = arguments[18].get<unsigned>();                          // Shuffle seed from serialized args.
+    const std::string file_prefix = arguments[19].get<std::string>();             // Optional file prefix filter.
+    const unsigned sequence_length = arguments[20].get<unsigned>();               // Sequence length for sequence readers.
+    const unsigned step = arguments[21].get<unsigned>();                          // Frame step for sequence readers.
+    const unsigned stride = arguments[22].get<unsigned>();                        // Frame stride for sequence readers.
+    const ExternalSourceFileMode external_file_mode = arguments[23].get<ExternalSourceFileMode>();  // External source mode.
+    const std::string index_path = arguments[24].get<std::string>();              // Optional index path for webdataset.
 
     this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<std::string>(),
                arguments[3].get<std::string>(), arguments[4].get<std::map<std::string, std::string>>(), arguments[5].get<StorageType>(),
@@ -111,10 +111,12 @@ ImageLoaderNode::~ImageLoaderNode() {
     _loader_module = nullptr;
 }
 
+// Capture the loader's current state into the operator checkpoint.
 void ImageLoaderNode::save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
     op_ckpt->GetMutableCheckpointState() = _loader_module->get_loader_state();
 }
 
+// Serialize loader state into a protobuf payload for checkpointing.
 std::string ImageLoaderNode::serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
     auto loader_state = op_ckpt->GetOperatorCheckpointState<LoaderState>();
     rocal_proto::LoaderState proto_state;
