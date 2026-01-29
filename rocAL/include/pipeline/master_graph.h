@@ -90,9 +90,6 @@ public:
                         NO_MORE_DATA = 2,
                         NOT_IMPLEMENTED = 3,
                         INVALID_ARGUMENTS };
-    //! Checkpoint schema version used in serialization.
-    static constexpr uint32_t kCheckpointVersion = 1;
-    // enable_checkpointing controls whether per-iteration operator/loader state is captured.
     MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, bool enable_checkpointing);
     ~MasterGraph();
     Status reset();

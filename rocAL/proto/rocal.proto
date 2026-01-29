@@ -126,22 +126,19 @@ message Checkpoint {
 
   // Optional versioning and identity/config fields
   optional uint64 pipeline_signature = 3;
-  optional uint32 checkpoint_version = 4;
-  optional uint32 batch_size = 5;
-  optional int32 device_id = 6;
-  optional int32 mem_type = 7;
+  optional uint32 batch_size = 4;
+  optional int32 device_id = 5;
+  optional int32 mem_type = 6;
 }
 
 // Loader state serialized as part of operator checkpoints.
 message LoaderState {
   // Epoch number at capture time.
   optional int32 current_epoch = 1;
-  // Legacy field (kept for backward compatibility).
-  optional int32 age = 2;
   // Serialized reader RNG state.
-  optional bytes rng = 3;
+  optional bytes rng = 2;
   // Iteration number at capture time.
-  optional int64 iteration_number = 4;
+  optional int64 iteration_number = 3;
   // Current file index within the reader.
-  optional uint32 curr_file_idx = 5;
+  optional uint32 curr_file_idx = 4;
 }

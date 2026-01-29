@@ -121,8 +121,6 @@ std::string ImageLoaderNode::serialize_state(const std::shared_ptr<OperatorCheck
     auto loader_state = op_ckpt->GetOperatorCheckpointState<LoaderState>();
     rocal_proto::LoaderState proto_state;
     proto_state.set_current_epoch(static_cast<int32_t>(loader_state.epoch_number));
-    // Backward compatibility - keep age as iteration if someone relies on it
-    proto_state.set_age(static_cast<int32_t>(loader_state.iteration_number));
     proto_state.set_iteration_number(static_cast<int64_t>(loader_state.iteration_number));
     proto_state.set_rng(SerializeRNGToString(loader_state.rng));
     proto_state.set_curr_file_idx(static_cast<uint32_t>(loader_state.curr_file_idx));
@@ -138,9 +136,7 @@ void ImageLoaderNode::restore_state(const std::string &operator_state_bytes) {
     }
     LoaderState st{};  // Reconstructed loader state from checkpoint data.
     st.epoch_number = proto_state.has_current_epoch() ? proto_state.current_epoch() : 0;
-    st.iteration_number = proto_state.has_iteration_number()
-                               ? proto_state.iteration_number()
-                               : (proto_state.has_age() ? proto_state.age() : 0);
+    st.iteration_number = proto_state.has_iteration_number() ? proto_state.iteration_number() : 0;
     if (proto_state.has_rng()) {
         DeserializeRNGFromString(proto_state.rng(), st.rng);
     }

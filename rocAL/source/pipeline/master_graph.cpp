@@ -2160,9 +2160,6 @@ void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size)
         op_ckpt->set_operator_state(pipe_op->node->serialize_state(ckpt->GetOperatorCheckpoint(pipe_op->operator_name)));
     }
 
-    auto *ext = checkpoint.mutable_external_ctx();               // External context metadata.
-    ext->set_pipeline_iteration(static_cast<int64_t>(_iteration_number));
-
     auto *rngs = checkpoint.mutable_aug_rng();                   // RNG snapshot message.
     const auto& iter_data = _ring_buffer.get_read_iteration_data();  // Iteration metadata from ring buffer.
     if (iter_data && !iter_data->rng_states.empty()) {
@@ -2180,7 +2177,6 @@ void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size)
         _pipeline_signature = compute_pipeline_signature();
     }
 
-    checkpoint.set_checkpoint_version(kCheckpointVersion);
     checkpoint.set_pipeline_signature(_pipeline_signature);
     checkpoint.set_batch_size(static_cast<uint32_t>(_user_batch_size));
     checkpoint.set_device_id(static_cast<int32_t>(_gpu_id));
@@ -2208,9 +2204,6 @@ void MasterGraph::restore_from_serialized_checkpoint(const std::string &serializ
         THROW("Failed to parse serialized rocAL checkpoint");
     }
 
-    if (checkpoint.has_checkpoint_version() && checkpoint.checkpoint_version() != kCheckpointVersion) {
-        THROW("rocAL checkpoint version mismatch");
-    }
     if (checkpoint.has_pipeline_signature()) {
         uint64_t current_sig = compute_pipeline_signature();  // Current pipeline signature.
         if (current_sig != checkpoint.pipeline_signature()) {
@@ -2251,11 +2244,6 @@ void MasterGraph::restore_from_serialized_checkpoint(const std::string &serializ
             rng_states.emplace_back(checkpoint.aug_rng().rng_mt19937(i));
         }
         ParameterFactory::instance()->restore_rngs(rng_states);
-    }
-
-    if (checkpoint.has_external_ctx()) {
-        // Restore pipeline iteration counter if available.
-        _iteration_number = checkpoint.external_ctx().pipeline_iteration();
     }
 
     if (!_loader_modules.empty()) {
