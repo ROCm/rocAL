@@ -1,3 +1,5 @@
+"""Checkpointing example for the rocAL Python API."""
+
 import sys
 import os
 import gc
@@ -8,32 +10,35 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 import numpy as np
 
-seed = 1549361629
-image_dir = "/opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet"
-batch_size = 1
-gpu_id = 0
+seed = 1549361629  # Deterministic seed for checkpoint reproducibility.
+image_dir = "/opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet"  # Default dataset path.
+batch_size = 1  # Batch size used for the example pipeline.
+gpu_id = 0  # GPU device id for ROCAL.
 
 def _get_image_names(pipe: Pipeline):
+    """Return decoded image names for the current batch."""
+    # Batch size from the pipeline (protected access).
     batch_size = pipe._batch_size  # pylint: disable=protected-access
-    name_lengths = np.zeros(batch_size, dtype=np.int32)
-    total_length = pipe.get_image_name_length(name_lengths)
+    name_lengths = np.zeros(batch_size, dtype=np.int32)  # Per-sample name lengths.
+    total_length = pipe.get_image_name_length(name_lengths)  # Total bytes in the name buffer.
     if total_length == 0:
         return [""] * batch_size
-    raw_bytes = pipe.get_image_name(total_length)
-    names = []
-    offset = 0
-    for length in name_lengths:
+    raw_bytes = pipe.get_image_name(total_length)  # Raw name buffer from ROCAL.
+    names = []  # Decoded UTF-8 names for the batch.
+    offset = 0  # Offset into the raw name buffer.
+    for length in name_lengths:  # Per-sample name length.
         if length == 0:
             names.append("")
             continue
-        chunk = raw_bytes[offset : offset + length]
+        chunk = raw_bytes[offset : offset + length]  # Bytes for a single name.
         names.append(chunk.decode("utf-8", errors="replace"))
         offset += length
     return names
 
 @pipeline_def(seed=seed)
 def image_decoder_pipeline(device="cpu", path=image_dir):
-    jpegs, labels = fn.readers.file(file_root=path)
+    """Simple file reader + decoder pipeline used for checkpointing demo."""
+    jpegs, labels = fn.readers.file(file_root=path)  # Reader outputs (labels unused).
     images = fn.decoders.image(
         jpegs,
         file_root=path,
@@ -52,7 +57,7 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
 
     Returns a tuple: (serialized_ckpt_bytes, ckpt_path_used or None)
     """
-    pipe = image_decoder_pipeline(
+    pipe = image_decoder_pipeline(  # Pipeline instance with checkpointing enabled.
         batch_size=bs,
         num_threads=1,
         device_id=gpu_id,
@@ -66,35 +71,35 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
         enable_checkpointing=True,
     )
     pipe.build()
-    iterator = ROCALGenericIterator(pipe)
+    iterator = ROCALGenericIterator(pipe)  # Iterator for consuming batches.
 
     print("Remaining images (initial):", pipe.get_remaining_images())
-    for i in range(3):
-        batch = iterator.next()
-        [image], label = batch
-        image_names = _get_image_names(pipe)
-        for idx in range(batch_size):
+    for i in range(3):  # Advance a few iterations before checkpointing.
+        batch = iterator.next()  # Next output batch from the pipeline.
+        [image], label = batch  # Unpack image tensor and labels.
+        image_names = _get_image_names(pipe)  # Human-readable image names.
+        for idx in range(batch_size):  # Batch index.
             print(image_names[idx], label[idx])
 
     # Save checkpoint bytes (and optionally to file)
-    serialized_ckpt = pipe.checkpoint(filename=ckpt_path)
+    serialized_ckpt = pipe.checkpoint(filename=ckpt_path)  # Serialized checkpoint bytes.
     if ckpt_path:
         try:
-            size = os.path.getsize(ckpt_path)
+            size = os.path.getsize(ckpt_path)  # On-disk checkpoint size.
             print(f"Checkpoint saved to: {ckpt_path} ({size} bytes)")
         except Exception as e:
             print("Warning: could not stat checkpoint file:", e)
     print("Remaining images at checkpoint:", pipe.get_remaining_images())
 
-    for i in range(5):
-        batch = iterator.next()
-        [image], label = batch
-        image_names = _get_image_names(pipe)
-        for idx in range(batch_size):
+    for i in range(5):  # Continue after checkpoint to ensure pipeline runs.
+        batch = iterator.next()  # Next output batch from the pipeline.
+        [image], label = batch  # Unpack image tensor and labels.
+        image_names = _get_image_names(pipe)  # Human-readable image names.
+        for idx in range(batch_size):  # Batch index.
             print(image_names[idx], label[idx])
 
     del iterator
-    gc.collect()
+    gc.collect()  # Release pipeline iterator resources before restore.
 
     return serialized_ckpt, ckpt_path
 
@@ -104,7 +109,7 @@ def restore_and_compare(bs, rocal_device, rocal_cpu, img_folder, serialized_ckpt
 
     Accepts either serialized_ckpt bytes or ckpt_path on disk.
     """
-    pipe_restored = image_decoder_pipeline(
+    pipe_restored = image_decoder_pipeline(  # Restored pipeline instance.
         batch_size=bs,
         num_threads=1,
         device_id=gpu_id,
@@ -139,12 +144,12 @@ def restore_and_compare(bs, rocal_device, rocal_cpu, img_folder, serialized_ckpt
 
     print(f"After restore: remaining images = {pipe_restored.get_remaining_images()}")
 
-    iterator = ROCALGenericIterator(pipe_restored)
-    for i in range(5):
+    iterator = ROCALGenericIterator(pipe_restored)  # Iterator for restored pipeline output.
+    for i in range(5):  # Read a few batches after restore.
         batch = iterator.next()
         [image], label = batch
         image_names = _get_image_names(pipe_restored)
-        for idx in range(bs):
+        for idx in range(bs):  # Batch index.
             print(image_names[idx], label[idx])
 
     del iterator
@@ -153,10 +158,10 @@ def restore_and_compare(bs, rocal_device, rocal_cpu, img_folder, serialized_ckpt
 
 def main():
     print('Optional arguments: <cpu/gpu> <image_folder>')
-    bs = batch_size
-    rocal_device = "cpu"
-    rocal_cpu = True
-    img_folder = image_dir
+    bs = batch_size  # Batch size for the example run.
+    rocal_device = "cpu"  # Device string passed to ROCAL ops.
+    rocal_cpu = True  # Whether to run ROCAL in CPU mode.
+    img_folder = image_dir  # Dataset path for the example run.
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == "gpu":
             rocal_device = "gpu"
@@ -165,16 +170,16 @@ def main():
         img_folder = sys.argv[2]
 
     # Use a unique file for convenience, but we primarily pass bytes to restore
-    ckpt_path = os.path.join(
-        os.path.dirname(__file__), f"checkpoint.bin"
+    ckpt_path = os.path.join(  # File path for storing checkpoint bytes.
+        os.path.dirname(__file__), "checkpoint.bin"
     )
     
     print("\n========== Creating and Checkpointing Pipeline ==========")
-    serialized_ckpt, _ = create_and_checkpoint(
+    serialized_ckpt, _ = create_and_checkpoint(  # Run the checkpointing workflow.
         bs, rocal_device, rocal_cpu, img_folder, ckpt_path=ckpt_path
     )
 
-    time.sleep(0.5)
+    time.sleep(0.5)  # Give the pipeline time to release resources before restore.
 
     print("\n========== Restoring Pipeline from Checkpoint ==========")
     restore_and_compare(

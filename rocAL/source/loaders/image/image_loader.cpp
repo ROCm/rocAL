@@ -221,12 +221,12 @@ ImageLoader::load_routine() {
                                               _output_tensor->info().color_format(), _decoder_keep_original);
 
             if (load_status == LoaderModuleStatus::OK) {
-                // Save state AFTER successful load for correct checkpoint restoration
+                // Save state after a successful load for correct checkpoint restoration.
                 if (_is_checkpointing_enabled) {
-                    _decoded_data_info._loader_state._epoch_number = _epoch_count;
-                    _decoded_data_info._loader_state._iteration_number = _iteration_count;
-                    _decoded_data_info._loader_state._rng = _image_loader->get_rng_state();
-                    _decoded_data_info._loader_state._curr_file_idx = _image_loader->get_curr_file_idx();
+                    _decoded_data_info._loader_state.epoch_number = _epoch_count;
+                    _decoded_data_info._loader_state.iteration_number = _iteration_count;
+                    _decoded_data_info._loader_state.rng = _image_loader->get_rng_state();
+                    _decoded_data_info._loader_state.curr_file_idx = _image_loader->get_curr_file_idx();
                 }
                 if (_randombboxcrop_meta_data_reader) {
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
@@ -334,10 +334,12 @@ void ImageLoader::feed_external_input(const std::vector<std::string>& input_imag
     _image_loader->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);
 }
 
+// Returns the most recent loader state captured during loading.
 const LoaderState& ImageLoader::get_loader_state() const {
     return _current_loader_state;
 }
 
+// Restore loader state and restart the loading thread from a checkpoint.
 void ImageLoader::restore_from_state(const LoaderState& s) {
     if (_internal_thread_running) {
         _internal_thread_running = false;
@@ -347,19 +349,19 @@ void ImageLoader::restore_from_state(const LoaderState& s) {
     }
     _circ_buff.reset();
 
-    _epoch_count = s._epoch_number;
-    _iteration_count = s._iteration_number;
+    _epoch_count = s.epoch_number;
+    _iteration_count = s.iteration_number;
     _current_loader_state = s;
 
     if (_image_loader) {
-        _image_loader->set_rng_state(s._rng);
-        _image_loader->set_curr_file_idx(s._curr_file_idx);
+        _image_loader->set_rng_state(s.rng);
+        _image_loader->set_curr_file_idx(s.curr_file_idx);
     }
 
-    size_t dataset_size = _dataset_size;
+    size_t dataset_size = _dataset_size;  // Dataset size used to recompute remaining count.
     _remaining_image_count = dataset_size;
-    if (!_loop && s._curr_file_idx > 0) {
-        _remaining_image_count = (dataset_size > s._curr_file_idx) ? (dataset_size - s._curr_file_idx) : 0;
+    if (!_loop && s.curr_file_idx > 0) {
+        _remaining_image_count = (dataset_size > s.curr_file_idx) ? (dataset_size - s.curr_file_idx) : 0;
     }
 
     _internal_thread_running = true;

@@ -54,7 +54,9 @@ class ImageLoader : public LoaderModule {
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
     size_t last_batch_padded_size() override;
+    //! Returns the most recent loader state for checkpointing.
     const LoaderState& get_loader_state() const override;
+    //! Restore loader state from a checkpoint.
     void restore_from_state(const LoaderState& s) override;
 
    private:
@@ -93,8 +95,8 @@ class ImageLoader : public LoaderModule {
 #if ENABLE_HIP
     hipStream_t _hip_stream = nullptr;
 #endif
-    bool _is_checkpointing_enabled = false;
-    int64_t _epoch_count = 0;
-    int64_t _iteration_count = 0;
-    LoaderState _current_loader_state;
+    bool _is_checkpointing_enabled = false;  //!< Enables capturing loader state for checkpointing.
+    int64_t _epoch_count = 0;                //!< Current epoch counter for the loader.
+    int64_t _iteration_count = 0;            //!< Iteration counter within the current epoch.
+    LoaderState _current_loader_state;       //!< Loader state for the latest batch.
 };

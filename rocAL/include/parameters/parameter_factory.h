@@ -83,7 +83,7 @@ class ParameterFactory {
     Parameter<T>* create_uniform_rand_param(T start, T end) {
         auto gen = new UniformRand<T>(start, end, get_seed_from_seedsequence());
         _parameters.insert(gen);
-        // Track creation order for deterministic RNG snapshots across processes
+        // Track creation order for deterministic RNG snapshot ordering (stable across pipeline rebuilds).
         _param_list.push_back(gen);
         return gen;
     }
@@ -91,7 +91,7 @@ class ParameterFactory {
     Parameter<T>* create_single_value_param(T value) {
         auto gen = new SimpleParameter<T>(value);
         _parameters.insert(gen);
-        // Track creation order for deterministic RNG snapshots across processes
+        // Track creation order for deterministic RNG snapshot ordering (stable across pipeline rebuilds).
         _param_list.push_back(gen);
         return gen;
     }
@@ -108,17 +108,18 @@ class ParameterFactory {
     IntParam* create_single_value_int_param(int value);
     FloatParam* create_single_value_float_param(float value);
 
-    // Checkpointing: snapshot RNG states of random parameters (deterministic params ignored)
+    /// Checkpointing: snapshot RNG states of random parameters (deterministic params ignored).
     std::vector<std::string> snapshot_rngs();
+    /// Restore RNG states from a snapshot aligned to creation order.
     void restore_rngs(const std::vector<std::string>& rng_states);
-    // Reset internal RNG parameter tracking used for checkpointing.
+    /// Reset internal RNG parameter tracking used for checkpointing.
     // NOTE: This does NOT delete any parameters or affect their lifetime.
     // It only clears the ordering metadata (_param_list) used to align
     // RNG snapshots with parameters. Intended for use when a new
     // checkpoint-enabled pipeline is constructed, under the assumption
     // that checkpointed pipelines are executed serially.
     void reset_param_list();
-    // Destroy the singleton instance completely (called when pipeline is released)
+    /// Destroy the singleton instance completely (called when pipeline is released).
     static void destroy_instance();
 
    private:

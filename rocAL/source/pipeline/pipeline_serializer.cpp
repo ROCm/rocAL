@@ -145,7 +145,7 @@ void serialize_parameter_to_protobuf(rocal_proto::Parameter *parameter, const Ar
     } else if (op_arg.sub_type_name == "CustomRand") {
         parameter->set_param_type(static_cast<int>(RocalParameterType::RANDOM_CUSTOM));
     } else {
-        parameter->set_param_type(static_cast<int>(RocalParameterType::DETERMINISTIC));
+        THROW("Unknown parameter type '" + op_arg.sub_type_name + "' for argument '" + op_arg.arg_name + "'");
     }
 
     if (op_arg.type_name == "int") {

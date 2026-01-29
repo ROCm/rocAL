@@ -65,8 +65,11 @@ class Node {
         THROW("initialize_args(arguments) not implemented for node type: " + node_name() + 
               ". Derived Nodes must override this method to handle deserialization.");
     }
+    /// Save operator state into a checkpoint object (used during checkpoint capture).
     virtual void save_state(std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) {}
+    /// Serialize operator checkpoint state into a wire format blob.
     virtual std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) { return ""; }
+    /// Restore operator state from a serialized checkpoint blob.
     virtual void restore_state(const std::string &/*operator_state_bytes*/) {}
 
    protected:

@@ -94,14 +94,14 @@ void ImageLoaderSingleShardNode::initialize_args(std::vector<Argument> &argument
         THROW("ImageLoaderSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
               ". Ensure all arguments present in init are accounted for");
     ShardingInfo sharding_info(arguments[13].get<RocalBatchPolicy>(), arguments[14].get<bool>(), arguments[15].get<bool>(), arguments[16].get<int32_t>());
-    const bool enable_checkpointing = arguments[17].get<bool>();
-    const unsigned seed = arguments[18].get<unsigned>();
-    const std::map<std::string, std::string> feature_key_map = arguments[19].get<std::map<std::string, std::string>>();
-    const unsigned sequence_length = arguments[20].get<unsigned>();
-    const unsigned step = arguments[21].get<unsigned>();
-    const unsigned stride = arguments[22].get<unsigned>();
-    const ExternalSourceFileMode external_file_mode = arguments[23].get<ExternalSourceFileMode>();
-    const std::string index_path = arguments[24].get<std::string>();
+    const bool enable_checkpointing = arguments[17].get<bool>();                  // Checkpointing flag from serialized args.
+    const unsigned seed = arguments[18].get<unsigned>();                          // Shuffle seed from serialized args.
+    const std::map<std::string, std::string> feature_key_map = arguments[19].get<std::map<std::string, std::string>>();  // Reader feature key map.
+    const unsigned sequence_length = arguments[20].get<unsigned>();               // Sequence length for sequence readers.
+    const unsigned step = arguments[21].get<unsigned>();                          // Frame step for sequence readers.
+    const unsigned stride = arguments[22].get<unsigned>();                        // Frame stride for sequence readers.
+    const ExternalSourceFileMode external_file_mode = arguments[23].get<ExternalSourceFileMode>();  // External source mode.
+    const std::string index_path = arguments[24].get<std::string>();              // Optional index path for webdataset.
 
     this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<unsigned>(), arguments[3].get<std::string>(),
                arguments[4].get<std::string>(), arguments[5].get<StorageType>(), arguments[6].get<DecoderType>(), arguments[7].get<bool>(), arguments[8].get<bool>(), 
@@ -119,36 +119,39 @@ ImageLoaderSingleShardNode::~ImageLoaderSingleShardNode() {
     _loader_module = nullptr;
 }
 
+// Capture the loader's current state into the operator checkpoint.
 void ImageLoaderSingleShardNode::save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
     op_ckpt->GetMutableCheckpointState() = _loader_module->get_loader_state();
 }
 
+// Serialize loader state into a protobuf payload for checkpointing.
 std::string ImageLoaderSingleShardNode::serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
     auto loader_state = op_ckpt->GetOperatorCheckpointState<LoaderState>();
     rocal_proto::LoaderState proto_state;
-    proto_state.set_current_epoch(static_cast<int32_t>(loader_state._epoch_number));
-    proto_state.set_age(static_cast<int32_t>(loader_state._iteration_number));
-    proto_state.set_iteration_number(static_cast<int64_t>(loader_state._iteration_number));
-    proto_state.set_rng(SerializeRNGToString(loader_state._rng));
-    proto_state.set_curr_file_idx(static_cast<uint32_t>(loader_state._curr_file_idx));
+    proto_state.set_current_epoch(static_cast<int32_t>(loader_state.epoch_number));
+    proto_state.set_age(static_cast<int32_t>(loader_state.iteration_number));
+    proto_state.set_iteration_number(static_cast<int64_t>(loader_state.iteration_number));
+    proto_state.set_rng(SerializeRNGToString(loader_state.rng));
+    proto_state.set_curr_file_idx(static_cast<uint32_t>(loader_state.curr_file_idx));
     return proto_state.SerializeAsString();
 }
 
+// Restore loader state from a serialized checkpoint payload.
 void ImageLoaderSingleShardNode::restore_state(const std::string &operator_state_bytes) {
-    rocal_proto::LoaderState proto_state;
+    rocal_proto::LoaderState proto_state;  // Protobuf loader state payload.
     if (!proto_state.ParseFromString(operator_state_bytes)) {
         WRN("Failed to parse LoaderState from checkpoint. Skipping restore for ImageLoaderSingleShardNode.");
         return;
     }
-    LoaderState st{};
-    st._epoch_number = proto_state.has_current_epoch() ? proto_state.current_epoch() : 0;
-    st._iteration_number = proto_state.has_iteration_number()
+    LoaderState st{};  // Reconstructed loader state from checkpoint data.
+    st.epoch_number = proto_state.has_current_epoch() ? proto_state.current_epoch() : 0;
+    st.iteration_number = proto_state.has_iteration_number()
                                ? proto_state.iteration_number()
                                : (proto_state.has_age() ? proto_state.age() : 0);
     if (proto_state.has_rng()) {
-        DeserializeRNGFromString(proto_state.rng(), st._rng);
+        DeserializeRNGFromString(proto_state.rng(), st.rng);
     }
-    st._curr_file_idx = proto_state.has_curr_file_idx() ? proto_state.curr_file_idx() : 0;
+    st.curr_file_idx = proto_state.has_curr_file_idx() ? proto_state.curr_file_idx() : 0;
     if (_loader_module) {
         _loader_module->restore_from_state(st);
     }

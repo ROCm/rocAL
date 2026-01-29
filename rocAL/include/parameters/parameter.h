@@ -42,7 +42,9 @@ class Parameter {
     /// used to fetch the updated param values
     virtual std::vector<T> get_array() { return {}; };
 
+    /// Serialize RNG state for checkpointing (empty for deterministic params).
     virtual std::string serialize_rng() const { return {}; }
+    /// Restore RNG state from a checkpoint (no-op for deterministic params).
     virtual void deserialize_rng(const std::string&) {}
 
     virtual ~Parameter() {}

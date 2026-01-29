@@ -46,6 +46,7 @@ THE SOFTWARE.
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
+ * \param [in] seed Seed for deterministic dataset shuffling when shuffle is enabled. Using a fixed seed makes file order reproducible across runs and when resuming from a checkpoint.
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSource(RocalContext context,
@@ -74,7 +75,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSource(RocalContext context,
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
  * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
-
+ * \param [in] seed Seed for deterministic dataset shuffling when shuffle is enabled. Using a fixed seed makes file order reproducible across runs and when resuming from a checkpoint.
  * \return Reference to the output tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSourceSingleShard(RocalContext context,

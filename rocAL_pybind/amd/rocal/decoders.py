@@ -48,6 +48,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
         @param decode_size_policy       Size policy for decoding images.
         @param max_decoded_width        Maximum width for decoded images.
         @param max_decoded_height       Maximum height for decoded images.
+        @param seed                     Seed for deterministic shuffling when supported (helps reproducible checkpoint resume).
 
         @return    Decoded and preprocessed image.
     """
@@ -496,4 +497,3 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
     Pipeline._current_pipeline._last_batch_policy = last_batch_policy
     decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return decoded_audio
-

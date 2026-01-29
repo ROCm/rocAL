@@ -193,29 +193,29 @@ Parameter<float>* core(FloatParam* arg) {
     return arg->core;
 }
 
+// Snapshot RNG states for all tracked random parameters.
 std::vector<std::string> ParameterFactory::snapshot_rngs() {
-    std::vector<std::string> out;
-    {
-        out.reserve(_param_list.size());
-        for (auto &p : _param_list) {
-            std::visit([&](auto* param) {
-                if (!param) {
-                    out.emplace_back(std::string{});
-                    return;
-                }
-                // Verify liveness: ensure the pointer is still tracked. If not, emit empty state.
-                pParamCore key = param;
-                if (_parameters.find(key) == _parameters.end()) {
-                    out.emplace_back(std::string{});
-                    return;
-                }
-                out.emplace_back(param->serialize_rng());
-            }, p);
-        }
+    std::vector<std::string> out;  // Serialized RNG states in parameter creation order.
+    out.reserve(_param_list.size());
+    for (auto &p : _param_list) {  // Preserve creation order for deterministic snapshots.
+        std::visit([&](auto* param) {
+            if (!param) {
+                out.emplace_back(std::string{});
+                return;
+            }
+            // Verify liveness: ensure the pointer is still tracked. If not, emit empty state.
+            pParamCore key = param;  // Variant wrapper for lookup in the live set.
+            if (_parameters.find(key) == _parameters.end()) {
+                out.emplace_back(std::string{});
+                return;
+            }
+            out.emplace_back(param->serialize_rng());
+        }, p);
     }
     return out;
 }
 
+// Restore RNG states for all tracked random parameters.
 void ParameterFactory::restore_rngs(const std::vector<std::string>& rng_states) {
     if (rng_states.size() != _param_list.size()) {
         throw std::runtime_error("ParameterFactory::restore_rngs: snapshot size mismatch with parameter list");
@@ -234,13 +234,15 @@ void ParameterFactory::restore_rngs(const std::vector<std::string>& rng_states) 
     }
 }
 
+// Reset the internal parameter ordering list used for RNG snapshots.
 void ParameterFactory::reset_param_list() {
     _param_list.clear();
     _seed_sequence_idx = 0;
 }
 
+// Tear down the singleton instance and clear tracked parameters.
 void ParameterFactory::destroy_instance() {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_mutex);  // Serialize singleton destruction.
     if (_instance != nullptr) {
         delete _instance;
         _instance = nullptr;

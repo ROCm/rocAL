@@ -294,8 +294,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
             --build-generator "${CMAKE_GENERATOR}"
-            --test-command "restore_checkpoint_test"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt
-            0
+            --test-command bash -c
+            "./checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0 && \
+             ./restore_checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0"
 ) 

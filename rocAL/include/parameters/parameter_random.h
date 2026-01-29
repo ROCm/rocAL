@@ -86,11 +86,13 @@ class UniformRand : public Parameter<T> {
         }
     }
 
+    // Serialize RNG state for checkpointing.
     std::string serialize_rng() const override {
         std::ostringstream ss;
         ss << _generator;
         return ss.str();
     }
+    // Restore RNG state from a checkpoint string.
     void deserialize_rng(const std::string &data) override {
         std::istringstream ss(data);
         ss >> _generator;
@@ -224,11 +226,13 @@ struct CustomRand : public Parameter<T> {
         }
     }
 
+    // Serialize RNG state for checkpointing.
     std::string serialize_rng() const override {
         std::ostringstream ss;
         ss << _generator;
         return ss.str();
     }
+    // Restore RNG state from a checkpoint string.
     void deserialize_rng(const std::string &data) override {
         std::istringstream ss(data);
         ss >> _generator;

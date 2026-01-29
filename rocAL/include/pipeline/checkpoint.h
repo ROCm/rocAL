@@ -31,48 +31,67 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
+/*!
+ * \file
+ * \brief Checkpointing helpers for capturing operator state and RNG state.
+ */
+
+/*! \brief Serialize an mt19937 RNG state into a string for checkpointing. */
 inline std::string SerializeRNGToString(const std::mt19937 &rng) {
     std::stringstream stream;
     stream << rng;
     return stream.str();
 }
 
+/*! \brief Deserialize an mt19937 RNG state from a checkpoint string. */
 inline void DeserializeRNGFromString(const std::string &data, std::mt19937 &rng) {
     std::stringstream stream(data);
     stream >> rng;
 }
 
+/*! \brief Holds per-operator checkpoint state during serialization. */
 class OperatorCheckpoint {
    public:
     explicit OperatorCheckpoint(std::string name) : _operator_name(std::move(name)) {}
 
+    /*! \brief Return mutable storage for the operator-specific state. */
     std::any &GetMutableCheckpointState() {
         return _state;
     }
 
+    /*! \brief Return the typed operator checkpoint state. */
     template <typename T>
     const T &GetOperatorCheckpointState() const {
         return std::any_cast<const T &>(_state);
     }
 
    private:
-    const std::string _operator_name;
-    std::any _state;
+    const std::string _operator_name;  //!< Operator name associated with this checkpoint entry.
+    std::any _state;                   //!< Operator-specific checkpoint payload.
 };
 
+/*! \brief Aggregates per-operator checkpoints for a single pipeline iteration. */
 class Checkpoint {
    public:
+    /*! \brief Clear all stored operator checkpoints. */
+    void Clear() {
+        _op_cpts.clear();
+        _name_to_id.clear();
+    }
+
+    /*! \brief Add a checkpoint entry for an operator and return it. */
     std::shared_ptr<OperatorCheckpoint> AddOperatorCheckpoint(std::string op_name) {
         _name_to_id[op_name] = _op_cpts.size();
         _op_cpts.emplace_back(std::make_shared<OperatorCheckpoint>(std::move(op_name)));
         return _op_cpts.back();
     }
 
+    /*! \brief Return the checkpoint entry for a given operator name. */
     const std::shared_ptr<OperatorCheckpoint> &GetOperatorCheckpoint(const std::string &op_name) {
         return _op_cpts[_name_to_id[op_name]];
     }
 
    private:
-    std::vector<std::shared_ptr<OperatorCheckpoint>> _op_cpts;
-    std::map<std::string, size_t, std::less<>> _name_to_id;
+    std::vector<std::shared_ptr<OperatorCheckpoint>> _op_cpts;  //!< Ordered list of operator checkpoints.
+    std::map<std::string, size_t, std::less<>> _name_to_id;     //!< Operator name to checkpoint index map.
 };
