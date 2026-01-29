@@ -17,3 +17,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+# Expose version from rocal_pybind
+try:
+    import rocal_pybind
+    __version__ = rocal_pybind.__version__
+except (ImportError, AttributeError):
+    __version__ = "unknown"
