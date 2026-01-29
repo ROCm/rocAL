@@ -5,10 +5,10 @@
 .. _using-with-cpp:
 
 ********************************************************************
-Using rocAL with C++ API
+The rocAL C++ API for contributors
 ********************************************************************
 
-This chapter explains how to create a pipeline and add augmentations using C++ APIs directly. The Python APIs also call these C++ APIs internally using the Python pybind utility as explained in the section Installing rocAL Python Package.
+The rocAL C++ API is meant for developers who want to contribute to the rocAL project, or who want to create their own custom augmentations. 
 
 C++ Common APIs
 =======================

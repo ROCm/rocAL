@@ -38,6 +38,10 @@ from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
 from rocal_pybind.types import INT16
+from rocal_pybind.types import INT32
+from rocal_pybind.types import INT8
+from rocal_pybind.types import UINT32
+
 
 #  RocalOutputMemType
 from rocal_pybind.types import HOST_MEMORY
@@ -126,6 +130,11 @@ from rocal_pybind.types import MISSING_COMPONENT_ERROR
 from rocal_pybind.types import MISSING_COMPONENT_SKIP
 from rocal_pybind.types import MISSING_COMPONENT_EMPTY
 
+#     RocalImageBorderType
+from rocal_pybind.types import REPLICATE
+from rocal_pybind.types import CONSTANT
+from rocal_pybind.types import REFLECT_NO_EDGE
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -140,6 +149,9 @@ _known_types = {
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
     INT16: ("INT16", INT16),
+    INT32: ("INT32", INT32),
+    INT8: ("INT8", INT8),
+    UINT32: ("UINT32", UINT32),
     HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
     DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
@@ -211,6 +223,10 @@ _known_types = {
     MISSING_COMPONENT_ERROR : ("MISSING_COMPONENT_ERROR", MISSING_COMPONENT_ERROR),
     MISSING_COMPONENT_SKIP : ("MISSING_COMPONENT_SKIP", MISSING_COMPONENT_SKIP),
     MISSING_COMPONENT_EMPTY : ("MISSING_COMPONENT_EMPTY", MISSING_COMPONENT_EMPTY),
+
+    REPLICATE : ("REPLICATE", REPLICATE),
+    CONSTANT : ("CONSTANT", CONSTANT),
+    REFLECT_NO_EDGE : ("REFLECT_NO_EDGE", REFLECT_NO_EDGE),
 }
 
 def data_type_function(dtype):
