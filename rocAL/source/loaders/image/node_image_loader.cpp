@@ -24,8 +24,6 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
-#define INIT_ARGS_COUNT 23  // Modify in accordance with number of args in init
-
 REGISTER_LOADER_NODE(ImageLoaderNode)
 
 ImageLoaderNode::ImageLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
