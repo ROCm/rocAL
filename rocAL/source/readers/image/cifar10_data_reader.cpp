@@ -21,63 +21,13 @@ THE SOFTWARE.
 */
 
 #include <cassert>
-#include <cerrno>
 #include "pipeline/commons.h"
 #include <cstring>
 #include <algorithm>
-#include <limits>
 #include <random>
 #include "readers/image/cifar10_data_reader.h"
 #include "readers/file_source_reader.h"
 #include "pipeline/filesystem.h"
-
-#if ENABLE_HIP && ENABLE_HIPFILE
-#include <cstdint>
-#include <cstdlib>
-#include <strings.h>
-#include <sys/stat.h>
-
-#include <hip/hip_runtime_api.h>
-#include <hipfile.h>
-#endif
-
-#if ENABLE_HIP && ENABLE_HIPFILE
-namespace {
-/*
- * hipFile Integration Notes:
- * - hipFile enables direct-to-GPU reads (GPU Direct Storage).
- * - The AMD fastpath requires 4KB-aligned file offsets, buffer offsets, and IO sizes.
- * - CIFAR records are not naturally 4KB-aligned, so we read an aligned window into a
- *   reusable device scratch buffer and then copy the requested subrange into the final output.
- * - If HIPFILE_FORCE_COMPAT_MODE=true, hipFile would internally add extra copies, so we bypass it.
- */
-
-// hipFile fastpath uses 4KB/page alignment when statx dio-align data is unavailable.
-constexpr size_t kHipFileAlignment = 4096;
-// hipFileRead() max transfer size (~2GiB - 4KiB) from hipFile's MAX_RW_COUNT.
-constexpr size_t kHipFileMaxIoSize = 0x7ffff000LU;
-
-inline size_t align_down(size_t value, size_t alignment) {
-    return value & ~(alignment - 1);
-}
-
-inline size_t align_up(size_t value, size_t alignment) {
-    const size_t mask = alignment - 1;
-    if (value > (std::numeric_limits<size_t>::max() - mask)) {
-        return std::numeric_limits<size_t>::max() & ~mask;
-    }
-    return (value + mask) & ~mask;
-}
-
-inline bool hipfile_forced_compat_mode() {
-    static const bool cached = [] {
-        const char* v = std::getenv("HIPFILE_FORCE_COMPAT_MODE");
-        return v && (!strcasecmp(v, "true"));
-    }();
-    return cached;
-}
-}  // namespace
-#endif
 
 CIFAR10DataReader::CIFAR10DataReader() {
     _src_dir = nullptr;
@@ -131,7 +81,6 @@ size_t CIFAR10DataReader::open() {
     auto file_path = _file_names[_curr_file_idx];  // Get next file name
     auto file_offset = _file_offsets[_curr_file_idx];
     _last_file_idx = _file_idx[_curr_file_idx];
-    _last_file_offset = file_offset;
     incremenet_read_ptr();
     // update _last_id for the next record
     _last_id = file_path;
@@ -144,18 +93,11 @@ size_t CIFAR10DataReader::open() {
     _last_id.append(std::to_string(_last_file_idx));
     // compare the file_name with the last one opened
     if (file_path.compare(_last_file_name) != 0) {
-#if ENABLE_HIP && ENABLE_HIPFILE
-        // Deregister hipFile handle before closing the underlying file descriptor to avoid FD reuse issues.
-        close_hipfile();
-#endif
         if (_current_fPtr) {
             fclose(_current_fPtr);
             _current_fPtr = nullptr;
         }
         _current_fPtr = fopen(file_path.c_str(), "rb");  // Open the file,
-        if (!_current_fPtr) {
-            return 0;
-        }
         _last_file_name = file_path;
         fseek(_current_fPtr, 0, SEEK_END);  // Take the file read pointer to the end
         _total_file_size = ftell(_current_fPtr);
@@ -165,8 +107,12 @@ size_t CIFAR10DataReader::open() {
     if (!_current_fPtr)  // Check if it is ready for reading
         return 0;
 
-    const size_t file_offset_sz = static_cast<size_t>(file_offset);
-    if (file_offset_sz >= _total_file_size || _raw_file_size > (_total_file_size - file_offset_sz)) {  // not enough data in the file to read
+    fseek(_current_fPtr, file_offset, SEEK_END);  // Take the file read pointer to the end
+
+    _current_file_size = ftell(_current_fPtr);  // Check how many bytes are there between and the current read pointer position (end of the file)
+
+    if (_current_file_size < _raw_file_size)  // not enough data in the file to read
+    {                                         // If file is empty continue
         fclose(_current_fPtr);
         _current_fPtr = nullptr;
         return 0;
@@ -184,105 +130,6 @@ size_t CIFAR10DataReader::read_data(unsigned char* buf, size_t read_size) {
     // Requested read size bigger than the raw file size? just read as many bytes as the raw file size
     read_size = (read_size > (_raw_file_size - 1)) ? _raw_file_size - 1 : read_size;
 
-#if ENABLE_HIP && ENABLE_HIPFILE
-    if (!_output_is_device_initialized) {
-        hipPointerAttribute_t attrs{};
-        auto status = hipPointerGetAttributes(&attrs, buf);
-        _output_is_device = (status == hipSuccess) && (attrs.type == hipMemoryTypeDevice);
-        _output_is_device_initialized = true;
-    }
-
-    if (_output_is_device) {
-        // If hipFile is forced into compatibility mode, using it here would add extra copies.
-        if (!hipfile_forced_compat_mode() && ensure_hipfile_open()) {
-            const size_t file_size = _hipfile_file_size ? _hipfile_file_size : static_cast<size_t>(_total_file_size);
-            const size_t data_offset = static_cast<size_t>(_last_file_offset) + 1;
-            const size_t desired_end = data_offset + read_size;
-
-            const size_t aligned_file_offset = align_down(data_offset, kHipFileAlignment);
-            const size_t max_aligned_end = align_down(file_size, kHipFileAlignment);
-            size_t aligned_end = align_up(desired_end, kHipFileAlignment);
-            if (aligned_end > max_aligned_end) {
-                aligned_end = max_aligned_end;
-            }
-
-            if (aligned_end > aligned_file_offset) {
-                const size_t io_size = aligned_end - aligned_file_offset;
-                const size_t offset_in_scratch = data_offset - aligned_file_offset;
-                const size_t direct_bytes = std::min(read_size, aligned_end - data_offset);
-
-                if (ensure_hipfile_scratch(io_size)) {
-                    bool io_ok = true;
-                    for (size_t chunk_offset = 0; chunk_offset < io_size; chunk_offset += kHipFileMaxIoSize) {
-                        const size_t chunk_size = std::min(kHipFileMaxIoSize, io_size - chunk_offset);
-                        const ssize_t nread = hipFileRead(reinterpret_cast<hipFileHandle_t>(_hipfile_handle), _hipfile_scratch, chunk_size,
-                                                          static_cast<hoff_t>(aligned_file_offset + chunk_offset),
-                                                          static_cast<hoff_t>(chunk_offset));
-                        if (nread < 0 || static_cast<size_t>(nread) != chunk_size) {
-                            WRN("hipFileRead failed in CIFAR10DataReader::read_data for " + _last_file_name +
-                                " (" + std::string(IS_HIPFILE_ERR(nread) ? HIPFILE_ERRSTR(nread) : std::strerror(errno)) +
-                                ", nread=" + std::to_string(nread) + ")")
-                            io_ok = false;
-                            break;
-                        }
-                    }
-
-                    if (io_ok) {
-                        auto hip_status =
-                            hipMemcpy(buf, static_cast<unsigned char*>(_hipfile_scratch) + offset_in_scratch, direct_bytes,
-                                      hipMemcpyDeviceToDevice);
-                        if (hip_status == hipSuccess) {
-                            if (direct_bytes == read_size) {
-                                return read_size;
-                            }
-
-                            // Near EOF, the AIS path may not support short reads; read the remaining tail via host.
-                            const size_t tail_offset = data_offset + direct_bytes;
-                            const size_t tail_bytes = read_size - direct_bytes;
-                            if (_host_staging.size() < tail_bytes) {
-                                _host_staging.resize(tail_bytes);
-                            }
-                            if (std::fseek(_current_fPtr, static_cast<long>(tail_offset), SEEK_SET)) {
-                                WRN("Seek operation failed in CIFAR10DataReader::read_data for " + _last_file_name + ": " +
-                                    std::strerror(errno))
-                                return direct_bytes;
-                            }
-                            const size_t host_read_size =
-                                std::fread(_host_staging.data(), sizeof(unsigned char), tail_bytes, _current_fPtr);
-                            if (host_read_size == 0) {
-                                return direct_bytes;
-                            }
-                            hip_status =
-                                hipMemcpy(buf + direct_bytes, _host_staging.data(), host_read_size, hipMemcpyHostToDevice);
-                            if (hip_status != hipSuccess) {
-                                WRN("hipMemcpyHostToDevice failed in CIFAR10DataReader::read_data tail copy: " + TOSTR(hip_status))
-                                return direct_bytes;
-                            }
-                            return direct_bytes + host_read_size;
-                        }
-                        WRN("hipMemcpyDeviceToDevice failed in CIFAR10DataReader::read_data: " + TOSTR(hip_status))
-                    }
-                }
-            }
-        }
-
-        // Fallback: read to host and copy to device
-        if (_host_staging.size() < read_size) {
-            _host_staging.resize(read_size);
-        }
-        size_t host_read_size = fread(_host_staging.data(), sizeof(unsigned char), read_size, _current_fPtr);
-        if (host_read_size == 0) {
-            return 0;
-        }
-        auto hip_status = hipMemcpy(buf, _host_staging.data(), host_read_size, hipMemcpyHostToDevice);
-        if (hip_status != hipSuccess) {
-            WRN("hipMemcpyHostToDevice failed in CIFAR10DataReader::read_data: " + TOSTR(hip_status))
-            return 0;
-        }
-        return host_read_size;
-    }
-#endif
-
     size_t actual_read_size = fread(buf, sizeof(unsigned char), read_size, _current_fPtr);
     return actual_read_size;
 }
@@ -292,34 +139,14 @@ int CIFAR10DataReader::close() {
 }
 
 CIFAR10DataReader::~CIFAR10DataReader() {
-#if ENABLE_HIP && ENABLE_HIPFILE
-    close_hipfile();
-#endif
     if (_current_fPtr) {
         fclose(_current_fPtr);
         _current_fPtr = nullptr;
     }
-#if ENABLE_HIP && ENABLE_HIPFILE
-    if (_hipfile_scratch_alloc) {
-        if (_hipfile_scratch_device_id >= 0) {
-            (void)hipSetDevice(_hipfile_scratch_device_id);
-        }
-        if (_hipfile_scratch_registered) {
-            (void)hipFileBufDeregister(_hipfile_scratch);
-            _hipfile_scratch_registered = false;
-        }
-        (void)hipFree(_hipfile_scratch_alloc);
-        _hipfile_scratch_alloc = nullptr;
-        _hipfile_scratch = nullptr;
-        _hipfile_scratch_size = 0;
-        _hipfile_scratch_device_id = -1;
-    }
-#endif
 }
 
 int CIFAR10DataReader::release() {
-    // Note: CIFAR records are read continuously from the same file; close() is called per-record.
-    // We intentionally keep the file descriptor and hipFile handle open until switching files or destruction.
+    // do not need to close file here since data is read from the same file continuously
     return 0;
 }
 
@@ -426,10 +253,6 @@ Reader::Status CIFAR10DataReader::open_folder() {
             file_path.append("/");
             file_path.append(_entity->d_name);
             FILE* fp = fopen(file_path.c_str(), "rb");  // Open the file,
-            if (!fp) {
-                WRN("CIFAR10DataReader:: Could not open file " + file_path)
-                continue;
-            }
             fseek(fp, 0, SEEK_END);                     // Take the file read pointer to the end
             size_t total_file_size = ftell(fp);
             size_t num_of_raw_files = _raw_file_size ? total_file_size / _raw_file_size : 0;
@@ -450,100 +273,3 @@ Reader::Status CIFAR10DataReader::open_folder() {
     closedir(_src_dir);
     return Reader::Status::OK;
 }
-
-#if ENABLE_HIP && ENABLE_HIPFILE
-void CIFAR10DataReader::close_hipfile() {
-    if (_hipfile_handle) {
-        hipFileHandleDeregister(reinterpret_cast<hipFileHandle_t>(_hipfile_handle));
-        _hipfile_handle = nullptr;
-    }
-    _hipfile_open_path.clear();
-    _hipfile_file_size = 0;
-}
-
-bool CIFAR10DataReader::ensure_hipfile_open() {
-    if (_hipfile_handle && _hipfile_open_path == _last_file_name) {
-        return true;
-    }
-
-    close_hipfile();
-    if (_last_file_name.empty() || !_current_fPtr) {
-        return false;
-    }
-
-    const int client_fd = ::fileno(_current_fPtr);
-    if (client_fd < 0) {
-        WRN("Failed to get file descriptor for hipFile: " + _last_file_name)
-        return false;
-    }
-
-    struct stat st {};
-    if (::fstat(client_fd, &st) == 0 && st.st_size > 0) {
-        _hipfile_file_size = static_cast<size_t>(st.st_size);
-    } else {
-        _hipfile_file_size = 0;
-    }
-
-    hipFileDescr_t descr{};
-    descr.type = hipFileHandleTypeOpaqueFD;
-    descr.handle.fd = client_fd;
-
-    hipFileHandle_t handle = nullptr;
-    auto err = hipFileHandleRegister(&handle, &descr);
-    if (err.err != hipFileSuccess) {
-        WRN("hipFileHandleRegister failed for " + _last_file_name + ": " + std::string(hipFileGetOpErrorString(err.err)))
-        return false;
-    }
-
-    _hipfile_handle = handle;
-    _hipfile_open_path = _last_file_name;
-    return true;
-}
-
-bool CIFAR10DataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
-    if (size_in_bytes == 0) {
-        return false;
-    }
-    if (_hipfile_scratch && _hipfile_scratch_size >= size_in_bytes) {
-        return _hipfile_scratch_registered;
-    }
-
-    if (_hipfile_scratch_alloc) {
-        if (_hipfile_scratch_registered) {
-            (void)hipFileBufDeregister(_hipfile_scratch);
-            _hipfile_scratch_registered = false;
-        }
-        if (_hipfile_scratch_device_id >= 0) {
-            (void)hipSetDevice(_hipfile_scratch_device_id);
-        }
-        (void)hipFree(_hipfile_scratch_alloc);
-        _hipfile_scratch_alloc = nullptr;
-        _hipfile_scratch = nullptr;
-        _hipfile_scratch_size = 0;
-        _hipfile_scratch_device_id = -1;
-    }
-
-    const size_t alloc_size = size_in_bytes + (kHipFileAlignment - 1);
-    auto hip_status = hipMalloc(&_hipfile_scratch_alloc, alloc_size);
-    if (hip_status != hipSuccess || !_hipfile_scratch_alloc) {
-        WRN("hipMalloc failed for CIFAR10 hipFile scratch buffer: " + TOSTR(hip_status))
-        return false;
-    }
-
-    const uintptr_t addr = reinterpret_cast<uintptr_t>(_hipfile_scratch_alloc);
-    const uintptr_t aligned_addr = (addr + (kHipFileAlignment - 1)) & ~(static_cast<uintptr_t>(kHipFileAlignment - 1));
-    _hipfile_scratch = reinterpret_cast<void*>(aligned_addr);
-    _hipfile_scratch_size = size_in_bytes;
-    int device_id = -1;
-    if (hipGetDevice(&device_id) == hipSuccess) {
-        _hipfile_scratch_device_id = device_id;
-    }
-
-    auto hipfile_err = hipFileBufRegister(_hipfile_scratch, _hipfile_scratch_size, 0);
-    _hipfile_scratch_registered = (hipfile_err.err == hipFileSuccess);
-    if (!_hipfile_scratch_registered) {
-        WRN("hipFileBufRegister failed for CIFAR10 hipFile scratch buffer: " + std::string(hipFileGetOpErrorString(hipfile_err.err)))
-    }
-    return _hipfile_scratch_registered;
-}
-#endif

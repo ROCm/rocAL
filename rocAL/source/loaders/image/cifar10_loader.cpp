@@ -32,7 +32,6 @@ THE SOFTWARE.
 CIFAR10Loader::CIFAR10Loader(void* dev_resources) : _circ_buff(dev_resources),
                                                             _file_load_time("file load time", DBG_TIMING),
                                                             _swap_handle_time("Swap_handle_time", DBG_TIMING) {
-    _dev_resources = dev_resources;
     _output_tensor = nullptr;
     _mem_type = RocalMemType::HOST;
     _internal_thread_running = false;
@@ -137,12 +136,7 @@ void CIFAR10Loader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cf
     _decoded_data_info._original_height.resize(_batch_size);
     _decoded_data_info._original_width.resize(_batch_size);
     _crop_image_info._crop_image_coords.resize(_batch_size);
-#if ENABLE_HIP && ENABLE_HIPFILE
-    const bool use_device_write_buffer = (_mem_type == RocalMemType::HIP);
-#else
-    const bool use_device_write_buffer = false;
-#endif
-    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, use_device_write_buffer);
+    _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth);
     _is_initialized = true;
     LOG("Loader module initialized");
 }
@@ -179,23 +173,11 @@ LoaderModuleStatus
 CIFAR10Loader::load_routine() {
     LOG("Started the internal loader thread");
     LoaderModuleStatus last_load_status = LoaderModuleStatus::OK;
-#if ENABLE_HIP
-    if (_mem_type == RocalMemType::HIP) {
-        int device_id = _device_id;
-        if (_dev_resources) {
-            device_id = static_cast<DeviceResourcesHip*>(_dev_resources)->device_id;
-        }
-        hipError_t hip_status = hipSetDevice(device_id);
-        if (hip_status != hipSuccess) {
-            ERR("hipSetDevice failed in CIFAR10Loader::load_routine: " + TOSTR(hip_status))
-            return LoaderModuleStatus::DEVICE_BUFFER_SWAP_FAILED;
-        }
-    }
-#endif
     // Initially record number of all the images that are going to be loaded, this is used to know how many still there
 
     while (_internal_thread_running) {
         auto data = _circ_buff.get_write_buffer();
+        auto cifar10reader = std::dynamic_pointer_cast<CIFAR10DataReader>(_reader);
 
         if (!_internal_thread_running)
             break;

@@ -54,9 +54,6 @@ class CIFAR10DataReader : public Reader {
     //! Returns the name of the latest data_id opened
     std::string id() override { return _last_id; };
 
-    //! Returns the path of the latest file opened
-    const std::string file_path() override { return _last_file_name; }
-
     ~CIFAR10DataReader() override;
 
     int close() override;
@@ -80,7 +77,6 @@ class CIFAR10DataReader : public Reader {
     unsigned _current_file_size;
     std::string _last_id;
     std::string _last_file_name;
-    unsigned _last_file_offset = 0;
     unsigned _last_file_idx;  // index of individual raw file in a batched file
     // hard_coding the following for now. Eventually needs to add in the ReaderConfig
     //!< file_name_prefix tells the reader to read only files with the prefix:: eventually needs to be passed through ReaderConfig
@@ -90,21 +86,4 @@ class CIFAR10DataReader : public Reader {
     size_t _total_file_size;
     void incremenet_read_ptr();
     int release();
-
-#if ENABLE_HIP && ENABLE_HIPFILE
-    void close_hipfile();
-    bool ensure_hipfile_open();
-    bool ensure_hipfile_scratch(size_t size_in_bytes);
-    void* _hipfile_handle = nullptr;
-    void* _hipfile_scratch = nullptr;
-    void* _hipfile_scratch_alloc = nullptr;
-    size_t _hipfile_scratch_size = 0;
-    size_t _hipfile_file_size = 0;
-    bool _hipfile_scratch_registered = false;
-    int _hipfile_scratch_device_id = -1;
-    bool _output_is_device = false;
-    bool _output_is_device_initialized = false;
-    std::string _hipfile_open_path;
-    std::vector<unsigned char> _host_staging;
-#endif
 };
