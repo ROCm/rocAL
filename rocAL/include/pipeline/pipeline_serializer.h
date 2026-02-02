@@ -61,7 +61,7 @@ public:
     /**
      * @brief Serialize a single operator's arguments into protobuf.
      */
-    void serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef);
+    void serialize_pipeop_arguments(const ArgumentSet& arguments_list, rocal_proto::OperatorDef *opdef);
 
     /**
      * @brief Clear any previously serialized state to start fresh.
