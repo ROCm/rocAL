@@ -796,7 +796,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .def_readwrite("y", &ROIxywh::y)
         .def_readwrite("w", &ROIxywh::w)
         .def_readwrite("h", &ROIxywh::h);
-    py::enum_<RocalRandomObjectBBoxFormat>(types_m, "RocalRandomObjectBBoxFormat",  "Rocal Random object bbox types")
+    py::enum_<RocalRandomObjectBBoxFormat>(types_m, "RocalRandomObjectBBoxFormat", "Rocal Random object bbox types")
         .value("OUT_BOX", ROCAL_OUT_BOX)
         .value("OUT_ANCHORSHAPE", ROCAL_OUT_ANCHORSHAPE)
         .value("OUT_STARTEND", ROCAL_OUT_STARTEND)

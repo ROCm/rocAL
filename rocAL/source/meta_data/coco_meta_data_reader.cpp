@@ -464,7 +464,13 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                             ++i;
                         }
                     } else if ((_output->get_metadata_type() == MetaDataType::PolygonMask || _output->get_metadata_type() == MetaDataType::PixelwiseMask) && 0 == std::strcmp(internal_key, "segmentation")) {
-                        if (parser.PeekType() == kObjectType && _output->get_metadata_type() == MetaDataType::PixelwiseMask) {
+                        if (parser.PeekType() == kObjectType) {
+                            // COCO RLE segmentation is encoded as an object (commonly when iscrowd == 1).
+                            // PolygonMask metadata expects polygon arrays; skip object-valued segmentation to avoid asserts on valid COCO JSON.
+                            if (_output->get_metadata_type() == MetaDataType::PolygonMask) {
+                                parser.SkipValue();
+                                continue;
+                            }
                             parser.EnterObject();
                             int h = -1, w = -1;
                             while (const char *another_key = parser.NextObjectKey()) {
@@ -496,10 +502,10 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                                     parser.SkipValue();
                                 }
 	                            }
-	                            rle_info.h = h;
-	                            rle_info.w = w;
-	                            has_rle = rle_valid && (!rle_info.counts_str.empty() || !rle_info.counts.empty());
-	                        } else {
+                            rle_info.h = h;
+                            rle_info.w = w;
+                            has_rle = rle_valid && (!rle_info.counts_str.empty() || !rle_info.counts.empty());
+                        } else {
                             RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
                             parser.EnterArray();
                             while (parser.NextArrayValue()) {
