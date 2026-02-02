@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <pybind11/stl.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/numpy.h>
+#include <cstring>
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
@@ -1119,21 +1120,16 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
                                      int k_largest, float foreground_prob, bool cache_objects) {
         rocalTensorList *boxes = RocalRandomObjectBBox(context, format, k_largest, foreground_prob, cache_objects);
         py::list boxes_list;
-        py::array_t<unsigned> boxes_array;
         for (int i = 0; i < boxes->size(); i++) {
             unsigned *box_buffer = static_cast<unsigned *>(boxes->at(i)->buffer());
-            boxes_array = py::array(py::buffer_info(
-                static_cast<unsigned *>(boxes->at(i)->buffer()),
-                sizeof(unsigned),
-                py::format_descriptor<unsigned>::format(),
-                1,
-                {4},
-                {sizeof(unsigned)}));
-            boxes_list.append(boxes_array);
+            py::array_t<unsigned> boxes_array({py::ssize_t(4)});
+            std::memcpy(boxes_array.mutable_data(), box_buffer, 4 * sizeof(unsigned));
+            boxes_list.append(std::move(boxes_array));
         }
         return boxes_list;
     }, py::arg("context"), py::arg("format"), py::arg("k_largest") = -1,
-       py::arg("foreground_prob") = 1.0f, py::arg("cache_objects") = false);
+       py::arg("foreground_prob") = 1.0f, py::arg("cache_objects") = false,
+       "Returns a list of 4-element uint arrays (one per image). The returned arrays own their data.");
     m.def("getOneHotEncodedLabels", &wrapper_one_hot_label_copy, py::return_value_policy::reference);
     // rocal_api_data_loaders.h
     m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",

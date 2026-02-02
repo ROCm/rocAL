@@ -737,6 +737,8 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
         size_t hash = 0;
         if (cache_objects) {
             hash = fast_hash_buffer(in_mask_buffer, buffer_size * sizeof(int));
+            hash = hash_combine(hash, static_cast<size_t>(width));
+            hash = hash_combine(hash, static_cast<size_t>(height));
             cache_entry = &_random_object_bbox_cache[hash];
         }
 

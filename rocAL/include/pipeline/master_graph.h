@@ -112,6 +112,11 @@ inline size_t fast_hash_buffer(const void* data, size_t size) {
     return hash;
 }
 
+inline size_t hash_combine(size_t seed, size_t value) {
+    // Similar to boost::hash_combine
+    return seed ^ (value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
+}
+
 class MasterGraph {
 public:
     enum class Status { OK = 0,
