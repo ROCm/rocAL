@@ -441,8 +441,9 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                 std::vector<float> mask;
                 std::vector<int> vertices_array;
                 int polygon_size = 0;
-                bool has_rle = false;
-                RLEMaskInfo rle_info;
+	                bool has_rle = false;
+	                bool rle_valid = true;
+	                RLEMaskInfo rle_info;
                 if (parser.PeekType() != kObjectType) {
                     continue;
                 }
@@ -475,25 +476,30 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                                     parser.NextArrayValue();
                                     w = parser.GetInt();
                                     parser.NextArrayValue();
-                                } else if (0 == std::strcmp(another_key, "counts")) {
-                                    if (parser.PeekType() == kStringType) {
-                                        rle_info.counts_str = parser.GetString();
-                                    } else if (parser.PeekType() == kArrayType) {
-                                        parser.EnterArray();
-                                        while (parser.NextArrayValue()) {
-                                            rle_info.counts.push_back(parser.GetInt());
-                                        }
-                                    } else {
-                                        parser.SkipValue();
-                                    }
+	                                } else if (0 == std::strcmp(another_key, "counts")) {
+	                                    if (parser.PeekType() == kStringType) {
+	                                        rle_info.counts_str = parser.GetString();
+	                                    } else if (parser.PeekType() == kArrayType) {
+	                                        parser.EnterArray();
+	                                        while (parser.NextArrayValue()) {
+	                                            int v = parser.GetInt();
+	                                            if (v < 0) {
+	                                                rle_valid = false;
+	                                                continue;
+	                                            }
+	                                            rle_info.counts.push_back(static_cast<uint32_t>(v));
+	                                        }
+	                                    } else {
+	                                        parser.SkipValue();
+	                                    }
                                 } else {
                                     parser.SkipValue();
                                 }
-                            }
-                            rle_info.h = h;
-                            rle_info.w = w;
-                            has_rle = !rle_info.counts_str.empty() || !rle_info.counts.empty();
-                        } else {
+	                            }
+	                            rle_info.h = h;
+	                            rle_info.w = w;
+	                            has_rle = rle_valid && (!rle_info.counts_str.empty() || !rle_info.counts.empty());
+	                        } else {
                             RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
                             parser.EnterArray();
                             while (parser.NextArrayValue()) {
@@ -528,13 +534,33 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                     bb_labels.push_back(label);
                     polygon_count.push_back(polygon_size);
                     vertices_count.push_back(vertices_array);
-                    add(itr->second, bb_coords, bb_labels, image_size, mask, polygon_count, vertices_count, id);
-                    if (has_rle && _output->get_metadata_type() == MetaDataType::PixelwiseMask) {
-                        rle_info.mask_idx = mask_idx;
-                        if (rle_info.h <= 0) rle_info.h = image_size.h;
-                        if (rle_info.w <= 0) rle_info.w = image_size.w;
-                        _rle_masks_by_image[itr->second].push_back(std::move(rle_info));
-                    }
+	                    add(itr->second, bb_coords, bb_labels, image_size, mask, polygon_count, vertices_count, id);
+	                    if (has_rle && _output->get_metadata_type() == MetaDataType::PixelwiseMask) {
+	                        rle_info.mask_idx = mask_idx;
+	                        if (rle_info.h <= 0) rle_info.h = image_size.h;
+	                        if (rle_info.w <= 0) rle_info.w = image_size.w;
+	                        if (rle_info.h != image_size.h || rle_info.w != image_size.w) {
+	                            std::cerr << "WARNING: RLE mask size mismatch for " << itr->second << " (mask "
+	                                      << rle_info.w << "x" << rle_info.h << " vs image "
+	                                      << image_size.w << "x" << image_size.h << ")\n";
+	                        } else if (!rle_info.counts.empty()) {
+	                            int64_t total = 0;
+	                            for (uint32_t c : rle_info.counts) {
+	                                total += static_cast<int64_t>(c);
+	                            }
+	                            int64_t expected = static_cast<int64_t>(rle_info.h) * static_cast<int64_t>(rle_info.w);
+	                            if (expected <= 0 || total != expected) {
+	                                std::cerr << "WARNING: Invalid RLE counts for " << itr->second
+	                                          << " (sum=" << total << " expected=" << expected << ")\n";
+	                            } else {
+	                                _rle_masks_by_image[itr->second].push_back(std::move(rle_info));
+	                            }
+	                            has_rle = false;  // handled
+	                        }
+	                        if (has_rle && rle_info.h == image_size.h && rle_info.w == image_size.w) {
+	                            _rle_masks_by_image[itr->second].push_back(std::move(rle_info));
+	                        }
+	                    }
                     mask.clear();
                     polygon_size = 0;
                     polygon_count.clear();
