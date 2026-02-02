@@ -2002,7 +2002,8 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                     THROW("Failed to deserialize arguments for node : " + op_def.name());
                 
                 // Resolve tensor arguments from _pipeline_tensors map
-                for (auto& arg : args_list) {
+                for (auto& argument : args_list) {
+                    Argument& arg = argument.second;
                     if (arg.is_tensor && !arg.tensor_name.empty()) {
                         if (_pipeline_tensors.find(arg.tensor_name) != _pipeline_tensors.end()) {
                             // Replace the placeholder with the actual tensor pointer
