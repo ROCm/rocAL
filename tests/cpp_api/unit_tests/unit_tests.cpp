@@ -28,10 +28,15 @@ THE SOFTWARE.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cerrno>
+#include <algorithm>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <fstream>
+#include <sys/stat.h>
 
 #include "opencv2/opencv.hpp"
 #include "rocal_api.h"
@@ -57,6 +62,39 @@ using namespace cv;
 #define RANDOMBBOXCROP
 
 using namespace std::chrono;
+
+static void rocal_mkdir_if_needed(const std::string &path) {
+    if (mkdir(path.c_str(), 0775) != 0 && errno != EEXIST) {
+        std::stringstream ss;
+        ss << "Failed to create directory '" << path << "': errno=" << errno;
+        throw std::runtime_error(ss.str());
+    }
+}
+
+static std::vector<int> rocal_encode_coco_rle_uncompressed(const cv::Mat &binary_mask) {
+    CV_Assert(binary_mask.type() == CV_8UC1);
+    const int height = binary_mask.rows;
+    const int width = binary_mask.cols;
+    std::vector<int> counts;
+    counts.reserve((size_t)height * (size_t)width / 2);
+
+    int current = 0;  // COCO RLE starts with zeros
+    int run = 0;
+    // COCO RLE uses column-major (Fortran) order: x major, then y
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+            int v = binary_mask.at<uint8_t>(y, x) ? 1 : 0;
+            if (v != current) {
+                counts.push_back(run);
+                run = 0;
+                current = v;
+            }
+            run++;
+        }
+    }
+    counts.push_back(run);
+    return counts;
+}
 
 std::string get_interpolation_type(unsigned int val, RocalResizeInterpolationType &interpolation_type) {
     switch (val) {
@@ -233,6 +271,12 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::string rocal_data_path;
     if (std::getenv("ROCAL_DATA_PATH"))
         rocal_data_path = std::getenv("ROCAL_DATA_PATH");
+
+    // Keep synthetic dataset paths alive for the duration of the test (used by reader_type == 16).
+    std::string synthetic_coco_dir;
+    std::string synthetic_images_dir;
+    std::string synthetic_json_path;
+    bool is_synthetic_pixelwise_masks = false;
 
     /*>>>>>>>>>>>>>>>> Creating Rocal parameters  <<<<<<<<<<<<<<<<*/
 
@@ -443,18 +487,111 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running COCO SEGMENTATION READER - SINGLE SHARD" << std::endl;
             pipeline_type = 6;
             use_pixelwise_masks = true;
-            if (strcmp(rocal_data_path.c_str(), "") == 0) {
-                std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
-                exit(0);
+
+            // Create a tiny synthetic COCO dataset with RLE-encoded instance masks and validate pixelwise-mask APIs
+            // without depending on ROCAL_DATA_PATH content.
+            try {
+                char tmp_template[] = "/tmp/rocal_coco_segm_XXXXXX";
+                char *tmp_dir = mkdtemp(tmp_template);
+                if (!tmp_dir) {
+                    throw std::runtime_error("mkdtemp failed for /tmp/rocal_coco_segm_XXXXXX");
+                }
+                synthetic_coco_dir = std::string(tmp_dir);
+                synthetic_images_dir = synthetic_coco_dir + "/images";
+                std::string synthetic_ann_dir = synthetic_coco_dir + "/annotations";
+                rocal_mkdir_if_needed(synthetic_images_dir);
+                rocal_mkdir_if_needed(synthetic_ann_dir);
+                synthetic_json_path = synthetic_ann_dir + "/coco_segm.json";
+
+                // Two 16x12 JPEGs
+                const int img_w = 16;
+                const int img_h = 12;
+                cv::Mat img0(img_h, img_w, CV_8UC3, cv::Scalar(20, 20, 20));
+                cv::Mat img1(img_h, img_w, CV_8UC3, cv::Scalar(40, 40, 40));
+                const std::string img0_name = "img_000.jpg";
+                const std::string img1_name = "img_001.jpg";
+                cv::imwrite(synthetic_images_dir + "/" + img0_name, img0);
+                cv::imwrite(synthetic_images_dir + "/" + img1_name, img1);
+
+                // Build instance masks (one connected component per label to make random_object_bbox stable).
+                // Image 0: label1 rectangle and label2 rectangle
+                cv::Mat m0_l1(img_h, img_w, CV_8UC1, cv::Scalar(0));
+                cv::Mat m0_l2(img_h, img_w, CV_8UC1, cv::Scalar(0));
+                cv::rectangle(m0_l1, cv::Rect(1, 2, 5, 6), cv::Scalar(255), CV_FILLED);   // x=1..5, y=2..7
+                cv::rectangle(m0_l2, cv::Rect(10, 1, 4, 3), cv::Scalar(255), CV_FILLED);  // x=10..13, y=1..3
+                // Image 1: label1 rectangle and label2 rectangle
+                cv::Mat m1_l1(img_h, img_w, CV_8UC1, cv::Scalar(0));
+                cv::Mat m1_l2(img_h, img_w, CV_8UC1, cv::Scalar(0));
+                cv::rectangle(m1_l1, cv::Rect(0, 0, 4, 4), cv::Scalar(255), CV_FILLED);   // x=0..3, y=0..3
+                cv::rectangle(m1_l2, cv::Rect(6, 8, 10, 4), cv::Scalar(255), CV_FILLED);  // x=6..15, y=8..11
+
+                auto rle0_l1 = rocal_encode_coco_rle_uncompressed(m0_l1);
+                auto rle0_l2 = rocal_encode_coco_rle_uncompressed(m0_l2);
+                auto rle1_l1 = rocal_encode_coco_rle_uncompressed(m1_l1);
+                auto rle1_l2 = rocal_encode_coco_rle_uncompressed(m1_l2);
+
+                auto write_counts = [](std::ostream &os, const std::vector<int> &counts) {
+                    os << "[";
+                    for (size_t i = 0; i < counts.size(); i++) {
+                        if (i) os << ",";
+                        os << counts[i];
+                    }
+                    os << "]";
+                };
+
+                std::ofstream js(synthetic_json_path);
+                if (!js) {
+                    throw std::runtime_error("Failed to open synthetic COCO JSON for writing");
+                }
+
+                js << "{\n";
+                js << "  \"images\": [\n";
+                js << "    {\"id\": 1, \"file_name\": \"" << img0_name << "\", \"width\": " << img_w << ", \"height\": " << img_h << "},\n";
+                js << "    {\"id\": 2, \"file_name\": \"" << img1_name << "\", \"width\": " << img_w << ", \"height\": " << img_h << "}\n";
+                js << "  ],\n";
+                js << "  \"categories\": [\n";
+                js << "    {\"id\": 1, \"name\": \"class1\"},\n";
+                js << "    {\"id\": 2, \"name\": \"class2\"}\n";
+                js << "  ],\n";
+                js << "  \"annotations\": [\n";
+                // Image 0, label 1
+                js << "    {\"id\": 1, \"image_id\": 1, \"category_id\": 1, \"iscrowd\": 1, \"area\": 30, \"bbox\": [1,2,5,6], \"segmentation\": {\"size\": [" << img_h << "," << img_w << "], \"counts\": ";
+                write_counts(js, rle0_l1);
+                js << "} },\n";
+                // Image 0, label 2
+                js << "    {\"id\": 2, \"image_id\": 1, \"category_id\": 2, \"iscrowd\": 1, \"area\": 12, \"bbox\": [10,1,4,3], \"segmentation\": {\"size\": [" << img_h << "," << img_w << "], \"counts\": ";
+                write_counts(js, rle0_l2);
+                js << "} },\n";
+                // Image 1, label 1
+                js << "    {\"id\": 3, \"image_id\": 2, \"category_id\": 1, \"iscrowd\": 1, \"area\": 16, \"bbox\": [0,0,4,4], \"segmentation\": {\"size\": [" << img_h << "," << img_w << "], \"counts\": ";
+                write_counts(js, rle1_l1);
+                js << "} },\n";
+                // Image 1, label 2
+                js << "    {\"id\": 4, \"image_id\": 2, \"category_id\": 2, \"iscrowd\": 1, \"area\": 40, \"bbox\": [6,8,10,4], \"segmentation\": {\"size\": [" << img_h << "," << img_w << "], \"counts\": ";
+                write_counts(js, rle1_l2);
+                js << "} }\n";
+                js << "  ]\n";
+                js << "}\n";
+                js.close();
+                is_synthetic_pixelwise_masks = true;
+            } catch (const std::exception &e) {
+                std::cerr << "\nWARNING: Failed to create synthetic COCO segmentation dataset (" << e.what()
+                          << "). Falling back to ROCAL_DATA_PATH-based dataset.";
+                if (strcmp(rocal_data_path.c_str(), "") == 0) {
+                    std::cerr << "\nROCAL_DATA_PATH is not set; cannot run COCO SEGMENTATION READER";
+                    return -1;
+                }
+                synthetic_images_dir = path;
+                synthetic_json_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/annotations/person_keypoints_val2017.json";
             }
-            std::string json_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/annotations/person_keypoints_val2017.json";
-            rocalCreateCOCOReader(handle, json_path.c_str(), true, false, true);
+
+            rocalCreateCOCOReader(handle, synthetic_json_path.c_str(), true, false, true);
             // Configure the random pixel selector: pick from foreground (value > 0)
             rocalSetRandomPixelMaskConfig(handle, true, 0, true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
-                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false);
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, synthetic_images_dir.c_str(), synthetic_json_path.c_str(), color_format, 0, 1, false, true, false);
             else
-                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, path, json_path.c_str(), color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+                decoded_output = rocalJpegCOCOFileSourceSingleShard(handle, synthetic_images_dir.c_str(), synthetic_json_path.c_str(), color_format, 0, 1, false, true, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 17:  // caffe classification
         {
@@ -1249,10 +1386,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                             return -1;
                         }
 
-                        if (nonzero > 0) {
-                            bool found_fg = false;
-                            for (unsigned yy = y0; yy < y1 && !found_fg; yy++) {
-                                size_t base = (size_t)yy * (size_t)mask_w;
+	                        if (nonzero > 0) {
+	                            bool found_fg = false;
+	                            for (unsigned yy = y0; yy < y1 && !found_fg; yy++) {
+	                                size_t base = (size_t)yy * (size_t)mask_w;
                                 for (unsigned xx = x0; xx < x1; xx++) {
                                     if (mask_buffer[base + xx] > 0) {
                                         found_fg = true;
@@ -1260,13 +1397,51 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                     }
                                 }
                             }
-                            if (!found_fg) {
-                                std::cerr << "\nrandom_object_bbox does not contain foreground for image " << i;
-                                return -1;
-                            }
-                        }
-                    }
-                } else {
+	                            if (!found_fg) {
+	                                std::cerr << "\nrandom_object_bbox does not contain foreground for image " << i;
+	                                return -1;
+	                            }
+	                        }
+
+	                        // For the synthetic dataset (one connected component per label), random_object_bbox should match
+	                        // exactly one of the foreground label bounding boxes.
+	                        if (is_synthetic_pixelwise_masks && max_label > 0) {
+	                            std::vector<unsigned> min_x((size_t)max_label + 1, (unsigned)mask_w);
+	                            std::vector<unsigned> min_y((size_t)max_label + 1, (unsigned)mask_h);
+	                            std::vector<unsigned> max_x((size_t)max_label + 1, 0);
+	                            std::vector<unsigned> max_y((size_t)max_label + 1, 0);
+	                            std::vector<bool> present((size_t)max_label + 1, false);
+	                            for (unsigned yy = 0; yy < (unsigned)mask_h; yy++) {
+	                                size_t base = (size_t)yy * (size_t)mask_w;
+	                                for (unsigned xx = 0; xx < (unsigned)mask_w; xx++) {
+	                                    int v = mask_buffer[base + xx];
+	                                    if (v <= 0 || v > max_label) continue;
+	                                    present[(size_t)v] = true;
+	                                    min_x[(size_t)v] = std::min(min_x[(size_t)v], xx);
+	                                    min_y[(size_t)v] = std::min(min_y[(size_t)v], yy);
+	                                    max_x[(size_t)v] = std::max(max_x[(size_t)v], xx);
+	                                    max_y[(size_t)v] = std::max(max_y[(size_t)v], yy);
+	                                }
+	                            }
+	                            bool matched = false;
+	                            for (int lbl = 1; lbl <= max_label; lbl++) {
+	                                if (!present[(size_t)lbl]) continue;
+	                                unsigned ey0 = min_y[(size_t)lbl];
+	                                unsigned ex0 = min_x[(size_t)lbl];
+	                                unsigned ey1 = max_y[(size_t)lbl] + 1;
+	                                unsigned ex1 = max_x[(size_t)lbl] + 1;
+	                                if (y0 == ey0 && x0 == ex0 && y1 == ey1 && x1 == ex1) {
+	                                    matched = true;
+	                                    break;
+	                                }
+	                            }
+	                            if (!matched) {
+	                                std::cerr << "\nrandom_object_bbox does not match any foreground label bbox for synthetic dataset (image " << i << ")";
+	                                return -1;
+	                            }
+	                        }
+	                    }
+	                } else {
                     int bbox_total = rocalGetBoundingBoxCount(handle);
                     std::vector<int> mask_count(bbox_total);
                     int mask_total = rocalGetMaskCount(handle, mask_count.data());

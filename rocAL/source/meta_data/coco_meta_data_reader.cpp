@@ -521,7 +521,11 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                 auto itr = _map_image_names_to_id.find(id);
                 auto it = _map_img_sizes.find(itr->second);
                 ImgSize image_size = it->second;  // Convert to "ltrb" format
-                if ((_output->get_metadata_type() == MetaDataType::PolygonMask || _output->get_metadata_type() == MetaDataType::PixelwiseMask) && iscrowd == 0) {
+                const bool is_polygon = (_output->get_metadata_type() == MetaDataType::PolygonMask);
+                const bool is_pixelwise = (_output->get_metadata_type() == MetaDataType::PixelwiseMask);
+                // Polygon masks are represented as polygons in COCO when iscrowd == 0.
+                // Pixelwise masks can be generated from polygons (iscrowd == 0) and/or RLE (iscrowd == 1).
+                if ((is_polygon && iscrowd == 0) || is_pixelwise) {
                     int mask_idx = 0;
                     if (exists(itr->second)) {
                         mask_idx = _map_content[itr->second]->get_labels().size();
@@ -534,11 +538,11 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                     bb_labels.push_back(label);
                     polygon_count.push_back(polygon_size);
                     vertices_count.push_back(vertices_array);
-	                    add(itr->second, bb_coords, bb_labels, image_size, mask, polygon_count, vertices_count, id);
-	                    if (has_rle && _output->get_metadata_type() == MetaDataType::PixelwiseMask) {
-	                        rle_info.mask_idx = mask_idx;
-	                        if (rle_info.h <= 0) rle_info.h = image_size.h;
-	                        if (rle_info.w <= 0) rle_info.w = image_size.w;
+                    add(itr->second, bb_coords, bb_labels, image_size, mask, polygon_count, vertices_count, id);
+                    if (has_rle && is_pixelwise) {
+                        rle_info.mask_idx = mask_idx;
+                        if (rle_info.h <= 0) rle_info.h = image_size.h;
+                        if (rle_info.w <= 0) rle_info.w = image_size.w;
 	                        if (rle_info.h != image_size.h || rle_info.w != image_size.w) {
 	                            std::cerr << "WARNING: RLE mask size mismatch for " << itr->second << " (mask "
 	                                      << rle_info.w << "x" << rle_info.h << " vs image "
