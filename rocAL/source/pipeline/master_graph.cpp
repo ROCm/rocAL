@@ -1934,8 +1934,11 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
     for (const auto& op_def : pipe_def->operators()) {
         if (op_def.has_module_name()) {
             if (op_def.module_name() == "reader") {
+                ArgumentSet args_list;
+                if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
+                        THROW("Failed to deserialize arguments for reader : " + op_def.name());
                 if (get_node_name(op_def.name()) == "LabelReader") {
-                    create_label_reader(op_def.args()[0].strings(0).c_str(), static_cast<MetaDataReaderType>(op_def.args()[1].enum_value().value()));
+                    create_label_reader(args_list.get<std::string>("source_path").c_str(), (args_list.get<MetaDataReaderType>("reader_type")));
                 }
             } else if (op_def.module_name() == "loader") {
                 // fetch the output tensor details and create it
@@ -1943,7 +1946,7 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
 
                 auto loader_node = this->add_node(get_node_name(op_def.name()), {}, {output_tensor}, true);
 
-                std::vector<Argument> args_list;
+                ArgumentSet args_list;
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
                     THROW("Failed to deserialize arguments for loader : " + op_def.name());
 
@@ -1994,7 +1997,7 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                 // Create the node with all inputs and outputs
                 auto node = this->add_node(get_node_name(op_def.name()), inputs_vector, outputs_vector);
 
-                std::vector<Argument> args_list;
+               ArgumentSet args_list;
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
                     THROW("Failed to deserialize arguments for node : " + op_def.name());
 
