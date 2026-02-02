@@ -15,13 +15,14 @@ subtrees:
 
 - caption: Conceptual
   entries:
-  - file: conceptual/overview.rst
-    title: rocAL Overview
-  - file: conceptual/architecture.rst
-    title: Architecture components
+  - file: conceptual/rocAL-operators.rst
+    title: Operators
+
 
 - caption: How to
   entries:
+  - file: how-to/rocAL-use-pipeline.rst
+    title: Create and run the pipeline
   - file: how-to/rocAL-pytorch-framework.rst
     title: Run PyTorch training 
   - file: how-to/rocAL-tensorflow-framework.rst
@@ -36,6 +37,8 @@ subtrees:
   
 - caption: Reference
   entries:
+  - file: reference/rocAL-pipeline.rst
+    title: Pipelines 
   - file: reference/rocAL-and-RNNT.rst
     title: RNNT dataloading
   - file: reference/rocAL-cpp-api.rst
