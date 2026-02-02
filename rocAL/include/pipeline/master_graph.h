@@ -203,8 +203,8 @@ public:
     // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
     std::string& get_serialized_string() { return _serialized_pipeline; }
 
-private:
-    Status update_node_parameters();
+	private:
+	    Status update_node_parameters();
     void create_single_graph();
     void create_multiple_graphs();
     void start_processing();
@@ -220,7 +220,8 @@ private:
     bool is_out_of_data();
     // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
     inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
-    int64_t find_pixel(std::vector<int> start, std::vector<int> foreground_count, int64_t val, int count);
+	    int64_t find_pixel(const std::vector<int> &start, const std::vector<int> &foreground_count, int64_t val, int count);
+	    void init_semantic_rngs();
     // Connected components helper functions using disjoint-set (union-find)
     int disjoint_get_group(const int &x) { return x; }
     int disjoint_set_group(int &x, int new_id);
@@ -309,12 +310,15 @@ private:
     // box IoU matcher variables
     bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
     BoxIouMatcherInfo _iou_matcher_info;
-    int _random_mask_pixel_value = 0;
-    bool _is_random_mask_pixel_threshold = false;
-    bool _is_random_mask_pixel_foreground = false;
-    std::vector<unsigned> output_random_mask_pixel;
+	    int _random_mask_pixel_value = 0;
+	    bool _is_random_mask_pixel_threshold = false;
+	    bool _is_random_mask_pixel_foreground = false;
+	    std::vector<unsigned> output_random_mask_pixel;
+	    unsigned _semantic_rng_seed = 0;
+	    std::vector<std::mt19937> _random_mask_pixel_rngs;
+	    std::vector<std::mt19937> _random_object_bbox_rngs;
 #if ENABLE_HIP
-    BoxEncoderGpu *_box_encoder_gpu = nullptr;
+	    BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline

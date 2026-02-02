@@ -1,9 +1,10 @@
-#include <random>
-#include <bits/stdc++.h>
-
-
 #pragma once
-// todo:: move this to common header
+
+#include <algorithm>
+#include <functional>
+#include <random>
+#include <vector>
+
 template<typename T = std::mt19937, std::size_t state_size = T::state_size>
 class SeededRNG {
   /*

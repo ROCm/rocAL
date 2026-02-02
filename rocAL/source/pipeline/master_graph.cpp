@@ -22,6 +22,7 @@ THE SOFTWARE.
 #include <omp.h>
 #include <vx_ext_amd.h>
 #include <VX/vx_types.h>
+#include <algorithm>
 #include <cstring>
 #include <sched.h>
 #include <half/half.hpp>
@@ -688,7 +689,7 @@ int MasterGraph::pick_box(std::vector<std::vector<std::pair<unsigned, unsigned>>
 
 TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format,
                                                 int k_largest, float foreground_prob, bool cache_objects) {
-    SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
+    init_semantic_rngs();
     if (_output_random_object_bbox.size() != 0) {
         for (unsigned i = 0; i < _user_batch_size; i++) {
             _output_random_object_bbox[i].clear();
@@ -704,7 +705,7 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
         unsigned width = input->at(id)->dims().at(0);
         unsigned height = input->at(id)->dims().at(1);
         unsigned buffer_size = width * height;
-        auto &rng = rngs[id];
+        auto &rng = _random_object_bbox_rngs[id];
 
         // Check foreground probability - if random value >= foreground_prob, return full image
         bool select_foreground = foreground_dist(rng) < foreground_prob;
@@ -1628,30 +1629,46 @@ void MasterGraph::set_random_mask_pixel_config(bool is_foreground, int value, bo
     _is_random_mask_pixel_threshold = is_threshold;
 }
 
-int64_t MasterGraph::find_pixel(std::vector<int> start, std::vector<int> foreground_count, int64_t val, int count) {
-    if (val < 0 || val >= count) {
+void MasterGraph::init_semantic_rngs() {
+    const unsigned seed = ParameterFactory::instance()->get_seed();
+    if (_semantic_rng_seed == seed &&
+        _random_mask_pixel_rngs.size() == _user_batch_size &&
+        _random_object_bbox_rngs.size() == _user_batch_size) {
+        return;
+    }
+    _semantic_rng_seed = seed;
+    _random_mask_pixel_rngs.resize(_user_batch_size);
+    _random_object_bbox_rngs.resize(_user_batch_size);
+
+    for (size_t i = 0; i < _user_batch_size; i++) {
+        std::seed_seq seq_pixel{seed, 0x4D504958u, static_cast<unsigned>(i)};  // "MPIX"
+        std::seed_seq seq_bbox{seed, 0x4F424258u, static_cast<unsigned>(i)};   // "OBBX"
+        _random_mask_pixel_rngs[i].seed(seq_pixel);
+        _random_object_bbox_rngs[i].seed(seq_bbox);
+    }
+}
+
+int64_t MasterGraph::find_pixel(const std::vector<int> &start, const std::vector<int> &foreground_count, int64_t val, int count) {
+    if (val < 0 || val >= count || start.empty() || foreground_count.empty() || start.size() != foreground_count.size()) {
         return -1;
     }
-    unsigned id = 0;
-    while (id < start.size()) {
-        if (foreground_count[id] > val) {
-            break;
-        } else {
-            id++;
-        }
+    auto it = std::upper_bound(foreground_count.begin(), foreground_count.end(), val);
+    if (it == foreground_count.begin()) {
+        return -1;
     }
-    id = id - 1;
-    return start[id] + (val - foreground_count[id]);
+    size_t idx = static_cast<size_t>(it - foreground_count.begin() - 1);
+    return start[idx] + (val - foreground_count[idx]);
 }
 
 TensorList *MasterGraph::get_random_mask_pixel(rocalTensorList *input) {
-    SeededRNG<std::mt19937, 4> rngs(_user_batch_size);
+    init_semantic_rngs();
     output_random_mask_pixel.clear();
     output_random_mask_pixel.resize(_user_batch_size * 2);
+    const int nthreads = static_cast<int>(std::max<size_t>(1, std::min(_cpu_num_threads, _user_batch_size)));
     if (_is_random_mask_pixel_foreground == false) {
-#pragma omp parallel for num_threads(_user_batch_size)
+#pragma omp parallel for num_threads(nthreads)
         for (unsigned i = 0; i < _user_batch_size; i++) {
-            auto rng = rngs[i];
+            auto &rng = _random_mask_pixel_rngs[i];
             auto width = input->at(i)->dims().at(0);
             auto height = input->at(i)->dims().at(1);
             auto row = std::uniform_int_distribution<int64_t>(0, height - 1)(rng);
@@ -1661,13 +1678,13 @@ TensorList *MasterGraph::get_random_mask_pixel(rocalTensorList *input) {
         }
     } else {
         if (_is_random_mask_pixel_threshold) {
-#pragma omp parallel for num_threads(_user_batch_size)
+#pragma omp parallel for num_threads(nthreads)
             for (unsigned i = 0; i < _user_batch_size; i++) {
                 std::vector<int> start;
                 std::vector<int> foreground_count;
                 unsigned id = 0;
                 int count = 0;
-                auto rng = rngs[i];
+                auto &rng = _random_mask_pixel_rngs[i];
                 int *mask_buffer = (int *)(input->at(i)->buffer());
                 auto width = input->at(i)->dims().at(0);
                 auto height = input->at(i)->dims().at(1);
@@ -1687,6 +1704,13 @@ TensorList *MasterGraph::get_random_mask_pixel(rocalTensorList *input) {
                 if (count != 0) {
                     auto dist = std::uniform_int_distribution<int64_t>(0, count - 1);
                     auto flat_idx = find_pixel(start, foreground_count, dist(rng), count);
+                    if (flat_idx < 0) {
+                        auto row = std::uniform_int_distribution<int64_t>(0, height - 1)(rng);
+                        auto col = std::uniform_int_distribution<int64_t>(0, width - 1)(rng);
+                        output_random_mask_pixel[i * 2] = row;
+                        output_random_mask_pixel[i * 2 + 1] = col;
+                        continue;
+                    }
                     auto row = flat_idx / width;
                     auto col = flat_idx % width;
                     output_random_mask_pixel[i * 2] = row;
@@ -1699,13 +1723,13 @@ TensorList *MasterGraph::get_random_mask_pixel(rocalTensorList *input) {
                 }
             }
         } else {
-#pragma omp parallel for num_threads(_user_batch_size)
+#pragma omp parallel for num_threads(nthreads)
             for (unsigned i = 0; i < _user_batch_size; i++) {
                 std::vector<int> start;
                 std::vector<int> foreground_count;
                 unsigned id = 0;
                 int count = 0;
-                auto rng = rngs[i];
+                auto &rng = _random_mask_pixel_rngs[i];
                 int *mask_buffer = (int *)(input->at(i)->buffer());
                 auto width = input->at(i)->dims().at(0);
                 auto height = input->at(i)->dims().at(1);
@@ -1725,6 +1749,13 @@ TensorList *MasterGraph::get_random_mask_pixel(rocalTensorList *input) {
                 if (count != 0) {
                     auto dist = std::uniform_int_distribution<int64_t>(0, count - 1);
                     auto flat_idx = find_pixel(start, foreground_count, dist(rng), count);
+                    if (flat_idx < 0) {
+                        auto row = std::uniform_int_distribution<int64_t>(0, height - 1)(rng);
+                        auto col = std::uniform_int_distribution<int64_t>(0, width - 1)(rng);
+                        output_random_mask_pixel[i * 2] = row;
+                        output_random_mask_pixel[i * 2 + 1] = col;
+                        continue;
+                    }
                     auto row = flat_idx / width;
                     auto col = flat_idx % width;
                     output_random_mask_pixel[i * 2] = row;

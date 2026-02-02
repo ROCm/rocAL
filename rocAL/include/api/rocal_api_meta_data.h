@@ -344,7 +344,7 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalSelectMask(RocalContext p_context
 /*! \brief Pick a random pixel coordinate from PixelwiseMask metadata
  * \ingroup group_rocal_meta_data
  * \param [in] p_context rocAL context
- * \return RocalTensorList of 2D coordinates (x, y) per image (valid only for PixelwiseMask metadata)
+ * \return RocalTensorList of 2D coordinates (row, col) per image (valid only for PixelwiseMask metadata)
  */
 extern "C" RocalTensorList ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_context);
 

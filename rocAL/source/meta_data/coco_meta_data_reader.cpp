@@ -195,10 +195,18 @@ void COCOMetaDataReader::generate_pixelwise_mask(const std::string &filename, co
             int label = bb_labels[mask.mask_idx];
             RLE M;
             rleInit(&M, 0, 0, 0, 0);
+            const int mask_h = (mask.h > 0) ? mask.h : h;
+            const int mask_w = (mask.w > 0) ? mask.w : w;
+            if (mask_h != h || mask_w != w) {
+                std::cerr << "WARNING: RLE mask size mismatch for " << filename << " (mask "
+                          << mask_w << "x" << mask_h << " vs image " << w << "x" << h << ")\n";
+                continue;
+            }
             if (!mask.counts_str.empty()) {
-                rleFrString(&M, const_cast<char *>(mask.counts_str.c_str()), mask.h, mask.w);
+                std::string s = mask.counts_str;
+                rleFrString(&M, s.data(), mask_h, mask_w);
             } else if (!mask.counts.empty()) {
-                rleInit(&M, mask.h, mask.w, mask.counts.size(), const_cast<uint *>(mask.counts.data()));
+                rleInit(&M, mask_h, mask_w, mask.counts.size(), const_cast<uint *>(mask.counts.data()));
             } else {
                 continue;
             }
@@ -401,7 +409,8 @@ void COCOMetaDataReader::read_all(const std::string &path) {
         } else if (0 == std::strcmp(key, "categories")) {
             RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
             parser.EnterArray();
-            int id = 1, continuous_idx = 1;
+            int id = 1;
+            std::vector<int> category_ids;
             while (parser.NextArrayValue()) {
                 if (parser.PeekType() != kObjectType) {
                     continue;
@@ -414,8 +423,14 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                         parser.SkipValue();
                     }
                 }
-                _label_info.insert(std::make_pair(id, continuous_idx));
-                continuous_idx++;
+                category_ids.push_back(id);
+            }
+            std::sort(category_ids.begin(), category_ids.end());
+            category_ids.erase(std::unique(category_ids.begin(), category_ids.end()), category_ids.end());
+            _label_info.clear();
+            int continuous_idx = 1;
+            for (int cat_id : category_ids) {
+                _label_info[cat_id] = continuous_idx++;
             }
         } else if (0 == std::strcmp(key, "annotations")) {
             RAPIDJSON_ASSERT(parser.PeekType() == kArrayType);
@@ -549,9 +564,16 @@ void COCOMetaDataReader::read_all(const std::string &path) {
         bb_labels = elem.second->get_labels();
         Labels continuous_label_id;
         for (unsigned int i = 0; i < bb_coords.size(); i++) {
+            if (_avoid_class_remapping) {
+                continuous_label_id.push_back(bb_labels[i]);
+                continue;
+            }
             auto _it_label = _label_info.find(bb_labels[i]);
-            int cnt_idx = _avoid_class_remapping ? _it_label->first : _it_label->second;
-            continuous_label_id.push_back(cnt_idx);
+            if (_it_label == _label_info.end()) {
+                continuous_label_id.push_back(bb_labels[i]);
+                continue;
+            }
+            continuous_label_id.push_back(_it_label->second);
         }
         elem.second->set_labels(continuous_label_id);
     }
