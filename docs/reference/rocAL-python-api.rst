@@ -1,5 +1,5 @@
 .. meta::
-  :description: rocAL Python APU
+  :description: rocAL Python API
   :keywords: rocAL, ROCm, API, Python
 
 ********************************************************************

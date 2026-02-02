@@ -1184,8 +1184,8 @@ TensorListVector* MasterGraph::create_label_reader(const char *source_path, Meta
     auto reader_op = std::make_shared<PipelineOperator>("LabelReader_" + std::to_string(_op_idx++), "reader");
 
     // Add all arguments as part of the operator
-    reader_op->arguments.push_back(Argument("source_path", source_path));
-    reader_op->arguments.push_back(Argument("reader_type", reader_type));
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
 
     _pipeline_operators.push_back(reader_op);
 
@@ -1809,10 +1809,10 @@ void MasterGraph::serialize(size_t *serialized_string_size) {
 
 Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output) {
     if (output.is_argument_input())
-        THROW("The tensor is an input, it is already created in the pipeline.")
+        THROW("The tensor '" + output.name() + "' is an input, it is already created in the pipeline.")
 
     if (_pipeline_tensors.find(output.name()) != _pipeline_tensors.end()) {
-        THROW("The tensor is already created and present in the pipeline.")
+        THROW("The tensor '" + output.name() + "' is already created and present in the pipeline.")
     }
     // dims
     std::vector<size_t> dims;
@@ -1821,7 +1821,7 @@ Tensor *MasterGraph::create_operator_output(const rocal_proto::InputOutput &outp
     }
 
     if (dims.empty())
-        THROW("Empty tensor dims.")
+        THROW(std::string("Empty tensor dims for tensor: ") + output.name())
     
     // Update the N dim to the batch size set in the pipeline
     dims[0] = _user_batch_size;
@@ -1896,6 +1896,9 @@ std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const 
         auto loader_module = node->get_loader_module();
         loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
         _loader_modules.emplace_back(loader_module);
+
+        // Assign a unique graph ID to this node based on the current loader count
+        // Each loader has its own graph, and nodes belong to exactly one graph
         node->set_graph_id(_loaders_count++);
         _root_nodes.push_back(node);
         
@@ -2005,7 +2008,7 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
         if (_pipeline_tensors.find(pipe_out.name()) != _pipeline_tensors.end()) {
             this->set_output(_pipeline_tensors[pipe_out.name()]);
         } else {
-            THROW("The required output tensor is not present in the reconstructed pipeline.")
+            THROW("The required output tensor '" + pipe_out.name() + "' is not present in the reconstructed pipeline.")
         }
     }
 }
