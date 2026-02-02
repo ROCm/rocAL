@@ -38,7 +38,8 @@ class Cifar10MetaDataReader : public MetaDataReader {
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
+    MetaDataReaderType get_reader_type() const override { return MetaDataReaderType::CIFAR10_META_DATA_READER; }
+    const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     Cifar10MetaDataReader();
 
    private:

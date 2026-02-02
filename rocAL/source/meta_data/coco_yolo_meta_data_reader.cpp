@@ -23,13 +23,25 @@ THE SOFTWARE.
 #include "meta_data/coco_yolo_meta_data_reader.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
+#include <unordered_map>
 #include <utility>
 
 using namespace std;
+
+namespace {
+constexpr size_t kYoloBboxCoordsCount = 4;
+constexpr size_t kMinPolygonCoordsCount = 6;
+constexpr int kRectVertices = 4;
+constexpr int kCoordsPerVertex = 2;
+constexpr int kRectPolygonCoordsCount = kRectVertices * kCoordsPerVertex;
+}  // namespace
 
 COCOYoloMetaDataReader::COCOYoloMetaDataReader() : _coco_yolo_metadata_read_time("coco yolo meta read time", DBG_TIMING) {
 }
@@ -377,7 +389,7 @@ ImgSize COCOYoloMetaDataReader::parse_bmp_header(const std::string& file_path) {
     int width = header[18] | (header[19] << 8) | (header[20] << 16) | (header[21] << 24);
     // Height at offset 22 (little-endian int32, can be negative)
     int height = header[22] | (header[23] << 8) | (header[24] << 16) | (header[25] << 24);
-    if (height < 0) height = -height;  // Absolute value for top-down BMPs
+    height = std::abs(height);  // Absolute value for top-down BMPs
 
     return ImgSize{width, height};
 }
@@ -385,7 +397,7 @@ ImgSize COCOYoloMetaDataReader::parse_bmp_header(const std::string& file_path) {
 ImgSize COCOYoloMetaDataReader::probe_image_size(const filesys::path& image_path) {
     std::string path_str = image_path.string();
     std::string ext = image_path.extension().string();
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
     ImgSize size;
     if (ext == ".jpg" || ext == ".jpeg") {
@@ -439,8 +451,8 @@ void COCOYoloMetaDataReader::parse_label_file(const filesys::path& label_path, c
     while (std::getline(file, line)) {
         line_num++;
 
-        // Skip empty lines
-        if (line.empty() || line.find_first_not_of(" \t\n\r") == std::string::npos) {
+        // Skip empty or whitespace-only lines
+        if (line.find_first_not_of(" \t\n\r") == std::string::npos) {
             continue;
         }
 
@@ -466,7 +478,7 @@ void COCOYoloMetaDataReader::parse_label_file(const filesys::path& label_path, c
         // Track observed class IDs for remapping
         _observed_class_ids.insert(class_id);
 
-        if (tokens.size() == 4) {
+        if (tokens.size() == kYoloBboxCoordsCount) {
             // Detection format: x_center y_center width height
             BoundingBoxCord box = convert_yolo_to_ltrb(tokens[0], tokens[1], tokens[2], tokens[3], img_width, img_height);
             BoundingBoxCords bbox;
@@ -488,13 +500,13 @@ void COCOYoloMetaDataReader::parse_label_file(const filesys::path& label_path, c
                 mask_cords.push_back(box.b);
 
                 std::vector<int> polygon_count = {1};  // One polygon per object
-                std::vector<std::vector<int>> vertices_count = {{8}};  // 8 values = 4 vertices x 2
+                std::vector<std::vector<int>> vertices_count = {{kRectPolygonCoordsCount}};  // 4 vertices x 2 coords each
 
                 add(image_key, bbox, labels, image_size, mask_cords, polygon_count, vertices_count);
             } else {
                 add(image_key, bbox, labels, image_size);
             }
-        } else if (tokens.size() >= 6 && tokens.size() % 2 == 0) {
+        } else if (tokens.size() >= kMinPolygonCoordsCount && tokens.size() % 2 == 0) {
             // Segmentation format: x1 y1 x2 y2 ... xn yn (polygon vertices)
             std::vector<float> pixel_coords = convert_polygon_to_pixel(tokens, img_width, img_height);
             BoundingBoxCord box = compute_bbox_from_polygon(pixel_coords, img_width, img_height);
@@ -514,10 +526,10 @@ void COCOYoloMetaDataReader::parse_label_file(const filesys::path& label_path, c
                 add(image_key, bbox, labels, image_size);
             }
         } else {
-            if (warning_count < max_warnings) {
+            if (warning_count < max_warnings)
                 WRN("Invalid annotation format in " + label_path.string() + " line " + std::to_string(line_num) +
-                    " (expected 4 values for bbox or >= 6 even values for polygon, got " + std::to_string(tokens.size()) + ")");
-            }
+                    " (expected " + std::to_string(kYoloBboxCoordsCount) + " values for bbox or >= " + std::to_string(kMinPolygonCoordsCount) +
+                    " even values for polygon, got " + std::to_string(tokens.size()) + ")");
             warning_count++;
         }
     }
@@ -553,30 +565,34 @@ void COCOYoloMetaDataReader::read_all(const std::string &path) {
         THROW("Images directory does not exist or is not a directory: " + _images_path);
     }
 
+    // Index label files by stem (basename) so we can iterate images and attach labels if present.
+    std::unordered_map<std::string, filesys::path> label_by_stem;
+    for (const auto& entry : filesys::directory_iterator(path)) {
+        if (!entry.is_regular_file())
+            continue;
+        auto ext = entry.path().extension().string();
+        if (ext != ".txt")
+            continue;
+        label_by_stem.emplace(entry.path().stem().string(), entry.path());
+    }
+
+    static const std::vector<std::string> supported_image_exts = {".jpg", ".jpeg", ".png", ".bmp", ".JPG", ".JPEG", ".PNG", ".BMP"};
+
     int files_processed = 0;
     int files_skipped = 0;
 
-    for (const auto& entry : filesys::directory_iterator(path)) {
-        if (!entry.is_regular_file()) {
+    // Iterate images to ensure every decoded image has a metadata entry (empty if missing a label file).
+    for (const auto& img_entry : filesys::directory_iterator(_images_path)) {
+        if (!img_entry.is_regular_file())
             continue;
-        }
 
-        std::string ext = entry.path().extension().string();
-        if (ext != ".txt") {
+        auto image_path = img_entry.path();
+        auto ext = image_path.extension().string();
+        if (std::find(supported_image_exts.begin(), supported_image_exts.end(), ext) == supported_image_exts.end())
             continue;
-        }
 
-        std::string basename = entry.path().stem().string();
+        std::string basename = image_path.stem().string();
 
-        // Find corresponding image file
-        filesys::path image_path = find_image_path(basename);
-        if (image_path.empty()) {
-            WRN("No matching image found for label file: " + entry.path().string());
-            files_skipped++;
-            continue;
-        }
-
-        // Probe image size
         ImgSize img_size;
         try {
             img_size = probe_image_size(image_path);
@@ -586,16 +602,34 @@ void COCOYoloMetaDataReader::read_all(const std::string &path) {
             continue;
         }
 
-        // Cache image size
         _map_img_sizes[basename] = img_size;
-
-        // Store relative file path with extension
         _relative_file_paths.push_back(image_path.filename().string());
 
-        // Parse label file
-        parse_label_file(entry.path(), basename, img_size);
+        auto label_it = label_by_stem.find(basename);
+        if (label_it != label_by_stem.end()) {
+            parse_label_file(label_it->second, basename, img_size);
+            files_processed++;
+        } else {
+            // No label file: add empty entry so lookup() won't throw during decode.
+            bool is_polygon_mode = (_output->get_metadata_type() == MetaDataType::PolygonMask);
+            BoundingBoxCords empty_bbox;
+            Labels empty_labels;
+            if (is_polygon_mode) {
+                MaskCords empty_mask;
+                std::vector<int> empty_polygon_count;
+                std::vector<std::vector<int>> empty_vertices_count;
+                add(basename, empty_bbox, empty_labels, img_size, empty_mask, empty_polygon_count, empty_vertices_count);
+            } else {
+                add(basename, empty_bbox, empty_labels, img_size);
+            }
+        }
+    }
 
-        files_processed++;
+    // Warn about label files with no matching image.
+    for (const auto& kv : label_by_stem) {
+        if (_map_img_sizes.find(kv.first) == _map_img_sizes.end()) {
+            WRN("No matching image found for label file: " + kv.second.string());
+        }
     }
 
     // Apply class remapping if needed
@@ -604,7 +638,12 @@ void COCOYoloMetaDataReader::read_all(const std::string &path) {
         std::vector<int> sorted_ids(_observed_class_ids.begin(), _observed_class_ids.end());
         std::sort(sorted_ids.begin(), sorted_ids.end());
 
-        // Create mapping from original ID to continuous index (1-based to match COCO reader)
+        // Create mapping from original ID to a dense, continuous index range.
+        // We intentionally use 1-based indices here to match the COCO reader and other
+        // parts of the pipeline that assume class IDs start at 1.
+        //
+        // If the source annotations are 0-based (i.e., they contain class_id 0), then 0
+        // will be treated like any other valid class and remapped to 1, 1 -> 2, etc.
         for (size_t i = 0; i < sorted_ids.size(); i++) {
             _label_info[sorted_ids[i]] = static_cast<int>(i + 1);
         }

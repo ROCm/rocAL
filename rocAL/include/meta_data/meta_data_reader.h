@@ -110,7 +110,7 @@ class MetaDataReader {
     virtual const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() = 0;
     virtual bool exists(const std::string& image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
-    virtual MetaDataReaderType get_reader_type() const { return MetaDataReaderType::FOLDER_BASED_LABEL_READER; }  // Returns the reader type
+    virtual MetaDataReaderType get_reader_type() const = 0;  // Returns the reader type
     virtual ImgSize lookup_image_size(const std::string& image_name) { return {}; }
     virtual void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { return; }
     virtual bool get_aspect_ratio_grouping() const { return {}; }

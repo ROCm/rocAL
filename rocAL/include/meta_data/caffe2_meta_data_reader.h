@@ -42,7 +42,8 @@ class Caffe2MetaDataReader : public MetaDataReader {
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return (_map_content); }
+    MetaDataReaderType get_reader_type() const override { return MetaDataReaderType::CAFFE2_META_DATA_READER; }
+    const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return (_map_content); }
     Caffe2MetaDataReader();
 
    private:

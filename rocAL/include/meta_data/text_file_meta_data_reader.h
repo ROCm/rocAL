@@ -34,6 +34,7 @@ class TextFileMetaDataReader : public MetaDataReader {
     void release(std::string image_name);
     void release() override;
     bool set_timestamp_mode() override { return false; }
+    MetaDataReaderType get_reader_type() const override { return MetaDataReaderType::TEXT_FILE_META_DATA_READER; }
 
     const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     std::vector<std::string> get_relative_file_path() override { return _relative_file_path; }
