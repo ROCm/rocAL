@@ -1,19 +1,16 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
-
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
@@ -26,23 +23,22 @@ THE SOFTWARE.
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
-   public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
+// WarpPerspective tensor node: applies 3x3 perspective transform per-sample.
+// The perspective matrix is provided as 9 floats either per-batch (size 9) replicated,
+// or per-sample (size 9 * batch_size).
+class WarpPerspectiveNode : public Node {
+public:
+    WarpPerspectiveNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
+    WarpPerspectiveNode() = delete;
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    void initialize_args(const ArgumentSet& arguments) override;
-    std::string node_name() const override { return "BrightnessNode"; }
+    // Initialize with a perspective matrix (size == 9 or size == 9 * batch_size)
+    void init(const std::vector<float>& perspective_matrix, ResizeInterpolationType interpolation_type);
 
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
 
-   private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+private:
+    std::vector<float> _perspective; // length 9 or 9 * batch_size
+    int _interpolation_type = 0;
 };

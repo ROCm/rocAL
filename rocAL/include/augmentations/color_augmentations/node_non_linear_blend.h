@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,28 +21,26 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
+class NonLinearBlendNode : public Node {
    public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
+    explicit NonLinearBlendNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
+    NonLinearBlendNode() = delete;
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    void initialize_args(const ArgumentSet& arguments) override;
-    std::string node_name() const override { return "BrightnessNode"; }
+    // Fixed and dynamic stddev init
+    void init(float stddev);
+    void init(FloatParam* stddev);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+    ParameterVX<float> _stddev;
+    // Suggested default range for stddev; actual values are fully user-controlled and not restricted to this range.
+    // User-provided values outside this range are accepted without clamping or rejection.
+    constexpr static float STDDEV_RANGE[2] = {0.05f, 0.50f};
 };

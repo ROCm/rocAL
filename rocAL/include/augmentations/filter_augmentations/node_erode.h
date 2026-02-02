@@ -1,48 +1,36 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
-
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 #pragma once
-#include "pipeline/graph.h"
 #include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
-   public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
+class ErodeNode : public Node {
+public:
+    explicit ErodeNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
+    ErodeNode() = delete;
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    void initialize_args(const ArgumentSet& arguments) override;
-    std::string node_name() const override { return "BrightnessNode"; }
+    // Fixed kernel size across the batch
+    void init(unsigned kernel_size);
 
-   protected:
-    void create_node() override;
+protected:
     void update_node() override;
+    void create_node() override;
 
-   private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+private:
+    unsigned _kernel_size = 3; // default kernel size
 };

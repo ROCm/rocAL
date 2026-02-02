@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,28 +21,25 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
+
 #include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
+class GridMaskNode : public Node {
    public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
+    GridMaskNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    GridMaskNode() = delete;
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    void initialize_args(const ArgumentSet& arguments) override;
-    std::string node_name() const override { return "BrightnessNode"; }
+    // Scalar-only parameters (uniform across the batch)
+    void init(unsigned tile_width, float grid_ratio, float grid_angle_radians, unsigned translate_x, unsigned translate_y);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+    unsigned _tile_width = 0;
+    float _grid_ratio = 0.0f;
+    float _grid_angle = 0.0f; // radians
+    unsigned _translate_x = 0;
+    unsigned _translate_y = 0;
 };

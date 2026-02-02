@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,20 @@ THE SOFTWARE.
 */
 
 #pragma once
-#include "pipeline/graph.h"
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
+class ColorCastNode : public Node {
    public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
+    ColorCastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    ColorCastNode() = delete;
+    ~ColorCastNode();
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    void initialize_args(const ArgumentSet& arguments) override;
-    std::string node_name() const override { return "BrightnessNode"; }
+    // Per-sample alpha as random parameter, and RGB triplet(s)
+    void init(FloatParam *alpha_param, std::vector<float> rgb);
+    // Fixed alpha and RGB triplet(s)
+    void init(float alpha, std::vector<float> rgb);
 
    protected:
     void create_node() override;
@@ -42,7 +42,8 @@ class BrightnessNode : public Node {
 
    private:
     ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+    std::vector<float> _rgb;
+    vx_tensor _rgb_tensor = nullptr;
+    void* _rgb_memory = nullptr;
+    constexpr static float ALPHA_RANGE[2] = {0.0f, 1.0f};
 };
