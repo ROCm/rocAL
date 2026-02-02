@@ -1,5 +1,6 @@
 /*
-Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc.
+All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -16,19 +17,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 #include <vx_ext_rpp.h>
 #include <vx_ext_rpp_version.h>
-#include "augmentations/filter_augmentations/node_median_filter.h"
+#include "augmentations/filter_augmentations/node_magnitude.h"
 #include "pipeline/exception.h"
 
-MedianFilterNode::MedianFilterNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+MagnitudeNode::MagnitudeNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
-void MedianFilterNode::create_node() {
+void MagnitudeNode::create_node() {
     if (_node)
         return;
 
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 2)
+#if VX_EXT_RPP_CHECK_VERSION(3, 1, 3)
+    if (_inputs.size() < 2)
+        THROW("Magnitude node needs two input tensors");
+
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -37,29 +42,21 @@ void MedianFilterNode::create_node() {
     vx_scalar input_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &input_layout);
     vx_scalar output_layout_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &roi_type);
-    vx_scalar kernel_size_vx = vxCreateScalar(ctx, VX_TYPE_UINT32, &_kernel_size);
-    vx_scalar border_type_vx = vxCreateScalar(ctx, VX_TYPE_INT32, &_border_type);
 
-    _node = vxExtRppMedianFilter(_graph->get(),
-                                 _inputs[0]->handle(),
-                                 _inputs[0]->get_roi_tensor(),
-                                 _outputs[0]->handle(),
-                                 kernel_size_vx,
-                                 border_type_vx,
-                                 input_layout_vx,
-                                 output_layout_vx,
-                                 roi_type_vx);
+    _node = vxExtRppMagnitude(_graph->get(),
+                              _inputs[0]->handle(),
+                              _inputs[1]->handle(),
+                              _inputs[0]->get_roi_tensor(),
+                              _outputs[0]->handle(),
+                              input_layout_vx,
+                              output_layout_vx,
+                              roi_type_vx);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the median filter (vxExtRppMedianFilter) node failed: " + TOSTR(status));
+        THROW("Adding the magnitude (vxExtRppMagnitude) node failed: " + TOSTR(status));
 #else
-    THROW("MedianFilterNode: vxExtRppMedianFilter requires amd_rpp version >= 3.1.2");
+    THROW("MagnitudeNode: vxExtRppMagnitude requires amd_rpp version >= 3.1.3");
 #endif
 }
 
-void MedianFilterNode::init(int kernel_size, ImageBorderType border_type) {
-    _kernel_size = kernel_size;
-    _border_type = static_cast<int>(border_type);
-}
-
-void MedianFilterNode::update_node() {}
+void MagnitudeNode::update_node() {}

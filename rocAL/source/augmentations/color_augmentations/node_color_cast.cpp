@@ -90,7 +90,7 @@ void ColorCastNode::create_node() {
                                            stride, _rgb_memory, mem_type);
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_rgb_tensor)) != VX_SUCCESS)
-        THROW("Error: vxCreateTensorFromHandle(_rgb_tensor) failed: " + TOSTR(status))
+        THROW("Error: vxCreateTensorFromHandle(_rgb_tensor) failed: " + TOSTR(status));
 
     // Layouts & ROI type
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
@@ -104,7 +104,7 @@ void ColorCastNode::create_node() {
                               _rgb_tensor, _alpha.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
     vx_status nstatus;
     if ((nstatus = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
-        THROW("Adding the ColorCast (vxExtRppColorCast) node failed: " + TOSTR(nstatus))
+        THROW("Adding the ColorCast (vxExtRppColorCast) node failed: " + TOSTR(nstatus));
 #else
     THROW("ColorCastNode: vxExtRppColorCast requires amd_rpp version >= 3.1.2");
 #endif

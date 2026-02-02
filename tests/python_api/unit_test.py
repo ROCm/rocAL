@@ -534,6 +534,59 @@ def main():
                                         border_type=types.REPLICATE,
                                         output_layout=tensor_layout,
                                         output_dtype=tensor_dtype)
+        elif augmentation_name == "dilate":
+            output = fn.dilate(images,
+                                kernel_size=3,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "erode":
+            output = fn.erode(images,
+                                kernel_size=3,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "magnitude":
+            images2 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=max_width,
+                                dest_height=max_height,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.magnitude(images,
+                                    images2,
+                                    output_layout=tensor_layout,
+                                    output_dtype=tensor_dtype)
+        elif augmentation_name == "phase":
+            images2 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=max_width,
+                                dest_height=max_height,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.phase(images,
+                                images2,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "threshold":
+            min_val = [30.0]
+            max_val = [100.0]
+            if color_format == types.RGB:
+                min_val = [30.0, 30.0, 30.0]
+                max_val = [100.0, 100.0, 100.0]
+            output = fn.threshold(images,
+                                  min=min_val,
+                                  max=max_val,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "warp_perspective":
+            output = fn.warp_perspective(images,
+                                         dest_height=416,
+                                         dest_width=416,
+                                         perspective=[0.93, 0.5, 0.0,
+                                                      -0.5, 0.93, 0.0,
+                                                      0.005, 0.005, 1.0],
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype,
+                                         interpolation_type=types.LINEAR_INTERPOLATION)
 
         if output_set == 0:
             pipe.set_outputs(output)
