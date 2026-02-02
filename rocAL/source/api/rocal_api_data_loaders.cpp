@@ -210,7 +210,6 @@ rocalJpegFileSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
@@ -271,7 +270,6 @@ rocalJpegFileSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
@@ -462,7 +460,6 @@ rocalJpegCaffe2LMDBRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
@@ -521,7 +518,6 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
@@ -583,7 +579,6 @@ rocalJpegCaffeLMDBRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
@@ -644,7 +639,6 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
@@ -838,7 +832,6 @@ rocalMXNetRecordSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
@@ -900,7 +893,6 @@ rocalMXNetRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
@@ -963,7 +955,6 @@ rocalJpegCOCOFileSource(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
@@ -1026,7 +1017,6 @@ rocalJpegCOCOFileSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
@@ -1287,7 +1277,6 @@ rocalJpegTFRecordSource(
         };
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (internal_shard_count < 1)
@@ -1356,7 +1345,6 @@ rocalJpegTFRecordSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if (dec_type == ROCAL_DECODER_ROCJPEG) decType = DecoderType::ROCJPEG;
 
         if (shard_count < 1)
@@ -2197,7 +2185,6 @@ rocalJpegExternalFileSource(
     try {
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) decType = DecoderType::OPENCV;
         if ((decode_size_policy == ROCAL_USE_MAX_SIZE) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED))
             THROW("use_max_size is not supported in external source reader");
 
@@ -2394,9 +2381,6 @@ rocalWebDatasetSourceSingleShard(
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
-        if (dec_type == ROCAL_DECODER_OPENCV) {
-            decType = DecoderType::OPENCV;
-        }
 
         if (shard_count < 1) {
             THROW("Shard count should be bigger than 0");

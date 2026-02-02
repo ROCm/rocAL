@@ -88,8 +88,6 @@ int main(int argc, const char **argv) {
     // Set the rocAL decoder type
     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG;
     if (decoder_type == 1) {
-        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_OPENCV;
-    } else if (decoder_type == 2) {
         rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_ROCJPEG;
         processing_device = 1;  // Requires GPU backend for rocJpeg decoder
     }
