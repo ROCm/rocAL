@@ -193,7 +193,7 @@ rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size,
     } catch (const std::exception& e) {
         delete static_cast<Context*>(context);
         context = nullptr;
-        ERR(STR("Failed to init the Rocal context, ") + STR(e.what()))
+        ERR(STR("Failed to init the Rocal context, ") + e.what())
     }
     return context;
 }
