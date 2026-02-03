@@ -6,6 +6,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 
 ### Added
 * Multi-version python `.so` build support for rocal pybind. Supports python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13
+* Adds support for pipeline checkpointing in rocAL.
 
 ### Changes
 * Changes build instructions to omit building of wheels.
@@ -19,9 +20,11 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
-* Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
+* Adds new public APIs rocalSerialize(), rocalGetSerializedString(), and rocalDeserialize() for serializing and deserializing pipelines.
 * Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
 * Update EnumRegistry to support enum value lookup by type name.
+* Adds new method in Argument class for type-safe value retrieval of arguments.
+* `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 
 ## rocAL 2.5.0 for ROCm 7.2.0
 
