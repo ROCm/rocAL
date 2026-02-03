@@ -185,8 +185,6 @@ int main(int argc, const char **argv) {
     file.close();
 
     std::cerr << "The checkpoint size: " << size_ckpt << " bytes\n";
-    std::cerr << "The checkpoint -> " << serialized_ckpt << "\n";
-
     std::cout << "Saved checkpoint\n";
     counter = 0;
 
