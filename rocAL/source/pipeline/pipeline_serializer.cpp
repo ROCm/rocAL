@@ -143,10 +143,11 @@ void serialize_parameter_to_protobuf(rocal_proto::Parameter *parameter, const Ar
     }
 }
 
-void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>& arguments_list, rocal_proto::OperatorDef *opdef) {
+void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments_list, rocal_proto::OperatorDef *opdef) {
 
     // Iterate through each argument to store in the protobuffers
-    for (auto &op_arg : arguments_list) {
+    for (auto &arg_pair : arguments_list) {
+        const Argument& op_arg = arg_pair.second;
         rocal_proto::Arguments *arg = opdef->add_args();
         arg->set_name(op_arg.arg_name);
         arg->set_type(op_arg.type_name);
@@ -181,7 +182,7 @@ void PipelineSerializer::serialize_pipeop_arguments(const std::vector<Argument>&
             set_tensor_proto(tensor_ref, tensor_ptr, true);
         } else if (op_arg.type_name == "enum") {
             if (op_arg.values.empty()) {
-                THROW("Enum argument " + op_arg.arg_name + " has no values.");
+                THROW("Enum argument '" + op_arg.arg_name + "' requires at least one value.");
             }
             rocal_proto::EnumType* enum_arg = arg->mutable_enum_value();
             enum_arg->set_name(op_arg.sub_type_name);
@@ -292,9 +293,8 @@ void PipelineSerializer::serialize_output_tensors(TensorList& output_tensors_lis
     }
 }
 
-RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto::OperatorDef& opdef, std::vector<Argument>& arguments) {
+RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto::OperatorDef& opdef, ArgumentSet& arguments) {
     arguments.clear();
-    arguments.reserve(opdef.args_size());
     for (const auto& proto_arg : opdef.args()) {
         Argument arg;
         arg.arg_name = proto_arg.name();
@@ -319,7 +319,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             if (arg.type_name == "int") {
                 if (arg.sub_type_name == "SimpleParameter") {
                     if (param.param_val_int_size() < 1) {
-                        THROW("Invalid parameter: missing value for " + arg.arg_name);
+                        THROW("Invalid parameter: missing value for int SimpleParameter '" + arg.arg_name + "'");
                     }
                     arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_single_value_int_param(param.param_val_int(0)));
                 } else if (arg.sub_type_name == "UniformRand") {
@@ -339,7 +339,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             } else if (arg.type_name == "float") {
                 if (arg.sub_type_name == "SimpleParameter") {
                     if (param.param_val_float_size() < 1) {
-                        THROW("Invalid parameter: missing value for " + arg.arg_name);
+                        THROW("Invalid parameter: missing value for float SimpleParameter '" + arg.arg_name + "'");
                     }
                     arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_single_value_float_param(param.param_val_float(0)));
                 } else if (arg.sub_type_name == "UniformRand") {
@@ -444,7 +444,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             THROW("Invalid or unsupported type while deserializing: " + arg.type_name);
         }
 
-        arguments.push_back(std::move(arg));
+        arguments.add_argument(arg.arg_name, arg);
     }
     return ROCAL_OK;
 }

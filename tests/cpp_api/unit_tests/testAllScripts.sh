@@ -193,7 +193,7 @@ do
         ./unit_tests 14 "$image_path" "${output_path}BrightnessRandom_${rgb_name[$rgb]}_${device_name}" $width $height 3 $device $rgb 1 $display
         ./unit_tests 15 "$coco_detection_path" "${output_path}FlipRandom_${rgb_name[$rgb]}_${device_name}" $width $height 6 $device $rgb 1 $display
         ./unit_tests 15 "$coco_detection_path" "${output_path}RotateRandom_${rgb_name[$rgb]}_${device_name}" $width $height 2 $device $rgb 1 $display
-        ./unit_tests 16 "$coco_keypoints_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
+        ./unit_tests 16 "$coco_keypoints_path" "${output_path}ResizeMirrorNormalizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
         ./unit_tests 17 "$caffe_classification_path" "${output_path}GammaRandom_${rgb_name[$rgb]}_${device_name}" $width $height 4 $device $rgb 1 $display
         ./unit_tests 18 "$caffe2_classification_path" "${output_path}ContrastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 5 $device $rgb 1 $display
         ./unit_tests 19 "$mxnet_path" "${output_path}BlurRandom_${rgb_name[$rgb]}_${device_name}" $width $height 7 $device $rgb 1 $display
@@ -221,6 +221,23 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}RandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 59 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ROIResize_${rgb_name[$rgb]}_${device_name}" $width $height 60 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}Nop_${rgb_name[$rgb]}_${device_name}" $width $height 61 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
+
+        ./unit_tests 2 "$coco_detection_path" "${output_path}ColorCastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 64 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}ColorCast_${rgb_name[$rgb]}_${device_name}" $width $height 65 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}GridMask_${rgb_name[$rgb]}_${device_name}" $width $height 66 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}NonLinearBlendRandom_${rgb_name[$rgb]}_${device_name}" $width $height 67 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}NonLinearBlend_${rgb_name[$rgb]}_${device_name}" $width $height 68 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}MedianFilter_${rgb_name[$rgb]}_${device_name}" $width $height 69 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}GaussianFilterRandom_${rgb_name[$rgb]}_${device_name}" $width $height 70 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}GaussianFilter_${rgb_name[$rgb]}_${device_name}" $width $height 71 $device $rgb 1 $display
+
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Dilate_${rgb_name[$rgb]}_${device_name}" $width $height 72 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Erode_${rgb_name[$rgb]}_${device_name}" $width $height 73 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Magnitude_${rgb_name[$rgb]}_${device_name}" $width $height 74 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Phase_${rgb_name[$rgb]}_${device_name}" $width $height 75 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
 
         # to_tensor coverage tests
         for ((memcpy_backend=0;memcpy_backend<=1;memcpy_backend++))

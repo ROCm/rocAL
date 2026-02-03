@@ -123,7 +123,7 @@ def test_serialization(data_path, rocal_cpu=True, batch_size=2):
             print(preview_text)
             if len(serialized_string) > 500:
                 print("... (truncated)")
-        except:
+        except Exception:
             # If binary, show hex representation
             print("Binary content (hex preview):")
             print(serialized_string[:100].hex())
@@ -245,7 +245,7 @@ def main():
     
     # Parse arguments
     data_path = sys.argv[1]
-    rocal_cpu =  (sys.argv[2].lower() == "cpu") if len(sys.argv) > 2 else True
+    rocal_cpu = (sys.argv[2].lower() == "cpu") if len(sys.argv) > 2 else True
     batch_size = int(sys.argv[3]) if len(sys.argv) > 3 else 2
     
     # Validate data path

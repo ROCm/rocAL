@@ -123,7 +123,7 @@ public:
             // Handle scalar types - return the single stored value
             else if (!is_vector) {
                 if (values.empty()) {
-                    THROW("Value not present for the given argument : " + arg_name + ".")
+                    THROW("Value not present for the given argument : " + arg_name + ".");
                 }
                 return std::any_cast<T>(values[0]);
             } 
@@ -358,9 +358,65 @@ private:
     }
 };
 
+/// @brief Class to manage a set of Arguments for a Node
+class ArgumentSet {
+
+public:
+    ArgumentSet() = default;
+    
+    // Iterator support for range-based for loops
+    using iterator = std::unordered_map<std::string, Argument>::iterator;
+    using const_iterator = std::unordered_map<std::string, Argument>::const_iterator;
+    
+    iterator begin() { return args_map.begin(); }
+    iterator end() { return args_map.end(); }
+    const_iterator begin() const { return args_map.begin(); }
+    const_iterator end() const { return args_map.end(); }
+
+    void add_argument(const std::string& name, const Argument& arg) {
+        args_map[name] = arg;
+    }
+
+    template<typename T>
+    void add_new_argument(const std::string& name, T&& value) {
+        args_map[name] = Argument(name, std::forward<T>(value));
+    }
+    
+    void clear() {
+        args_map.clear();
+    }
+
+    const Argument& get_argument(const std::string& name) const {
+        auto it = args_map.find(name);
+        if (it != args_map.end()) {
+            return it->second;
+        } else {
+            THROW("Argument " + name + " not found");
+        }
+    }
+
+    template<typename T>
+    T get(const std::string& name) const {
+        const Argument& arg = get_argument(name);
+        try {  
+            return arg.get<T>();
+        } catch (const std::bad_any_cast& e) {
+            THROW("Type mismatch when retrieving value for argument " + name + ": " + e.what());
+        }
+    }
+
+    size_t size() const {
+        return args_map.size();
+    }
+
+private:
+    std::unordered_map<std::string, Argument> args_map;
+};
+
 template <typename... Args, std::size_t... I>
-std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments, std::index_sequence<I...>) {
-    return std::make_tuple(arguments[I].get<Args>()...);
+std::tuple<Args...> unpack_arguments_impl(const ArgumentSet& arguments, const std::vector<std::string> &arg_names, 
+                                          std::index_sequence<I...>) {
+    return std::make_tuple(arguments.get<Args>(arg_names[I])...);
 }
 
 /**
@@ -371,8 +427,8 @@ std::tuple<Args...> unpack_arguments_impl(const std::vector<Argument>& arguments
  * each argument at the corresponding position and cast it to the requested type.
  */
 template <typename... Args>
-std::tuple<Args...> unpack_arguments(const std::vector<Argument>& arguments) {
-    return unpack_arguments_impl<Args...>(arguments, std::index_sequence_for<Args...>{});
+std::tuple<Args...> unpack_arguments(const ArgumentSet& arguments, const std::vector<std::string> &arg_names) {
+    return unpack_arguments_impl<Args...>(arguments, arg_names, std::index_sequence_for<Args...>{});
 }
 
 /**
@@ -395,12 +451,15 @@ std::tuple<Args...> unpack_arguments(const std::vector<Argument>& arguments) {
  * if (init_args<BrightnessNode, FloatParam*, FloatParam*>(this, arguments)) return;
  */
 template <typename NodeType, typename... Args>
-bool init_args(NodeType* node, const std::vector<Argument>& arguments) {
-    if (arguments.size() != sizeof...(Args)) return false;
+bool init_args(NodeType* node, const std::vector<std::string> &arg_names, const ArgumentSet& arguments) {
 
+    if (arguments.size() != sizeof...(Args)) {
+        THROW("Argument count mismatch: expected " + std::to_string(sizeof...(Args)) + 
+              " but got " + std::to_string(arguments.size()));
+    }
     try {
         // Unpack arguments with type-check and casting
-        auto unpacked_args = unpack_arguments<Args...>(arguments);
+        auto unpacked_args = unpack_arguments<Args...>(arguments, arg_names);
 
         std::apply([&](Args&... unpacked) {
             node->init(unpacked...);
