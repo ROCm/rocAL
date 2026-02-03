@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
+#include <stdexcept>
 #if ENABLE_DLPACK
     #include <dlpack/dlpack.h>
 #endif
@@ -323,7 +324,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     // Return the serialized checkpoint blob as Python bytes.
     m.def("checkpoint", [](RocalContext context) {
         size_t size = 0;  // Serialized checkpoint size in bytes.
-        rocalCheckpoint(context, &size);
+        RocalStatus status = rocalCheckpoint(context, &size);
+        if (status != ROCAL_OK) {
+            throw std::runtime_error(rocalGetErrorMessage(context));
+        }
         std::string serialized_ckpt(size, '\0');  // Buffer for checkpoint bytes.
         if (size > 0) {
             rocalGetSerializedCheckpointString(context, serialized_ckpt.data());

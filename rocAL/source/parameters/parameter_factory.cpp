@@ -24,9 +24,9 @@ THE SOFTWARE.
 
 #include <cstdlib>
 #include <ctime>
-#include <stdexcept>
-
 #include "parameters/parameter_simple.h"
+#include "pipeline/commons.h"
+
 ParameterFactory* ParameterFactory::_instance = nullptr;
 std::mutex ParameterFactory::_mutex;
 
@@ -218,7 +218,7 @@ std::vector<std::string> ParameterFactory::snapshot_rngs() {
 // Restore RNG states for all tracked random parameters.
 void ParameterFactory::restore_rngs(const std::vector<std::string>& rng_states) {
     if (rng_states.size() != _param_list.size()) {
-        throw std::runtime_error("ParameterFactory::restore_rngs: snapshot size mismatch with parameter list");
+        THROW("ParameterFactory::restore_rngs: snapshot size mismatch with parameter list");
     }
     for (size_t i = 0; i < _param_list.size(); ++i) {
         std::visit([&](auto* param) {

@@ -177,7 +177,9 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
         // When checkpointing is enabled, ensure that RNG checkpoint tracking
         // starts fresh for this pipeline. This clears only the internal
         // ordering metadata used for RNG snapshots and does not delete any
-        // parameters or affect existing parameter handles.
+        // parameters or affect existing parameter handles. This assumes
+        // checkpoint-enabled pipelines run serially because ParameterFactory
+        // is a process-wide singleton.
         if (_checkpointing_enabled) {
             ParameterFactory::instance()->reset_param_list();
         }
@@ -2192,8 +2194,8 @@ void MasterGraph::restore_from_serialized_checkpoint(const std::string &serializ
         THROW("Checkpointing is not enabled for this pipeline");
     }
 
-    bool was_processing = _processing;  // Track whether processing was active.
-    if (was_processing) {
+    bool processing = _processing;  // Track whether processing was active.
+    if (processing) {
         stop_processing();
     }
     _ring_buffer.reset();
@@ -2254,7 +2256,7 @@ void MasterGraph::restore_from_serialized_checkpoint(const std::string &serializ
         }
     }
 
-    if (was_processing) {
+    if (processing) {
         // Resume processing thread if it was running before restore.
         start_processing();
     }

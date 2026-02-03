@@ -69,7 +69,7 @@ class LoaderModule {
     // Returns loader state for checkpointing (default throws if unsupported).
     virtual const LoaderState& get_loader_state() const { THROW("The LoaderState is not defined for the given loader") }
     // Restore loader state from a checkpoint (default is no-op).
-    virtual void restore_from_state(const LoaderState& /*s*/) {}
+    virtual void restore_from_state(const LoaderState& state) { (void)state; }
    protected:
     DecodedDataInfo _decoded_data_info, _output_decoded_data_info;  // Stores the decoded data info
 };

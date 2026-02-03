@@ -347,23 +347,24 @@ void ImageLoader::restore_from_state(const LoaderState& s) {
         if (_load_thread.joinable())
             _load_thread.join();
     }
-    _circ_buff.reset();
+    _circ_buff.reset();  // Clear any buffered data before restoring.
 
     _epoch_count = s.epoch_number;
     _iteration_count = s.iteration_number;
     _current_loader_state = s;
 
-    if (_image_loader) {
-        _image_loader->set_rng_state(s.rng);
-        _image_loader->set_curr_file_idx(s.curr_file_idx);
+    if (!_image_loader) {
+        THROW("ImageLoader restore failed: internal image loader is not initialized");
     }
+    _image_loader->set_rng_state(s.rng);
+    _image_loader->set_curr_file_idx(s.curr_file_idx);
 
-    size_t dataset_size = _dataset_size;  // Dataset size used to recompute remaining count.
-    _remaining_image_count = dataset_size;
+    _remaining_image_count = _dataset_size;  // Reset remaining count based on restored position.
     if (!_loop && s.curr_file_idx > 0) {
-        _remaining_image_count = (dataset_size > s.curr_file_idx) ? (dataset_size - s.curr_file_idx) : 0;
+        _remaining_image_count = (_dataset_size > s.curr_file_idx) ? (_dataset_size - s.curr_file_idx) : 0;
     }
 
+    // Restart loading thread to resume prefetching from the restored state.
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }

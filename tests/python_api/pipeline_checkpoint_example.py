@@ -2,7 +2,6 @@
 
 import sys
 import os
-import gc
 import time
 from amd.rocal.pipeline import pipeline_def, Pipeline
 from amd.rocal.plugin.generic import ROCALGenericIterator
@@ -99,7 +98,7 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
             print(image_names[idx], label[idx])
 
     del iterator
-    gc.collect()  # Release pipeline iterator resources before restore.
+    pipe.rocal_release()  # Release rocAL resources before creating a new pipeline.
 
     return serialized_ckpt, ckpt_path
 
@@ -153,7 +152,7 @@ def restore_and_compare(bs, rocal_device, rocal_cpu, img_folder, serialized_ckpt
             print(image_names[idx], label[idx])
 
     del iterator
-    gc.collect()
+    pipe_restored.rocal_release()
 
 
 def main():

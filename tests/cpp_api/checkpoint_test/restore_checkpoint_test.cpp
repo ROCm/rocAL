@@ -32,19 +32,6 @@ THE SOFTWARE.
 #include "rocal_api.h"
 
 
-#include "opencv2/opencv.hpp"
-using namespace cv;
-#if USE_OPENCV_4
-#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
-#define CV_BGR2GRAY COLOR_BGR2GRAY
-#define CV_GRAY2RGB COLOR_GRAY2RGB
-#define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
-#define CV_FILLED FILLED
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
-#define cvDestroyWindow destroyWindow
-#endif
-#define DISPLAY 0
 int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 3;  // Minimum CLI args: dataset path, labels path, device flag.
@@ -160,9 +147,7 @@ int main(int argc, const char **argv) {
     int w = rocalGetOutputWidth(handle);                                                             // Output width in pixels.
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);                           // Output channel count.
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);  // OpenCV matrix type.
-
-    int ImageNameLen[inputBatchSize];  // Per-sample image name lengths.
+    int image_name_len[inputBatchSize];  // Per-sample image name lengths.
 
     std::vector<std::string> names;  // Decoded image names for the current batch.
     names.resize(inputBatchSize);
@@ -170,18 +155,19 @@ int main(int argc, const char **argv) {
 
     std::cout << "Remaining images after restoration:" << rocalGetRemainingImages(handle) << std::endl;
 
-    cv::Mat mat_input(h, w, cv_color_format);  // Output buffer for rocalCopyToOutput.
+    size_t output_size = static_cast<size_t>(h) * w * p;  // Output buffer size in bytes.
+    std::vector<unsigned char> output_buffer(output_size);  // Output buffer for rocalCopyToOutput.
 
     while (!rocalIsEmpty(handle)) {
         if (rocalRun(handle) != 0) {
             std::cout << "rocalRun Failed with runtime error" << std::endl;
             break;
         }
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        rocalCopyToOutput(handle, output_buffer.data(), output_size);
 
         RocalTensorList labels = rocalGetImageLabels(handle);  // Label tensor list for this batch.
 
-        unsigned imagename_size = rocalGetImageNameLen(handle, ImageNameLen);  // Total name bytes for this batch.
+        unsigned imagename_size = rocalGetImageNameLen(handle, image_name_len);  // Total name bytes for this batch.
         std::vector<char> imageNames(imagename_size);                          // Name buffer.
         rocalGetImageName(handle, imageNames.data());
         std::string imageNamesStr(imageNames.data());                          // Concatenated names string.
@@ -189,8 +175,8 @@ int main(int argc, const char **argv) {
         int pos = 0;                                                           // Offset into names string.
         int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer()); // Pointer to label data.
         for (int i = 0; i < inputBatchSize; i++) {  // Batch index.
-            names[i] = imageNamesStr.substr(pos, ImageNameLen[i]);
-            pos += ImageNameLen[i];
+            names[i] = imageNamesStr.substr(pos, image_name_len[i]);
+            pos += image_name_len[i];
             std::cout << "name: " << names[i] << " label: " << labels_buffer[i] << std::endl;
         }
         std::cout << std::endl;

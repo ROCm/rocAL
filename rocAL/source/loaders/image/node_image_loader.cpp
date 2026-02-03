@@ -140,6 +140,7 @@ void ImageLoaderNode::restore_state(const std::string &operator_state_bytes) {
     if (proto_state.has_rng()) {
         DeserializeRNGFromString(proto_state.rng(), st.rng);
     }
+    // For sharded loaders, curr_file_idx is relative to each shard's file list.
     st.curr_file_idx = proto_state.has_curr_file_idx() ? proto_state.curr_file_idx() : 0;
     if (_loader_module) {
         _loader_module->restore_from_state(st);
