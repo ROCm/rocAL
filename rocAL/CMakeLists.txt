@@ -322,7 +322,14 @@ if(${BUILD_ROCAL})
     else()
         message(FATAL_ERROR "No filesystem library found.")
     endif()
-    
+
+    if(${VX_EXT_RPP_VERSION_MAJOR} VERSION_GREATER_EQUAL "3" AND ${VX_EXT_RPP_VERSION_MINOR} VERSION_GREATER_EQUAL "2" AND ${VX_EXT_RPP_VERSION_PATCH} VERSION_GREATER_EQUAL "0")
+        set(BUILD_ROCAL TRUE)
+    else()
+        set(BUILD_ROCAL FALSE)
+        message("-- ${Yellow}rocAL -- Requires MIVisionX vx_rpp version >= 3.2.0 for rocAL${ColourReset}")
+    endif()
+
     # Audio features for rocAL
     if(VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.0")
         if(NOT SNDFILE_FOUND)

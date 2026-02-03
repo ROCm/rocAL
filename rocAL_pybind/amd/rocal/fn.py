@@ -55,11 +55,13 @@ def blend(*inputs, ratio=None, device=None, output_layout=types.NHWC, output_dty
     return (blend_image)
 
 
-def snow(*inputs, snow=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def snow(*inputs, snow=0.5, brightness_coefficient=2.0, dark_mode=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies snow effect on images.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param snow (float, default = 0.5)                                            snow fill value used for the augmentation
+        @param snow (float, default = 0.5)                                            snow threshold used for the augmentation, valid range: (0, 1]
+        @param brightness_coefficient (float, default = 2.0)                          brightness modification used for the augmentation, valid range: (1, 4]
+        @param dark_mode (int, default = 0)                                           enables/disables dark mode, valid values: 0/1
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
@@ -67,8 +69,11 @@ def snow(*inputs, snow=0.5, device=None, output_layout=types.NHWC, output_dtype=
         @return    Image with snow effect
     """
     snow = b.createFloatParameter(snow) if isinstance(snow, float) else snow
+    brightness_coefficient = b.createFloatParameter(brightness_coefficient) if isinstance(brightness_coefficient, float) else brightness_coefficient
+    dark_mode = b.createIntParameter(dark_mode) if isinstance(dark_mode, int) else dark_mode
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "snow": snow,
+                     "brightness_coefficient": brightness_coefficient, "dark_mode": dark_mode,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     snow_image = b.snow(Pipeline._current_pipeline._handle,
                         *(kwargs_pybind.values()))
