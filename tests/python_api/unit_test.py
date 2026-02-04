@@ -353,7 +353,9 @@ def main():
                                   output_dtype=tensor_dtype)
         elif augmentation_name == "snow":
             output = fn.snow(images,
-                             snow=0.2,
+                             snow=1.0,
+                             brightness_coefficient=2.5,
+                             dark_mode=0,
                              output_layout=tensor_layout,
                              output_dtype=tensor_dtype)
         elif augmentation_name == "rain":

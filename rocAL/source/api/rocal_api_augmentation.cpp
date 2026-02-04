@@ -1237,6 +1237,8 @@ rocalSnow(
     RocalTensor p_input,
     bool is_output,
     RocalFloatParam p_snow_value,
+    RocalFloatParam p_brightness_coefficient,
+    RocalIntParam p_dark_mode,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1245,6 +1247,8 @@ rocalSnow(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto snow_value = static_cast<FloatParam*>(p_snow_value);
+    auto brightness_coefficient = static_cast<FloatParam*>(p_brightness_coefficient);
+    auto dark_mode = static_cast<IntParam*>(p_dark_mode);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -1252,7 +1256,7 @@ rocalSnow(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SnowNode>({input}, {output})->init(snow_value);
+        context->master_graph->add_node<SnowNode>({input}, {output})->init(snow_value, brightness_coefficient, dark_mode);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1265,6 +1269,8 @@ rocalSnowFixed(
     RocalTensor p_input,
     float snow_value,
     bool is_output,
+    float brightness_coefficient,
+    int dark_mode,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
@@ -1279,7 +1285,7 @@ rocalSnowFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SnowNode>({input}, {output})->init(snow_value);
+        context->master_graph->add_node<SnowNode>({input}, {output})->init(snow_value, brightness_coefficient, dark_mode);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

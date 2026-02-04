@@ -604,7 +604,9 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
- * \param [in] snow Float param representing the intensity of snow effect
+ * \param [in] snow specifies the value of the snow threshold. Valid range: (0, 1].
+ * \param [in] brightness_coefficient specifies the value of the brightness modification. Valid range: (1, 4].
+ * \param [in] dark_mode specifies whether to enable/disable dark mode. Valid values: 0/1.
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -612,21 +614,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
 extern "C" RocalTensor ROCAL_API_CALL rocalSnow(RocalContext context, RocalTensor input,
                                                 bool is_output,
                                                 RocalFloatParam snow = NULL,
+                                                RocalFloatParam brightness_coefficient = NULL,
+                                                RocalIntParam dark_mode = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-/*! \brief Applies snow effect on images with fixed parameter.
+/*! \brief Applies snow effect on images with fixed parameters.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
- * \param [in] snow Float param representing the intensity of snow effect
+ * \param [in] snow Snow threshold. Valid range: (0, 1].
  * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] brightness_coefficient Brightness modification. Valid range: (1, 4]. Default: 2.0.
+ * \param [in] dark_mode Dark mode enable/disable. Valid values: 0/1. Default: 0.
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalSnowFixed(RocalContext context, RocalTensor input,
                                                      float snow, bool is_output,
+                                                     float brightness_coefficient = 2.0f,
+                                                     int dark_mode = 0,
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
