@@ -55,7 +55,79 @@ public:
     std::vector<std::any> values;         ///< Storage for argument values
     pParam param;                         ///< Parameter stored for parameter-type arguments
 
+    /**
+     * @brief Retrieves the value of the argument as the specified type.
+     * 
+     * This template method extracts the stored value(s) from the argument and returns
+     * them as the requested type. It supports scalar types, vectors, maps, and parameter
+     * pointer types.
+     * 
+     * @tparam T The type to which the argument value should be cast.
+     * @return The value of the argument as type T.
+     * @note For parameter pointer types (FloatParam*, IntParam*), nullptr is returned
+     *       if the argument is a null pointer.
+     */
+    template <typename T>
+    T get() const {
+        // Handle parameter pointer types (FloatParam* or IntParam*)
+        if constexpr (std::is_same_v<T, FloatParam*> || std::is_same_v<T, IntParam*>) {
+            // Return nullptr if the parameter was null
+            if (is_null_ptr) {
+                return nullptr;
+            }
+            if constexpr (std::is_same_v<T, FloatParam*>)
+                return std::get<FloatParam*>(param);
+            else if constexpr (std::is_same_v<T, IntParam*>)
+                return std::get<IntParam*>(param);
+        } 
+        // Handle string-to-string map type
+        else if constexpr (std::is_same_v<T, std::map<std::string, std::string>>) {
+            // Validate that we have key-value pairs (even number of elements)
+            if ((values.size() % 2) != 0)
+                THROW("Corrupted map payload for argument : " + arg_name + ".");
+            // Reconstruct the map from alternating key-value elements in the values vector
+            std::map<std::string, std::string> feature_map;
+            for (size_t i = 0; i < values.size(); i += 2) {
+                const auto& key = std::any_cast<const std::string&>(values[i]);
+                const auto& value = std::any_cast<const std::string&>(values[i + 1]);
+                feature_map.emplace(key, value);
+            }
+            return feature_map;
+        } 
+        // Handle all other types (scalars, vectors, etc.)
+        else {
+            if (is_null_ptr || is_parameter)
+                THROW("Type mismatch: cannot retrieve non-parameter type from a parameter argument (arg_name: '" + arg_name + "', type_name: '" + type_name + "')");
+
+            // Handle vector types - reconstruct vector from stored elements
+            if constexpr (is_vector_type<std::decay_t<T>>::value) {
+                using ElementType = typename std::decay_t<T>::value_type;
+
+                std::vector<ElementType> result;
+                result.reserve(values.size());
+                for (const auto& v : values) {
+                    result.push_back(std::any_cast<ElementType>(v));
+                }
+                return result;
+            } 
+            // Handle scalar types - return the single stored value
+            else if (!is_vector) {
+                if (values.empty()) {
+                    THROW("Value not present for the given argument : " + arg_name + ".");
+                }
+                return std::any_cast<T>(values[0]);
+            } 
+            else {
+                THROW("Unsupported type requested for argument : " + arg_name + " of type " + type_name);
+            }
+        }
+    }
+
     // Constructors
+    /**
+     * @brief Default constructor for Argument.
+     */
+    Argument() {}
 
     /**
      * @brief Unified template constructor for all data types
@@ -259,3 +331,116 @@ private:
         is_parameter = true;
     }
 };
+
+/// @brief Class to manage a set of Arguments for a Node
+class ArgumentSet {
+
+public:
+    ArgumentSet() = default;
+    
+    // Iterator support for range-based for loops
+    using iterator = std::unordered_map<std::string, Argument>::iterator;
+    using const_iterator = std::unordered_map<std::string, Argument>::const_iterator;
+    
+    iterator begin() { return args_map.begin(); }
+    iterator end() { return args_map.end(); }
+    const_iterator begin() const { return args_map.begin(); }
+    const_iterator end() const { return args_map.end(); }
+
+    void add_argument(const std::string& name, const Argument& arg) {
+        args_map[name] = arg;
+    }
+
+    template<typename T>
+    void add_new_argument(const std::string& name, T&& value) {
+        args_map[name] = Argument(name, std::forward<T>(value));
+    }
+    
+    void clear() {
+        args_map.clear();
+    }
+
+    const Argument& get_argument(const std::string& name) const {
+        auto it = args_map.find(name);
+        if (it != args_map.end()) {
+            return it->second;
+        } else {
+            THROW("Argument " + name + " not found");
+        }
+    }
+
+    template<typename T>
+    T get(const std::string& name) const {
+        const Argument& arg = get_argument(name);
+        try {  
+            return arg.get<T>();
+        } catch (const std::bad_any_cast& e) {
+            THROW("Type mismatch when retrieving value for argument " + name + ": " + e.what());
+        }
+    }
+
+    size_t size() const {
+        return args_map.size();
+    }
+
+private:
+    std::unordered_map<std::string, Argument> args_map;
+};
+
+template <typename... Args, std::size_t... I>
+std::tuple<Args...> unpack_arguments_impl(const ArgumentSet& arguments, const std::vector<std::string> &arg_names, 
+                                          std::index_sequence<I...>) {
+    return std::make_tuple(arguments.get<Args>(arg_names[I])...);
+}
+
+/**
+ * @brief Extracts arguments into a tuple using index sequence expansion
+ * 
+ * This helper function unpacks a vector of Argument objects into a std::tuple
+ * with the specified types. It uses compile-time index sequences to extract
+ * each argument at the corresponding position and cast it to the requested type.
+ */
+template <typename... Args>
+std::tuple<Args...> unpack_arguments(const ArgumentSet& arguments, const std::vector<std::string> &arg_names) {
+    return unpack_arguments_impl<Args...>(arguments, arg_names, std::index_sequence_for<Args...>{});
+}
+
+/**
+ * @brief Initializes a node by unpacking and applying arguments from a vector of Argument objects
+ * 
+ * This template function provides type-safe argument deserialization for node initialization.
+ * It extracts typed values from the Argument vector, validates the argument count, and applies
+ * them to the node's init() method.
+ * 
+ * @tparam NodeType The type of node to initialize (e.g., BrightnessNode, ImageLoaderNode)
+ * @tparam Args Variadic template parameters representing the expected argument types
+ * @param node Pointer to the node instance to initialize
+ * @param arguments Vector of Argument objects containing the serialized argument values
+ * @return true if initialization succeeded, false if argument count mismatch or type conversion failed
+ * 
+ * @example
+ * // For a node expecting (float, float) arguments:
+ * if (init_args<BrightnessNode, float, float>(this, arguments)) return;
+ * // For a node expecting (FloatParam*, FloatParam*) arguments:
+ * if (init_args<BrightnessNode, FloatParam*, FloatParam*>(this, arguments)) return;
+ */
+template <typename NodeType, typename... Args>
+bool init_args(NodeType* node, const std::vector<std::string> &arg_names, const ArgumentSet& arguments) {
+
+    if (arguments.size() != sizeof...(Args)) {
+        THROW("Argument count mismatch: expected " + std::to_string(sizeof...(Args)) + 
+              " but got " + std::to_string(arguments.size()));
+    }
+    try {
+        // Unpack arguments with type-check and casting
+        auto unpacked_args = unpack_arguments<Args...>(arguments, arg_names);
+
+        std::apply([&](Args&... unpacked) {
+            node->init(unpacked...);
+        }, unpacked_args);
+
+        return true;
+    } catch (const std::exception& e) {
+        return false; // Type mismatch
+    }
+}
