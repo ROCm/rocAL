@@ -53,9 +53,19 @@ class Node {
     void set_graph_id(int id) { _graph_id = id; }
     int get_graph_id() { return _graph_id; }
     virtual std::string node_name() const { return ""; }
-    const std::vector<Argument>& get_args_list() const { return _args; }
+    const ArgumentSet& get_args_list() const { return _args; }
     // Returns the LoaderModule associated with this node, Derived LoaderNodes should override this method.
     virtual std::shared_ptr<LoaderModule> get_loader_module() { THROW("get_loader_module() is not implemented for the Node"); }
+    // Overloaded method for loader nodes to initialize the arguments during deserialization.
+    virtual void initialize_args(const ArgumentSet& arguments, std::shared_ptr<MetaDataReader> meta_data_reader) { 
+        THROW("initialize_args not implemented for the LoaderNode type: " + node_name() + 
+              ". Derived LoaderNode must override this method to handle deserialization with metadata reader."); 
+    }
+    // Overloaded method for augmentation nodes to initialize the arguments during deserialization.
+    virtual void initialize_args(const ArgumentSet &arguments) { 
+        THROW("initialize_args(arguments) not implemented for node type: " + node_name() + 
+              ". Derived Nodes must override this method to handle deserialization.");
+    }
 
    protected:
     virtual void create_node() = 0;
@@ -69,16 +79,5 @@ class Node {
     std::vector<std::shared_ptr<Node>> _next;   // Stores the reference to a list of next Nodes
     std::vector<std::shared_ptr<Node>> _prev;   // Stores the reference to a list of previous Nodes
     int _graph_id = -1;
-    std::vector<Argument> _args;
-    /**
-     * @brief Template function to set node arguments using variadic templates and fold expressions.
-     * 
-     * This function creates Argument objects for each argument-name pair and stores them in the node.
-     * It uses fold expressions to expand the parameter pack at compile time.
-     */
-    template <size_t N, size_t... Indices, typename... Args>
-    void set_node_arguments(const std::array<std::string, N>& arg_names, std::index_sequence<Indices ...>, Args... args) {
-        // Fold expression to create Argument object for each argument in the node
-        (this->_args.push_back(Argument(arg_names[Indices], std::forward<Args>(args))), ...);
-    }
+    ArgumentSet _args;
 };

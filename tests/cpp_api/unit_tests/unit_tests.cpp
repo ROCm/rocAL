@@ -597,12 +597,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || test_case == 71 || test_case == 72 || reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 ||
+        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 || test_case == 64 || test_case == 65 || test_case == 93 || test_case == 94) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
     }
-    if ((test_case == 71 || test_case == 72) && gpu == 1) {
+    if ((test_case == 93 || test_case == 94) && gpu == 1) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -791,7 +792,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 41: {
             std::cout << "Running rocalSnowFixed" << std::endl;
-            output = rocalSnowFixed(handle, input, 0.2, true);
+            output = rocalSnowFixed(handle, input, 1.0, true, 2.5);
         } break;
         case 42: {
             std::cout << "Running rocalRainFixed" << std::endl;
@@ -890,46 +891,257 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalRandomResizedCrop(handle, input, resize_w, resize_h, true, area_factor, aspect_ratio);
         } break;
         case 64: {
+            std::cout << "Running rocalColorCast" << std::endl;
+            std::vector<float> rgb = {12.0f, 0.0f, 100.00f};
+            output = rocalColorCast(handle, input, true, nullptr, rgb, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 65: {
+            std::cout << "Running rocalColorCastFixed" << std::endl;
+            std::vector<float> rgb = {12.0f, 0.0f, 100.0f};
+            output = rocalColorCastFixed(handle, input, 0.5f, rgb, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 66: {
+            std::cout << "Running rocalGridMask" << std::endl;
+            unsigned tile_width = 40;
+            float grid_ratio = 0.6f;
+            float grid_angle = 0.5f; // radians
+            unsigned translate_x = 0;
+            unsigned translate_y = 0;
+            output = rocalGridMask(handle, input, true, tile_width, grid_ratio, grid_angle, translate_x, translate_y, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 67: {
+            std::cout << "Running rocalNonLinearBlend" << std::endl;
+            RocalTensor output_1 = rocalRotate(handle, input, false);
+            RocalFloatParam stddev_param = rocalCreateFloatParameter(40.0f);
+            output = rocalNonLinearBlend(handle, input, output_1, true, stddev_param, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 68: {
+            std::cout << "Running rocalNonLinearBlendFixed" << std::endl;
+            RocalTensor output_1 = rocalRotateFixed(handle, input, 45, false);
+            float stddev = 50.0f;
+            output = rocalNonLinearBlendFixed(handle, input, output_1, stddev, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 69: {
+            std::cout << "Running rocalMedianFilter" << std::endl;
+            int kernel = 3;
+            auto border_type = RocalImageBorderType::ROCAL_REPLICATE;
+            output = rocalMedianFilter(handle, input, true, kernel, border_type, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 70: {
+            std::cout << "Running rocalGaussianFilter" << std::endl;
+            // Use existing float_param defined earlier as per-sample stddev
+            output = rocalGaussianFilter(handle, input, true, nullptr, 3, RocalImageBorderType::ROCAL_REPLICATE, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 71: {
+            std::cout << "Running rocalGaussianFilterFixed" << std::endl;
+            output = rocalGaussianFilterFixed(handle, input, 5.0f, 3, RocalImageBorderType::ROCAL_REPLICATE, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 72: {
+            std::cout << "Running rocalDilate" << std::endl;
+            output = rocalDilate(handle, input, true, 3, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 73: {
+            std::cout << "Running rocalErode" << std::endl;
+            output = rocalErode(handle, input, true, 3, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 74: {
+            std::cout << "Running rocalMagnitude" << std::endl;
+            // Create a second tensor by rotating the input; use as second input to magnitude
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45.0f, false);
+            output = rocalMagnitude(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 75: {
+            std::cout << "Running rocalPhase" << std::endl;
+            // Create a second tensor by rotating the input; use as second input to phase
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45.0f, false);
+            output = rocalPhase(handle, input, input2, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 76: {
+            std::cout << "Running rocalThreshold" << std::endl;
+            std::vector<float> min_threshold;
+            std::vector<float> max_threshold;
+            if (rgb) {
+                min_threshold = {30.0f, 30.0f, 30.0f};
+                max_threshold = {100.0f, 100.0f, 100.0f};
+            } else {
+                min_threshold = {30.0f};
+                max_threshold = {100.0f};
+            }
+
+            output = rocalThreshold(handle, input, min_threshold, max_threshold, true, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 77: {
+            std::cout << "Running rocalWarpPerspective" << std::endl;
+            std::vector<float> perspective_1d_matrix = {0.93f, 0.5f, 0.0f,
+                                                        -0.5f, 0.93f, 0.0f,
+                                                        0.005f, 0.005f, 1.0f};
+            output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
+
+        }break;
+        case 78: {
+            std::cout << "Running rocalRemap (vector-based tables)" << std::endl;
+            // Build identity remap tables (row = y, col = x) for output size [height,width]
+            const int H = height;
+            const int W = width;
+            std::vector<float> row_remap(H * W);
+            std::vector<float> col_remap(H * W);
+            auto half_width = W / 2;
+            for (int y = 0; y < H; ++y) {
+                int x = 0;
+                for (; x < half_width; ++x) {
+                    row_remap[y * W + x] = static_cast<float>(y);
+                    col_remap[y * W + x] = static_cast<float>(half_width - x);
+                }
+                for (; x < W; ++x) {
+                    row_remap[y * W + x] = static_cast<float>(y);
+                    col_remap[y * W + x] = static_cast<float>(x);
+                }
+            }
+            // Use bilinear interpolation, default layout/dtype
+            output = rocalRemap(handle, input, true,
+                                H, W,
+                                row_remap, col_remap,
+                                ROCAL_LINEAR_INTERPOLATION,
+                                output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 79: {
+            std::cout << "Running rocalCropAndPatch" << std::endl;
+            // Create a simple second input (e.g., rotated version)
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            // Define XYWH ROIs (replicated across batch if size==4)
+            // dst_roi: place the patch at top-left corner with size WxH reduced
+            int roi_w = std::max(1, width / 4);
+            int roi_h = std::max(1, height / 4);
+            // crop_roi: crop region from input2
+            std::vector<int> crop_roi = {std::max(0, width/8), std::max(0, height/8), roi_w, roi_h};
+            // patch_roi: patch location inside destination where crop will be pasted
+            std::vector<int> patch_roi = {0, 0, roi_w, roi_h};
+            output = rocalCropAndPatch(handle, input, input2, true,
+                                       crop_roi, patch_roi,
+                                       output_tensor_layout,
+                                       output_tensor_dtype);
+        } break;
+        case 80: {
+            std::cout << "Running rocalRicap" << std::endl;
+            // Permutation for quadrants [q0,q1,q2,q3]; replicate across batch if size==4
+            std::vector<unsigned> permutation = {0, 1, 1, 0, 1, 0, 0, 1};
+            // Define 4 XYWH ROIs covering image quadrants; replicate across batch if size==16
+            int q_w = std::max(1, width / 2);
+            int q_h = std::max(1, height / 2);
+            std::vector<int> crop_rois = {
+                0,      0,      q_w, q_h,   // top-left
+                q_w,    0,      q_w, q_h,   // top-right
+                0,      q_h,    q_w, q_h,   // bottom-left
+                q_w,    q_h,    q_w, q_h    // bottom-right
+            };
+            output = rocalRicap(handle, input, true, permutation, crop_rois, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 81: {
+            std::cout << "Running rocalBitwiseOps AND" << std::endl;
+            // Create second input tensor (rotate input to get variation)
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_AND,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 82: {
+            std::cout << "Running rocalBitwiseOps OR" << std::endl;
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_OR,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 83: {
+            std::cout << "Running rocalBitwiseOps XOR" << std::endl;
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_XOR,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 84: {
+            std::cout << "Running rocalBitwiseOps NOT (single input)" << std::endl;
+            // NOT uses only a single input; pass same tensor for second parameter (ignored internally)
+            output = rocalBitwiseOps(handle, input, input, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_NOT,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 85: {
+            std::cout << "Running rocalErase (vector inputs, single fill value)" << std::endl;
+            // Use vector-based API: provide anchor [x1,y1], shape [w,h], num_boxes, and a single fill value
+            // Replicate num_boxes across batch with a single entry
+            std::vector<unsigned> num_boxes = {2};
+
+            // Derive two boxes using input width/height; keep within image bounds
+            unsigned W = static_cast<unsigned>(width);
+            unsigned H = static_cast<unsigned>(height);
+            unsigned bw = std::max(1u, W / 4);
+            unsigned bh = std::max(1u, H / 4);
+
+            // Two anchors (x1, y1) and matching shapes (w, h) for a single-sample pattern
+            // Pattern will be replicated across the batch since num_boxes.size()==1
+            std::vector<float> anchor = {
+                static_cast<float>(W / 8), static_cast<float>(H / 8),
+                static_cast<float>(W / 2), static_cast<float>(H / 2)
+            };
+            std::vector<float> shape = {
+                static_cast<float>(bw), static_cast<float>(bh),
+                static_cast<float>(W - 50), static_cast<float>(H - 25)
+            };
+
+            // Single fill value replicated for all boxes and channels
+            std::vector<float> fill_value;
+            if (rgb) {
+                fill_value = {0.0f, 0.0f, 240.0f, 0.0f, 60.0f, 0.0f};
+            } else {
+                fill_value = {120.0f, 60.0f};
+            }
+
+            // Execute vector-based erase
+            output = rocalErase(handle, input, true,
+                                anchor, shape, num_boxes, fill_value,
+                                output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 86: {
             std::cout << "Running rocalGaussianNoise" << std::endl;
             output = rocalGaussianNoise(handle, input, true);
         } break;
-        case 65: {
+        case 87: {
             std::cout << "Running rocalGaussianNoiseFixed" << std::endl;
             output = rocalGaussianNoiseFixed(handle, input, true, 0.0f, 0.2f, 1255459);
         } break;
-        case 66: {
+        case 88: {
             std::cout << "Running rocalShotNoise" << std::endl;
             output = rocalShotNoise(handle, input, true);
         } break;
-        case 67: {
+        case 89: {
             std::cout << "Running rocalShotNoiseFixed" << std::endl;
             output = rocalShotNoiseFixed(handle, input, 80.0f, true, 1255459);
         } break;
-        case 68: {
+        case 90: {
             std::cout << "Running rocalSpatter" << std::endl;
             output = rocalSpatter(handle, input, true);
         } break;
-        case 69: {
+        case 91: {
             std::cout << "Running rocalSpatterFixed" << std::endl;
             output = rocalSpatterFixed(handle, input, 65, 50, 23, true);
         } break;
-        case 70: {
+        case 92: {
             std::cout << "Running rocalLog" << std::endl;
             output = rocalLog(handle, input, true);
         } break;
-        case 71: {
+        case 93: {
             std::cout << "Running rocalColorJitter" << std::endl;
             output = rocalColorJitter(handle, input, true);
         } break;
-        case 72: {
+        case 94: {
             std::cout << "Running rocalColorJitterFixed" << std::endl;
             output = rocalColorJitterFixed(handle, input, 1.02f, 1.1f, 0.02f, 1.3f, true);
         } break;
-        case 73: {
+        case 95: {
             std::cout << "Running rocalWater" << std::endl;
             output = rocalWater(handle, input, true);
         } break;
-        case 74: {
+        case 96: {
             std::cout << "Running rocalWaterFixed" << std::endl;
             output = rocalWaterFixed(handle, input, 2.0f, 5.0f, 5.8f, 1.2f, 10.0f, 15.0f, true);
         } break;
