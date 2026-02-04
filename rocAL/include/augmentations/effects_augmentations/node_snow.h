@@ -30,8 +30,8 @@ class SnowNode : public Node {
    public:
     SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SnowNode() = delete;
-    void init(float snow_value);
-    void init(FloatParam *snow_value_param);
+    void init(float snow_threshold, float brightness_coefficient, int dark_mode);
+    void init(FloatParam *snow_threshold_param, FloatParam *brightness_coefficient_param, IntParam *dark_mode_param);
 
    protected:
     void create_node() override;
@@ -39,5 +39,9 @@ class SnowNode : public Node {
 
    private:
     ParameterVX<float> _snow_value;
+    ParameterVX<float> _brightness_coefficient;
+    ParameterVX<int> _dark_mode;
     constexpr static float SNOW_VALUE_RANGE[2] = {0.1, 0.8};
+    constexpr static float BRIGHTNESS_COEFFICIENT_RANGE[2] = {1.0, 4.0};
+    constexpr static int DARK_MODE_RANGE[2] = {0, 1};
 };
