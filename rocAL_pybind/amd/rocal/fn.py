@@ -55,11 +55,13 @@ def blend(*inputs, ratio=None, device=None, output_layout=types.NHWC, output_dty
     return (blend_image)
 
 
-def snow(*inputs, snow=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def snow(*inputs, snow=0.5, brightness_coefficient=2.0, dark_mode=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies snow effect on images.
 
         @param inputs                                                                 the input image passed to the augmentation
-        @param snow (float, default = 0.5)                                            snow fill value used for the augmentation
+        @param snow (float, default = 0.5)                                            snow threshold used for the augmentation, valid range: (0, 1]
+        @param brightness_coefficient (float, default = 2.0)                          brightness modification used for the augmentation, valid range: (1, 4]
+        @param dark_mode (int, default = 0)                                           enables/disables dark mode, valid values: 0/1
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
@@ -67,8 +69,11 @@ def snow(*inputs, snow=0.5, device=None, output_layout=types.NHWC, output_dtype=
         @return    Image with snow effect
     """
     snow = b.createFloatParameter(snow) if isinstance(snow, float) else snow
+    brightness_coefficient = b.createFloatParameter(brightness_coefficient) if isinstance(brightness_coefficient, float) else brightness_coefficient
+    dark_mode = b.createIntParameter(dark_mode) if isinstance(dark_mode, int) else dark_mode
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "snow": snow,
+                     "brightness_coefficient": brightness_coefficient, "dark_mode": dark_mode,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     snow_image = b.snow(Pipeline._current_pipeline._handle,
                         *(kwargs_pybind.values()))
@@ -1596,6 +1601,407 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "function_id": function_id, "output_dims": output_dims, "layout": layout, "dtype": dtype}
     output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return output
+
+def color_cast(*inputs, alpha=1.0, rgb=[0.0, 0.0, 0.0], device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies color cast by blending a target RGB color with the input using alpha.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param alpha (float or FloatParam, default = 1.0)                            blending amount for the cast (0..1). If float, wrapped into a FloatParam.
+        @param rgb (list of floats, default = [0.0, 0.0, 0.0])                       target color to cast; can be a single triplet [r,g,b] or per-sample triplets with length batch*3
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image with color cast applied
+    """
+    alpha = b.createFloatParameter(alpha) if isinstance(alpha, float) else alpha
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "alpha": alpha, "rgb": rgb,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    color_cast_image = b.colorCast(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (color_cast_image)
+
+def grid_mask(*inputs, tile_width=16, grid_ratio=0.5, grid_angle=0.0, translate_x=0, translate_y=0,
+              device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies GridMask effect by overlaying a grid of tiles with a masked ratio.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param tile_width (int, default = 16)                                        width of each grid tile in pixels
+        @param grid_ratio (float, default = 0.5)                                     ratio of masked area within a tile (0..1)
+        @param grid_angle (float, default = 0.0)                                     angle of the grid in radians
+        @param translate_x (int, default = 0)                                        translation offset in x for the grid origin
+        @param translate_y (int, default = 0)                                        translation offset in y for the grid origin
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image with grid mask effect applied
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "tile_width": tile_width,
+        "grid_ratio": grid_ratio,
+        "grid_angle": grid_angle,
+        "translate_x": translate_x,
+        "translate_y": translate_y,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    grid_mask_image = b.gridMask(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (grid_mask_image)
+
+def median_filter(*inputs, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies median filter to images.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param kernel_size (int, default = 3)                                        median filter kernel size (pixels), typically odd: 3,5,7
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image after median filtering
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "kernel_size": kernel_size,
+        "border_type": border_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.medianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+
+def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies gaussian filter to images with per-sample stddev parameter.
+
+        @param inputs                                                                the input image passed to the augmentation
+        @param stddev (float or FloatParam, optional, default = None)                per-sample standard deviation parameter; if float, wrapped into a FloatParam. When None, the backend uses its default random parameterization.
+        @param kernel_size (int, default = 3)                                        gaussian filter kernel size (pixels), typically odd: 3,5,7
+        @param border_type (int, default = types.REPLICATE)                          border handling policy (implementation specific)
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    Image after gaussian filtering
+    """
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "stddev": stddev,
+        "kernel_size": kernel_size,
+        "border_type": border_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.gaussianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def non_linear_blend(*inputs, stddev=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Non-linear blend of two input images using per-sample stddev parameter.
+
+        @param inputs                                                                 list containing two input images
+        @param stddev (float, optional, default = None)                              standard deviation parameter controlling non-linear blend
+        @param device (string, optional, default = None)                             Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                   tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                   tensor dtype for the augmentation output
+
+        @return    non-linearly blended image
+    """
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "stddev": stddev,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    output_image = b.nonLinearBlend(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies thresholding to images with per-sample min/max parameters.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param min (list of floats, optional, default = None)                         minimum thresholds per channel or per sample (length = channels or batch*channels)
+        @param max (list of floats, optional, default = None)                         maximum thresholds per channel or per sample (length = channels or batch*channels)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Thresholded image
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "min": min,
+        "max": max,
+        "is_output": False,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.threshold(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def warp_perspective(*inputs, dest_width=0, dest_height=0, perspective=[1.0, 0.0, 0.0,
+                                                                         0.0, 1.0, 0.0,
+                                                                         0.0, 0.0, 1.0],
+                     interpolation_type=types.LINEAR_INTERPOLATION, device=None,
+                     output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies perspective transformation to images.
+
+        @param inputs                                                                      the input image passed to the augmentation
+        @param dest_width (int, optional, default = 0)                                     The length of the X dimension of the transformed image (0 uses input max width)
+        @param dest_height (int, optional, default = 0)                                    The length of the Y dimension of the transformed image (0 uses input max height)
+        @param perspective (list of 9 floats, default = identity)                          3x3 perspective transform matrix flattened row-major.
+                                                                                            Either a single 9-element list replicated across the batch or per-sample data of length batch*9.
+        @param interpolation_type (int, optional, default = types.LINEAR_INTERPOLATION)    Type of interpolation to be used.
+        @param device (string, optional, default = None)                                   Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                         tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                         tensor dtype for the augmentation output
+
+        @return    Perspective warped images
+    """
+    # Order of arguments must match C API binding signature in rocal_pybind:
+    # (context, input, is_output, dest_height, dest_width, perspective, interpolation_type, output_layout, output_datatype)
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "dest_height": dest_height,
+        "dest_width": dest_width,
+        "perspective": perspective,
+        "interpolation_type": interpolation_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    warp_persp_output = b.warpPerspective(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (warp_persp_output)
+
+def magnitude(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Computes the magnitude of complex input images.
+
+        @param inputs                                                                 list containing two input images (real and imaginary parts)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Magnitude image
+    """
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    magnitude_image = b.magnitude(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (magnitude_image)
+
+def phase(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Computes the phase of complex input images.
+
+        @param inputs                                                                 list containing two input images (real and imaginary parts)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Phase image
+    """
+    # pybind call arguments
+    kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    phase_image = b.phase(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (phase_image)
+
+def dilate(*inputs, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies morphological dilation to images.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param kernel_size (int, default = 3)                                         kernel size for the dilation operation (pixels), typically odd: 3,5,7
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Dilated image
+    """
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "kernel_size": kernel_size,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    dilated_image = b.dilate(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (dilated_image)
+
+def erode(*inputs, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies morphological erosion to images.
+
+        @param inputs                                                                 the input image passed to the augmentation
+        @param kernel_size (int, default = 3)                                         kernel size for the erosion operation (pixels), typically odd: 3,5,7
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Eroded image
+    """
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "kernel_size": kernel_size,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    eroded_image = b.erode(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (eroded_image)
+
+def crop_and_patch(*inputs, crop_roi=[0, 0, 0, 0], patch_roi=[0, 0, 0, 0],
+                   device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Crops a region from the second input and patches it into a destination region in the first input.
+
+        ROIs are specified in XYWH format: [x, y, w, h].
+
+        @param inputs                                  two input tensors; first is destination, second is source for cropping
+        @param dst_roi (list of int)                   destination ROI in input0 where patch will be placed
+        @param crop_roi (list of int)                  crop ROI in input1 to extract as patch
+        @param patch_roi (list of int)                 ROI inside destination region where the patch is pasted
+        @param output_layout (int)                     tensor layout for the augmentation output
+        @param output_dtype (int)                      tensor dtype for the augmentation output
+
+        @return    Output image after crop-and-patch
+    """
+    kwargs_pybind = {
+        "input_image0": inputs[0],
+        "input_image1": inputs[1],
+        "is_output": False,
+        "crop_roi": crop_roi,
+        "patch_roi": patch_roi,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.cropAndPatch(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def remap(*inputs, dest_width=0, dest_height=0, row_remap=[], col_remap=[],
+          interpolation_type=types.LINEAR_INTERPOLATION, device=None,
+          output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies pixel remapping using per-sample row/col maps.
+
+        @param inputs                               the input image tensor
+        @param dest_width (int, default = 0)        destination width; 0 uses input max width
+        @param dest_height (int, default = 0)       destination height; 0 uses input max height
+        @param row_remap (list of float)            flattened HxW y-coordinates for remap
+        @param col_remap (list of float)            flattened HxW x-coordinates for remap
+        @param interpolation_type (int)             interpolation to use (e.g., LINEAR_INTERPOLATION)
+        @param output_layout (int)                  tensor layout for the augmentation output
+        @param output_dtype (int)                   tensor dtype for the augmentation output
+
+        @return    Remapped image
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "dest_height": dest_height,
+        "dest_width": dest_width,
+        "row_remap": row_remap,
+        "col_remap": col_remap,
+        "interpolation_type": interpolation_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.remap(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def erase(*inputs, anchor=None, shape=None, num_boxes=None, fill_value=None, 
+          anchor_box_info=None, colors=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Erases regions in images. Supports both vector-based and tensor-based APIs.
+
+        Vector-based API (when anchor, shape, num_boxes, fill_value are provided):
+        @param anchor (list of float)                                                 anchor points (x1, y1) for each box
+        @param shape (list of float)                                                  shape (w, h) for each box
+        @param num_boxes (list of int)                                                number of boxes per sample
+        @param fill_value (list of float)                                             fill values for erased regions
+        
+        Tensor-based API (when anchor_box_info and colors are provided):
+        @param anchor_box_info (rocalTensor)                                          tensor holding per-sample per-box LTRB anchors
+        @param colors (rocalTensor)                                                   tensor holding per-sample per-box RGB colors
+        
+        Common parameters:
+        @param inputs                                                                 the input image passed to the augmentation
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+        @return    Image with specified regions erased
+    """
+    # Check which API is being used
+    if anchor is not None and shape is not None and num_boxes is not None and fill_value is not None:
+        # Vector-based API
+        kwargs_pybind = {
+            "input_image": inputs[0],
+            "is_output": False,
+            "anchor": anchor,
+            "shape": shape,
+            "num_boxes": num_boxes,
+            "fill_value": fill_value,
+            "output_layout": output_layout,
+            "output_dtype": output_dtype
+        }
+    elif anchor_box_info is not None and colors is not None:
+        # Tensor-based API
+        num_boxes = b.createIntParameter(num_boxes) if isinstance(num_boxes, int) else num_boxes
+        kwargs_pybind = {
+            "input_image": inputs[0],
+            "is_output": False,
+            "anchor_box_info": anchor_box_info,
+            "colors": colors,
+            "num_boxes": num_boxes,
+            "output_layout": output_layout,
+            "output_dtype": output_dtype
+        }
+    else:
+        raise RuntimeError("erase requires either (anchor, shape, num_boxes, fill_value) for vector API or (anchor_box_info, colors) for tensor API")
+    
+    output_image = b.erase(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def ricap(*inputs, permutation=[], crop_rois=[], device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies RICAP (Random Image Cropping And Patching) augmentation.
+
+        RICAP creates a new training image by combining four cropped regions from the input batch.
+        
+        @param inputs                                                                 the input image passed to the augmentation
+        @param permutation (list of int)                                              permutation indices for quadrants (length 4 or batch*4)
+        @param crop_rois (list of int)                                               XYWH ROIs for cropping (length 16 or batch*16)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    RICAP augmented image
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "permutation": permutation,
+        "crop_rois": crop_rois,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.ricap(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def bitwise_ops(*inputs, op=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies bitwise operations on input images.
+
+        @param inputs                                                                 list containing input image(s); for NOT operation, only first is used
+        @param op (RocalBitwiseOp)                                                    bitwise operation type (BITWISE_AND, BITWISE_OR, BITWISE_XOR, BITWISE_NOT)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Image after bitwise operation
+    """
+    if op is None:
+        raise RuntimeError("bitwise_ops requires 'op' parameter specifying the operation type")
+    
+    # For NOT operation, we only need one input, but the API expects two
+    if len(inputs) == 1:
+        inputs = [inputs[0], inputs[0]]
+    
+    kwargs_pybind = {
+        "input_image0": inputs[0],
+        "input_image1": inputs[1],
+        "is_output": False,
+        "op": op,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.bitwiseOps(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
 
 
 def log(*inputs, output_datatype = types.FLOAT):

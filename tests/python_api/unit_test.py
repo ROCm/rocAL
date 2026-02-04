@@ -110,7 +110,7 @@ def main():
     if (scaling_mode != types.SCALING_MODE_DEFAULT and interpolation_type !=
             types.LINEAR_INTERPOLATION):
         interpolation_type = types.LINEAR_INTERPOLATION
-    if augmentation_name in ["hue", "saturation", "color_twist"] and color_format == types.GRAY:
+    if augmentation_name in ["hue", "saturation", "color_twist", "color_cast", "non_linear_blend"] and color_format == types.GRAY:
         print("Not a valid option! Exiting!")
         sys.exit(0)
 
@@ -413,7 +413,9 @@ def main():
                                   output_dtype=tensor_dtype)
         elif augmentation_name == "snow":
             output = fn.snow(images,
-                             snow=0.2,
+                             snow=1.0,
+                             brightness_coefficient=2.5,
+                             dark_mode=0,
                              output_layout=tensor_layout,
                              output_dtype=tensor_dtype)
         elif augmentation_name == "rain":
@@ -579,6 +581,237 @@ def main():
                              output_dtype=tensor_dtype)
             num_classes = len(next(os.walk(data_path))[1])
             labels_onehot = fn.one_hot(labels, num_classes=num_classes)
+        elif augmentation_name == "color_cast":
+            output = fn.color_cast(images,
+                                   alpha=0.5,
+                                   rgb=[12.0, 0.0, 100.0],
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
+        elif augmentation_name == "grid_mask":
+            output = fn.grid_mask(images,
+                                  tile_width=40,
+                                  grid_ratio=0.6,
+                                  grid_angle=0.5,
+                                  translate_x=0,
+                                  translate_y=0,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "non_linear_blend":
+            output1 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=416,
+                                dest_height=416,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.non_linear_blend(images,
+                                         output1,
+                                         stddev=50.0,
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype)
+        elif augmentation_name == "median_filter":
+            output = fn.median_filter(images,
+                                      kernel_size=3,
+                                      border_type=types.REPLICATE,
+                                      output_layout=tensor_layout,
+                                      output_dtype=tensor_dtype)
+        elif augmentation_name == "gaussian_filter":
+            output = fn.gaussian_filter(images,
+                                        stddev=5.0,
+                                        kernel_size=3,
+                                        border_type=types.REPLICATE,
+                                        output_layout=tensor_layout,
+                                        output_dtype=tensor_dtype)
+        elif augmentation_name == "dilate":
+            output = fn.dilate(images,
+                                kernel_size=3,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "erode":
+            output = fn.erode(images,
+                                kernel_size=3,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "magnitude":
+            images2 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=max_width,
+                                dest_height=max_height,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.magnitude(images,
+                                    images2,
+                                    output_layout=tensor_layout,
+                                    output_dtype=tensor_dtype)
+        elif augmentation_name == "phase":
+            images2 = fn.rotate(images,
+                                angle=45.0,
+                                dest_width=max_width,
+                                dest_height=max_height,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+            output = fn.phase(images,
+                                images2,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "threshold":
+            min_val = [30.0]
+            max_val = [100.0]
+            if color_format == types.RGB:
+                min_val = [30.0, 30.0, 30.0]
+                max_val = [100.0, 100.0, 100.0]
+            output = fn.threshold(images,
+                                  min=min_val,
+                                  max=max_val,
+                                  output_layout=tensor_layout,
+                                  output_dtype=tensor_dtype)
+        elif augmentation_name == "warp_perspective":
+            output = fn.warp_perspective(images,
+                                         dest_height=416,
+                                         dest_width=416,
+                                         perspective=[0.93, 0.5, 0.0,
+                                                      -0.5, 0.93, 0.0,
+                                                      0.005, 0.005, 1.0],
+                                         output_layout=tensor_layout,
+                                         output_dtype=tensor_dtype,
+                                         interpolation_type=types.LINEAR_INTERPOLATION)
+        elif augmentation_name == "remap":
+            # Build identity remap tables with horizontal flip for left half
+            H = max_height
+            W = max_width
+            row_remap = []
+            col_remap = []
+            half_width = W // 2
+            for y in range(H):
+                for x in range(half_width):
+                    row_remap.append(float(y))
+                    col_remap.append(float(half_width - x))
+                for x in range(half_width, W):
+                    row_remap.append(float(y))
+                    col_remap.append(float(x))
+            output = fn.remap(images,
+                             dest_height=H,
+                             dest_width=W,
+                             row_remap=row_remap,
+                             col_remap=col_remap,
+                             interpolation_type=types.LINEAR_INTERPOLATION,
+                             output_layout=tensor_layout,
+                             output_dtype=tensor_dtype)
+        elif augmentation_name == "crop_and_patch":
+            # Create a second input (rotated version)
+            images2 = fn.rotate(images,
+                               angle=45.0,
+                               dest_width=max_width,
+                               dest_height=max_height,
+                               output_layout=tensor_layout,
+                               output_dtype=tensor_dtype)
+            # Define XYWH ROIs
+            roi_w = max(1, (max_width) // 4)
+            roi_h = max(1, (max_height) // 4)
+            crop_roi = [max(0, (max_width) // 8), 
+                       max(0, (max_height) // 8), 
+                       roi_w, roi_h]
+            patch_roi = [0, 0, roi_w, roi_h]
+            output = fn.crop_and_patch(images,
+                                      images2,
+                                      crop_roi=crop_roi,
+                                      patch_roi=patch_roi,
+                                      output_layout=tensor_layout,
+                                      output_dtype=tensor_dtype)
+        elif augmentation_name == "ricap":
+            # Permutation for quadrants [q0,q1,q2,q3]; replicate across batch
+            permutation = [0, 1, 1, 0, 1, 0, 0, 1]
+            # Define 4 XYWH ROIs covering image quadrants
+            q_w = max(1, (max_width) // 2)
+            q_h = max(1, (max_height) // 2)
+            crop_rois = [
+                0,      0,      q_w, q_h,   # top-left
+                q_w,    0,      q_w, q_h,   # top-right
+                0,      q_h,    q_w, q_h,   # bottom-left
+                q_w,    q_h,    q_w, q_h    # bottom-right
+            ]
+            output = fn.ricap(images,
+                             permutation=permutation,
+                             crop_rois=crop_rois,
+                             output_layout=tensor_layout,
+                             output_dtype=tensor_dtype)
+        elif augmentation_name == "bitwise_and":
+            # Create second input tensor (rotate input to get variation)
+            images2 = fn.rotate(images,
+                               angle=45.0,
+                               dest_width=max_width,
+                               dest_height=max_height,
+                               output_layout=tensor_layout,
+                               output_dtype=tensor_dtype)
+            output = fn.bitwise_ops(images,
+                                   images2,
+                                   op=types.BITWISE_AND,
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
+        elif augmentation_name == "bitwise_or":
+            images2 = fn.rotate(images,
+                               angle=45.0,
+                               dest_width=max_width,
+                               dest_height=max_height,
+                               output_layout=tensor_layout,
+                               output_dtype=tensor_dtype)
+            output = fn.bitwise_ops(images,
+                                   images2,
+                                   op=types.BITWISE_OR,
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
+        elif augmentation_name == "bitwise_xor":
+            images2 = fn.rotate(images,
+                               angle=45.0,
+                               dest_width=max_width,
+                               dest_height=max_height,
+                               output_layout=tensor_layout,
+                               output_dtype=tensor_dtype)
+            output = fn.bitwise_ops(images,
+                                   images2,
+                                   op=types.BITWISE_XOR,
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
+        elif augmentation_name == "bitwise_not":
+            # NOT uses only a single input
+            output = fn.bitwise_ops(images,
+                                   images,  # second parameter ignored for NOT
+                                   op=types.BITWISE_NOT,
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
+        elif augmentation_name == "erase":
+            # Use vector-based API with anchor [x1,y1], shape [w,h], num_boxes, and fill values
+            num_boxes = [2]  # Two boxes per sample
+            
+            # Derive two boxes using input width/height
+            W = max_width
+            H = max_height
+            bw = max(1, W // 4)
+            bh = max(1, H // 4)
+            
+            # Two anchors (x1, y1) and matching shapes (w, h)
+            anchor = [
+                float(W // 8), float(H // 8),
+                float(W // 2), float(H // 2)
+            ]
+            shape = [
+                float(bw), float(bh),
+                float(W - 50), float(H - 25)
+            ]
+            
+            # Fill values for each box and channel
+            if color_format == types.RGB:
+                fill_value = [0.0, 0.0, 240.0, 0.0, 60.0, 0.0]
+            else:
+                fill_value = [120.0, 60.0]
+            
+            output = fn.erase(images,
+                            anchor=anchor,
+                            shape=shape,
+                            num_boxes=num_boxes,
+                            fill_value=fill_value,
+                            output_layout=tensor_layout,
+                            output_dtype=tensor_dtype)
+
 
         if output_set == 0:
             pipe.set_outputs(output)
