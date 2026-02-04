@@ -64,13 +64,13 @@ class COCOMetaDataReader : public MetaDataReader {
     void generate_pixelwise_mask(const std::string& filename, const std::vector<RLEMaskInfo>* rle_masks);
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
-	    std::map<std::string, ImgSize> _map_img_sizes;
-	    std::map<int, std::string> _map_image_names_to_id;  // Maps image names to their image IDs
-	    std::unordered_map<std::string, std::vector<RLEMaskInfo>> _rle_masks_by_image;
-	    std::map<std::string, ImgSize>::iterator itr;
-	    std::map<int, int> _label_info;
-	    uint32_t _max_width = 0;
-	    uint32_t _max_height = 0;
-	    std::map<int, int>::iterator _it_label;
-	    TimingDbg _coco_metadata_read_time;
+    std::map<std::string, ImgSize> _map_img_sizes;
+    std::map<int, std::string> _map_image_names_to_id;  // Maps image names to their image IDs
+    std::unordered_map<std::string, std::vector<RLEMaskInfo>> _rle_masks_by_image;
+    std::map<std::string, ImgSize>::iterator itr;
+    std::map<int, int> _label_info;
+    uint32_t _max_width = 0;
+    uint32_t _max_height = 0;
+    std::map<int, int>::iterator _it_label;
+    TimingDbg _coco_metadata_read_time;
 };

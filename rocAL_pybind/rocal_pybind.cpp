@@ -1122,9 +1122,11 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         py::list boxes_list;
         for (int i = 0; i < boxes->size(); i++) {
             unsigned *box_buffer = static_cast<unsigned *>(boxes->at(i)->buffer());
-            py::array_t<unsigned> boxes_array({py::ssize_t(4)});
+            py::array::ShapeContainer shape{4};
+            py::array::StridesContainer strides{static_cast<py::ssize_t>(sizeof(unsigned))};
+            py::array_t<unsigned> boxes_array(shape, strides);
             std::memcpy(boxes_array.mutable_data(), box_buffer, 4 * sizeof(unsigned));
-            boxes_list.append(std::move(boxes_array));
+            boxes_list.append(boxes_array);
         }
         return boxes_list;
     }, py::arg("context"), py::arg("format"), py::arg("k_largest") = -1,

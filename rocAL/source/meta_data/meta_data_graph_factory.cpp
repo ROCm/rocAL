@@ -36,8 +36,6 @@ std::shared_ptr<MetaDataGraph> create_meta_data_graph(const MetaDataConfig& conf
         case MetaDataType::PolygonMask:
         case MetaDataType::PixelwiseMask:
         case MetaDataType::KeyPoints:
-            // These metadata types currently share the same bbox-centric graph implementation; mask/keypoint
-            // metadata is stored alongside and propagated through the same graph.
             return std::make_shared<BoundingBoxGraph>();
 
         default:

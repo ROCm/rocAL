@@ -441,9 +441,9 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                 std::vector<float> mask;
                 std::vector<int> vertices_array;
                 int polygon_size = 0;
-	                bool has_rle = false;
-	                bool rle_valid = true;
-	                RLEMaskInfo rle_info;
+                bool has_rle = false;
+                bool rle_valid = true;
+                RLEMaskInfo rle_info;
                 if (parser.PeekType() != kObjectType) {
                     continue;
                 }
