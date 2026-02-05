@@ -200,7 +200,7 @@ rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size,
 
 RocalStatus ROCAL_API_CALL
 rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
-    auto context = static_cast<Context*>(rocal_context);  // Context pointer from rocAL handle.
+    auto context = static_cast<Context*>(rocal_context);
     try {
         if (!serialized_string) {
             THROW("String copy failed, Invalid pointer passed for serialize.")
@@ -222,8 +222,7 @@ rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
 // Serialize the current pipeline state into an internal checkpoint blob.
 RocalStatus ROCAL_API_CALL
 rocalCheckpoint(RocalContext rocal_context, size_t *serialized_ckpt_string_size) {
-    // Capture a checkpoint and return the serialized size.
-    auto context = static_cast<Context*>(rocal_context);  // Context pointer from rocAL handle.
+    auto context = static_cast<Context*>(rocal_context);
     try {
         if (!serialized_ckpt_string_size) {
             THROW("Serialized checkpoint size pointer is null")
@@ -240,14 +239,13 @@ rocalCheckpoint(RocalContext rocal_context, size_t *serialized_ckpt_string_size)
 // Copy the last serialized checkpoint blob into the user-provided buffer.
 RocalStatus ROCAL_API_CALL
 rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_ckpt_string) {
-    // Copy the last serialized checkpoint blob into the user buffer.
     auto context = static_cast<Context*>(rocal_context);
     try {
         if (!serialized_ckpt_string) {
             THROW("String copy failed, Invalid pointer passed for serialize")
         }
 
-        auto pipe_ckpt_string = context->master_graph->get_serialized_checkpoint_string();  // Cached checkpoint blob.
+        auto pipe_ckpt_string = context->master_graph->get_serialized_checkpoint_string();
         if (pipe_ckpt_string.empty())
             THROW("Serialized string is empty, Invoke rocalCheckpoint before obtaining the string")
         std::memcpy(serialized_ckpt_string, pipe_ckpt_string.data(), pipe_ckpt_string.size());

@@ -36,7 +36,6 @@ struct LoaderState {
     unsigned curr_file_idx = 0;    //!< Current file index in the reader.
 };
 
-/*! \brief Decoded batch metadata forwarded through the loader ring buffer. */
 struct DecodedDataInfo {
     std::vector<std::string> _data_names;
     std::vector<uint32_t> _roi_width;

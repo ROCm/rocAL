@@ -35,20 +35,20 @@ THE SOFTWARE.
 // Checkpointing smoke test: run a few iterations, capture a checkpoint, then finish.
 int main(int argc, const char **argv) {
     // check command-line usage
-    const int MIN_ARG_COUNT = 3;  // Minimum CLI args: dataset path, labels path, device flag.
+    const int MIN_ARG_COUNT = 3;
     if (argc < MIN_ARG_COUNT) {
         std::cout << "Usage: checkpoint_test <image_dataset_folder - required> <label_text_file_path> <processing_device=1/cpu=0>  decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts decoder_type \n";
         return -1;
     }
-    int argIdx = 1;                           // Cursor for optional CLI args.
-    const char *folderPath1 = argv[argIdx++]; // Dataset folder path.
-    const char *label_text_file_path = "";    // Optional label file path.
-    int rgb = 1;                              // Process color images by default.
-    int decode_width = 0;                     // Optional decode width override.
-    int decode_height = 0;                    // Optional decode height override.
-    bool processing_device = 0;              // 0=CPU, 1=GPU.
-    size_t decode_shard_counts = 1;           // Number of reader shards.
-    int decoder_type = 0;                     // Default TurboJpeg decoder.
+    int argIdx = 1;
+    const char *folderPath1 = argv[argIdx++];
+    const char *label_text_file_path = "";
+    int rgb = 1;  // process color images
+    int decode_width = 0;
+    int decode_height = 0;
+    bool processing_device = 0;
+    size_t decode_shard_counts = 1;
+    int decoder_type = 0;   // Set to default TurboJpeg decoder
 
     if (argc > argIdx)
         label_text_file_path = argv[argIdx++];
@@ -71,10 +71,10 @@ int main(int argc, const char **argv) {
     if (argc > argIdx)
         decoder_type = atoi(argv[argIdx++]);
 
-    const int inputBatchSize = 1;  // Batch size for the test pipeline.
+    const int inputBatchSize = 1;
 
     // Set the rocAL decoder type
-    RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG;  // Selected decoder backend.
+    RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG;
     if (decoder_type == 1) {
         rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_OPENCV;
     } else if (decoder_type == 2) {
@@ -84,7 +84,7 @@ int main(int argc, const char **argv) {
 
     std::cout << ">>> Running on " << (processing_device ? "GPU" : "CPU") << std::endl;
 
-    RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24 : RocalImageColor::ROCAL_COLOR_U8;  // Output color format.
+    RocalImageColor color_format = (rgb != 0) ? RocalImageColor::ROCAL_COLOR_RGB24 : RocalImageColor::ROCAL_COLOR_U8;
 
     // Create a pipeline context with checkpointing enabled.
     auto handle = rocalCreate(inputBatchSize, processing_device ? RocalProcessMode::ROCAL_PROCESS_GPU : RocalProcessMode::ROCAL_PROCESS_CPU, 0, 1, 3, ROCAL_FP32, true);
@@ -95,7 +95,7 @@ int main(int argc, const char **argv) {
     }
 
     /*>>>>>>>>>>>>>>>>>>> Graph description <<<<<<<<<<<<<<<<<<<*/
-    RocalTensor decoded_output;  // Loader output tensor.
+    RocalTensor decoded_output;
 
     // The jpeg file loader can automatically select the best size to decode all images to that size
     // User can alternatively set the size or change the policy that is used to automatically find the size
@@ -129,23 +129,23 @@ int main(int argc, const char **argv) {
     std::cout << "Augmented copies count " << rocalGetAugmentationBranchCount(handle) << std::endl;
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
-    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;  // Output height in pixels.
-    int w = rocalGetOutputWidth(handle);                                                             // Output width in pixels.
-    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);                           // Output channel count.
+    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
+    int w = rocalGetOutputWidth(handle);
+    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);  // OpenCV matrix type.
+    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
 
-    int ImageNameLen[inputBatchSize];  // Per-sample image name lengths.
+    int ImageNameLen[inputBatchSize];
 
-    std::vector<std::string> names;  // Decoded image names for the current batch.
+    std::vector<std::string> names;
     names.resize(inputBatchSize);
 
     std::cout << "Available images = " << rocalGetRemainingImages(handle) << std::endl;
-    int process_image_count = rocalGetRemainingImages(handle);  // Total images to process.
+    int process_image_count = rocalGetRemainingImages(handle);
     std::cout << "Process " << process_image_count << " images" << std::endl;
 
-    int counter = 0;                                   // Processed image counter.
-    cv::Mat mat_input(h, w, cv_color_format);          // Output buffer for rocalCopyToOutput.
+    int counter = 0;
+    cv::Mat mat_input(h, w, cv_color_format);
 
     while (counter < 15 && !rocalIsEmpty(handle)) {
         if (rocalRun(handle) != 0) {
@@ -157,16 +157,16 @@ int main(int argc, const char **argv) {
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
 
         counter += inputBatchSize;
-        RocalTensorList labels = rocalGetImageLabels(handle);  // Label tensor list for this batch.
+        RocalTensorList labels = rocalGetImageLabels(handle);
 
-        unsigned imagename_size = rocalGetImageNameLen(handle, ImageNameLen);  // Total name bytes for this batch.
-        std::vector<char> imageNames(imagename_size);                          // Name buffer.
+        unsigned imagename_size = rocalGetImageNameLen(handle, ImageNameLen);
+        std::vector<char> imageNames(imagename_size);
         rocalGetImageName(handle, imageNames.data());
-        std::string imageNamesStr(imageNames.data());                          // Concatenated names string.
+        std::string imageNamesStr(imageNames.data());
 
-        int pos = 0;                                                           // Offset into names string.
-        int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer()); // Pointer to label data.
-        for (int i = 0; i < inputBatchSize; i++) {  // Batch index.
+        int pos = 0;
+        int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
+        for (int i = 0; i < inputBatchSize; i++) {
             names[i] = imageNamesStr.substr(pos, ImageNameLen[i]);
             pos += ImageNameLen[i];
             std::cout << "name: " << names[i] << " label: " << labels_buffer[i] << std::endl;
@@ -174,13 +174,13 @@ int main(int argc, const char **argv) {
         std::cout << std::endl;
     }
     // Capture a checkpoint mid-run (after 15 iterations) and then continue running to completion.
-    size_t size_ckpt;  // Serialized checkpoint size in bytes.
+    size_t size_ckpt;
     rocalCheckpoint(handle, &size_ckpt);
-    std::string serialized_ckpt(size_ckpt, '\0');  // Checkpoint payload buffer.
+    std::string serialized_ckpt(size_ckpt, '\0');
     rocalGetSerializedCheckpointString(handle, &serialized_ckpt[0]);
 
     // Save to file
-    std::ofstream file("checkpoint.bin", std::ios::binary);  // Output file stream.
+    std::ofstream file("checkpoint.bin", std::ios::binary);
     file.write(serialized_ckpt.data(), size_ckpt);
     file.close();
 
@@ -197,16 +197,16 @@ int main(int argc, const char **argv) {
         rocalCopyToOutput(handle, mat_input.data, h * w * p);
 
         counter += inputBatchSize;
-        RocalTensorList labels = rocalGetImageLabels(handle);  // Label tensor list for this batch.
+        RocalTensorList labels = rocalGetImageLabels(handle);
 
-        unsigned imagename_size = rocalGetImageNameLen(handle, ImageNameLen);  // Total name bytes for this batch.
-        std::vector<char> imageNames(imagename_size);                          // Name buffer.
+        unsigned imagename_size = rocalGetImageNameLen(handle, ImageNameLen);
+        std::vector<char> imageNames(imagename_size);
         rocalGetImageName(handle, imageNames.data());
-        std::string imageNamesStr(imageNames.data());                          // Concatenated names string.
+        std::string imageNamesStr(imageNames.data());
 
-        int pos = 0;                                                           // Offset into names string.
-        int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer()); // Pointer to label data.
-        for (int i = 0; i < inputBatchSize; i++) {  // Batch index.
+        int pos = 0;
+        int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
+        for (int i = 0; i < inputBatchSize; i++) {
             names[i] = imageNamesStr.substr(pos, ImageNameLen[i]);
             pos += ImageNameLen[i];
             std::cout << "name: " << names[i] << " label: " << labels_buffer[i] << std::endl;
