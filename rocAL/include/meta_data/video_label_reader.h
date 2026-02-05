@@ -42,7 +42,6 @@ class VideoLabelReader : public MetaDataReader {
         _file_list_frame_num = false;
         return _file_list_frame_num;
     }
-    MetaDataReaderType get_reader_type() const override { return MetaDataReaderType::VIDEO_LABEL_READER; }
     void print_map_contents();
     const std::map<std::string, std::shared_ptr<MetaData>> &get_map_content() override { return _map_content; }
     VideoLabelReader();

@@ -38,7 +38,6 @@ class COCOMetaDataReader : public MetaDataReader {
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    MetaDataReaderType get_reader_type() const override { return MetaDataReaderType::COCO_META_DATA_READER; }
     const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     void set_aspect_ratio_grouping(bool aspect_ratio_grouping) override { _aspect_ratio_grouping = aspect_ratio_grouping; }
     bool get_aspect_ratio_grouping() const override { return _aspect_ratio_grouping; }

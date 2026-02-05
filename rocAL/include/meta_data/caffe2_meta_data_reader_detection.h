@@ -41,7 +41,6 @@ class Caffe2MetaDataReaderDetection : public MetaDataReader {
     void release(std::string image_name);
     void release() override;
     void print_map_contents();
-    MetaDataReaderType get_reader_type() const override { return MetaDataReaderType::CAFFE2_DETECTION_META_DATA_READER; }
     const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
     bool set_timestamp_mode() override { return false; }
     Caffe2MetaDataReaderDetection();

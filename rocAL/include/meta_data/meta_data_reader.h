@@ -97,6 +97,7 @@ struct MetaDataConfig {
 class MetaDataReader {
    protected:
     bool _aspect_ratio_grouping;
+    MetaDataReaderType _reader_type = MetaDataReaderType::FOLDER_BASED_LABEL_READER;
 
    public:
     enum class Status {
@@ -110,7 +111,8 @@ class MetaDataReader {
     virtual const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() = 0;
     virtual bool exists(const std::string& image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
-    virtual MetaDataReaderType get_reader_type() const = 0;  // Returns the reader type
+    virtual MetaDataReaderType get_reader_type() const { return _reader_type; }  // Returns the reader type
+    void set_reader_type(MetaDataReaderType reader_type) { _reader_type = reader_type; }
     virtual ImgSize lookup_image_size(const std::string& image_name) { return {}; }
     virtual void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { return; }
     virtual bool get_aspect_ratio_grouping() const { return {}; }

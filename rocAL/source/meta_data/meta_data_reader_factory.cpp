@@ -48,6 +48,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("FOLDER_BASED_LABEL_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<LabelReaderFolders>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -57,6 +58,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("VIDEO_LABEL_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<VideoLabelReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -66,6 +68,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("TEXT_FILE_META_DATA_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<TextFileMetaDataReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -74,6 +77,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("TF_META_DATA_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<TFMetaDataReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -82,6 +86,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("TF_DETECTION_META_DATA_READER can only be used to load bounding boxes")
             auto meta_data_reader = std::make_shared<TFMetaDataReaderDetection>();
             meta_data_batch = std::make_shared<BoundingBoxBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -93,6 +98,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 meta_data_batch = std::make_shared<PolygonMaskBatch>();
             else
                 meta_data_batch = std::make_shared<BoundingBoxBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -101,6 +107,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("COCO_KEY_POINTS_META_DATA_READER can only be used to load keypoints")
             auto meta_data_reader = std::make_shared<COCOMetaDataReaderKeyPoints>();
             meta_data_batch = std::make_shared<KeyPointBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -112,6 +119,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 meta_data_batch = std::make_shared<PolygonMaskBatch>();
             else
                 meta_data_batch = std::make_shared<BoundingBoxBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -120,6 +128,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("TEXT_FILE_META_DATA_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<Cifar10MetaDataReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -128,6 +137,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("CAFFE_META_DATA_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<CaffeMetaDataReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -136,6 +146,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("CAFFE_DETECTION_META_DATA_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<CaffeMetaDataReaderDetection>();
             meta_data_batch = std::make_shared<BoundingBoxBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -144,6 +155,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("CAFFE2_META_DATA_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<Caffe2MetaDataReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -152,6 +164,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("CAFFE2_DETECTION_META_DATA_READER can only be used to load labels")
             auto meta_data_reader = std::make_shared<Caffe2MetaDataReaderDetection>();
             meta_data_batch = std::make_shared<BoundingBoxBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -160,6 +173,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("MXNetMetaDataReader can only be used to load labels")
             auto meta_data_reader = std::make_shared<MXNetMetaDataReader>();
             meta_data_batch = std::make_shared<LabelBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
@@ -169,6 +183,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
                 THROW("WEBDATASET_META_DATA_READER can only be used to load ascii values")
             auto meta_data_reader = std::make_shared<WebDataSetMetaDataReader>();
             meta_data_batch = std::make_shared<AsciiValueBatch>();
+            meta_data_reader->set_reader_type(config.reader_type());
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;

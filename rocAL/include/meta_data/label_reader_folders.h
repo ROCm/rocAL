@@ -38,7 +38,6 @@ class LabelReaderFolders : public MetaDataReader {
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
-    MetaDataReaderType get_reader_type() const override { return MetaDataReaderType::FOLDER_BASED_LABEL_READER; }
     const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() override { return _map_content; }
 
     LabelReaderFolders();
