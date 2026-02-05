@@ -110,8 +110,6 @@ class ParameterFactory {
 
     /// Checkpointing: snapshot RNG states of random parameters (deterministic params ignored).
     std::vector<std::string> snapshot_rngs();
-    /// Destroy the singleton instance completely (called when pipeline is released).
-    static void destroy_instance();
 
    private:
     long long unsigned _seed;

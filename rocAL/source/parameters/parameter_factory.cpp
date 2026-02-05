@@ -213,12 +213,3 @@ std::vector<std::string> ParameterFactory::snapshot_rngs() {
     }
     return out;
 }
-
-// Tear down the singleton instance and clear tracked parameters.
-void ParameterFactory::destroy_instance() {
-    std::lock_guard<std::mutex> lock(_mutex);  // Serialize singleton destruction.
-    if (_instance != nullptr) {
-        delete _instance;
-        _instance = nullptr;
-    }
-}
