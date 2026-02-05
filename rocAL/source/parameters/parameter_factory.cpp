@@ -239,12 +239,3 @@ void ParameterFactory::reset_param_list() {
     _param_list.clear();
     _seed_sequence_idx = 0;
 }
-
-// Tear down the singleton instance and clear tracked parameters.
-void ParameterFactory::destroy_instance() {
-    std::lock_guard<std::mutex> lock(_mutex);  // Serialize singleton destruction.
-    if (_instance != nullptr) {
-        delete _instance;
-        _instance = nullptr;
-    }
-}

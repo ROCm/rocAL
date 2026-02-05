@@ -787,7 +787,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 41: {
             std::cout << "Running rocalSnowFixed" << std::endl;
-            output = rocalSnowFixed(handle, input, 0.2, true);
+            output = rocalSnowFixed(handle, input, 1.0, true, 2.5);
         } break;
         case 42: {
             std::cout << "Running rocalRainFixed" << std::endl;

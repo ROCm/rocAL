@@ -119,8 +119,6 @@ class ParameterFactory {
     // checkpoint-enabled pipeline is constructed, under the assumption
     // that checkpointed pipelines are executed serially.
     void reset_param_list();
-    /// Destroy the singleton instance completely (called when pipeline is released).
-    static void destroy_instance();
 
    private:
     long long unsigned _seed;
