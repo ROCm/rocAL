@@ -55,11 +55,13 @@ void ResampleNode::init(Tensor *output_resample_rate, float quality) {
     _output_resample_rate = output_resample_rate;
     _quality = quality;
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"output_resample_rate", "quality"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, output_resample_rate, quality);
+    ArgumentSet args;
+    args.add_new_argument("output_resample_rate", output_resample_rate);
+    args.add_new_argument("quality", quality);
+    _args = args;
 }
 
-void ResampleNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ResampleNode, Tensor*, float>(this, arguments)) return;
+void ResampleNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ResampleNode, Tensor*, float>(this, {"output_resample_rate", "quality"}, arguments)) return;
     THROW("Unsupported argument types for ResampleNode");
 }

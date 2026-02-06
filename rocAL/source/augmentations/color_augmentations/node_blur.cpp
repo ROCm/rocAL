@@ -45,7 +45,7 @@ void BlurNode::create_node() {
         THROW("Adding the blur (vxExtRppBlur) node failed: " + TOSTR(status))
 }
 
-void BlurNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<BlurNode>(this, arguments)) return;
+void BlurNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<BlurNode>(this, {}, arguments)) return;
     THROW("Unsupported argument types for BlurNode");
 }

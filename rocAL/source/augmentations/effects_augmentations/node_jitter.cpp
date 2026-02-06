@@ -52,24 +52,28 @@ void JitterNode::init(int kernel_size, int seed) {
     _kernel_size.set_param(kernel_size);
     _seed = seed;
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"kernel_size", "seed"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, kernel_size, seed);
+    ArgumentSet args;
+    args.add_new_argument("kernel_size", kernel_size);
+    args.add_new_argument("seed", seed);
+    _args = args;
 }
 
 void JitterNode::init(IntParam *kernel_size, int seed) {
     _kernel_size.set_param(core(kernel_size));
     _seed = seed;
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"kernel_size", "seed"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, kernel_size, seed);
+    ArgumentSet args;
+    args.add_new_argument("kernel_size", kernel_size);
+    args.add_new_argument("seed", seed);
+    _args = args;
 }
 
 void JitterNode::update_node() {
     _kernel_size.update_array();
 }
 
-void JitterNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<JitterNode, int, int>(this, arguments)) return;
-    if (init_args<JitterNode, IntParam*, int>(this, arguments)) return;
+void JitterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<JitterNode, int, int>(this, {"kernel_size", "seed"}, arguments)) return;
+    if (init_args<JitterNode, IntParam*, int>(this, {"kernel_size", "seed"}, arguments)) return;
     THROW("Unsupported argument types for JitterNode");
 }

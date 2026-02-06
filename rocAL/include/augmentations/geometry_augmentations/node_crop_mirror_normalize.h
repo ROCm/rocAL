@@ -35,7 +35,7 @@ class CropMirrorNormalizeNode : public CropNode {
     vx_array return_mirror() { return _mirror.default_array(); }
     std::shared_ptr<RocalCropParam> return_crop_param() { return _crop_param; }
     void init() {}
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "CropMirrorNormalizeNode"; }
 
    protected:

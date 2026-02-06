@@ -33,7 +33,7 @@ class ResizeMirrorNormalizeNode : public Node {
               ResizeInterpolationType interpolation_type, std::vector<float> &mean, std::vector<float> &std_dev, IntParam *mirror);
     void adjust_out_roi_size();
     vx_array get_mirror() { return _mirror.default_array(); }
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "ResizeMirrorNormalizeNode"; }
 
    protected:

@@ -43,7 +43,7 @@ class SpectrogramNode : public Node {
     SpectrogramNode() = delete;
     void init(bool is_center_windows, bool is_reflect_padding, int power, int nfft,
               int window_length, int window_step, std::vector<float> &window_fn);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "SpectrogramNode"; }
 
    protected:

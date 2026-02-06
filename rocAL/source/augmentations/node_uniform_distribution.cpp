@@ -63,11 +63,12 @@ void UniformDistributionNode::init(std::vector<float> &range) {
     _rngs = rng;
     update_param();
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"range"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, range);
+    ArgumentSet args;
+    args.add_new_argument("range", range);
+    _args = args;
 }
 
-void UniformDistributionNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<UniformDistributionNode, std::vector<float>>(this, arguments)) return;
+void UniformDistributionNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<UniformDistributionNode, std::vector<float>>(this, {"range"}, arguments)) return;
     THROW("Unsupported argument types for UniformDistributionNode");
 }

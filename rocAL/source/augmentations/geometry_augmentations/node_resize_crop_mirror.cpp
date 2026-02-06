@@ -93,8 +93,12 @@ void ResizeCropMirrorNode::init(unsigned int crop_h, unsigned int crop_w, IntPar
     _mirror.set_param(core(mirror));
     _interpolation_type = static_cast<int>(interpolation_type);
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"crop_h", "crop_w", "mirror", "interpolation_type"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h, crop_w, mirror, interpolation_type);
+    ArgumentSet args;
+    args.add_new_argument("crop_h", crop_h);
+    args.add_new_argument("crop_w", crop_w);
+    args.add_new_argument("mirror", mirror);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    _args = args;
 }
 
 void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, IntParam *mirror, ResizeInterpolationType interpolation_type) {
@@ -104,12 +108,16 @@ void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_fa
     _mirror.set_param(core(mirror));
     _interpolation_type = static_cast<int>(interpolation_type);
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"crop_h_factor", "crop_w_factor", "mirror", "interpolation_type"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h_factor, crop_w_factor, mirror, interpolation_type);
+    ArgumentSet args;
+    args.add_new_argument("crop_h_factor", crop_h_factor);
+    args.add_new_argument("crop_w_factor", crop_w_factor);
+    args.add_new_argument("mirror", mirror);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    _args = args;
 }
 
-void ResizeCropMirrorNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ResizeCropMirrorNode, unsigned int, unsigned int, IntParam*, ResizeInterpolationType>(this, arguments)) return;
-    if (init_args<ResizeCropMirrorNode, FloatParam*, FloatParam*, IntParam*, ResizeInterpolationType>(this, arguments)) return;
+void ResizeCropMirrorNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ResizeCropMirrorNode, unsigned int, unsigned int, IntParam*, ResizeInterpolationType>(this, {"crop_h", "crop_w", "mirror", "interpolation_type"}, arguments)) return;
+    if (init_args<ResizeCropMirrorNode, FloatParam*, FloatParam*, IntParam*, ResizeInterpolationType>(this, {"crop_h", "crop_w", "mirror", "interpolation_type"}, arguments)) return;
     THROW("Unsupported argument types for ResizeCropMirrorNode");
 };

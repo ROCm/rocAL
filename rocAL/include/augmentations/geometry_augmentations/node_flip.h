@@ -33,7 +33,7 @@ class FlipNode : public Node {
     void init(IntParam *h_flag_param, IntParam *v_flag_param);
     vx_array get_horizontal_flip() { return _horizontal.default_array(); }
     vx_array get_vertical_flip() { return _vertical.default_array(); }
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "FlipNode"; }
 
    protected:

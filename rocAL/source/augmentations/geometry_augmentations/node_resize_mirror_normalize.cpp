@@ -138,7 +138,7 @@ void ResizeMirrorNormalizeNode::init(unsigned dest_width, unsigned dest_height, 
     set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, dest_width, dest_height, scaling_mode, max_size, interpolation_type, mean, std_dev, mirror);
 }
 
-void ResizeMirrorNormalizeNode::initialize_args(std::vector<Argument> &arguments) {
+void ResizeMirrorNormalizeNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<ResizeMirrorNormalizeNode, unsigned, unsigned, ResizeScalingMode, std::vector<unsigned>, ResizeInterpolationType, std::vector<float>, std::vector<float>, IntParam*>(this, arguments)) return;
     THROW("Unsupported argument types for ResizeMirrorNormalizeNode");
 }

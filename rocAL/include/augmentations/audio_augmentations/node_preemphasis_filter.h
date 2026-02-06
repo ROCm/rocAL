@@ -31,7 +31,7 @@ class PreemphasisFilterNode : public Node {
         PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
         PreemphasisFilterNode() = delete;
         void init(FloatParam *preemph_coeff, AudioBorderType preemph_border);
-        void initialize_args(std::vector<Argument> &arguments) override;
+        void initialize_args(const ArgumentSet& arguments) override;
         std::string node_name() const override { return "PreemphasisFilterNode"; }
 
     protected:

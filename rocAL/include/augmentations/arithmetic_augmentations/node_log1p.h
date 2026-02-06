@@ -29,7 +29,7 @@ class Log1pNode : public Node {
     Log1pNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     Log1pNode() = delete;
     void init() {}
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "Log1pNode"; }
 
    protected:

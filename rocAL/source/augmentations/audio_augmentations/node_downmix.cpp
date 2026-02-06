@@ -50,7 +50,7 @@ void DownmixNode::update_node() {
     }
 }
 
-void DownmixNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<DownmixNode>(this, arguments)) return;
+void DownmixNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<DownmixNode>(this, {}, arguments)) return;
     THROW("Unsupported argument types for DownmixNode");
 }

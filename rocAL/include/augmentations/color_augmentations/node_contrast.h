@@ -33,7 +33,7 @@ class ContrastNode : public Node {
     ContrastNode() = delete;
     void init(float contrast_factor, float contrast_center);
     void init(FloatParam *contrast_factor_param, FloatParam *contrast_center_param);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "ContrastNode"; }
 
    protected:

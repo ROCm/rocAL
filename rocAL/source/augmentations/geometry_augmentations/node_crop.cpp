@@ -81,8 +81,12 @@ void CropNode::init(unsigned int crop_h, unsigned int crop_w, float x_drift, flo
     _crop_param->set_x_drift_factor(core(x_drift_param));
     _crop_param->set_y_drift_factor(core(y_drift_param));
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"crop_h", "crop_w", "x_drift", "y_drift"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h, crop_w, x_drift, y_drift);
+    ArgumentSet args;
+    args.add_new_argument("crop_h", crop_h);
+    args.add_new_argument("crop_w", crop_w);
+    args.add_new_argument("x_drift", x_drift);
+    args.add_new_argument("y_drift", y_drift);
+    _args = args;
 }
 
 // This init is used only for centre crop
@@ -93,8 +97,10 @@ void CropNode::init(unsigned int crop_h, unsigned int crop_w) {
     _crop_param->y1 = 0;
     _crop_param->set_fixed_crop(0.5, 0.5);  // for center_crop
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"crop_h", "crop_w"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h, crop_w);
+    ArgumentSet args;
+    args.add_new_argument("crop_h", crop_h);
+    args.add_new_argument("crop_w", crop_w);
+    _args = args;
 }
 
 void CropNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatParam *x_drift, FloatParam *y_drift) {
@@ -104,8 +110,12 @@ void CropNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_factor, FloatP
     _crop_param->set_crop_width_factor(core(crop_w_factor));
     _crop_param->set_random();
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"crop_h_factor", "crop_w_factor", "x_drift", "y_drift"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h_factor, crop_w_factor, x_drift, y_drift);
+    ArgumentSet args;
+    args.add_new_argument("crop_h_factor", crop_h_factor);
+    args.add_new_argument("crop_w_factor", crop_w_factor);
+    args.add_new_argument("x_drift", x_drift);
+    args.add_new_argument("y_drift", y_drift);
+    _args = args;
 }
 
 // Create vx_tensor for the crop coordinates
@@ -129,10 +139,10 @@ void CropNode::create_crop_tensor() {
         THROW("Error: vxCreateTensorFromHandle(_crop_tensor: failed " + TOSTR(status))
 }
 
-void CropNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<CropNode, unsigned int, unsigned int, float, float>(this, arguments)) return;
-    if (init_args<CropNode, unsigned int, unsigned int>(this, arguments)) return;
-    if (init_args<CropNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, arguments)) return;
+void CropNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<CropNode, unsigned int, unsigned int, float, float>(this, {"crop_h", "crop_w", "x_drift", "y_drift"}, arguments)) return;
+    if (init_args<CropNode, unsigned int, unsigned int>(this, {"crop_h", "crop_w", "x_drift", "y_drift"}, arguments)) return;
+    if (init_args<CropNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, {"crop_h", "crop_w", "x_drift", "y_drift"}, arguments)) return;
     THROW("Unsupported argument types for CropNode");
 }
 

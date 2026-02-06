@@ -63,11 +63,15 @@ void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_val
     if (_fill_values.size() == 1)
         std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), _fill_values[0]);
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"anchor", "shape", "fill_values", "policy"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, anchor, shape, fill_values, policy);
+    ArgumentSet args;
+    args.add_new_argument("anchor", anchor);
+    args.add_new_argument("shape", shape);
+    args.add_new_argument("fill_values", fill_values);
+    args.add_new_argument("policy", policy);
+    _args = args;
 }
 
-void SliceNode::initialize_args(std::vector<Argument> &arguments) {
+void SliceNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<SliceNode, Tensor*, Tensor*, std::vector<float>, OutOfBoundsPolicy>(this, arguments)) return;
     THROW("Unsupported argument types for SliceNode");
 }

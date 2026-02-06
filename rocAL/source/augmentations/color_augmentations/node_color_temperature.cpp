@@ -50,22 +50,24 @@ void ColorTemperatureNode::create_node() {
 void ColorTemperatureNode::init(int adjustment) {
     _adj_value_param.set_param(adjustment);
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"adjustment"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, adjustment);
+    ArgumentSet args;
+    args.add_new_argument("adjustment", adjustment);
+    _args = args;
 }
 
 void ColorTemperatureNode::init(IntParam *adjustment) {
     _adj_value_param.set_param(core(adjustment));
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"adjustment"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, adjustment);
+    ArgumentSet args;
+    args.add_new_argument("adjustment", adjustment);
+    _args = args;
 }
 void ColorTemperatureNode::update_node() {
     _adj_value_param.update_array();
 }
 
-void ColorTemperatureNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ColorTemperatureNode, int>(this, arguments)) return;
-    if (init_args<ColorTemperatureNode, IntParam*>(this, arguments)) return;
+void ColorTemperatureNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ColorTemperatureNode, int>(this, {"adjustment"}, arguments)) return;
+    if (init_args<ColorTemperatureNode, IntParam*>(this, {"adjustment"}, arguments)) return;
     THROW("Unsupported argument types for ColorTemperatureNode");
 }

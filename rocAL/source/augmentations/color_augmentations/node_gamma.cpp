@@ -53,23 +53,25 @@ void GammaNode::create_node() {
 void GammaNode::init(float gamma) {
     _gamma.set_param(gamma);
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"gamma"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, gamma);
+    ArgumentSet args;
+    args.add_new_argument("gamma", gamma);
+    _args = args;
 }
 
 void GammaNode::init(FloatParam *gamma_param) {
     _gamma.set_param(core(gamma_param));
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"gamma_param"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, gamma_param);
+    ArgumentSet args;
+    args.add_new_argument("gamma_param", gamma_param);
+    _args = args;
 }
 
 void GammaNode::update_node() {
     _gamma.update_array();
 }
 
-void GammaNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<GammaNode, float>(this, arguments)) return;
-    if (init_args<GammaNode, FloatParam*>(this, arguments)) return;
+void GammaNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<GammaNode, float>(this, {"gamma"}, arguments)) return;
+    if (init_args<GammaNode, FloatParam*>(this, {"gamma"}, arguments)) return;
     THROW("Unsupported argument types for GammaNode");
 }

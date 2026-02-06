@@ -53,24 +53,28 @@ void RotateNode::init(float angle, ResizeInterpolationType interpolation_type) {
     _angle.set_param(angle);
     _interpolation_type = static_cast<int>(interpolation_type);
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"angle", "interpolation_type"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, angle, interpolation_type);
+    ArgumentSet args;
+    args.add_new_argument("angle", angle);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    _args = args;
 }
 
 void RotateNode::init(FloatParam *angle, ResizeInterpolationType interpolation_type) {
     _angle.set_param(core(angle));
     _interpolation_type = static_cast<int>(interpolation_type);
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"angle", "interpolation_type"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, angle, interpolation_type);
+    ArgumentSet args;
+    args.add_new_argument("angle", angle);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    _args = args;
 }
 
 void RotateNode::update_node() {
     _angle.update_array();
 }
 
-void RotateNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<RotateNode, float, ResizeInterpolationType>(this, arguments)) return;
-    if (init_args<RotateNode, FloatParam*, ResizeInterpolationType>(this, arguments)) return;
+void RotateNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<RotateNode, float, ResizeInterpolationType>(this, {"angle", "interpolation_type"}, arguments)) return;
+    if (init_args<RotateNode, FloatParam*, ResizeInterpolationType>(this, {"angle", "interpolation_type"}, arguments)) return;
     THROW("Unsupported argument types for RotateNode");
 }

@@ -42,7 +42,7 @@ void CopyNode::create_node() {
         THROW("Adding the copy (vxCopyNode) node failed: " + TOSTR(status))
 }
 
-void CopyNode::initialize_args(std::vector<Argument> &arguments) {
+void CopyNode::initialize_args(const ArgumentSet &arguments) {
     if (init_args<CopyNode>(this, arguments)) return;
     THROW("Unsupported argument types for CopyNode");
 }

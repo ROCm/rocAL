@@ -56,11 +56,14 @@ void ToDecibelsNode::init(float cutoff_db, float multiplier, float reference_mag
     _multiplier = multiplier;
     _reference_magnitude = reference_magnitude;
     // Add all arguments as part of the Node
-    std::array<std::string, 3> arg_names = {"cutoff_db", "multiplier", "reference_magnitude"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, cutoff_db, multiplier, reference_magnitude);
+    ArgumentSet args;
+    args.add_new_argument("cutoff_db", cutoff_db);
+    args.add_new_argument("multiplier", multiplier);
+    args.add_new_argument("reference_magnitude", reference_magnitude);
+    _args = args;
 }
 
-void ToDecibelsNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ToDecibelsNode, float, float, float>(this, arguments)) return;
+void ToDecibelsNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ToDecibelsNode, float, float, float>(this, {"cutoff_db", "multiplier", "reference_magnitude"}, arguments)) return;
     THROW("Unsupported argument types for ToDecibelsNode");
 }

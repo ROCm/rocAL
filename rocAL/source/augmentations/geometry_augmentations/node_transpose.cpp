@@ -84,11 +84,12 @@ void TransposeNode::update_node() {
 void TransposeNode::init(std::vector<unsigned> perm) {
     _perm = perm;
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"perm"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, perm);
+    ArgumentSet args;
+    args.add_new_argument("perm", perm);
+    _args = args;
 }
 
-void TransposeNode::initialize_args(std::vector<Argument> &arguments) {
+void TransposeNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<TransposeNode, std::vector<unsigned>>(this, arguments)) return;
     THROW("Unsupported argument types for TransposeNode");
 }

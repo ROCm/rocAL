@@ -53,16 +53,20 @@ void FogNode::init(float intensity_param, float gray_param) {
     _intensity_param.set_param(intensity_param);
     _gray_param.set_param(gray_param);
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"intensity_param", "gray_param"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, intensity_param, gray_param);
+    ArgumentSet args;
+    args.add_new_argument("intensity_param", intensity_param);
+    args.add_new_argument("gray_param", gray_param);
+    _args = args;
 }
 
 void FogNode::init(FloatParam *intensity_param, FloatParam *gray_param) {
     _intensity_param.set_param(core(intensity_param));
     _gray_param.set_param(core(gray_param));
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"intensity_param", "gray_param"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, intensity_param, gray_param);
+    ArgumentSet args;
+    args.add_new_argument("intensity_param", intensity_param);
+    args.add_new_argument("gray_param", gray_param);
+    _args = args;
 }
 
 void FogNode::update_node() {
@@ -70,8 +74,8 @@ void FogNode::update_node() {
     _gray_param.update_array();
 }
 
-void FogNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<FogNode, float, float>(this, arguments)) return;
-    if (init_args<FogNode, FloatParam*, FloatParam*>(this, arguments)) return;
+void FogNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<FogNode, float, float>(this, {"intensity_param", "gray_param"}, arguments)) return;
+    if (init_args<FogNode, FloatParam*, FloatParam*>(this, {"intensity_param", "gray_param"}, arguments)) return;
     THROW("Unsupported argument types for FogNode");
 }

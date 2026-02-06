@@ -50,11 +50,13 @@ void PreemphasisFilterNode::init(FloatParam *preemph_coeff, AudioBorderType pree
     _preemph_coeff.set_param(core(preemph_coeff));
     _preemph_border = preemph_border;
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"preemph_coeff", "preemph_border"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, preemph_coeff, preemph_border);
+    ArgumentSet args;
+    args.add_new_argument("preemph_coeff", preemph_coeff);
+    args.add_new_argument("preemph_border", preemph_border);
+    _args = args;
 }
 
-void PreemphasisFilterNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<PreemphasisFilterNode, FloatParam*, AudioBorderType>(this, arguments)) return;
+void PreemphasisFilterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<PreemphasisFilterNode, FloatParam*, AudioBorderType>(this, {"preemph_coeff", "preemph_border"}, arguments)) return;
     THROW("Unsupported argument types for PreemphasisFilterNode");
 }

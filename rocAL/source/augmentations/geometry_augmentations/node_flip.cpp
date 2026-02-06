@@ -54,16 +54,20 @@ void FlipNode::init(int h_flag, int v_flag) {
     _horizontal.set_param(h_flag);
     _vertical.set_param(v_flag);
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"h_flag", "v_flag"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, h_flag, v_flag);
+    ArgumentSet args;
+    args.add_new_argument("h_flag", h_flag);
+    args.add_new_argument("v_flag", v_flag);
+    _args = args;
 }
 
 void FlipNode::init(IntParam *h_flag, IntParam *v_flag) {
     _horizontal.set_param(core(h_flag));
     _vertical.set_param(core(v_flag));
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"h_flag", "v_flag"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, h_flag, v_flag);
+    ArgumentSet args;
+    args.add_new_argument("h_flag", h_flag);
+    args.add_new_argument("v_flag", v_flag);
+    _args = args;
 }
 
 void FlipNode::update_node() {
@@ -71,8 +75,8 @@ void FlipNode::update_node() {
     _vertical.update_array();
 }
 
-void FlipNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<FlipNode, int, int>(this, arguments)) return;
-    if (init_args<FlipNode, IntParam*, IntParam*>(this, arguments)) return;
+void FlipNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<FlipNode, int, int>(this, {"h_flag", "v_flag"}, arguments)) return;
+    if (init_args<FlipNode, IntParam*, IntParam*>(this, {"h_flag", "v_flag"}, arguments)) return;
     THROW("Unsupported argument types for FlipNode");
 }

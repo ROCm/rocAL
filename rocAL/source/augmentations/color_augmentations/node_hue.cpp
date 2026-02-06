@@ -50,23 +50,25 @@ void HueNode::create_node() {
 void HueNode::init(float hue) {
     _hue.set_param(hue);
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"hue"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, hue);
+    ArgumentSet args;
+    args.add_new_argument("hue", hue);
+    _args = args;
 }
 
 void HueNode::init(FloatParam *hue) {
     _hue.set_param(core(hue));
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"hue"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, hue);
+    ArgumentSet args;
+    args.add_new_argument("hue", hue);
+    _args = args;
 }
 
 void HueNode::update_node() {
     _hue.update_array();
 }
 
-void HueNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<HueNode, float>(this, arguments)) return;
-    if (init_args<HueNode, FloatParam*>(this, arguments)) return;
+void HueNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<HueNode, float>(this, {"hue"}, arguments)) return;
+    if (init_args<HueNode, FloatParam*>(this, {"hue"}, arguments)) return;
     THROW("Unsupported argument types for HueNode");
 }

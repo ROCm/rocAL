@@ -97,12 +97,18 @@ void ResizeNode::init(unsigned dest_width, unsigned dest_height, ResizeScalingMo
     }
 
     // Add all arguments as part of the Node
-    std::array<std::string, 5> arg_names = {"dest_width", "dest_height", "scaling_mode", "max_size", "interpolation_type"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, dest_width, dest_height, scaling_mode, max_size, interpolation_type);
+    ArgumentSet args;
+    args.add_new_argument("dest_width", dest_width);
+    args.add_new_argument("dest_height", dest_height);
+    args.add_new_argument("scaling_mode", scaling_mode);
+    args.add_new_argument("max_size", max_size);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    _args = args;
 }
 
-void ResizeNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ResizeNode, unsigned, unsigned, ResizeScalingMode, const std::vector<unsigned>, ResizeInterpolationType>(this, arguments)) return;
+void ResizeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ResizeNode, unsigned, unsigned, ResizeScalingMode, const std::vector<unsigned>, ResizeInterpolationType>(this, 
+        {"dest_width", "dest_height", "scaling_mode", "max_size", "interpolation_type"}, arguments)) return;
     THROW("Unsupported argument types for ResizeNode");
 }
 

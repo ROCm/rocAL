@@ -123,11 +123,18 @@ void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float anchor_x, float
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
     // Add all arguments as part of the Node
-    std::array<std::string, 7> arg_names = {"crop_h", "crop_w", "anchor_x", "anchor_y", "mean", "std_dev", "mirror"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, crop_h, crop_w, anchor_x, anchor_y, mean, std_dev, mirror);
+    ArgumentSet args;
+    args.add_new_argument("crop_h", crop_h);
+    args.add_new_argument("crop_w", crop_w);
+    args.add_new_argument("anchor_x", anchor_x);
+    args.add_new_argument("anchor_y", anchor_y);
+    args.add_new_argument("mean", mean);
+    args.add_new_argument("std_dev", std_dev);
+    args.add_new_argument("mirror", mirror);
+    _args = args;
 }
 
-void CropMirrorNormalizeNode::initialize_args(std::vector<Argument> &arguments) {
+void CropMirrorNormalizeNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<CropMirrorNormalizeNode, int, int, float, float, std::vector<float>, std::vector<float>, IntParam*>(this, arguments)) return;
     THROW("Unsupported argument types for CropMirrorNormalizeNode");
 }

@@ -33,7 +33,7 @@ class ColorTemperatureNode : public Node {
     ColorTemperatureNode() = delete;
     void init(int adjustment);
     void init(IntParam *adjustment);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "ColorTemperatureNode"; }
 
    protected:

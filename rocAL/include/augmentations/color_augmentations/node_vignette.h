@@ -32,7 +32,7 @@ class VignetteNode : public Node {
     VignetteNode() = delete;
     void init(float sdev);
     void init(FloatParam *sdev);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "VignetteNode"; }
 
    protected:

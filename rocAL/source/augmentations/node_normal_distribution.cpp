@@ -62,11 +62,13 @@ void NormalDistributionNode::init(float mean, float std_dev) {
     _rngs = rng;
     update_param();
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"mean", "std_dev"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, mean, std_dev);
+    ArgumentSet args;
+    args.add_new_argument("mean", mean);
+    args.add_new_argument("std_dev", std_dev);
+    _args = args;
 }
 
-void NormalDistributionNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<NormalDistributionNode, float, float>(this, arguments)) return;
+void NormalDistributionNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<NormalDistributionNode, float, float>(this, {"mean", "std_dev"}, arguments)) return;
     THROW("Unsupported argument types for NormalDistributionNode");
 };

@@ -54,20 +54,22 @@ void BlendNode::init(float ratio) {
     _ratio.set_param(ratio);
 
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"ratio"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, ratio);
+    ArgumentSet args;
+    args.add_new_argument("ratio", ratio);
+    _args = args;
 }
 
 void BlendNode::init(FloatParam *ratio) {
     _ratio.set_param(core(ratio));
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"ratio"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, ratio);
+    ArgumentSet args;
+    args.add_new_argument("ratio", ratio);
+    _args = args;
 }
 
-void BlendNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<BlendNode, float>(this, arguments)) return;
-    if (init_args<BlendNode, FloatParam*>(this, arguments)) return;
+void BlendNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<BlendNode, float>(this, {"ratio"}, arguments)) return;
+    if (init_args<BlendNode, FloatParam*>(this, {"ratio"}, arguments)) return;
     THROW("Unsupported argument types for BlendNode");
 }
 

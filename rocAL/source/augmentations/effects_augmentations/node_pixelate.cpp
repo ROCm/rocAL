@@ -51,14 +51,15 @@ void PixelateNode::create_node() {
 void PixelateNode::init(float pixelatePercent) {
     _pixelatePercent = pixelatePercent;
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"pixelatePercent"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, pixelatePercent);
+    ArgumentSet args;
+    args.add_new_argument("pixelatePercent", pixelatePercent);
+    _args = args;
 
 }
 
 void PixelateNode::update_node() {}
 
-void PixelateNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<PixelateNode, float>(this, arguments)) return;
+void PixelateNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<PixelateNode, float>(this, {"pixelatePercent"}, arguments)) return;
     THROW("Unsupported argument types for PixelateNode");
 }

@@ -53,16 +53,20 @@ void ContrastNode::init(float contrast_factor, float contrast_center) {
     _factor.set_param(contrast_factor);
     _center.set_param(contrast_center);
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"contrast_factor", "contrast_center"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, contrast_factor, contrast_center);
+    ArgumentSet args;
+    args.add_new_argument("contrast_factor", contrast_factor);
+    args.add_new_argument("contrast_center", contrast_center);
+    _args = args;
 }
 
 void ContrastNode::init(FloatParam *contrast_factor_param, FloatParam *contrast_center_param) {
     _factor.set_param(core(contrast_factor_param));
     _center.set_param(core(contrast_center_param));
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"contrast_factor_param", "contrast_center_param"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, contrast_factor_param, contrast_center_param);
+    ArgumentSet args;
+    args.add_new_argument("contrast_factor_param", contrast_factor_param);
+    args.add_new_argument("contrast_center_param", contrast_center_param);
+    _args = args;
 }
 
 void ContrastNode::update_node() {
@@ -70,8 +74,8 @@ void ContrastNode::update_node() {
     _center.update_array();
 }
 
-void ContrastNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ContrastNode, float, float>(this, arguments)) return;
-    if (init_args<ContrastNode, FloatParam*, FloatParam*>(this, arguments)) return;
+void ContrastNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ContrastNode, float, float>(this, {"contrast_factor", "contrast_center"}, arguments)) return;
+    if (init_args<ContrastNode, FloatParam*, FloatParam*>(this, {"contrast_factor", "contrast_center"}, arguments)) return;
     THROW("Unsupported argument types for ContrastNode");
 }

@@ -60,8 +60,12 @@ void ColorTwistNode::init(float alpha, float beta, float hue, float sat) {
     _hue.set_param(hue);
     _sat.set_param(sat);
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"alpha", "beta", "hue", "sat"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta, hue, sat);
+    ArgumentSet args;
+    args.add_new_argument("alpha", alpha);
+    args.add_new_argument("beta", beta);
+    args.add_new_argument("hue", hue);
+    args.add_new_argument("sat", sat);
+    _args = args;
 }
 
 void ColorTwistNode::init(FloatParam *alpha, FloatParam *beta, FloatParam *hue, FloatParam *sat) {
@@ -70,8 +74,12 @@ void ColorTwistNode::init(FloatParam *alpha, FloatParam *beta, FloatParam *hue, 
     _hue.set_param(core(hue));
     _sat.set_param(core(sat));
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"alpha", "beta", "hue", "sat"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta, hue, sat);
+    ArgumentSet args;
+    args.add_new_argument("alpha", alpha);
+    args.add_new_argument("beta", beta);
+    args.add_new_argument("hue", hue);
+    args.add_new_argument("sat", sat);
+    _args = args;
 }
 
 void ColorTwistNode::update_node() {
@@ -81,8 +89,8 @@ void ColorTwistNode::update_node() {
     _sat.update_array();
 }
 
-void ColorTwistNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ColorTwistNode, float, float, float, float>(this, arguments)) return;
-    if (init_args<ColorTwistNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, arguments)) return;
+void ColorTwistNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ColorTwistNode, float, float, float, float>(this, {"alpha", "beta", "hue", "sat"}, arguments)) return;
+    if (init_args<ColorTwistNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, {"alpha", "beta", "hue", "sat"}, arguments)) return;
     THROW("Unsupported argument types for ColorTwistNode");
 }

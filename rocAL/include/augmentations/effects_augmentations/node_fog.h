@@ -31,7 +31,7 @@ class FogNode : public Node {
     FogNode() = delete;
     void init(float intensity_param, float gray_param);
     void init(FloatParam *intensity_param, FloatParam *gray_param);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "FogNode"; }
 
    protected:

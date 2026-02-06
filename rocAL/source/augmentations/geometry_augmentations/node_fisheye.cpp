@@ -47,7 +47,7 @@ void FisheyeNode::create_node() {
 
 void FisheyeNode::update_node() {}
 
-void FisheyeNode::initialize_args(std::vector<Argument> &arguments) {
+void FisheyeNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<FisheyeNode>(this, arguments)) return;
     THROW("Unsupported argument types for FisheyeNode");
 }

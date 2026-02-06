@@ -31,7 +31,7 @@ class PixelateNode : public Node {
     PixelateNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     PixelateNode() = delete;
     void init(float pixelatePercent);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "PixelateNode"; }
 
    protected:

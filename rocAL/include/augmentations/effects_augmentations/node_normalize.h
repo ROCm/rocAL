@@ -30,7 +30,7 @@ class NormalizeNode : public Node {
      NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
      NormalizeNode() = delete;
      void init(std::vector<unsigned> &axes, std::vector<float> &mean, std::vector<float> &std_dev, float scale, float shift);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "NormalizeNode"; }
 
    protected:

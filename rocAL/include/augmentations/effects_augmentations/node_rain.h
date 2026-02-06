@@ -32,7 +32,7 @@ class RainNode : public Node {
     RainNode() = delete;
     void init(float rain_percentage, int rain_width, int rain_height, float rain_slant_angle, float rain_transparency);
     void init(float rain_percentage, int rain_width, int rain_height, float rain_slant_angle, FloatParam *rain_transparency);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "RainNode"; }
 
    protected:

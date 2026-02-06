@@ -54,11 +54,15 @@ void NonSilentRegionDetectionNode::init(float cutoff_db, float reference_power, 
     _window_length = window_length;
     _reset_interval = reset_interval;
     // Add all arguments as part of the Node
-    std::array<std::string, 4> arg_names = {"cutoff_db", "reference_power", "reset_interval", "window_length"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, cutoff_db, reference_power, reset_interval, window_length);
+    ArgumentSet args;
+    args.add_new_argument("cutoff_db", cutoff_db);
+    args.add_new_argument("reference_power", reference_power);
+    args.add_new_argument("reset_interval", reset_interval);
+    args.add_new_argument("window_length", window_length);
+    _args = args;
 }
 
-void NonSilentRegionDetectionNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<NonSilentRegionDetectionNode, float, float, int, int>(this, arguments)) return;
+void NonSilentRegionDetectionNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<NonSilentRegionDetectionNode, float, float, int, int>(this, {"cutoff_db", "reference_power", "reset_interval", "window_length"}, arguments)) return;
     THROW("Unsupported argument types for NonSilentRegionDetectionNode");
 }

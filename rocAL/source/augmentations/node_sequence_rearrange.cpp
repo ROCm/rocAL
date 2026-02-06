@@ -51,13 +51,14 @@ void SequenceRearrangeNode::create_node() {
 void SequenceRearrangeNode::init(std::vector<unsigned int> &new_order) {
     _new_order = new_order;
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"new_order"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, new_order);
+    ArgumentSet args;
+    args.add_new_argument("new_order", new_order);
+    _args = args;
 }
 
 void SequenceRearrangeNode::update_node() {}
 
-void SequenceRearrangeNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<SequenceRearrangeNode, std::vector<unsigned int>>(this, arguments)) return;
+void SequenceRearrangeNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<SequenceRearrangeNode, std::vector<unsigned int>>(this, {"new_order"}, arguments)) return;
     THROW("Unsupported argument types for SequenceRearrangeNode");
 }

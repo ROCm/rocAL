@@ -60,8 +60,13 @@ void RainNode::init(float rain_percentage, int rain_width, int rain_height, floa
     _rain_slant_angle = rain_slant_angle;
     _rain_transparency.set_param(rain_transparency);
     // Add all arguments as part of the Node
-    std::array<std::string, 5> arg_names = {"rain_percentage", "rain_width", "rain_height", "rain_slant_angle", "rain_transparency"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, rain_percentage, rain_width, rain_height, rain_slant_angle, rain_transparency);
+    ArgumentSet args;
+    args.add_new_argument("rain_percentage", rain_percentage);
+    args.add_new_argument("rain_width", rain_width);
+    args.add_new_argument("rain_height", rain_height);
+    args.add_new_argument("rain_slant_angle", rain_slant_angle);
+    args.add_new_argument("rain_transparency", rain_transparency);
+    _args = args;
 }
 
 void RainNode::init(float rain_percentage, int rain_width, int rain_height, float rain_slant_angle, FloatParam *rain_transparency) {
@@ -71,16 +76,21 @@ void RainNode::init(float rain_percentage, int rain_width, int rain_height, floa
     _rain_slant_angle = rain_slant_angle;
     _rain_transparency.set_param(core(rain_transparency));
     // Add all arguments as part of the Node
-    std::array<std::string, 5> arg_names = {"rain_percentage", "rain_width", "rain_height", "rain_slant_angle", "rain_transparency"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, rain_percentage, rain_width, rain_height, rain_slant_angle, rain_transparency);
+    ArgumentSet args;
+    args.add_new_argument("rain_percentage", rain_percentage);
+    args.add_new_argument("rain_width", rain_width);
+    args.add_new_argument("rain_height", rain_height);
+    args.add_new_argument("rain_slant_angle", rain_slant_angle);
+    args.add_new_argument("rain_transparency", rain_transparency);
+    _args = args;
 }
 
 void RainNode::update_node() {
     _rain_transparency.update_array();
 }
 
-void RainNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<RainNode, float, int, int, float, float>(this, arguments)) return;
-    if (init_args<RainNode, float, int, int, float, FloatParam*>(this, arguments)) return;
+void RainNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<RainNode, float, int, int, float, float>(this, {"rain_percentage", "rain_width", "rain_height", "rain_slant_angle", "rain_transparency"}, arguments)) return;
+    if (init_args<RainNode, float, int, int, float, FloatParam*>(this, {"rain_percentage", "rain_width", "rain_height", "rain_slant_angle", "rain_transparency"}, arguments)) return;
     THROW("Unsupported argument types for RainNode");
 }

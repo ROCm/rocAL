@@ -45,11 +45,12 @@ void TensorMulScalarNode::update_node() {}
 void TensorMulScalarNode::init(float scalar) {
     _scalar = scalar;
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"scalar"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, scalar);
+    ArgumentSet args;
+    args.add_new_argument("scalar", scalar);
+    _args = args;
 }
 
-void TensorMulScalarNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<TensorMulScalarNode, float>(this, arguments)) return;
+void TensorMulScalarNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<TensorMulScalarNode, float>(this, {"scalar"}, arguments)) return;
     THROW("Unsupported argument types for TensorMulScalarNode");
 };

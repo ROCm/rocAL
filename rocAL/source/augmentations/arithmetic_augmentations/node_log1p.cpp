@@ -41,7 +41,7 @@ void Log1pNode::create_node() {
         THROW("Adding the (vxExtRppLog1p) node failed: " + TOSTR(status))
 }
 
-void Log1pNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<Log1pNode>(this, arguments)) return;
+void Log1pNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<Log1pNode>(this, {}, arguments)) return;
     THROW("Unsupported argument types for Log1pNode");
 }

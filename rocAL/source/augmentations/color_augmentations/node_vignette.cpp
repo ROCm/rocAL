@@ -50,23 +50,25 @@ void VignetteNode::create_node() {
 void VignetteNode::init(float sdev) {
     _sdev.set_param(sdev);
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"sdev"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, sdev);
+    ArgumentSet args;
+    args.add_new_argument("sdev", sdev);
+    _args = args;
 }
 
 void VignetteNode::init(FloatParam *sdev) {
     _sdev.set_param(core(sdev));
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"sdev"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, sdev);
+    ArgumentSet args;
+    args.add_new_argument("sdev", sdev);
+    _args = args;
 }
 
 void VignetteNode::update_node() {
     _sdev.update_array();
 }
 
-void VignetteNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<VignetteNode, float>(this, arguments)) return;
-    if (init_args<VignetteNode, FloatParam*>(this, arguments)) return;
+void VignetteNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<VignetteNode, float>(this, {"sdev"}, arguments)) return;
+    if (init_args<VignetteNode, FloatParam*>(this, {"sdev"}, arguments)) return;
     THROW("Unsupported argument types for VignetteNode");
 }

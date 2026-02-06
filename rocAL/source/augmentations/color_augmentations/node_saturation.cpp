@@ -50,23 +50,25 @@ void SaturationNode::create_node() {
 void SaturationNode::init(float saturation) {
     _saturation.set_param(saturation);
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"saturation"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, saturation);
+    ArgumentSet args;
+    args.add_new_argument("saturation", saturation);
+    _args = args;
 }
 
 void SaturationNode::init(FloatParam *saturation_param) {
     _saturation.set_param(core(saturation_param));
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"saturation_param"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, saturation_param);
+    ArgumentSet args;
+    args.add_new_argument("saturation_param", saturation_param);
+    _args = args;
 }
 
 void SaturationNode::update_node() {
     _saturation.update_array();
 }
 
-void SaturationNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<SaturationNode, float>(this, arguments)) return;
-    if (init_args<SaturationNode, FloatParam*>(this, arguments)) return;
+void SaturationNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SaturationNode, float>(this, {"saturation"}, arguments)) return;
+    if (init_args<SaturationNode, FloatParam*>(this, {"saturation"}, arguments)) return;
     THROW("Unsupported argument types for SaturationNode");
 }

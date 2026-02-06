@@ -29,7 +29,7 @@ class TensorMulScalarNode : public Node {
     TensorMulScalarNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorMulScalarNode() = delete;
     void init(float scalar);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "TensorMulScalarNode"; }
 
    protected:

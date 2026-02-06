@@ -50,23 +50,25 @@ void ExposureNode::create_node() {
 void ExposureNode::init(float exposure_factor) {
     _exposure_factor.set_param(exposure_factor);
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"exposure_factor"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, exposure_factor);
+    ArgumentSet args;
+    args.add_new_argument("exposure_factor", exposure_factor);
+    _args = args;
 }
 
 void ExposureNode::init(FloatParam *exposure_factor_param) {
     _exposure_factor.set_param(core(exposure_factor_param));
     // Add all arguments as part of the Node
-    std::array<std::string, 1> arg_names = {"exposure_factor_param"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, exposure_factor_param);
+    ArgumentSet args;
+    args.add_new_argument("exposure_factor_param", exposure_factor_param);
+    _args = args;
 }
 
 void ExposureNode::update_node() {
     _exposure_factor.update_array();
 }
 
-void ExposureNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<ExposureNode, float>(this, arguments)) return;
-    if (init_args<ExposureNode, FloatParam*>(this, arguments)) return;
+void ExposureNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ExposureNode, float>(this, {"exposure_factor"}, arguments)) return;
+    if (init_args<ExposureNode, FloatParam*>(this, {"exposure_factor"}, arguments)) return;
     THROW("Unsupported argument types for ExposureNode");
 }

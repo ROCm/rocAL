@@ -38,7 +38,7 @@ void TensorAddTensorNode::create_node() {
 
 void TensorAddTensorNode::update_node() {}
 
-void TensorAddTensorNode::initialize_args(std::vector<Argument> &arguments) {
-    if (init_args<TensorAddTensorNode>(this, arguments)) return;
+void TensorAddTensorNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<TensorAddTensorNode>(this, {}, arguments)) return;
     THROW("Unsupported argument types for TensorAddTensorNode");
 }

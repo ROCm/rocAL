@@ -31,7 +31,7 @@ class ColorTwistNode : public Node {
     ColorTwistNode() = delete;
     void init(float alpha, float beta, float hue, float sat);
     void init(FloatParam *alpha_param, FloatParam *beta_param, FloatParam *hue_param, FloatParam *sat_param);
-    void initialize_args(std::vector<Argument> &arguments) override;
+    void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "ColorTwistNode"; }
 
    protected:
