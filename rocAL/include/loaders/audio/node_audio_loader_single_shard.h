@@ -49,7 +49,7 @@ class AudioLoaderSingleShardNode : public Node {
               const std::string &file_list_path, StorageType storage_type, DecoderType decoder_type, bool shuffle,
               bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
               const ShardingInfo& sharding_info);
-    void initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) override;
+    void initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) override;
     std::shared_ptr<LoaderModule> get_loader_module() override;
     std::string node_name() const override { return "AudioLoaderSingleShardNode"; }
 

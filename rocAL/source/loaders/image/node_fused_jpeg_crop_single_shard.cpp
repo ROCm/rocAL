@@ -24,8 +24,6 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
-#define INIT_ARGS_COUNT 19  // Modify in accordance with number of args in init
-
 REGISTER_LOADER_NODE(FusedJpegCropSingleShardNode)
 
 FusedJpegCropSingleShardNode::FusedJpegCropSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
@@ -61,17 +59,26 @@ void FusedJpegCropSingleShardNode::init(unsigned shard_id, unsigned shard_count,
                                _batch_size);
     _loader_module->start_loading();
 
-    std::array<std::string, INIT_ARGS_COUNT> arg_names = {
-        "shard_id", "shard_count", "cpu_num_threads", "source_path", "json_path", "storage_type",
-        "decoder_type", "shuffle", "loop", "load_batch_count", "mem_type", "meta_data_reader",
-        "num_attempts", "area_factor", "aspect_ratio", "last_batch_policy",
-        "pad_last_batch_repeated", "stick_to_shard", "shard_size"
-    };
-    // NOTE: Update arg_names when modifying init
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, shard_id, shard_count, cpu_num_threads,
-                       source_path, json_path, storage_type, decoder_type, shuffle, loop, load_batch_count, mem_type,
-                       meta_data_reader, num_attempts, area_factor, aspect_ratio, sharding_info.last_batch_policy,
-                       sharding_info.pad_last_batch_repeated, sharding_info.stick_to_shard, sharding_info.shard_size);
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("shard_id", shard_id);
+    _args.add_new_argument("shard_count", shard_count);
+    _args.add_new_argument("cpu_num_threads", cpu_num_threads);
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("json_path", json_path);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("decoder_type", decoder_type);
+    _args.add_new_argument("shuffle", shuffle);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+    _args.add_new_argument("meta_data_reader", meta_data_reader);
+    _args.add_new_argument("num_attempts", num_attempts);
+    _args.add_new_argument("area_factor", area_factor);
+    _args.add_new_argument("aspect_ratio", aspect_ratio);
+    _args.add_new_argument("last_batch_policy", sharding_info.last_batch_policy);
+    _args.add_new_argument("pad_last_batch_repeated", sharding_info.pad_last_batch_repeated);
+    _args.add_new_argument("stick_to_shard", sharding_info.stick_to_shard);
+    _args.add_new_argument("shard_size", sharding_info.shard_size);
 }
 
 std::shared_ptr<LoaderModule> FusedJpegCropSingleShardNode::get_loader_module() {
@@ -84,17 +91,29 @@ FusedJpegCropSingleShardNode::~FusedJpegCropSingleShardNode() {
     _loader_module = nullptr;
 }
 
-void FusedJpegCropSingleShardNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
-    if (arguments.size() != INIT_ARGS_COUNT)
-        THROW("FusedJpegCropSingleShardNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
-              ". Ensure all arguments present in init are accounted for");
+void FusedJpegCropSingleShardNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    auto area_factor = arguments.get<std::vector<float>>("area_factor");
+    auto aspect_ratio = arguments.get<std::vector<float>>("aspect_ratio");
+    ShardingInfo sharding_info(arguments.get<RocalBatchPolicy>("last_batch_policy"), 
+                                arguments.get<bool>("stick_to_shard"), 
+                                arguments.get<bool>("pad_last_batch_repeated"), 
+                                arguments.get<int32_t>("shard_size"));
 
-    auto area_factor = arguments[13].get<std::vector<float>>();
-    auto aspect_ratio = arguments[14].get<std::vector<float>>();
-    ShardingInfo sharding_info(arguments[15].get<RocalBatchPolicy>(), arguments[16].get<bool>(), arguments[17].get<bool>(), arguments[18].get<int32_t>());
-
-    this->init(arguments[0].get<unsigned>(), arguments[1].get<unsigned>(), arguments[2].get<unsigned>(), arguments[3].get<std::string>(),
-               arguments[4].get<std::string>(), arguments[5].get<StorageType>(), arguments[6].get<DecoderType>(), arguments[7].get<bool>(),
-               arguments[8].get<bool>(), arguments[9].get<size_t>(), arguments[10].get<RocalMemType>(), meta_data_reader,
-               arguments[12].get<unsigned>(), area_factor, aspect_ratio, sharding_info);
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->init(arguments.get<unsigned>("shard_id"), 
+               arguments.get<unsigned>("shard_count"), 
+               arguments.get<unsigned>("cpu_num_threads"), 
+               arguments.get<std::string>("source_path"),
+               arguments.get<std::string>("json_path"), 
+               arguments.get<StorageType>("storage_type"), 
+               arguments.get<DecoderType>("decoder_type"), 
+               arguments.get<bool>("shuffle"),
+               arguments.get<bool>("loop"), 
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"), 
+               meta_data_reader,
+               arguments.get<unsigned>("num_attempts"), 
+               area_factor, 
+               aspect_ratio, 
+               sharding_info);
 }

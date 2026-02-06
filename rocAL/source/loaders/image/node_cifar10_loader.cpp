@@ -24,8 +24,6 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
-#define INIT_ARGS_COUNT 7  // Modify in accordance with number of args in init
-
 REGISTER_LOADER_NODE(Cifar10LoaderNode)
 
 Cifar10LoaderNode::Cifar10LoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
@@ -46,8 +44,14 @@ void Cifar10LoaderNode::init(const std::string &source_path, const std::string &
                                mem_type, _batch_size);
     _loader_module->start_loading();
 
-    std::array<std::string, 7> arg_names = {"source_path", "json_path", "storage_type", "loop", "load_batch_count", "mem_type", "file_prefix"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, source_path, json_path, storage_type, loop, load_batch_count, mem_type, file_prefix);
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("json_path", json_path);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+    _args.add_new_argument("file_prefix", file_prefix);
 }
 
 std::shared_ptr<LoaderModule> Cifar10LoaderNode::get_loader_module() {
@@ -60,13 +64,15 @@ Cifar10LoaderNode::~Cifar10LoaderNode() {
     _loader_module = nullptr;
 }
 
-void Cifar10LoaderNode::initialize_args(std::vector<Argument> &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+void Cifar10LoaderNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
     (void)meta_data_reader;
-    if (arguments.size() != INIT_ARGS_COUNT)
-        THROW("Cifar10LoaderNode expected " + std::to_string(INIT_ARGS_COUNT) + " arguments, received " + std::to_string(arguments.size()) +
-              ". Ensure all arguments present in init are accounted for");
-
-    this->init(arguments[0].get<std::string>(), arguments[1].get<std::string>(), arguments[2].get<StorageType>(),
-               arguments[3].get<bool>(), arguments[4].get<size_t>(), arguments[5].get<RocalMemType>(),
-               arguments[6].get<std::string>());
+    
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->init(arguments.get<std::string>("source_path"), 
+               arguments.get<std::string>("json_path"), 
+               arguments.get<StorageType>("storage_type"),
+               arguments.get<bool>("loop"), 
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"),
+               arguments.get<std::string>("file_prefix"));
 }
