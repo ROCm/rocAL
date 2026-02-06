@@ -2046,13 +2046,6 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
                     THROW("Failed to deserialize arguments for reader : " + op_def.name());
 
-                auto get_argument = [&](const std::string& arg_name) -> const Argument& {
-                    for (const auto& arg : args_list) {
-                        if (arg.arg_name == arg_name) return arg;
-                    }
-                    THROW("Missing argument '" + arg_name + "' for reader : " + op_def.name());
-                };
-
                 auto reader_name = get_node_name(op_def.name());
                 if (reader_name == "LabelReader") {
                     // Extract arguments for LabelReader
@@ -2158,7 +2151,8 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                     THROW("Failed to deserialize arguments for loader : " + op_def.name());
 
                 // Extract the loop argument from args_list and set it in MasterGraph
-                for (const auto& arg : args_list) {
+                for (const auto& arg_pair : args_list) {
+                    auto& arg = arg_pair.second;
                     if (arg.arg_name == "loop") {
                         try {
                             _loop = arg.get<bool>();
