@@ -583,15 +583,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 exit(0);
             }
             // Setting paths for YOLO-format labels and images directories
-            // labels_path: directory containing .txt label files
-            // images_path: directory containing corresponding images (passed as 'path' argument)
-            std::string labels_path = rocal_data_path + "/rocal_data/coco/coco_10_img_yolo/labels/";
-            std::string images_path = std::string(path);
+            std::string labels_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/labels/";
+            std::string images_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/";
             rocalCreateCOCOYoloReader(handle, labels_path.c_str(), images_path.c_str(), true);
             if (decode_max_height <= 0 || decode_max_width <= 0)
-                decoded_output = rocalJpegCOCOFileSource(handle, path, "", color_format, num_threads, false, true, false);
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, true, false);
             else
-                decoded_output = rocalJpegCOCOFileSource(handle, path, "", color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         case 30:  // coco yolo segmentation reader (with masks)
         {
@@ -602,13 +600,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 exit(0);
             }
             // Setting paths for YOLO-format labels and images directories
-            std::string labels_path = rocal_data_path + "/rocal_data/coco/coco_10_img_yolo/labels/";
-            std::string images_path = std::string(path);
+            std::string labels_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/labels/";
+            std::string images_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/";
             rocalCreateCOCOYoloReader(handle, labels_path.c_str(), images_path.c_str(), true, true);  // mask=true for segmentation
             if (decode_max_height <= 0 || decode_max_width <= 0)
-                decoded_output = rocalJpegCOCOFileSource(handle, path, "", color_format, num_threads, false, true, false);
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, true, false);
             else
-                decoded_output = rocalJpegCOCOFileSource(handle, path, "", color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
         } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
