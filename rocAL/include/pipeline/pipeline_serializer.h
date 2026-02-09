@@ -64,6 +64,11 @@ public:
     void serialize_pipeop_arguments(const ArgumentSet& arguments_list, rocal_proto::OperatorDef *opdef);
 
     /**
+     * @brief Deserialize operator arguments from protobuf into Argument objects.
+     */
+    RocalStatus deserialize_args_from_protobuf(const rocal_proto::OperatorDef& opdef, ArgumentSet& arguments);
+
+    /**
      * @brief Clear any previously serialized state to start fresh.
      */
     void reset();
