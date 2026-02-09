@@ -290,3 +290,14 @@ enum class ImageBorderType {
     REFLECT_NO_EDGE
 };
 REGISTER_ENUM(ImageBorderType)
+
+/*! \brief Internal Bitwise Operation enum
+ * Internal version of RocalBitwiseOp for use within rocAL implementation
+ */
+enum class BitwiseOp {
+    AND = 0,
+    OR,
+    XOR,
+    NOT
+};
+REGISTER_ENUM(BitwiseOp)

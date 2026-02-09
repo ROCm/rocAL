@@ -273,6 +273,149 @@ void PipelineSerializer::serialize_output_tensors(TensorList& output_tensors_lis
     }
 }
 
+RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto::OperatorDef& opdef, ArgumentSet& arguments) {
+    arguments.clear();
+    for (const auto& proto_arg : opdef.args()) {
+        Argument arg;
+        arg.arg_name = proto_arg.name();
+        arg.type_name = proto_arg.has_type() ? proto_arg.type() : "";
+        arg.sub_type_name = proto_arg.has_instance_name() ? proto_arg.instance_name() : "";
+        arg.is_vector = proto_arg.is_vector();
+        arg.is_parameter = proto_arg.has_param();
+
+        // Handle parameters
+        if (arg.type_name == "enum") {
+            const auto& enum_val = proto_arg.enum_value();
+            arg.sub_type_name = enum_val.name();
+            if (EnumRegistry::getInstance().isEnumRegistered(arg.sub_type_name)) {
+                // Use new std::any-based approach
+                std::any enum_value = EnumRegistry::getInstance().convertIntToEnum(arg.sub_type_name, enum_val.value());
+                arg.values.emplace_back(enum_value);
+            } else {
+                THROW("Enum type '" + arg.sub_type_name + "' is not registered. Please ensure the enum is properly registered with EnumRegistry before deserialization.");
+            }
+        } else if (arg.is_parameter) {
+            const auto& param = proto_arg.param();
+            if (arg.type_name == "int") {
+                if (arg.sub_type_name == "SimpleParameter") {
+                    if (param.param_val_int_size() < 1) {
+                        THROW("Invalid parameter: missing value for int SimpleParameter '" + arg.arg_name + "'");
+                    }
+                    arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_single_value_int_param(param.param_val_int(0)));
+                } else if (arg.sub_type_name == "UniformRand") {
+                    if (param.param_val_int_size() < 2) {
+                        THROW("Invalid parameter: missing values for UniformRand parameter " + arg.arg_name);
+                    }
+                    arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_uniform_int_rand_param(param.param_val_int(0), param.param_val_int(1)));
+                } else if (arg.sub_type_name == "CustomRand") {
+                    std::vector<int> values(param.param_val_int().begin(), param.param_val_int().end());
+                    std::vector<double> freqs(param.frequency().begin(), param.frequency().end());
+                    arg.param = static_cast<IntParam*>(ParameterFactory::instance()->create_custom_int_rand_param(values.data(),
+                                                                      freqs.data(),
+                                                                      values.size()));
+                } else {
+                    THROW("Invalid parameter sub-type '" + arg.sub_type_name + "' for int parameter '" + arg.arg_name + "'. Expected: SimpleParameter, UniformRand, or CustomRand");
+                }
+            } else if (arg.type_name == "float") {
+                if (arg.sub_type_name == "SimpleParameter") {
+                    if (param.param_val_float_size() < 1) {
+                        THROW("Invalid parameter: missing value for float SimpleParameter '" + arg.arg_name + "'");
+                    }
+                    arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_single_value_float_param(param.param_val_float(0)));
+                } else if (arg.sub_type_name == "UniformRand") {
+                    if (param.param_val_float_size() < 2) {
+                        THROW("Invalid parameter: missing values for UniformRand parameter " + arg.arg_name);
+                    }
+                    arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_uniform_float_rand_param(param.param_val_float(0), param.param_val_float(1)));
+                } else if (arg.sub_type_name == "CustomRand") {
+                    std::vector<float> values(param.param_val_float().begin(), param.param_val_float().end());
+                    std::vector<double> freqs(param.frequency().begin(), param.frequency().end());
+                    arg.param = static_cast<FloatParam*>(ParameterFactory::instance()->create_custom_float_rand_param(values.data(),
+                                                                      freqs.data(),
+                                                                      values.size()));
+                } else {
+                    THROW("Invalid parameter sub-type '" + arg.sub_type_name + "' for float parameter '" + arg.arg_name + "'. Expected: SimpleParameter, UniformRand, or CustomRand");
+                }
+            } else {
+                // For unsupported parameter types, set as null pointer
+                arg.is_null_ptr = true;
+            }
+        } else if (arg.is_vector) {
+            // Handle vector deserialization based on type
+            if (arg.type_name == "int" || arg.type_name == "unsigned" || arg.type_name == "size_t" || arg.type_name == "shared_ptr") {
+                // Deserialize integer vectors - expect exactly one vector
+                if (proto_arg.int_vectors_size() > 1) {
+                    THROW("Expected at most one int vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.int_vectors_size()));
+                }
+                const auto& int_vec = proto_arg.int_vectors(0);
+                for (auto val : int_vec.values()) {
+                    if (arg.type_name == "unsigned") {
+                        arg.values.emplace_back(static_cast<unsigned>(val));
+                    } else if (arg.type_name == "size_t") {
+                        arg.values.emplace_back(static_cast<size_t>(val));
+                    } else if (arg.type_name == "shared_ptr" || arg.type_name == "int") {
+                        arg.values.emplace_back(static_cast<int>(val));
+                    }
+                }
+            } else if (arg.type_name == "float") {
+                // Deserialize float vectors - expect exactly one vector
+                if (proto_arg.float_vectors_size() > 1) {
+                    THROW("Expected at most one float vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.float_vectors_size()));
+                }
+                const auto& float_vec = proto_arg.float_vectors(0);
+                for (auto val : float_vec.values()) {
+                    arg.values.emplace_back(val);
+                }
+            } else if (arg.type_name == "char_str" || arg.type_name == "string" || arg.type_name == "map_string") {
+                // Deserialize string vectors - expect exactly one vector
+                if (proto_arg.string_vectors_size() > 1) {
+                    THROW("Expected at most one string vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.string_vectors_size()));
+                }
+                const auto& string_vec = proto_arg.string_vectors(0);
+                for (const auto& val : string_vec.values()) {
+                    arg.values.emplace_back(val);
+                }
+            } else {
+                THROW("Vector type not supported during deserialization for Argument " + arg.arg_name + " with type " + arg.type_name);
+            }
+        }
+
+        // Handle non-parameter arguments
+        else if (arg.type_name == "int" || arg.type_name == "shared_ptr") {
+            for (auto i : proto_arg.ints()) {
+                arg.values.emplace_back(static_cast<int>(i));
+            }
+        } else if (arg.type_name == "float") {
+            for (auto f : proto_arg.floats()) {
+                arg.values.emplace_back(f);
+            }
+        } else if (arg.type_name == "char_str" || arg.type_name == "string") {
+            for (const auto& s : proto_arg.strings()) {
+                arg.values.emplace_back(s);
+            }
+        } else if (arg.type_name == "bool") {
+            for (auto b : proto_arg.bools()) {
+                arg.values.emplace_back(b);
+            }
+        } else if (arg.type_name == "unsigned") {
+            for (auto u : proto_arg.uints()) {
+                arg.values.emplace_back(static_cast<unsigned>(u));
+            }
+        } else if (arg.type_name == "size_t") {
+            for (auto u : proto_arg.uints()) {
+                arg.values.emplace_back(static_cast<size_t>(u));
+            }
+        } else if (arg.type_name == "nullptr") {
+            arg.is_null_ptr = true;
+        } else {
+            THROW("Invalid or unsupported type while deserializing: " + arg.type_name);
+        }
+
+        arguments.add_argument(arg.arg_name, arg);
+    }
+    return ROCAL_OK;
+}
+
 void PipelineSerializer::reset() {
     _pipeline_proto.Clear();
 }

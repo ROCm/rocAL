@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -13,7 +13,7 @@ all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
@@ -21,27 +21,22 @@ THE SOFTWARE.
 */
 
 #pragma once
-
 #include "pipeline/node.h"
-#include "parameters/parameter_factory.h"
-#include "parameters/parameter_vx.h"
+#include "pipeline/commons.h"
 
-class SnowNode : public Node {
-   public:
-    SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    SnowNode() = delete;
-    void init(float snow_threshold, float brightness_coefficient, int dark_mode);
-    void init(FloatParam *snow_threshold_param, FloatParam *brightness_coefficient_param, IntParam *dark_mode_param);
+class BitwiseOpsNode : public Node {
+public:
+    BitwiseOpsNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
+        : Node(inputs, outputs) {}
+    BitwiseOpsNode() = delete;
 
-   protected:
+    // Initialize the op to perform
+    void init(BitwiseOp op) { _operator = op; }
+
+protected:
     void create_node() override;
     void update_node() override;
 
-   private:
-    ParameterVX<float> _snow_value;
-    ParameterVX<float> _brightness_coefficient;
-    ParameterVX<int> _dark_mode;
-    constexpr static float SNOW_VALUE_RANGE[2] = {0.1, 0.8};
-    constexpr static float BRIGHTNESS_COEFFICIENT_RANGE[2] = {1.0, 4.0};
-    constexpr static int DARK_MODE_RANGE[2] = {0, 1};
+private:
+    BitwiseOp _operator = BitwiseOp::AND;
 };

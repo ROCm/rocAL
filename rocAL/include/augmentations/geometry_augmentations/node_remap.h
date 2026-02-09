@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,39 @@ THE SOFTWARE.
 */
 
 #pragma once
-
+#include "pipeline/graph.h"
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class SnowNode : public Node {
-   public:
-    SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    SnowNode() = delete;
-    void init(float snow_threshold, float brightness_coefficient, int dark_mode);
-    void init(FloatParam *snow_threshold_param, FloatParam *brightness_coefficient_param, IntParam *dark_mode_param);
+class RemapNode : public Node {
+public:
+    RemapNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
+    RemapNode() = delete;
+    ~RemapNode();
 
-   protected:
+    // Initialize with row/col remap vectors and interpolation policy.
+    // Vectors can be size H*W (replicated for all N) or N*H*W (per-sample).
+    void init(const std::vector<float>& row_remap_vec,
+              const std::vector<float>& col_remap_vec,
+              ResizeInterpolationType interpolation_type);
+
+protected:
     void create_node() override;
     void update_node() override;
 
-   private:
-    ParameterVX<float> _snow_value;
-    ParameterVX<float> _brightness_coefficient;
-    ParameterVX<int> _dark_mode;
-    constexpr static float SNOW_VALUE_RANGE[2] = {0.1, 0.8};
-    constexpr static float BRIGHTNESS_COEFFICIENT_RANGE[2] = {1.0, 4.0};
-    constexpr static int DARK_MODE_RANGE[2] = {0, 1};
+private:
+    // Data provided by API
+    std::vector<float> _row_remap_vec;
+    std::vector<float> _col_remap_vec;
+
+    // Internal vx_tensors created from vectors (backed by external handles)
+    vx_tensor _row_tbl = nullptr;
+    vx_tensor _col_tbl = nullptr;
+
+    // Backing buffers (host or pinned) for remap tables
+    void* _row_tbl_ptr = nullptr;
+    void* _col_tbl_ptr = nullptr;
+
+    int _interpolation_type = 0;
 };

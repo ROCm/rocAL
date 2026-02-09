@@ -113,6 +113,8 @@ public:
     vx_context get_vx_context() { return _context; }
     template <typename T>
     std::shared_ptr<T> add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    // Creates and adds a node to the pipeline graph by name during deserialization
+    std::shared_ptr<Node> add_node(const std::string& node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node = false);
     template <typename T, typename M>
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
@@ -159,7 +161,8 @@ public:
     void serialize(size_t *serialized_string_size); // Serialize the current pipeline to an internal string and return its size.
     // Returns the last serialized pipeline string, Should be called after serialize(). Returns an empty string if serialize() hasn't been called.
     std::string& get_serialized_string() { return _serialized_pipeline; }
-
+    void deserialize(rocal_proto::PipelineDef *pipe_def);
+    Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
 private:
     Status update_node_parameters();
     void create_single_graph();
@@ -188,6 +191,7 @@ private:
     std::list<std::shared_ptr<Node>> _root_nodes;                                 //!< List of all root nodes (image/video loaders)
     std::list<std::shared_ptr<Node>> _meta_data_nodes;                            //!< List of nodes where meta data has to be updated after augmentation
     std::map<Tensor *, std::shared_ptr<Node>> _tensor_map;                        //!< key: tensor, value : Parent node
+    std::map<std::string, Tensor *> _pipeline_tensors;                        //!< Maps tensor names to tensor pointers during deserialization
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
     TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder
