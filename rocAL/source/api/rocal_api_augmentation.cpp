@@ -2908,3 +2908,162 @@ rocalWarpPerspective(
     }
     return output;
 }
+
+RocalTensor ROCAL_API_CALL
+rocalErase(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    std::vector<float>& anchor,
+    std::vector<float>& shape,
+    std::vector<unsigned>& num_boxes,
+    std::vector<float>& fill_value,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input   = static_cast<Tensor*>(p_input);
+    try {
+        if (anchor.size() != shape.size())
+            THROW("Anchor and shape dimensions do not match")
+        RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_dtype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        auto erase_node = context->master_graph->add_node<EraseNode>({input}, {output});
+        erase_node->init(anchor, shape, num_boxes, fill_value);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalRemap(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    unsigned dest_height,
+    unsigned dest_width,
+    std::vector<float>& row_remap,
+    std::vector<float>& col_remap,
+    RocalResizeInterpolationType interpolation_type,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input   = static_cast<Tensor*>(p_input);
+    try {
+        if (dest_width == 0 || dest_height == 0) {
+            dest_width  = input->info().max_shape()[0];
+            dest_height = input->info().max_shape()[1];
+        }
+        RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_dtype);
+        output_info.modify_dims_width_and_height(op_tensor_layout, dest_width, dest_height);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<RemapNode>({input}, {output})->init(row_remap, col_remap, static_cast<ResizeInterpolationType>(interpolation_type));
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalCropAndPatch(
+    RocalContext p_context,
+    RocalTensor p_input1,
+    RocalTensor p_input2,
+    bool is_output,
+    std::vector<int>& crop_roi_vec,
+    std::vector<int>& patch_roi_vec,
+    RocalTensorLayout output_layout,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input1, output);
+    ROCAL_INVALID_INPUT_ERR(p_input2, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input1  = static_cast<Tensor*>(p_input1);
+    auto input2  = static_cast<Tensor*>(p_input2);
+    try {
+        RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input1->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_dtype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<CropAndPatchNode>({input1, input2}, {output})->init(crop_roi_vec, patch_roi_vec);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalRicap(RocalContext p_context,
+           RocalTensor p_input,
+           bool is_output,
+           std::vector<unsigned> &permutation,
+           std::vector<int> &crop_rois,
+           RocalTensorLayout output_layout,
+           RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+
+    auto context = static_cast<Context*>(p_context);
+    auto input   = static_cast<Tensor*>(p_input);
+    try {
+        RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        if (op_tensor_layout != RocalTensorlayout::NONE)
+            output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_dtype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        auto ricap_node = context->master_graph->add_node<RicapNode>({input}, {output});
+        ricap_node->init(permutation, crop_rois);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalBitwiseOps(RocalContext p_context,
+                RocalTensor p_input1,
+                RocalTensor p_input2,
+                bool is_output,
+                RocalBitwiseOp op,
+                RocalTensorLayout output_layout,
+                RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input1, output);
+
+    auto context = static_cast<Context*>(p_context);
+    auto input1  = static_cast<Tensor*>(p_input1);
+    auto input2  = static_cast<Tensor*>(p_input2);
+    try {
+        RocalTensorlayout op_tensor_layout  = static_cast<RocalTensorlayout>(output_layout);
+        RocalTensorDataType op_tensor_dtype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input1->info();
+        output_info.set_tensor_layout(op_tensor_layout);
+        output_info.set_data_type(op_tensor_dtype);
+        output = context->master_graph->create_tensor(output_info, is_output);
+        auto node = context->master_graph->add_node<BitwiseOpsNode>({input1, input2}, {output});
+        node->init(static_cast<BitwiseOp>(op));
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}

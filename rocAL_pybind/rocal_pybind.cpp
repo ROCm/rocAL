@@ -795,6 +795,13 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("CONSTANT", ROCAL_CONSTANT)
         .value("REFLECT_NO_EDGE", ROCAL_REFLECT_NO_EDGE)
         .export_values();
+    // Bitwise Ops enum
+    py::enum_<RocalBitwiseOp>(types_m, "RocalBitwiseOp", "Bitwise operation selector")
+        .value("BITWISE_AND", ROCAL_BITWISE_AND)
+        .value("BITWISE_OR",  ROCAL_BITWISE_OR)
+        .value("BITWISE_XOR", ROCAL_BITWISE_XOR)
+        .value("BITWISE_NOT", ROCAL_BITWISE_NOT)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -1230,6 +1237,16 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("threshold", &rocalThreshold,
           py::return_value_policy::reference);
     m.def("warpPerspective", &rocalWarpPerspective,
+          py::return_value_policy::reference);
+    m.def("remap", &rocalRemap,
+          py::return_value_policy::reference);
+    m.def("cropAndPatch", &rocalCropAndPatch,
+          py::return_value_policy::reference);
+    m.def("bitwiseOps", &rocalBitwiseOps,
+          py::return_value_policy::reference);
+    m.def("erase", &rocalErase,
+          py::return_value_policy::reference);
+    m.def("ricap", &rocalRicap,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

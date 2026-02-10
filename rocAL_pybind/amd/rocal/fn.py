@@ -1655,3 +1655,166 @@ def erode(*inputs, kernel_size=3, device=None, output_layout=types.NHWC, output_
                      "output_layout": output_layout, "output_dtype": output_dtype}
     eroded_image = b.erode(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (eroded_image)
+
+def crop_and_patch(*inputs, crop_roi=[0, 0, 0, 0], patch_roi=[0, 0, 0, 0],
+                   device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Crops a region from the second input and patches it into a destination region in the first input.
+
+        ROIs are specified in XYWH format: [x, y, w, h].
+
+        @param inputs                                  two input tensors; first is destination, second is source for cropping
+        @param dst_roi (list of int)                   destination ROI in input0 where patch will be placed
+        @param crop_roi (list of int)                  crop ROI in input1 to extract as patch
+        @param patch_roi (list of int)                 ROI inside destination region where the patch is pasted
+        @param output_layout (int)                     tensor layout for the augmentation output
+        @param output_dtype (int)                      tensor dtype for the augmentation output
+
+        @return    Output image after crop-and-patch
+    """
+    kwargs_pybind = {
+        "input_image0": inputs[0],
+        "input_image1": inputs[1],
+        "is_output": False,
+        "crop_roi": crop_roi,
+        "patch_roi": patch_roi,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.cropAndPatch(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def remap(*inputs, dest_width=0, dest_height=0, row_remap=[], col_remap=[],
+          interpolation_type=types.LINEAR_INTERPOLATION, device=None,
+          output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies pixel remapping using per-sample row/col maps.
+
+        @param inputs                               the input image tensor
+        @param dest_width (int, default = 0)        destination width; 0 uses input max width
+        @param dest_height (int, default = 0)       destination height; 0 uses input max height
+        @param row_remap (list of float)            flattened HxW y-coordinates for remap
+        @param col_remap (list of float)            flattened HxW x-coordinates for remap
+        @param interpolation_type (int)             interpolation to use (e.g., LINEAR_INTERPOLATION)
+        @param output_layout (int)                  tensor layout for the augmentation output
+        @param output_dtype (int)                   tensor dtype for the augmentation output
+
+        @return    Remapped image
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "dest_height": dest_height,
+        "dest_width": dest_width,
+        "row_remap": row_remap,
+        "col_remap": col_remap,
+        "interpolation_type": interpolation_type,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.remap(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def erase(*inputs, anchor=None, shape=None, num_boxes=None, fill_value=None, 
+          anchor_box_info=None, colors=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Erases regions in images. Supports both vector-based and tensor-based APIs.
+
+        Vector-based API (when anchor, shape, num_boxes, fill_value are provided):
+        @param anchor (list of float)                                                 anchor points (x1, y1) for each box
+        @param shape (list of float)                                                  shape (w, h) for each box
+        @param num_boxes (list of int)                                                number of boxes per sample
+        @param fill_value (list of float)                                             fill values for erased regions
+        
+        Tensor-based API (when anchor_box_info and colors are provided):
+        @param anchor_box_info (rocalTensor)                                          tensor holding per-sample per-box LTRB anchors
+        @param colors (rocalTensor)                                                   tensor holding per-sample per-box RGB colors
+        
+        Common parameters:
+        @param inputs                                                                 the input image passed to the augmentation
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+        @return    Image with specified regions erased
+    """
+    # Check which API is being used
+    if anchor is not None and shape is not None and num_boxes is not None and fill_value is not None:
+        # Vector-based API
+        kwargs_pybind = {
+            "input_image": inputs[0],
+            "is_output": False,
+            "anchor": anchor,
+            "shape": shape,
+            "num_boxes": num_boxes,
+            "fill_value": fill_value,
+            "output_layout": output_layout,
+            "output_dtype": output_dtype
+        }
+    elif anchor_box_info is not None and colors is not None:
+        # Tensor-based API
+        num_boxes = b.createIntParameter(num_boxes) if isinstance(num_boxes, int) else num_boxes
+        kwargs_pybind = {
+            "input_image": inputs[0],
+            "is_output": False,
+            "anchor_box_info": anchor_box_info,
+            "colors": colors,
+            "num_boxes": num_boxes,
+            "output_layout": output_layout,
+            "output_dtype": output_dtype
+        }
+    else:
+        raise RuntimeError("erase requires either (anchor, shape, num_boxes, fill_value) for vector API or (anchor_box_info, colors) for tensor API")
+    
+    output_image = b.erase(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def ricap(*inputs, permutation=[], crop_rois=[], device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies RICAP (Random Image Cropping And Patching) augmentation.
+
+        RICAP creates a new training image by combining four cropped regions from the input batch.
+        
+        @param inputs                                                                 the input image passed to the augmentation
+        @param permutation (list of int)                                              permutation indices for quadrants (length 4 or batch*4)
+        @param crop_rois (list of int)                                               XYWH ROIs for cropping (length 16 or batch*16)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    RICAP augmented image
+    """
+    kwargs_pybind = {
+        "input_image": inputs[0],
+        "is_output": False,
+        "permutation": permutation,
+        "crop_rois": crop_rois,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.ricap(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
+
+def bitwise_ops(*inputs, op=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies bitwise operations on input images.
+
+        @param inputs                                                                 list containing input image(s); for NOT operation, only first is used
+        @param op (RocalBitwiseOp)                                                    bitwise operation type (BITWISE_AND, BITWISE_OR, BITWISE_XOR, BITWISE_NOT)
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
+        @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
+
+        @return    Image after bitwise operation
+    """
+    if op is None:
+        raise RuntimeError("bitwise_ops requires 'op' parameter specifying the operation type")
+    
+    # For NOT operation, we only need one input, but the API expects two
+    if len(inputs) == 1:
+        inputs = [inputs[0], inputs[0]]
+    
+    kwargs_pybind = {
+        "input_image0": inputs[0],
+        "input_image1": inputs[1],
+        "is_output": False,
+        "op": op,
+        "output_layout": output_layout,
+        "output_dtype": output_dtype
+    }
+    output_image = b.bitwiseOps(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (output_image)
