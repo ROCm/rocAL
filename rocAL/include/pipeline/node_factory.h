@@ -84,12 +84,13 @@ public:
 private:
     // Private constructor to enforce singleton pattern
     NodeFactory() = default;
+    
+    std::unordered_map<std::string, LoaderCreator> _loader_node_registry;
+    std::unordered_map<std::string, AugmentationCreator> _node_registry;
 
     // Delete copy constructor and copy-assignment operator to prevent copying
     NodeFactory(const NodeFactory&) = delete;
     NodeFactory& operator=(const NodeFactory&) = delete;
-    std::unordered_map<std::string, LoaderCreator> _loader_node_registry;
-    std::unordered_map<std::string, AugmentationCreator> _node_registry;
 };
 
 /*!
