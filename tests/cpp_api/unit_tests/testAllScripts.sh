@@ -239,6 +239,15 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
 
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}" $width $height 79 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}" $width $height 80 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseAnd_${rgb_name[$rgb]}_${device_name}" $width $height 81 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseOr_${rgb_name[$rgb]}_${device_name}" $width $height 82 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseXor_${rgb_name[$rgb]}_${device_name}" $width $height 83 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseNot_${rgb_name[$rgb]}_${device_name}" $width $height 84 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Erase_${rgb_name[$rgb]}_${device_name}" $width $height 85 $device $rgb 1 $display
+
         # to_tensor coverage tests
         for ((memcpy_backend=0;memcpy_backend<=1;memcpy_backend++))
         do

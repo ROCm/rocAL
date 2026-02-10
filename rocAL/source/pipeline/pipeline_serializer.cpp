@@ -302,7 +302,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
             if (EnumRegistry::getInstance().isEnumRegistered(arg.sub_type_name)) {
                 // Use new std::any-based approach
                 std::any enum_value = EnumRegistry::getInstance().convertIntToEnum(arg.sub_type_name, enum_val.value());
-                arg.values.push_back(enum_value);
+                arg.values.emplace_back(enum_value);
             } else {
                 THROW("Enum type '" + arg.sub_type_name + "' is not registered. Please ensure the enum is properly registered with EnumRegistry before deserialization.");
             }
@@ -362,13 +362,11 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                 const auto& int_vec = proto_arg.int_vectors(0);
                 for (auto val : int_vec.values()) {
                     if (arg.type_name == "unsigned") {
-                        arg.values.push_back(static_cast<unsigned>(val));
+                        arg.values.emplace_back(static_cast<unsigned>(val));
                     } else if (arg.type_name == "size_t") {
-                        arg.values.push_back(static_cast<size_t>(val));
-                    } else if (arg.type_name == "shared_ptr") {
-                        arg.values.push_back(static_cast<int>(val));
-                    } else { // int
-                        arg.values.push_back(static_cast<int>(val));
+                        arg.values.emplace_back(static_cast<size_t>(val));
+                    } else if (arg.type_name == "shared_ptr" || arg.type_name == "int") {
+                        arg.values.emplace_back(static_cast<int>(val));
                     }
                 }
             } else if (arg.type_name == "float") {
@@ -378,7 +376,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                 }
                 const auto& float_vec = proto_arg.float_vectors(0);
                 for (auto val : float_vec.values()) {
-                    arg.values.push_back(val);
+                    arg.values.emplace_back(val);
                 }
             } else if (arg.type_name == "char_str" || arg.type_name == "string" || arg.type_name == "map_string") {
                 // Deserialize string vectors - expect exactly one vector
@@ -387,7 +385,7 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                 }
                 const auto& string_vec = proto_arg.string_vectors(0);
                 for (const auto& val : string_vec.values()) {
-                    arg.values.push_back(val);
+                    arg.values.emplace_back(val);
                 }
             } else {
                 THROW("Vector type not supported during deserialization for Argument " + arg.arg_name + " with type " + arg.type_name);
@@ -397,27 +395,27 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
         // Handle non-parameter arguments
         else if (arg.type_name == "int" || arg.type_name == "shared_ptr") {
             for (auto i : proto_arg.ints()) {
-                arg.values.push_back(static_cast<int>(i));
+                arg.values.emplace_back(static_cast<int>(i));
             }
         } else if (arg.type_name == "float") {
             for (auto f : proto_arg.floats()) {
-                arg.values.push_back(f);
+                arg.values.emplace_back(f);
             }
         } else if (arg.type_name == "char_str" || arg.type_name == "string") {
             for (const auto& s : proto_arg.strings()) {
-                arg.values.push_back(s);
+                arg.values.emplace_back(s);
             }
         } else if (arg.type_name == "bool") {
             for (auto b : proto_arg.bools()) {
-                arg.values.push_back(b);
+                arg.values.emplace_back(b);
             }
         } else if (arg.type_name == "unsigned") {
             for (auto u : proto_arg.uints()) {
-                arg.values.push_back(static_cast<unsigned>(u));
+                arg.values.emplace_back(static_cast<unsigned>(u));
             }
         } else if (arg.type_name == "size_t") {
             for (auto u : proto_arg.uints()) {
-                arg.values.push_back(static_cast<size_t>(u));
+                arg.values.emplace_back(static_cast<size_t>(u));
             }
         } else if (arg.type_name == "nullptr") {
             arg.is_null_ptr = true;
