@@ -1649,4 +1649,103 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWarpPerspective(RocalContext context,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
+/*! \brief Erases regions in images using raw vectors (no parameters/tensors).
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] anchor_box_info LTRB anchors: either [4*num_boxes] replicated or [batch*4*num_boxes]
+ * \param [in] colors RGB colors per box: either [3*num_boxes] replicated or [batch*3*num_boxes]
+ * \param [in] num_boxes Number of boxes to be erased
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalErase(RocalContext context, RocalTensor input,
+                                                 bool is_output,
+                                                 std::vector<float> &anchor,
+                                                 std::vector<float> &shape,
+                                                 std::vector<unsigned> &num_boxes,
+                                                 std::vector<float> &fill_value,
+                                                 RocalTensorLayout output_layout = ROCAL_NONE,
+                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Random Image Cropping And Patching (RICAP).
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] permutation vector length 4 or batch*4, with 4 source indices per output sample quadrants
+ * \param [in] crop_rois vector length 16 or batch*16, per-sample 4 ROIs of [x,y,w,h] or [l,t,r,b] based on roiType
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */                                                 
+extern "C" RocalTensor ROCAL_API_CALL rocalRicap(RocalContext context,
+                                                 RocalTensor input,
+                                                 bool is_output,
+                                                 std::vector<unsigned> &permutation,
+                                                 std::vector<int> &crop_rois,
+                                                 RocalTensorLayout output_layout = ROCAL_NONE,
+                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Performs bitwise operations (AND/OR/XOR) elementwise on two input tensors.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 First input tensor (U8)
+ * \param [in] input2 Second input tensor (U8)
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] op The bitwise operation to perform (AND/OR/XOR)
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor (defaults to U8)
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalBitwiseOps(RocalContext context,
+                                                      RocalTensor input1,
+                                                      RocalTensor input2,
+                                                      bool is_output,
+                                                      RocalBitwiseOp op,
+                                                      RocalTensorLayout output_layout = ROCAL_NONE,
+                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Applies remap to images using per-pixel row/col lookup tables.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] dest_height output height (0 to use input max height)
+ * \param [in] dest_width output width (0 to use input max width)
+ * \param [in] row_remap_table Tensor with remap rows (NHWC, c=1) sized to match output dimensions
+ * \param [in] col_remap_table Tensor with remap cols (NHWC, c=1) sized to match output dimensions
+ * \param [in] interpolation_type Interpolation policy
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalRemap(RocalContext context, RocalTensor input, bool is_output,
+                                                 unsigned dest_height, unsigned dest_width,
+                                                 std::vector<float> &row_remap, std::vector<float> &col_remap,
+                                                 RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
+                                                 RocalTensorLayout output_layout = ROCAL_NONE,
+                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Crops and patches regions between two input tensors based on provided ROIs.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input1 First input tensor
+ * \param [in] input2 Second input tensor
+ * \param [in] is_output Is the output tensor part of the graph output
+ * \param [in] crop_roi Per-sample ROI tensor for crop region
+ * \param [in] patch_roi Per-sample ROI tensor for patch region
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalCropAndPatch(RocalContext context,
+                                                        RocalTensor input1, RocalTensor input2,
+                                                        bool is_output,
+                                                        std::vector<int> &crop_roi, std::vector<int> &patch_roi,
+                                                        RocalTensorLayout output_layout = ROCAL_NONE,
+                                                        RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
 #endif  // MIVISIONX_ROCAL_API_AUGMENTATION_H
