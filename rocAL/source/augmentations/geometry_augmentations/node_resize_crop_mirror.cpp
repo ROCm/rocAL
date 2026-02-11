@@ -118,6 +118,6 @@ void ResizeCropMirrorNode::init(FloatParam *crop_h_factor, FloatParam *crop_w_fa
 
 void ResizeCropMirrorNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<ResizeCropMirrorNode, unsigned int, unsigned int, IntParam*, ResizeInterpolationType>(this, {"crop_h", "crop_w", "mirror", "interpolation_type"}, arguments)) return;
-    if (init_args<ResizeCropMirrorNode, FloatParam*, FloatParam*, IntParam*, ResizeInterpolationType>(this, {"crop_h", "crop_w", "mirror", "interpolation_type"}, arguments)) return;
+    if (init_args<ResizeCropMirrorNode, FloatParam*, FloatParam*, IntParam*, ResizeInterpolationType>(this, {"crop_h_factor", "crop_w_factor", "mirror", "interpolation_type"}, arguments)) return;
     THROW("Unsupported argument types for ResizeCropMirrorNode");
 };

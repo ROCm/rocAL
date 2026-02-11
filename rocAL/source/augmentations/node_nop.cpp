@@ -42,6 +42,6 @@ void NopNode::create_node() {
 void NopNode::update_node() {}
 
 void NopNode::initialize_args(const ArgumentSet &arguments) {
-    if (init_args<NopNode>(this, arguments)) return;
+    if (init_args<NopNode>(this, {}, arguments)) return;
     THROW("Unsupported argument types for NopNode");
 }

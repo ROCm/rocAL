@@ -148,7 +148,7 @@ void CropResizeNode::init(unsigned int crop_h, unsigned int crop_w, float x_drif
 void CropResizeNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<CropResizeNode, float, float, float, float>(this, {"area", "aspect_ratio", "x_center_drift", "y_center_drift"}, arguments)) return;
     if (init_args<CropResizeNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, {"area", "aspect_ratio", "x_center_drift", "y_center_drift"}, arguments)) return;
-    if (init_args<CropResizeNode, std::vector<float>, std::vector<float>, ResizeInterpolationType>(this, arguments)) return;
-    if (init_args<CropResizeNode, unsigned int, unsigned int, float, float, ResizeInterpolationType>(this, {"area", "aspect_ratio", "x_center_drift", "y_center_drift"}, arguments)) return;
+    if (init_args<CropResizeNode, std::vector<float>, std::vector<float>, ResizeInterpolationType>(this, {"area_factor", "aspect_ratio", "interpolation_type"}, arguments)) return;
+    if (init_args<CropResizeNode, unsigned int, unsigned int, float, float, ResizeInterpolationType>(this, {"crop_h", "crop_w", "x_drift", "y_drift", "interpolation_type"}, arguments)) return;
     THROW("Unsupported argument types for CropResizeNode");
 }

@@ -85,7 +85,7 @@ void SnowNode::update_node() {
 }
 
 void SnowNode::initialize_args(const ArgumentSet& arguments) {
-    if (init_args<SnowNode, float>(this, {"snow_threshold", "brightness_coefficient", "dark_mode"}, arguments)) return;
-    if (init_args<SnowNode, FloatParam*>(this, {"snow_threshold", "brightness_coefficient", "dark_mode"}, arguments)) return;
+    if (init_args<SnowNode, float, float, int>(this, {"snow_threshold", "brightness_coefficient", "dark_mode"}, arguments)) return;
+    if (init_args<SnowNode, FloatParam*, FloatParam*, IntParam*>(this, {"snow_threshold", "brightness_coefficient", "dark_mode"}, arguments)) return;
     THROW("Unsupported argument types for SnowNode");
 }

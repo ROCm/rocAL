@@ -43,6 +43,6 @@ void CopyNode::create_node() {
 }
 
 void CopyNode::initialize_args(const ArgumentSet &arguments) {
-    if (init_args<CopyNode>(this, arguments)) return;
+    if (init_args<CopyNode>(this, {}, arguments)) return;
     THROW("Unsupported argument types for CopyNode");
 }

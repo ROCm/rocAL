@@ -80,17 +80,19 @@ void SnPNoiseNode::init(FloatParam* noise_prob_param, FloatParam* salt_prob_para
     _seed = seed;
     // Add all arguments as part of the Node
     ArgumentSet args;
-    args.add_new_argument("noise_prob_param", noise_prob_param);
-    args.add_new_argument("salt_prob_param", salt_prob_param);
-    args.add_new_argument("salt_value_param", salt_value_param);
-    args.add_new_argument("pepper_value_param", pepper_value_param);
+    args.add_new_argument("noise_prob", noise_prob_param);
+    args.add_new_argument("salt_prob", salt_prob_param);
+    args.add_new_argument("salt_value", salt_value_param);
+    args.add_new_argument("pepper_value", pepper_value_param);
     args.add_new_argument("seed", seed);
     _args = args;
 }
 
-void SnPNoiseNode::initialize_args(std::vector<Argument>& arguments) {
-    if (init_args<SnPNoiseNode>(this, {"noise_prob", "salt_prob", "salt_value", "pepper_value", "seed"}, arguments)) return;
-    if (init_args<SnPNoiseNode>(this, {"noise_prob", "salt_prob", "salt_value", "pepper_value", "seed"}, arguments)) return;
+void SnPNoiseNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SnPNoiseNode, float, float, float, float, int>(this, 
+        {"noise_prob", "salt_prob", "salt_value", "pepper_value", "seed"}, arguments)) return;
+    if (init_args<SnPNoiseNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*, int>(this, 
+        {"noise_prob", "salt_prob", "salt_value", "pepper_value", "seed"}, arguments)) return;
     THROW("Unsupported argument types for SnPNoiseNode");
 }
 

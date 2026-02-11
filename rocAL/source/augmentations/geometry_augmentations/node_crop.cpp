@@ -141,8 +141,8 @@ void CropNode::create_crop_tensor() {
 
 void CropNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<CropNode, unsigned int, unsigned int, float, float>(this, {"crop_h", "crop_w", "x_drift", "y_drift"}, arguments)) return;
-    if (init_args<CropNode, unsigned int, unsigned int>(this, {"crop_h", "crop_w", "x_drift", "y_drift"}, arguments)) return;
-    if (init_args<CropNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, {"crop_h", "crop_w", "x_drift", "y_drift"}, arguments)) return;
+    if (init_args<CropNode, unsigned int, unsigned int>(this, {"crop_h", "crop_w"}, arguments)) return;
+    if (init_args<CropNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, {"crop_h_factor", "crop_w_factor", "x_drift", "y_drift"}, arguments)) return;
     THROW("Unsupported argument types for CropNode");
 }
 

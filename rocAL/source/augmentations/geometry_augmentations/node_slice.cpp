@@ -72,6 +72,7 @@ void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_val
 }
 
 void SliceNode::initialize_args(const ArgumentSet& arguments) {
-    if (init_args<SliceNode, Tensor*, Tensor*, std::vector<float>, OutOfBoundsPolicy>(this, arguments)) return;
+    if (init_args<SliceNode, Tensor*, Tensor*, std::vector<float>, OutOfBoundsPolicy>(this, 
+        {"anchor", "shape", "fill_values", "policy"}, arguments)) return;
     THROW("Unsupported argument types for SliceNode");
 }

@@ -106,11 +106,13 @@ void LensCorrectionNode::init(std::vector<CameraMatrix> camera_matrix, std::vect
         _distortion_coeffs[dist_coeff_index + 7] = 0;
     }
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"camera_matrix", "distortion_coeffs"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, camera_matrix, distortion_coeffs);
+    ArgumentSet args;
+    args.add_new_argument("camera_matrix", camera_matrix);
+    args.add_new_argument("distortion_coeffs", distortion_coeffs);
+    _args = args;
 }
 
 void LensCorrectionNode::initialize_args(const ArgumentSet& arguments) {
-    if (init_args<LensCorrectionNode, std::vector<CameraMatrix>, std::vector<DistortionCoeffs>>(this, arguments)) return;
+    if (init_args<LensCorrectionNode, std::vector<CameraMatrix>, std::vector<DistortionCoeffs>>(this, {"camera_matrix", "distortion_coeffs"}, arguments)) return;
     THROW("Unsupported argument types for LensCorrectionNode");
 }

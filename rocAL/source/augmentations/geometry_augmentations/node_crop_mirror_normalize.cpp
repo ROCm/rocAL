@@ -135,6 +135,7 @@ void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float anchor_x, float
 }
 
 void CropMirrorNormalizeNode::initialize_args(const ArgumentSet& arguments) {
-    if (init_args<CropMirrorNormalizeNode, int, int, float, float, std::vector<float>, std::vector<float>, IntParam*>(this, arguments)) return;
+    if (init_args<CropMirrorNormalizeNode, int, int, float, float, std::vector<float>, std::vector<float>, IntParam*>(this, 
+        {"crop_h", "crop_w", "anchor_x", "anchor_y", "mean", "std_dev", "mirror"}, arguments)) return;
     THROW("Unsupported argument types for CropMirrorNormalizeNode");
 }

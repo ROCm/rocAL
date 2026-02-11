@@ -90,6 +90,6 @@ void TransposeNode::init(std::vector<unsigned> perm) {
 }
 
 void TransposeNode::initialize_args(const ArgumentSet& arguments) {
-    if (init_args<TransposeNode, std::vector<unsigned>>(this, arguments)) return;
+    if (init_args<TransposeNode, std::vector<unsigned>>(this, {"perm"}, arguments)) return;
     THROW("Unsupported argument types for TransposeNode");
 }
