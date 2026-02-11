@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "pipeline/commons.h"
@@ -49,7 +50,6 @@ class COCOYoloMetaDataReader : public MetaDataReader {
     void lookup(const std::vector<std::string>& image_names) override;
     ImgSize lookup_image_size(const std::string& image_name) override;
     void read_all(const std::string& path) override;
-    void release(std::string image_name);
     void release() override;
     void print_map_contents();
     bool set_timestamp_mode() override { return false; }
@@ -100,5 +100,6 @@ class COCOYoloMetaDataReader : public MetaDataReader {
     std::map<int, int> _label_info;                  // For class remapping
     std::set<int> _observed_class_ids;
     std::vector<std::string> _relative_file_paths;  // Full filenames WITH extensions (e.g., "image.jpg")
+    std::unordered_set<std::string> _accepted_filenames;  // Basename+ext whitelist for exists()
     TimingDbg _coco_yolo_metadata_read_time;
 };

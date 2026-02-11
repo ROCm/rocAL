@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <limits>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 using namespace std;
@@ -70,6 +71,21 @@ std::string COCOYoloMetaDataReader::normalize_key(const std::string &image_name)
 }
 
 bool COCOYoloMetaDataReader::exists(const std::string &image_name) {
+    // If caller provides a concrete filename (has an extension), ensure it is one of the enumerated images.
+    // This avoids ambiguities when multiple images share the same stem (e.g., foo.jpg and foo.jpeg).
+    std::string leaf = image_name;
+    auto last_slash = leaf.find_last_of("/\\");
+    if (last_slash != std::string::npos) {
+        leaf = leaf.substr(last_slash + 1);
+    }
+    if (!_accepted_filenames.empty()) {
+        auto dot_pos = leaf.find_last_of('.');
+        if (dot_pos != std::string::npos) {
+            if (_accepted_filenames.find(leaf) == _accepted_filenames.end())
+                return false;
+        }
+    }
+
     std::string key = normalize_key(image_name);
     return _map_content.find(key) != _map_content.end();
 }
@@ -109,9 +125,11 @@ void COCOYoloMetaDataReader::lookup(const std::vector<std::string> &image_names)
 }
 
 void COCOYoloMetaDataReader::add(std::string image_name, BoundingBoxCords bb_coords, Labels bb_labels, ImgSize image_size, MaskCords mask_cords, std::vector<int> polygon_count, std::vector<std::vector<int>> vertices_count, int image_id) {
-    if (exists(image_name)) {
-        std::string key = normalize_key(image_name);
-        auto it = _map_content.find(key);
+    std::string key = normalize_key(image_name);
+    auto it = _map_content.find(key);
+    if (it != _map_content.end()) {
+        if (bb_coords.empty() || bb_labels.empty() || polygon_count.empty() || vertices_count.empty())
+            return;
         it->second->get_bb_cords().push_back(bb_coords[0]);
         it->second->get_labels().push_back(bb_labels[0]);
         it->second->get_mask_cords().insert(it->second->get_mask_cords().end(), mask_cords.begin(), mask_cords.end());
@@ -119,15 +137,16 @@ void COCOYoloMetaDataReader::add(std::string image_name, BoundingBoxCords bb_coo
         it->second->get_vertices_count().push_back(vertices_count[0]);
         return;
     }
-    std::string key = normalize_key(image_name);
     pMetaDataPolygonMask info = std::make_shared<PolygonMask>(bb_coords, bb_labels, image_size, mask_cords, polygon_count, vertices_count, image_id);
     _map_content.insert(pair<std::string, std::shared_ptr<PolygonMask>>(key, info));
 }
 
 void COCOYoloMetaDataReader::add(std::string image_name, BoundingBoxCords bb_coords, Labels bb_labels, ImgSize image_size, int image_id) {
     std::string key = normalize_key(image_name);
-    if (_map_content.find(key) != _map_content.end()) {
-        auto it = _map_content.find(key);
+    auto it = _map_content.find(key);
+    if (it != _map_content.end()) {
+        if (bb_coords.empty() || bb_labels.empty())
+            return;
         it->second->get_bb_cords().push_back(bb_coords[0]);
         it->second->get_labels().push_back(bb_labels[0]);
         return;
@@ -205,52 +224,87 @@ std::vector<float> COCOYoloMetaDataReader::convert_polygon_to_pixel(const std::v
 ImgSize COCOYoloMetaDataReader::parse_jpeg_header(const std::string& file_path) {
     std::ifstream file(file_path, std::ios::binary);
     if (!file.is_open()) {
-        THROW("Failed to open JPEG file for header parsing: " + file_path);
+        ERR("Failed to open JPEG file for header parsing: " + file_path);
+        return ImgSize{0, 0};
     }
 
     unsigned char buf[2];
     file.read(reinterpret_cast<char*>(buf), 2);
-    if (buf[0] != 0xFF || buf[1] != 0xD8) {
-        THROW("Invalid JPEG file (missing SOI marker): " + file_path);
+    if (!file.good() || buf[0] != 0xFF || buf[1] != 0xD8) {
+        ERR("Invalid JPEG file (missing SOI marker): " + file_path);
+        return ImgSize{0, 0};
     }
 
     while (file.good()) {
-        // Read marker
-        file.read(reinterpret_cast<char*>(buf), 2);
-        if (buf[0] != 0xFF) {
-            continue;  // Skip non-marker bytes
+        // Scan for the next 0xFF byte (marker prefix)
+        unsigned char byte;
+        if (!file.read(reinterpret_cast<char*>(&byte), 1))
+            break;
+        if (byte != 0xFF)
+            continue;
+
+        // Skip any padding 0xFF bytes, then read the marker type
+        unsigned char marker;
+        do {
+            if (!file.read(reinterpret_cast<char*>(&marker), 1))
+                break;
+        } while (marker == 0xFF);
+
+        // Skip standalone markers (RST0-RST7, SOI, EOI, TEM)
+        if (marker == 0x00 || marker == 0x01 || (marker >= 0xD0 && marker <= 0xD9)) {
+            continue;
         }
 
-        unsigned char marker = buf[1];
-
-        // Skip padding bytes (0xFF)
-        while (marker == 0xFF && file.good()) {
-            file.read(reinterpret_cast<char*>(&marker), 1);
-        }
-
-        // SOF0, SOF1, SOF2 markers contain image dimensions
-        if (marker >= 0xC0 && marker <= 0xC2) {
+        // SOF markers that contain image dimensions:
+        // SOF0 (0xC0) - Baseline DCT
+        // SOF1 (0xC1) - Extended sequential DCT
+        // SOF2 (0xC2) - Progressive DCT
+        // SOF3 (0xC3) - Lossless (sequential)
+        // SOF5 (0xC5) - Differential sequential DCT
+        // SOF6 (0xC6) - Differential progressive DCT
+        // SOF7 (0xC7) - Differential lossless (sequential)
+        // SOF9 (0xC9) - Extended sequential DCT, arithmetic
+        // SOF10 (0xCA) - Progressive DCT, arithmetic
+        // SOF11 (0xCB) - Lossless (sequential), arithmetic
+        // SOF13 (0xCD) - Differential sequential DCT, arithmetic
+        // SOF14 (0xCE) - Differential progressive DCT, arithmetic
+        // SOF15 (0xCF) - Differential lossless, arithmetic
+        // Excludes: 0xC4 (DHT), 0xC8 (JPG reserved), 0xCC (DAC)
+        bool is_sof = (marker >= 0xC0 && marker <= 0xCF) && marker != 0xC4 && marker != 0xC8 && marker != 0xCC;
+        if (is_sof) {
             unsigned char header[7];
-            file.read(reinterpret_cast<char*>(header), 7);
+            if (!file.read(reinterpret_cast<char*>(header), 7) || !file.good()) {
+                ERR("Truncated SOF segment in JPEG file: " + file_path);
+                return ImgSize{0, 0};
+            }
             // header[0-1]: segment length
             // header[2]: precision
             // header[3-4]: height (big-endian)
             // header[5-6]: width (big-endian)
             int height = (header[3] << 8) | header[4];
             int width = (header[5] << 8) | header[6];
+            if (width <= 0 || height <= 0) {
+                ERR("Invalid dimensions in JPEG SOF segment (w=" + std::to_string(width) + ", h=" + std::to_string(height) + "): " + file_path);
+                return ImgSize{0, 0};
+            }
             return ImgSize{width, height};
         }
 
-        // Read segment length and skip
+        // Read segment length and skip over the segment
         unsigned char len_buf[2];
-        file.read(reinterpret_cast<char*>(len_buf), 2);
-        int segment_length = (len_buf[0] << 8) | len_buf[1];
-        if (segment_length > 2) {
-            file.seekg(segment_length - 2, std::ios::cur);
+        if (!file.read(reinterpret_cast<char*>(len_buf), 2) || !file.good()) {
+            break;
         }
+        int segment_length = (len_buf[0] << 8) | len_buf[1];
+        if (segment_length < 2) {
+            ERR("Invalid segment length in JPEG file: " + file_path);
+            return ImgSize{0, 0};
+        }
+        file.seekg(segment_length - 2, std::ios::cur);
     }
 
-    THROW("Failed to find SOF marker in JPEG file: " + file_path);
+    ERR("Failed to find SOF marker in JPEG file: " + file_path);
+    return ImgSize{0, 0};
 }
 
 ImgSize COCOYoloMetaDataReader::probe_image_size(const filesys::path& image_path) {
@@ -258,13 +312,11 @@ ImgSize COCOYoloMetaDataReader::probe_image_size(const filesys::path& image_path
     std::string ext = image_path.extension().string();
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
-    ImgSize size;
     if (ext != ".jpg" && ext != ".jpeg") {
-        THROW("Unsupported image format for size probing (JPEG only): " + ext);
+        ERR("Unsupported image format for size probing (JPEG only): " + ext);
+        return ImgSize{0, 0};
     }
-    size = parse_jpeg_header(path_str);
-
-    return size;
+    return parse_jpeg_header(path_str);
 }
 
 void COCOYoloMetaDataReader::parse_label_file(const filesys::path& label_path, const std::string& image_key, ImgSize image_size) {
@@ -322,6 +374,10 @@ void COCOYoloMetaDataReader::parse_label_file(const filesys::path& label_path, c
 
         if (tokens.size() == kYoloBboxCoordsCount) {
             // Detection format: x_center y_center width height
+            if (!std::isfinite(tokens[0]) || !std::isfinite(tokens[1]) || !std::isfinite(tokens[2]) || !std::isfinite(tokens[3])) {
+                ERR("Non-finite bbox values in " + label_path.string() + " line " + std::to_string(line_num));
+                continue;
+            }
             if (tokens[2] <= 0.0f || tokens[3] <= 0.0f) {
                 ERR("Invalid bbox width/height in " + label_path.string() + " line " + std::to_string(line_num));
                 continue;
@@ -355,6 +411,17 @@ void COCOYoloMetaDataReader::parse_label_file(const filesys::path& label_path, c
             }
         } else if (tokens.size() >= kMinPolygonCoordsCount && tokens.size() % 2 == 0) {
             // Segmentation format: x1 y1 x2 y2 ... xn yn (polygon vertices)
+            bool all_finite = true;
+            for (float f : tokens) {
+                if (!std::isfinite(f)) {
+                    all_finite = false;
+                    break;
+                }
+            }
+            if (!all_finite) {
+                ERR("Non-finite polygon values in " + label_path.string() + " line " + std::to_string(line_num));
+                continue;
+            }
             std::vector<float> pixel_coords = convert_polygon_to_pixel(tokens, img_width, img_height);
             BoundingBoxCord box = compute_bbox_from_polygon(pixel_coords, img_width, img_height);
 
@@ -424,8 +491,7 @@ void COCOYoloMetaDataReader::read_all(const std::string &path) {
         }
     }
 
-    int files_processed = 0;
-    int files_skipped = 0;
+    std::unordered_set<std::string> seen_image_stems;
 
     // Iterate images to ensure every decoded image has a metadata entry (empty if missing a label file).
     for (const auto& img_entry : filesys::directory_iterator(_images_path)) {
@@ -439,28 +505,23 @@ void COCOYoloMetaDataReader::read_all(const std::string &path) {
             continue;
 
         std::string basename = image_path.stem().string();
-
-        ImgSize img_size;
-        try {
-            img_size = probe_image_size(image_path);
-        } catch (const std::exception& e) {
-            ERR("Failed to probe image size for " + image_path.string() + ": " + e.what());
-            files_skipped++;
+        if (!seen_image_stems.insert(basename).second) {
+            ERR("Duplicate image stem encountered in images folder; skipping: " + image_path.filename().string());
             continue;
         }
+
+        ImgSize img_size = probe_image_size(image_path);
         if (img_size.w <= 0 || img_size.h <= 0) {
-            ERR("Invalid probed image size for " + image_path.string() + " (w=" + std::to_string(img_size.w) + ", h=" + std::to_string(img_size.h) + ")");
-            files_skipped++;
             continue;
         }
 
         _map_img_sizes[basename] = img_size;
         _relative_file_paths.push_back(image_path.filename().string());
+        _accepted_filenames.insert(image_path.filename().string());
 
         auto label_it = label_by_stem.find(basename);
         if (label_it != label_by_stem.end()) {
             parse_label_file(label_it->second, basename, img_size);
-            files_processed++;
         } else {
             // No label file: add empty entry so lookup() won't throw during decode.
             bool is_polygon_mode = (_output->get_metadata_type() == MetaDataType::PolygonMask);
@@ -516,11 +577,7 @@ void COCOYoloMetaDataReader::read_all(const std::string &path) {
         }
     }
 
-    (void)files_processed;
-    (void)files_skipped;
     _coco_yolo_metadata_read_time.end();
-    LOG("COCOYoloMetaDataReader: Processed " + std::to_string(files_processed) + " label files, skipped " +
-        std::to_string(files_skipped) + " files");
 }
 
 void COCOYoloMetaDataReader::print_map_contents() {
@@ -559,19 +616,11 @@ void COCOYoloMetaDataReader::print_map_contents() {
     }
 }
 
-void COCOYoloMetaDataReader::release(std::string image_name) {
-    std::string key = normalize_key(image_name);
-    if (_map_content.find(key) == _map_content.end()) {
-        ERR("Given name not present in the map: " + image_name);
-        return;
-    }
-    _map_content.erase(key);
-}
-
 void COCOYoloMetaDataReader::release() {
     _map_content.clear();
     _map_img_sizes.clear();
     _observed_class_ids.clear();
     _label_info.clear();
     _relative_file_paths.clear();
+    _accepted_filenames.clear();
 }
