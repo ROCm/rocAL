@@ -1128,6 +1128,75 @@ def snp_noise(*inputs, p_noise=0.0, p_salt=0.0, noise_val=0.0, salt_val=0.0,
     return (snp_noise_added_image)
 
 
+def gaussian_noise(*inputs, mean=0.0, stddev=0.1, seed=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies Gaussian noise to the input image.
+
+        @param inputs (list)                                                          The input image to which Gaussian noise is applied.
+        @param mean (float, optional, default = 0.0)                                  Mean value for the Gaussian noise distribution. Default is 0.0.
+        @param stddev (float, optional, default = 0.1)                                Standard deviation for the Gaussian noise distribution. Default is 0.1.
+        @param seed (int, optional, default = 0)                                      Random seed. Default is 0.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output. Default is types.UINT8.
+
+        @return    images with Gaussian noise added.
+    """
+    mean = b.createFloatParameter(mean) if isinstance(mean, float) else mean
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "stddev": stddev,
+                     "seed": seed, "output_layout": output_layout, "output_dtype": output_dtype}
+    gaussian_noise_added_image = b.gaussianNoise(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (gaussian_noise_added_image)
+
+
+def shot_noise(*inputs, noise_factor=0.1, seed=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies shot (Poisson) noise to the input image.
+
+        @param inputs (list)                                                          The input image to which shot noise is applied.
+        @param noise_factor (float, optional, default = 0.1)                          Noise intensity factor for shot (Poisson) noise. Default is 0.1.
+        @param seed (int, optional, default = 0)                                      Random seed. Default is 0.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output. Default is types.UINT8.
+
+        @return    images with shot noise added.
+    """
+    noise_factor = b.createFloatParameter(noise_factor) if isinstance(noise_factor, float) else noise_factor
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "noise_factor": noise_factor,
+                     "seed": seed, "output_layout": output_layout, "output_dtype": output_dtype}
+    shot_noise_added_image = b.shotNoise(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (shot_noise_added_image)
+
+
+def spatter(*inputs, red=65, green=50, blue=23, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies spatter effect to the input image with a specified color.
+
+        @param inputs (list)                                                          The input image to which the spatter effect is applied.
+        @param red (int, optional, default = 65)                                      Red channel value for the spatter color.
+        @param green (int, optional, default = 50)                                    Green channel value for the spatter color.
+        @param blue (int, optional, default = 23)                                     Blue channel value for the spatter color.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Image with spatter effect applied.
+    """
+    red = b.createIntParameter(red) if isinstance(red, int) else red
+    green = b.createIntParameter(green) if isinstance(green, int) else green
+    blue = b.createIntParameter(blue) if isinstance(blue, int) else blue
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "red": red, "green": green, "blue": blue,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    spatter_image = b.spatter(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (spatter_image)
+
+
 def box_iou_matcher(*inputs, anchors, high_threshold=0.5,
                     low_threshold=0.4, allow_low_quality_matches=True, device=None):
     """!Applies box IoU matching to the input image.
@@ -1818,3 +1887,72 @@ def bitwise_ops(*inputs, op=None, device=None, output_layout=types.NHWC, output_
     }
     output_image = b.bitwiseOps(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (output_image)
+
+
+def log(*inputs, output_datatype = types.FLOAT):
+    """
+    Computes the natural logarithm of input element-wise.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
+    log_output = b.log(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    return log_output
+
+
+def color_jitter(*inputs, brightness=1.0, contrast=1.0, hue=0.0, saturation=1.0,
+                 device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies color jitter to the input image.
+
+        @param inputs (list)                                                          The input image to which color jitter is applied.
+        @param brightness (float, optional, default = 1.0)                            Brightness adjustment factor.
+        @param contrast (float, optional, default = 1.0)                              Contrast adjustment factor.
+        @param hue (float, optional, default = 0.0)                                   Hue adjustment value in degrees.
+        @param saturation (float, optional, default = 1.0)                            Saturation adjustment factor.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Image with color jitter applied.
+    """
+    brightness = b.createFloatParameter(brightness) if isinstance(brightness, float) else brightness
+    contrast = b.createFloatParameter(contrast) if isinstance(contrast, float) else contrast
+    hue = b.createFloatParameter(hue) if isinstance(hue, float) else hue
+    saturation = b.createFloatParameter(saturation) if isinstance(saturation, float) else saturation
+
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "brightness": brightness, "contrast": contrast,
+                     "hue": hue, "saturation": saturation, "output_layout": output_layout, "output_dtype": output_dtype}
+    jittered_image = b.colorJitter(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (jittered_image)
+
+
+def water(*inputs, amplitude_x=5.0, amplitude_y=5.0, frequency_x=0.5, frequency_y=0.5,
+          phase_x=0.0, phase_y=0.0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Applies water effect to the input image.
+
+    @param inputs (list)                                                          The input image to which water effect is applied.
+    @param amplitude_x (float, optional, default = 5.0)                           Amplitude of the water effect in the x direction. Default is 5.0.
+    @param amplitude_y (float, optional, default = 5.0)                           Amplitude of the water effect in the y direction. Default is 5.0.
+    @param frequency_x (float, optional, default = 0.5)                           Frequency of the water effect in the x direction. Default is 0.5.
+    @param frequency_y (float, optional, default = 0.5)                           Frequency of the water effect in the y direction. Default is 0.5.
+    @param phase_x (float, optional, default = 0.0)                               Phase of the water effect in the x direction. Default is 0.0.
+    @param phase_y (float, optional, default = 0.0)                               Phase of the water effect in the y direction. Default is 0.0.
+    @param device (string, optional, default = None)                              Parameter unused for augmentation
+    @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
+    @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output. Default is types.UINT8.
+
+    @return    images with water effect applied.
+    """
+    amplitude_x = b.createFloatParameter(amplitude_x) if isinstance(amplitude_x, float) else amplitude_x
+    amplitude_y = b.createFloatParameter(amplitude_y) if isinstance(amplitude_y, float) else amplitude_y
+    frequency_x = b.createFloatParameter(frequency_x) if isinstance(frequency_x, float) else frequency_x
+    frequency_y = b.createFloatParameter(frequency_y) if isinstance(frequency_y, float) else frequency_y
+    phase_x = b.createFloatParameter(phase_x) if isinstance(phase_x, float) else phase_x
+    phase_y = b.createFloatParameter(phase_y) if isinstance(phase_y, float) else phase_y
+
+    # pybind call arguments
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "amplitude_x": amplitude_x, "amplitude_y": amplitude_y,
+                     "frequency_x": frequency_x, "frequency_y": frequency_y, "phase_x": phase_x, "phase_y": phase_y,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    water_image = b.water(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (water_image)

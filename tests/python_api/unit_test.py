@@ -342,6 +342,19 @@ def main():
                                kernel_size=3,
                                output_layout=tensor_layout,
                                output_dtype=tensor_dtype)
+        elif augmentation_name == "gaussian_noise":
+            output = fn.gaussian_noise(images,
+                                       mean=0.0,
+                                       stddev=0.2,
+                                       seed=1255459,
+                                       output_layout=tensor_layout,
+                                       output_dtype=tensor_dtype)
+        elif augmentation_name == "shot_noise":
+            output = fn.shot_noise(images,
+                                   noise_factor=80.0,
+                                   seed=1255459,
+                                   output_layout=tensor_layout,
+                                   output_dtype=tensor_dtype)
         elif augmentation_name == "snp_noise":
             output = fn.snp_noise(images,
                                   p_noise=0.2,
@@ -397,6 +410,31 @@ def main():
                                     saturation=0.25,
                                     output_layout=tensor_layout,
                                     output_dtype=tensor_dtype)
+        elif augmentation_name == "spatter":
+            output = fn.spatter(images,
+                                red=65,
+                                green=50,
+                                blue=23,
+                                output_layout=tensor_layout,
+                                output_dtype=tensor_dtype)
+        elif augmentation_name == "water":
+            output = fn.water(images,
+                              amplitude_x=2.0,
+                              amplitude_y=5.0,
+                              frequency_x=5.8,
+                              frequency_y=1.2,
+                              phase_x=10.0,
+                              phase_y=15.0,
+                              output_layout=tensor_layout,
+                              output_dtype=tensor_dtype)
+        elif augmentation_name == "color_jitter":
+            output = fn.color_jitter(images,
+                                     brightness=1.02,
+                                     contrast=1.1,
+                                     hue=0.02,
+                                     saturation=1.3,
+                                     output_layout=tensor_layout,
+                                     output_dtype=tensor_dtype)
         elif augmentation_name == "crop":
             output = fn.crop(images,
                              crop=(3, 224, 224),

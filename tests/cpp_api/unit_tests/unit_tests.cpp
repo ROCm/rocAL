@@ -597,8 +597,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || 
-        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 || test_case == 64 || test_case == 65) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 ||
+        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 || test_case == 64 || test_case == 65 || test_case == 93 || test_case == 94) && rgb == 0) {
+        std::cout << "Not a valid option! Exiting!\n";
+        rocalRelease(handle);
+        return -1;
+    }
+    if ((test_case == 93 || test_case == 94) && gpu == 1) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -1095,6 +1100,50 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             output = rocalErase(handle, input, true,
                                 anchor, shape, num_boxes, fill_value,
                                 output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 86: {
+            std::cout << "Running rocalGaussianNoise" << std::endl;
+            output = rocalGaussianNoise(handle, input, true);
+        } break;
+        case 87: {
+            std::cout << "Running rocalGaussianNoiseFixed" << std::endl;
+            output = rocalGaussianNoiseFixed(handle, input, true, 0.0f, 0.2f, 1255459);
+        } break;
+        case 88: {
+            std::cout << "Running rocalShotNoise" << std::endl;
+            output = rocalShotNoise(handle, input, true);
+        } break;
+        case 89: {
+            std::cout << "Running rocalShotNoiseFixed" << std::endl;
+            output = rocalShotNoiseFixed(handle, input, 80.0f, true, 1255459);
+        } break;
+        case 90: {
+            std::cout << "Running rocalSpatter" << std::endl;
+            output = rocalSpatter(handle, input, true);
+        } break;
+        case 91: {
+            std::cout << "Running rocalSpatterFixed" << std::endl;
+            output = rocalSpatterFixed(handle, input, 65, 50, 23, true);
+        } break;
+        case 92: {
+            std::cout << "Running rocalLog" << std::endl;
+            output = rocalLog(handle, input, true);
+        } break;
+        case 93: {
+            std::cout << "Running rocalColorJitter" << std::endl;
+            output = rocalColorJitter(handle, input, true);
+        } break;
+        case 94: {
+            std::cout << "Running rocalColorJitterFixed" << std::endl;
+            output = rocalColorJitterFixed(handle, input, 1.02f, 1.1f, 0.02f, 1.3f, true);
+        } break;
+        case 95: {
+            std::cout << "Running rocalWater" << std::endl;
+            output = rocalWater(handle, input, true);
+        } break;
+        case 96: {
+            std::cout << "Running rocalWaterFixed" << std::endl;
+            output = rocalWaterFixed(handle, input, 2.0f, 5.0f, 5.8f, 1.2f, 10.0f, 15.0f, true);
         } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
