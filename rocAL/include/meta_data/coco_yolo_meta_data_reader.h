@@ -85,20 +85,11 @@ class COCOYoloMetaDataReader : public MetaDataReader {
     // Convert normalized polygon coords to pixel coords
     std::vector<float> convert_polygon_to_pixel(const std::vector<float>& norm_coords, int img_width, int img_height);
 
-    // Probe image dimensions from file header (JPEG/PNG/BMP header parsing, no OpenCV)
+    // Probe image dimensions from JPEG header
     ImgSize probe_image_size(const filesys::path& image_path);
 
     // Parse JPEG header to get dimensions
     ImgSize parse_jpeg_header(const std::string& file_path);
-    // Parse PNG header to get dimensions
-    ImgSize parse_png_header(const std::string& file_path);
-    // Parse BMP header to get dimensions
-    ImgSize parse_bmp_header(const std::string& file_path);
-    // Parse EXIF orientation from JPEG and swap dimensions if needed (orientation 5,6,7,8)
-    int parse_jpeg_exif_orientation(const std::string& file_path);
-
-    // Find image file in _images_path with the given basename (tries .jpg, .jpeg, .png, .bmp)
-    filesys::path find_image_path(const std::string& basename);
 
     // Normalize lookup key (strip directory and extension) - USED BY exists(), lookup(), lookup_image_size()
     std::string normalize_key(const std::string& image_name);
