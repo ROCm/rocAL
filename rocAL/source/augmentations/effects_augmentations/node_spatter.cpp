@@ -86,9 +86,9 @@ void SpatterNode::update_node() {
     _blue_param.update_array();
 
     // Get the generated values from ParameterVX and update the color array
-    _color[0] = static_cast<vx_uint8>(_red_param.default_value());
-    _color[1] = static_cast<vx_uint8>(_green_param.default_value());
-    _color[2] = static_cast<vx_uint8>(_blue_param.default_value());
+    _color[0] = static_cast<vx_uint8>(_red_param.get());
+    _color[1] = static_cast<vx_uint8>(_green_param.get());
+    _color[2] = static_cast<vx_uint8>(_blue_param.get());
 
     vxCopyArrayRange(_color_array, 0, 3, sizeof(vx_uint8), _color.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
 }
