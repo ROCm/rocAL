@@ -135,6 +135,12 @@ from rocal_pybind.types import REPLICATE
 from rocal_pybind.types import CONSTANT
 from rocal_pybind.types import REFLECT_NO_EDGE
 
+#     RocalBitwiseOpType
+from rocal_pybind.types import BITWISE_AND
+from rocal_pybind.types import BITWISE_OR
+from rocal_pybind.types import BITWISE_XOR
+from rocal_pybind.types import BITWISE_NOT
+
 _known_types = {
 
     OK: ("OK", OK),
@@ -227,6 +233,11 @@ _known_types = {
     REPLICATE : ("REPLICATE", REPLICATE),
     CONSTANT : ("CONSTANT", CONSTANT),
     REFLECT_NO_EDGE : ("REFLECT_NO_EDGE", REFLECT_NO_EDGE),
+
+    BITWISE_AND : ("BITWISE_AND", BITWISE_AND),
+    BITWISE_OR : ("BITWISE_OR", BITWISE_OR),
+    BITWISE_XOR : ("BITWISE_XOR", BITWISE_XOR),
+    BITWISE_NOT : ("BITWISE_NOT", BITWISE_NOT),
 }
 
 def data_type_function(dtype):

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,23 +26,34 @@ THE SOFTWARE.
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
-   public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
+class RemapNode : public Node {
+public:
+    RemapNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
+    RemapNode() = delete;
+    ~RemapNode();
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    void initialize_args(const ArgumentSet& arguments) override;
-    std::string node_name() const override { return "BrightnessNode"; }
+    // Initialize with row/col remap vectors and interpolation policy.
+    // Vectors can be size H*W (replicated for all N) or N*H*W (per-sample).
+    void init(const std::vector<float>& row_remap_vec,
+              const std::vector<float>& col_remap_vec,
+              ResizeInterpolationType interpolation_type);
 
-   protected:
+protected:
     void create_node() override;
     void update_node() override;
 
-   private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+private:
+    // Data provided by API
+    std::vector<float> _row_remap_vec;
+    std::vector<float> _col_remap_vec;
+
+    // Internal vx_tensors created from vectors (backed by external handles)
+    vx_tensor _row_tbl = nullptr;
+    vx_tensor _col_tbl = nullptr;
+
+    // Backing buffers (host or pinned) for remap tables
+    void* _row_tbl_ptr = nullptr;
+    void* _col_tbl_ptr = nullptr;
+
+    int _interpolation_type = 0;
 };

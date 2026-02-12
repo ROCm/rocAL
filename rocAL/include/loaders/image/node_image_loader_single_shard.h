@@ -40,6 +40,7 @@ class ImageLoaderSingleShardNode : public Node {
               bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig = false, const ShardingInfo& sharding_info = ShardingInfo(), 
               const std::map<std::string, std::string> feature_key_map = std::map<std::string, std::string>(), unsigned sequence_length = 0, unsigned step = 0, unsigned stride = 0, ExternalSourceFileMode external_file_mode = ExternalSourceFileMode::NONE, const std::string &index_path = "");
 
+    void initialize_args(const ArgumentSet& arguments, std::shared_ptr<MetaDataReader> meta_data_reader) override;
     std::shared_ptr<LoaderModule> get_loader_module() override;
     std::string node_name() const override { return "ImageLoaderSingleShardNode"; }
 

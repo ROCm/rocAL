@@ -540,4 +540,18 @@ struct DistortionCoeffs {
     float k3;
 };
 
+/*! \brief rocAL Bitwise Operation enum
+ * \ingroup group_rocal_types
+ */
+enum RocalBitwiseOp {
+    /*! \brief Bitwise AND operation */
+    ROCAL_BITWISE_AND = 0,
+    /*! \brief Bitwise OR operation */
+    ROCAL_BITWISE_OR  = 1,
+    /*! \brief Bitwise XOR operation */
+    ROCAL_BITWISE_XOR = 2,
+    /*! \brief Bitwise NOT operation */
+    ROCAL_BITWISE_NOT = 3
+};
+
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

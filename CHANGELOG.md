@@ -22,6 +22,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
 * Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
 * Update EnumRegistry to support enum value lookup by type name.
+* Adds new method in Argument class for type-safe value retrieval of arguments.
 
 ## rocAL 2.5.0 for ROCm 7.2.0
 

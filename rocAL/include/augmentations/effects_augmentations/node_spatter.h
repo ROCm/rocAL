@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,28 +21,30 @@ THE SOFTWARE.
 */
 
 #pragma once
+
+#include <array>
+
 #include "pipeline/graph.h"
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class BrightnessNode : public Node {
+class SpatterNode : public Node {
    public:
-    BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    BrightnessNode() = delete;
-
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
-    void initialize_args(const ArgumentSet& arguments) override;
-    std::string node_name() const override { return "BrightnessNode"; }
+    SpatterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    SpatterNode() = delete;
+    void init(uint8_t red, uint8_t green, uint8_t blue);
+    void init(IntParam *red, IntParam *green, IntParam *blue);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _alpha;
-    ParameterVX<float> _beta;
-    constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
-    constexpr static float BETA_RANGE[2] = {0, 25};
+    ParameterVX<int> _red_param;
+    ParameterVX<int> _green_param;
+    ParameterVX<int> _blue_param;
+    constexpr static int COLOR_RANGE[2] = {0, 255};
+    vx_array _color_array;
+    std::array<vx_uint8, 3> _color;
 };
