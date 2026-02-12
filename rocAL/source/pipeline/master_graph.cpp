@@ -687,7 +687,7 @@ int MasterGraph::pick_box(std::vector<std::vector<std::pair<unsigned, unsigned>>
     }
 }
 
-TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format,
+TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RocalRandomObjectBBoxFormat format,
                                                 int k_largest, float foreground_prob, bool cache_objects) {
     init_semantic_rngs();
     if (_output_random_object_bbox.size() != 0) {
@@ -713,14 +713,14 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
         if (!select_foreground) {
             // Return full image bounding box
             switch (format) {
-                case RandomObjectBBoxFormat::OUT_BOX:
-                case RandomObjectBBoxFormat::OUT_STARTEND:
+                case ROCAL_OUT_BOX:
+                case ROCAL_OUT_STARTEND:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
                     _output_random_object_bbox[id][2] = height;
                     _output_random_object_bbox[id][3] = width;
                     break;
-                case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+                case ROCAL_OUT_ANCHORSHAPE:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
                     _output_random_object_bbox[id][2] = height;
@@ -762,14 +762,14 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
         // If no foreground labels found, return full image
         if (unique_labels.empty()) {
             switch (format) {
-                case RandomObjectBBoxFormat::OUT_BOX:
-                case RandomObjectBBoxFormat::OUT_STARTEND:
+                case ROCAL_OUT_BOX:
+                case ROCAL_OUT_STARTEND:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
                     _output_random_object_bbox[id][2] = height;
                     _output_random_object_bbox[id][3] = width;
                     break;
-                case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+                case ROCAL_OUT_ANCHORSHAPE:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
                     _output_random_object_bbox[id][2] = height;
@@ -821,14 +821,14 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
 
             if (nbox == 0) {
                 switch (format) {
-                    case RandomObjectBBoxFormat::OUT_BOX:
-                    case RandomObjectBBoxFormat::OUT_STARTEND:
+                    case ROCAL_OUT_BOX:
+                    case ROCAL_OUT_STARTEND:
                         _output_random_object_bbox[id][0] = 0;
                         _output_random_object_bbox[id][1] = 0;
                         _output_random_object_bbox[id][2] = height;
                         _output_random_object_bbox[id][3] = width;
                         break;
-                    case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+                    case ROCAL_OUT_ANCHORSHAPE:
                         _output_random_object_bbox[id][0] = 0;
                         _output_random_object_bbox[id][1] = 0;
                         _output_random_object_bbox[id][2] = height;
@@ -867,14 +867,14 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
         if (pick_box_id < 0 || pick_box_id >= static_cast<int>(boxes.size()) || boxes[pick_box_id].size() < 2) {
             // No valid box found, return full image
             switch (format) {
-                case RandomObjectBBoxFormat::OUT_BOX:
-                case RandomObjectBBoxFormat::OUT_STARTEND:
+                case ROCAL_OUT_BOX:
+                case ROCAL_OUT_STARTEND:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
                     _output_random_object_bbox[id][2] = height;
                     _output_random_object_bbox[id][3] = width;
                     break;
-                case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+                case ROCAL_OUT_ANCHORSHAPE:
                     _output_random_object_bbox[id][0] = 0;
                     _output_random_object_bbox[id][1] = 0;
                     _output_random_object_bbox[id][2] = height;
@@ -888,20 +888,20 @@ TensorList *MasterGraph::get_random_object_bbox(rocalTensorList *input, RandomOb
 
         auto &selected_box = boxes[pick_box_id];
         switch (format) {
-            case RandomObjectBBoxFormat::OUT_BOX:
+            case ROCAL_OUT_BOX:
                 _output_random_object_bbox[id][0] = selected_box[0].first;
                 _output_random_object_bbox[id][2] = selected_box[1].first;
                 _output_random_object_bbox[id][1] = selected_box[0].second;
                 _output_random_object_bbox[id][3] = selected_box[1].second;
                 break;
-            case RandomObjectBBoxFormat::OUT_ANCHORSHAPE:
+            case ROCAL_OUT_ANCHORSHAPE:
                 // FIX: Calculate shape as hi - lo (not lo - hi)
                 _output_random_object_bbox[id][0] = selected_box[0].first;   // anchor row
                 _output_random_object_bbox[id][1] = selected_box[0].second;  // anchor col
                 _output_random_object_bbox[id][2] = selected_box[1].first - selected_box[0].first;   // height (hi.row - lo.row)
                 _output_random_object_bbox[id][3] = selected_box[1].second - selected_box[0].second; // width (hi.col - lo.col)
                 break;
-            case RandomObjectBBoxFormat::OUT_STARTEND:
+            case ROCAL_OUT_STARTEND:
                 _output_random_object_bbox[id][0] = selected_box[0].first;
                 _output_random_object_bbox[id][2] = selected_box[1].first;
                 _output_random_object_bbox[id][1] = selected_box[0].second;

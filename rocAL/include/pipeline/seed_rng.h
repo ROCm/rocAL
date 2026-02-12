@@ -59,9 +59,3 @@ private:
     std::vector<T> _rngs;
     int _batch_size;
 };
-enum RandomObjectBBoxFormat
-{
-    OUT_BOX = 0,
-    OUT_ANCHORSHAPE = 1,
-    OUT_STARTEND = 2,
-};

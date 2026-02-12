@@ -459,7 +459,7 @@ RocalTensorList
         if (context->user_batch_size() != meta_data_batch_size)
             THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
         return context->master_graph->get_random_object_bbox(context->master_graph->mask_meta_data(false),
-                                                             (RandomObjectBBoxFormat)format,
+                                                             format,
                                                              k_largest, foreground_prob, cache_objects);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);

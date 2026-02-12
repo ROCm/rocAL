@@ -180,7 +180,7 @@ public:
     TensorList *bbox_meta_data();
     TensorList *mask_meta_data(bool is_polygon_mask);
     TensorList *get_random_mask_pixel(rocalTensorList *input);
-    TensorList *get_random_object_bbox(rocalTensorList *input, RandomObjectBBoxFormat format,
+    TensorList *get_random_object_bbox(rocalTensorList *input, RocalRandomObjectBBoxFormat format,
                                        int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
     TensorList *matched_index_meta_data();
     TensorListVector * ascii_values_meta_data(); // Gets the pointer to a batch of ASCII values of all samples in the batch
