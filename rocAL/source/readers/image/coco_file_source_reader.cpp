@@ -55,7 +55,7 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     _meta_data_reader = desc.meta_data_reader();
 
     // Only require JSON path if no metadata reader is set,
-    // or if the metadata reader is not a YOLO reader
+    // or if the metadata reader is not a COCO YOLO reader (which reads YOLO-format .txt label files instead of JSON)
     bool is_yolo_reader = _meta_data_reader &&
         (_meta_data_reader->get_reader_type() == MetaDataReaderType::COCO_YOLO_META_DATA_READER);
 

@@ -99,11 +99,11 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReader(RocalContext rocal
  */
 extern "C" RocalMetaData ROCAL_API_CALL rocalCreateCOCOReaderKeyPoints(RocalContext rocal_context, const char* source_path, bool is_output, float sigma = 0.0, unsigned pose_output_width = 0, unsigned pose_output_height = 0);
 
-/*! \brief create coco yolo reader for YOLO-format label files
+/*! \brief create COCO YOLO reader for reading COCO dataset annotations stored in YOLO-format .txt label files
  * \ingroup group_rocal_meta_data
  * \param [in] rocal_context rocal context
  * \param [in] labels_path path to the directory containing YOLO-format .txt label files
- * \param [in] images_path path to the directory containing images (for size probing)
+ * \param [in] images_path path to the directory containing the corresponding JPEG images (used for dimension probing)
  * \param [in] is_output flag to mark the output
  * \param [in] mask enable polygon masks
  * \param [in] ltrb If set to True, bboxes are returned as [left, top, right, bottom]. If set to False, the bboxes are returned as [x, y, width, height]

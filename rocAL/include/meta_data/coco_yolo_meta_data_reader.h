@@ -36,13 +36,13 @@ THE SOFTWARE.
 /**
  * @brief COCO YOLO Metadata Reader
  *
- * Reads annotation data from YOLO-style .txt label files (Ultralytics format).
+ * Reads COCO dataset annotation data from YOLO-format .txt label files.
  * Each image has a corresponding .txt file with the same basename containing:
  * - Detection rows: class x_center y_center width height (5 values)
  * - Segmentation rows: class x1 y1 x2 y2 ... xn yn (polygon vertices)
  *
- * Coordinates in YOLO files are normalized [0,1]. This reader converts them
- * to pixel coordinates for compatibility with rocAL's metadata pipeline.
+ * Coordinates in YOLO-format files are normalized [0,1]. This reader converts
+ * them to pixel coordinates for compatibility with rocAL's metadata pipeline.
  */
 class COCOYoloMetaDataReader : public MetaDataReader {
    public:
@@ -73,7 +73,7 @@ class COCOYoloMetaDataReader : public MetaDataReader {
              MaskCords mask_cords, std::vector<int> polygon_count,
              std::vector<std::vector<int>> vertices_count, int image_id = 0);
 
-    // Parse a single YOLO label file and add PIXEL coords to _map_content
+    // Parse a single YOLO-format .txt label file and add PIXEL coords to _map_content
     void parse_label_file(const filesys::path& label_path, const std::string& image_key, ImgSize image_size);
 
     // Convert normalized YOLO (x_center, y_center, w, h) to pixel LTRB

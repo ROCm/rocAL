@@ -122,6 +122,11 @@ def parse_args():
         'coco-pipeline', 'coco-pipeline-related options')
     coco_reader.add_argument('--json-path', '-json-path', type=str,
                                help='coco dataset json path')
+    # coco_yolo_reader.py related options
+    coco_yolo_reader = parser.add_argument_group(
+        'coco-yolo-pipeline', 'coco-yolo-pipeline-related options')
+    coco_yolo_reader.add_argument('--labels-path', '-labels-path', type=str,
+                                   help='path to directory containing YOLO-format .txt label files')
     # caffe_reader.py related options
     caffe_pipeline = parser.add_argument_group(
         'caffe-pipeline', 'caffe-pipeline-related options')

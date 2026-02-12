@@ -1119,6 +1119,8 @@ TensorListVector* MasterGraph::create_coco_meta_data_reader(const char *source_p
     return &_metadata_output_tensor_list;
 }
 
+// Creates a metadata reader for COCO dataset annotations stored in YOLO-format .txt label files.
+// labels_path: directory containing per-image .txt files; images_path: directory with the corresponding JPEG images (for dimension probing).
 TensorListVector* MasterGraph::create_coco_yolo_meta_data_reader(const char *labels_path, const char *images_path, bool is_output, MetaDataReaderType reader_type, MetaDataType metadata_type, bool ltrb_bbox, bool avoid_class_remapping, bool aspect_ratio_grouping) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")
