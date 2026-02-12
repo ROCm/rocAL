@@ -37,7 +37,7 @@ class LutNode : public Node {
     void init_lut_buffer();
 
    private:
-    vx_tensor _lut_tensor;
+    vx_tensor _lut_tensor = nullptr;
     void *_lut_buffer = nullptr;
     size_t _lut_size = 256;  // Default LUT size for 8-bit data
 };

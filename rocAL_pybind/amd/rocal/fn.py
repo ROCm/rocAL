@@ -1237,11 +1237,11 @@ def posterize(*inputs, num_bits=4, device=None, output_layout=types.NHWC, output
     return (posterized_image)
 
 
-def solarize(*inputs, threshold=128.0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def solarize(*inputs, threshold=0.5, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies solarize effect to the input image.
 
         @param inputs (list)                                                          The input image to which solarize is applied.
-        @param threshold (float, optional, default = 128.0)                           Threshold value for solarization.
+        @param threshold (float, optional, default = 0.5)                             Threshold value for solarization in the range [0.0, 1.0].
         @param device (string, optional, default = None)                              Parameter unused for augmentation.
         @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
         @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
@@ -2004,12 +2004,15 @@ def bitwise_ops(*inputs, op=None, device=None, output_layout=types.NHWC, output_
     return (output_image)
 
 
-def log(*inputs, output_datatype = types.FLOAT):
+def log(*inputs, output_datatype=types.FLOAT):
+    """Computes the natural logarithm of input element-wise.
+
+        @param inputs (list)                                                          The input tensor; only the first element is used.
+        @param output_datatype (int, optional, default = types.FLOAT)                 Currently unused for this op; output dtype is determined by the backend.
     """
-    Computes the natural logarithm of input element-wise.
-    """
+    _ = output_datatype
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
-    log_output = b.log(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    log_output = b.log(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return log_output
 
 
