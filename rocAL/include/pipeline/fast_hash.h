@@ -58,7 +58,7 @@ inline void fast_hash(fast_hash_t &hash, const void *data, size_t n) {
     // Loosely based on xxHash 3.
     //
     // This function computes a 256-bit non-cryptographic hash.
-    // The entropy is diffused across the whole hash (unlike xxHash) by combinng a state entry
+    // The entropy is diffused across the whole hash (unlike xxHash) by combining a state entry
     // with another state entry (shifted by 1 word). The bit rotations are different for each
     // entry and a bias is added to avoid lack of entropy in constant 0 inputs.
     const uint8_t *data8 = static_cast<const uint8_t *>(data);
@@ -83,7 +83,7 @@ inline void fast_hash(fast_hash_t &hash, const void *data, size_t n) {
         hash.data[6] += (rotl(prev.data[5], 12) + data32[6] + bias) * prime;
         hash.data[7] += (rotl(prev.data[6], 19) + data32[7] + bias) * prime;
     }
-    // proces trailing 32-bit words
+    // process trailing 32-bit words
     int k = 0;
     for (; offset + 4 <= n; offset += 4, k++) {
         const uint32_t *data32 = reinterpret_cast<const uint32_t *>(data8 + offset);
