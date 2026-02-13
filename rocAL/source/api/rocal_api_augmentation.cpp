@@ -1538,6 +1538,48 @@ rocalSlice(
 }
 
 RocalTensor ROCAL_API_CALL
+rocalSliceFixed(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    RocalTensor p_anchor,
+    std::vector<int> shape,
+    std::vector<float> fill_values,
+    RocalOutOfBoundsPolicy policy,
+    RocalTensorOutputType output_datatype) {
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    ROCAL_INVALID_INPUT_ERR(p_anchor, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto anchor = static_cast<Tensor*>(p_anchor);
+    try {
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+
+        if (shape.empty())
+            THROW("SliceFixed node expects a non-empty shape vector");
+        auto output_dims = output_info.dims();
+        if (shape.size() != (output_dims.size() - 1))
+            THROW("SliceFixed shape vector must match the input tensor dimensions (excluding batch)");
+        for (size_t i = 0; i < shape.size(); i++) {
+            if (shape[i] <= 0)
+                THROW("SliceFixed shape dimensions must be positive");
+            output_dims[i + 1] = static_cast<size_t>(shape[i]);
+        }
+        output_info.set_dims(output_dims);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, std::move(shape), fill_values, policy);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
 rocalFlip(
     RocalContext p_context,
     RocalTensor p_input,
