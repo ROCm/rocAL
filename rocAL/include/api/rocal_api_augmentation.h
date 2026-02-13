@@ -376,7 +376,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTenso
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFlipFixed(RocalContext context, RocalTensor input,
-                                                     int horizonal_flag, int vertical_flag, int depth_flag, bool is_output,
+                                                     int horizonal_flag, int vertical_flag, bool is_output, int depth_flag = 0,
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
 

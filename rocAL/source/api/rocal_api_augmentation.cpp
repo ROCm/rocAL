@@ -1557,8 +1557,8 @@ rocalFlipFixed(
     RocalTensor p_input,
     int horizontal_flag,
     int vertical_flag,
-    int depth_flag,
     bool is_output,
+    int depth_flag,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;

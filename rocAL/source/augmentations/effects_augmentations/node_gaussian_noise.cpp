@@ -67,7 +67,11 @@ void GaussianNoiseNode::init(FloatParam* mean_param, FloatParam* stddev_param, i
     _mean.set_param(core(mean_param));
     _stddev.set_param(core(stddev_param));
     _seed = seed;
-    _conditional_execution.set_param(core(condition_execution_param));
+    if (condition_execution_param) {
+        _conditional_execution.set_param(core(condition_execution_param));
+    } else {
+        _conditional_execution.set_param(CONDITIONAL_EXECUTION_RANGE[1]); // Default to always execute
+    }
 }
 
 void GaussianNoiseNode::update_node() {

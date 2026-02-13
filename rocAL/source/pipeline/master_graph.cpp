@@ -367,30 +367,34 @@ void MasterGraph::release() {
     _output_tensor_list.release();    // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _metadata_output_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
     _bbox_encoded_output.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
-    if(_is_roi_random_crop)
-    {
-        if(_crop_shape_batch != nullptr)
-            delete[] _crop_shape_batch;
-        if(_roi_random_crop_buf != nullptr) {
+    if (_is_roi_random_crop) {
+        delete _roi_random_crop_tensor;
+        _roi_random_crop_tensor = nullptr;
+        if (_roi_random_crop_buf != nullptr) {
             if (_affinity == RocalAffinity::GPU) {
 #if ENABLE_HIP
                 hipError_t err = hipHostFree(_roi_random_crop_buf);
                 if (err != hipSuccess)
                     std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
 #endif
-            } else { free(_roi_random_crop_buf); }
-        delete _roi_random_crop_tensor;
+            } else {
+                free(_roi_random_crop_buf);
+            }
+            _roi_random_crop_buf = nullptr;
         }
+        delete[] _crop_shape_batch;
+        _crop_shape_batch = nullptr;
     }
-    if(_is_random_object_bbox)
-    {
-        if(_random_object_bbox_box1_buf != nullptr) {
-            free(_random_object_bbox_box1_buf);
-        }
-        if(_random_object_bbox_box2_buf != nullptr) {
-            free(_random_object_bbox_box2_buf);
-        }
+    if (_is_random_object_bbox) {
         _random_object_bbox_tensor_list.release();
+        if (_random_object_bbox_box1_buf != nullptr) {
+            free(_random_object_bbox_box1_buf);
+            _random_object_bbox_box1_buf = nullptr;
+        }
+        if (_random_object_bbox_box2_buf != nullptr) {
+            free(_random_object_bbox_box2_buf);
+            _random_object_bbox_box2_buf = nullptr;
+        }
     }
 
     if (_graph != nullptr)
@@ -1023,8 +1027,8 @@ void MasterGraph::output_routine_multiple_loaders() {
             if (!_processing)
                 break;
 
-            if(_is_random_object_bbox) { update_random_object_bbox(); }
-            if(_is_roi_random_crop) { update_roi_random_crop(); }
+            if (_is_random_object_bbox) { update_random_object_bbox(); }
+            if (_is_roi_random_crop) { update_roi_random_crop(); }
             update_node_parameters();
             _process_time.start();
             for (auto& graph : _graphs) {
@@ -1618,7 +1622,7 @@ TensorList *MasterGraph::random_object_bbox(Tensor *input, std::string output_fo
     _cache_boxes = cache_objects;
     auto output_dims = _random_object_bbox_label_tensor->num_of_dims() - 1;
     _random_object_bbox_output_format = output_format;
-    if(output_format == "start_end" || output_format == "anchor_shape") {        
+    if (output_format == "start_end" || output_format == "anchor_shape") {        
         // create new instance of tensor class
         std::vector<size_t> box1_dims = {_user_batch_size, output_dims};
         auto box1_info = TensorInfo(std::move(box1_dims), RocalMemType::HOST, RocalTensorDataType::INT32);
@@ -1638,7 +1642,7 @@ TensorList *MasterGraph::random_object_bbox(Tensor *input, std::string output_fo
         _random_object_bbox_box2_tensor->create_from_ptr(_context, _random_object_bbox_box2_buf);
         _random_object_bbox_tensor_list.push_back(_random_object_bbox_box1_tensor);
         _random_object_bbox_tensor_list.push_back(_random_object_bbox_box2_tensor);
-    } else if(output_format == "box") {
+    } else if (output_format == "box") {
         // create new instance of tensor class
         std::vector<size_t> box1_dims = {_user_batch_size, output_dims * 2};
         auto box1_info = TensorInfo(std::move(box1_dims), RocalMemType::HOST, RocalTensorDataType::INT32);
@@ -1662,9 +1666,9 @@ void MasterGraph::update_random_object_bbox() {
     BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
     std::uniform_real_distribution<float> foreground(0.0f, 1.0f);
     int *box1_buf = static_cast<int *>(_random_object_bbox_box1_buf);
-    int *box2_buf = static_cast<int *>(_random_object_bbox_box2_buf);
-#pragma omp parallel for num_threads(_user_batch_size)
-    for (uint i = 0; i < _user_batch_size; i++) {
+    int *box2_buf = (_random_object_bbox_box2_buf != nullptr) ? static_cast<int *>(_random_object_bbox_box2_buf) : nullptr;
+
+    auto process_sample = [&](uint i) {
         auto sample_idx = i * input_dims;
         int *input_shape = &roi_dims[sample_idx * 2 + input_dims];
         std::vector<int> roi_size;
@@ -1676,9 +1680,9 @@ void MasterGraph::update_random_object_bbox() {
         int total_box = 0;
         bool fg = foreground(_rng[i]) < _foreground_prob;
         CacheEntry *cache_entry = nullptr;
-        fast_hash_t hash = {};
+        content_hash_t hash = {};
         if (_cache_boxes) {
-            fast_hash(hash, label, single_image_size * sizeof(u_int8_t));
+            content_hash(hash, label, single_image_size * sizeof(u_int8_t));
             cache_entry = &_boxes_cache[hash];
         }
         int selected_label = -1;
@@ -1707,10 +1711,10 @@ void MasterGraph::update_random_object_bbox() {
                     cache_entry->Put(selected_label, boxes);
             }
             int chosen_box_idx = pick_box(boxes, _rng[i], _k_largest);
-            if(chosen_box_idx == -1) { ERR("No ROI regions found in input. Setting input shape as ROI region"); }
-            if(_random_object_bbox_output_format == "box") {
+            if (chosen_box_idx == -1) { ERR("No ROI regions found in input. Setting input shape as ROI region"); }
+            if (_random_object_bbox_output_format == "box") {
                 for (uint j = 0; j < input_dims; j++) {
-                    if(chosen_box_idx >= 0) {
+                    if (chosen_box_idx >= 0) {
                         box1_buf[sample_idx + j] = boxes[chosen_box_idx][0][j];
                         box1_buf[sample_idx + j + input_dims] = boxes[chosen_box_idx][1][j];
                     }
@@ -1719,9 +1723,9 @@ void MasterGraph::update_random_object_bbox() {
                         box1_buf[sample_idx + j + input_dims] = input_shape[j];
                     }
                 }
-            } else if(_random_object_bbox_output_format == "anchor_shape") {
+            } else if (_random_object_bbox_output_format == "anchor_shape") {
                 for (uint j = 0; j < input_dims; j++) {
-                    if(chosen_box_idx >= 0) {
+                    if (chosen_box_idx >= 0) {
                         box1_buf[sample_idx + j] = boxes[chosen_box_idx][0][j];
                         box2_buf[sample_idx + j] = boxes[chosen_box_idx][1][j] - boxes[chosen_box_idx][0][j];
                     }
@@ -1730,9 +1734,9 @@ void MasterGraph::update_random_object_bbox() {
                         box2_buf[sample_idx + j] = input_shape[j];
                     }
                 }
-            } else if(_random_object_bbox_output_format == "start_end") {
+            } else if (_random_object_bbox_output_format == "start_end") {
                 for (uint j = 0; j < input_dims; j++) {
-                    if(chosen_box_idx >= 0) {
+                    if (chosen_box_idx >= 0) {
                         box1_buf[sample_idx + j] = boxes[chosen_box_idx][0][j];
                         box2_buf[sample_idx + j] = boxes[chosen_box_idx][1][j];
                     }
@@ -1743,7 +1747,7 @@ void MasterGraph::update_random_object_bbox() {
                 }
             }
         } else {
-            if(_random_object_bbox_output_format == "box") {
+            if (_random_object_bbox_output_format == "box") {
                 for (uint j = 0; j < input_dims; j++) {
                     box1_buf[sample_idx + j] = 0;
                     box1_buf[sample_idx + j + input_dims] = input_shape[j];
@@ -1754,6 +1758,17 @@ void MasterGraph::update_random_object_bbox() {
                     box2_buf[sample_idx + j] = input_shape[j];
                 }
             }
+        }
+    };
+
+    if (_cache_boxes) {
+        for (uint i = 0; i < _user_batch_size; i++) {
+            process_sample(i);
+        }
+    } else {
+#pragma omp parallel for num_threads(_user_batch_size)
+        for (uint i = 0; i < _user_batch_size; i++) {
+            process_sample(i);
         }
     }
 }
@@ -2136,7 +2151,7 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
     _crop_shape_batch = new int[input_dims * _user_batch_size]; // TODO handle this case later when different crop_shape is given for each tensor
 
     // replicate crop_shape values for all samples in a batch
-    for(uint i = 0; i < _user_batch_size; i++)
+    for (uint i = 0; i < _user_batch_size; i++)
     {
         int sample_idx = i * input_dims;
         memcpy(&(_crop_shape_batch[sample_idx]), crop_shape, input_dims * sizeof(int));
@@ -2155,13 +2170,13 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
 
 void MasterGraph::update_roi_random_crop() {
     int *crop_begin_batch = static_cast<int *>(_roi_random_crop_buf);
-    uint seed = std::time(0);
+    auto seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     auto input_dims = _roi_random_crop_tensor->info().dims()[1];
     // get the roi_begin and roi_end values from random_object_bbox
     int *roi_begin_batch = static_cast<int *>(_random_object_bbox_box1_buf);
     int *roi_end_batch = static_cast<int *>(_random_object_bbox_box2_buf);
     BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
-    for(uint i = 0; i < _user_batch_size; i++) {
+    for (uint i = 0; i < _user_batch_size; i++) {
         int sample_idx = i * input_dims;
         int *crop_shape = &_crop_shape_batch[sample_idx];
         int *roi_begin = &roi_begin_batch[sample_idx];
@@ -2169,9 +2184,9 @@ void MasterGraph::update_roi_random_crop() {
         int *roi_end = &roi_end_batch[sample_idx];
         int *crop_begin = &crop_begin_batch[sample_idx];
 
-        for(uint j = 0; j < input_dims; j++) {
+        for (uint j = 0; j < input_dims; j++) {
             // check if crop_shape, roi_end is greater than input_shape
-            if(crop_shape[j] > input_shape[j])
+            if (crop_shape[j] > input_shape[j])
                 THROW("crop shape cannot be greater than input shape");
             if (roi_end[j] > input_shape[j]) {
                 ERR("ROI shape (" + std::to_string(roi_end[j]) + ") cannot be greater than input shape (" + std::to_string(input_shape[j]) + ")");

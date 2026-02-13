@@ -30,6 +30,7 @@ from amd.rocal import noise
 from amd.rocal import reductions
 
 import amd.rocal.types as types
+import numbers
 import rocal_pybind as b
 from amd.rocal.pipeline import Pipeline
 
@@ -1135,33 +1136,31 @@ def snp_noise(*inputs, p_noise=0.0, p_salt=0.0, noise_val=0.0, salt_val=0.0,
     return (snp_noise_added_image)
 
 
-def gaussian_noise(*inputs, mean=0.0, std_dev=1.0, seed=0, conditional_execution=1, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def gaussian_noise(*inputs, mean=0.0, stddev=0.1, seed=0, conditional_execution=1, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Gaussian noise to the input image.
 
-        @param inputs (list)                                                          The input image to which salt-and-pepper noise is applied.
-        @param mean (float, optional, default = 0.0)                                  Mean used for noise generation. Default is 0.0.
-        @param std_dev (float, optional, default = 1.0)                               Standard deviation used for noise generation. Default is 1.0.
+        @param inputs (list)                                                          The input image to which Gaussian noise is applied.
+        @param mean (float, optional, default = 0.0)                                  Mean value for the Gaussian noise distribution. Default is 0.0.
+        @param stddev (float, optional, default = 0.1)                                Standard deviation for the Gaussian noise distribution. Default is 0.1.
         @param seed (int, optional, default = 0)                                      Random seed. Default is 0.
         @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
-        @param output_dtype (int, optional, default = types.UINT*)                    Tensor dtype for the augmentation output. Default is types.UINT8.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output. Default is types.UINT8.
 
         @return    images with Gaussian noise added.
     """
-    mean = b.createFloatParameter(
-        mean) if isinstance(mean, float) else mean
-    std_dev = b.createFloatParameter(
-        std_dev) if isinstance(std_dev, float) else std_dev
+    mean = b.createFloatParameter(mean) if isinstance(mean, float) else mean
+    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
     conditional_execution = b.createIntParameter(conditional_execution) if isinstance(
                 conditional_execution, int) else conditional_execution
 
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "std_dev": std_dev,
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "stddev": stddev,
                      "seed": seed, "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
-    noise_added_image = b.gaussianNoise(
+    gaussian_noise_added_image = b.gaussianNoise(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (noise_added_image)
+    return (gaussian_noise_added_image)
 
 
 def shot_noise(*inputs, noise_factor=0.1, seed=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1555,25 +1554,80 @@ def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_
     """
 
     if anchor is None or shape is None:
-        raise ValueError("Both anchor and shape tensors must be provided to slice")
-    
-    if isinstance(shape, (list, tuple)):
-        kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape, "fill_values": fill_values,
+        raise ValueError("Both anchor and shape must be provided to slice")
+
+    anchor_tensor = anchor
+    if isinstance(anchor, (list, tuple)):
+        if len(anchor) != 1:
+            raise ValueError("anchor must be a single tensor or a singleton list/tuple containing a tensor")
+        anchor_tensor = anchor[0]
+
+    is_fixed_shape = (
+        isinstance(shape, (list, tuple)) and
+        len(shape) > 0 and
+        all(isinstance(dim, numbers.Integral) and not isinstance(dim, bool) for dim in shape)
+    )
+    if is_fixed_shape:
+        kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "anchor": anchor_tensor, "shape": list(shape), "fill_values": fill_values,
                         "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
         slice_output = b.sliceFixed(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:
-        kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values,
+        shape_tensor = shape
+        if isinstance(shape, (list, tuple)):
+            if len(shape) != 1:
+                raise ValueError("shape must be a tensor, a singleton list/tuple containing a tensor, or a non-empty list/tuple of ints")
+            shape_tensor = shape[0]
+        kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "anchor": anchor_tensor, "shape": shape_tensor, "fill_values": fill_values,
                         "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
         slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return slice_output
 
 def roi_random_crop(*inputs, roi_start, roi_end, crop_shape):
+    """!Generates a random crop anchor within a specified region of interest (ROI).
+
+        Given an ROI defined by roi_start and roi_end, this function computes a random
+        starting position (anchor) such that a crop of the given shape fits within the ROI
+        and the input tensor bounds.
+
+        @param inputs                                                                 The input tensor.
+        @param roi_start (RocalTensor)                                                Tensor specifying the starting coordinates of the ROI.
+        @param roi_end (RocalTensor)                                                  Tensor specifying the ending coordinates of the ROI.
+        @param crop_shape (list of int)                                               The desired crop dimensions (excluding batch dimension).
+
+        @return    A RocalTensor containing the computed anchor coordinates for each sample in the batch.
+    """
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "roi_start": roi_start, "roi_end": roi_end, "crop_shape": crop_shape}
     anchor = b.roiRandomCrop(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (anchor)
 
 def random_object_bbox(*inputs, format='anchor_shape', background=0, cache_objects=False, classes=[], foreground_prob=1.0, ignore_class=False, k_largest=-1, seed=0, threshold=[]):
+    """!Finds bounding boxes of connected components (objects) in a segmentation mask and returns a randomly selected one.
+
+        Performs connected-component labeling on the input label tensor to identify distinct
+        foreground objects, then randomly selects one object's bounding box. The output format
+        can be configured to return the box as anchor+shape, start+end coordinates, or a single
+        combined box tensor.
+
+        @param inputs                                                                 The input label/segmentation tensor.
+        @param format (string, optional, default = 'anchor_shape')                    Output format: "anchor_shape" returns (anchor, shape) tensors,
+                                                                                      "start_end" returns (start, end) tensors,
+                                                                                      "box" returns a single tensor with concatenated start and end coordinates.
+        @param background (int, optional, default = 0)                                Label value representing the background class.
+        @param cache_objects (bool, optional, default = False)                        If True, caches the computed bounding boxes per input hash to speed up repeated access.
+        @param classes (list, optional, default = [])                                  List of class labels to consider as foreground.
+        @param foreground_prob (float, optional, default = 1.0)                       Probability of selecting a foreground object. If the random draw exceeds this
+                                                                                      probability, the entire input extent is returned instead.
+        @param ignore_class (bool, optional, default = False)                         If True, ignores class distinctions and treats all non-background pixels as foreground.
+        @param k_largest (int, optional, default = -1)                                If positive, restricts random selection to the k largest objects by volume.
+        @param seed (int, optional, default = 0)                                      Random seed.
+        @param threshold (list, optional, default = [])                               Threshold values for filtering objects.
+
+        @return    Depending on format:
+                   - "anchor_shape": tuple of (anchor_tensor, shape_tensor)
+                   - "start_end": tuple of (start_tensor, end_tensor)
+                   - "box": single tensor with concatenated coordinates
+    """
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "format": format, "k_largest": k_largest, "foreground_prob": foreground_prob, "cache_objects": cache_objects}
     selected_roi = b.randomObjectBbox(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))

@@ -59,7 +59,10 @@ void FlipNode::init(int h_flag, int v_flag, int d_flag) {
 void FlipNode::init(IntParam *h_flag, IntParam *v_flag, IntParam *d_flag) {
     _horizontal.set_param(core(h_flag));
     _vertical.set_param(core(v_flag));
-    _depth.set_param(core(d_flag));
+    if (d_flag)
+        _depth.set_param(core(d_flag));
+    else
+        _depth.set_param(DEPTH_RANGE[0]);
 }
 
 void FlipNode::update_node() {

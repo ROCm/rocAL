@@ -47,7 +47,7 @@ THE SOFTWARE.
 #endif
 #include "pipeline/ring_buffer.h"
 #include "pipeline/timing_debug.h"
-#include "pipeline/fast_hash.h"
+#include "pipeline/content_hash.h"
 #if ENABLE_HIP
 #include "box_encoder_hip.h"
 #include "device/device_manager_hip.h"
@@ -300,7 +300,7 @@ private:
     int _k_largest;
     float _foreground_prob;
     bool _cache_boxes;
-    std::unordered_map<fast_hash_t, CacheEntry> _boxes_cache;
+    std::unordered_map<content_hash_t, CacheEntry> _boxes_cache;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
