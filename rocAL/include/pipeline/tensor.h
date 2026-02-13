@@ -53,6 +53,13 @@ vx_enum vx_mem_type(RocalMemType mem);
  */
 vx_uint64 tensor_data_size(RocalTensorDataType data_type);
 
+/*! \brief Converts the Rocal data_type to OpenVX
+ *
+ * @param RocalTensorDataType input data type
+ * @return the OpenVX data type associated with input argument
+ */
+vx_enum interpret_tensor_data_type(RocalTensorDataType data_type);
+
 /*! \brief Allocated memory for given size
  *
  * @param void * The ptr for which memory is allocated

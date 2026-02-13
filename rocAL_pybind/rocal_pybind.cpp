@@ -774,6 +774,18 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("MISSING_COMPONENT_SKIP", ROCAL_MISSING_COMPONENT_SKIP)
         .value("MISSING_COMPONENT_EMPTY", ROCAL_MISSING_COMPONENT_EMPTY)
         .export_values();
+    py::enum_<RocalImageBorderType>(types_m,"RocalImageBorderType", "Rocal Image Border Type")
+        .value("REPLICATE", ROCAL_REPLICATE)
+        .value("CONSTANT", ROCAL_CONSTANT)
+        .value("REFLECT_NO_EDGE", ROCAL_REFLECT_NO_EDGE)
+        .export_values();
+    // Bitwise Ops enum
+    py::enum_<RocalBitwiseOp>(types_m, "RocalBitwiseOp", "Bitwise operation selector")
+        .value("BITWISE_AND", ROCAL_BITWISE_AND)
+        .value("BITWISE_OR",  ROCAL_BITWISE_OR)
+        .value("BITWISE_XOR", ROCAL_BITWISE_XOR)
+        .value("BITWISE_NOT", ROCAL_BITWISE_NOT)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -1218,6 +1230,38 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("gaussianNoise", &rocalGaussianNoise,
           py::return_value_policy::reference);
     m.def("log1p", &rocalLog1p,
+          py::return_value_policy::reference);
+    m.def("colorCast", &rocalColorCast,
+          py::return_value_policy::reference);
+    m.def("gridMask", &rocalGridMask,
+          py::return_value_policy::reference);
+    m.def("gaussianFilter", &rocalGaussianFilter,
+          py::return_value_policy::reference);
+    m.def("medianFilter", &rocalMedianFilter,
+          py::return_value_policy::reference);
+    m.def("nonLinearBlend", &rocalNonLinearBlend,
+          py::return_value_policy::reference);
+    m.def("dilate", &rocalDilate,
+          py::return_value_policy::reference);
+    m.def("erode", &rocalErode,
+          py::return_value_policy::reference);
+    m.def("magnitude", &rocalMagnitude,
+          py::return_value_policy::reference);
+    m.def("phase", &rocalPhase,
+          py::return_value_policy::reference);
+    m.def("threshold", &rocalThreshold,
+          py::return_value_policy::reference);
+    m.def("warpPerspective", &rocalWarpPerspective,
+          py::return_value_policy::reference);
+    m.def("remap", &rocalRemap,
+          py::return_value_policy::reference);
+    m.def("cropAndPatch", &rocalCropAndPatch,
+          py::return_value_policy::reference);
+    m.def("bitwiseOps", &rocalBitwiseOps,
+          py::return_value_policy::reference);
+    m.def("erase", &rocalErase,
+          py::return_value_policy::reference);
+    m.def("ricap", &rocalRicap,
           py::return_value_policy::reference);
     m.def("log", &rocalLog,
           py::return_value_policy::reference);

@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(ImageLoaderSingleShardNode)
+
 ImageLoaderSingleShardNode::ImageLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoader>(device_resources);
 }
@@ -53,26 +55,61 @@ void ImageLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, u
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
 
-    std::array<std::string, 23> arg_names = {
-        "shard_id", "shard_count", "cpu_num_threads", "source_path",
-        "json_path", "storage_type", "decoder_type", "shuffle", "loop",
-        "load_batch_count", "mem_type", "meta_data_reader", "decoder_keep_orig",
-        "last_batch_policy", "pad_last_batch_repeated", "stick_to_shard", "shard_size",
-        "feature_key_map", "sequence_length", "step", "stride",
-        "external_file_mode", "index_path"
-    };
-
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, shard_id, 
-                       shard_count, cpu_num_threads, source_path, json_path, storage_type, 
-                       decoder_type, shuffle, loop, load_batch_count, mem_type, meta_data_reader, decoder_keep_original, 
-                       sharding_info.last_batch_policy, sharding_info.pad_last_batch_repeated, 
-                       sharding_info.stick_to_shard, sharding_info.shard_size, feature_key_map,
-                       sequence_length, step, stride, external_file_mode, index_path);
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("shard_id", shard_id);
+    _args.add_new_argument("shard_count", shard_count);
+    _args.add_new_argument("cpu_num_threads", cpu_num_threads);
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("json_path", json_path);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("decoder_type", decoder_type);
+    _args.add_new_argument("shuffle", shuffle);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+    _args.add_new_argument("meta_data_reader", meta_data_reader);
+    _args.add_new_argument("decoder_keep_orig", decoder_keep_original);
+    _args.add_new_argument("last_batch_policy", sharding_info.last_batch_policy);
+    _args.add_new_argument("pad_last_batch_repeated", sharding_info.pad_last_batch_repeated);
+    _args.add_new_argument("stick_to_shard", sharding_info.stick_to_shard);
+    _args.add_new_argument("shard_size", sharding_info.shard_size);
+    _args.add_new_argument("feature_key_map", feature_key_map);
+    _args.add_new_argument("sequence_length", sequence_length);
+    _args.add_new_argument("step", step);
+    _args.add_new_argument("stride", stride);
+    _args.add_new_argument("external_file_mode", external_file_mode);
+    _args.add_new_argument("index_path", index_path);
 
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type),
                                mem_type,
                                _batch_size, decoder_keep_original);
     _loader_module->start_loading();
+}
+
+void ImageLoaderSingleShardNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    ShardingInfo sharding_info(arguments.get<RocalBatchPolicy>("last_batch_policy"), arguments.get<bool>("stick_to_shard"), arguments.get<bool>("pad_last_batch_repeated"), arguments.get<int32_t>("shard_size"));
+
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->init(arguments.get<unsigned>("shard_id"), 
+               arguments.get<unsigned>("shard_count"), 
+               arguments.get<unsigned>("cpu_num_threads"), 
+               arguments.get<std::string>("source_path"),
+               arguments.get<std::string>("json_path"), 
+               arguments.get<StorageType>("storage_type"), 
+               arguments.get<DecoderType>("decoder_type"), 
+               arguments.get<bool>("shuffle"), 
+               arguments.get<bool>("loop"), 
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"),
+               meta_data_reader, 
+               arguments.get<bool>("decoder_keep_orig"), 
+               sharding_info,
+               arguments.get<std::map<std::string, std::string>>("feature_key_map"), 
+               arguments.get<unsigned>("sequence_length"), 
+               arguments.get<unsigned>("step"), 
+               arguments.get<unsigned>("stride"), 
+               arguments.get<ExternalSourceFileMode>("external_file_mode"),
+               arguments.get<std::string>("index_path"));
 }
 
 std::shared_ptr<LoaderModule> ImageLoaderSingleShardNode::get_loader_module() {

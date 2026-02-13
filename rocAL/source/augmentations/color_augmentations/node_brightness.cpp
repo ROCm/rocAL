@@ -57,8 +57,12 @@ void BrightnessNode::init(float alpha, float beta, int conditional_execution) {
     _beta.set_param(beta);
     _conditional_execution.set_param(conditional_execution);
 
-    std::array<std::string, 3> arg_names = {"alpha", "beta", "conditional_execution"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta, conditional_execution);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("alpha", alpha);
+    args.add_new_argument("beta", beta);
+    args.add_new_argument("conditional_execution", conditional_execution);
+    _args = args;
 }
 
 void BrightnessNode::init(FloatParam *alpha, FloatParam *beta, IntParam *conditional_execution) {
@@ -67,18 +71,28 @@ void BrightnessNode::init(FloatParam *alpha, FloatParam *beta, IntParam *conditi
     if (conditional_execution)
         _conditional_execution.set_param(core(conditional_execution));
     else
-        _conditional_execution.set_param(CONDITIONAL_EXECUTION_RANGE[0]);
+        _conditional_execution.set_param(CONDITIONAL_EXECUTION_RANGE[1]);
 
-    std::array<std::string, 3> arg_names = {"alpha", "beta", "conditional_execution"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta, conditional_execution);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("alpha", alpha);
+    args.add_new_argument("beta", beta);
+    args.add_new_argument("conditional_execution", conditional_execution);
+    _args = args;
 }
 
 void BrightnessNode::init(float alpha, float beta) {
-    init(alpha, beta, CONDITIONAL_EXECUTION_RANGE[0]);
+    init(alpha, beta, CONDITIONAL_EXECUTION_RANGE[1]);
 }
 
 void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
     init(alpha, beta, nullptr);
+}
+
+void BrightnessNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<BrightnessNode, float, float>(this, {"alpha", "beta"}, arguments)) return;
+    if (init_args<BrightnessNode, FloatParam*, FloatParam*>(this, {"alpha", "beta"}, arguments)) return;
+    THROW("Unsupported argument types for BrightnessNode");
 }
 
 void BrightnessNode::update_node() {

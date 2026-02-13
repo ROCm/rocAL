@@ -463,6 +463,22 @@ enum RocalLastBatchPolicy {
     ROCAL_LAST_BATCH_PARTIAL = 2
 };
 
+
+/*! \brief rocAL Image Border Type enum
+ * \ingroup group_rocal_types
+ */
+enum RocalImageBorderType {
+    /*! \brief AMD ROCAL_REPLICATE
+     */
+    ROCAL_REPLICATE = 0,
+    /*! \brief AMD ROCAL_CONSTANT
+     */
+    ROCAL_CONSTANT = 1,
+    /*! \brief AMD ROCAL_REFLECT_NO_EDGE
+     */
+    ROCAL_REFLECT_NO_EDGE = 2
+};
+
 /*! \brief  rocAL RocalShardingInfo enum
  * \ingroup group_rocal_types
  */
@@ -521,6 +537,20 @@ struct DistortionCoeffs {
     float p1;
     float p2;
     float k3;
+};
+
+/*! \brief rocAL Bitwise Operation enum
+ * \ingroup group_rocal_types
+ */
+enum RocalBitwiseOp {
+    /*! \brief Bitwise AND operation */
+    ROCAL_BITWISE_AND = 0,
+    /*! \brief Bitwise OR operation */
+    ROCAL_BITWISE_OR  = 1,
+    /*! \brief Bitwise XOR operation */
+    ROCAL_BITWISE_XOR = 2,
+    /*! \brief Bitwise NOT operation */
+    ROCAL_BITWISE_NOT = 3
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H

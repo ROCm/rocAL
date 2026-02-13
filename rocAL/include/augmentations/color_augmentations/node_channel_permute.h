@@ -28,7 +28,7 @@ class ChannelPermuteNode : public Node {
    public:
     ChannelPermuteNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ChannelPermuteNode() = delete;
-    void init(std::vector<unsigned> &permutation_order);
+    void init(const std::vector<unsigned> &permutation_order);
 
    protected:
     void create_node() override;

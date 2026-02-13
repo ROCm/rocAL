@@ -49,17 +49,23 @@ void ChannelPermuteNode::create_node() {
 #endif
 }
 
-void ChannelPermuteNode::init(std::vector<unsigned> &permutation_order) {
+void ChannelPermuteNode::init(const std::vector<unsigned> &permutation_order) {
     _permutation_order = permutation_order;
 }
 
 void ChannelPermuteNode::update_node() {
+    if (_permutation_order.size() != 3)
+        THROW("ChannelPermuteNode: permutation_order must contain 3 elements");
     // Replicate the permutation order for each image in the batch
-    std::vector<unsigned> perm_tensor(_batch_size * 3);
+    std::vector<vx_uint32> perm_tensor(_batch_size * 3);
     for (unsigned i = 0; i < _batch_size; i++) {
         for (unsigned j = 0; j < 3; j++) {
             perm_tensor[i * 3 + j] = _permutation_order[j];
         }
     }
-    vxAddArrayItems(_permutation_array, _batch_size * 3, perm_tensor.data(), sizeof(unsigned));
+    vx_status status;
+    if ((status = vxTruncateArray(_permutation_array, 0)) != VX_SUCCESS)
+        THROW("ChannelPermuteNode: vxTruncateArray failed: " + TOSTR(status));
+    if ((status = vxAddArrayItems(_permutation_array, _batch_size * 3, perm_tensor.data(), sizeof(vx_uint32))) != VX_SUCCESS)
+        THROW("ChannelPermuteNode: vxAddArrayItems failed: " + TOSTR(status));
 }
