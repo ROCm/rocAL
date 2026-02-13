@@ -85,16 +85,13 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             return meta_data_reader;
         } break;
         case MetaDataReaderType::COCO_META_DATA_READER: {
-            if (config.type() != MetaDataType::BoundingBox && config.type() != MetaDataType::PolygonMask && config.type() != MetaDataType::PixelwiseMask)
+            if (config.type() != MetaDataType::BoundingBox && config.type() != MetaDataType::PolygonMask)
                 THROW("COCO_META_DATA_READER can only be used to load bounding boxes and mask coordinates")
             auto meta_data_reader = std::make_shared<COCOMetaDataReader>();
-            if (config.type() == MetaDataType::PolygonMask) {
+            if (config.type() == MetaDataType::PolygonMask)
                 meta_data_batch = std::make_shared<PolygonMaskBatch>();
-            } else if (config.type() == MetaDataType::PixelwiseMask) {
-                meta_data_batch = std::make_shared<PixelwiseMaskBatch>();
-            } else {
+            else
                 meta_data_batch = std::make_shared<BoundingBoxBatch>();
-            }
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;

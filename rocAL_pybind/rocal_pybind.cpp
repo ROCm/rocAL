@@ -780,11 +780,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .def_readwrite("y", &ROIxywh::y)
         .def_readwrite("w", &ROIxywh::w)
         .def_readwrite("h", &ROIxywh::h);
-    py::enum_<RocalRandomObjectBBoxFormat>(types_m, "RocalRandomObjectBBoxFormat",  "Rocal Random object bbox types")
-        .value("OUT_BOX", ROCAL_OUT_BOX)
-        .value("OUT_ANCHORSHAPE", ROCAL_OUT_ANCHORSHAPE)
-        .value("OUT_STARTEND", ROCAL_OUT_STARTEND)
-        .export_values();
     py::class_<RocalShardingInfo>(m, "RocalShardingInfo")
         .def(py::init<>())
         .def(py::init<RocalLastBatchPolicy, bool, bool, int>())
@@ -871,7 +866,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("updateFloatParameter", &rocalUpdateFloatParameter);
     m.def("getIntValue", &rocalGetIntValue);
     m.def("getFloatValue", &rocalGetFloatValue);
-    m.def("setRandomPixelMaskConfig", &rocalSetRandomPixelMaskConfig);
     // rocal_api_data_transfer.h
     m.def("rocalToTensor", &wrapper_copy_to_tensor);
     m.def("getOutputTensors", [](RocalContext context) {
@@ -1024,97 +1018,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
             {sizeof(float)}));
         return std::make_pair(labels_array, bboxes_array);
     });
-    m.def("getPixelwiseLabels", [](RocalContext context) {
-        rocalTensorList *bbox_labels = rocalGetBoundingBoxLabel(context);
-        rocalTensorList *labels = rocalGetPixelwiseMaskLabels(context);
-        py::list labels_array_list;
-        for (int i = 0; i < bbox_labels->size(); i++) {
-            py::array_t<int> labels_array = py::array(py::buffer_info(
-                (int *)(labels->at(i)->buffer()),
-                sizeof(int),
-                py::format_descriptor<int>::format(),
-                1,
-                {labels->at(i)->dims().at(0) * labels->at(i)->dims().at(1)},
-                {sizeof(int)}));
-            labels_array_list.append(labels_array);
-        }
-        return labels_array_list;
-    });
-    m.def("getRandomMaskPixel", [](RocalContext context) {
-        rocalTensorList *bbox_labels = rocalGetBoundingBoxLabel(context);
-        rocalTensorList *random_mask_pixel = rocalRandomMaskPixel(context);
-        py::list random_mask_pixel_array_list;
-
-        for (int i = 0; i < bbox_labels->size(); i++) {
-            py::list centre_coordinate_list;
-            unsigned int *random_mask_image = (unsigned int *)(random_mask_pixel->at(i)->buffer());
-            centre_coordinate_list.append(random_mask_image[0]);
-            centre_coordinate_list.append(random_mask_image[1]);
-            random_mask_pixel_array_list.append(centre_coordinate_list);
-        }
-        return random_mask_pixel_array_list;
-    });
-    m.def("getSelectMask", [](RocalContext context, std::vector<int> mask_ids) {
-        rocalTensorList *bbox_labels = rocalGetBoundingBoxLabel(context);
-
-        std::vector<std::vector<int>> sel_vertices_counts;
-        std::vector<std::vector<int>> sel_mask_ids;
-        rocalTensorList *select_mask_polygon = rocalSelectMask(context,
-                                                               mask_ids,
-                                                               sel_vertices_counts,
-                                                               sel_mask_ids,
-                                                               false);
-
-        py::list per_image_select_mask;
-        for (int i = 0; i < bbox_labels->size(); i++) {
-            float *select_mask_polygon_buffer = (float *)(select_mask_polygon->at(i)->buffer());
-            auto sel_vertices_count_per_image = sel_vertices_counts[i];
-            auto sel_mask_ids_per_image = sel_mask_ids[i];
-            int cnt = 0;
-            py::dict mask_select_polygon_dict;
-            for (auto mask_id : mask_ids) {
-                std::string key = std::to_string(mask_id);
-                mask_select_polygon_dict[py::str(key)] = py::list();
-            }
-
-            if (sel_vertices_count_per_image.size() != sel_mask_ids_per_image.size()) {
-                throw std::runtime_error("Internal error: select_masks vertices_count/mask_id mismatch");
-            }
-
-            for (size_t poly_idx = 0; poly_idx < sel_vertices_count_per_image.size(); poly_idx++) {
-                int ncoords = sel_vertices_count_per_image[poly_idx];
-                int mask_id = sel_mask_ids_per_image[poly_idx];
-                py::list polygon_coords;
-                for (int k = 0; k < ncoords; k++) {
-                    polygon_coords.append(select_mask_polygon_buffer[cnt++]);
-                }
-                std::string key = std::to_string(mask_id);
-                auto polygons = mask_select_polygon_dict[py::str(key)].cast<py::list>();
-                polygons.append(polygon_coords);
-            }
-            per_image_select_mask.append(mask_select_polygon_dict);
-        }
-        return per_image_select_mask;
-    });
-    m.def("getRandomObjectBBox", [](RocalContext context, RocalRandomObjectBBoxFormat format,
-                                     int k_largest, float foreground_prob, bool cache_objects) {
-        rocalTensorList *boxes = RocalRandomObjectBBox(context, format, k_largest, foreground_prob, cache_objects);
-        py::list boxes_list;
-        py::array_t<unsigned> boxes_array;
-        for (int i = 0; i < boxes->size(); i++) {
-            unsigned *box_buffer = static_cast<unsigned *>(boxes->at(i)->buffer());
-            boxes_array = py::array(py::buffer_info(
-                static_cast<unsigned *>(boxes->at(i)->buffer()),
-                sizeof(unsigned),
-                py::format_descriptor<unsigned>::format(),
-                1,
-                {4},
-                {sizeof(unsigned)}));
-            boxes_list.append(boxes_array);
-        }
-        return boxes_list;
-    }, py::arg("context"), py::arg("format"), py::arg("k_largest") = -1,
-       py::arg("foreground_prob") = 1.0f, py::arg("cache_objects") = false);
     m.def("getOneHotEncodedLabels", &wrapper_one_hot_label_copy, py::return_value_policy::reference);
     // rocal_api_data_loaders.h
     m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",
