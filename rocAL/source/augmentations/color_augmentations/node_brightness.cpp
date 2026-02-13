@@ -81,17 +81,9 @@ void BrightnessNode::init(FloatParam *alpha, FloatParam *beta, IntParam *conditi
     _args = args;
 }
 
-void BrightnessNode::init(float alpha, float beta) {
-    init(alpha, beta, CONDITIONAL_EXECUTION_RANGE[1]);
-}
-
-void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
-    init(alpha, beta, nullptr);
-}
-
 void BrightnessNode::initialize_args(const ArgumentSet &arguments) {
-    if (init_args<BrightnessNode, float, float>(this, {"alpha", "beta"}, arguments)) return;
-    if (init_args<BrightnessNode, FloatParam*, FloatParam*>(this, {"alpha", "beta"}, arguments)) return;
+    if (init_args<BrightnessNode, float, float, int>(this, {"alpha", "beta", "conditional_execution"}, arguments)) return;
+    if (init_args<BrightnessNode, FloatParam*, FloatParam*, IntParam*>(this, {"alpha", "beta", "conditional_execution"}, arguments)) return;
     THROW("Unsupported argument types for BrightnessNode");
 }
 

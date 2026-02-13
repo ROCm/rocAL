@@ -303,6 +303,7 @@ class Reader {
     virtual std::string get_root_folder_path() { return {}; }
 
     virtual std::vector<std::string> get_file_paths_from_meta_data_reader() { return {}; }
+
     //! Returns the number of images in the last batch
     size_t last_batch_padded_size() { return _last_batch_padded_size; }
 

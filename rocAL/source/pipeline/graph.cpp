@@ -111,21 +111,3 @@ Graph::release() {
 
     return Status::OK;
 }
-
-Graph::Status
-Graph::schedule() {
-    vx_status status;
-    if ((status = vxScheduleGraph(_graph)) != VX_SUCCESS)
-        THROW("ERROR: vxScheduleGraph failed " + TOSTR(status))
-
-    return Status::OK;
-}
-
-Graph::Status
-Graph::wait() {
-    vx_status status;
-    if ((status = vxWaitGraph(_graph)) != VX_SUCCESS)
-        THROW("ERROR: vxScheduleGraph failed " + TOSTR(status))
-
-    return Status::OK;
-}

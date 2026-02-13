@@ -45,8 +45,6 @@ THE SOFTWARE.
 #include "loaders/audio/node_audio_loader.h"
 #include "loaders/audio/node_audio_loader_single_shard.h"
 #endif
-#include "loaders/image/node_numpy_loader.h"
-#include "loaders/image/node_numpy_loader_single_shard.h"
 #include "pipeline/ring_buffer.h"
 #include "pipeline/timing_debug.h"
 #include "pipeline/fast_hash.h"
@@ -201,11 +199,6 @@ public:
     bool hit(std::vector<unsigned>& hits, unsigned idx);
     void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> ranges, std::vector<unsigned> hits, int *in, std::vector<int> origin, unsigned width);
     int pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest = -1);
-#if ENABLE_OPENCL
-        cl_command_queue get_ocl_cmd_q() {
-        return _device.resources()->cmd_queue;
-    }
-#endif
 private:
     Status update_node_parameters();
     void create_single_graph();
@@ -360,7 +353,7 @@ std::shared_ptr<T> MasterGraph::meta_add_node(std::shared_ptr<M> node) {
  */
 template <>
 inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<ImageLoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<ImageLoaderNode>(outputs[0], nullptr);
@@ -382,7 +375,7 @@ inline std::shared_ptr<ImageLoaderNode> MasterGraph::add_node(const std::vector<
 
 template <>
 inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<ImageLoaderSingleShardNode>(outputs[0], nullptr);
@@ -404,7 +397,7 @@ inline std::shared_ptr<ImageLoaderSingleShardNode> MasterGraph::add_node(const s
 
 template <>
 inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<FusedJpegCropNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<FusedJpegCropNode>(outputs[0], nullptr);
@@ -423,7 +416,7 @@ inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const std::vecto
 
 template <>
 inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<FusedJpegCropSingleShardNode>(outputs[0], nullptr);
@@ -445,7 +438,7 @@ inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const
  */
 template <>
 inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<Cifar10LoaderNode>(outputs[0], nullptr);
@@ -464,7 +457,7 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
 template<> inline std::shared_ptr<CIFAR10LoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
     if(_loader_module)
         THROW("A loader already exists, cannot have more than one loader")
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<CIFAR10LoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<CIFAR10LoaderSingleShardNode>(outputs[0], nullptr);
@@ -486,7 +479,7 @@ template<> inline std::shared_ptr<CIFAR10LoaderSingleShardNode> MasterGraph::add
  */
 template <>
 inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<VideoLoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<VideoLoaderNode>(outputs[0], nullptr);
@@ -504,7 +497,7 @@ inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const std::vector<
 
 template <>
 inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<VideoLoaderSingleShardNode>(outputs[0], nullptr);
@@ -526,7 +519,7 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
  * Explicit specialization for AudioLoaderNode
  */
 template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<AudioLoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<AudioLoaderNode>(outputs[0], nullptr);
@@ -543,7 +536,7 @@ template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const s
 }
 
 template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], nullptr);
@@ -565,7 +558,7 @@ template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_n
  */
 template <>
 inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<NumpyLoaderNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<NumpyLoaderNode>(outputs[0], nullptr);
@@ -583,7 +576,7 @@ inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<
 
 template <>
 inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
-#if ENABLE_HIP || ENABLE_OPENCL
+#if ENABLE_HIP
     auto node = std::make_shared<NumpyLoaderSingleShardNode>(outputs[0], (void *)_device.resources());
 #else
     auto node = std::make_shared<NumpyLoaderSingleShardNode>(outputs[0], nullptr);

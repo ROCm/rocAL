@@ -120,15 +120,6 @@ enum class RocalROIType {
 };
 REGISTER_ENUM(RocalROIType)
 
-/*! \brief Tensor 3D ROI type
- *
- * currently supports following formats
- */
-enum class Rocal3DROIType {
-    LTFRBB = 0,
-    XYZWHD
-};
-
 /*! \brief Tensor ROI in LTRB format
  *
  */

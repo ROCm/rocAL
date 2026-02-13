@@ -640,48 +640,6 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoiseFixed(RocalContext conte
                                                               RocalTensorLayout output_layout = ROCAL_NONE,
                                                               RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
-/*! \brief Applies slice augmentation on tensors.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] anchor Anchor tensor used for slice
- * \param [in] shape Shape tensor describing slice dimensions
- * \param [in] fill_values Fill value for the slice padding
- * \param [in] policy Padding policy used for slice augmentation
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
-                                                 RocalTensor input,
-                                                 bool is_output,
-                                                 RocalTensor anchor,
-                                                 RocalTensor shape,
-                                                 std::vector<float> fill_values,
-                                                 RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
-                                                 RocalTensorOutputType output_datatype = ROCAL_FP32);
-
-/*! \brief Applies slice augmentation on tensors with fixed shape.
- * \ingroup group_rocal_augmentations
- * \param [in] context Rocal context
- * \param [in] input Input Rocal tensor
- * \param [in] is_output is the output tensor part of the graph output
- * \param [in] anchor Anchor tensor used for slice
- * \param [in] shape Shape vector describing slice dimensions (excluding batch dimension, in tensor dimension order)
- * \param [in] fill_values Fill value for the slice padding
- * \param [in] policy Padding policy used for slice augmentation
- * \param [in] output_datatype the data type of the output tensor
- * \return RocalTensor
- */
-extern "C" RocalTensor ROCAL_API_CALL rocalSliceFixed(RocalContext context,
-                                                      RocalTensor input,
-                                                      bool is_output,
-                                                      RocalTensor anchor,
-                                                      std::vector<int> shape,
-                                                      std::vector<float> fill_values,
-                                                      RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
-                                                      RocalTensorOutputType output_datatype = ROCAL_FP32);
-
 /*! \brief Applies shot noise effect on images.
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
@@ -1683,8 +1641,47 @@ extern "C" RocalNSROutput ROCAL_API_CALL rocalNonSilentRegionDetection(RocalCont
                                                                        int reset_interval,
                                                                        int window_length);
 
-extern "C" RocalTensor ROCAL_API_CALL rocalSetLayout(RocalContext context, RocalTensor input,
-                                                     RocalTensorLayout output_layout = ROCAL_NONE);
+/*! \brief Extracts the sub-tensor from a given input tensor
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] anchor anchor values used for specifying the starting indices of slice
+ * \param [in] shape shape values used for specifying the length of slice
+ * \param [in] fill_values fill values based on out of Bound policy
+ * \param [in] policy
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
+                                                 RocalTensor input,
+                                                 bool is_output,
+                                                 RocalTensor anchor,
+                                                 RocalTensor shape,
+                                                 std::vector<float> fill_values,
+                                                 RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
+                                                 RocalTensorOutputType output_datatype = ROCAL_FP32);
+
+/*! \brief Applies slice augmentation on tensors with fixed shape.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] anchor Anchor tensor used for slice
+ * \param [in] shape Shape vector describing slice dimensions (excluding batch dimension, in tensor dimension order)
+ * \param [in] fill_values Fill value for the slice padding
+ * \param [in] policy Padding policy used for slice augmentation
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSliceFixed(RocalContext context,
+                                                      RocalTensor input,
+                                                      bool is_output,
+                                                      RocalTensor anchor,
+                                                      std::vector<int> shape,
+                                                      std::vector<float> fill_values,
+                                                      RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
+                                                      RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 /*! \brief Performs mean-stddev normalization on images.
  * \ingroup group_rocal_augmentations

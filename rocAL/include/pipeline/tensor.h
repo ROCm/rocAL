@@ -214,7 +214,8 @@ class TensorInfo {
         if (_layout != layout && _layout != RocalTensorlayout::NONE && (_num_of_dims > 3)) {  // If layout input and current layout's are different modify dims accordingly
             std::vector<size_t> new_dims(_num_of_dims, 0);
             get_modified_dims_from_layout(_layout, layout, new_dims);
-            set_dims(new_dims);
+            _dims = new_dims;
+            modify_strides();
         }
         _layout = layout;
     }
@@ -255,13 +256,7 @@ class TensorInfo {
     }
     void modify_dims(RocalTensorlayout layout, std::vector<int> new_dims) {
         switch (_layout) {
-            case RocalTensorlayout::NDHWC: {
-                _max_shape[0] = _dims[1] = new_dims[0];
-                _max_shape[1] = _dims[2] = new_dims[1];
-                _max_shape[2] = _dims[3] = new_dims[2];
-                _max_shape[3] = _dims[4] = new_dims[3];
-                break;
-            }
+            case RocalTensorlayout::NDHWC:
             case RocalTensorlayout::NCDHW: {
                 _max_shape[0] = _dims[1] = new_dims[0];
                 _max_shape[1] = _dims[2] = new_dims[1];
@@ -393,7 +388,6 @@ class Tensor : public rocalTensor {
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
     void set_dims(std::vector<size_t> dims) override { _info.set_dims(dims); }
-    void set_layout(RocalTensorlayout layout) { _info.set_tensor_layout(layout); }
     unsigned num_of_dims() override { return _info.num_of_dims(); }
     unsigned batch_size() override { return _info.batch_size(); }
     std::vector<size_t> dims() override { return _info.dims(); }

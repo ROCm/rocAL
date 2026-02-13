@@ -390,7 +390,7 @@ void MasterGraph::release() {
         if(_random_object_bbox_box2_buf != nullptr) {
             free(_random_object_bbox_box2_buf);
         }
-        // _random_object_bbox_tensor_list.release();
+        _random_object_bbox_tensor_list.release();
     }
 
     if (_graph != nullptr)

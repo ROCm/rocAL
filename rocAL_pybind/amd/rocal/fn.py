@@ -142,7 +142,7 @@ def fog(*inputs, intensity_factor=0.5, gray_factor=0.5, device=None, output_layo
     return (fog_image)
 
 
-def brightness(*inputs, brightness=None, brightness_shift=None, conditional_execution=1, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def brightness(*inputs, brightness=None, brightness_shift=None, conditional_execution=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Adjusts brightness of the image.
 
         @param inputs                                                                 the input image passed to the augmentation
@@ -924,35 +924,6 @@ def crop(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
     return (cropped_image)
 
 
-def slice(*inputs, anchor=None, shape=None, fill_values=[0.0], out_of_bounds_policy=types.PAD, output_dtype=types.FLOAT):
-    """
-    Applies a slice operation using tensor-based anchor and shape definitions.
-
-    @param anchor (Tensor)                                      Anchor tensor specifying slice start coordinates
-    @param shape (Tensor)                                       Shape tensor specifying slice extents
-    @param fill_values (float or list of floats)                Padding values used when the slice extends beyond input bounds
-    @param out_of_bounds_policy (types.OutOfBoundsPolicy)       Policy when slice exceeds bounds
-    @param output_dtype (types.TensorOutputType)                Output tensor datatype
-    """
-    if anchor is None or shape is None:
-        raise ValueError("Both anchor and shape tensors must be provided to slice")
-
-    def _unwrap_tensor(tensor_arg):
-        if isinstance(tensor_arg, (list, tuple)):
-            if not tensor_arg:
-                raise ValueError("Empty tensor list passed to slice")
-            return tensor_arg[0]
-        return tensor_arg
-
-    anchor_tensor = _unwrap_tensor(anchor)
-    shape_tensor = _unwrap_tensor(shape)
-
-    kwargs_pybind = {"input": inputs[0], "is_output": False, "anchor": anchor_tensor, "shape": shape_tensor,
-                     "fill_values": fill_values, "out_of_bounds_policy": out_of_bounds_policy, "output_dtype": output_dtype}
-    slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return slice_output
-
-
 def color_twist(*inputs, brightness=1.0, contrast=1.0, hue=0.0,
                 saturation=1.0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Adjusts the brightness, hue and saturation of the images.
@@ -1164,28 +1135,33 @@ def snp_noise(*inputs, p_noise=0.0, p_salt=0.0, noise_val=0.0, salt_val=0.0,
     return (snp_noise_added_image)
 
 
-def gaussian_noise(*inputs, mean=0.0, stddev=0.1, seed=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+def gaussian_noise(*inputs, mean=0.0, std_dev=1.0, seed=0, conditional_execution=1, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies Gaussian noise to the input image.
 
-        @param inputs (list)                                                          The input image to which Gaussian noise is applied.
-        @param mean (float, optional, default = 0.0)                                  Mean value for the Gaussian noise distribution. Default is 0.0.
-        @param stddev (float, optional, default = 0.1)                                Standard deviation for the Gaussian noise distribution. Default is 0.1.
+        @param inputs (list)                                                          The input image to which salt-and-pepper noise is applied.
+        @param mean (float, optional, default = 0.0)                                  Mean used for noise generation. Default is 0.0.
+        @param std_dev (float, optional, default = 1.0)                               Standard deviation used for noise generation. Default is 1.0.
         @param seed (int, optional, default = 0)                                      Random seed. Default is 0.
+        @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
-        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output. Default is types.UINT8.
+        @param output_dtype (int, optional, default = types.UINT*)                    Tensor dtype for the augmentation output. Default is types.UINT8.
 
         @return    images with Gaussian noise added.
     """
-    mean = b.createFloatParameter(mean) if isinstance(mean, float) else mean
-    stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
+    mean = b.createFloatParameter(
+        mean) if isinstance(mean, float) else mean
+    std_dev = b.createFloatParameter(
+        std_dev) if isinstance(std_dev, float) else std_dev
+    conditional_execution = b.createIntParameter(conditional_execution) if isinstance(
+                conditional_execution, int) else conditional_execution
 
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "stddev": stddev,
-                     "seed": seed, "output_layout": output_layout, "output_dtype": output_dtype}
-    gaussian_noise_added_image = b.gaussianNoise(
+    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "std_dev": std_dev,
+                     "seed": seed, "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
+    noise_added_image = b.gaussianNoise(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (gaussian_noise_added_image)
+    return (noise_added_image)
 
 
 def shot_noise(*inputs, noise_factor=0.1, seed=0, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1568,47 +1544,28 @@ def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_inte
     non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return non_silent_region_output.anchor, non_silent_region_output.shape
 
-def set_layout(*inputs, output_layout=types.NHWC):
-    """!Adjusts brightness of the image.
-
-        @param inputs                                                                 the input image passed to the augmentation
-        @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
-
-        @return    Tensor with required output layout
+def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
     """
-    # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "output_layout": output_layout}
-    new_output = b.setLayout(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (new_output)
-
-def gaussian_noise(*inputs, mean=0.0, std_dev=1.0, seed=0, conditional_execution=1, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
-    """!Applies Gaussian noise to the input image.
-
-        @param inputs (list)                                                          The input image to which salt-and-pepper noise is applied.
-        @param mean (float, optional, default = 0.0)                                  Mean used for noise generation. Default is 0.0.
-        @param std_dev (float, optional, default = 1.0)                               Standard deviation used for noise generation. Default is 1.0.
-        @param seed (int, optional, default = 0)                                      Random seed. Default is 0.
-        @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
-        @param device (string, optional, default = None)                              Parameter unused for augmentation
-        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
-        @param output_dtype (int, optional, default = types.UINT*)                    Tensor dtype for the augmentation output. Default is types.UINT8.
-
-        @return    images with Gaussian noise added.
+    The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
+    @param anchor (int or 1D RocalTensor of ints)                                      The absolute starting co-ordinate points of the slice.
+    @param shape (list of int or 1D RocalTensor of ints)                               The absolute co-ordinate for the dimensions of the slice.
+    @param fill_values (float or list of float)                                        Determines the padding values and is only relevant if out_of_bounds_policy is “pad” policy.
+    @param out_of_bounds_policy ("error", "pad", "trim_to_shape")                      Determines the policy when slicing the out of bounds area of the input.
+    @param rocal_tensor_output_type (float)                                            Output DataType of the Tensor
     """
-    mean = b.createFloatParameter(
-        mean) if isinstance(mean, float) else mean
-    std_dev = b.createFloatParameter(
-        std_dev) if isinstance(std_dev, float) else std_dev
-    conditional_execution = b.createIntParameter(conditional_execution) if isinstance(
-                conditional_execution, int) else conditional_execution
 
-    # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "std_dev": std_dev,
-                     "seed": seed, "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
-    noise_added_image = b.gaussianNoise(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    return (noise_added_image)
+    if anchor is None or shape is None:
+        raise ValueError("Both anchor and shape tensors must be provided to slice")
+    
+    if isinstance(shape, (list, tuple)):
+        kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape, "fill_values": fill_values,
+                        "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
+        slice_output = b.sliceFixed(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    else:
+        kwargs_pybind = {"input_audio0": inputs[0], "is_output": False, "anchor": anchor[0], "shape": shape[0], "fill_values": fill_values,
+                        "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
+        slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return slice_output
 
 def roi_random_crop(*inputs, roi_start, roi_end, crop_shape):
     # pybind call arguments
