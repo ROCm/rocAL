@@ -2159,6 +2159,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalWaterFixed(RocalContext context, Roca
 
 /*! \brief Converts color images to greyscale.
  * \ingroup group_rocal_augmentations
+ * \note Output is forced to NCHW layout with C=1 and color format U8, regardless of the input layout.
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
  * \param [in] is_output is the output tensor part of the graph output
