@@ -38,10 +38,6 @@ from rocal_pybind.types import UINT8
 from rocal_pybind.types import FLOAT
 from rocal_pybind.types import FLOAT16
 from rocal_pybind.types import INT16
-from rocal_pybind.types import INT32
-from rocal_pybind.types import INT8
-from rocal_pybind.types import UINT32
-
 
 #  RocalOutputMemType
 from rocal_pybind.types import HOST_MEMORY
@@ -149,9 +145,6 @@ _known_types = {
     FLOAT: ("FLOAT", FLOAT),
     FLOAT16: ("FLOAT16", FLOAT16),
     INT16: ("INT16", INT16),
-    INT32: ("INT32", INT32),
-    INT8: ("INT8", INT8),
-    UINT32: ("UINT32", UINT32),
     HOST_MEMORY: ("HOST_MEMORY", HOST_MEMORY),
     DEVICE_MEMORY: ("DEVICE_MEMORY", DEVICE_MEMORY),
     PINNED_MEMORY: ("PINNED_MEMORY", PINNED_MEMORY),
