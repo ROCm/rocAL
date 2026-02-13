@@ -3090,7 +3090,7 @@ rocalSliceFixed(
         output_info.set_dims(output_dims);
 
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, std::move(shape), fill_values, policy);
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, std::move(shape), fill_values, static_cast<OutOfBoundsPolicy>(policy));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

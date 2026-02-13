@@ -25,14 +25,13 @@ THE SOFTWARE.
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
-#include "rocal_api_types.h"
 
 class SliceNode : public Node {
    public:
     SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SliceNode() = delete;
     ~SliceNode();
-    void init(Tensor *anchor_param, std::vector<int> shape_param, std::vector<float> &fill_values_param, RocalOutOfBoundsPolicy policy);
+    void init(Tensor *anchor_param, std::vector<int> shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
     void init(Tensor *anchor_param, Tensor *shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
 
    protected:
