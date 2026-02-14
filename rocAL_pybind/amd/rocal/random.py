@@ -48,17 +48,6 @@ def uniform(*inputs, range=[-1.0, 1.0]):
     output_uniform_distribution = b.uniformDistribution(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (output_uniform_distribution)
 
-def uniform_rand(*inputs, range=[-1, 1]):
-    """!Generates random values uniformly distributed within a specified range.
-
-        @param inputs    list of input arguments.
-        @param range     Range for the uniform distribution.
-
-        @return    random values uniformly distributed within the specified range.
-    """
-    output_param = b.createFloatUniformRand(range[0], range[1])
-    return output_param
-
 def normal(*inputs, mean=0.0, stddev=1.0):
     """
     Creates a rocalTensor from an normal distribution with given mean and stddev.

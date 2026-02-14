@@ -178,7 +178,7 @@ def brightness_fixed(*inputs, brightness=1.0, brightness_shift=0.0, conditional_
         @param inputs                                                                 the input image passed to the augmentation
         @param brightness (float, optional, default = 1.0)                            brightness multiplier. Values >= 0 are accepted. For example: 0 - black image, 1 - no change, 2 - increase brightness twice
         @param brightness_shift (float, optional, default = 0.0)                      brightness shift
-        @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
+        @param conditional_execution (int, optional, default = 1)                     controls the execution of the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    tensor layout for the augmentation output
         @param output_dtype (int, optional, default = types.UINT8)                    tensor dtype for the augmentation output
@@ -1143,7 +1143,7 @@ def gaussian_noise(*inputs, mean=0.0, stddev=0.1, seed=0, conditional_execution=
         @param mean (float, optional, default = 0.0)                                  Mean value for the Gaussian noise distribution. Default is 0.0.
         @param stddev (float, optional, default = 0.1)                                Standard deviation for the Gaussian noise distribution. Default is 0.1.
         @param seed (int, optional, default = 0)                                      Random seed. Default is 0.
-        @param conditional_execution (int, optional, default = None)                  controls the execution of the augmentation
+        @param conditional_execution (int, optional, default = 1)                     controls the execution of the augmentation
         @param device (string, optional, default = None)                              Parameter unused for augmentation
         @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output. Default is types.NHWC.
         @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output. Default is types.UINT8.
@@ -1628,16 +1628,15 @@ def random_object_bbox(*inputs, format='anchor_shape', background=0, cache_objec
                    - "start_end": tuple of (start_tensor, end_tensor)
                    - "box": single tensor with concatenated coordinates
     """
+    if format not in ("box", "anchor_shape", "start_end"):
+        raise ValueError('format must be one of: "box", "anchor_shape", "start_end"')
+
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "format": format, "k_largest": k_largest, "foreground_prob": foreground_prob, "cache_objects": cache_objects}
     selected_roi = b.randomObjectBbox(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     if format == "box":
-        return (selected_roi)
-    elif format == "anchor_shape" or format == "start_end":
-        return (selected_roi[0], selected_roi[1])
-    else:
-        print('Wrong format passed to random_object_bbox')
-        return ()
+        return selected_roi
+    return (selected_roi[0], selected_roi[1])
 
 def normalize(*inputs, axes=[], mean=[], stddev=[], scale=1.0, shift=0.0, output_datatype=types.FLOAT):
     '''

@@ -49,5 +49,5 @@ class SliceNode : public Node {
     std::vector<int> _shape_vec;
     std::vector<std::vector<uint32_t>> _slice_roi;
     bool _use_tensor_shape = false;
-    OutOfBoundsPolicy _policy = OutOfBoundsPolicy::PAD;
+    OutOfBoundsPolicy _policy = OutOfBoundsPolicy::ERROR;
 };

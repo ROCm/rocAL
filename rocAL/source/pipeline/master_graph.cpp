@@ -374,13 +374,16 @@ void MasterGraph::release() {
             if (_affinity == RocalAffinity::GPU) {
 #if ENABLE_HIP
                 hipError_t err = hipHostFree(_roi_random_crop_buf);
-                if (err != hipSuccess)
-                    std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+                if (err != hipSuccess) {
+                    std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
+                } else {
+                    _roi_random_crop_buf = nullptr;
+                }
 #endif
             } else {
                 free(_roi_random_crop_buf);
+                _roi_random_crop_buf = nullptr;
             }
-            _roi_random_crop_buf = nullptr;
         }
         delete[] _crop_shape_batch;
         _crop_shape_batch = nullptr;
@@ -2148,7 +2151,7 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
     auto input_dims = input->info().is_image() ? input->num_of_dims() - 2 : input->num_of_dims() - 1;
 
     _roi_batch = reinterpret_cast<int *>(input->info().roi().get_ptr());
-    _crop_shape_batch = new int[input_dims * _user_batch_size]; // TODO handle this case later when different crop_shape is given for each tensor
+    _crop_shape_batch = new int[input_dims * _user_batch_size];  // crop_shape is currently replicated for all samples in the batch
 
     // replicate crop_shape values for all samples in a batch
     for (uint i = 0; i < _user_batch_size; i++)
@@ -2185,20 +2188,21 @@ void MasterGraph::update_roi_random_crop() {
         int *crop_begin = &crop_begin_batch[sample_idx];
 
         for (uint j = 0; j < input_dims; j++) {
-            // check if crop_shape, roi_end is greater than input_shape
-            if (crop_shape[j] > input_shape[j])
-                THROW("crop shape cannot be greater than input shape");
-            if (roi_end[j] > input_shape[j]) {
-                ERR("ROI shape (" + std::to_string(roi_end[j]) + ") cannot be greater than input shape (" + std::to_string(input_shape[j]) + ")");
-                crop_begin[j] = 0;
+            if (crop_shape[j] > input_shape[j]) {
+                ERR("crop shape (" + std::to_string(crop_shape[j]) + ") cannot be greater than input shape (" + std::to_string(input_shape[j]) + "), clamping to input shape")
+                crop_shape[j] = input_shape[j];
             }
 
-            int roi_length = roi_end[j] - roi_begin[j];
+            const int roi_begin_val = std::max<int>(0, roi_begin[j]);
+            int roi_end_val = std::min<int>(roi_end[j], input_shape[j]);
+            roi_end_val = std::max<int>(roi_end_val, roi_begin_val);
+
+            int roi_length = roi_end_val - roi_begin_val;
             int crop_length = crop_shape[j];
-            if (roi_length == crop_length) {
-                crop_begin[j] = roi_begin[j];
+            if (roi_length <= crop_length) {
+                crop_begin[j] = std::min<int>(roi_begin_val, input_shape[j] - crop_length);
             } else {
-                int64_t start_range[2] = {roi_begin[j], roi_end[j] - crop_length};
+                int64_t start_range[2] = {roi_begin_val, roi_end_val - crop_length};
 
                 // swap range values if start_range[0] > start_range[1]
                 if (start_range[0] > start_range[1]) {

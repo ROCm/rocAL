@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2024 - 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -157,14 +157,19 @@ void SliceNode::create_shape_tensor() {
 }
 
 SliceNode::~SliceNode() {
+    if (_fill_values_array) vxReleaseArray(&_fill_values_array);
+
     if (_inputs[0]->info().mem_type() == RocalMemType::HIP) {
 #if ENABLE_HIP
-        hipError_t err = hipHostFree(_shape_array);
-        if (err != hipSuccess)
-            std::cerr << "\n[ERR] hipFree failed  " << std::to_string(err) << "\n";
+        if (_shape_array) {
+            hipError_t err = hipHostFree(_shape_array);
+            if (err != hipSuccess)
+                std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
+        }
 #endif
     } else {
         if (_shape_array) free(_shape_array);
     }
+    _shape_array = nullptr;
     if (_shape_tensor_handle) vxReleaseTensor(&_shape_tensor_handle);
 }

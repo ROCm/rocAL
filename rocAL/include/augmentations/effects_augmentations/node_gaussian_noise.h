@@ -31,8 +31,8 @@ class GaussianNoiseNode : public Node {
    public:
     GaussianNoiseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     GaussianNoiseNode() = delete;
-    void init(float mean, float std_dev, int seed, int conditional_execution);
-    void init(FloatParam *mean_param, FloatParam *stddev_param, int seed, IntParam *condition_execution_param);
+    void init(float mean, float stddev, int seed, int conditional_execution);
+    void init(FloatParam *mean_param, FloatParam *stddev_param, int seed, IntParam *conditional_execution_param);
 
    protected:
     void create_node() override;

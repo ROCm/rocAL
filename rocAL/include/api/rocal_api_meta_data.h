@@ -340,19 +340,23 @@ RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
 /*! \brief initialize the values required for ROI Random crop
  * \ingroup group_rocal_meta_data
  * \param [in] rocal_context rocal context
- * \param [in] crop_shape_batch
- * \param [in] roi_begin_batch
- * \param [in] input_shape_batch
- * \param [in] roi_end_batch
+ * \param [in] crop_shape_batch The batch of crop shapes to be used for cropping the images in the output batch
+ * \param [in] roi_begin_batch The batch of roi begin coordinates to be used for cropping the images in the output batch
+ * \param [in] input_shape_batch The batch of input image shapes for the images in the output batch
+ * \param [in] roi_end_batch The batch of roi end coordinates to be used for cropping the images in the output batch
  * \param [out] anchor The generated anchor tensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, std::vector<int> crop_shape);
 
-/*! \brief initialize the values required for ROI Random crop
+/*! \brief Returns a randomly selected object bounding box from a segmentation/label tensor.
  * \ingroup group_rocal_meta_data
- * \param [in] rocal_context rocal context
- * \param [in] p_input
- * \param [out] anchor The generated anchor tensor
+ * \param [in] p_context rocal context
+ * \param [in] p_input Input label tensor
+ * \param [in] output_format Output format for the returned tensors ("anchor_shape", "start_end", or "box")
+ * \param [in] k_largest If positive, selects from the k largest objects; otherwise selects from all
+ * \param [in] foreground_prob Probability of selecting a foreground object (otherwise returns full image ROI)
+ * \param [in] cache_objects If true, caches computed boxes for repeated inputs
+ * \return A tensor list containing the selected ROI tensors
  */
 extern "C" RocalTensorList ROCAL_API_CALL rocalRandomObjectBbox(RocalContext p_context, RocalTensor p_input, std::string output_format="anchor_shape", int k_largest = -1, float foreground_prob = 1.0, bool cache_objects = false);
 
