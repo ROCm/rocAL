@@ -1769,7 +1769,8 @@ void MasterGraph::update_random_object_bbox() {
             process_sample(i);
         }
     } else {
-#pragma omp parallel for num_threads(_user_batch_size)
+        auto num_threads = _cpu_num_threads * 2;
+#pragma omp parallel for num_threads(num_threads)
         for (uint i = 0; i < _user_batch_size; i++) {
             process_sample(i);
         }
