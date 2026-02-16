@@ -30,12 +30,6 @@ THE SOFTWARE.
 
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
 namespace {
-inline void validate_status(vx_node node) {
-    vx_status status = vxGetStatus((vx_reference)node);
-    if (status != VX_SUCCESS)
-        THROW("Adding tensor reduction node failed: " + TOSTR(status));
-}
-
 inline void tensor_reduction_create(Node *node,
                                     vx_node &vx_node_ref,
                                     vx_tensor input_tensor,
@@ -52,7 +46,9 @@ inline void tensor_reduction_create(Node *node,
     vx_scalar input_layout_vx = vxCreateScalar(context, VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
     vx_node_ref = create_fn(graph, input_tensor, input_roi, output_tensor, input_layout_vx, roi_type_vx);
-    validate_status(vx_node_ref);
+    vx_status status = vxGetStatus((vx_reference)vx_node_ref);
+    if (status != VX_SUCCESS)
+        THROW("Adding tensor reduction node failed: " + TOSTR(status));
 }
 
 inline void tensor_stddev_create(vx_node &vx_node_ref,
@@ -70,7 +66,9 @@ inline void tensor_stddev_create(vx_node &vx_node_ref,
     vx_scalar input_layout_vx = vxCreateScalar(context, VX_TYPE_INT32, &input_layout);
     vx_scalar roi_type_vx = vxCreateScalar(context, VX_TYPE_INT32, &roi_type);
     vx_node_ref = vxExtRppTensorStdDev(graph, input_tensor, input_roi, output_tensor, mean_tensor, input_layout_vx, roi_type_vx);
-    validate_status(vx_node_ref);
+    vx_status status = vxGetStatus((vx_reference)vx_node_ref);
+    if (status != VX_SUCCESS)
+        THROW("Adding tensor stddev node failed: " + TOSTR(status));
 }
 }  // namespace
 
