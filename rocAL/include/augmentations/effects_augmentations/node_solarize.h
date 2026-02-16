@@ -22,31 +22,23 @@ THE SOFTWARE.
 
 #pragma once
 
+#include "pipeline/graph.h"
 #include "pipeline/node.h"
 #include "parameters/parameter_factory.h"
 #include "parameters/parameter_vx.h"
 
-class WaterNode : public Node {
+class SolarizeNode : public Node {
    public:
-    WaterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
-    WaterNode() = delete;
-    void init(float amplitude_x, float amplitude_y, float frequency_x, float frequency_y, float phase_x, float phase_y);
-    void init(FloatParam *amplitude_x_param, FloatParam *amplitude_y_param, 
-              FloatParam *frequency_x_param, FloatParam *frequency_y_param,
-              FloatParam *phase_x_param, FloatParam *phase_y_param);
+    SolarizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
+    SolarizeNode() = delete;
+    void init(float threshold);
+    void init(FloatParam *threshold_param);
 
    protected:
     void create_node() override;
     void update_node() override;
 
    private:
-    ParameterVX<float> _amplitude_x;
-    ParameterVX<float> _amplitude_y;
-    ParameterVX<float> _frequency_x;
-    ParameterVX<float> _frequency_y;
-    ParameterVX<float> _phase_x;
-    ParameterVX<float> _phase_y;
-    constexpr static float AMPLITUDE_RANGE[2] = {0.0, 10.0};
-    constexpr static float FREQUENCY_RANGE[2] = {0.0, 10.0};
-    constexpr static float PHASE_RANGE[2] = {0.0, 20.0};
+    ParameterVX<float> _threshold;
+    constexpr static float THRESHOLD_RANGE[2] = {0.0f, 1.0f};
 };

@@ -598,7 +598,8 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     RocalTensor output;
 
     if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 ||
-        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 || test_case == 64 || test_case == 65 || test_case == 93 || test_case == 94) && rgb == 0) {
+        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 ||
+        test_case == 64 || test_case == 65 || test_case == 93 || test_case == 94 || test_case == 97 || test_case == 105) && rgb == 0) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -1145,6 +1146,43 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalWaterFixed" << std::endl;
             output = rocalWaterFixed(handle, input, 2.0f, 5.0f, 5.8f, 1.2f, 10.0f, 15.0f, true);
         } break;
+        case 97: {
+            std::cout << "Running rocalChannelPermute" << std::endl;
+            std::vector<unsigned> permutation_order = {2, 1, 0};  // RGB to BGR
+            output = rocalChannelPermute(handle, input, permutation_order, true);
+        } break;
+        case 98: {
+            std::cout << "Running rocalJpegCompressionDistortion" << std::endl;
+            output = rocalJpegCompressionDistortion(handle, input, true);
+        } break;
+        case 99: {
+            std::cout << "Running rocalJpegCompressionDistortionFixed" << std::endl;
+            output = rocalJpegCompressionDistortionFixed(handle, input, 50, true);
+        } break;
+        case 100: {
+            std::cout << "Running rocalLUT" << std::endl;
+            output = rocalLUT(handle, input, true);
+        } break;
+        case 101: {
+            std::cout << "Running rocalPosterize" << std::endl;
+            output = rocalPosterize(handle, input, true);
+        } break;
+        case 102: {
+            std::cout << "Running rocalPosterizeFixed" << std::endl;
+            output = rocalPosterizeFixed(handle, input, 3, true);
+        } break;
+        case 103: {
+            std::cout << "Running rocalSolarize" << std::endl;
+            output = rocalSolarize(handle, input, true);
+        } break;
+        case 104: {
+            std::cout << "Running rocalSolarizeFixed" << std::endl;
+            output = rocalSolarizeFixed(handle, input, 0.5f, true);
+        } break;
+        case 105: {
+            std::cout << "Running rocalColorToGreyscale" << std::endl;
+            output = rocalColorToGreyscale(handle, input, true);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;
@@ -1170,9 +1208,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int w = rocalGetOutputWidth(handle);
     int output_color_format = rocalGetOutputColorFormat(handle);
     auto last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
-    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
+    // Use output_color_format to determine channels: 0=RGB24(3ch), 1=BGR24(3ch), 2=U8(1ch), 3=RGB_PLANAR(3ch)
+    int p = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? 3 : 1);
     const unsigned number_of_cols = 1;  // 1920 / w;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
+    auto cv_color_format = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h, w, cv_color_format);
     cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
@@ -1425,12 +1464,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         if (display_all)
             out_filename = std::string(outName) + std::to_string(index) + ".png";  // in case the user specifies non png filename
 
-        if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
+        if (output_color_format == 0) {  // RGB24
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
                 cv::imwrite(out_filename, mat_color, compression_params);
+        } else if (output_color_format == 1) {  // BGR24
+            if (DISPLAY)
+                cv::imshow("output", mat_output);
+            else
+                cv::imwrite(out_filename, mat_output, compression_params);
         } else {
             if (DISPLAY)
                 cv::imshow("output", mat_output);
