@@ -300,7 +300,7 @@ class Pipeline(object):
     def deserialize(cls, serialized_pipeline=None, filename=None, **kwargs):
         """
         Deserialize the pipeline from the protobuffers and reconstruct the pipeline
-        The returned pipeline is deserialized and build
+        The returned pipeline is deserialized and built
         return:
         The pipeline object
         """
