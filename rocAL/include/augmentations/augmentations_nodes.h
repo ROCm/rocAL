@@ -98,3 +98,4 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_remap.h"
 #include "augmentations/geometry_augmentations/node_ricap.h"
 #include "augmentations/arithmetic_augmentations/node_log.h"
+#include "augmentations/arithmetic_augmentations/node_tensor_statistics.h"

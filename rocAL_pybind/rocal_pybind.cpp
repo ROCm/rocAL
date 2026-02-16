@@ -1232,6 +1232,16 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("tensorAddTensor", &rocalTensorAddTensor,
           py::return_value_policy::reference);
+    m.def("tensorSum", &rocalTensorSum,
+          py::return_value_policy::reference);
+    m.def("tensorMin", &rocalTensorMin,
+          py::return_value_policy::reference);
+    m.def("tensorMax", &rocalTensorMax,
+          py::return_value_policy::reference);
+    m.def("tensorMean", &rocalTensorMean,
+          py::return_value_policy::reference);
+    m.def("tensorStdDev", &rocalTensorStdDev,
+          py::return_value_policy::reference);
     m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection,
           py::return_value_policy::reference);
     m.def("slice", &rocalSlice,

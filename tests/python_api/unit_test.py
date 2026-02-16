@@ -482,6 +482,30 @@ def main():
                                      saturation=1.3,
                                      output_layout=tensor_layout,
                                      output_dtype=tensor_dtype)
+        elif augmentation_name == "tensor_sum":
+            output = fn.tensor_sum(images,
+                                   output_layout=types.NONE,
+                                   output_dtype=types.FLOAT)
+        elif augmentation_name == "tensor_min":
+            output = fn.tensor_min(images,
+                                   output_layout=types.NONE,
+                                   output_dtype=types.UINT8)
+        elif augmentation_name == "tensor_max":
+            output = fn.tensor_max(images,
+                                   output_layout=types.NONE,
+                                   output_dtype=types.UINT8)
+        elif augmentation_name == "tensor_mean":
+            output = fn.tensor_mean(images,
+                                    output_layout=types.NONE,
+                                    output_dtype=types.FLOAT)
+        elif augmentation_name == "tensor_stddev":
+            mean_tensor = fn.tensor_mean(images,
+                                         output_layout=types.NONE,
+                                         output_dtype=types.FLOAT)
+            output = fn.tensor_stddev(images,
+                                      mean_tensor=mean_tensor,
+                                      output_layout=types.NONE,
+                                      output_dtype=types.FLOAT)
         elif augmentation_name == "crop":
             output = fn.crop(images,
                              crop=(3, 224, 224),
