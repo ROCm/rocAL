@@ -138,4 +138,21 @@ extern "C" RocalStatus ROCAL_API_CALL rocalSerialize(RocalContext rocal_context,
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedString(RocalContext rocal_context, char* serialized_string);
 
+/*!
+ * \brief Deserialize a pipeline from a serialized binary string.
+ * \ingroup group_rocal
+ *
+ * Constructs a rocAL pipeline from the serialized input and returns a new
+ * context. Caller-provided fields in \p pipe_params take precedence over values
+ * stored in the serialized pipeline; any remaining unset fields are populated
+ * from the deserialized pipeline metadata.
+ *
+ * \param [in] serialized_pipeline pointer to the serialized pipeline buffer.
+ * \param [in] serialized_string_size size in bytes of the serialized pipeline buffer.
+ * \param [in,out] pipe_params pointer to \ref RocalPipelineParams used to override
+ *              pipeline configuration; must not be nullptr.
+ * \return A \ref RocalContext representing the newly created pipeline context, or nullptr on failure.
+ */
+extern "C" RocalContext ROCAL_API_CALL rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size, RocalPipelineParams* pipe_params);
+
 #endif

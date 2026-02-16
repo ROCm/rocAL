@@ -19,10 +19,11 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
-* Adds new public APIs rocalSerialize() and rocalGetSerializedString() for serializing pipelines.
+* Adds new public APIs rocalSerialize(), rocalGetSerializedString(), and rocalDeserialize() for serializing and deserializing pipelines.
 * Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
 * Update EnumRegistry to support enum value lookup by type name.
 * Adds new method in Argument class for type-safe value retrieval of arguments.
+* `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 
 ## rocAL 2.5.0 for ROCm 7.2.0
 
