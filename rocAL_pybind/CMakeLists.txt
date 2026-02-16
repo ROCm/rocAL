@@ -225,6 +225,8 @@ if(${BUILD_ROCAL_PYBIND})
             )
 
             pybind11_add_module(${mod_tgt} MODULE ${BINDING_SOURCES})
+            # Add version definition
+            target_compile_definitions(${mod_tgt} PRIVATE ROCAL_VERSION="${VERSION}")
             # Use target-specific includes to avoid cross-contamination between Python versions
             target_include_directories(${mod_tgt} PRIVATE 
                 ${MIVisionX_INCLUDE_DIRS}
