@@ -256,6 +256,10 @@ def main():
     # Run the serialization test
     serialized_string = test_serialization(data_path, rocal_cpu, batch_size)
 
+    if (serialized_string is None) or (len(serialized_string) == 0):
+        print("SERIALIZATION TEST FAILED - No valid serialized string produced")
+        sys.exit(1)
+
     # Run the deserialization test
     success = test_deserialization(serialized_string, rocal_cpu, batch_size)
     
