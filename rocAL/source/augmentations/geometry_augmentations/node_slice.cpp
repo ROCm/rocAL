@@ -78,8 +78,7 @@ void SliceNode::create_node() {
     vx_status status = vxAddArrayItems(_fill_values_array, _batch_size, _fill_values_vec.data(), sizeof(vx_float32));
     if (status != 0)
         THROW(" vxAddArrayItems failed in the slice (vxExtRppSlice) node: " + TOSTR(status));
-    int policy_value = static_cast<int>(_policy);
-    vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &policy_value);
+    vx_scalar policy = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_policy);
     _node = vxExtRppSlice(_graph->get(),
                           _inputs[0]->handle(),
                           _inputs[0]->get_roi_tensor(),
