@@ -1546,6 +1546,78 @@ extern "C" RocalTensor ROCAL_API_CALL rocalTensorAddTensor(RocalContext p_contex
                                                            bool is_output,
                                                            RocalTensorOutputType output_datatype = ROCAL_FP32);
 
+/*! \brief Computes tensor sum per image.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorSum(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      RocalTensorLayout output_layout = ROCAL_NONE,
+                                                      RocalTensorOutputType output_datatype = ROCAL_FP32);
+
+/*! \brief Computes tensor minimum per image.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorMin(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      RocalTensorLayout output_layout = ROCAL_NONE,
+                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Computes tensor maximum per image.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorMax(RocalContext context, RocalTensor input,
+                                                      bool is_output,
+                                                      RocalTensorLayout output_layout = ROCAL_NONE,
+                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
+
+/*! \brief Computes tensor mean per image.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorMean(RocalContext context, RocalTensor input,
+                                                       bool is_output,
+                                                       RocalTensorLayout output_layout = ROCAL_NONE,
+                                                       RocalTensorOutputType output_datatype = ROCAL_FP32);
+
+/*! \brief Computes tensor standard deviation per image using precomputed means.
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] mean_tensor Precomputed mean tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] output_layout the layout of the output tensor
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalTensorStdDev(RocalContext context, RocalTensor input,
+                                                         RocalTensor mean_tensor,
+                                                         bool is_output,
+                                                         RocalTensorLayout output_layout = ROCAL_NONE,
+                                                         RocalTensorOutputType output_datatype = ROCAL_FP32);
+
 /*! \brief Performs silence detection in the input audio tensor
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context

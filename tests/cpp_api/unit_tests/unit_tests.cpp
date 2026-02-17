@@ -1183,6 +1183,15 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             std::cout << "Running rocalColorToGreyscale" << std::endl;
             output = rocalColorToGreyscale(handle, input, true);
         } break;
+        case 106: {
+            std::cout << "Running tensor reduction augmentations" << std::endl;
+            auto tensor_sum = rocalTensorSum(handle, input, false, ROCAL_NONE, ROCAL_FP32);
+            auto tensor_min = rocalTensorMin(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
+            auto tensor_max = rocalTensorMax(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
+            auto tensor_mean = rocalTensorMean(handle, input, false, ROCAL_NONE, ROCAL_FP32);
+            auto tensor_stddev = rocalTensorStdDev(handle, input, tensor_mean, false, ROCAL_NONE, ROCAL_FP32);
+            output = rocalCopy(handle, input, true);
+        } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
             return -1;

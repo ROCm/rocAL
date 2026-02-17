@@ -291,6 +291,14 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
 
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
+
+    // Add version attribute
+#ifdef ROCAL_VERSION
+    m.attr("__version__") = ROCAL_VERSION;
+#else
+    m.attr("__version__") = "unknown";
+#endif
+
     // Bind the C++ structure
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it", py::return_value_policy::reference);
@@ -1241,6 +1249,16 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("tensorMulScalar", &rocalTensorMulScalar,
           py::return_value_policy::reference);
     m.def("tensorAddTensor", &rocalTensorAddTensor,
+          py::return_value_policy::reference);
+    m.def("tensorSum", &rocalTensorSum,
+          py::return_value_policy::reference);
+    m.def("tensorMin", &rocalTensorMin,
+          py::return_value_policy::reference);
+    m.def("tensorMax", &rocalTensorMax,
+          py::return_value_policy::reference);
+    m.def("tensorMean", &rocalTensorMean,
+          py::return_value_policy::reference);
+    m.def("tensorStdDev", &rocalTensorStdDev,
           py::return_value_policy::reference);
     m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection,
           py::return_value_policy::reference);

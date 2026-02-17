@@ -1432,6 +1432,93 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, output_datatype=types.FLOAT):
     tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
 
+
+def tensor_sum(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.FLOAT):
+    """!Computes the sum of tensor elements per image.
+
+        @param inputs (list)                                                          The input tensor.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.FLOAT)                    Tensor dtype for the augmentation output.
+
+        @return    Tensor sum per image.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    sum_tensor = b.tensorSum(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (sum_tensor)
+
+
+def tensor_min(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Computes the minimum of tensor elements per image.
+
+        @param inputs (list)                                                          The input tensor.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Tensor minimum per image.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    min_tensor = b.tensorMin(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (min_tensor)
+
+
+def tensor_max(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
+    """!Computes the maximum of tensor elements per image.
+
+        @param inputs (list)                                                          The input tensor.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.UINT8)                    Tensor dtype for the augmentation output.
+
+        @return    Tensor maximum per image.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    max_tensor = b.tensorMax(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (max_tensor)
+
+
+def tensor_mean(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.FLOAT):
+    """!Computes the mean of tensor elements per image.
+
+        @param inputs (list)                                                          The input tensor.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.FLOAT)                    Tensor dtype for the augmentation output.
+
+        @return    Tensor mean per image.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    mean_tensor = b.tensorMean(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (mean_tensor)
+
+
+def tensor_stddev(*inputs, mean_tensor, device=None, output_layout=types.NHWC, output_dtype=types.FLOAT):
+    """!Computes the standard deviation of tensor elements per image using precomputed means.
+
+        @param inputs (list)                                                          The input tensor.
+        @param mean_tensor                                                            Precomputed mean tensor.
+        @param device (string, optional, default = None)                              Parameter unused for augmentation.
+        @param output_layout (int, optional, default = types.NHWC)                    Tensor layout for the augmentation output.
+        @param output_dtype (int, optional, default = types.FLOAT)                    Tensor dtype for the augmentation output.
+
+        @return    Tensor standard deviation per image.
+    """
+    kwargs_pybind = {"input_tensor": inputs[0], "mean_tensor": mean_tensor, "is_output": False,
+                     "output_layout": output_layout, "output_dtype": output_dtype}
+    stddev_tensor = b.tensorStdDev(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (stddev_tensor)
+
+
 def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_interval = 8192, window_length = 2048):
     """
     Performs leading and trailing silence detection in an audio buffer.

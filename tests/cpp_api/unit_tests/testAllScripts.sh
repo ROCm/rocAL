@@ -272,6 +272,8 @@ do
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Posterize_${rgb_name[$rgb]}_${device_name}" $width $height 102 $device $rgb 0 $display
         ./unit_tests 11 "$mxnet_path" "${output_path}Solarize_${rgb_name[$rgb]}_${device_name}" $width $height 104 $device $rgb 0 $display
 
+        ./unit_tests 0 "$image_path" "${output_path}TensorReduction_${rgb_name[$rgb]}_${device_name}" $width $height 106 $device $rgb 0 $display
+
         # to_tensor coverage tests
         for ((memcpy_backend=0;memcpy_backend<=1;memcpy_backend++))
         do
