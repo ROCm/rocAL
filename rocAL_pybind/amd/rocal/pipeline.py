@@ -308,7 +308,7 @@ class Pipeline(object):
         if (serialized_pipeline is None) == (filename is None):
             raise ValueError(
                 "serialized_pipeline and filename arguments are mutually exclusive. "
-                "At least one of them should be defined."
+                "Exactly one of serialized_pipeline or filename must be provided."
             )
 
         for key, value in kwargs.items():
