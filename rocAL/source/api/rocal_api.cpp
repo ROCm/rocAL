@@ -148,12 +148,8 @@ rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size,
         }
 
         // Get the pipeline related info
-        if (!pipe_params->batch_size.has_value()) {
-            if (pipe.has_batch_size())
-                pipe_params->batch_size = pipe.batch_size();
-            else
-                THROW("Serialized pipeline missing required batch size");
-        }
+        if (!pipe_params->batch_size.has_value())
+            pipe_params->batch_size = pipe.has_batch_size() ? pipe.batch_size() : 1;
 
         if (!pipe_params->device_id.has_value() && pipe.has_device_id())
             pipe_params->device_id = pipe.device_id();
