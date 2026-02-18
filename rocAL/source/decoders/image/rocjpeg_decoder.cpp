@@ -134,14 +134,17 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     if (width) *width = widths[0];
     if (height) *height = heights[0];
     uint scaledw = widths[0], scaledh = heights[0];
-    // Scaling to be performed if width/height is greater than max decode width/height
-    if (widths[0] > max_decoded_width || heights[0] > max_decoded_height) {
-        for (unsigned j = 0; j < _num_scaling_factors; j++) {
-            scaledw = (((widths[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
-            scaledh = (((heights[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
-            if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
-                break;
+    // If original dims exceed max decode dims, compute output dims that fit within max while preserving aspect ratio.
+    if (max_decoded_width > 0 && max_decoded_height > 0 &&
+        (widths[0] > static_cast<uint32_t>(max_decoded_width) || heights[0] > static_cast<uint32_t>(max_decoded_height))) {
+        uint32_t out_w = static_cast<uint32_t>(max_decoded_width);
+        uint32_t out_h = static_cast<uint32_t>(((uint64_t)out_w * heights[0]) / widths[0]);
+        if (out_h > static_cast<uint32_t>(max_decoded_height)) {
+            out_h = static_cast<uint32_t>(max_decoded_height);
+            out_w = static_cast<uint32_t>(((uint64_t)out_h * widths[0]) / heights[0]);
         }
+        scaledw = out_w ? out_w : 1;
+        scaledh = out_h ? out_h : 1;
     }
     // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
     if (scaledw != widths[0] || scaledh != heights[0]) {
