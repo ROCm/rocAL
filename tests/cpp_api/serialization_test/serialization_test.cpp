@@ -130,8 +130,13 @@ int main(int argc, const char **argv) {
                                                   &pipe_params);
     
     // Check if deserialization was successful
-    if (second_handle == nullptr || rocalGetStatus(second_handle) != ROCAL_OK) {
+    if (second_handle != nullptr && rocalGetStatus(second_handle) != ROCAL_OK) {
         std::cout << "Failed to deserialize pipeline: " << rocalGetErrorMessage(second_handle) << std::endl;
+        rocalRelease(handle);
+        rocalRelease(second_handle);
+        return -1;
+    } else if (second_handle == nullptr) {
+        std::cout << "Failed to deserialize pipeline: Received null context" << std::endl;
         rocalRelease(handle);
         return -1;
     }

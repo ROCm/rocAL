@@ -315,16 +315,27 @@ class Pipeline(object):
     @classmethod
     def deserialize(cls, serialized_pipeline=None, filename=None, **kwargs):
         """
-        Deserialize the pipeline from the protobuffers and reconstruct the pipeline
-        The returned pipeline is deserialized and build
-        return:
-        The pipeline object
+        Deserialize the pipeline from protobuffers and reconstruct the pipeline.
+
+        Args:
+            serialized_pipeline (bytes, optional): Serialized pipeline protobuf payload.
+                Exactly one of ``serialized_pipeline`` or ``filename`` must be provided.
+            filename (str, optional): Path to a file containing the serialized pipeline
+                protobuf payload. Exactly one of ``serialized_pipeline`` or ``filename``
+                must be provided.
+            **kwargs: Additional pipeline parameters used to override values stored in
+                the serialized pipeline. Only keys that match attributes of
+                :class:`b.RocalPipelineParams` are applied; unexpected keys are ignored
+                with a warning.
+
+        Returns:
+            Pipeline: A deserialized and built :class:`Pipeline` object.
         """
         pipe_params = b.RocalPipelineParams()
         if (serialized_pipeline is None) == (filename is None):
             raise ValueError(
                 "serialized_pipeline and filename arguments are mutually exclusive. "
-                "At least one of them should be defined."
+                "Exactly one of serialized_pipeline or filename must be provided."
             )
 
         for key, value in kwargs.items():
@@ -339,9 +350,19 @@ class Pipeline(object):
                 serialized_pipeline = pipeline_file.read()
 
         ret = b.rocalDeserialize(serialized_pipeline, len(serialized_pipeline), pipe_params)
-        pipe_obj = cls(deserialized_pipeline_handle=ret, batch_size=pipe_params.batch_size, num_threads=pipe_params.num_threads,
-                  device_id=pipe_params.device_id, seed=pipe_params.seed, prefetch_queue_depth=pipe_params.prefetch_queue_depth,
-                  rocal_cpu=pipe_params.rocal_cpu)
+        if ret is None:
+            raise RuntimeError("Failed to deserialize pipeline: rocalDeserialize returned an invalid handle.")
+
+        constructor_kwargs = {"deserialized_pipeline_handle": ret}
+        # Only pass parameters that are explicitly set (i.e., not None) to avoid
+        # forwarding unset optionals as None into the Pipeline constructor.
+        for attr in ("batch_size", "num_threads", "device_id", "seed",
+                     "prefetch_queue_depth", "rocal_cpu"):
+            value = getattr(pipe_params, attr, None)
+            if value is not None:
+                constructor_kwargs[attr] = value
+
+        pipe_obj = cls(**constructor_kwargs)
         pipe_obj.build()
 
         return pipe_obj
