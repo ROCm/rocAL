@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 // kernel definitions for HIP
 
+#include <cstdint>
+
 #define ENABLE_EVENT_BASED_SYNC 0
 int HipExecCopyInt8ToNHWC(
     hipStream_t stream,
@@ -73,6 +75,26 @@ void HipExecResizeTensor(
     size_t *dst_height,
     size_t *src_height_stride,
     size_t *src_img_offset,
+    unsigned channels,
+    const size_t max_src_width,
+    const size_t max_src_height,
+    const size_t max_dst_width,
+    const size_t max_dst_height);
+
+// Resizes a compacted subset of images and writes into the correct output slot using `dst_img_idx`
+// (maps subset index -> original batch index). This avoids per-image branching inside the resize kernel.
+void HipExecResizeTensorMapped(
+    hipStream_t stream,
+    void *src_ptr,
+    void *dst_ptr,
+    unsigned batch_size,
+    size_t *src_width,
+    size_t *src_height,
+    size_t *dst_width,
+    size_t *dst_height,
+    size_t *src_height_stride,
+    size_t *src_img_offset,
+    uint32_t *dst_img_idx,
     unsigned channels,
     const size_t max_src_width,
     const size_t max_src_height,
