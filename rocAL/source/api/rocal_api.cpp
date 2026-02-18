@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/message.h>
 
+#include <cstring>
 #include <exception>
 #include <string>
 

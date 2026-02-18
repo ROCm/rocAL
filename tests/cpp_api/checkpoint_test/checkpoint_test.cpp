@@ -174,10 +174,25 @@ int main(int argc, const char **argv) {
         std::cout << std::endl;
     }
     // Capture a checkpoint mid-run (after 15 iterations) and then continue running to completion.
-    size_t size_ckpt;
-    rocalCheckpoint(handle, &size_ckpt);
+    size_t size_ckpt = 0;
+    RocalStatus ckpt_status = rocalCheckpoint(handle, &size_ckpt);
+    if (ckpt_status != ROCAL_OK) {
+        std::cout << "rocalCheckpoint failed: " << rocalGetErrorMessage(handle) << std::endl;
+        rocalRelease(handle);
+        return -1;
+    }
+    if (size_ckpt == 0) {
+        std::cout << "rocalCheckpoint returned empty checkpoint" << std::endl;
+        rocalRelease(handle);
+        return -1;
+    }
     std::string serialized_ckpt(size_ckpt, '\0');
-    rocalGetSerializedCheckpointString(handle, &serialized_ckpt[0]);
+    ckpt_status = rocalGetSerializedCheckpointString(handle, &serialized_ckpt[0]);
+    if (ckpt_status != ROCAL_OK) {
+        std::cout << "rocalGetSerializedCheckpointString failed: " << rocalGetErrorMessage(handle) << std::endl;
+        rocalRelease(handle);
+        return -1;
+    }
 
     // Save to file
     std::ofstream file("checkpoint.bin", std::ios::binary);

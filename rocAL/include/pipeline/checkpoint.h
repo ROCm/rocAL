@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <mutex>
 #include <random>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -82,7 +83,11 @@ class Checkpoint {
 
     /*! \brief Return the checkpoint entry for a given operator name. */
     const std::shared_ptr<OperatorCheckpoint> &GetOperatorCheckpoint(const std::string &op_name) {
-        return _op_cpts[_name_to_id[op_name]];
+        auto it = _name_to_id.find(op_name);
+        if (it == _name_to_id.end() || it->second >= _op_cpts.size()) {
+            throw std::out_of_range("Operator checkpoint not found: " + op_name);
+        }
+        return _op_cpts[it->second];
     }
 
    private:

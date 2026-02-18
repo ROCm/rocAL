@@ -75,7 +75,7 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
         batch = iterator.next()
         [image], label = batch
         image_names = _get_image_names(pipe)
-        for idx in range(batch_size):
+        for idx in range(bs):
             print(image_names[idx], label[idx])
 
     # Save checkpoint bytes (and optionally to file)
@@ -92,7 +92,7 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
         batch = iterator.next()
         [image], label = batch
         image_names = _get_image_names(pipe)
-        for idx in range(batch_size):
+        for idx in range(bs):
             print(image_names[idx], label[idx])
 
     return serialized_ckpt, ckpt_path
