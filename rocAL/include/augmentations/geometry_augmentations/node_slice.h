@@ -40,14 +40,12 @@ class SliceNode : public Node {
     void create_shape_tensor();
 
    private:
-    vx_array _fill_values_array = nullptr;
     void *_shape_array = nullptr;
     Tensor *_anchor = nullptr;
     Tensor *_shape_tensor_param = nullptr;
     vx_tensor _shape_tensor_handle = nullptr;
     std::vector<float> _fill_values, _fill_values_vec;
     std::vector<int> _shape_vec;
-    std::vector<std::vector<uint32_t>> _slice_roi;
     bool _use_tensor_shape = false;
     OutOfBoundsPolicy _policy = OutOfBoundsPolicy::ERROR;
 };
