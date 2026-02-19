@@ -1,4 +1,22 @@
-"""Checkpointing example for the rocAL Python API."""
+# Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
 import sys
 import os
@@ -11,11 +29,11 @@ import amd.rocal.types as types
 import numpy as np
 
 seed = 1549361629
-image_dir = "/opt/rocm/share/rocal/test/data/images/AMD-tinyDataSet"
+image_dir = os.environ.get("ROCM_PATH", "/opt/rocm") + "/share/rocal/test/data/images/AMD-tinyDataSet"
 batch_size = 1
 gpu_id = 0
 
-def _get_image_names(pipe: Pipeline):
+def get_image_names(pipe: Pipeline):
     batch_size = pipe._batch_size  # pylint: disable=protected-access
     name_lengths = np.zeros(batch_size, dtype=np.int32)
     total_length = pipe.get_image_name_length(name_lengths)
@@ -74,7 +92,7 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
     for i in range(3):
         batch = iterator.next()
         [image], label = batch
-        image_names = _get_image_names(pipe)
+        image_names = get_image_names(pipe)
         for idx in range(bs):
             print(image_names[idx], label[idx])
 
@@ -91,7 +109,7 @@ def create_and_checkpoint(bs, rocal_device, rocal_cpu, img_folder, ckpt_path=Non
     for i in range(5):
         batch = iterator.next()
         [image], label = batch
-        image_names = _get_image_names(pipe)
+        image_names = get_image_names(pipe)
         for idx in range(bs):
             print(image_names[idx], label[idx])
 
