@@ -1,4 +1,4 @@
-# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2018 - 2026 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -17,3 +17,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+# Expose version from rocal_pybind
+try:
+    import rocal_pybind
+    __version__ = rocal_pybind.__version__
+except (ImportError, AttributeError):
+    __version__ = "unknown"

@@ -291,6 +291,14 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
 
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
+
+    // Add version attribute
+#ifdef ROCAL_VERSION
+    m.attr("__version__") = ROCAL_VERSION;
+#else
+    m.attr("__version__") = "unknown";
+#endif
+
     // Bind the C++ structure
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it", py::return_value_policy::reference);
@@ -319,6 +327,7 @@ PYBIND11_MODULE(rocal_pybind, m) {
         // Return only the first 'size' bytes as Python bytes object
         return py::bytes(buffer.data(), size);
     }, "Returns the serialized pipeline as string");
+    m.def("rocalDeserialize", &rocalDeserialize, "Creates context from the serialized string", py::return_value_policy::reference);
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)
@@ -681,7 +690,14 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
                 Returns a TensorList at given position in the list.
                 )code",
             py::return_value_policy::reference);
-
+    py::class_<RocalPipelineParams>(m, "RocalPipelineParams")
+        .def(py::init<>())
+        .def_readwrite("batch_size", &RocalPipelineParams::batch_size)
+        .def_readwrite("num_threads", &RocalPipelineParams::num_threads)
+        .def_readwrite("prefetch_queue_depth", &RocalPipelineParams::prefetch_queue_depth)
+        .def_readwrite("device_id", &RocalPipelineParams::device_id)
+        .def_readwrite("rocal_cpu", &RocalPipelineParams::rocal_cpu)
+        .def_readwrite("seed", &RocalPipelineParams::seed);
     py::module types_m = m.def_submodule("types");
     types_m.doc() = "Datatypes and options used by ROCAL";
     py::enum_<RocalStatus>(types_m, "RocalStatus", "Status info")
