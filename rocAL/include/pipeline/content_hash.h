@@ -38,8 +38,11 @@ THE SOFTWARE.
  * inequality, ordering, and use as an unordered_map key via the
  * std::hash specialization provided below.
  */
+/// Number of 32-bit lanes in the 256-bit content hash (256 / 32 = 8).
+constexpr int kContentHashLanes = 8;
+
 struct content_hash_t {
-    std::array<std::uint32_t, 8> data{};  ///< Eight 32-bit lanes comprising the 256-bit hash
+    std::array<uint32_t, kContentHashLanes> data{};  ///< Eight 32-bit lanes comprising the 256-bit hash
 
     friend bool operator==(const content_hash_t &a, const content_hash_t &b) noexcept {
         return a.data == b.data;
@@ -58,19 +61,19 @@ struct content_hash_t {
 namespace content_hash_detail {
 
 /// Rotate a 32-bit value left by \p r bits.
-inline constexpr std::uint32_t rotl32(std::uint32_t x, std::uint8_t r) noexcept {
+inline constexpr uint32_t rotl32(uint32_t x, uint8_t r) noexcept {
     return (x << r) | (x >> (32U - r));
 }
 
 /// Read a 32-bit little-endian word from a potentially unaligned pointer.
-inline std::uint32_t read_u32_unaligned(const std::uint8_t *ptr) noexcept {
-    std::uint32_t word = 0;
+inline uint32_t read_u32_unaligned(const uint8_t *ptr) noexcept {
+    uint32_t word = 0;
     std::memcpy(&word, ptr, sizeof(word));
     return word;
 }
 
 /// MurmurHash3 64-bit finalization mix (public domain).
-inline std::uint64_t mix64(std::uint64_t x) noexcept {
+inline uint64_t mix64(uint64_t x) noexcept {
     // MurmurHash3 64-bit finalization mix (public domain).
     x ^= x >> 33U;
     x *= 0xff51afd7ed558ccdULL;
@@ -81,13 +84,13 @@ inline std::uint64_t mix64(std::uint64_t x) noexcept {
 }
 
 /// Collapse a 256-bit content_hash_t into a single 64-bit value for use in hash tables.
-inline std::uint64_t to_u64(const content_hash_t &h) noexcept {
-    std::uint64_t acc = 0x9e3779b97f4a7c15ULL;
+inline uint64_t to_u64(const content_hash_t &h) noexcept {
+    uint64_t acc = 0x9e3779b97f4a7c15ULL;
     for (int i = 0; i < 4; ++i) {
-        const std::uint64_t lo = static_cast<std::uint64_t>(h.data[i * 2]);
-        const std::uint64_t hi = static_cast<std::uint64_t>(h.data[i * 2 + 1]);
-        const std::uint64_t chunk = lo | (hi << 32U);
-        acc ^= mix64(chunk + (0x9e3779b97f4a7c15ULL * static_cast<std::uint64_t>(i + 1)));
+        const uint64_t lo = static_cast<uint64_t>(h.data[i * 2]);
+        const uint64_t hi = static_cast<uint64_t>(h.data[i * 2 + 1]);
+        const uint64_t chunk = lo | (hi << 32U);
+        acc ^= mix64(chunk + (0x9e3779b97f4a7c15ULL * static_cast<uint64_t>(i + 1)));
         acc = mix64(acc);
     }
     return acc;
@@ -113,20 +116,20 @@ inline void content_hash(content_hash_t &hash, const void *data, std::size_t n) 
     // Entropy is spread across all 8 lanes by mixing each state word with a neighboring state word
     // (shifted by one). Each lane uses a different rotation, and a bias term helps avoid
     // low-entropy results for constant/zero inputs.
-    constexpr std::uint32_t kPrime = 2246822519u;
-    constexpr std::uint32_t kBias = 103456789u;
-    constexpr std::array<std::uint8_t, 8> kBlockRot = {13, 16, 15, 17, 14, 18, 12, 19};
+    constexpr uint32_t kPrime = 2246822519u;
+    constexpr uint32_t kBias = 103456789u;
+    constexpr std::array<uint8_t, kContentHashLanes> kBlockRot = {13, 16, 15, 17, 14, 18, 12, 19};
 
-    const auto *data8 = static_cast<const std::uint8_t *>(data);
+    const auto *data8 = static_cast<const uint8_t *>(data);
 
     std::size_t offset = 0;
     for (; offset + 32 <= n; offset += 32) {
-        std::array<std::uint32_t, 8> words{};
+        std::array<uint32_t, kContentHashLanes> words{};
         std::memcpy(words.data(), data8 + offset, 32);
         const content_hash_t prev = hash;
 
-        for (int i = 0; i < 8; ++i) {
-            const int prev_idx = (i + 7) & 7;
+        for (int i = 0; i < kContentHashLanes; ++i) {
+            const int prev_idx = (i + kContentHashLanes - 1) & (kContentHashLanes - 1);
             hash.data[i] += (content_hash_detail::rotl32(prev.data[prev_idx], kBlockRot[i]) + words[i] + kBias) * kPrime;
         }
     }
@@ -134,26 +137,26 @@ inline void content_hash(content_hash_t &hash, const void *data, std::size_t n) 
     // Handle remaining 32-bit words.
     int word_idx = 0;
     for (; offset + 4 <= n; offset += 4, ++word_idx) {
-        const std::uint32_t word = content_hash_detail::read_u32_unaligned(data8 + offset);
-        hash.data[word_idx] += (content_hash_detail::rotl32(hash.data[(word_idx + 7) & 7], 13) + word + kBias) * kPrime;
+        const uint32_t word = content_hash_detail::read_u32_unaligned(data8 + offset);
+        hash.data[word_idx] += (content_hash_detail::rotl32(hash.data[(word_idx + kContentHashLanes - 1) & (kContentHashLanes - 1)], 13) + word + kBias) * kPrime;
     }
 
     // Mix the final bytes; include the tail length/position so even constant tails (including zeros)
     // affect the output.
-    word_idx &= 7;
-    std::uint32_t tail = 0xCCCCCCCCu + static_cast<std::uint32_t>(offset);
+    word_idx &= (kContentHashLanes - 1);
+    uint32_t tail = 0xCCCCCCCCu + static_cast<uint32_t>(offset);
     for (; offset < n; ++offset) {
-        tail = content_hash_detail::rotl32(tail, 17) + static_cast<std::uint32_t>(data8[offset]) * kPrime;
+        tail = content_hash_detail::rotl32(tail, 17) + static_cast<uint32_t>(data8[offset]) * kPrime;
     }
-    hash.data[word_idx] = (content_hash_detail::rotl32(hash.data[(word_idx + 7) & 7], 13) + tail) * kPrime;
+    hash.data[word_idx] = (content_hash_detail::rotl32(hash.data[(word_idx + kContentHashLanes - 1) & (kContentHashLanes - 1)], 13) + tail) * kPrime;
 
     // Final avalanche so hashes diverge more, even when differences occur near the end
     // before mixing has propagated through all lanes.
-    for (int i = 0; i < 8; ++i) {
-        hash.data[i] += (hash.data[(i + 1) & 7] + kBias) * kPrime;
+    for (int i = 0; i < kContentHashLanes; ++i) {
+        hash.data[i] += (hash.data[(i + 1) & (kContentHashLanes - 1)] + kBias) * kPrime;
     }
-    for (int i = 0; i < 8; ++i) {
-        hash.data[i] += (hash.data[(i + 7) & 7] + kBias) * kPrime;
+    for (int i = 0; i < kContentHashLanes; ++i) {
+        hash.data[i] += (hash.data[(i + (kContentHashLanes - 1)) & (kContentHashLanes - 1)] + kBias) * kPrime;
     }
 }
 
@@ -163,8 +166,8 @@ namespace std {
 template <>
 struct hash<content_hash_t> {
     size_t operator()(const content_hash_t &h) const noexcept {
-        const std::uint64_t v = content_hash_detail::to_u64(h);
-        if constexpr (sizeof(size_t) == sizeof(std::uint64_t)) {
+        const uint64_t v = content_hash_detail::to_u64(h);
+        if constexpr (sizeof(size_t) == sizeof(uint64_t)) {
             return static_cast<size_t>(v);
         }
         return static_cast<size_t>(v ^ (v >> 32U));

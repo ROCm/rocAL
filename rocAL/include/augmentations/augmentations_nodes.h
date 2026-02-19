@@ -79,7 +79,6 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_normalize.h"
 #include "augmentations/audio_augmentations/node_mel_filter_bank.h"
 #include "augmentations/geometry_augmentations/node_transpose.h"
-#include "augmentations/effects_augmentations/node_gaussian_noise.h"
 #include "augmentations/arithmetic_augmentations/node_log1p.h"
 #include "augmentations/node_python_function.h"
 #include "augmentations/color_augmentations/node_color_cast.h"

@@ -168,7 +168,7 @@ public:
      * Allocates the output anchor tensor and replicates the crop shape across the batch.
      * The actual crop position is computed per-iteration in update_roi_random_crop().
      */
-    Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, int *crop_shape);
+    Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, const int *crop_shape);
 
     /*! \brief Set up the random object bounding box operator.
      * Creates a RandomObjectBbox instance that identifies connected components in a label

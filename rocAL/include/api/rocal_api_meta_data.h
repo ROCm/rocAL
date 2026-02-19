@@ -339,14 +339,14 @@ RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
 
 /*! \brief Generate a random crop anchor within the specified ROI for each sample in the batch.
  * \ingroup group_rocal_meta_data
- * \param [in] rocal_context rocal context
- * \param [in] crop_shape_batch The batch of crop shapes to be used for cropping the images in the output batch
- * \param [in] roi_begin_batch The batch of roi begin coordinates to be used for cropping the images in the output batch
- * \param [in] input_shape_batch The batch of input image shapes for the images in the output batch
- * \param [in] roi_end_batch The batch of roi end coordinates to be used for cropping the images in the output batch
+ * \param [in] p_context rocal context
+ * \param [in] p_input The input tensor
+ * \param [in] roi_start Tensor specifying the starting coordinates of the ROI
+ * \param [in] roi_end Tensor specifying the ending coordinates of the ROI
+ * \param [in] crop_shape The desired crop dimensions (excluding batch dimension)
  * \param [out] anchor The generated anchor tensor
  */
-extern "C" RocalTensor ROCAL_API_CALL rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, std::vector<int> crop_shape);
+extern "C" RocalTensor ROCAL_API_CALL rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, const std::vector<int> &crop_shape);
 
 /*! \brief Find connected-component bounding boxes in a label/segmentation tensor and return a randomly selected one per sample.
  * \ingroup group_rocal_meta_data

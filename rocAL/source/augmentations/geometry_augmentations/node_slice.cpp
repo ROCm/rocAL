@@ -42,6 +42,7 @@ void fill_values_buffer(std::vector<float> &dst, const std::vector<float> &src) 
         return;
     }
 
+    // Copy as many values as available from src; if src is shorter than dst, the remainder is filled with the last src value below.
     const auto copy_count = std::min(dst.size(), src.size());
     std::copy_n(src.begin(), copy_count, dst.begin());
     if (copy_count < dst.size())
@@ -56,7 +57,7 @@ void SliceNode::create_node() {
         return;
 
     vx_tensor shape_tensor = nullptr;
-    if (_use_tensor_shape) {
+    if (_use_shape_tensor) {
         if (!_shape_tensor)
             THROW("Slice node expects a valid shape tensor when tensor-based API is used");
         shape_tensor = _shape_tensor->handle();
@@ -90,14 +91,14 @@ void SliceNode::create_node() {
 
 void SliceNode::update_node() {}
 
-void SliceNode::init(Tensor *anchor, std::vector<int> shape, std::vector<float> &fill_values, OutOfBoundsPolicy policy) {
+void SliceNode::init(Tensor *anchor, const std::vector<int> &shape, std::vector<float> &fill_values, OutOfBoundsPolicy policy) {
     _policy = static_cast<OutOfBoundsPolicy>(policy);
     _anchor = anchor;
-    _shape_vec = std::move(shape);
+    _shape_vec = shape;
     _fill_values = fill_values;
     _fill_values_vec.resize(_batch_size);
     fill_values_buffer(_fill_values_vec, _fill_values);
-    _use_tensor_shape = false;
+    _use_shape_tensor = false;
 }
 
 void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_values, OutOfBoundsPolicy policy) {
@@ -107,12 +108,12 @@ void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_val
     _fill_values = fill_values;
     _fill_values_vec.resize(_batch_size);
     fill_values_buffer(_fill_values_vec, _fill_values);
-    _use_tensor_shape = true;
+    _use_shape_tensor = true;
 }
 
 // Create vx_tensor for the shape coordinates
 void SliceNode::create_shape_tensor() {
-    if (_use_tensor_shape)
+    if (_use_shape_tensor)
         return;
     if (_shape_vec.empty())
         THROW("Slice node expects valid shape dimensions when using vector-based API");

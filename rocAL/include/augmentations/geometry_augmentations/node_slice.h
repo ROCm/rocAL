@@ -31,7 +31,7 @@ class SliceNode : public Node {
     SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SliceNode() = delete;
     ~SliceNode();
-    void init(Tensor *anchor_param, std::vector<int> shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
+    void init(Tensor *anchor_param, const std::vector<int> &shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
     void init(Tensor *anchor_param, Tensor *shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
 
    protected:
@@ -46,7 +46,7 @@ class SliceNode : public Node {
     Tensor *_shape_tensor = nullptr;           ///< External Tensor providing per-sample shape (tensor-shape mode)
     vx_tensor _shape_tensor_handle = nullptr;  ///< OpenVX tensor handle wrapping _shape_array (fixed-shape mode)
     std::vector<float> _fill_values, _fill_values_vec;  ///< Fill values for out-of-bounds padding, expanded to batch size
-    std::vector<int> _shape_vec;               ///< Fixed shape dimensions (excluding batch), used when _use_tensor_shape is false
-    bool _use_tensor_shape = false;            ///< Selects between fixed-shape (false) and tensor-shape (true) modes
+    std::vector<int> _shape_vec;               ///< Fixed shape dimensions (excluding batch), used when _use_shape_tensor is false
+    bool _use_shape_tensor = false;            ///< Selects between fixed-shape (false) and tensor-shape (true) modes
     OutOfBoundsPolicy _policy = OutOfBoundsPolicy::ERROR;  ///< Policy for handling out-of-bounds regions
 };

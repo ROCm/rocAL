@@ -1558,7 +1558,7 @@ def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_
 
     anchor_tensor = anchor
     if isinstance(anchor, (list, tuple)):
-        if len(anchor) != 1:
+        if len(anchor) != 1 or isinstance(anchor[0], (int, float)):
             raise ValueError("anchor must be a single tensor or a singleton list/tuple containing a tensor")
         anchor_tensor = anchor[0]
 
@@ -1574,7 +1574,7 @@ def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_
     else:
         shape_tensor = shape
         if isinstance(shape, (list, tuple)):
-            if len(shape) != 1:
+            if len(shape) != 1 or isinstance(shape[0], (int, float)):
                 raise ValueError("shape must be a tensor, a singleton list/tuple containing a tensor, or a non-empty list/tuple of ints")
             shape_tensor = shape[0]
         kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "anchor": anchor_tensor, "shape": shape_tensor, "fill_values": fill_values,

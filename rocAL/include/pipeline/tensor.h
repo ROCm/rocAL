@@ -254,28 +254,6 @@ class TensorInfo {
         set_tensor_layout(layout);            // Modify the layout and dims based on the layout input
         reset_tensor_roi_buffers();           // Reset ROI buffers to reflect the modified width and height
     }
-    // Modify tensor dimensions for volumetric (NDHWC/NCDHW) layouts.
-    void modify_dims(RocalTensorlayout layout, std::vector<int> new_dims) {
-        if (new_dims.size() != 4)
-            THROW("new_dims must have exactly 4 elements for volumetric layouts")
-        switch (_layout) {
-            case RocalTensorlayout::NDHWC:
-            case RocalTensorlayout::NCDHW: {
-                _max_shape[0] = _dims[1] = new_dims[0];
-                _max_shape[1] = _dims[2] = new_dims[1];
-                _max_shape[2] = _dims[3] = new_dims[2];
-                _max_shape[3] = _dims[4] = new_dims[3];
-                break;
-            }
-            default: {
-                THROW("Invalid layout type specified")
-            }
-        }
-        modify_strides();
-        _data_size = _strides[0] * _dims[0];  // Modify data size wrt latest width and height
-        set_tensor_layout(layout);            // Modify the layout and dims based on the layout input
-        reset_tensor_roi_buffers();           // Reset ROI buffers to reflect the modified width and height
-    }
     void modify_strides() {
         _strides[_num_of_dims - 1] = _data_type_size;
         for (int i = _num_of_dims - 2; i >= 0; i--) {

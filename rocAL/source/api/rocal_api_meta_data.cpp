@@ -501,7 +501,7 @@ RocalTensorList
 
 RocalTensor
     ROCAL_API_CALL
-    rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, std::vector<int> crop_shape) {
+    rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, const std::vector<int> &crop_shape) {
     RocalTensor output = nullptr;
     ROCAL_INVALID_CONTEXT_EXCEPTION(p_context);
     ROCAL_INVALID_INPUT_ERR(p_input, output);

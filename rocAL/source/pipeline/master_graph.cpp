@@ -1612,7 +1612,7 @@ TensorList *MasterGraph::random_object_bbox(Tensor *input, std::string output_fo
     return _random_object_bbox->init(input, output_format, k_largest, foreground_prob, cache_objects);
 }
 
-Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, int *crop_shape)
+Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, const int *crop_shape)
 {
     _is_roi_random_crop = true;
     _roi_start_tensor = roi_start;
