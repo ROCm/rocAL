@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <array>
 #include <vx_ext_rpp.h>
 #include "augmentations/color_augmentations/node_brightness.h"
 #include "pipeline/exception.h"

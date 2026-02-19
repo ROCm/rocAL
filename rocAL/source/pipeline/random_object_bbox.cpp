@@ -48,6 +48,8 @@ RandomObjectBbox::~RandomObjectBbox() {
 // For "anchor_shape" and "start_end", two tensors are created (one for each component).
 // For "box", a single tensor with double the spatial dims holds concatenated start+end.
 TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int k_largest, float foreground_prob, bool cache_objects) {
+    if (output_format != "start_end" && output_format != "anchor_shape" && output_format != "box")
+        THROW("RandomObjectBbox: invalid output_format '" + output_format + "'. Must be one of: 'anchor_shape', 'start_end', 'box'")
     _label_tensor = input;
     _k_largest = k_largest;
     _foreground_prob = foreground_prob;
@@ -127,15 +129,15 @@ void RandomObjectBbox::update() {
         }
         int selected_label = -1;
         std::vector<std::vector<std::vector<unsigned>>> boxes;  // total - lo,hi - 4D
-        if (fg) {
+        // Validate roi_size dimensionality before running 4D-specific processing
+        if (roi_size.size() < 4) {
+            ERR("RandomObjectBbox: Expected roi_size with at least 4 dimensions, got " + TOSTR(roi_size.size()));
+            // Leave total_box as 0 so that downstream logic falls back to full-extent ROI.
+        } else if (fg) {
             total_box = labelMergeFunc(label, selected_label, roi_size, max_size, output_compact, _rng[i], cache_entry);
         }
         if (total_box) {
-            if (roi_size.size() < 4) {
-                ERR("RandomObjectBbox: Expected roi_size with at least 4 dimensions, got " + TOSTR(roi_size.size()));
-                boxes.clear();
-                total_box = 0;
-            } else if (!cache_entry || !cache_entry->Get(boxes, selected_label)) {
+            if (!cache_entry || !cache_entry->Get(boxes, selected_label)) {
             std::vector<std::pair<unsigned, unsigned>> ranges;      // totalbox - lo,hi
             std::vector<unsigned> hits;
             boxes.resize(total_box);

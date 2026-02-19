@@ -1546,7 +1546,7 @@ def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_inte
 def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
     """
     The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
-    @param anchor (int or 1D RocalTensor of ints)                                      The absolute starting co-ordinate points of the slice.
+    @param anchor (1D RocalTensor of ints)                                             The absolute starting co-ordinate points of the slice.
     @param shape (list of int or 1D RocalTensor of ints)                               The absolute co-ordinate for the dimensions of the slice.
     @param fill_values (float or list of float)                                        Determines the padding values and is only relevant if out_of_bounds_policy is “pad” policy.
     @param out_of_bounds_policy ("error", "pad", "trim_to_shape")                      Determines the policy when slicing the out of bounds area of the input.
@@ -1556,6 +1556,8 @@ def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_
     if anchor is None or shape is None:
         raise ValueError("Both anchor and shape must be provided to slice")
 
+    if isinstance(anchor, (int, float)):
+        raise ValueError("anchor must be a RocalTensor or a singleton list/tuple containing a tensor, not a scalar")
     anchor_tensor = anchor
     if isinstance(anchor, (list, tuple)):
         if len(anchor) != 1 or isinstance(anchor[0], (int, float)):
