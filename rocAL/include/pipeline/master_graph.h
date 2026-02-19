@@ -47,7 +47,7 @@ THE SOFTWARE.
 #endif
 #include "pipeline/ring_buffer.h"
 #include "pipeline/timing_debug.h"
-#include "pipeline/content_hash.h"
+#include "pipeline/random_object_bbox.h"
 #if ENABLE_HIP
 #include "box_encoder_hip.h"
 #include "device/device_manager_hip.h"
@@ -82,24 +82,6 @@ const __m256i avx_pkdMaskG = _mm256_setr_epi32(0x80808001, 0x80808004, 0x8080800
 const __m256i avx_pkdMaskB = _mm256_setr_epi32(0x80808002, 0x80808005, 0x80808008, 0x8080800B, 0x80808002,
                                                0x80808005, 0x80808008, 0x8080800B);
 #endif
-
-struct CacheEntry {
-    std::set<int> labels;
-    std::unordered_map<int, std::vector<std::vector<std::vector<unsigned>>>> class_boxes;
-    std::unordered_map<int, int> total_boxes;
-
-    bool Get(std::vector<std::vector<std::vector<unsigned>>> &boxes, int label) const {
-        auto it = class_boxes.find(label);
-        if (it == class_boxes.end())
-            return false;
-        boxes = it->second;
-        return true;
-    }
-
-    void Put(int label, const std::vector<std::vector<std::vector<unsigned>>> &boxes) {
-        class_boxes[label] = boxes;
-    }
-};
 
 class MasterGraph {
 public:
@@ -186,19 +168,6 @@ public:
     Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, int *crop_shape);
     TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
     void update_roi_random_crop();
-    void update_random_object_bbox();
-    void findLabels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
-    void filterByLabel(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
-    void labelRow(const int *label_base, const int *in_row, int *out_row, unsigned length);
-    int disjointGetGroup(const int &x) { return x; }
-    int disjointSetGroup(int &x, int new_id);
-    int disjointFind(int *items, int x);
-    int disjointMerge(int *items, int x, int y);
-    void mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
-    int labelMergeFunc(const u_int8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
-    bool hit(std::vector<unsigned>& hits, unsigned idx);
-    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> ranges, std::vector<unsigned> hits, int *in, std::vector<int> origin, unsigned width);
-    int pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest = -1);
 private:
     Status update_node_parameters();
     void create_single_graph();
@@ -283,24 +252,13 @@ private:
     bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
     BoxIouMatcherInfo _iou_matcher_info;
     bool _is_roi_random_crop = false;
-    bool _is_random_object_bbox = false;
+    std::unique_ptr<RandomObjectBbox> _random_object_bbox;
     int *_crop_shape_batch = nullptr;
     int *_roi_batch = nullptr;
     Tensor *_roi_random_crop_tensor = nullptr;
     Tensor *_roi_start_tensor = nullptr;
     Tensor *_roi_end_tensor = nullptr;
-    Tensor *_random_object_bbox_label_tensor = nullptr;
-    Tensor *_random_object_bbox_box1_tensor = nullptr;
-    Tensor *_random_object_bbox_box2_tensor = nullptr;
     void *_roi_random_crop_buf = nullptr;
-    void *_random_object_bbox_box1_buf = nullptr;
-    void *_random_object_bbox_box2_buf = nullptr;
-    TensorList _random_object_bbox_tensor_list;
-    std::string _random_object_bbox_output_format;
-    int _k_largest;
-    float _foreground_prob;
-    bool _cache_boxes;
-    std::unordered_map<content_hash_t, CacheEntry> _boxes_cache;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
