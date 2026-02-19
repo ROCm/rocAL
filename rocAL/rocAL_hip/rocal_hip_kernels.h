@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 // kernel definitions for HIP
 
+#include <cstdint>
+
 #define ENABLE_EVENT_BASED_SYNC 0
 int HipExecCopyInt8ToNHWC(
     hipStream_t stream,
@@ -73,6 +75,7 @@ void HipExecResizeTensor(
     size_t *dst_height,
     size_t *src_height_stride,
     size_t *src_img_offset,
+    const uint32_t *dst_img_idx,
     unsigned channels,
     const size_t max_src_width,
     const size_t max_src_height,

@@ -27,11 +27,6 @@ THE SOFTWARE.
 
 #include "rocjpeg/rocjpeg.h"
 
-struct ScalingFactor {
-  unsigned num;
-  unsigned denom;
-};
-
 /**
  * @brief Gets the channel pitch and sizes.
  *
@@ -236,8 +231,14 @@ class HWRocJpegDecoder : public Decoder {
     size_t *_dev_src_height = nullptr;
     size_t *_dev_dst_width = nullptr, *_dev_dst_height = nullptr;
     size_t *_dev_src_hstride = nullptr, *_dev_src_img_offset = nullptr;
+    uint32_t *_dev_dst_img_idx = nullptr;  // Maps resized-subset index -> original batch index in output tensor
+    std::vector<size_t> _src_width;
+    std::vector<size_t> _src_height;
+    std::vector<size_t> _dst_width;
+    std::vector<size_t> _dst_height;
     std::vector<size_t> _src_hstride;
     std::vector<size_t> _src_img_offset;
+    std::vector<uint32_t> _dst_img_idx;
     std::vector<bool> _image_needs_rescaling;   // A flag for each image in the batch, set to `true` if the image needs rescaling.
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params = {};
@@ -245,26 +246,5 @@ class HWRocJpegDecoder : public Decoder {
     bool _resize_batch = false;
     int _device_id = 0;
     hipStream_t _hip_stream;
-
-    // Using the Scaling factors from TurboJpeg decoder
-    unsigned _num_scaling_factors = 16;
-    ScalingFactor _scaling_factors[16] = {
-      { 2, 1 },
-      { 15, 8 },
-      { 7, 4 },
-      { 13, 8 },
-      { 3, 2 },
-      { 11, 8 },
-      { 5, 4 },
-      { 9, 8 },
-      { 1, 1 },
-      { 7, 8 },
-      { 3, 4 },
-      { 5, 8 },
-      { 1, 2 },
-      { 3, 8 },
-      { 1, 4 },
-      { 1, 8 }
-    };
 };
 #endif

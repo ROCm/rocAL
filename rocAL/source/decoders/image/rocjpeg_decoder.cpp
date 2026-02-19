@@ -74,8 +74,13 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _device_id = device_id;
     _batch_size = batch_size;
     _output_images.resize(_batch_size);
+    _src_width.resize(_batch_size);
+    _src_height.resize(_batch_size);
+    _dst_width.resize(_batch_size);
+    _dst_height.resize(_batch_size);
     _src_hstride.resize(_batch_size);
     _src_img_offset.resize(_batch_size);
+    _dst_img_idx.resize(_batch_size);
     _decode_params.resize(_batch_size);
     _image_needs_rescaling.resize(_batch_size);
 
@@ -86,6 +91,7 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     if (!_dev_dst_height) CHECK_HIP(hipMalloc((void **)&_dev_dst_height, _batch_size * sizeof(size_t)));
     if (!_dev_src_hstride) CHECK_HIP(hipMalloc((void **)&_dev_src_hstride, _batch_size * sizeof(size_t)));
     if (!_dev_src_img_offset) CHECK_HIP(hipMalloc((void **)&_dev_src_img_offset, _batch_size * sizeof(size_t)));
+    if (!_dev_dst_img_idx) CHECK_HIP(hipMalloc((void **)&_dev_dst_img_idx, _batch_size * sizeof(uint32_t)));
 
 }
 
@@ -133,15 +139,34 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
 
     if (width) *width = widths[0];
     if (height) *height = heights[0];
+    // Reset per-image flag for this batch (it is used later for intermediate buffer layout).
+    _image_needs_rescaling[index] = false;
+
     uint scaledw = widths[0], scaledh = heights[0];
-    // Scaling to be performed if width/height is greater than max decode width/height
-    if (widths[0] > max_decoded_width || heights[0] > max_decoded_height) {
-        for (unsigned j = 0; j < _num_scaling_factors; j++) {
-            scaledw = (((widths[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
-            scaledh = (((heights[0]) * _scaling_factors[j].num + _scaling_factors[j].denom - 1) / _scaling_factors[j].denom);
-            if (scaledw <= max_decoded_width && scaledh <= max_decoded_height)
-                break;
+    // If original dims exceed max decode dims, compute output dims that fit within max while preserving aspect ratio.
+    // Pick the scale based on the dimension that would be downscaled the most (largest original/max ratio).
+    if (max_decoded_width > 0 && max_decoded_height > 0 &&
+        (widths[0] > static_cast<uint32_t>(max_decoded_width) || heights[0] > static_cast<uint32_t>(max_decoded_height))) {
+        const uint32_t in_w = widths[0];
+        const uint32_t in_h = heights[0];
+        const uint32_t max_w = static_cast<uint32_t>(max_decoded_width);
+        const uint32_t max_h = static_cast<uint32_t>(max_decoded_height);
+
+        uint32_t out_w = max_w;
+        uint32_t out_h = max_h;
+
+        // Compare in_w/max_w vs in_h/max_h without FP: in_w * max_h ? in_h * max_w
+        if ((uint64_t)in_w * (uint64_t)max_h >= (uint64_t)in_h * (uint64_t)max_w) {
+            // Width is the limiting (largest) dimension.
+            out_w = max_w;
+            out_h = static_cast<uint32_t>(((uint64_t)max_w * (uint64_t)in_h) / (uint64_t)in_w);
+        } else {
+            // Height is the limiting (largest) dimension.
+            out_h = max_h;
+            out_w = static_cast<uint32_t>(((uint64_t)max_h * (uint64_t)in_w) / (uint64_t)in_h);
         }
+        scaledw = out_w ? out_w : 1;
+        scaledh = out_h ? out_h : 1;
     }
     // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
     if (scaledw != widths[0] || scaledh != heights[0]) {
@@ -157,7 +182,11 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     if (actual_width) *actual_width = scaledw;
     if (actual_height) *actual_height = scaledh;
 
-    _rocjpeg_image_buff_size += max_widths[0] * max_heights[0];
+    // Only images that are decoded into the intermediate buffer contribute to its size.
+    // Non-resized images will decode directly into the output tensor.
+    if (_image_needs_rescaling[index]) {
+        _rocjpeg_image_buff_size += max_widths[0] * max_heights[0];
+    }
 
     return Status::OK;
 }
@@ -195,43 +224,68 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
                                                std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
 
 
+    // Decode directly into the output tensor for images that don't need resizing.
+    // For images that need resizing, decode into an intermediate buffer (original size) and then resize into output.
+    unsigned resize_count = 0;
     if (_resize_batch) {
-        // Allocate memory for the itermediate decoded output
-        _rocjpeg_image_buff_size *= _num_channels;
+        for (unsigned i = 0; i < _batch_size; i++) {
+            if (_image_needs_rescaling[i]) resize_count++;
+        }
+    }
+
+    if (_resize_batch && resize_count) {
+        // Allocate memory for the intermediate decoded output for only the images that need resizing.
+        const size_t resize_image_buff_bytes = (size_t)_rocjpeg_image_buff_size * (size_t)_num_channels;
         if (!_rocjpeg_image_buff) {
-            CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
-            _prev_image_buff_size = _rocjpeg_image_buff_size;
-        } else if (_rocjpeg_image_buff_size > _prev_image_buff_size) {  // Reallocate if the intermediate output exceeds the allocated memory
+            CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, resize_image_buff_bytes));
+            _prev_image_buff_size = resize_image_buff_bytes;
+        } else if (resize_image_buff_bytes > _prev_image_buff_size) {  // Reallocate if intermediate output exceeds allocated memory
             CHECK_HIP(hipFree((void *)_rocjpeg_image_buff));
-            CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, _rocjpeg_image_buff_size));
-            _prev_image_buff_size = _rocjpeg_image_buff_size;
+            CHECK_HIP(hipMalloc((void **)&_rocjpeg_image_buff, resize_image_buff_bytes));
+            _prev_image_buff_size = resize_image_buff_bytes;
         }
 
         uint8_t *img_buff = reinterpret_cast<uint8_t*>(_rocjpeg_image_buff);
         size_t src_offset = 0;
+        const bool needs_mapping = (resize_count != _batch_size);
 
-        // Update RocJpegImage with the pointer
+        // Update RocJpegImage pointers: resized images -> intermediate buffer; non-resized images -> output buffer.
+        // Build compact metadata for only the resized subset.
+        unsigned r = 0;
         for (unsigned i = 0; i < _batch_size; i++) {
+            if (_image_needs_rescaling[i]) {
                 _output_images[i].channel[0] = static_cast<uint8_t *>(img_buff);    // For RGB
-                _src_img_offset[i] = src_offset;
 
-                // For images having original width and height greater than the max decode width and height
-                // the buffer size is strided according to the original width and height, and pitch is set accordingly
-                // For other images the max decode width and height dims are used for the stride
-                unsigned pitch_width = _image_needs_rescaling[i] ? (original_image_width[i] + 8) & ~7 : max_decoded_width;
-                unsigned pitch_height = _image_needs_rescaling[i] ? (original_image_height[i] + 8) & ~7 : max_decoded_height;
-                src_offset += (pitch_width * pitch_height * _num_channels);
-                img_buff += (pitch_width * pitch_height * _num_channels);
-                _src_hstride[i] = pitch_width * _num_channels;
+                const unsigned pitch_width = (original_image_width[i] + 8) & ~7;
+                const unsigned pitch_height = (original_image_height[i] + 8) & ~7;
+                const size_t img_bytes = (size_t)pitch_width * (size_t)pitch_height * (size_t)_num_channels;
+
+                _src_width[r] = original_image_width[i];
+                _src_height[r] = original_image_height[i];
+                _dst_width[r] = actual_decoded_width[i];
+                _dst_height[r] = actual_decoded_height[i];
+                _src_hstride[r] = (size_t)pitch_width * (size_t)_num_channels;
+                _src_img_offset[r] = src_offset;
+                if (needs_mapping) _dst_img_idx[r] = i;
+
+                src_offset += img_bytes;
+                img_buff += img_bytes;
+                r++;
+            } else {
+                _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);  // Direct decode into output tensor
+            }
         }
 
-        // Copy width and height args to HIP memory
-        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, original_image_width.data(), _batch_size * sizeof(size_t)));
-        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, original_image_height.data(), _batch_size * sizeof(size_t)));
-        CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_width, actual_decoded_width.data(), _batch_size * sizeof(size_t)));
-        CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_height, actual_decoded_height.data(), _batch_size * sizeof(size_t)));
-        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_hstride, _src_hstride.data(), _batch_size * sizeof(size_t)));
-        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_img_offset, _src_img_offset.data(), _batch_size * sizeof(size_t)));
+        // Copy compacted args to HIP memory (only the resized subset).
+        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_width, _src_width.data(), resize_count * sizeof(size_t)));
+        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_height, _src_height.data(), resize_count * sizeof(size_t)));
+        CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_width, _dst_width.data(), resize_count * sizeof(size_t)));
+        CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_height, _dst_height.data(), resize_count * sizeof(size_t)));
+        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_hstride, _src_hstride.data(), resize_count * sizeof(size_t)));
+        CHECK_HIP(hipMemcpyHtoD((void *)_dev_src_img_offset, _src_img_offset.data(), resize_count * sizeof(size_t)));
+        if (needs_mapping) {
+            CHECK_HIP(hipMemcpyHtoD((void *)_dev_dst_img_idx, _dst_img_idx.data(), resize_count * sizeof(uint32_t)));
+        }
     } else {
         for (unsigned i = 0; i < _batch_size; i++) {
             _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);    // For RGB
@@ -240,11 +294,12 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
 
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params.data(), _output_images.data()));
 
-    if (_resize_batch) {
-        HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0], 
-                            _batch_size, _dev_src_width, _dev_src_height, 
-                            _dev_dst_width, _dev_dst_height, _dev_src_hstride, _dev_src_img_offset, _num_channels,
-                            max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
+    if (_resize_batch && resize_count) {
+        const uint32_t *dst_idx = (resize_count == _batch_size) ? nullptr : _dev_dst_img_idx;
+        HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0],
+                            resize_count, _dev_src_width, _dev_src_height,
+                            _dev_dst_width, _dev_dst_height, _dev_src_hstride, _dev_src_img_offset, dst_idx,
+                            _num_channels, max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
     }
     _resize_batch = false;  // Need to reset this value for every batch
     _rocjpeg_image_buff_size = 0;
@@ -264,5 +319,6 @@ HWRocJpegDecoder::~HWRocJpegDecoder() {
     if (_dev_dst_height) CHECK_HIP(hipFree(_dev_dst_height));
     if (_dev_src_hstride) CHECK_HIP(hipFree(_dev_src_hstride));
     if (_dev_src_img_offset) CHECK_HIP(hipFree(_dev_src_img_offset));
+    if (_dev_dst_img_idx) CHECK_HIP(hipFree(_dev_dst_img_idx));
 }
 #endif
