@@ -131,7 +131,11 @@ void RandomObjectBbox::update() {
             total_box = labelMergeFunc(label, selected_label, roi_size, max_size, output_compact, _rng[i], cache_entry);
         }
         if (total_box) {
-            if (!cache_entry || !cache_entry->Get(boxes, selected_label)) {
+            if (roi_size.size() < 4) {
+                ERR("RandomObjectBbox: Expected roi_size with at least 4 dimensions, got " + TOSTR(roi_size.size()));
+                boxes.clear();
+                total_box = 0;
+            } else if (!cache_entry || !cache_entry->Get(boxes, selected_label)) {
             std::vector<std::pair<unsigned, unsigned>> ranges;      // totalbox - lo,hi
             std::vector<unsigned> hits;
             boxes.resize(total_box);
@@ -206,7 +210,7 @@ void RandomObjectBbox::update() {
             process_sample(i);
         }
     } else {
-        auto num_threads = _cpu_num_threads * 2;
+        auto num_threads = _cpu_num_threads;
 #pragma omp parallel for num_threads(num_threads)
         for (uint i = 0; i < _user_batch_size; i++) {
             process_sample(i);
@@ -564,8 +568,8 @@ bool RandomObjectBbox::hit(std::vector<unsigned> &hits, unsigned idx) {
 // The `hits` bitmap tracks which labels appear in this row, enabling efficient
 // skipping of absent labels when iterating over the results.
 void RandomObjectBbox::get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes,
-                                          std::vector<std::pair<unsigned, unsigned>> ranges,
-                                          std::vector<unsigned> hits,
+                                          std::vector<std::pair<unsigned, unsigned>> &ranges,
+                                          std::vector<unsigned> &hits,
                                           int *in,
                                           std::vector<int> origin,
                                           unsigned width) {
@@ -573,7 +577,7 @@ void RandomObjectBbox::get_label_boundingboxes(std::vector<std::vector<std::vect
         mask = 0u;  // mark all labels as not found in this row
     }
 
-    int ndim = 4;
+    int ndim = origin.size();
 
     const unsigned nboxes = ranges.size();
     int background = -1;

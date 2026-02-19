@@ -131,7 +131,7 @@ class RandomObjectBbox {
     /// Test and set a bit in the hit bitmap; returns true if the bit was already set.
     bool hit(std::vector<unsigned> &hits, unsigned idx);
     /// Compute or expand axis-aligned bounding boxes from a row of compact labels. Each box spans the min/max coordinates across all dimensions.
-    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> ranges, std::vector<unsigned> hits, int *in, std::vector<int> origin, unsigned width);
+    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> &ranges, std::vector<unsigned> &hits, int *in, std::vector<int> origin, unsigned width);
     /// Randomly select a bounding box index, optionally restricted to the k-largest by volume. Returns -1 if no boxes exist.
     int pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest = -1);
 

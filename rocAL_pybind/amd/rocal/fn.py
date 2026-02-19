@@ -1565,7 +1565,7 @@ def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_
     is_fixed_shape = (
         isinstance(shape, (list, tuple)) and
         len(shape) > 0 and
-        all(isinstance(dim, numbers.Integral) and not isinstance(dim, bool) for dim in shape)
+        all(isinstance(dim, numbers.Integral) and not isinstance(dim, bool) and dim > 0 for dim in shape)
     )
     if is_fixed_shape:
         kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "anchor": anchor_tensor, "shape": list(shape), "fill_values": fill_values,
@@ -1601,7 +1601,7 @@ def roi_random_crop(*inputs, roi_start, roi_end, crop_shape):
     anchor = b.roiRandomCrop(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (anchor)
 
-def random_object_bbox(*inputs, format='anchor_shape', background=0, cache_objects=False, classes=[], foreground_prob=1.0, ignore_class=False, k_largest=-1, seed=0, threshold=[]):
+def random_object_bbox(*inputs, format='anchor_shape', cache_objects=False, foreground_prob=1.0, k_largest=-1):
     """!Finds bounding boxes of connected components (objects) in a segmentation mask and returns a randomly selected one.
 
         Performs connected-component labeling on the input label tensor to identify distinct
@@ -1613,15 +1613,10 @@ def random_object_bbox(*inputs, format='anchor_shape', background=0, cache_objec
         @param format (string, optional, default = 'anchor_shape')                    Output format: "anchor_shape" returns (anchor, shape) tensors,
                                                                                       "start_end" returns (start, end) tensors,
                                                                                       "box" returns a single tensor with concatenated start and end coordinates.
-        @param background (int, optional, default = 0)                                Label value representing the background class.
         @param cache_objects (bool, optional, default = False)                        If True, caches the computed bounding boxes per input hash to speed up repeated access.
-        @param classes (list, optional, default = [])                                  List of class labels to consider as foreground.
         @param foreground_prob (float, optional, default = 1.0)                       Probability of selecting a foreground object. If the random draw exceeds this
                                                                                       probability, the entire input extent is returned instead.
-        @param ignore_class (bool, optional, default = False)                         If True, ignores class distinctions and treats all non-background pixels as foreground.
         @param k_largest (int, optional, default = -1)                                If positive, restricts random selection to the k largest objects by volume.
-        @param seed (int, optional, default = 0)                                      Random seed.
-        @param threshold (list, optional, default = [])                               Threshold values for filtering objects.
 
         @return    Depending on format:
                    - "anchor_shape": tuple of (anchor_tensor, shape_tensor)

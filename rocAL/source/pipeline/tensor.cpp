@@ -344,6 +344,8 @@ int Tensor::create_from_handle(vx_context context) {
 // a ROI tensor — the caller is responsible for the buffer's lifetime and for
 // providing ROI data separately if needed.
 int Tensor::create_from_ptr(vx_context context, void *ptr) {
+    if (!ptr)
+        THROW("ptr cannot be null")
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")
         return -1;

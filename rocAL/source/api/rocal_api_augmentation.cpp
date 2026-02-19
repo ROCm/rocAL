@@ -3038,6 +3038,8 @@ rocalSlice(
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
+    ROCAL_INVALID_INPUT_ERR(p_anchor, output);
+    ROCAL_INVALID_INPUT_ERR(p_shape, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto anchor = static_cast<Tensor*>(p_anchor);

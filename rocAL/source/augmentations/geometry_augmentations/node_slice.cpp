@@ -57,9 +57,9 @@ void SliceNode::create_node() {
 
     vx_tensor shape_tensor = nullptr;
     if (_use_tensor_shape) {
-        if (!_shape_tensor_param)
+        if (!_shape_tensor)
             THROW("Slice node expects a valid shape tensor when tensor-based API is used");
-        shape_tensor = _shape_tensor_param->handle();
+        shape_tensor = _shape_tensor->handle();
     } else {
         create_shape_tensor();
         // Populate the shape buffer once — values are fixed for the lifetime of the node
@@ -103,7 +103,7 @@ void SliceNode::init(Tensor *anchor, std::vector<int> shape, std::vector<float> 
 void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_values, OutOfBoundsPolicy policy) {
     _policy = policy;
     _anchor = anchor;
-    _shape_tensor_param = shape;
+    _shape_tensor = shape;
     _fill_values = fill_values;
     _fill_values_vec.resize(_batch_size);
     fill_values_buffer(_fill_values_vec, _fill_values);

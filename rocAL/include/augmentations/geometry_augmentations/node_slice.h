@@ -43,7 +43,7 @@ class SliceNode : public Node {
    private:
     void *_shape_array = nullptr;              ///< Raw host/pinned buffer holding the per-sample shape values (fixed-shape mode)
     Tensor *_anchor = nullptr;                 ///< Tensor providing per-sample anchor (starting) coordinates
-    Tensor *_shape_tensor_param = nullptr;     ///< External Tensor providing per-sample shape (tensor-shape mode)
+    Tensor *_shape_tensor = nullptr;           ///< External Tensor providing per-sample shape (tensor-shape mode)
     vx_tensor _shape_tensor_handle = nullptr;  ///< OpenVX tensor handle wrapping _shape_array (fixed-shape mode)
     std::vector<float> _fill_values, _fill_values_vec;  ///< Fill values for out-of-bounds padding, expanded to batch size
     std::vector<int> _shape_vec;               ///< Fixed shape dimensions (excluding batch), used when _use_tensor_shape is false

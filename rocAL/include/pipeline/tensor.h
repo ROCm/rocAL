@@ -256,6 +256,8 @@ class TensorInfo {
     }
     // Modify tensor dimensions for volumetric (NDHWC/NCDHW) layouts.
     void modify_dims(RocalTensorlayout layout, std::vector<int> new_dims) {
+        if (new_dims.size() != 4)
+            THROW("new_dims must have exactly 4 elements for volumetric layouts")
         switch (_layout) {
             case RocalTensorlayout::NDHWC:
             case RocalTensorlayout::NCDHW: {
