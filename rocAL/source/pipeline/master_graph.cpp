@@ -967,8 +967,6 @@ void MasterGraph::output_routine() {
             _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
 #endif
             _ring_buffer.set_meta_data(full_batch_data_names, output_meta_data);
-            _ring_buffer.push();  // The data and metadata is now stored in output the ring_buffer, increases it's level by 1
-
             if (_checkpointing_enabled) {
                 std::lock_guard<std::mutex> lk(_checkpoint_mutex);  // Serialize checkpoint slot updates.
                 if (reserved_iter_data) {
@@ -981,6 +979,7 @@ void MasterGraph::output_routine() {
                     reserved_iter_data->rng_states = ParameterFactory::instance()->snapshot_rngs();
                 }
             }
+            _ring_buffer.push();  // The data and metadata is now stored in the ring_buffer, increases it's level by 1
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));

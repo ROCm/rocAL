@@ -334,11 +334,15 @@ PYBIND11_MODULE(rocal_pybind, m) {
         size_t size = 0;  // Serialized checkpoint size in bytes.
         RocalStatus status = rocalCheckpoint(context, &size);
         if (status != ROCAL_OK) {
-            throw std::runtime_error(rocalGetErrorMessage(context));
+            throw std::runtime_error("Failed to serialize checkpoint");
+        }
+        if (size == 0) {
+            throw std::runtime_error("Serialized checkpoint is empty");
         }
         std::string serialized_ckpt(size, '\0');  // Buffer for checkpoint bytes.
-        if (size > 0) {
-            rocalGetSerializedCheckpointString(context, serialized_ckpt.data());
+        status = rocalGetSerializedCheckpointString(context, serialized_ckpt.data());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to get serialized checkpoint string");
         }
         return py::bytes(serialized_ckpt);
     }, "Returns the serialized checkpoint as Python bytes");

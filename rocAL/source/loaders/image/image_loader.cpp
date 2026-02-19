@@ -225,7 +225,12 @@ ImageLoader::load_routine() {
                 if (_is_checkpointing_enabled) {
                     _decoded_data_info._loader_state.epoch_number = _epoch_count;
                     _decoded_data_info._loader_state.iteration_number = _iteration_count;
-                    _decoded_data_info._loader_state.rng = _image_loader->get_rng_state();
+                    try {
+                        _decoded_data_info._loader_state.rng = _image_loader->get_rng_state();
+                    } catch (...) {
+                        _decoded_data_info._loader_state.rng = std::mt19937{};
+                        ERR("Checkpointing: reader RNG state not available, using default RNG state");
+                    }
                     _decoded_data_info._loader_state.curr_file_idx = _image_loader->get_curr_file_idx();
                 }
                 if (_randombboxcrop_meta_data_reader) {

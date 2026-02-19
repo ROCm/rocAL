@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2026 Advanced Micro Devices, Inc.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,26 +48,12 @@ project(checkpoint_test)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
-find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
 link_directories(${ROCM_PATH}/lib)
 file(GLOB My_Source_Files ./checkpoint_test.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
-
-if(OpenCV_FOUND)
-    if(${OpenCV_VERSION_MAJOR} EQUAL 4)
-        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
-        include_directories(${OpenCV_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-    else()
-        message(FATAL_ERROR "OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Not Supported (requires OpenCV4)")
-    endif()
-else()
-    message(FATAL_ERROR "OpenCV Not Found -- No Display Support")
-endif()
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 target_link_libraries(${PROJECT_NAME} rocal)
 

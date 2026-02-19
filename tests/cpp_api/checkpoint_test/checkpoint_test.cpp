@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2018 - 2025 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,8 @@ THE SOFTWARE.
 #include <vector>
 
 #include "rocal_api.h"
-#include <opencv2/opencv.hpp>
+
+#define CHECKPOINT_ITERATIONS 15
 
 // Checkpointing smoke test: run a few iterations, capture a checkpoint, then finish.
 int main(int argc, const char **argv) {
@@ -76,8 +77,6 @@ int main(int argc, const char **argv) {
     // Set the rocAL decoder type
     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG;
     if (decoder_type == 1) {
-        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_OPENCV;
-    } else if (decoder_type == 2) {
         rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_ROCJPEG;
         processing_device = 1;  // Requires GPU backend for rocJpeg decoder
     }
@@ -133,7 +132,6 @@ int main(int argc, const char **argv) {
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
 
     int ImageNameLen[inputBatchSize];
 
@@ -145,16 +143,17 @@ int main(int argc, const char **argv) {
     std::cout << "Process " << process_image_count << " images" << std::endl;
 
     int counter = 0;
-    cv::Mat mat_input(h, w, cv_color_format);
+    size_t output_size = static_cast<size_t>(h) * w * p;
+    std::vector<unsigned char> output_buffer(output_size);
 
-    while (counter < 15 && !rocalIsEmpty(handle)) {
+    while (counter < CHECKPOINT_ITERATIONS && !rocalIsEmpty(handle)) {
         if (rocalRun(handle) != 0) {
             std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
             return -1;
         }
 
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        rocalCopyToOutput(handle, output_buffer.data(), h * w * p);
 
         counter += inputBatchSize;
         RocalTensorList labels = rocalGetImageLabels(handle);
@@ -174,10 +173,25 @@ int main(int argc, const char **argv) {
         std::cout << std::endl;
     }
     // Capture a checkpoint mid-run (after 15 iterations) and then continue running to completion.
-    size_t size_ckpt;
-    rocalCheckpoint(handle, &size_ckpt);
+    size_t size_ckpt = 0;
+    RocalStatus ckpt_status = rocalCheckpoint(handle, &size_ckpt);
+    if (ckpt_status != ROCAL_OK) {
+        std::cout << "rocalCheckpoint failed: " << rocalGetErrorMessage(handle) << std::endl;
+        rocalRelease(handle);
+        return -1;
+    }
+    if (size_ckpt == 0) {
+        std::cout << "rocalCheckpoint returned empty checkpoint" << std::endl;
+        rocalRelease(handle);
+        return -1;
+    }
     std::string serialized_ckpt(size_ckpt, '\0');
-    rocalGetSerializedCheckpointString(handle, &serialized_ckpt[0]);
+    ckpt_status = rocalGetSerializedCheckpointString(handle, &serialized_ckpt[0]);
+    if (ckpt_status != ROCAL_OK) {
+        std::cout << "rocalGetSerializedCheckpointString failed: " << rocalGetErrorMessage(handle) << std::endl;
+        rocalRelease(handle);
+        return -1;
+    }
 
     // Save to file
     std::ofstream file("checkpoint.bin", std::ios::binary);
@@ -194,7 +208,7 @@ int main(int argc, const char **argv) {
             break;
         }
 
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        rocalCopyToOutput(handle, output_buffer.data(), h * w * p);
 
         counter += inputBatchSize;
         RocalTensorList labels = rocalGetImageLabels(handle);

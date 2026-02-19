@@ -70,7 +70,7 @@ class Node {
     /// Save operator state into a checkpoint object (used during checkpoint capture).
     virtual void save_state(std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) {}
     /// Serialize operator checkpoint state into a wire format blob.
-    virtual std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) { return ""; }
+    virtual std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& /*op_ckpt*/) { return {}; }
     /// Restore operator state from a serialized checkpoint blob.
     virtual void restore_state(const std::string &operator_state_bytes) { (void)operator_state_bytes; }
 
