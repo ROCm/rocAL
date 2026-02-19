@@ -54,8 +54,10 @@ void BrightnessNode::init(float alpha, float beta) {
     _beta.set_param(beta);
 
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"alpha", "beta"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta);
+    ArgumentSet args;
+    args.add_new_argument("alpha", alpha);
+    args.add_new_argument("beta", beta);
+    _args = args;
 }
 
 void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
@@ -63,8 +65,16 @@ void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
     _beta.set_param(core(beta));
 
     // Add all arguments as part of the Node
-    std::array<std::string, 2> arg_names = {"alpha", "beta"};
-    set_node_arguments(arg_names, std::make_index_sequence<arg_names.size()>{}, alpha, beta);
+    ArgumentSet args;
+    args.add_new_argument("alpha", alpha);
+    args.add_new_argument("beta", beta);
+    _args = args;
+}
+
+void BrightnessNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<BrightnessNode, float, float>(this, {"alpha", "beta"}, arguments)) return;
+    if (init_args<BrightnessNode, FloatParam*, FloatParam*>(this, {"alpha", "beta"}, arguments)) return;
+    THROW("Unsupported argument types for BrightnessNode");
 }
 
 void BrightnessNode::update_node() {

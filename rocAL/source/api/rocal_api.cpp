@@ -22,12 +22,16 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/message.h>
+
 #include <exception>
 #include <string>
 #include <cstring>
 
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
+#include "rocal.pb.h"
 
 RocalStatus ROCAL_API_CALL
 rocalRelease(RocalContext p_context) {
@@ -121,6 +125,73 @@ rocalSerialize(RocalContext rocal_context, size_t *serialized_string_size) {
         return ROCAL_RUNTIME_ERROR;
     }
     return ROCAL_OK;
+}
+
+RocalContext ROCAL_API_CALL
+rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size, RocalPipelineParams* pipe_params) {
+    RocalContext context = nullptr;
+    try {
+        if (!serialized_pipeline || serialized_string_size == 0) {
+            THROW("Serialized pipeline buffer is null or empty");
+        }
+        if (!pipe_params) {
+            THROW("Invalid pipeline params pointer passed to rocalDeserialize");
+        }
+
+        // Parse from the serialized string.
+        rocal_proto::PipelineDef pipe;
+        google::protobuf::io::CodedInputStream coded_input(
+            reinterpret_cast<const uint8_t *>(serialized_pipeline), serialized_string_size);
+        coded_input.SetTotalBytesLimit(static_cast<int>(serialized_string_size));
+        if (!pipe.ParseFromCodedStream(&coded_input)) {
+            THROW("Failed to parse serialized pipeline protobuf");
+        }
+
+        // Get the pipeline related info
+        if (!pipe_params->batch_size.has_value())
+            pipe_params->batch_size = pipe.has_batch_size() ? pipe.batch_size() : 1;
+
+        if (!pipe_params->device_id.has_value() && pipe.has_device_id())
+            pipe_params->device_id = pipe.device_id();
+
+        if (!pipe_params->num_threads.has_value() && pipe.has_num_threads())
+            pipe_params->num_threads = pipe.num_threads();
+
+        if (!pipe_params->rocal_cpu.has_value() && pipe.has_rocal_cpu())
+            pipe_params->rocal_cpu = pipe.rocal_cpu();
+
+        if (!pipe_params->prefetch_queue_depth.has_value() && pipe.has_prefetch_queue_depth())
+            pipe_params->prefetch_queue_depth = pipe.prefetch_queue_depth();
+
+        if (!pipe_params->seed.has_value() && pipe.has_seed()) {
+            pipe_params->seed = pipe.seed();
+            rocalSetSeed(pipe.seed());
+        }
+
+        const size_t batch_size = pipe_params->batch_size.value();
+        const int device_id = pipe_params->device_id.value_or(0);
+        if (device_id < 0) {
+            THROW("Invalid device_id: negative values are not allowed (" + std::to_string(device_id) + ")");
+        }
+        const size_t num_threads = pipe_params->num_threads.value_or(1);
+        const size_t prefetch_queue_depth = pipe_params->prefetch_queue_depth.value_or(3);
+        const bool use_cpu = pipe_params->rocal_cpu.value_or(false);
+
+        RocalAffinity affinity = use_cpu ? RocalAffinity::CPU : RocalAffinity::GPU;
+        // Create the context
+        context = new Context(batch_size, affinity,
+                              device_id,
+                              num_threads,
+                              prefetch_queue_depth,
+                              RocalTensorDataType::FP32);  // Pipeline creation currently omit dtype; defaulting to FP32.
+        static_cast<Context*>(context)->master_graph->deserialize(&pipe);
+
+    } catch (const std::exception& e) {
+        delete static_cast<Context*>(context);
+        context = nullptr;
+        ERR(STR("Failed to init the Rocal context, ") + e.what())
+    }
+    return context;
 }
 
 RocalStatus ROCAL_API_CALL
