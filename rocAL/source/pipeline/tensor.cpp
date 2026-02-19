@@ -339,6 +339,10 @@ int Tensor::create_from_handle(vx_context context) {
     return 0;
 }
 
+// Create an OpenVX tensor backed by an externally owned buffer pointer.
+// Unlike create_from_handle(), this does not allocate internal memory or create
+// a ROI tensor — the caller is responsible for the buffer's lifetime and for
+// providing ROI data separately if needed.
 int Tensor::create_from_ptr(vx_context context, void *ptr) {
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")

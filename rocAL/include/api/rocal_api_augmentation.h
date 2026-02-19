@@ -355,6 +355,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalContrastFixed(RocalContext context, R
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] horizonal_flag  determines whether the input tensor should be flipped horizontally
  * \param [in] vertical_flag  determines whether the input tensor should be flipped vertically
+ * \param [in] depth_flag  determines whether the input tensor should be flipped along the depth axis
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -371,6 +372,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTenso
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] horizonal_flag  determines whether the input tensor should be flipped horizontally
  * \param [in] vertical_flag  determines whether the input tensor should be flipped vertically
+ * \param [in] depth_flag  determines whether the input tensor should be flipped along the depth axis
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -1662,7 +1664,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
                                                  RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
                                                  RocalTensorOutputType output_datatype = ROCAL_FP32);
 
-/*! \brief Applies slice augmentation on tensors with fixed shape.
+/*! \brief Applies slice augmentation on tensors with a fixed output shape (same for every sample in the batch).
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor

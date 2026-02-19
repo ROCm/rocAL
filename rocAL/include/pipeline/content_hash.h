@@ -28,8 +28,18 @@ THE SOFTWARE.
 #include <cstring>
 #include <functional>
 
+/*! \brief A 256-bit non-cryptographic content hash.
+ *
+ * Used to fingerprint tensor data (e.g. segmentation masks) so that
+ * computed bounding boxes can be cached and reused across iterations
+ * when the same input content is encountered again.
+ *
+ * The hash is stored as eight 32-bit lanes and supports equality,
+ * inequality, ordering, and use as an unordered_map key via the
+ * std::hash specialization provided below.
+ */
 struct content_hash_t {
-    std::array<std::uint32_t, 8> data{};
+    std::array<std::uint32_t, 8> data{};  ///< Eight 32-bit lanes comprising the 256-bit hash
 
     friend bool operator==(const content_hash_t &a, const content_hash_t &b) noexcept {
         return a.data == b.data;
@@ -44,18 +54,22 @@ struct content_hash_t {
     }
 };
 
+/// Internal helpers for the content hash implementation.
 namespace content_hash_detail {
 
+/// Rotate a 32-bit value left by \p r bits.
 inline constexpr std::uint32_t rotl32(std::uint32_t x, std::uint8_t r) noexcept {
     return (x << r) | (x >> (32U - r));
 }
 
+/// Read a 32-bit little-endian word from a potentially unaligned pointer.
 inline std::uint32_t read_u32_unaligned(const std::uint8_t *ptr) noexcept {
     std::uint32_t word = 0;
     std::memcpy(&word, ptr, sizeof(word));
     return word;
 }
 
+/// MurmurHash3 64-bit finalization mix (public domain).
 inline std::uint64_t mix64(std::uint64_t x) noexcept {
     // MurmurHash3 64-bit finalization mix (public domain).
     x ^= x >> 33U;
@@ -66,6 +80,7 @@ inline std::uint64_t mix64(std::uint64_t x) noexcept {
     return x;
 }
 
+/// Collapse a 256-bit content_hash_t into a single 64-bit value for use in hash tables.
 inline std::uint64_t to_u64(const content_hash_t &h) noexcept {
     std::uint64_t acc = 0x9e3779b97f4a7c15ULL;
     for (int i = 0; i < 4; ++i) {
@@ -80,6 +95,17 @@ inline std::uint64_t to_u64(const content_hash_t &h) noexcept {
 
 }  // namespace content_hash_detail
 
+/*! \brief Compute a 256-bit non-cryptographic content hash over a byte buffer.
+ *
+ * Incrementally updates \p hash with the contents of the buffer [\p data, \p data + \p n).
+ * Multiple calls accumulate into the same hash state. The algorithm is inspired by xxHash3
+ * and spreads entropy across all 8 lanes using per-lane rotations, neighbor mixing, and a
+ * bias term to avoid degenerate results for constant or zero inputs.
+ *
+ * \param [in,out] hash  The hash state to update (zero-initialize before first use).
+ * \param [in] data      Pointer to the data buffer.
+ * \param [in] n         Number of bytes to hash.
+ */
 inline void content_hash(content_hash_t &hash, const void *data, std::size_t n) noexcept {
     // Inspired by xxHash3 (not identical).
     //
@@ -133,6 +159,7 @@ inline void content_hash(content_hash_t &hash, const void *data, std::size_t n) 
 
 namespace std {
 
+/// std::hash specialization so content_hash_t can be used as an unordered_map key.
 template <>
 struct hash<content_hash_t> {
     size_t operator()(const content_hash_t &h) const noexcept {

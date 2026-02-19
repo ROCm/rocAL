@@ -1640,6 +1640,14 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
     return _roi_random_crop_tensor;
 }
 
+// Compute a random crop anchor for each sample in the batch, constrained to
+// lie within the ROI region provided by random_object_bbox.
+//
+// For each sample and each spatial dimension:
+//   1. Clamp the ROI to the input bounds.
+//   2. If the crop fits entirely within the ROI, uniformly sample a valid start position.
+//   3. If the ROI is smaller than the crop, place the crop so it covers the ROI
+//      while staying within the input bounds.
 void MasterGraph::update_roi_random_crop() {
     int *crop_begin_batch = static_cast<int *>(_roi_random_crop_buf);
     auto seed = ParameterFactory::instance()->get_seed_from_seedsequence();

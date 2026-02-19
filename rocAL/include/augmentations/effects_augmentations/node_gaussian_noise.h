@@ -40,9 +40,9 @@ class GaussianNoiseNode : public Node {
 
    private:
     ParameterVX<float> _mean, _stddev;
-    ParameterVX<int> _conditional_execution;
+    ParameterVX<int> _conditional_execution;  ///< Per-sample flag controlling whether the augmentation is applied (1) or bypassed (0)
     constexpr static float MEAN_RANGE[2] = {0.0, 1.0};
     constexpr static float STDDEV_RANGE[2] = {0.0, 1.0};
-    constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};
+    constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};  ///< Valid range for conditional execution flag: 0 = skip, 1 = execute
     int _seed;
 };

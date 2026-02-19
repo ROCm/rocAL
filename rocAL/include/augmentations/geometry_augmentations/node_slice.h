@@ -37,15 +37,16 @@ class SliceNode : public Node {
    protected:
     void create_node() override;
     void update_node() override;
+    /// Allocate and create a vx_tensor from _shape_vec for the fixed-shape path.
     void create_shape_tensor();
 
    private:
-    void *_shape_array = nullptr;
-    Tensor *_anchor = nullptr;
-    Tensor *_shape_tensor_param = nullptr;
-    vx_tensor _shape_tensor_handle = nullptr;
-    std::vector<float> _fill_values, _fill_values_vec;
-    std::vector<int> _shape_vec;
-    bool _use_tensor_shape = false;
-    OutOfBoundsPolicy _policy = OutOfBoundsPolicy::ERROR;
+    void *_shape_array = nullptr;              ///< Raw host/pinned buffer holding the per-sample shape values (fixed-shape mode)
+    Tensor *_anchor = nullptr;                 ///< Tensor providing per-sample anchor (starting) coordinates
+    Tensor *_shape_tensor_param = nullptr;     ///< External Tensor providing per-sample shape (tensor-shape mode)
+    vx_tensor _shape_tensor_handle = nullptr;  ///< OpenVX tensor handle wrapping _shape_array (fixed-shape mode)
+    std::vector<float> _fill_values, _fill_values_vec;  ///< Fill values for out-of-bounds padding, expanded to batch size
+    std::vector<int> _shape_vec;               ///< Fixed shape dimensions (excluding batch), used when _use_tensor_shape is false
+    bool _use_tensor_shape = false;            ///< Selects between fixed-shape (false) and tensor-shape (true) modes
+    OutOfBoundsPolicy _policy = OutOfBoundsPolicy::ERROR;  ///< Policy for handling out-of-bounds regions
 };

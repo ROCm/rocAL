@@ -44,6 +44,9 @@ RandomObjectBbox::~RandomObjectBbox() {
     }
 }
 
+// Allocate output tensors based on the chosen format and store configuration.
+// For "anchor_shape" and "start_end", two tensors are created (one for each component).
+// For "box", a single tensor with double the spatial dims holds concatenated start+end.
 TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int k_largest, float foreground_prob, bool cache_objects) {
     _label_tensor = input;
     _k_largest = k_largest;
@@ -85,6 +88,14 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
     return &_tensor_list;
 }
 
+// Called once per pipeline iteration to recompute bounding boxes for the current batch.
+// For each sample:
+//   1. Decide foreground vs background based on _foreground_prob.
+//   2. Run connected-component labeling (labelMergeFunc) to find objects in the segmentation mask.
+//   3. Compute axis-aligned bounding boxes around each connected component.
+//   4. Randomly pick one box (optionally restricted to k-largest by volume).
+//   5. Write the selected box coordinates into the output buffers in the requested format.
+// When caching is disabled, samples are processed in parallel via OpenMP.
 void RandomObjectBbox::update() {
     u_int8_t *input = static_cast<u_int8_t *>(_label_tensor->buffer());
     auto roi_dims = reinterpret_cast<int *>(_label_tensor->info().roi().get_ptr());
@@ -203,6 +214,10 @@ void RandomObjectBbox::update() {
     }
 }
 
+// Select a random bounding box index from the list of boxes.
+// When k_largest > 0, sort boxes by volume (descending), then uniformly sample among the top-k.
+// Otherwise, uniformly sample from all available boxes.
+// Returns -1 when no boxes are available.
 int RandomObjectBbox::pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest) {
     int n = boxes.size();
     if (n <= 0)
@@ -233,6 +248,10 @@ int RandomObjectBbox::pick_box(const std::vector<std::vector<std::vector<unsigne
     }
 }
 
+// Scan the input label tensor within the ROI and collect all unique label values.
+// Uses stride-based indexing to handle the gap between ROI dimensions and the
+// underlying max-allocated tensor dimensions.  Skips runs of identical values
+// for efficiency.
 void RandomObjectBbox::findLabels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size) {
     if (!roi_size.size() || !max_size.size())
         return;
@@ -266,6 +285,8 @@ void RandomObjectBbox::findLabels(const u_int8_t *input, std::set<int> &labels, 
     }
 }
 
+// Produce a binary mask from the input tensor: output[i] = 1 where input[i] == label, 0 otherwise.
+// Uses stride-based indexing identical to findLabels to respect the gap between ROI and max dims.
 void RandomObjectBbox::filterByLabel(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label) {
     int num_dims = roi_size.size();
     std::vector<unsigned> strides(num_dims + 1);
@@ -292,6 +313,10 @@ void RandomObjectBbox::filterByLabel(const u_int8_t *input, std::vector<int> &ou
     }
 }
 
+// Assign connected-component labels to a single row using run-length encoding.
+// Each contiguous run of foreground pixels (in_row[i] != 0) receives a unique label
+// derived from its position relative to label_base.  Background pixels get the
+// sentinel value -1.
 void RandomObjectBbox::labelRow(const int *label_base, const int *in_row, int *out_row, unsigned length) {
     int curr_label = -1;
     int bg_label = -1;
@@ -309,12 +334,17 @@ void RandomObjectBbox::labelRow(const int *label_base, const int *in_row, int *o
     }
 }
 
+// Assign element x to a new group (new_id) and return its previous group.
+// Used by the union-find algorithm during label merging.
 int RandomObjectBbox::disjointSetGroup(int &x, int new_id) {
     int old = x;
     x = new_id;
     return old;
 }
 
+// Union-Find: find the root representative of element x with path compression.
+// After finding the root, all intermediate elements on the path are updated to
+// point directly to the root, speeding up subsequent lookups.
 int RandomObjectBbox::disjointFind(int *items, int x) {
     int x0 = x;
 
@@ -338,6 +368,9 @@ int RandomObjectBbox::disjointFind(int *items, int x) {
     return r;
 }
 
+// Union-Find: merge the sets containing x and y.
+// The smaller root becomes the child of the larger to maintain a balanced structure.
+// Returns the new root of the merged set.
 int RandomObjectBbox::disjointMerge(int *items, int x, int y) {
     y = disjointFind(items, y);
     x = disjointFind(items, x);
@@ -353,6 +386,10 @@ int RandomObjectBbox::disjointMerge(int *items, int x, int y) {
     }
 }
 
+// Merge connected-component labels between two adjacent rows (or slices).
+// For each position where both rows have the same filtered label value, unify
+// their component labels using the disjoint-set structure.  This propagates
+// connectivity across the height/depth dimensions.
 void RandomObjectBbox::mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n) {
     int bg_label = -1;
     int prev1 = bg_label;
@@ -372,6 +409,20 @@ void RandomObjectBbox::mergeRow(int *label_base, const int *in1, const int *in2,
     }
 }
 
+// Core connected-component labeling pipeline for a single sample.
+//
+// Steps:
+//   1. Find all unique foreground labels in the input (or use cached labels).
+//   2. Randomly select one label class.
+//   3. Check the cache for a pre-computed result; if found, return early.
+//   4. Filter the input to a binary mask for the selected label.
+//   5. Label each row of the innermost dimension (width) independently using run-length encoding.
+//   6. Merge labels between adjacent rows within each 2D slice (height direction).
+//   7. Merge labels across slices (depth direction) using a hierarchical merge strategy.
+//   8. Flatten the disjoint-set forest via path compression and remap labels to
+//      sequential IDs (0, 1, 2, ...).
+//
+// Returns the total number of distinct connected components found.
 int RandomObjectBbox::labelMergeFunc(const u_int8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry) {
     int64_t total_buf_size = 1;
     for (auto val : size)
@@ -490,6 +541,10 @@ int RandomObjectBbox::labelMergeFunc(const u_int8_t *input, int &selected_label,
     return counter;
 }
 
+// Test-and-set a bit in the hit bitmap.  Returns true if the bit was already set
+// (i.e., the label was already encountered in this row), false if this is the
+// first occurrence.  Used to track which connected-component labels appear in
+// a row so their coordinate ranges can be initialized or extended.
 bool RandomObjectBbox::hit(std::vector<unsigned> &hits, unsigned idx) {
     unsigned flag = (1u << (idx & 31));
     unsigned &h = hits[idx >> 5];
@@ -498,6 +553,16 @@ bool RandomObjectBbox::hit(std::vector<unsigned> &hits, unsigned idx) {
     return ret;
 }
 
+// Process one row (innermost dimension) of the compact label tensor to update
+// axis-aligned bounding boxes.
+//
+// For each label found in the row:
+//   - Record the min/max column index in `ranges` (used for the width dimension).
+//   - If this is the first time the label's box is seen, create it from `origin`.
+//   - Otherwise, expand the existing box to encompass the new coordinates.
+//
+// The `hits` bitmap tracks which labels appear in this row, enabling efficient
+// skipping of absent labels when iterating over the results.
 void RandomObjectBbox::get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes,
                                           std::vector<std::pair<unsigned, unsigned>> ranges,
                                           std::vector<unsigned> hits,

@@ -23,7 +23,6 @@ THE SOFTWARE.
 #pragma once
 #include <list>
 #include <map>
-#include <unordered_map>
 #include <memory>
 #include <variant>
 
@@ -165,8 +164,18 @@ public:
     std::string& get_serialized_string() { return _serialized_pipeline; }
     void deserialize(rocal_proto::PipelineDef *pipe_def);
     Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
+    /*! \brief Set up the ROI random crop operator.
+     * Allocates the output anchor tensor and replicates the crop shape across the batch.
+     * The actual crop position is computed per-iteration in update_roi_random_crop().
+     */
     Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, int *crop_shape);
+
+    /*! \brief Set up the random object bounding box operator.
+     * Creates a RandomObjectBbox instance that identifies connected components in a label
+     * tensor and returns a randomly selected bounding box per sample each iteration.
+     */
     TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
+    /// Recompute per-sample random crop anchors within the ROI region for the current batch.
     void update_roi_random_crop();
 private:
     Status update_node_parameters();
@@ -251,14 +260,15 @@ private:
     // box IoU matcher variables
     bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
     BoxIouMatcherInfo _iou_matcher_info;
-    bool _is_roi_random_crop = false;
-    std::unique_ptr<RandomObjectBbox> _random_object_bbox;
-    int *_crop_shape_batch = nullptr;
-    int *_roi_batch = nullptr;
-    Tensor *_roi_random_crop_tensor = nullptr;
-    Tensor *_roi_start_tensor = nullptr;
-    Tensor *_roi_end_tensor = nullptr;
-    void *_roi_random_crop_buf = nullptr;
+    // ROI random crop variables
+    bool _is_roi_random_crop = false;                          ///< True when the ROI random crop operator is active
+    std::unique_ptr<RandomObjectBbox> _random_object_bbox;     ///< Connected-component random object bbox operator (provides ROI for roi_random_crop)
+    int *_crop_shape_batch = nullptr;                          ///< Per-sample crop dimensions replicated across the batch [batch_size * num_dims]
+    int *_roi_batch = nullptr;                                 ///< Pointer into the input tensor's ROI buffer (begin + end coordinates per sample)
+    Tensor *_roi_random_crop_tensor = nullptr;                 ///< Output tensor holding the computed crop anchor coordinates
+    Tensor *_roi_start_tensor = nullptr;                       ///< Tensor providing per-sample ROI start coordinates
+    Tensor *_roi_end_tensor = nullptr;                         ///< Tensor providing per-sample ROI end coordinates
+    void *_roi_random_crop_buf = nullptr;                      ///< Raw host/pinned buffer backing _roi_random_crop_tensor
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif

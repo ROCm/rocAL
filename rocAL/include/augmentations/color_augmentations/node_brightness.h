@@ -43,8 +43,8 @@ class BrightnessNode : public Node {
    private:
     ParameterVX<float> _alpha;
     ParameterVX<float> _beta;
-    ParameterVX<int> _conditional_execution;
+    ParameterVX<int> _conditional_execution;  ///< Per-sample flag controlling whether the augmentation is applied (1) or bypassed (0)
     constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
     constexpr static float BETA_RANGE[2] = {0, 25};
-    constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};
+    constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};  ///< Valid range for conditional execution flag: 0 = skip, 1 = execute
 };

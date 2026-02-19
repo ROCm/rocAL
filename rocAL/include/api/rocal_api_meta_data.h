@@ -337,7 +337,7 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateWebDatasetReader(RocalContext
  */
 RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
 
-/*! \brief initialize the values required for ROI Random crop
+/*! \brief Generate a random crop anchor within the specified ROI for each sample in the batch.
  * \ingroup group_rocal_meta_data
  * \param [in] rocal_context rocal context
  * \param [in] crop_shape_batch The batch of crop shapes to be used for cropping the images in the output batch
@@ -348,7 +348,7 @@ RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, std::vector<int> crop_shape);
 
-/*! \brief Returns a randomly selected object bounding box from a segmentation/label tensor.
+/*! \brief Find connected-component bounding boxes in a label/segmentation tensor and return a randomly selected one per sample.
  * \ingroup group_rocal_meta_data
  * \param [in] p_context rocal context
  * \param [in] p_input Input label tensor

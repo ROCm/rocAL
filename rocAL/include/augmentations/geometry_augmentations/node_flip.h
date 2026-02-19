@@ -40,8 +40,8 @@ class FlipNode : public Node {
     void update_node() override;
 
    private:
-    ParameterVX<int> _horizontal, _vertical, _depth;
+    ParameterVX<int> _horizontal, _vertical, _depth;  ///< Per-sample flip flags for horizontal, vertical, and depth axes
     constexpr static int HORIZONTAL_RANGE[2] = {0, 1};
     constexpr static int VERTICAL_RANGE[2] = {0, 1};
-    constexpr static int DEPTH_RANGE[2] = {0, 1};
+    constexpr static int DEPTH_RANGE[2] = {0, 1};  ///< Valid range for depth flip flag (0 = no flip, 1 = flip)
 };
