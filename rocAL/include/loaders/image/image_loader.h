@@ -54,6 +54,8 @@ class ImageLoader : public LoaderModule {
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char*>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
     size_t last_batch_padded_size() override;
+    //! Returns the most recent loader state for checkpointing.
+    const LoaderState& get_loader_state() const override;
 
    private:
     bool is_out_of_data();
@@ -82,6 +84,7 @@ class ImageLoader : public LoaderModule {
     size_t _prefetch_queue_depth;   // Used for circular buffer's internal buffer
     size_t _image_counter = 0;      //!< How many images have been loaded already
     size_t _remaining_image_count;  //!< How many images are there yet to be loaded
+    size_t _dataset_size = 0;       //!< Total number of images in the dataset at initialization (stable across restore)
     bool _decoder_keep_original = false;
     int _device_id;
     size_t _max_tensor_width, _max_tensor_height;
@@ -90,4 +93,8 @@ class ImageLoader : public LoaderModule {
 #if ENABLE_HIP
     hipStream_t _hip_stream = nullptr;
 #endif
+    bool _is_checkpointing_enabled = false;  //!< Enables capturing loader state for checkpointing.
+    int64_t _epoch_count = 0;                //!< Current epoch counter for the loader.
+    int64_t _iteration_count = 0;            //!< Iteration counter within the current epoch.
+    LoaderState _current_loader_state;       //!< Loader state for the latest batch.
 };

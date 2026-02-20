@@ -25,9 +25,9 @@ THE SOFTWARE.
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/message.h>
 
+#include <cstring>
 #include <exception>
 #include <string>
-#include <cstring>
 
 #include "pipeline/commons.h"
 #include "pipeline/context.h"
@@ -48,7 +48,8 @@ rocalCreate(
     int gpu_id,
     size_t cpu_thread_count,
     size_t prefetch_queue_depth,
-    RocalTensorOutputType output_tensor_data_type) {
+    RocalTensorOutputType output_tensor_data_type,
+    bool enable_checkpointing) {
     RocalContext context = nullptr;
     try {
         auto translate_process_mode = [](RocalProcessMode process_mode) {
@@ -75,7 +76,7 @@ rocalCreate(
         };
         if (gpu_id < 0)
             ERR(STR("Negative GPU device ID passed to context creation. Setting GPU device ID to 0"));
-        context = new Context(batch_size, translate_process_mode(affinity), std::max(gpu_id, 0), cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type));
+        context = new Context(batch_size, translate_process_mode(affinity), std::max(gpu_id, 0), cpu_thread_count, prefetch_queue_depth, translate_output_data_type(output_tensor_data_type), enable_checkpointing);
         // Reset seed in case it's being randomized during context creation
     } catch (const std::exception& e) {
         ERR(STR("Failed to init the Rocal context, ") + STR(e.what()))
@@ -209,7 +210,46 @@ rocalGetSerializedString(RocalContext rocal_context, char* serialized_string) {
 
     } catch (const std::exception& e) {
         context->capture_error(e.what());
-        ERR(e.what());
+        ERR(e.what())
+        return ROCAL_RUNTIME_ERROR;
+    }
+    return ROCAL_OK;
+}
+
+// Serialize the current pipeline state into an internal checkpoint blob.
+RocalStatus ROCAL_API_CALL
+rocalCheckpoint(RocalContext rocal_context, size_t *serialized_ckpt_string_size) {
+    auto context = static_cast<Context*>(rocal_context);
+    try {
+        if (!serialized_ckpt_string_size) {
+            THROW("Serialized checkpoint size pointer is null")
+        }
+        context->master_graph->get_serialized_checkpoint(*serialized_ckpt_string_size);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+        return ROCAL_RUNTIME_ERROR;
+    }
+    return ROCAL_OK;
+}
+
+// Copy the last serialized checkpoint blob into the user-provided buffer.
+RocalStatus ROCAL_API_CALL
+rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_ckpt_string) {
+    auto context = static_cast<Context*>(rocal_context);
+    try {
+        if (!serialized_ckpt_string) {
+            THROW("String copy failed, Invalid pointer passed for serialize")
+        }
+
+        auto pipe_ckpt_string = context->master_graph->get_serialized_checkpoint_string();
+        if (pipe_ckpt_string.empty())
+            THROW("Serialized string is empty, Invoke rocalCheckpoint before obtaining the string")
+        std::memcpy(serialized_ckpt_string, pipe_ckpt_string.data(), pipe_ckpt_string.size());
+
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
         return ROCAL_RUNTIME_ERROR;
     }
     return ROCAL_OK;

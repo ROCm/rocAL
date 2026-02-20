@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "loaders/image/node_image_loader.h"
 
 #include "pipeline/exception.h"
+#include "rocal.pb.h"
 
 REGISTER_LOADER_NODE(ImageLoaderNode)
 
@@ -31,8 +32,8 @@ ImageLoaderNode::ImageLoaderNode(Tensor *output, void *device_resources) : Node(
 }
 
 void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &json_path, const std::map<std::string, std::string> feature_key_map, StorageType storage_type, DecoderType decoder_type,
-                           bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig, const ShardingInfo& sharding_info, const char *file_prefix, unsigned sequence_length, 
-                           unsigned step, unsigned stride, ExternalSourceFileMode external_file_mode, const std::string &index_path) {
+                           bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader, bool decoder_keep_orig, const ShardingInfo& sharding_info, bool enable_checkpointing, unsigned seed, const char *file_prefix,
+                           unsigned sequence_length, unsigned step, unsigned stride, ExternalSourceFileMode external_file_mode, const std::string &index_path) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for ImageLoaderNode, cannot initialize")
     if (internal_shard_count < 1)
@@ -52,6 +53,8 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_external_filemode(external_file_mode);
     reader_cfg.set_index_path(index_path);
     reader_cfg.set_sharding_info(sharding_info);
+    reader_cfg.enable_checkpointing(enable_checkpointing);
+    reader_cfg.set_seed(seed);
 
     // Add arguments to ArgumentSet one by one
     _args.add_new_argument("internal_shard_count", internal_shard_count);
@@ -71,6 +74,8 @@ void ImageLoaderNode::init(unsigned internal_shard_count, unsigned cpu_num_threa
     _args.add_new_argument("pad_last_batch_repeated", sharding_info.pad_last_batch_repeated);
     _args.add_new_argument("stick_to_shard", sharding_info.stick_to_shard);
     _args.add_new_argument("shard_size", sharding_info.shard_size);
+    _args.add_new_argument("enable_checkpointing", enable_checkpointing);
+    _args.add_new_argument("seed", seed);
     _args.add_new_argument("file_prefix", file_prefix);
     _args.add_new_argument("sequence_length", sequence_length);
     _args.add_new_argument("step", step);
@@ -101,7 +106,8 @@ void ImageLoaderNode::initialize_args(const ArgumentSet &arguments, std::shared_
                arguments.get<size_t>("load_batch_count"), 
                arguments.get<RocalMemType>("mem_type"),
                meta_data_reader, arguments.get<bool>("decoder_keep_orig"), 
-               sharding_info, file_prefix.c_str(),
+               sharding_info, arguments.get<bool>("enable_checkpointing"),
+               arguments.get<unsigned>("seed"), file_prefix.c_str(),
                arguments.get<unsigned>("sequence_length"), 
                arguments.get<unsigned>("step"), 
                arguments.get<unsigned>("stride"), 
@@ -117,4 +123,20 @@ std::shared_ptr<LoaderModule> ImageLoaderNode::get_loader_module() {
 
 ImageLoaderNode::~ImageLoaderNode() {
     _loader_module = nullptr;
+}
+
+// Capture the loader's current state into the operator checkpoint.
+void ImageLoaderNode::save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
+    op_ckpt->GetMutableCheckpointState() = _loader_module->get_loader_state();
+}
+
+// Serialize loader state into a protobuf payload for checkpointing.
+std::string ImageLoaderNode::serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) {
+    auto loader_state = op_ckpt->GetOperatorCheckpointState<LoaderState>();
+    rocal_proto::LoaderState proto_state;
+    proto_state.set_current_epoch(static_cast<int32_t>(loader_state.epoch_number));
+    proto_state.set_iteration_number(static_cast<int64_t>(loader_state.iteration_number));
+    proto_state.set_rng(SerializeRNGToString(loader_state.rng));
+    proto_state.set_curr_file_idx(static_cast<uint32_t>(loader_state.curr_file_idx));
+    return proto_state.SerializeAsString();
 }
