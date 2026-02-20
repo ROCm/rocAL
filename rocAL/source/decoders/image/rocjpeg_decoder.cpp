@@ -306,8 +306,11 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
 }
 
 HWRocJpegDecoder::~HWRocJpegDecoder() {
-    CHECK_ROCJPEG(rocJpegDestroy(_rocjpeg_handle));
-    for (auto j = 0; j < _batch_size; j++) {
+    if (_rocjpeg_handle) {
+        CHECK_ROCJPEG(rocJpegDestroy(_rocjpeg_handle));
+        _rocjpeg_handle = nullptr;
+    }
+    for (size_t j = 0; j < _rocjpeg_streams.size(); j++) {
         CHECK_ROCJPEG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
     }
     if (_rocjpeg_image_buff) CHECK_HIP(hipFree(_rocjpeg_image_buff));

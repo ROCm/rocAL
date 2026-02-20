@@ -223,7 +223,7 @@ class HWRocJpegDecoder : public Decoder {
    private:
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;
-    RocJpegHandle _rocjpeg_handle;
+    RocJpegHandle _rocjpeg_handle = nullptr;
     std::vector<RocJpegStreamHandle> _rocjpeg_streams;
     unsigned _batch_size;
     void * _rocjpeg_image_buff = nullptr;
@@ -241,6 +241,6 @@ class HWRocJpegDecoder : public Decoder {
     uint32_t _num_channels = 0;
     bool _resize_batch = false;
     int _device_id = 0;
-    hipStream_t _hip_stream;
+    hipStream_t _hip_stream = nullptr;
 };
 #endif
