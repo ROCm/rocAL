@@ -291,10 +291,10 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params.data(), _output_images.data()));
 
     if (_resize_batch && resize_count) {
-        HipExecResizeTensorMapped(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0],
-                                  resize_count, _dev_src_width, _dev_src_height,
-                                  _dev_dst_width, _dev_dst_height, _dev_src_hstride, _dev_src_img_offset, _dev_dst_img_idx, _num_channels,
-                                  max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
+        HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0],
+                            resize_count, _dev_src_width, _dev_src_height,
+                            _dev_dst_width, _dev_dst_height, _dev_src_hstride, _dev_src_img_offset, _dev_dst_img_idx, _num_channels,
+                            max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
         // The circular buffer hands off `output_buffer` to the consumer immediately after `decode_batch()` returns.
         // Ensure the resize kernel has finished writing into the output tensor before we release the batch.
         CHECK_HIP(hipStreamSynchronize(_hip_stream));

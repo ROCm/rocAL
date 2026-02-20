@@ -446,7 +446,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(uchar
     *(d_uint6_s *)dst_ptr = *(d_uint6_s *)&dst_ui6;
 }
 
-template <typename T, bool kUseDstIdx>
+template <typename T>
 __global__ void resize_bilinear_pkd_hip_tensor(T *src_ptr,
                                                uint2 src_strides,
                                                T *dst_ptr,
@@ -461,7 +461,7 @@ __global__ void resize_bilinear_pkd_hip_tensor(T *src_ptr,
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    const uint32_t out_z = kUseDstIdx ? dst_img_idx[id_z] : (uint32_t)id_z;
+    const uint32_t out_z = dst_img_idx[id_z];
 
     uint2 dst_dims_wh;
     dst_dims_wh.x = dst_width[id_z];
@@ -533,7 +533,7 @@ __device__ void rpp_hip_compute_interpolation_scale_and_radius(float *scale, flo
     }
 }
 
-template <typename T, bool kUseDstIdx>
+template <typename T>
 __global__ void resize_generic_pln1_hip_tensor(T *src_ptr,
                                                uint3 src_strides,
                                                T *dst_ptr,
@@ -548,7 +548,7 @@ __global__ void resize_generic_pln1_hip_tensor(T *src_ptr,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    const uint32_t out_z = kUseDstIdx ? dst_img_idx[id_z] : (uint32_t)id_z;
+    const uint32_t out_z = dst_img_idx[id_z];
 
     uint2 dst_dims_wh;
     dst_dims_wh.x = dst_width[id_z];
@@ -622,6 +622,7 @@ void HipExecResizeTensor(hipStream_t stream,
                          size_t *dst_height,
                          size_t *src_height_stride,
                          size_t *src_img_offset,
+                         uint32_t *dst_img_idx,
                          unsigned channels,
                          const size_t max_src_width,
                          const size_t max_src_height,
@@ -632,7 +633,7 @@ void HipExecResizeTensor(hipStream_t stream,
     unsigned globalThreads_z = batch_size;
 
     if (channels == 3) {    // For RGB images
-        hipLaunchKernelGGL((resize_bilinear_pkd_hip_tensor<unsigned char, false>),
+        hipLaunchKernelGGL((resize_bilinear_pkd_hip_tensor<unsigned char>),
                             dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                             0,
@@ -647,9 +648,9 @@ void HipExecResizeTensor(hipStream_t stream,
                             dst_height,
                             src_height_stride,
                             src_img_offset,
-                            nullptr);
+                            dst_img_idx);
     } else if (channels == 1) {
-        hipLaunchKernelGGL((resize_generic_pln1_hip_tensor<unsigned char, false>),
+        hipLaunchKernelGGL((resize_generic_pln1_hip_tensor<unsigned char>),
                     dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                     dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                     0,
@@ -664,64 +665,7 @@ void HipExecResizeTensor(hipStream_t stream,
                     dst_height,
                     src_height_stride,
                     src_img_offset,
-                    nullptr);  
+                    dst_img_idx);  
     }
 
-}
-
-void HipExecResizeTensorMapped(hipStream_t stream,
-                               void *src_ptr,
-                               void *dst_ptr,
-                               unsigned batch_size,
-                               size_t *src_width,
-                               size_t *src_height,
-                               size_t *dst_width,
-                               size_t *dst_height,
-                               size_t *src_height_stride,
-                               size_t *src_img_offset,
-                               uint32_t *dst_img_idx,
-                               unsigned channels,
-                               const size_t max_src_width,
-                               const size_t max_src_height,
-                               const size_t max_dst_width,
-                               const size_t max_dst_height) {
-    unsigned globalThreads_x = (channels == 3) ? ((max_dst_width + 7) >> 3) : max_dst_width;
-    unsigned globalThreads_y = max_dst_height;
-    unsigned globalThreads_z = batch_size;
-
-    if (channels == 3) {    // For RGB images
-        hipLaunchKernelGGL((resize_bilinear_pkd_hip_tensor<unsigned char, true>),
-                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           stream,
-                           static_cast<unsigned char *>(src_ptr),
-                           make_uint2(max_src_width * max_src_height * channels, max_src_width * channels),
-                           static_cast<unsigned char *>(dst_ptr),
-                           make_uint2(max_dst_width * max_dst_height * channels, max_dst_width * channels),
-                           src_width,
-                           src_height,
-                           dst_width,
-                           dst_height,
-                           src_height_stride,
-                           src_img_offset,
-                           dst_img_idx);
-    } else if (channels == 1) {
-        hipLaunchKernelGGL((resize_generic_pln1_hip_tensor<unsigned char, true>),
-                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           stream,
-                           static_cast<unsigned char *>(src_ptr),
-                           make_uint3(max_src_width * max_src_height * channels, max_src_width * max_src_height, max_src_width),
-                           static_cast<unsigned char *>(dst_ptr),
-                           make_uint3(max_dst_width * max_dst_height * channels, max_src_width * max_src_height, max_dst_width),
-                           src_width,
-                           src_height,
-                           dst_width,
-                           dst_height,
-                           src_height_stride,
-                           src_img_offset,
-                           dst_img_idx);
-    }
 }
