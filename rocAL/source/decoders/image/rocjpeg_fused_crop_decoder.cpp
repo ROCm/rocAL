@@ -193,12 +193,11 @@ Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char 
                                                       std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
     for (unsigned i = 0; i < _batch_size; i++) {
         _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);  // For RGB
+        // Update the actual decoded width and height based on the crop window and max decode params
+        actual_decoded_width[i] = _roi_width[i];
+        actual_decoded_height[i] = _roi_height[i];
     }
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()));
-    for (unsigned i = 0; i < _batch_size; i++) {
-        if (i < actual_decoded_width.size() && i < _roi_width.size()) actual_decoded_width[i] = _roi_width[i];
-        if (i < actual_decoded_height.size() && i < _roi_height.size()) actual_decoded_height[i] = _roi_height[i];
-    }
 
     return Status::OK;
 }
