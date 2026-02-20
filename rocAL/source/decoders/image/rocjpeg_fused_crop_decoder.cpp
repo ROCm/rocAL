@@ -148,8 +148,6 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     *height = heights[0];
     _max_decoded_width = max_decoded_width;
     _max_decoded_height = max_decoded_height;
-
-    _current_index = index;
     _decode_params = &_decode_params_batch[index];
 
     if (GetChannelPitchAndSizes(_decode_params_batch[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
@@ -157,8 +155,8 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     }
     _original_image_width = *actual_width = widths[0];
     _original_image_height = *actual_height = heights[0];
-    if (static_cast<size_t>(index) < _roi_width.size()) _roi_width[index] = widths[0];
-    if (static_cast<size_t>(index) < _roi_height.size()) _roi_height[index] = heights[0];
+    _roi_width[index] = widths[0];
+    _roi_height[index] = heights[0];
 
     return Status::OK;
 }

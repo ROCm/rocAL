@@ -144,22 +144,16 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
         const uint32_t in_h = heights[0];
         const uint32_t max_w = static_cast<uint32_t>(max_decoded_width);
         const uint32_t max_h = static_cast<uint32_t>(max_decoded_height);
-
-        uint32_t out_w = max_w;
-        uint32_t out_h = max_h;
-
         // Compare in_w/max_w vs in_h/max_h without FP: in_w * max_h ? in_h * max_w
         if ((uint64_t)in_w * (uint64_t)max_h >= (uint64_t)in_h * (uint64_t)max_w) {
             // Width is the limiting (largest) dimension.
-            out_w = max_w;
-            out_h = static_cast<uint32_t>(((uint64_t)max_w * (uint64_t)in_h) / (uint64_t)in_w);
+            scaledw = max_w;
+            scaledh = static_cast<uint32_t>(((uint64_t)max_w * (uint64_t)in_h) / (uint64_t)in_w);
         } else {
             // Height is the limiting (largest) dimension.
-            out_h = max_h;
-            out_w = static_cast<uint32_t>(((uint64_t)max_h * (uint64_t)in_w) / (uint64_t)in_h);
+            scaledh = max_h;
+            scaledw = static_cast<uint32_t>(((uint64_t)max_h * (uint64_t)in_w) / (uint64_t)in_h);
         }
-        scaledw = out_w ? out_w : 1;
-        scaledh = out_h ? out_h : 1;
     }
     // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
     if (scaledw != widths[0] || scaledh != heights[0]) {
