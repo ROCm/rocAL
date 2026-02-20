@@ -74,8 +74,6 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _device_id = device_id;
     _batch_size = batch_size;
     _output_images.resize(_batch_size);
-    _src_hstride.resize(_batch_size);
-    _src_img_offset.resize(_batch_size);
     _decode_params.resize(_batch_size);
     _image_needs_rescaling.resize(_batch_size);
 
@@ -139,13 +137,26 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
 
     uint scaledw = widths[0], scaledh = heights[0];
     // If original dims exceed max decode dims, compute output dims that fit within max while preserving aspect ratio.
+    // Pick the scale based on the dimension that would be downscaled the most (largest original/max ratio).
     if (max_decoded_width > 0 && max_decoded_height > 0 &&
         (widths[0] > static_cast<uint32_t>(max_decoded_width) || heights[0] > static_cast<uint32_t>(max_decoded_height))) {
-        uint32_t out_w = static_cast<uint32_t>(max_decoded_width);
-        uint32_t out_h = static_cast<uint32_t>(((uint64_t)out_w * heights[0]) / widths[0]);
-        if (out_h > static_cast<uint32_t>(max_decoded_height)) {
-            out_h = static_cast<uint32_t>(max_decoded_height);
-            out_w = static_cast<uint32_t>(((uint64_t)out_h * widths[0]) / heights[0]);
+        const uint32_t in_w = widths[0];
+        const uint32_t in_h = heights[0];
+        const uint32_t max_w = static_cast<uint32_t>(max_decoded_width);
+        const uint32_t max_h = static_cast<uint32_t>(max_decoded_height);
+
+        uint32_t out_w = max_w;
+        uint32_t out_h = max_h;
+
+        // Compare in_w/max_w vs in_h/max_h without FP: in_w * max_h ? in_h * max_w
+        if ((uint64_t)in_w * (uint64_t)max_h >= (uint64_t)in_h * (uint64_t)max_w) {
+            // Width is the limiting (largest) dimension.
+            out_w = max_w;
+            out_h = static_cast<uint32_t>(((uint64_t)max_w * (uint64_t)in_h) / (uint64_t)in_w);
+        } else {
+            // Height is the limiting (largest) dimension.
+            out_h = max_h;
+            out_w = static_cast<uint32_t>(((uint64_t)max_h * (uint64_t)in_w) / (uint64_t)in_h);
         }
         scaledw = out_w ? out_w : 1;
         scaledh = out_h ? out_h : 1;
@@ -286,6 +297,6 @@ HWRocJpegDecoder::~HWRocJpegDecoder() {
     if (_dev_dst_height) CHECK_HIP(hipHostFree(_dev_dst_height));
     if (_dev_src_hstride) CHECK_HIP(hipHostFree(_dev_src_hstride));
     if (_dev_src_img_offset) CHECK_HIP(hipHostFree(_dev_src_img_offset));
-    if (_dev_dst_img_idx) CHECK_HIP(hipFree(_dev_dst_img_idx));
+    if (_dev_dst_img_idx) CHECK_HIP(hipHostFree(_dev_dst_img_idx));
 }
 #endif

@@ -26,7 +26,6 @@ THE SOFTWARE.
 #if ENABLE_ROCJPEG
 
 #include "rocjpeg/rocjpeg.h"
-#include <cstdint>
 
 /**
  * @brief Gets the channel pitch and sizes.
@@ -233,8 +232,6 @@ class HWRocJpegDecoder : public Decoder {
     size_t *_dev_dst_width = nullptr, *_dev_dst_height = nullptr;
     size_t *_dev_src_hstride = nullptr, *_dev_src_img_offset = nullptr;
     uint32_t *_dev_dst_img_idx = nullptr;  // Maps resize-subset index -> original batch index in output tensor.
-    std::vector<size_t> _src_hstride;
-    std::vector<size_t> _src_img_offset;
     std::vector<bool> _image_needs_rescaling;   // A flag for each image in the batch, set to `true` if the image needs rescaling.
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params = {};

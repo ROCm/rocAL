@@ -75,7 +75,7 @@ void HipExecResizeTensor(
     size_t *dst_height,
     size_t *src_height_stride,
     size_t *src_img_offset,
-    uint32_t *dst_img_idx,
+    const uint32_t *dst_img_idx,
     unsigned channels,
     const size_t max_src_width,
     const size_t max_src_height,
