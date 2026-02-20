@@ -206,6 +206,14 @@ extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedCheckpointString(RocalCo
  * Restores the pipeline runtime state from a checkpoint blob previously produced by
  * rocalCheckpoint()/rocalGetSerializedCheckpointString().
  *
+ * \note Preconditions:
+ * - The pipeline must be built (rocalVerify() called) but not currently running.
+ * - Checkpointing must have been enabled at pipeline creation time (enable_checkpointing=True).
+ * - The checkpoint must originate from a pipeline with a compatible configuration
+ *   (same augmentation graph, batch size, and reader setup).
+ * - Any buffered data in the prefetch queue is discarded and re-filled from the
+ *   restored reader position.
+ *
  * \param [in] rocal_context the rocAL context
  * \param [in] serialized_ckpt_string pointer to checkpoint blob bytes
  * \param [in] serialized_ckpt_size size in bytes of the checkpoint blob

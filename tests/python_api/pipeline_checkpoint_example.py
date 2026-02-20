@@ -20,7 +20,6 @@
 
 import sys
 import os
-import time
 from amd.rocal.pipeline import pipeline_def, Pipeline
 from amd.rocal.plugin.generic import ROCALGenericIterator
 import amd.rocal.fn as fn
@@ -157,14 +156,15 @@ def restore_and_compare(bs, rocal_device, rocal_cpu, img_folder, serialized_ckpt
     print(f"After restore: remaining images = {pipe_restored.get_remaining_images()}")
 
     iterator = ROCALGenericIterator(pipe_restored)
-    for i in range(5):
-        batch = iterator.next()
-        [image], label = batch
-        image_names = get_image_names(pipe_restored)
-        for idx in range(bs):
-            print(image_names[idx], label[idx])
-
-    del iterator
+    try:
+        for i in range(5):
+            batch = iterator.next()
+            [image], label = batch
+            image_names = get_image_names(pipe_restored)
+            for idx in range(bs):
+                print(image_names[idx], label[idx])
+    finally:
+        del iterator
 
 
 def main():
@@ -189,8 +189,6 @@ def main():
     serialized_ckpt, used_path = create_and_checkpoint(
         bs, rocal_device, rocal_cpu, img_folder, ckpt_path=ckpt_path
     )
-
-    time.sleep(0.5)  # Give the pipeline time to release resources before restore.
 
     print("\n========== Restoring Pipeline from Checkpoint ==========")
     restore_and_compare(

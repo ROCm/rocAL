@@ -57,8 +57,6 @@ add_executable(${PROJECT_NAME} ${My_Source_Files})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 target_link_libraries(${PROJECT_NAME} rocal)
 
-include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
-link_directories(${ROCM_PATH}/lib)
 file(GLOB Restore_Source_Files ./restore_checkpoint_test.cpp)
 add_executable(restore_checkpoint_test ${Restore_Source_Files})
 

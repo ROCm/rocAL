@@ -349,7 +349,10 @@ PYBIND11_MODULE(rocal_pybind, m) {
     // Restore pipeline state from a checkpoint bytes object.
     m.def("restoreFromCheckpoint", [](RocalContext context, py::bytes checkpoint_bytes) {
         std::string ckpt = checkpoint_bytes;  // Checkpoint blob copied from Python.
-        rocalRestoreFromSerializedCheckpoint(context, ckpt.data(), ckpt.size());
+        RocalStatus status = rocalRestoreFromSerializedCheckpoint(context, ckpt.data(), ckpt.size());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to restore from checkpoint");
+        }
     }, "Restores the pipeline from a checkpoint bytes object");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
