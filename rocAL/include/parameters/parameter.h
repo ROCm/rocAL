@@ -22,6 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 template <typename T>
 class Parameter {
    public:
@@ -38,6 +41,9 @@ class Parameter {
 
     /// used to fetch the updated param values
     virtual std::vector<T> get_array() { return {}; };
+
+    /// Serialize RNG state for checkpointing (empty for deterministic params).
+    virtual std::string serialize_rng() const { return {}; }
 
     virtual ~Parameter() {}
     ///

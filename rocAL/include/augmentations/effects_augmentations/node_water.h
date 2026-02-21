@@ -47,6 +47,6 @@ class WaterNode : public Node {
     ParameterVX<float> _phase_x;
     ParameterVX<float> _phase_y;
     constexpr static float AMPLITUDE_RANGE[2] = {0.0, 10.0};
-    constexpr static float FREQUENCY_RANGE[2] = {0.0, 1.0};
-    constexpr static float PHASE_RANGE[2] = {0.0, 6.28318};  // 0 to 2*PI
+    constexpr static float FREQUENCY_RANGE[2] = {0.0, 10.0};
+    constexpr static float PHASE_RANGE[2] = {0.0, 20.0};
 };

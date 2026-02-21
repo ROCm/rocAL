@@ -195,6 +195,15 @@ do
             python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name color_jitter --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ColorJitter_${rgb_name[$rgb]}_${device_name}"
         fi
 
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name jpeg_compression_distortion --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}JpegCompressionDistortion_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name lut --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}LUT_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name posterize --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Posterize_${rgb_name[$rgb]}_${device_name}"
+        python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name solarize --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Solarize_${rgb_name[$rgb]}_${device_name}"
+        if [ $rgb -eq 1 ]; then
+            python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name channel_permute --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ChannelPermute_${rgb_name[$rgb]}_${device_name}"
+            python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name color_to_greyscale --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ColorToGreyscale_${rgb_name[$rgb]}_${device_name}"
+        fi
+
         # Special Case - One Hot Encoded Labels
         python"$ver" unit_test.py --image-dataset-path "$one_hot_data_path" --augmentation-name one_hot --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}OneHot_${rgb_name[$rgb]}_${device_name}"
 

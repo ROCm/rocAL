@@ -24,6 +24,7 @@ THE SOFTWARE.
 #define MIVISIONX_ROCAL_API_TYPES_H
 
 #include <cstdlib>
+#include <optional>
 
 #ifndef ROCAL_API_CALL
 #if defined(_WIN32)
@@ -552,6 +553,20 @@ enum RocalBitwiseOp {
     ROCAL_BITWISE_XOR = 2,
     /*! \brief Bitwise NOT operation */
     ROCAL_BITWISE_NOT = 3
+};
+
+/*! \brief  rocAL RocalPipelineParams struct
+ * \ingroup group_rocal_types
+ * \note All fields are marked as optional to allow the pipeline to use default values
+ *       when parameters are not explicitly provided.
+ */
+struct RocalPipelineParams {
+    std::optional<size_t> batch_size;
+    std::optional<size_t> num_threads;
+    std::optional<size_t> prefetch_queue_depth;
+    std::optional<int> device_id;
+    std::optional<bool> rocal_cpu;
+    std::optional<unsigned> seed;
 };
 
 #endif  // MIVISIONX_ROCAL_API_TYPES_H
