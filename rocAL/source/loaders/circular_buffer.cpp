@@ -129,7 +129,7 @@ void CircularBuffer::pop() {
 void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, size_t buffer_depth, bool use_hip_memory) {
     if (_initialized)
         return;
-    _use_pinned_memory = !use_hip_memory; // When using Hardware decoder, pinned memory is not allocated for HIP backend
+    _use_pinned_memory = !use_hip_memory; // Controls whether host-pinned buffers are used instead of direct device write buffers (for HIP backend, including HW decoder and hipFile direct I/O via numpy loader)
     _buff_depth = buffer_depth;
     _output_mem_type = output_mem_type;
     _output_mem_size = output_mem_size;
