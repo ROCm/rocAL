@@ -69,11 +69,21 @@ THE SOFTWARE.
 namespace {
 /*
  * hipFile Integration Notes:
- * - hipFile enables direct-to-GPU reads (GPU Direct Storage).
+ * - hipFile GPU Direct I/O is disabled by default. Users must set ROCAL_USE_HIPFILE=1 to enable.
+ * - hipFile enables direct-to-GPU reads (GPU Direct Storage) from NVMe to GPU HBM, bypassing
+ *   the host staging path (fread -> pinned host memory -> zero-copy GPU mapping).
  * - The AMD fastpath requires 4KB-aligned file offsets, buffer offsets, and IO sizes.
- * - NumPy payload offsets are typically not 4KB-aligned, so we read an aligned window into a
- *   reusable device scratch buffer and then copy the requested subrange into the final output.
+ * - NumPy payload offsets are typically not 4KB-aligned (data_offset is 64-128 bytes for NPY v1),
+ *   so we read an aligned window into a reusable device scratch buffer registered with
+ *   hipFileBufRegister, then D2D copy the requested subrange into the final output.
  * - If HIPFILE_FORCE_COMPAT_MODE=true, hipFile would internally add extra copies, so we bypass it.
+ * - The feature uses fileno() on the existing FILE* rather than a separate O_DIRECT open,
+ *   avoiding the overhead of a second open() syscall per file.
+ * - The scratch buffer is allocated once and reused across all file reads. For uniform-shape
+ *   datasets (common case), the aligned read size is the same for every file.
+ * - This feature is most beneficial when the dataset is too large to fit in the OS page cache.
+ *   When data fits in cache, fread() serves from RAM, while hipFile reads from NVMe.
+ *   hipFile wins for large (TB-scale) datasets or cold-storage scenarios.
  */
 
 // hipFile fastpath uses 4KB/page alignment when statx dio-align data is unavailable.
@@ -97,6 +107,15 @@ inline bool hipfile_forced_compat_mode() {
     static const bool cached = [] {
         const char* v = std::getenv("HIPFILE_FORCE_COMPAT_MODE");
         return v && (!strcasecmp(v, "true"));
+    }();
+    return cached;
+}
+
+// hipFile is disabled by default. Users must set ROCAL_USE_HIPFILE=1 to opt in.
+inline bool hipfile_enabled() {
+    static const bool cached = [] {
+        const char* v = std::getenv("ROCAL_USE_HIPFILE");
+        return v && (std::string(v) == "1");
     }();
     return cached;
 }
@@ -347,7 +366,10 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
         _output_is_device_initialized = true;
     }
 
-    if (_output_is_device) {
+    // hipFile GPU Direct I/O: only active when ROCAL_USE_HIPFILE=1, output buffer is device
+    // memory, and HIPFILE_FORCE_COMPAT_MODE is not set. Falls back to the standard fread() path
+    // when any condition is not met.
+    if (_output_is_device && hipfile_enabled()) {
         // hipFile path currently supports only contiguous output layouts
         if (!hipfile_forced_compat_mode() && strides_in_dims[0] == _curr_file_header.size() && ensure_hipfile_open() && _hipfile_file_size > 0) {
             const size_t file_size = _hipfile_file_size;

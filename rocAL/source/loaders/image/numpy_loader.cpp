@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "loaders/image/numpy_loader.h"
 
 #include <chrono>
+#include <cstdlib>
 #include <thread>
 
 #include "vx_ext_amd.h"
@@ -136,10 +137,23 @@ void NumpyLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     }
     _decoded_data_info._data_names.resize(_batch_size);
     _decoded_data_info._roi_shape.resize(_batch_size);
+    // hipFile GPU Direct I/O is disabled by default (ROCAL_USE_HIPFILE is unset or "0").
+    // Users must explicitly set ROCAL_USE_HIPFILE=1 to opt in. This feature reads .npy data
+    // directly from NVMe to GPU device memory via hipFileRead, bypassing host staging.
+    // It is most beneficial when the dataset is too large to fit in the OS page cache,
+    // so that the standard fread() path cannot serve data from cached host RAM.
+    // When enabled, the circular buffer allocates hipMalloc device memory instead of
+    // zero-copy mapped pinned host memory, so augmentation kernels read from HBM
+    // instead of PCIe-mapped pinned memory.
+    bool use_device_write_buffer = false;
 #if ENABLE_HIP && ENABLE_HIPFILE
-    const bool use_device_write_buffer = (_mem_type == RocalMemType::HIP);
-#else
-    const bool use_device_write_buffer = false;
+    if (_mem_type == RocalMemType::HIP) {
+        const char* env = std::getenv("ROCAL_USE_HIPFILE");
+        use_device_write_buffer = (env && std::string(env) == "1");
+        if (use_device_write_buffer) {
+            LOG("hipFile GPU Direct I/O enabled for numpy loader");
+        }
+    }
 #endif
     _circ_buff.init(_mem_type, _output_mem_size, _prefetch_queue_depth, use_device_write_buffer);
     _is_initialized = true;
