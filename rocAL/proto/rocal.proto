@@ -37,10 +37,11 @@ message InputOutput {
 }
 
 message Parameter {
-  repeated float param_val_float = 1;
-  repeated int32 param_val_int = 2;
-  repeated double frequency = 3;  // Used only for CustomRand param
-  optional uint32 size = 4; // Used only for CustomRand param
+  required int32 param_type = 1;  // Parameter kind (deterministic/uniform/custom).
+  repeated float param_val_float = 2;
+  repeated int32 param_val_int = 3;
+  repeated double frequency = 4;  // Used only for CustomRand param
+  optional uint32 size = 5; // Used only for CustomRand param
 }
 
 message EnumType {
@@ -104,4 +105,40 @@ message PipelineDef {
   optional uint64 prefetch_queue_depth = 6;
   repeated OperatorDef operators = 7;
   repeated InputOutput pipe_outputs = 8;
+}
+
+// Captured RNG states for random parameters used in the pipeline.
+message AugmentationRNGSnapshot {
+  repeated bytes rng_mt19937 = 1;
+}
+
+// Serialized pipeline checkpoint blob.
+message Checkpoint {
+  message OpCheckpoint {
+    optional string operator_name = 1;
+    optional bytes operator_state = 2;
+  }
+
+  // Per-operator checkpoints (one per operator in the pipeline).
+  repeated OpCheckpoint cpts = 1;
+  // RNG state snapshot for random parameters at the checkpoint iteration.
+  optional AugmentationRNGSnapshot aug_rng = 2;
+
+  // Optional versioning and identity/config fields
+  optional uint64 pipeline_signature = 3;
+  optional uint32 batch_size = 4;
+  optional int32 device_id = 5;
+  optional int32 mem_type = 6;
+}
+
+// Loader state serialized as part of operator checkpoints.
+message LoaderState {
+  // Epoch number at capture time.
+  optional int32 current_epoch = 1;
+  // Serialized reader RNG state.
+  optional bytes rng = 2;
+  // Iteration number at capture time.
+  optional int64 iteration_number = 3;
+  // Current file index within the reader.
+  optional uint32 curr_file_idx = 4;
 }

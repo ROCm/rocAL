@@ -42,7 +42,7 @@ class PipelineOperator {
     }
 
     // Set the list of arguments associated with this operator
-    void set_arguments(const std::vector<Argument>& arguments) {
+    void set_arguments(const ArgumentSet& arguments) {
         this->arguments = arguments;
     }
 
@@ -52,7 +52,7 @@ class PipelineOperator {
      * For reader modules, arguments are stored directly on the operator.
      * For augmentation operators, the arguments are maintained by the underlying Node.
      */
-    const std::vector<Argument>& get_arguments() const {
+    const ArgumentSet& get_arguments() const {
         if (this->module_name == "reader") {
             return this->arguments;
         } else {
@@ -85,6 +85,6 @@ class PipelineOperator {
 
     std::string operator_name;              // Name of the operator (e.g., "ResizeNode")
     std::string module_name;                // Category of the operator (e.g., "loader", "augmentation" or "reader")
-    std::vector<Argument> arguments;        // List of arguments/configurations for the operator
+    ArgumentSet arguments;                  // List of arguments/configurations for the operator
     std::shared_ptr<Node> node;             // Pointer to the associated computational graph node
 };

@@ -40,6 +40,6 @@ class ShotNoiseNode : public Node {
 
    private:
     ParameterVX<float> _noise_factor;
-    constexpr static float NOISE_FACTOR_RANGE[2] = {0.0, 1.0};
+    constexpr static float NOISE_FACTOR_RANGE[2] = {0.0f, 100.0f};
     int _seed;
 };
