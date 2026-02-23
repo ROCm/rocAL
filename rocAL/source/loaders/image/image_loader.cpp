@@ -38,6 +38,8 @@ ImageLoader::ImageLoader(void *dev_resources) : _circ_buff(dev_resources),
     _is_initialized = false;
     _remaining_image_count = 0;
     _device_id = 0;
+    _iteration_count = 0;
+    _epoch_count = 0;
 #if ENABLE_HIP
     DeviceResourcesHip *hipres = static_cast<DeviceResourcesHip *>(dev_resources);
     _hip_stream = hipres->hip_stream;
@@ -89,6 +91,11 @@ void ImageLoader::reset() {
     // Emptying the internal circular buffer
     _circ_buff.reset();
 
+    // Reset is called after each epoch, hence increase the epoch count
+    // Set the iteration_count to 0
+    _epoch_count++;
+    _iteration_count = 0;
+    
     // resetting the reader thread to the start of the media
     _image_counter = 0;
     _image_loader->reset();
@@ -144,6 +151,7 @@ void ImageLoader::initialize(ReaderConfig reader_cfg, DecoderConfig decoder_cfg,
     _image_loader = std::make_shared<ImageReadAndDecode>();
     size_t shard_count = reader_cfg.get_shard_count();
     int device_id = reader_cfg.get_shard_id();
+    _is_checkpointing_enabled = reader_cfg.is_checkpointing_enabled();
 #if ENABLE_HIP
     // Set stream in decoder config, to be used by rocJpeg decoder for scaling
     if (decoder_cfg._type == DecoderType::ROCJPEG) {
@@ -184,6 +192,7 @@ void ImageLoader::start_loading() {
         THROW("start_loading() should be called after initialize() function is called")
 
     _remaining_image_count = _image_loader->count();
+    _dataset_size = _remaining_image_count;  // Capture the dataset size once for stable restore semantics
     _internal_thread_running = true;
     _load_thread = std::thread(&ImageLoader::load_routine, this);
 }
@@ -212,6 +221,18 @@ ImageLoader::load_routine() {
                                               _output_tensor->info().color_format(), _decoder_keep_original);
 
             if (load_status == LoaderModuleStatus::OK) {
+                // Save state after a successful load for correct checkpoint restoration.
+                if (_is_checkpointing_enabled) {
+                    _decoded_data_info._loader_state.epoch_number = _epoch_count;
+                    _decoded_data_info._loader_state.iteration_number = _iteration_count;
+                    try {
+                        _decoded_data_info._loader_state.rng = _image_loader->get_rng_state();
+                    } catch (...) {
+                        _decoded_data_info._loader_state.rng = std::mt19937{};
+                        ERR("Checkpointing: reader RNG state not available, using default RNG state");
+                    }
+                    _decoded_data_info._loader_state.curr_file_idx = _image_loader->get_curr_file_idx();
+                }
                 if (_randombboxcrop_meta_data_reader) {
                     _crop_image_info._crop_image_coords = _image_loader->get_batch_random_bbox_crop_coords();
                     _circ_buff.set_crop_image_info(_crop_image_info);
@@ -219,6 +240,7 @@ ImageLoader::load_routine() {
                 _circ_buff.set_decoded_data_info(_decoded_data_info);
                 _circ_buff.push();
                 _image_counter += _output_tensor->info().batch_size();
+                _iteration_count++;
             }
         }
         if (load_status != LoaderModuleStatus::OK) {
@@ -284,6 +306,7 @@ ImageLoader::update_output_image() {
         _output_cropped_img_info = _circ_buff.get_cropped_image_info();
     }
     _output_names = _output_decoded_data_info._data_names;
+    _current_loader_state = _output_decoded_data_info._loader_state;
     _output_tensor->update_tensor_roi(_output_decoded_data_info._roi_width, _output_decoded_data_info._roi_height);
     _circ_buff.pop();
     if (!_loop)
@@ -314,4 +337,8 @@ void ImageLoader::feed_external_input(const std::vector<std::string>& input_imag
     _external_source_reader = true;
     _external_input_eos = eos;
     _image_loader->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);
+}
+
+const LoaderState& ImageLoader::get_loader_state() const {
+    return _current_loader_state;
 }

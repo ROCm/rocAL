@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <map>
 #include <memory>
 #include <variant>
+#include <mutex>
 
 #include "pipeline/graph.h"
 #include "meta_data/meta_data_graph.h"
@@ -53,6 +54,7 @@ THE SOFTWARE.
 #include "meta_data/randombboxcrop_meta_data_reader.h"
 #include "rocal_api_types.h"
 #include "pipeline/pipeline_serializer.h"
+#include "pipeline/checkpoint.h"
 
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
@@ -88,7 +90,7 @@ public:
                         NO_MORE_DATA = 2,
                         NOT_IMPLEMENTED = 3,
                         INVALID_ARGUMENTS };
-    MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type);
+    MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, bool enable_checkpointing);
     ~MasterGraph();
     Status reset();
     size_t remaining_count();
@@ -117,6 +119,8 @@ public:
     std::shared_ptr<Node> add_node(const std::string& node_name, const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs, bool is_loader_node = false);
     template <typename T, typename M>
     std::shared_ptr<T> meta_add_node(std::shared_ptr<M> node);
+    //! Returns whether checkpointing is enabled for this pipeline.
+    bool is_checkpointing_enabled() const { return _checkpointing_enabled; }
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
     Tensor *create_internal_tensor(const TensorInfo &info);  // Creates a regular (non-virtual) tensor and adds it to _internal_tensors vector
     TensorListVector * create_label_reader(const char *source_path, MetaDataReaderType reader_type);
@@ -163,8 +167,16 @@ public:
     std::string& get_serialized_string() { return _serialized_pipeline; }
     void deserialize(rocal_proto::PipelineDef *pipe_def);
     Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
+    //! Serialize the current pipeline state into an internal checkpoint buffer.
+    void get_serialized_checkpoint(size_t &serialized_ckpt_string_size);
+    //! Returns the last serialized checkpoint buffer.
+    const std::string& get_serialized_checkpoint_string() const { return _serialized_checkpoint; }
 private:
     Status update_node_parameters();
+    //! Populate a Checkpoint object with per-operator state for the current iteration.
+    void create_checkpoint(Checkpoint &ckpt);
+    // Computes a signature for the pipeline configuration to validate checkpoint compatibility.
+    uint64_t compute_pipeline_signature() const;
     void create_single_graph();
     void create_multiple_graphs();
     void start_processing();
@@ -256,6 +268,12 @@ private:
     PipelineSerializer _pipeline_serializer;
     // Stores the serialized binary string representation of the pipeline
     std::string _serialized_pipeline;
+    // Serialized checkpoint blob cached after rocalCheckpoint()
+    std::string _serialized_checkpoint;
+    bool _checkpointing_enabled = false;  //!< True when checkpoint capture is enabled.
+    uint64_t _pipeline_signature = 0;     //!< Cached pipeline signature for checkpoint validation.
+    mutable std::mutex _checkpoint_mutex; //!< Protects checkpoint capture/read operations.
+    int64_t _iteration_number = 0;        //!< Iteration counter used for checkpoint metadata.
     int _tensor_idx = 0; // Index/counter used to uniquely name Tensor instances created in the pipeline
     bool _set_device_id = false;
 };

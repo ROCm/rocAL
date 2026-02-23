@@ -45,6 +45,7 @@ class Pipeline(object):
     @param exec_async (bool, optional, default = True)                                                    Whether to execute the pipeline asynchronously. his makes :meth:`amd.rocal.pipeline.Pipeline.run` method run asynchronously with respect to the calling Python thread.
     @param bytes_per_sample  (int, optional, default = 0)                                                 A hint for ROCAL for how much memory to use for its tensors.
     @param rocal_cpu (bool, optional, default = False)                                                    Whether to use CPU or GPU for the pipeline
+    @param enable_checkpointing (bool, optional, default = False)                                         Enable pipeline checkpointing APIs.
     @param max_streams (int, optional, default = -1)                                                      Limit the number of HIP streams used by the executor. Value of -1 does not impose a limit. This parameter is currently unused (and behavior of unrestricted number of streams is assumed).
     @param default_cuda_stream_priority (int, optional, default = 0)                                      HIP stream priority used by ROCAL. See `cudaStreamCreateWithPriority` in HIP documentation
     @param tensor_layout (int, optional, default = 0)                                                     Tensor layout used for the augmentations
@@ -68,17 +69,17 @@ class Pipeline(object):
                  exec_async=True, bytes_per_sample=0,
                  rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, 
                  reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None,
-                 deserialized_pipeline_handle=None): 
+                 deserialized_pipeline_handle=None, enable_checkpointing=False): 
         
         if deserialized_pipeline_handle is not None:
             self._handle = deserialized_pipeline_handle
         else:
             if (rocal_cpu):
                 self._handle = b.rocalCreate(
-                    batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                    batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
             else:
                 self._handle = b.rocalCreate(
-                    batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                    batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
 
         if (b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
@@ -130,6 +131,7 @@ class Pipeline(object):
         self._external_source = None
         self._external_source_mode = None
         self._last_batch_policy = None
+        self._enable_checkpointing = enable_checkpointing  # Enable checkpoint API access for this pipeline.
 
     def build(self):
         """!Build the pipeline using rocalVerify call
@@ -241,6 +243,20 @@ class Pipeline(object):
     
     def get_image_name_length(self, idx):
         return b.getImageNameLen(self._handle, idx)
+
+    def checkpoint(self, filename=None):
+        """
+        Capture and return the current pipeline checkpoint as bytes.
+        Optionally persist the checkpoint to ``filename`` if provided.
+        Requires enable_checkpointing=True and at least one successful run.
+        """
+        if not self._enable_checkpointing:
+            raise RuntimeError("Checkpointing was not enabled when this pipeline was created.")
+        ckpt = b.checkpoint(self._handle)
+        if filename is not None:
+            with open(filename, "wb") as f:
+                f.write(ckpt)
+        return ckpt
 
     def get_remaining_images(self):
         return b.getRemainingImages(self._handle)

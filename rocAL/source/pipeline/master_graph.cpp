@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include <VX/vx_types.h>
 #include <cstring>
 #include <sched.h>
+#include <typeinfo>
 #include <half/half.hpp>
 #include "pipeline/master_graph.h"
 #include "parameters/parameter_factory.h"
@@ -34,6 +35,7 @@ THE SOFTWARE.
 #include "meta_data/meta_data_graph_factory.h"
 #include "meta_data/randombboxcrop_meta_data_reader_factory.h"
 #include "augmentations/node_copy.h"
+#include "rocal.pb.h"
 
 using half_float::half;
 
@@ -94,7 +96,7 @@ MasterGraph::~MasterGraph() {
     release();
 }
 
-MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type) : _ring_buffer(prefetch_queue_depth),
+MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_thread_count, int gpu_id, size_t prefetch_queue_depth, RocalTensorDataType output_tensor_data_type, bool enable_checkpointing) : _ring_buffer(prefetch_queue_depth),
                                                                                                                                                                                      _graph(nullptr),
                                                                                                                                                                                      _affinity(affinity),
                                                                                                                                                                                      _cpu_num_threads(cpu_thread_count),
@@ -114,8 +116,9 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 #if ENABLE_HIP
                                                                                                                                                                                      _box_encoder_gpu(nullptr),
 #endif
-                                                                                                                                                                                     _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
-                                                                                                                                                                                     _rb_block_if_full_time("Ring Buffer Block IF Full Time") {
+                                                                                                                                                                                    _rb_block_if_empty_time("Ring Buffer Block IF Empty Time"),
+                                                                                                                                                                                     _rb_block_if_full_time("Ring Buffer Block IF Full Time"),
+                                                                                                                                                                                     _checkpointing_enabled(enable_checkpointing) {
     try {
         vx_status status;
         vxRegisterLogCallback(NULL, log_callback, vx_false_e);
@@ -274,6 +277,7 @@ MasterGraph::build() {
 #else
     _ring_buffer.init(_mem_type, nullptr, _internal_tensor_list.data_size(), _internal_tensor_list.roi_size());
 #endif
+    if (_checkpointing_enabled) _ring_buffer.init_iteration_data();
     if (_is_box_encoder) _ring_buffer.initBoxEncoderMetaData(_mem_type, _user_batch_size * _num_anchors * 4 * sizeof(float), _user_batch_size * _num_anchors * sizeof(int));
     
     // Check if at least one loader module is created
@@ -281,6 +285,9 @@ MasterGraph::build() {
         THROW("At least one loader needs to be created in the pipeline")
 
     if (_loaders_count > 1) {
+        if (_checkpointing_enabled) {
+            THROW("Checkpointing is not yet supported for pipelines with multiple loaders.");
+        }
         _meta_data_reader = nullptr; // Disable metadata reader for multiple loaders pipeline, support not enabled
         create_multiple_graphs();
     } else {
@@ -335,6 +342,8 @@ void MasterGraph::set_output(Tensor *output_tensor) {
 
 void MasterGraph::release() {
     LOG("MasterGraph release ...")
+    // Unblock any threads that might be waiting on ring buffer read/write calls during shutdown.
+    _ring_buffer.release_all_blocked_calls();
     stop_processing();
     for (auto &node : _nodes)
         node->release();
@@ -868,6 +877,11 @@ void MasterGraph::output_routine() {
             auto write_output_buffers = write_buffers.first;
             _rb_block_if_full_time.end();
 
+            std::shared_ptr<IterationData> reserved_iter_data;  // Slot for per-iteration checkpoint metadata.
+            if (_checkpointing_enabled) {
+                reserved_iter_data = _ring_buffer.get_write_iteration_data();
+            }
+
             // Swap handles on the input tensor, so that new tensor is loaded to be processed
             auto load_ret = _loader_module->load_next();
             if (load_ret != LoaderModuleStatus::OK)
@@ -942,7 +956,19 @@ void MasterGraph::output_routine() {
             _sequence_frame_timestamps_vec.insert(_sequence_frame_timestamps_vec.begin(), _loader_module->get_sequence_frame_timestamps());
 #endif
             _ring_buffer.set_meta_data(full_batch_data_names, output_meta_data);
-            _ring_buffer.push();  // The data and metadata is now stored in output the ring_buffer, increases it's level by 1
+            if (_checkpointing_enabled) {
+                std::lock_guard<std::mutex> lk(_checkpoint_mutex);  // Serialize checkpoint slot updates.
+                if (reserved_iter_data) {
+                    // Attach iteration-local checkpoint + RNG snapshots to the ring-buffer slot being published.
+                    reserved_iter_data->iteration_number = _iteration_number++;
+                    if (!reserved_iter_data->ckpt) {
+                        reserved_iter_data->ckpt = std::make_shared<Checkpoint>();
+                    }
+                    this->create_checkpoint(*reserved_iter_data->ckpt);
+                    reserved_iter_data->rng_states = ParameterFactory::instance()->snapshot_rngs();
+                }
+            }
+            _ring_buffer.push();  // The data and metadata is now stored in the ring_buffer, increases it's level by 1
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
@@ -2014,4 +2040,154 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
             THROW("The required output tensor '" + pipe_out.name() + "' is not present in the reconstructed pipeline.")
         }
     }
+}
+
+// Compute a stable signature of pipeline configuration for checkpoint validation.
+uint64_t MasterGraph::compute_pipeline_signature() const {
+    auto hash_combine = [](uint64_t &h, uint64_t v) {  // Hash combiner for 64-bit values.
+        h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+    };
+    uint64_t h = 1469598103934665603ULL;  // Running hash accumulator (FNV offset basis).
+    std::hash<std::string> Hs;            // String hasher for names/keys.
+
+    auto hash_uint = [&](uint64_t v) {  // Helper to hash integer fields.
+        hash_combine(h, v);
+    };
+
+    for (auto &pipe_op : _pipeline_operators) {  // Include each operator in the signature hash.
+        hash_combine(h, Hs(pipe_op->module_name));
+        hash_combine(h, Hs(pipe_op->operator_name));
+
+        const ArgumentSet *args = nullptr;  // Operator arguments to include in signature.
+        if (pipe_op->module_name == "reader") {
+            args = &pipe_op->arguments;
+        } else if (pipe_op->node) {
+            args = &pipe_op->node->get_args_list();
+        }
+
+        std::vector<const Argument*> sorted_args;  // Stable ordering of arguments by name.
+        if (args) {
+            sorted_args.reserve(args->size());
+            for (const auto &kv : *args) {
+                sorted_args.push_back(&kv.second);
+            }
+            std::sort(sorted_args.begin(), sorted_args.end(),
+                      [](const Argument *a, const Argument *b) { return a->arg_name < b->arg_name; });
+        }
+
+        for (const Argument *arg : sorted_args) {  // Include argument metadata and values.
+            hash_combine(h, Hs(arg->arg_name));
+            hash_combine(h, Hs(arg->type_name));
+            hash_combine(h, Hs(arg->sub_type_name));
+            hash_uint(arg->is_vector ? 1ULL : 0ULL);
+            hash_uint(arg->is_parameter ? 1ULL : 0ULL);
+            hash_uint(arg->is_null_ptr ? 1ULL : 0ULL);
+            hash_uint(static_cast<uint64_t>(arg->values.size()));
+
+            for (const auto &value : arg->values) {  // Include serialized argument values.
+                const std::type_info &ti = value.type();  // Type tag for std::any payloads.
+                try {
+                    if (ti == typeid(int)) {
+                        hash_uint(static_cast<uint64_t>(std::any_cast<int>(value)));
+                    } else if (ti == typeid(unsigned)) {
+                        hash_uint(static_cast<uint64_t>(std::any_cast<unsigned>(value)));
+                    } else if (ti == typeid(size_t)) {
+                        hash_uint(static_cast<uint64_t>(std::any_cast<size_t>(value)));
+                    } else if (ti == typeid(bool)) {
+                        hash_uint(std::any_cast<bool>(value) ? 1ULL : 0ULL);
+                    } else if (ti == typeid(float)) {
+                        float f = std::any_cast<float>(value);  // Float payload for bit hashing.
+                        uint32_t bits;                          // Bit representation for the float value.
+                        std::memcpy(&bits, &f, sizeof(bits));
+                        hash_uint(static_cast<uint64_t>(bits));
+                    } else if (ti == typeid(double)) {
+                        double d = std::any_cast<double>(value);  // Double payload for bit hashing.
+                        uint64_t bits;                            // Bit representation for the double value.
+                        std::memcpy(&bits, &d, sizeof(bits));
+                        hash_uint(bits);
+                    } else if (ti == typeid(std::string)) {
+                        hash_combine(h, Hs(std::any_cast<std::string>(value)));
+                    }
+                } catch (...) {
+                    // Ignore values that cannot be cast
+                }
+            }
+        }
+    }
+
+    // Include output tensor metadata
+    auto &out_list = const_cast<TensorList&>(_internal_tensor_list);  // Output tensor list to hash metadata from.
+    for (unsigned i = 0; i < out_list.size(); i++) {
+        Tensor *pipe_output = out_list[i];  // Output tensor entry to hash.
+        hash_uint(static_cast<uint64_t>(pipe_output->info().mem_type()));
+        hash_uint(static_cast<uint64_t>(pipe_output->info().data_type()));
+        hash_uint(static_cast<uint64_t>(pipe_output->info().layout()));
+        hash_uint(static_cast<uint64_t>(pipe_output->info().color_format()));
+        for (auto dim : pipe_output->info().dims()) {  // Include tensor dimensions.
+            hash_uint(static_cast<uint64_t>(dim));
+        }
+    }
+
+    hash_uint(static_cast<uint64_t>(_mem_type));
+    return h;
+}
+
+// Populate the checkpoint with per-operator state for the current iteration.
+void MasterGraph::create_checkpoint(Checkpoint &ckpt) {
+    ckpt.Clear();
+    for (auto &pipe_op : _pipeline_operators) {  // Collect per-operator state.
+        auto op_ckpt = ckpt.AddOperatorCheckpoint(pipe_op->operator_name);  // Per-operator checkpoint slot.
+        if (pipe_op->node) {
+            pipe_op->node->save_state(op_ckpt);
+        }
+    }
+}
+
+// Serialize the current checkpoint (operator state + RNG snapshots) into a blob.
+void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size) {
+    if (!_checkpointing_enabled) {
+        THROW("Checkpointing is not enabled for this pipeline");
+    }
+
+    std::lock_guard<std::mutex> lk(_checkpoint_mutex);  // Serialize checkpoint capture/read.
+
+    const auto& ckpt = _ring_buffer.get_read_checkpoint();  // Checkpoint captured for the current read slot.
+    if (!ckpt) {
+        THROW("No checkpoint data available. Run the pipeline before requesting a checkpoint.");
+    }
+
+    rocal_proto::Checkpoint checkpoint;  // Protobuf container for serialized checkpoint data.
+
+    for (auto &pipe_op : _pipeline_operators) {  // Serialize each operator checkpoint.
+        if (!pipe_op->node)
+            continue;
+        auto op_ckpt = checkpoint.add_cpts();  // Per-operator checkpoint entry.
+        op_ckpt->set_operator_name(pipe_op->operator_name);
+        op_ckpt->set_operator_state(pipe_op->node->serialize_state(ckpt->GetOperatorCheckpoint(pipe_op->operator_name)));
+    }
+
+    auto *rngs = checkpoint.mutable_aug_rng();                   // RNG snapshot message.
+    const auto& iter_data = _ring_buffer.get_read_iteration_data();  // Iteration metadata from ring buffer.
+    if (iter_data && !iter_data->rng_states.empty()) {
+        for (auto &s : iter_data->rng_states) {  // Emit captured RNG state strings.
+            rngs->add_rng_mt19937(s);
+        }
+    } else {
+        auto rng_states = ParameterFactory::instance()->snapshot_rngs();  // Fallback RNG snapshot if none in ring buffer.
+        for (auto &s : rng_states) {  // Emit fallback RNG state strings.
+            rngs->add_rng_mt19937(s);
+        }
+    }
+
+    if (_pipeline_signature == 0) {
+        _pipeline_signature = compute_pipeline_signature();
+    }
+
+    checkpoint.set_pipeline_signature(_pipeline_signature);
+    checkpoint.set_batch_size(static_cast<uint32_t>(_user_batch_size));
+    checkpoint.set_device_id(static_cast<int32_t>(_gpu_id));
+    checkpoint.set_mem_type(static_cast<int32_t>(_mem_type));
+
+    _serialized_checkpoint = checkpoint.SerializeAsString();
+    serialized_ckpt_string_size = _serialized_checkpoint.size();
 }
