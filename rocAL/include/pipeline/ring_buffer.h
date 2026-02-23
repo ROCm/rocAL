@@ -22,13 +22,26 @@ THE SOFTWARE.
 
 #pragma once
 #include <condition_variable>
+#include <cstdint>
+#include <memory>
+#include <string>
 #include <vector>
 #include <queue>
 #include "pipeline/commons.h"
 #include "device/device_manager_hip.h"
 #include "meta_data/meta_data.h"
+#include "pipeline/checkpoint.h"
 
 using MetaDataNamePair = std::pair<ImageNameBatch, pMetaDataBatch>;
+
+/*! \brief Per-iteration checkpoint metadata stored in the ring buffer. */
+class IterationData {
+   public:
+    int64_t iteration_number = 0;           //!< Pipeline iteration number.
+    std::shared_ptr<Checkpoint> ckpt;       //!< Operator checkpoint state for this iteration.
+    std::vector<std::string> rng_states;    //!< Serialized RNG states for random parameters.
+};
+
 class RingBuffer {
    public:
     explicit RingBuffer(unsigned buffer_depth);
@@ -52,6 +65,14 @@ class RingBuffer {
     std::vector<void *> get_meta_write_buffers();
     void set_meta_data(ImageNameBatch names, pMetaDataBatch meta_data);
     void rellocate_meta_data_buffer(void *buffer, size_t buffer_size, unsigned buff_idx);
+    //! Returns the iteration data slot reserved for the next write.
+    std::shared_ptr<IterationData>& get_write_iteration_data();
+    //! Allocate IterationData entries for the ring buffer slots.
+    void init_iteration_data();
+    //! Returns the checkpoint for the current read slot.
+    const std::shared_ptr<Checkpoint>& get_read_checkpoint();
+    //! Returns iteration data for the current read slot.
+    const std::shared_ptr<IterationData>& get_read_iteration_data();
     void reset();
     void pop();
     void push();
@@ -92,4 +113,5 @@ class RingBuffer {
     std::mutex _names_buff_lock;
     const size_t MEM_ALIGNMENT = 256;
     bool _box_encoder = false;
+    std::vector<std::shared_ptr<IterationData>> _iteration_data;  //!< Per-slot iteration checkpoint metadata.
 };

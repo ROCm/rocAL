@@ -328,6 +328,23 @@ PYBIND11_MODULE(rocal_pybind, m) {
         return py::bytes(buffer.data(), size);
     }, "Returns the serialized pipeline as string");
     m.def("rocalDeserialize", &rocalDeserialize, "Creates context from the serialized string", py::return_value_policy::reference);
+    // Return the serialized checkpoint blob as Python bytes.
+    m.def("checkpoint", [](RocalContext context) {
+        size_t size = 0;  // Serialized checkpoint size in bytes.
+        RocalStatus status = rocalCheckpoint(context, &size);
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to serialize checkpoint");
+        }
+        if (size == 0) {
+            throw std::runtime_error("Serialized checkpoint is empty");
+        }
+        std::string serialized_ckpt(size, '\0');  // Buffer for checkpoint bytes.
+        status = rocalGetSerializedCheckpointString(context, serialized_ckpt.data());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to get serialized checkpoint string");
+        }
+        return py::bytes(serialized_ckpt);
+    }, "Returns the serialized checkpoint as Python bytes");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)

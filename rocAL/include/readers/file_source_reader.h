@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <dirent.h>
 
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -68,6 +69,8 @@ class FileSourceReader : public Reader {
     std::string get_root_folder_path() override;  // Returns the root folder path
 
     std::vector<std::string> get_file_paths_from_meta_data_reader() override;  // Returns the relative file path from the meta-data reader
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
    private:
     //! opens the folder containing the images
     Reader::Status open_folder();
@@ -78,6 +81,7 @@ class FileSourceReader : public Reader {
     DIR *_sub_dir;
     struct dirent *_entity;
     std::vector<std::string> _file_names;
+    std::vector<std::string> _backup_file_names;  //!< Original file ordering (used to restore shuffle determinism).
     FILE *_current_fPtr;
     unsigned _current_file_size;
     std::string _last_id;
@@ -88,4 +92,8 @@ class FileSourceReader : public Reader {
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! Pair containing the last batch policy and pad_last_batch_repeated values for deciding what to do with last batch
     Reader::Status generate_file_names();         // Function that would generate _file_names containing all the samples in the dataset
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };
