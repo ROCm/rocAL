@@ -34,6 +34,7 @@ enum class MetaDataReaderType {
     TEXT_FILE_META_DATA_READER,     // Used when metadata is stored in a text file
     COCO_META_DATA_READER,
     COCO_KEY_POINTS_META_DATA_READER,
+    COCO_YOLO_META_DATA_READER,     // Used for reading COCO dataset annotations from YOLO-format .txt label files
     CIFAR10_META_DATA_READER,  // meta_data for cifar10 data which is store as part of bin file
     TF_META_DATA_READER,
     CAFFE_META_DATA_READER,
@@ -52,6 +53,7 @@ struct MetaDataConfig {
     MetaDataType _type;
     MetaDataReaderType _reader_type;
     std::string _path;
+    std::string _images_path;  // Path to images directory (used by COCO YOLO reader for JPEG dimension probing)
     std::map<std::string, std::string> _feature_key_map;
     std::string _file_prefix;  // if we want to read only filenames with prefix (needed for cifar10 meta data)
     unsigned _sequence_length;
@@ -72,6 +74,7 @@ struct MetaDataConfig {
     MetaDataType type() const { return _type; }
     MetaDataReaderType reader_type() const { return _reader_type; }
     std::string path() const { return _path; }
+    std::string images_path() const { return _images_path; }
     std::string index_path() const { return _index_path; }
     std::vector<std::set<std::string>> exts() const { return _exts; }
     MissingComponentsBehaviour get_missing_component_behaviour() const { return _missing_component_behaviour; }
@@ -88,11 +91,13 @@ struct MetaDataConfig {
     void set_out_img_height(unsigned out_img_height) { _out_img_height = out_img_height; }
     void set_avoid_class_remapping(bool avoid_class_remapping) { _avoid_class_remapping = avoid_class_remapping; }
     void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { _aspect_ratio_grouping = aspect_ratio_grouping; }
+    void set_images_path(const std::string& images_path) { _images_path = images_path; }
 };
 
 class MetaDataReader {
    protected:
     bool _aspect_ratio_grouping;
+    MetaDataReaderType _reader_type = MetaDataReaderType::FOLDER_BASED_LABEL_READER;  // Tracks the concrete reader type for runtime dispatch (e.g., skipping JSON path validation for COCO YOLO reader)
 
    public:
     enum class Status {
@@ -106,8 +111,10 @@ class MetaDataReader {
     virtual const std::map<std::string, std::shared_ptr<MetaData>>& get_map_content() = 0;
     virtual bool exists(const std::string& image_name) = 0;
     virtual bool set_timestamp_mode() = 0;
+    virtual MetaDataReaderType get_reader_type() const { return _reader_type; }  // Returns the concrete reader type
+    void set_reader_type(MetaDataReaderType reader_type) { _reader_type = reader_type; }  // Sets the reader type (called by the factory after construction)
     virtual ImgSize lookup_image_size(const std::string& image_name) { return {}; }
     virtual void set_aspect_ratio_grouping(bool aspect_ratio_grouping) { return; }
     virtual bool get_aspect_ratio_grouping() const { return {}; }
-    virtual std::vector<std::string> get_relative_file_path() { return {}; } // Returns the relative file_path's of the reader 
+    virtual std::vector<std::string> get_relative_file_path() { return {}; } // Returns the relative file_path's of the reader
 };

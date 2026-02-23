@@ -1121,6 +1121,63 @@ TensorListVector* MasterGraph::create_coco_meta_data_reader(const char *source_p
     return &_metadata_output_tensor_list;
 }
 
+// Creates a metadata reader for COCO dataset annotations stored in YOLO-format .txt label files.
+// labels_path: directory containing per-image .txt files; images_path: directory with the corresponding JPEG images (for dimension probing).
+TensorListVector* MasterGraph::create_coco_yolo_meta_data_reader(const char *labels_path, const char *images_path, bool is_output, MetaDataReaderType reader_type, MetaDataType metadata_type, bool ltrb_bbox, bool avoid_class_remapping, bool aspect_ratio_grouping) {
+    if (_meta_data_reader)
+        THROW("A metadata reader has already been created")
+    if (_augmented_meta_data)
+        THROW("Metadata output already defined, there can only be a single output for metadata augmentation");
+
+    MetaDataConfig config(metadata_type, reader_type, labels_path, std::map<std::string, std::string>(), std::string());
+    config.set_images_path(images_path);
+    config.set_avoid_class_remapping(avoid_class_remapping);
+    config.set_aspect_ratio_grouping(aspect_ratio_grouping);
+    _meta_data_graph = create_meta_data_graph(config);
+    _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
+    _meta_data_reader->read_all(labels_path);
+    if (!ltrb_bbox) _augmented_meta_data->set_xywh_bbox();
+
+    std::vector<size_t> dims;
+    size_t max_objects = static_cast<size_t>(MAX_OBJECTS);
+    dims = {max_objects};
+    auto default_labels_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::INT32);  // Create default labels Info
+    default_labels_info.set_metadata();
+    _meta_data_buffer_size.emplace_back(_user_batch_size * default_labels_info.data_size());
+
+    dims = {max_objects, BBOX_COUNT};
+    auto default_bbox_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::FP32);  // Create default Bbox Info
+    default_bbox_info.set_metadata();
+    _meta_data_buffer_size.emplace_back(_user_batch_size * default_bbox_info.data_size());
+
+    TensorInfo default_mask_info;
+    if (metadata_type == MetaDataType::PolygonMask) {
+        dims = {MAX_MASK_BUFFER, 1};
+        default_mask_info = TensorInfo(std::move(dims), _mem_type, RocalTensorDataType::FP32);  // Create default mask Info
+        default_mask_info.set_metadata();
+        _meta_data_buffer_size.emplace_back(_user_batch_size * default_mask_info.data_size());
+    }
+
+    for (unsigned i = 0; i < _user_batch_size; i++)  // Create rocALTensorList for each metadata
+    {
+        auto labels_info = default_labels_info;
+        auto bbox_info = default_bbox_info;
+        _labels_tensor_list.push_back(new Tensor(labels_info));
+        _bbox_tensor_list.push_back(new Tensor(bbox_info));
+        if (metadata_type == MetaDataType::PolygonMask) {
+            auto mask_info = default_mask_info;
+            _mask_tensor_list.push_back(new Tensor(mask_info));
+        }
+    }
+    _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
+    _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
+    _metadata_output_tensor_list.emplace_back(&_bbox_tensor_list);
+    if (metadata_type == MetaDataType::PolygonMask)
+        _metadata_output_tensor_list.emplace_back(&_mask_tensor_list);
+
+    return &_metadata_output_tensor_list;
+}
+
 TensorListVector* MasterGraph::create_tf_record_meta_data_reader(const char *source_path, MetaDataReaderType reader_type, MetaDataType label_type, std::map<std::string, std::string> feature_key_map) {
     if (_meta_data_reader)
         THROW("A metadata reader has already been created")

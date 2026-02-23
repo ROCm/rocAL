@@ -64,6 +64,38 @@ def coco(annotations_file='', ltrb=True, masks=False, ratio=False, avoid_class_r
     return (meta_data, labels, bboxes)
 
 
+def coco_yolo(labels_path='', images_path='', ltrb=True, masks=False, avoid_class_remapping=False,
+              aspect_ratio_grouping=False, stick_to_shard=False, pad_last_batch=False):
+    """!Creates a COCOYoloReader node for reading COCO dataset annotations stored in YOLO-format .txt label files.
+
+        @param labels_path              Path to the directory containing YOLO-format .txt label files.
+        @param images_path              Path to the directory containing the corresponding JPEG images (used for size probing).
+        @param ltrb                     Whether bounding box coordinates are returned in (left, top, right, bottom) format.
+        @param masks                    Whether to read polygon masks from the YOLO-format annotations.
+        @param avoid_class_remapping    Specifies if class remapping should be avoided.
+        @param aspect_ratio_grouping    Whether to enable aspect ratio grouping in the pipeline.
+        @param stick_to_shard           Determines whether the reader should stick to a data shard instead of going through the entire dataset.
+        @param pad_last_batch           If set to True, pads the shard by repeating the last sample.
+
+        @return    meta data, labels, and bounding boxes.
+    """
+    Pipeline._current_pipeline._reader = "COCOReader"
+    # Output
+    labels = []
+    bboxes = []
+    kwargs_pybind = {
+        "labels_path": labels_path,
+        "images_path": images_path,
+        "is_output": True,
+        "mask": masks,
+        "ltrb": ltrb,
+        "avoid_class_remapping": avoid_class_remapping,
+        "aspect_ratio_grouping": aspect_ratio_grouping}
+    meta_data = b.cocoYoloReader(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    return (meta_data, labels, bboxes)
+
+
 def file(file_root, file_filters=None, file_list='', stick_to_shard=False, pad_last_batch=False):
     """!Creates a labelReader node for reading files from folder or file_list.
 

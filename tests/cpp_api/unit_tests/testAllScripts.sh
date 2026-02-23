@@ -206,6 +206,8 @@ do
         ./unit_tests 26 "$coco_detection_path" "${output_path}CropResizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 1 $device $rgb 1 $display
         ./unit_tests 27 "$tf_raw_classification_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}_tfraw" $width $height 41 $device $rgb 0 $display
         ./unit_tests 28 "$tf_raw_classification_path" "${output_path}SNPNoise_${rgb_name[$rgb]}_${device_name}_tfraw" $width $height 40 $device $rgb 0 $display
+        ./unit_tests 29 "$coco_keypoints_path" "${output_path}ContrastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 34 $device $rgb 0 $display
+        ./unit_tests 30 "$coco_keypoints_path" "${output_path}ExposureRandom_${rgb_name[$rgb]}_${device_name}" $width $height 20 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}RandomResizedCrop_${rgb_name[$rgb]}_${device_name}" $width $height 63 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}ExposureRandom_${rgb_name[$rgb]}_${device_name}" $width $height 20 $device $rgb 1 $display
         ./unit_tests 0 "$image_path" "${output_path}HueRandom_${rgb_name[$rgb]}_${device_name}" $width $height 21 $device $rgb 1 $display

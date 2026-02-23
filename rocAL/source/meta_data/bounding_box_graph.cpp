@@ -57,6 +57,19 @@ void BoundingBoxGraph::update_meta_data(pMetaDataBatch input_meta_data, DecodedD
             bb_coords.push_back(temp_box);
         }
         input_meta_data->get_bb_cords_batch()[i] = bb_coords;
+
+        // Scale polygon mask coordinates to match the decoded/cropped image dimensions.
+        // Mask coords are stored as interleaved (x, y) pairs in pixel space; apply the
+        // same width/height ratios used for bounding box coordinate scaling above.
+        if (input_meta_data->get_metadata_type() == MetaDataType::PolygonMask) {
+            auto& mask_cords = input_meta_data->get_mask_cords_batch()[i];
+            for (size_t idx = 0; idx + 1 < mask_cords.size(); idx += 2) {
+                mask_cords[idx] *= _dst_to_src_width_ratio;
+                mask_cords[idx + 1] *= _dst_to_src_height_ratio;
+            }
+        }
+        // Update the ROI size to reflect the decoded/cropped dimensions for this sample
+        input_meta_data->get_img_roi_sizes_batch()[i] = ImgSize{static_cast<int>(roi_width[i]), static_cast<int>(roi_height[i])};
     }
 }
 

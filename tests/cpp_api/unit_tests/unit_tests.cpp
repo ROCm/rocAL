@@ -574,6 +574,40 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             rocalCreateTFReader(handle, path, true, key2, key8);
             decoded_output = rocalRawTFRecordSourceSingleShard(handle, path, key1, key8, color_format, 0, 1, false, true, false, decode_max_width, decode_max_height);
         } break;
+        case 29:  // COCO YOLO detection reader - reads COCO dataset annotations from YOLO-format .txt label files
+        {
+            std::cout << "Running COCO YOLO DETECTION READER" << std::endl;
+            pipeline_type = 2;
+            if (strcmp(rocal_data_path.c_str(), "") == 0) {
+                std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+                exit(0);
+            }
+            // Setting paths for COCO dataset with YOLO-format labels and the corresponding images directory
+            std::string labels_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/labels/";
+            std::string images_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/";
+            rocalCreateCOCOYoloReader(handle, labels_path.c_str(), images_path.c_str(), true);
+            if (decode_max_height <= 0 || decode_max_width <= 0)
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, true, false);
+            else
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
+        case 30:  // COCO YOLO segmentation reader - reads COCO dataset polygon masks from YOLO-format .txt label files
+        {
+            std::cout << "Running COCO YOLO SEGMENTATION READER" << std::endl;
+            pipeline_type = 6;
+            if (strcmp(rocal_data_path.c_str(), "") == 0) {
+                std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
+                exit(0);
+            }
+            // Setting paths for COCO dataset with YOLO-format labels and the corresponding images directory
+            std::string labels_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/labels/";
+            std::string images_path = rocal_data_path + "/rocal_data/coco/coco_10_img_keypoints/person_keypoints_10images_val2017/";
+            rocalCreateCOCOYoloReader(handle, labels_path.c_str(), images_path.c_str(), true, true);  // mask=true for segmentation
+            if (decode_max_height <= 0 || decode_max_width <= 0)
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, true, false);
+            else
+                decoded_output = rocalJpegCOCOFileSource(handle, images_path.c_str(), "", color_format, num_threads, false, false, false, ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED, decode_max_width, decode_max_height);
+        } break;
         default: {
             std::cout << "Running IMAGE READER" << std::endl;
             pipeline_type = 1;
