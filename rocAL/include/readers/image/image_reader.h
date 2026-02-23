@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include <string>
 #include <tuple>
 #include <vector>
+#include <random>
 
 #include <lmdb.h>
 #include "meta_data/meta_data_reader.h"
@@ -113,6 +114,8 @@ struct ReaderConfig {
     }
     void set_files_list(const std::vector<std::string> &files) { _file_names = files; }
     void set_seed(unsigned seed) { _seed = seed; }
+    //! Enable reader state capture for checkpointing.
+    void enable_checkpointing(bool enable_checkpointing) { _checkpointing_enabled = enable_checkpointing; }
     size_t get_shard_count() { return _shard_count; }
     size_t get_shard_id() { return _shard_id; }
     size_t get_cpu_num_threads() { return _cpu_num_threads; }
@@ -137,6 +140,8 @@ struct ReaderConfig {
     std::shared_ptr<MetaDataReader> meta_data_reader() { return _meta_data_reader; }
     ExternalSourceFileMode mode() { return _file_mode; }
     const ShardingInfo& get_sharding_info() { return _sharding_info; }
+    //! Returns whether checkpointing is enabled for this reader.
+    bool is_checkpointing_enabled() { return _checkpointing_enabled; }
 
    private:
     StorageType _type = StorageType::FILE_SYSTEM;
@@ -163,7 +168,7 @@ struct ReaderConfig {
     VideoProperties _video_prop;
 #endif
     std::string _index_path = "";
-
+    bool _checkpointing_enabled = false;  //!< Enables reader state capture for checkpointing.
 };
 
 // MXNet image recordio struct - used to read the contents from the MXNet recordIO files.
@@ -306,6 +311,15 @@ class Reader {
 
     //! Returns the number of images in the last batch
     size_t last_batch_padded_size() { return _last_batch_padded_size; }
+
+    //! Returns reader RNG state (used for checkpointing).
+    virtual std::mt19937& get_rng() { THROW("RNG not available for the requested reader") }
+
+    //! Returns current file index for checkpointing/resume.
+    virtual unsigned get_curr_file_idx() const { return _curr_file_idx; }
+
+    //! Restores current file index during checkpoint resume.
+    virtual void set_curr_file_idx(unsigned idx) { _curr_file_idx = idx; }
 
    protected:
     ShardingInfo _sharding_info = ShardingInfo();  // The members of ShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
