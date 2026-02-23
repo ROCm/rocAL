@@ -254,7 +254,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRotateFixed(RocalContext context, Roc
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] alpha controls contrast of the image
  * \param [in] beta controls brightness of the image
- * \param [in] conditional_execution controls the execution of the augmentation
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -271,7 +271,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] alpha controls contrast of the image
  * \param [in] beta controls brightness of the image
- * \param [in] conditional_execution controls the execution of the augmentation
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -611,7 +611,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
  * \param [in] mean specifies the mean value for the Gaussian noise distribution
  * \param [in] stddev specifies the standard deviation for the Gaussian noise distribution
  * \param [in] seed seed value for the random number generator
- * \param [in] conditional_execution controls the execution of the augmentation
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -631,7 +631,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoise(RocalContext context, R
  * \param [in] stddev specifies the standard deviation for the Gaussian noise distribution
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] seed seed value for the random number generator
- * \param [in] conditional_execution controls the execution of the augmentation
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor

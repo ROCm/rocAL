@@ -712,6 +712,10 @@ rocalBrightness(
     RocalIntParam conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalBrightness requires vx_rpp version >= 3.3.1");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -744,6 +748,10 @@ rocalBrightnessFixed(
     int conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalBrightnessFixed requires vx_rpp version >= 3.3.1");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -1150,8 +1158,8 @@ rocalGaussianNoise(
     RocalIntParam conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
-#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 8)
-    THROW("rocalGaussianNoise requires vx_rpp version >= 3.1.8");
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalGaussianNoise requires vx_rpp version >= 3.3.1");
     return nullptr;
 #endif
     Tensor* output = nullptr;
@@ -1189,8 +1197,8 @@ rocalGaussianNoiseFixed(
     int conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
-#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 8)
-    THROW("rocalGaussianNoiseFixed requires vx_rpp version >= 3.1.8");
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalGaussianNoiseFixed requires vx_rpp version >= 3.3.1");
     return nullptr;
 #endif
     Tensor* output = nullptr;
@@ -1526,6 +1534,10 @@ rocalFlip(
     RocalIntParam p_depth_flag,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalFlip requires vx_rpp version >= 3.3.1");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -1561,6 +1573,10 @@ rocalFlipFixed(
     int depth_flag,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalFlipFixed requires vx_rpp version >= 3.3.1");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
@@ -3067,6 +3083,10 @@ rocalSliceFixed(
     std::vector<float> fill_values,
     RocalOutOfBoundsPolicy policy,
     RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalSliceFixed requires vx_rpp version >= 3.3.1");
+    return nullptr;
+#endif
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
