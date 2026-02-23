@@ -22,9 +22,6 @@ THE SOFTWARE.
 
 #include "decoders/image/rocjpeg_fused_crop_decoder.h"
 
-#include <algorithm>
-#include <cmath>
-
 #include <stdio.h>
 #include <string.h>
 
