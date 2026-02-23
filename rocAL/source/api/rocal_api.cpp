@@ -143,7 +143,12 @@ rocalDeserialize(const char* serialized_pipeline, size_t serialized_string_size,
         rocal_proto::PipelineDef pipe;
         google::protobuf::io::CodedInputStream coded_input(
             reinterpret_cast<const uint8_t *>(serialized_pipeline), serialized_string_size);
+        // Protobuf < 3.18.0 has a second parameter (warning_threshold) for SetTotalBytesLimit
+#if GOOGLE_PROTOBUF_VERSION < 3018000
+        coded_input.SetTotalBytesLimit(static_cast<int>(serialized_string_size), static_cast<int>(serialized_string_size * 0.75));
+#else
         coded_input.SetTotalBytesLimit(static_cast<int>(serialized_string_size));
+#endif
         if (!pipe.ParseFromCodedStream(&coded_input)) {
             THROW("Failed to parse serialized pipeline protobuf");
         }
