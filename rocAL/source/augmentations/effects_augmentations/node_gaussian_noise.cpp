@@ -34,7 +34,7 @@ void GaussianNoiseNode::create_node() {
     if (_node)
         return;
 
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 8)
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
     _mean.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _stddev.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _conditional_execution.create_array(_graph, VX_TYPE_INT32, _batch_size);
@@ -52,7 +52,7 @@ void GaussianNoiseNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the GaussianNoise (vxExtRppGaussianNoise) node failed: " + TOSTR(status))
 #else
-    THROW("GaussianNoiseNode: vxExtRppGaussianNoise requires vx_rpp version >= 3.1.8");
+    THROW("GaussianNoiseNode: vxExtRppGaussianNoise requires vx_rpp version >= 3.3.1");
 #endif
 }
 

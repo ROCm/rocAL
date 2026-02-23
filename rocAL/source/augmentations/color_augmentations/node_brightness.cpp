@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/color_augmentations/node_brightness.h"
 #include "pipeline/exception.h"
 
@@ -35,6 +36,7 @@ void BrightnessNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
     _alpha.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _beta.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _conditional_execution.create_array(_graph, VX_TYPE_INT32, _batch_size);
@@ -49,6 +51,9 @@ void BrightnessNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the brightness (vxExtRppBrightness) node failed: " + TOSTR(status))
+#else
+    THROW("BrightnessNode: vxExtRppBrightness requires vx_rpp version >= 3.3.1");
+#endif
 }
 
 void BrightnessNode::init(float alpha, float beta, int conditional_execution) {

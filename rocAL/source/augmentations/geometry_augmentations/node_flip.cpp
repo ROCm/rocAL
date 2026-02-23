@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/geometry_augmentations/node_flip.h"
 #include "pipeline/exception.h"
 
@@ -33,6 +34,7 @@ void FlipNode::create_node() {
     if (_node)
         return;
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
     _horizontal.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _vertical.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _depth.create_array(_graph, VX_TYPE_UINT32, _batch_size);
@@ -48,6 +50,9 @@ void FlipNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the flip (vxExtRppFlip) node failed: " + TOSTR(status))
+#else
+    THROW("FlipNode: vxExtRppFlip requires vx_rpp version >= 3.3.1");
+#endif
 }
 
 void FlipNode::init(int h_flag, int v_flag, int d_flag) {
