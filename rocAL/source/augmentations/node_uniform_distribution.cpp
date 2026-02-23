@@ -75,7 +75,7 @@ UniformDistributionNode::~UniformDistributionNode() {
 #if ENABLE_HIP
         hipError_t err = hipHostFree(_uniform_distribution_array);
         if (err != hipSuccess)
-            std::cerr << "\n[ERR] hipFree failed for uniform distribution " << std::to_string(err) << "\n";
+            std::cerr << "\n[ERR] hipHostFree failed for uniform distribution " << std::to_string(err) << "\n";
 #endif
     } else {
         delete[] _uniform_distribution_array;

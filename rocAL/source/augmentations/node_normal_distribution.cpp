@@ -74,7 +74,7 @@ NormalDistributionNode::~NormalDistributionNode() {
 #if ENABLE_HIP
         hipError_t err = hipHostFree(_normal_distribution_array);
         if (err != hipSuccess)
-            std::cerr << "\n[ERR] hipFree failed for normal distribution " << std::to_string(err) << "\n";
+            std::cerr << "\n[ERR] hipHostFree failed for normal distribution " << std::to_string(err) << "\n";
 #endif
     } else {
         delete[] _normal_distribution_array;
