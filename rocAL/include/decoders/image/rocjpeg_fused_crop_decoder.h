@@ -97,5 +97,6 @@ class FusedCropRocJpegDecoder : public Decoder {
     int _max_decoded_width = 0, _max_decoded_height = 0, _original_image_width = 0, _original_image_height = 0;
     std::vector<size_t> _roi_width;
     std::vector<size_t> _roi_height;
+    int _current_index = -1;
 };
 #endif
