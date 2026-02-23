@@ -74,7 +74,7 @@ class COCOYoloMetaDataReader : public MetaDataReader {
              std::vector<std::vector<int>> vertices_count, int image_id = 0);
 
     // Parse a single YOLO-format .txt label file and add PIXEL coords to _map_content
-    void parse_label_file(const filesys::path& label_path, const std::string& image_key, ImgSize image_size);
+    bool parse_label_file(const filesys::path& label_path, const std::string& image_key, ImgSize image_size);
 
     // Convert normalized YOLO (x_center, y_center, w, h) to pixel LTRB
     BoundingBoxCord convert_yolo_to_ltrb(float x_center, float y_center, float width, float height,
