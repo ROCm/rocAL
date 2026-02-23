@@ -37,7 +37,7 @@ THE SOFTWARE.
  * @brief COCO YOLO Metadata Reader
  *
  * Reads COCO dataset annotation data from YOLO-format .txt label files.
- * Each image has a corresponding .txt file with the same basename containing:
+ * Each image has a corresponding .txt file with the same name (without extension) containing:
  * - Detection rows: class x_center y_center width height (5 values)
  * - Segmentation rows: class x1 y1 x2 y2 ... xn yn (polygon vertices)
  *
@@ -91,15 +91,12 @@ class COCOYoloMetaDataReader : public MetaDataReader {
     // Parse JPEG header to get dimensions
     ImgSize parse_jpeg_header(const std::string& file_path);
 
-    // Normalize lookup key (strip directory and extension) - USED BY exists(), lookup(), lookup_image_size()
-    std::string normalize_key(const std::string& image_name);
-
     std::map<std::string, std::shared_ptr<MetaData>> _map_content;  // ALWAYS contains PIXEL coords
     std::map<std::string, std::shared_ptr<MetaData>>::iterator _itr;
-    std::map<std::string, ImgSize> _map_img_sizes;  // basename → {width, height} from image headers
+    std::map<std::string, ImgSize> _map_img_sizes;  // filename (with extension) → {width, height} from image headers
     std::map<int, int> _label_info;                  // For class remapping
     std::set<int> _observed_class_ids;
     std::vector<std::string> _relative_file_paths;  // Full filenames WITH extensions (e.g., "image.jpg")
-    std::unordered_set<std::string> _accepted_filenames;  // Basename+ext whitelist for exists()
+    std::unordered_set<std::string> _accepted_filenames;  // Filename (with extension) whitelist for exists()
     TimingDbg _coco_yolo_metadata_read_time;
 };
