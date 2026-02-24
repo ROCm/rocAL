@@ -43,6 +43,7 @@ class UniformDistributionNode : public Node {
    private:
     float _min, _max;
     std::uniform_real_distribution<float> _dist_uniform;  // uniform distribution
-    float* _uniform_distribution_array;
+    float* _uniform_distribution_array = nullptr;
+    RocalMemType _mem_type = RocalMemType::HOST;
     BatchRNG<std::mt19937> _rngs = {89, 2};  // Random Seed, Random BatchSize for initialization
 };
