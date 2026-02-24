@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <dirent.h>
 
 #include <memory>
+#include <random>
 #include <vector>
 
 #include "pipeline/commons.h"
@@ -70,6 +71,14 @@ class ImageReadAndDecode {
     //! returns timing info or other status information
     Timing timing();
     size_t last_batch_padded_size();
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng_state() { return _reader->get_rng(); }
+    //! Restores reader RNG state during checkpoint resume.
+    void set_rng_state(const std::mt19937& rng) { _reader->get_rng() = rng; }
+    //! Returns current file index for checkpoint capture.
+    unsigned get_curr_file_idx() const { return _reader->get_curr_file_idx(); }
+    //! Restores current file index during checkpoint resume.
+    void set_curr_file_idx(unsigned idx) { _reader->set_curr_file_idx(idx); }
 
    private:
     std::vector<std::shared_ptr<Decoder>> _decoder;

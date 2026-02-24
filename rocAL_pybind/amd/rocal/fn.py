@@ -181,8 +181,8 @@ def brightness_fixed(*inputs, brightness=1.0, brightness_shift=0.0, device=None,
         @return    Image with adjusted brightness
     """
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "is_output": False, "brightness": brightness, "brightness_shift": brightness_shift,
-                     "output_layout": output_layout, "output_dtype": output_dtype}
+    kwargs_pybind = {"input_image": inputs[0], "brightness": brightness, "brightness_shift": brightness_shift,
+                     "is_output": False, "output_layout": output_layout, "output_dtype": output_dtype}
     brightness_image = b.brightnessFixed(
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (brightness_image)

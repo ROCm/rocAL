@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <memory>
 #include <numeric>  // std::inner_product, std::accumulate
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <thread>
 #include <variant>
@@ -83,6 +84,18 @@ class UniformRand : public Parameter<T> {
         } else {
             renew_value();
         }
+    }
+
+    // Serialize RNG state for checkpointing.
+    std::string serialize_rng() const override {
+        std::ostringstream ss;
+        ss << _generator;
+        return ss.str();
+    }
+    // Restore RNG state from a checkpoint string.
+    void deserialize_rng(const std::string &data) override {
+        std::istringstream ss(data);
+        ss >> _generator;
     }
     int update(T start, T end) {
         std::unique_lock<std::mutex> lock(_lock);
@@ -211,6 +224,18 @@ struct CustomRand : public Parameter<T> {
         } else {
             renew_value();
         }
+    }
+
+    // Serialize RNG state for checkpointing.
+    std::string serialize_rng() const override {
+        std::ostringstream ss;
+        ss << _generator;
+        return ss.str();
+    }
+    // Restore RNG state from a checkpoint string.
+    void deserialize_rng(const std::string &data) override {
+        std::istringstream ss(data);
+        ss >> _generator;
     }
     T get() override {
         return _updated_val;

@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
+#include <stdexcept>
 #if ENABLE_DLPACK
     #include <dlpack/dlpack.h>
 #endif
@@ -327,6 +328,32 @@ PYBIND11_MODULE(rocal_pybind, m) {
         // Return only the first 'size' bytes as Python bytes object
         return py::bytes(buffer.data(), size);
     }, "Returns the serialized pipeline as string");
+    m.def("rocalDeserialize", &rocalDeserialize, "Creates context from the serialized string", py::return_value_policy::reference);
+    // Return the serialized checkpoint blob as Python bytes.
+    m.def("checkpoint", [](RocalContext context) {
+        size_t size = 0;  // Serialized checkpoint size in bytes.
+        RocalStatus status = rocalCheckpoint(context, &size);
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to serialize checkpoint");
+        }
+        if (size == 0) {
+            throw std::runtime_error("Serialized checkpoint is empty");
+        }
+        std::string serialized_ckpt(size, '\0');  // Buffer for checkpoint bytes.
+        status = rocalGetSerializedCheckpointString(context, serialized_ckpt.data());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to get serialized checkpoint string");
+        }
+        return py::bytes(serialized_ckpt);
+    }, "Returns the serialized checkpoint as Python bytes");
+    // Restore pipeline state from a checkpoint bytes object.
+    m.def("restoreFromCheckpoint", [](RocalContext context, py::bytes checkpoint_bytes) {
+        std::string ckpt = checkpoint_bytes;  // Checkpoint blob copied from Python.
+        RocalStatus status = rocalRestoreFromSerializedCheckpoint(context, ckpt.data(), ckpt.size());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to restore from checkpoint");
+        }
+    }, "Restores the pipeline from a checkpoint bytes object");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)
@@ -689,7 +716,14 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
                 Returns a TensorList at given position in the list.
                 )code",
             py::return_value_policy::reference);
-
+    py::class_<RocalPipelineParams>(m, "RocalPipelineParams")
+        .def(py::init<>())
+        .def_readwrite("batch_size", &RocalPipelineParams::batch_size)
+        .def_readwrite("num_threads", &RocalPipelineParams::num_threads)
+        .def_readwrite("prefetch_queue_depth", &RocalPipelineParams::prefetch_queue_depth)
+        .def_readwrite("device_id", &RocalPipelineParams::device_id)
+        .def_readwrite("rocal_cpu", &RocalPipelineParams::rocal_cpu)
+        .def_readwrite("seed", &RocalPipelineParams::seed);
     py::module types_m = m.def_submodule("types");
     types_m.doc() = "Datatypes and options used by ROCAL";
     py::enum_<RocalStatus>(types_m, "RocalStatus", "Status info")

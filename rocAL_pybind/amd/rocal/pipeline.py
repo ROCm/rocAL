@@ -45,6 +45,7 @@ class Pipeline(object):
     @param exec_async (bool, optional, default = True)                                                    Whether to execute the pipeline asynchronously. his makes :meth:`amd.rocal.pipeline.Pipeline.run` method run asynchronously with respect to the calling Python thread.
     @param bytes_per_sample  (int, optional, default = 0)                                                 A hint for ROCAL for how much memory to use for its tensors.
     @param rocal_cpu (bool, optional, default = False)                                                    Whether to use CPU or GPU for the pipeline
+    @param enable_checkpointing (bool, optional, default = False)                                         Enable pipeline checkpointing APIs.
     @param max_streams (int, optional, default = -1)                                                      Limit the number of HIP streams used by the executor. Value of -1 does not impose a limit. This parameter is currently unused (and behavior of unrestricted number of streams is assumed).
     @param default_cuda_stream_priority (int, optional, default = 0)                                      HIP stream priority used by ROCAL. See `cudaStreamCreateWithPriority` in HIP documentation
     @param tensor_layout (int, optional, default = 0)                                                     Tensor layout used for the augmentations
@@ -66,18 +67,25 @@ class Pipeline(object):
     def __init__(self, batch_size=-1, num_threads=0, device_id=0, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
                  exec_async=True, bytes_per_sample=0,
-                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None): 
-        if (rocal_cpu):
-            self._handle = b.rocalCreate(
-                batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+                 rocal_cpu=False, max_streams=-1, default_cuda_stream_priority=0, tensor_layout=types.NCHW, 
+                 reverse_channels=False, mean=None, std=None, tensor_dtype=types.FLOAT, output_memory_type=None,
+                 deserialized_pipeline_handle=None, enable_checkpointing=False): 
+        
+        if deserialized_pipeline_handle is not None:
+            self._handle = deserialized_pipeline_handle
         else:
-            self._handle = b.rocalCreate(
-                batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype)
+            if (rocal_cpu):
+                self._handle = b.rocalCreate(
+                    batch_size, types.CPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
+            else:
+                self._handle = b.rocalCreate(
+                    batch_size, types.GPU, device_id, num_threads, prefetch_queue_depth, tensor_dtype, enable_checkpointing)
 
         if (b.getStatus(self._handle) == types.OK):
             print("Pipeline has been created succesfully")
         else:
             raise Exception("Failed creating the pipeline")
+
         self._check_ops = ["CropMirrorNormalize"]
         self._check_crop_ops = ["Resize"]
         self._check_ops_decoder = [
@@ -123,6 +131,7 @@ class Pipeline(object):
         self._external_source = None
         self._external_source_mode = None
         self._last_batch_policy = None
+        self._enable_checkpointing = enable_checkpointing  # Enable checkpoint API access for this pipeline.
 
     def build(self):
         """!Build the pipeline using rocalVerify call
@@ -235,6 +244,36 @@ class Pipeline(object):
     def get_image_name_length(self, idx):
         return b.getImageNameLen(self._handle, idx)
 
+    def checkpoint(self, filename=None):
+        """
+        Capture and return the current pipeline checkpoint as bytes.
+        Optionally persist the checkpoint to ``filename`` if provided.
+        Requires enable_checkpointing=True and at least one successful run.
+        """
+        if not self._enable_checkpointing:
+            raise RuntimeError("Checkpointing was not enabled when this pipeline was created.")
+        ckpt = b.checkpoint(self._handle)
+        if filename is not None:
+            with open(filename, "wb") as f:
+                f.write(ckpt)
+        return ckpt
+    
+    def restore_checkpoint(self, serialized_ckpt=None, filename=None):
+        """
+        Restore pipeline state from a checkpoint. Build must be called before restoring.
+        Provide exactly one of ``serialized_ckpt`` (bytes) or ``filename``.
+        """
+        if not self._enable_checkpointing:
+            raise RuntimeError("Checkpointing was not enabled when this pipeline was created.")
+        if (serialized_ckpt is None) == (filename is None):
+            raise ValueError("serialized_ckpt and filename are mutually exclusive; provide exactly one.")
+
+        if filename is not None:
+            with open(filename, "rb") as f:
+                serialized_ckpt = f.read()  # Load checkpoint bytes from disk.
+
+        b.restoreFromCheckpoint(self._handle, serialized_ckpt)
+
     def get_remaining_images(self):
         return b.getRemainingImages(self._handle)
 
@@ -288,6 +327,61 @@ class Pipeline(object):
             with open(filename, 'wb') as f:
                 f.write(serialized_str)
         return serialized_str
+
+    @classmethod
+    def deserialize(cls, serialized_pipeline=None, filename=None, **kwargs):
+        """
+        Deserialize the pipeline from protobuffers and reconstruct the pipeline.
+
+        Args:
+            serialized_pipeline (bytes, optional): Serialized pipeline protobuf payload.
+                Exactly one of ``serialized_pipeline`` or ``filename`` must be provided.
+            filename (str, optional): Path to a file containing the serialized pipeline
+                protobuf payload. Exactly one of ``serialized_pipeline`` or ``filename``
+                must be provided.
+            **kwargs: Additional pipeline parameters used to override values stored in
+                the serialized pipeline. Only keys that match attributes of
+                :class:`b.RocalPipelineParams` are applied; unexpected keys are ignored
+                with a warning.
+
+        Returns:
+            Pipeline: A deserialized and built :class:`Pipeline` object.
+        """
+        pipe_params = b.RocalPipelineParams()
+        if (serialized_pipeline is None) == (filename is None):
+            raise ValueError(
+                "serialized_pipeline and filename arguments are mutually exclusive. "
+                "Exactly one of serialized_pipeline or filename must be provided."
+            )
+
+        for key, value in kwargs.items():
+            if hasattr(pipe_params, key):
+                setattr(pipe_params, key, value)
+            else:
+                # Handle the case of an unexpected keyword argument
+                print(f"Warning: Ignoring unexpected keyword argument '{key}'")
+
+        if filename is not None:
+            with open(filename, "rb") as pipeline_file:
+                serialized_pipeline = pipeline_file.read()
+
+        ret = b.rocalDeserialize(serialized_pipeline, len(serialized_pipeline), pipe_params)
+        if ret is None:
+            raise RuntimeError("Failed to deserialize pipeline: rocalDeserialize returned an invalid handle.")
+
+        constructor_kwargs = {"deserialized_pipeline_handle": ret}
+        # Only pass parameters that are explicitly set (i.e., not None) to avoid
+        # forwarding unset optionals as None into the Pipeline constructor.
+        for attr in ("batch_size", "num_threads", "device_id", "seed",
+                     "prefetch_queue_depth", "rocal_cpu"):
+            value = getattr(pipe_params, attr, None)
+            if value is not None:
+                constructor_kwargs[attr] = value
+
+        pipe_obj = cls(**constructor_kwargs)
+        pipe_obj.build()
+
+        return pipe_obj
 
 def _discriminate_args(func, **func_kwargs):
     """!Split args on those applicable to Pipeline constructor and the decorated function."""
