@@ -1187,10 +1187,11 @@ TensorListVector* MasterGraph::create_tf_record_meta_data_reader(const char *sou
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
     // Add each operator to the pipeline operators list
-    auto reader_op = std::make_shared<PipelineOperator>("Caffe2LmdbRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    auto reader_op = std::make_shared<PipelineOperator>("TFRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
     reader_op->arguments.add_new_argument("source_path", source_path);
     reader_op->arguments.add_new_argument("reader_type", reader_type);
     reader_op->arguments.add_new_argument("label_type", label_type);
+    reader_op->arguments.add_new_argument("feature_key_map", feature_key_map);
     _pipeline_operators.push_back(reader_op);
 
     return &_metadata_output_tensor_list;
@@ -2003,6 +2004,10 @@ std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const 
 #endif
         auto loader_module = node->get_loader_module();
         loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+        if (node_name == "FusedJpegCropNode" || node_name == "FusedJpegCropSingleShardNode") {
+            if (_randombboxcrop_meta_data_reader)
+                loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+        }
         _loader_modules.emplace_back(loader_module);
 
         // Assign a unique graph ID to this node based on the current loader count

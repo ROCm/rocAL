@@ -38,23 +38,6 @@ void FusedJpegCropNode::init(unsigned internal_shard_count, unsigned cpu_num_thr
     if (internal_shard_count < 1)
         THROW("Shard count should be greater than or equal to one")
     _loader_module->set_output(_outputs[0]);
-    // Set reader and decoder config accordingly for the FusedJpegCropNode
-    auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), shuffle, loop);
-    reader_cfg.set_shard_count(internal_shard_count);
-    reader_cfg.set_cpu_num_threads(cpu_num_threads);
-    reader_cfg.set_batch_count(load_batch_count);
-    reader_cfg.set_meta_data_reader(meta_data_reader);
-    reader_cfg.set_sharding_info(sharding_info);
-    auto decoder_cfg = DecoderConfig(decoder_type);
-
-    decoder_cfg.set_random_area(random_area);
-    decoder_cfg.set_random_aspect_ratio(random_aspect_ratio);
-    decoder_cfg.set_num_attempts(num_attempts);
-    decoder_cfg.set_seed(ParameterFactory::instance()->get_seed());
-    _loader_module->initialize(reader_cfg, decoder_cfg,
-                               mem_type,
-                               _batch_size);
-    _loader_module->start_loading();
 
     // Add arguments to ArgumentSet one by one
     _args.add_new_argument("internal_shard_count", internal_shard_count);
@@ -75,6 +58,25 @@ void FusedJpegCropNode::init(unsigned internal_shard_count, unsigned cpu_num_thr
     _args.add_new_argument("pad_last_batch_repeated", sharding_info.pad_last_batch_repeated);
     _args.add_new_argument("stick_to_shard", sharding_info.stick_to_shard);
     _args.add_new_argument("shard_size", sharding_info.shard_size);
+
+    // Set reader and decoder config accordingly for the FusedJpegCropNode
+    auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), shuffle, loop);
+    reader_cfg.set_shard_count(internal_shard_count);
+    reader_cfg.set_cpu_num_threads(cpu_num_threads);
+    reader_cfg.set_batch_count(load_batch_count);
+    reader_cfg.set_meta_data_reader(meta_data_reader);
+    reader_cfg.set_sharding_info(sharding_info);
+    auto decoder_cfg = DecoderConfig(decoder_type);
+    decoder_cfg.set_random_area(random_area);
+    decoder_cfg.set_random_aspect_ratio(random_aspect_ratio);
+    decoder_cfg.set_num_attempts(num_attempts);
+    decoder_cfg.set_seed(ParameterFactory::instance()->get_seed());
+
+    // Initialize the loader module with the reader and decoder config and start loading
+    _loader_module->initialize(reader_cfg, decoder_cfg,
+                               mem_type,
+                               _batch_size);
+    _loader_module->start_loading();
 }
 
 std::shared_ptr<LoaderModule> FusedJpegCropNode::get_loader_module() {
