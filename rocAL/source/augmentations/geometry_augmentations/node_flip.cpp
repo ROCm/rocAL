@@ -34,10 +34,8 @@ void FlipNode::create_node() {
     if (_node)
         return;
 
-#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
     _horizontal.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _vertical.create_array(_graph, VX_TYPE_UINT32, _batch_size);
-    _depth.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     int input_layout = static_cast<int>(_inputs[0]->info().layout());
     int output_layout = static_cast<int>(_outputs[0]->info().layout());
     int roi_type = static_cast<int>(_inputs[0]->info().roi_type());
@@ -45,14 +43,17 @@ void FlipNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    _depth.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _node = vxExtRppFlip(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                         _horizontal.default_array(), _vertical.default_array(), _depth.default_array(), input_layout_vx, output_layout_vx,roi_type_vx);
+                         _horizontal.default_array(), _vertical.default_array(), _depth.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
+#else
+    _node = vxExtRppFlip(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
+                         _horizontal.default_array(), _vertical.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
+#endif
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the flip (vxExtRppFlip) node failed: " + TOSTR(status))
-#else
-    THROW("FlipNode: vxExtRppFlip requires vx_rpp version >= 3.3.1");
-#endif
 }
 
 void FlipNode::init(int h_flag, int v_flag, int d_flag) {
@@ -73,5 +74,7 @@ void FlipNode::init(IntParam *h_flag, IntParam *v_flag, IntParam *d_flag) {
 void FlipNode::update_node() {
     _horizontal.update_array();
     _vertical.update_array();
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
     _depth.update_array();
+#endif
 }
