@@ -164,6 +164,21 @@ public:
         }
     }
 
+    // Constructor for Tensor* arguments - stores tensor name for later resolution
+    explicit inline Argument(std::string name, Tensor* tensor_ptr)
+        : arg_name(std::move(name)) {
+        type_name = "tensor";
+        is_tensor = true;
+        if (tensor_ptr == nullptr) {
+            is_null_ptr = true;
+            type_name = "nullptr";
+            return;
+        }
+        // Store the tensor name for later resolution during deserialization
+        // The actual tensor pointer will be resolved from MasterGraph's _pipeline_tensors map
+        tensor_name = tensor_ptr->tensor_name(); // This will be set during serialization with the actual tensor name
+        values.push_back(static_cast<Tensor*>(tensor_ptr)); // Store the pointer temporarily
+    }
 
 private:
     /**
@@ -339,22 +354,6 @@ private:
         }
         param = parameter;
         is_parameter = true;
-    }
-
-    // Constructor for Tensor* arguments - stores tensor name for later resolution
-    explicit inline Argument(std::string name, Tensor* tensor_ptr)
-        : arg_name(std::move(name)) {
-        type_name = "tensor";
-        is_tensor = true;
-        if (tensor_ptr == nullptr) {
-            is_null_ptr = true;
-            type_name = "nullptr";
-            return;
-        }
-        // Store the tensor name for later resolution during deserialization
-        // The actual tensor pointer will be resolved from MasterGraph's _pipeline_tensors map
-        tensor_name = tensor_ptr->tensor_name(); // This will be set during serialization with the actual tensor name
-        values.push_back(static_cast<Tensor*>(tensor_ptr)); // Store the pointer temporarily
     }
 };
 
