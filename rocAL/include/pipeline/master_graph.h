@@ -167,6 +167,8 @@ public:
     std::string& get_serialized_string() { return _serialized_pipeline; }
     void deserialize(rocal_proto::PipelineDef *pipe_def);
     Tensor *create_operator_output(const rocal_proto::InputOutput &output, bool is_loader_output = false);
+    //! Restore pipeline state from a serialized checkpoint blob.
+    void restore_from_serialized_checkpoint(const std::string &serialized_ckpt);
     //! Serialize the current pipeline state into an internal checkpoint buffer.
     void get_serialized_checkpoint(size_t &serialized_ckpt_string_size);
     //! Returns the last serialized checkpoint buffer.

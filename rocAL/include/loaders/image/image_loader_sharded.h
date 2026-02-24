@@ -47,9 +47,11 @@ class ImageLoaderSharded : public LoaderModule {
     void shut_down() override;
     void feed_external_input(const std::vector<std::string>& input_images_names, const std::vector<unsigned char *>& input_buffer,
                              const std::vector<ROIxywh>& roi_xywh, unsigned int max_width, unsigned int max_height, unsigned int channels, ExternalSourceFileMode mode, bool eos) override;
-   size_t last_batch_padded_size() override;
-   //! Returns loader state for the current shard (used for checkpointing).
-   const LoaderState& get_loader_state() const override;
+    size_t last_batch_padded_size() override;
+    //! Returns loader state for the current shard (used for checkpointing).
+    const LoaderState& get_loader_state() const override;
+    //! Restore loader state across all shards (used for checkpointing).
+    void restore_from_state(const LoaderState& s) override;
 
    private:
     void increment_loader_idx();

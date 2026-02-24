@@ -56,6 +56,8 @@ class ImageLoader : public LoaderModule {
     size_t last_batch_padded_size() override;
     //! Returns the most recent loader state for checkpointing.
     const LoaderState& get_loader_state() const override;
+    //! Restore loader state from a checkpoint.
+    void restore_from_state(const LoaderState& s) override;
 
    private:
     bool is_out_of_data();
