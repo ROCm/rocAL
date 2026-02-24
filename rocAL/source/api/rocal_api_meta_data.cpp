@@ -513,6 +513,12 @@ RocalTensor
     auto input = static_cast<Tensor*>(p_input);
     auto roi_start_tensor = static_cast<Tensor*>(roi_start);
     auto roi_end_tensor = static_cast<Tensor*>(roi_end);
+    auto input_dims = input->info().is_image() ? input->num_of_dims() - 2 : input->num_of_dims() - 1;
+    // Validate crop_shape.size() == input_dims
+    if (crop_shape.size() != input_dims) {
+        ERR("Crop shape size " + TOSTR(crop_shape.size()) + " does not match input dimensions " + TOSTR(input_dims))
+        return output;
+    }
     return context->master_graph->roi_random_crop(input, roi_start_tensor, roi_end_tensor, crop_shape.data());
 }
 
