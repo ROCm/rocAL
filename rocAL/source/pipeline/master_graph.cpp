@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include <VX/vx_types.h>
 #include <cstring>
 #include <sched.h>
+#include <unordered_map>
 #include <typeinfo>
 #include <half/half.hpp>
 #include "pipeline/master_graph.h"
@@ -172,6 +173,16 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 #endif
         }
         ParameterFactory::instance()->set_seed(0);  // Setting default seed for ParameterFactory instance. User can set the seed manually by calling rocalSetSeed(seed_value)
+
+        // When checkpointing is enabled, ensure that RNG checkpoint tracking
+        // starts fresh for this pipeline. This clears only the internal
+        // ordering metadata used for RNG snapshots and does not delete any
+        // parameters or affect existing parameter handles. This assumes
+        // checkpoint-enabled pipelines run serially because ParameterFactory
+        // is a process-wide singleton.
+        if (_checkpointing_enabled) {
+            ParameterFactory::instance()->reset_param_list();
+        }
     } catch (const std::exception &e) {
         release();
         throw;
@@ -2190,4 +2201,78 @@ void MasterGraph::get_serialized_checkpoint(size_t &serialized_ckpt_string_size)
 
     _serialized_checkpoint = checkpoint.SerializeAsString();
     serialized_ckpt_string_size = _serialized_checkpoint.size();
+}
+
+// Restore pipeline state from a serialized checkpoint blob.
+void MasterGraph::restore_from_serialized_checkpoint(const std::string &serialized_ckpt) {
+    if (!_checkpointing_enabled) {
+        THROW("Checkpointing is not enabled for this pipeline");
+    }
+
+    bool processing = _processing;  // Track whether processing was active.
+    if (processing) {
+        stop_processing();
+    }
+    _ring_buffer.reset();
+    _first_run = true;
+
+    rocal_proto::Checkpoint checkpoint;  // Parsed checkpoint protobuf.
+    if (!checkpoint.ParseFromString(serialized_ckpt)) {
+        THROW("Failed to parse serialized rocAL checkpoint");
+    }
+
+    if (checkpoint.has_pipeline_signature()) {
+        uint64_t current_sig = compute_pipeline_signature();  // Current pipeline signature.
+        if (current_sig != checkpoint.pipeline_signature()) {
+            THROW("rocAL checkpoint/pipeline signature mismatch - checkpoint was created with a different pipeline configuration");
+        }
+    }
+    if (checkpoint.has_batch_size() && static_cast<uint32_t>(_user_batch_size) != checkpoint.batch_size()) {
+        THROW("rocAL checkpoint restore failed: batch_size mismatch");
+    }
+    if (checkpoint.has_device_id() && static_cast<int32_t>(_gpu_id) != checkpoint.device_id()) {
+        THROW("rocAL checkpoint restore failed: device_id mismatch");
+    }
+    if (checkpoint.has_mem_type() && static_cast<int32_t>(_mem_type) != checkpoint.mem_type()) {
+        THROW("rocAL checkpoint restore failed: mem_type mismatch");
+    }
+
+    std::unordered_map<std::string, std::shared_ptr<Node>> node_by_name;  // Operator name to node map.
+    node_by_name.reserve(_pipeline_operators.size());
+    for (auto &pipe_op : _pipeline_operators) {
+        if (pipe_op->node) {
+            node_by_name.emplace(pipe_op->operator_name, pipe_op->node);
+        }
+    }
+
+    for (int i = 0; i < checkpoint.cpts_size(); i++) {
+        const auto &cpt = checkpoint.cpts(i);  // Serialized operator checkpoint entry.
+        auto it = node_by_name.find(cpt.operator_name());
+        if (it == node_by_name.end()) {
+            continue;
+        }
+        it->second->restore_state(cpt.operator_state());
+    }
+
+    if (checkpoint.has_aug_rng()) {
+        std::vector<std::string> rng_states;  // RNG snapshot strings aligned to parameter order.
+        rng_states.reserve(checkpoint.aug_rng().rng_mt19937_size());
+        for (int i = 0; i < checkpoint.aug_rng().rng_mt19937_size(); i++) {
+            rng_states.emplace_back(checkpoint.aug_rng().rng_mt19937(i));
+        }
+        ParameterFactory::instance()->restore_rngs(rng_states);
+    }
+
+    if (!_loader_modules.empty()) {
+        // Update remaining count from loaders after restoring their state.
+        _remaining_count = static_cast<int>(_loader_modules[0]->remaining_count());
+        for (size_t i = 1; i < _loader_modules.size(); i++) {
+            _remaining_count = std::min(_remaining_count, static_cast<int>(_loader_modules[i]->remaining_count()));
+        }
+    }
+
+    if (processing) {
+        // Resume processing thread if it was running before restore.
+        start_processing();
+    }
 }

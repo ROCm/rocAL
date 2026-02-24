@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
+#include <stdexcept>
 #if ENABLE_DLPACK
     #include <dlpack/dlpack.h>
 #endif
@@ -345,6 +346,14 @@ PYBIND11_MODULE(rocal_pybind, m) {
         }
         return py::bytes(serialized_ckpt);
     }, "Returns the serialized checkpoint as Python bytes");
+    // Restore pipeline state from a checkpoint bytes object.
+    m.def("restoreFromCheckpoint", [](RocalContext context, py::bytes checkpoint_bytes) {
+        std::string ckpt = checkpoint_bytes;  // Checkpoint blob copied from Python.
+        RocalStatus status = rocalRestoreFromSerializedCheckpoint(context, ckpt.data(), ckpt.size());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to restore from checkpoint");
+        }
+    }, "Restores the pipeline from a checkpoint bytes object");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)

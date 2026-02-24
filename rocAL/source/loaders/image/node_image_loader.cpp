@@ -140,3 +140,23 @@ std::string ImageLoaderNode::serialize_state(const std::shared_ptr<OperatorCheck
     proto_state.set_curr_file_idx(static_cast<uint32_t>(loader_state.curr_file_idx));
     return proto_state.SerializeAsString();
 }
+
+// Restore loader state from a serialized checkpoint payload.
+void ImageLoaderNode::restore_state(const std::string &operator_state_bytes) {
+    rocal_proto::LoaderState proto_state;  // Protobuf loader state payload.
+    if (!proto_state.ParseFromString(operator_state_bytes)) {
+        WRN("Failed to parse LoaderState from checkpoint. Skipping restore for ImageLoaderNode.");
+        return;
+    }
+    LoaderState st{};  // Reconstructed loader state from checkpoint data.
+    st.epoch_number = proto_state.has_current_epoch() ? proto_state.current_epoch() : 0;
+    st.iteration_number = proto_state.has_iteration_number() ? proto_state.iteration_number() : 0;
+    if (proto_state.has_rng()) {
+        DeserializeRNGFromString(proto_state.rng(), st.rng);
+    }
+    // For sharded loaders, curr_file_idx is relative to each shard's file list.
+    st.curr_file_idx = proto_state.has_curr_file_idx() ? proto_state.curr_file_idx() : 0;
+    if (_loader_module) {
+        _loader_module->restore_from_state(st);
+    }
+}

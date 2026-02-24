@@ -257,6 +257,22 @@ class Pipeline(object):
             with open(filename, "wb") as f:
                 f.write(ckpt)
         return ckpt
+    
+    def restore_checkpoint(self, serialized_ckpt=None, filename=None):
+        """
+        Restore pipeline state from a checkpoint. Build must be called before restoring.
+        Provide exactly one of ``serialized_ckpt`` (bytes) or ``filename``.
+        """
+        if not self._enable_checkpointing:
+            raise RuntimeError("Checkpointing was not enabled when this pipeline was created.")
+        if (serialized_ckpt is None) == (filename is None):
+            raise ValueError("serialized_ckpt and filename are mutually exclusive; provide exactly one.")
+
+        if filename is not None:
+            with open(filename, "rb") as f:
+                serialized_ckpt = f.read()  # Load checkpoint bytes from disk.
+
+        b.restoreFromCheckpoint(self._handle, serialized_ckpt)
 
     def get_remaining_images(self):
         return b.getRemainingImages(self._handle)
