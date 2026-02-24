@@ -1543,7 +1543,7 @@ def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_inte
     non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return non_silent_region_output.anchor, non_silent_region_output.shape
 
-def slice(*inputs, anchor = [], shape = [], fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
+def slice(*inputs, anchor = None, shape = None, fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
     """
     The slice can be specified by proving the start and end coordinates, or start coordinates and shape of the slice. Both coordinates and shapes can be provided in absolute or relative terms.
     @param anchor (1D RocalTensor of ints)                                             The absolute starting co-ordinate points of the slice.
@@ -1611,7 +1611,11 @@ def random_object_bbox(*inputs, format='anchor_shape', cache_objects=False, fore
         can be configured to return the box as anchor+shape, start+end coordinates, or a single
         combined box tensor.
 
-        @param inputs                                                                 The input label/segmentation tensor.
+        Note: The input tensor must have at least 4 spatial dimensions (e.g., NCDHW layout) for
+        connected-component labeling to run. For inputs with fewer than 4 dimensions, the operator
+        throws an exception.
+
+        @param inputs                                                                 The input label/segmentation tensor (must have at least 4 spatial dimensions).
         @param format (string, optional, default = 'anchor_shape')                    Output format: "anchor_shape" returns (anchor, shape) tensors,
                                                                                       "start_end" returns (start, end) tensors,
                                                                                       "box" returns a single tensor with concatenated start and end coordinates.

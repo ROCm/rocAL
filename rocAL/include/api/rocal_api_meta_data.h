@@ -344,14 +344,16 @@ RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
  * \param [in] roi_start Tensor specifying the starting coordinates of the ROI
  * \param [in] roi_end Tensor specifying the ending coordinates of the ROI
  * \param [in] crop_shape The desired crop dimensions (excluding batch dimension)
- * \param [out] anchor The generated anchor tensor
+ * \return RocalTensor containing the generated anchor coordinates for each sample in the batch.
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, const std::vector<int> &crop_shape);
 
 /*! \brief Find connected-component bounding boxes in a label/segmentation tensor and return a randomly selected one per sample.
  * \ingroup group_rocal_meta_data
+ * \note The input label tensor must have at least 4 spatial dimensions (e.g., NCDHW layout).
+ *       For inputs with fewer than 4 dimensions, the operator throws an exception.
  * \param [in] p_context rocal context
- * \param [in] p_input Input label tensor
+ * \param [in] p_input Input label tensor (must have at least 4 spatial dimensions for connected-component labeling)
  * \param [in] output_format Output format for the returned tensors ("anchor_shape", "start_end", or "box")
  * \param [in] k_largest If positive, selects from the k largest objects; otherwise selects from all
  * \param [in] foreground_prob Probability of selecting a foreground object (otherwise returns full image ROI)

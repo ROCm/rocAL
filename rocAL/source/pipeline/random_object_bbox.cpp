@@ -34,6 +34,9 @@ RandomObjectBbox::RandomObjectBbox(vx_context context, size_t user_batch_size, s
 
 RandomObjectBbox::~RandomObjectBbox() {
     _tensor_list.release();
+    // Note: _box1_buf and _box2_buf are allocated via allocate_host_or_pinned_mem
+    // with RocalMemType::HOST in init(). If the mem_type is changed to HIP in the
+    // future, these must be freed with hipHostFree instead of free.
     if (_box1_buf != nullptr) {
         free(_box1_buf);
         _box1_buf = nullptr;
@@ -123,6 +126,8 @@ void RandomObjectBbox::update() {
         bool fg = foreground(_rng[i]) < _foreground_prob;
         CacheEntry *cache_entry = nullptr;
         content_hash_t hash = {};
+        // Note: when _cache_boxes is true, update() runs sequentially (not via OpenMP),
+        // so accessing _boxes_cache here is thread-safe.
         if (_cache_boxes) {
             content_hash(hash, label, single_image_size * sizeof(uint8_t));
             // Bound the number of cached entries to avoid unbounded memory growth.

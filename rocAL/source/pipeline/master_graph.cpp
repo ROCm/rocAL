@@ -396,14 +396,12 @@ void MasterGraph::release() {
                 hipError_t err = hipHostFree(_roi_random_crop_buf);
                 if (err != hipSuccess) {
                     std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
-                } else {
-                    _roi_random_crop_buf = nullptr;
                 }
 #endif
             } else {
                 free(_roi_random_crop_buf);
-                _roi_random_crop_buf = nullptr;
             }
+            _roi_random_crop_buf = nullptr;
         }
         delete[] _crop_shape_batch;
         _crop_shape_batch = nullptr;
