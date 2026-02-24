@@ -48,9 +48,11 @@ void GaussianNoiseNode::create_node() {
     _conditional_execution.create_array(_graph, VX_TYPE_INT32, _batch_size);
     _node = vxExtRppGaussianNoise(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _mean.default_array(),
                           _stddev.default_array(), _conditional_execution.default_array(), seed, input_layout_vx, output_layout_vx, roi_type_vx);
-#else
+#elif VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
     _node = vxExtRppGaussianNoise(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _mean.default_array(),
                                    _stddev.default_array(), seed, input_layout_vx, output_layout_vx, roi_type_vx);
+#else
+    THROW("GaussianNoise node requires vx_rpp version >= 3.1.5")
 #endif
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)

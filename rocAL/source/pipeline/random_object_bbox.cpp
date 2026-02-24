@@ -99,7 +99,7 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
 //   5. Write the selected box coordinates into the output buffers in the requested format.
 // When caching is disabled, samples are processed in parallel via OpenMP.
 void RandomObjectBbox::update() {
-    u_int8_t *input = static_cast<u_int8_t *>(_label_tensor->buffer());
+    uint8_t *input = static_cast<uint8_t *>(_label_tensor->buffer());
     auto roi_dims = reinterpret_cast<int *>(_label_tensor->info().roi().get_ptr());
     std::vector<size_t> max_size = _label_tensor->info().max_shape();
     auto single_image_size = _label_tensor->data_size() / _user_batch_size;
@@ -124,15 +124,19 @@ void RandomObjectBbox::update() {
         CacheEntry *cache_entry = nullptr;
         content_hash_t hash = {};
         if (_cache_boxes) {
-            content_hash(hash, label, single_image_size * sizeof(u_int8_t));
+            content_hash(hash, label, single_image_size * sizeof(uint8_t));
+            // Bound the number of cached entries to avoid unbounded memory growth.
+            static const std::size_t max_cache_entries = 1024;
+            if (_boxes_cache.size() > max_cache_entries) {
+                _boxes_cache.clear();
+            }
             cache_entry = &_boxes_cache[hash];
         }
         int selected_label = -1;
         std::vector<std::vector<std::vector<unsigned>>> boxes;  // total - lo,hi - 4D
         // Validate roi_size dimensionality before running 4D-specific processing
         if (roi_size.size() < 4) {
-            ERR("RandomObjectBbox: Expected roi_size with at least 4 dimensions, got " + TOSTR(roi_size.size()));
-            // Leave total_box as 0 so that downstream logic falls back to full-extent ROI.
+            THROW("RandomObjectBbox: Expected roi_size with at least 4 dimensions, got " + TOSTR(roi_size.size()))
         } else if (fg) {
             total_box = labelMergeFunc(label, selected_label, roi_size, max_size, output_compact, _rng[i], cache_entry);
         }
@@ -258,7 +262,7 @@ int RandomObjectBbox::pick_box(const std::vector<std::vector<std::vector<unsigne
 // Uses stride-based indexing to handle the gap between ROI dimensions and the
 // underlying max-allocated tensor dimensions.  Skips runs of identical values
 // for efficiency.
-void RandomObjectBbox::findLabels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size) {
+void RandomObjectBbox::findLabels(const uint8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size) {
     if (!roi_size.size() || !max_size.size())
         return;
     int prev = input[0];
@@ -293,7 +297,7 @@ void RandomObjectBbox::findLabels(const u_int8_t *input, std::set<int> &labels, 
 
 // Produce a binary mask from the input tensor: output[i] = 1 where input[i] == label, 0 otherwise.
 // Uses stride-based indexing identical to findLabels to respect the gap between ROI and max dims.
-void RandomObjectBbox::filterByLabel(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label) {
+void RandomObjectBbox::filterByLabel(const uint8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label) {
     int num_dims = roi_size.size();
     std::vector<unsigned> strides(num_dims + 1);
     strides[num_dims] = 1;
@@ -429,7 +433,7 @@ void RandomObjectBbox::mergeRow(int *label_base, const int *in1, const int *in2,
 //      sequential IDs (0, 1, 2, ...).
 //
 // Returns the total number of distinct connected components found.
-int RandomObjectBbox::labelMergeFunc(const u_int8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry) {
+int RandomObjectBbox::labelMergeFunc(const uint8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry) {
     int64_t total_buf_size = 1;
     for (auto val : size)
         total_buf_size *= val;

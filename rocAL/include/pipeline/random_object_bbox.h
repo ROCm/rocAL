@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <cstdint>
 #include <map>
 #include <random>
 #include <set>
@@ -111,9 +112,9 @@ class RandomObjectBbox {
 
    private:
     /// Scan the input label tensor to collect the set of unique label values present within the ROI.
-    void findLabels(const u_int8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
+    void findLabels(const uint8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
     /// Produce a binary mask where each element is 1 if the input equals \p label, 0 otherwise.
-    void filterByLabel(const u_int8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
+    void filterByLabel(const uint8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
     /// Assign connected-component labels to a single row of the binary mask using run-length encoding.
     void labelRow(const int *label_base, const int *in_row, int *out_row, unsigned length);
     /// Return the group representative for element \p x (identity function — reads the stored group).
@@ -127,7 +128,7 @@ class RandomObjectBbox {
     /// Merge adjacent rows by unifying component labels at positions where both rows share the same filtered label.
     void mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
     /// Core connected-component labeling: filters by a randomly selected label, labels rows, merges across dimensions, and remaps labels to sequential IDs. Returns the total number of connected components.
-    int labelMergeFunc(const u_int8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
+    int labelMergeFunc(const uint8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
     /// Test and set a bit in the hit bitmap; returns true if the bit was already set.
     bool hit(std::vector<unsigned> &hits, unsigned idx);
     /// Compute or expand axis-aligned bounding boxes from a row of compact labels. Each box spans the min/max coordinates across all dimensions.

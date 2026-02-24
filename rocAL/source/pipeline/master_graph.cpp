@@ -1651,6 +1651,8 @@ TensorList *MasterGraph::random_object_bbox(Tensor *input, std::string output_fo
 
 Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, const int *crop_shape)
 {
+    if (_is_roi_random_crop)
+        THROW("roi_random_crop has already been initialized. Cannot initialize it more than once.")
     _is_roi_random_crop = true;
     _roi_start_tensor = roi_start;
     _roi_end_tensor = roi_end;
