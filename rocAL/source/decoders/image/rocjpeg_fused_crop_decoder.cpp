@@ -66,8 +66,8 @@ void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) {
     _decode_params->crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
     _decode_params->crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
 
-    if (static_cast<size_t>(_current_index) < _roi_width.size()) _roi_width[_current_index] = _crop_window.W;
-    if (static_cast<size_t>(_current_index) < _roi_height.size()) _roi_height[_current_index] = _crop_window.H;
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_width[_current_index] = _crop_window.W;
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_height[_current_index] = _crop_window.H;
 }
 
 void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) {
@@ -80,8 +80,8 @@ void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) {
     _decode_params->crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
     _decode_params->crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
 
-    if (static_cast<size_t>(_current_index) < _roi_width.size()) _roi_width[_current_index] = _crop_window.W;
-    if (static_cast<size_t>(_current_index) < _roi_height.size()) _roi_height[_current_index] = _crop_window.H;
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_width[_current_index] = _crop_window.W;
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_height[_current_index] = _crop_window.H;
 }
 
 void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
@@ -133,9 +133,6 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
             _decode_params_batch[index].output_format = ROCJPEG_OUTPUT_RGB;
             break;
     };
-
-    _decode_params_batch[index].crop_rectangle = {0, 0, 0, 0};
-    _decode_params_batch[index].target_dimension = {0, 0};
 
     if (rocJpegStreamParse(reinterpret_cast<uint8_t *>(input_buffer), input_size, _rocjpeg_streams[index]) != ROCJPEG_STATUS_SUCCESS) {
         return Status::HEADER_DECODE_FAILED;

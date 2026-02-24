@@ -64,6 +64,8 @@ int HipExecCopyInt8ToNCHW(
     const unsigned max_roi_height = 0,
     const unsigned max_roi_width = 0);
 
+// Function to launch resize kernel
+// This function resizes all images passed and stores in the dst based on the indices specified in dst_img_idx.
 void HipExecResizeTensor(
     hipStream_t stream,
     void *src_ptr,
