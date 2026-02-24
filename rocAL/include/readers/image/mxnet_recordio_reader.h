@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <iterator>
 #include <map>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -64,6 +65,9 @@ class MXNetRecordIOReader : public Reader {
 
     MXNetRecordIOReader();
 
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
+
    private:
     //! opens the folder containing the images
     Reader::Status record_reading();
@@ -91,4 +95,9 @@ class MXNetRecordIOReader : public Reader {
     const uint32_t _kMagic = 0xced7230a;
     int64_t _seek_pos, _data_size_to_read;
     ImageRecordIOHeader _hdr;
+    std::vector<std::string> _backup_file_names;  //!< Original file ordering (used to restore shuffle determinism).
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };

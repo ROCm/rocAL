@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #ifdef ENABLE_WDS
+#include <random>
 #include "meta_data/webdataset_meta_data_reader.h"
 #include "pipeline/timing_debug.h"
 #include "readers/image/image_reader.h"
@@ -57,6 +58,9 @@ class WebDatasetSourceReader : public Reader {
 
     WebDatasetSourceReader();
 
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
+
   private:
     //! opens the folder containnig the images
     Reader::Status webdataset_record_reader();
@@ -91,5 +95,10 @@ class WebDatasetSourceReader : public Reader {
                                               uint file_size, uint offset,
                                               uint wds_shard_index);
     void increment_shard_id();
+    std::vector<std::string> _backup_file_names;  //!< Original file ordering (used to restore shuffle determinism).
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };
 #endif

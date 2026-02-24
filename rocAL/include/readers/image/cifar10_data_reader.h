@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <dirent.h>
 
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -62,6 +63,9 @@ class CIFAR10DataReader : public Reader {
 
     unsigned get_file_index() { return _last_file_idx; }
 
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
+
    private:
     //! opens the folder containing the images
     Reader::Status open_folder();
@@ -86,4 +90,11 @@ class CIFAR10DataReader : public Reader {
     size_t _total_file_size;
     void incremenet_read_ptr();
     int release();
+    std::vector<std::string> _backup_file_names;   //!< Original file ordering (used to restore shuffle determinism).
+    std::vector<unsigned> _backup_file_offsets;     //!< Original offset ordering (used to restore shuffle determinism).
+    std::vector<unsigned> _backup_file_idx;         //!< Original idx ordering (used to restore shuffle determinism).
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };

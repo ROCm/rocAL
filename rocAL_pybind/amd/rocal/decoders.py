@@ -72,7 +72,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "seed": seed}
         decoded_image = b.cocoImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -90,7 +91,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "seed": seed}
         decoded_image = b.tfImageDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -107,7 +109,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "seed": seed}
         decoded_image = b.caffe2ImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -124,7 +127,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "seed": seed}
         decoded_image = b.caffeImageDecoderShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
@@ -141,7 +145,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "seed": seed}
         decoded_image = b.mxnetDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif reader == "WebDataset":
@@ -158,7 +163,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "max_width": max_decoded_width,
             "max_height": max_decoded_height,
             "dec_type": decoder_type,
-            "sharding_info": sharding_info}
+            "sharding_info": sharding_info,
+            "seed": seed}
         decoded_image = b.webdatasetSourceSingleShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     else:

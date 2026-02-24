@@ -39,7 +39,8 @@ class CIFAR10LoaderSingleShardNode : public Node {
     /// \param load_batch_count Defines the quantum count of the numpy files to be loaded. It's usually equal to the user's batch size.
     /// \param mem_type Memory type, host or device
     /// \param sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
-    void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix, const ShardingInfo& sharding_info = ShardingInfo());
+    void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix, const ShardingInfo& sharding_info = ShardingInfo(),
+              bool enable_checkpointing = false, unsigned seed = 0);
     std::shared_ptr<LoaderModule> get_loader_module() override;
 
    protected:

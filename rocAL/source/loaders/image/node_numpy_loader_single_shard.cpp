@@ -29,7 +29,7 @@ NumpyLoaderSingleShardNode::NumpyLoaderSingleShardNode(Tensor *output, void *dev
 }
 
 void NumpyLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, const std::vector<std::string> &files, StorageType storage_type, DecoderType decoder_type,
-                                      bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, unsigned seed, const ShardingInfo& sharding_info) {
+                                      bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, unsigned seed, const ShardingInfo& sharding_info, bool enable_checkpointing) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for NumpyLoaderSingleShardNode, cannot initialize")
     if (shard_count < 1)
@@ -45,6 +45,7 @@ void NumpyLoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, c
     reader_cfg.set_files_list(files);
     reader_cfg.set_seed(seed);
     reader_cfg.set_sharding_info(sharding_info);
+    reader_cfg.enable_checkpointing(enable_checkpointing);
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::SKIP_DECODE), mem_type, _batch_size);
     _loader_module->start_loading();
 }

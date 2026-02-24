@@ -57,6 +57,7 @@ NumpyDataReader::NumpyDataReader() {
     _loop = false;
     _shuffle = false;
     _file_count_all_shards = 0;
+    _epoch_counter = 0;
 }
 
 Reader::Status NumpyDataReader::initialize(ReaderConfig desc) {
@@ -75,13 +76,17 @@ Reader::Status NumpyDataReader::initialize(ReaderConfig desc) {
     _shard_size = _sharding_info.shard_size;
     _files = desc.get_files();
     _seed = desc.seed();
+    _is_checkpointing_enabled = desc.is_checkpointing_enabled();
     ret = subfolder_reading();
     _file_headers.resize(_file_names.size());
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle) {
-        std::mt19937 rng(_seed);
+        if (_is_checkpointing_enabled) {
+            _backup_file_names = _file_names;
+        }
+        _rng.seed(_seed);
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                     _file_names.begin() + _shard_end_idx_vector[_shard_id], rng);
+                     _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
     }
     return ret;
 }
@@ -339,9 +344,12 @@ int NumpyDataReader::release() {
 
 void NumpyDataReader::reset() {
     if (_shuffle) {
-        std::mt19937 rng(_seed);
+        if (_is_checkpointing_enabled) {
+            _file_names = _backup_file_names;
+        }
+        _rng.seed(_seed + (++_epoch_counter));
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                     _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), rng);
+                     _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), _rng);
     }
 
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id

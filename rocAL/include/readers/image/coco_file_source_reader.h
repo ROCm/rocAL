@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 #include <fstream>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -64,6 +65,9 @@ class COCOFileSourceReader : public Reader {
 
     COCOFileSourceReader();
 
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
+
    private:
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
     //! opens the folder containing the images
@@ -85,4 +89,9 @@ class COCOFileSourceReader : public Reader {
     void incremenet_read_ptr();
     int release();
     void shuffle_with_aspect_ratios();
+    std::vector<std::string> _backup_file_names;  //!< Original file ordering (used to restore shuffle determinism).
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };

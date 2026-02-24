@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <cassert>
 #include <algorithm>
 #include <cstring>
+#include <random>
 #include "pipeline/commons.h"
 #include "readers/video/sequence_file_source_reader.h"
 #include "pipeline/filesystem.h"
@@ -38,6 +39,7 @@ SequenceFileSourceReader::SequenceFileSourceReader() {
     _sequence_id = 0;
     _shuffle = false;
     _sequence_count_all_shards = 0;
+    _epoch_counter = 0;
 }
 
 unsigned SequenceFileSourceReader::count_items() {
@@ -59,6 +61,8 @@ Reader::Status SequenceFileSourceReader::initialize(ReaderConfig desc) {
     _sequence_length = desc.get_sequence_length();
     _step = desc.get_frame_step();
     _stride = desc.get_frame_stride();
+    _seed = desc.seed();
+    _is_checkpointing_enabled = desc.is_checkpointing_enabled();
     _batch_count = _user_batch_count / _sequence_length;
     ret = subfolder_reading();
     if (ret != Reader::Status::OK)
@@ -76,8 +80,13 @@ Reader::Status SequenceFileSourceReader::initialize(ReaderConfig desc) {
     }
 
     // shuffle dataset if set
-    if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_sequence_frame_names.begin(), _sequence_frame_names.end());
+    if (ret == Reader::Status::OK && _shuffle) {
+        if (_is_checkpointing_enabled) {
+            _backup_sequence_frame_names = _sequence_frame_names;
+        }
+        _rng.seed(_seed);
+        std::shuffle(_sequence_frame_names.begin(), _sequence_frame_names.end(), _rng);
+    }
 
     for (auto &&seq : _sequence_frame_names) {
         _frame_names.insert(_frame_names.end(), seq.begin(), seq.end());
@@ -140,8 +149,13 @@ int SequenceFileSourceReader::release() {
 }
 
 void SequenceFileSourceReader::reset() {
-    if (_shuffle)
-        std::random_shuffle(_sequence_frame_names.begin(), _sequence_frame_names.end());
+    if (_shuffle) {
+        if (_is_checkpointing_enabled) {
+            _sequence_frame_names = _backup_sequence_frame_names;
+        }
+        _rng.seed(_seed + (++_epoch_counter));
+        std::shuffle(_sequence_frame_names.begin(), _sequence_frame_names.end(), _rng);
+    }
 
     _read_counter = 0;
     _curr_file_idx = 0;

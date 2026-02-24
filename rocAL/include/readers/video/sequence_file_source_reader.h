@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <dirent.h>
 
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -63,6 +64,9 @@ class SequenceFileSourceReader : public Reader {
     int close() override;
 
     SequenceFileSourceReader();
+
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
 
    private:
     //! opens the folder containnig the images
@@ -105,4 +109,9 @@ class SequenceFileSourceReader : public Reader {
     void incremenet_sequence_id() { _sequence_id++; }
     void replicate_last_sequence_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
+    std::vector<std::vector<std::string>> _backup_sequence_frame_names;  //!< Original sequence ordering (used to restore shuffle determinism).
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };

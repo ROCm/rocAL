@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #include "readers/image/tf_record_reader.h"
+#include <algorithm>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -38,6 +40,7 @@ TFRecordReader::TFRecordReader() {
     _last_rec = false;
     _record_name_prefix = "";
     _file_count_all_shards = 0;
+    _epoch_counter = 0;
 }
 
 Reader::Status TFRecordReader::initialize(ReaderConfig desc) {
@@ -58,11 +61,18 @@ Reader::Status TFRecordReader::initialize(ReaderConfig desc) {
     _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
     _stick_to_shard = _sharding_info.stick_to_shard;
     _shard_size = _sharding_info.shard_size;
+    _seed = desc.seed();
+    _is_checkpointing_enabled = desc.is_checkpointing_enabled();
     ret = folder_reading();
     // shuffle dataset if set
-    if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+    if (ret == Reader::Status::OK && _shuffle) {
+        if (_is_checkpointing_enabled) {
+            _backup_file_names = _file_names;
+        }
+        _rng.seed(_seed);
+        std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                     _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
+    }
     return ret;
 }
 
@@ -102,9 +112,14 @@ int TFRecordReader::release() {
 }
 
 void TFRecordReader::reset() {
-    if (_shuffle)
-        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding());
+    if (_shuffle) {
+        if (_is_checkpointing_enabled) {
+            _file_names = _backup_file_names;
+        }
+        _rng.seed(_seed + (++_epoch_counter));
+        std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                     _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), _rng);
+    }
     if (_stick_to_shard == false) // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();     // Should work for both single and multiple shards
     _read_counter = 0;

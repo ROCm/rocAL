@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 #include <memory>
 #include <mutex>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -84,6 +85,9 @@ class NumpyDataReader : public Reader {
 
     //! Returns the root folder path
     std::string get_root_folder_path() override;
+
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
 
    private:
     //! opens the folder containing the numpy arrays
@@ -145,4 +149,8 @@ class NumpyDataReader : public Reader {
     void incremenet_read_ptr();
     int release();
     Reader::Status generate_file_names();            // Function that would generate _file_names containing all the samples in the dataset
+    std::vector<std::string> _backup_file_names;  //!< Original file ordering (used to restore shuffle determinism).
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };

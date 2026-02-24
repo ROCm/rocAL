@@ -460,7 +460,8 @@ rocalJpegCaffe2LMDBRecordSource(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -492,7 +493,7 @@ rocalJpegCaffe2LMDBRecordSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", std::map<std::string, std::string>(), StorageType::CAFFE2_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info,
-                                                                             context->master_graph->is_checkpointing_enabled());
+                                                                             context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -520,7 +521,8 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -555,7 +557,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE2_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled());
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE2_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -582,7 +584,8 @@ rocalJpegCaffeLMDBRecordSource(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -615,7 +618,7 @@ rocalJpegCaffeLMDBRecordSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", std::map<std::string, std::string>(), StorageType::CAFFE_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info,
-                                                                             context->master_graph->is_checkpointing_enabled());
+                                                                             context->master_graph->is_checkpointing_enabled(), seed);
 
         context->master_graph->set_loop(loop);
 
@@ -644,7 +647,8 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -679,7 +683,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled());
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::CAFFE_LMDB_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -837,7 +841,8 @@ rocalMXNetRecordSource(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
@@ -871,7 +876,7 @@ rocalMXNetRecordSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", std::map<std::string, std::string>(), StorageType::MXNET_RECORDIO, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info,
-                                                                             context->master_graph->is_checkpointing_enabled());
+                                                                             context->master_graph->is_checkpointing_enabled(), seed);
 
         context->master_graph->set_loop(loop);
 
@@ -900,7 +905,8 @@ rocalMXNetRecordSourceSingleShard(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
@@ -936,7 +942,7 @@ rocalMXNetRecordSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::MXNET_RECORDIO, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled());
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::MXNET_RECORDIO, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -964,7 +970,8 @@ rocalJpegCOCOFileSource(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -998,7 +1005,7 @@ rocalJpegCOCOFileSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, json_path, std::map<std::string, std::string>(), StorageType::COCO_FILE_SYSTEM, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info,
-                                                                             context->master_graph->is_checkpointing_enabled());
+                                                                             context->master_graph->is_checkpointing_enabled(), seed);
 
         context->master_graph->set_loop(loop);
 
@@ -1028,7 +1035,8 @@ rocalJpegCOCOFileSourceSingleShard(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1063,7 +1071,7 @@ rocalJpegCOCOFileSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled());
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, json_path, StorageType::COCO_FILE_SYSTEM, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1283,7 +1291,8 @@ rocalJpegTFRecordSource(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1322,7 +1331,7 @@ rocalJpegTFRecordSource(
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
         context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", feature_key_map, StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info,
-                                                                             context->master_graph->is_checkpointing_enabled());
+                                                                             context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1352,7 +1361,8 @@ rocalJpegTFRecordSourceSingleShard(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -1394,7 +1404,7 @@ rocalJpegTFRecordSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), 0, feature_key_map);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), seed, feature_key_map);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1421,7 +1431,8 @@ rocalRawTFRecordSource(
     unsigned out_width,
     unsigned out_height,
     const char* record_name_prefix,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
@@ -1449,7 +1460,7 @@ rocalRawTFRecordSource(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(1);
 
-        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", feature_key_map, StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info, context->master_graph->is_checkpointing_enabled(), 0, record_name_prefix, 0, 0, 0);
+        context->master_graph->add_node<ImageLoaderNode>({}, {output})->init(internal_shard_count, cpu_num_threads, source_path, "", feature_key_map, StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info, context->master_graph->is_checkpointing_enabled(), seed, record_name_prefix, 0, 0, 0);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1477,7 +1488,8 @@ rocalRawTFRecordSourceSingleShard(
     bool loop,
     unsigned out_width,
     unsigned out_height,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     std::map<std::string, std::string> feature_key_map = {
@@ -1508,7 +1520,7 @@ rocalRawTFRecordSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
 
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info, context->master_graph->is_checkpointing_enabled(), 0, feature_key_map);
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::TF_RECORD, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), false, sharding_info, context->master_graph->is_checkpointing_enabled(), seed, feature_key_map);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1628,7 +1640,8 @@ rocalVideoFileSource(
 
         output = context->master_graph->create_internal_tensor(info);
 
-        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(),
+                                                                             context->master_graph->is_checkpointing_enabled());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1672,7 +1685,8 @@ rocalNumpyFileSource(
         output = context->master_graph->create_internal_tensor(info);
 
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
-        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed, sharding_info);
+        context->master_graph->add_node<NumpyLoaderNode>({}, {output})->init(shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed, sharding_info,
+                                                                             context->master_graph->is_checkpointing_enabled());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1721,7 +1735,8 @@ rocalNumpyFileSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
 
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
-        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed, sharding_info);
+        context->master_graph->add_node<NumpyLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, files, StorageType::NUMPY_DATA, DecoderType::SKIP_DECODE, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), seed, sharding_info,
+                                                                                        context->master_graph->is_checkpointing_enabled());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1784,7 +1799,8 @@ rocalVideoFileSourceSingleShard(
 
         output = context->master_graph->create_internal_tensor(info);
 
-        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(),
+                                                                                        context->master_graph->is_checkpointing_enabled());
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -1848,7 +1864,8 @@ rocalVideoFileResize(
                                color_format);
 
         Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(),
+                                                                             context->master_graph->is_checkpointing_enabled());
         context->master_graph->set_loop(loop);
 
         if (dest_width != video_prop.width && dest_height != video_prop.height) {
@@ -1998,7 +2015,8 @@ rocalVideoFileResizeSingleShard(
                                tensor_layout,
                                color_format);
         Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(),
+                                                                                        context->master_graph->is_checkpointing_enabled());
         context->master_graph->set_loop(loop);
 
         if (dest_width != video_prop.width && dest_height != video_prop.height) {
@@ -2103,7 +2121,8 @@ rocalRawCIFAR10Source(
     unsigned out_width,
     unsigned out_height,
     const char* filename_prefix,
-    bool loop) {
+    bool loop,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2124,7 +2143,8 @@ rocalRawCIFAR10Source(
                                color_format);
         output = context->master_graph->create_internal_tensor(info);
 
-        context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "", StorageType::UNCOMPRESSED_BINARY_DATA, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix);
+        context->master_graph->add_node<Cifar10LoaderNode>({}, {output})->init(source_path, "", StorageType::UNCOMPRESSED_BINARY_DATA, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix,
+                                                                             context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -2151,7 +2171,8 @@ rocalRawCIFAR10SourceSingleShard(
     unsigned out_width,
     unsigned out_height,
     const char* filename_prefix,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2175,7 +2196,8 @@ rocalRawCIFAR10SourceSingleShard(
                                color_format);
         output = context->master_graph->create_internal_tensor(info);
 
-        context->master_graph->add_node<CIFAR10LoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::UNCOMPRESSED_BINARY_DATA, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix, sharding_info);
+        context->master_graph->add_node<CIFAR10LoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::UNCOMPRESSED_BINARY_DATA, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), filename_prefix, sharding_info,
+                                                                                        context->master_graph->is_checkpointing_enabled(), seed);
         context->master_graph->set_loop(loop);
 
         if (is_output) {
@@ -2396,7 +2418,8 @@ rocalWebDatasetSourceSingleShard(
     unsigned max_width,
     unsigned max_height,
     RocalDecoderType dec_type,
-    RocalShardingInfo rocal_sharding_info) {
+    RocalShardingInfo rocal_sharding_info,
+    unsigned seed) {
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
@@ -2431,7 +2454,7 @@ rocalWebDatasetSourceSingleShard(
         output = context->master_graph->create_internal_tensor(info);
         auto cpu_num_threads = context->master_graph->calculate_cpu_num_threads(shard_count);
         ShardingInfo sharding_info(convert_last_batch_policy(rocal_sharding_info.last_batch_policy), rocal_sharding_info.pad_last_batch_repeated, rocal_sharding_info.stick_to_shard, rocal_sharding_info.shard_size);
-        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::WEBDATASET_RECORDS, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), 0,
+        context->master_graph->add_node<ImageLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, cpu_num_threads, source_path, "", StorageType::WEBDATASET_RECORDS, decType, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type(), context->master_graph->meta_data_reader(), decoder_keep_original, sharding_info, context->master_graph->is_checkpointing_enabled(), seed,
                                                                                         std::map<std::string, std::string>(), 0, 0, 0, ExternalSourceFileMode::NONE, index_path);
         context->master_graph->set_loop(loop);
 

@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <iterator>
 #include <map>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -66,6 +67,9 @@ class CaffeLMDBRecordReader : public Reader {
 
     CaffeLMDBRecordReader();
 
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
+
    private:
     //! opens the folder containing the images
     Reader::Status folder_reading();
@@ -94,4 +98,9 @@ class CaffeLMDBRecordReader : public Reader {
     int _open_env = 1;
     void open_env_for_read_image();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
+    std::vector<std::string> _backup_file_names;  //!< Original file ordering (used to restore shuffle determinism).
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };

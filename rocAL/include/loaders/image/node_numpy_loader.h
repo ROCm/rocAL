@@ -42,7 +42,8 @@ class NumpyLoaderNode : public Node {
     /// \param seed Determines the seed used by RNG for shuffling data between shards.
     /// \param sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
     void init(unsigned internal_shard_count, const std::string &source_path, const std::vector<std::string> &files, StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
-              size_t load_batch_count, RocalMemType mem_type, unsigned seed = 0, const ShardingInfo& sharding_info = ShardingInfo());
+              size_t load_batch_count, RocalMemType mem_type, unsigned seed = 0, const ShardingInfo& sharding_info = ShardingInfo(),
+              bool enable_checkpointing = false);
     std::shared_ptr<LoaderModule> get_loader_module() override;
 
    protected:

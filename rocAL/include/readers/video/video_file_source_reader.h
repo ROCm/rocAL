@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -52,6 +53,9 @@ class VideoFileSourceReader : public VideoReader {
     ~VideoFileSourceReader() override;
 
     VideoFileSourceReader();
+
+    //! Returns reader RNG state for checkpoint capture.
+    std::mt19937& get_rng() override { return _rng; }
 
    private:
     std::string _folder_path;
@@ -87,5 +91,10 @@ class VideoFileSourceReader : public VideoReader {
     void replicate_last_sequence_to_fill_last_shard();
     void replicate_last_batch_to_pad_partial_shard();
     VideoReader::Status create_sequence_info();
+    std::vector<SequenceInfo> _backup_sequences;  //!< Original sequence ordering (used to restore shuffle determinism).
+    unsigned _seed = 0;                     //!< Seed used for deterministic shuffling.
+    bool _is_checkpointing_enabled = false; //!< Enables shuffle state capture for checkpointing.
+    unsigned _epoch_counter = 0;            //!< Epoch counter used to advance shuffle seed.
+    std::mt19937 _rng;                      //!< Reader RNG used for shuffling.
 };
 #endif

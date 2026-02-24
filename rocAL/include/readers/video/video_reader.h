@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -61,5 +62,8 @@ class VideoReader {
     virtual unsigned count_items() = 0;
 
     virtual ~VideoReader() = default;
+
+    //! Returns reader RNG state (used for checkpointing).
+    virtual std::mt19937& get_rng() { THROW("RNG not available for the requested video reader") }
 };
 #endif

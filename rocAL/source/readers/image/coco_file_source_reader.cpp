@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <algorithm>
+#include <random>
 #include "readers/image/coco_file_source_reader.h"
 #include "meta_data/meta_data_reader_factory.h"
 #include "meta_data/meta_data_graph_factory.h"
@@ -37,6 +39,7 @@ COCOFileSourceReader::COCOFileSourceReader() {
     _loop = false;
     _shuffle = false;
     _file_count_all_shards = 0;
+    _epoch_counter = 0;
 }
 
 Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
@@ -53,6 +56,8 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
     _loop = desc.loop();
     _shuffle = desc.shuffle();
     _meta_data_reader = desc.meta_data_reader();
+    _seed = desc.seed();
+    _is_checkpointing_enabled = desc.is_checkpointing_enabled();
 
     if (_json_path == "") {
         std::cout << "\n _json_path has to be set manually";
@@ -90,13 +95,22 @@ Reader::Status COCOFileSourceReader::initialize(ReaderConfig desc) {
 
         // shuffle dataset if set
         if (ret == Reader::Status::OK && _shuffle) {
+            if (_is_checkpointing_enabled) {
+                _backup_file_names = _file_names;
+            }
+            _rng.seed(_seed);
             shuffle_with_aspect_ratios();
         }
     } else {
         // shuffle dataset if set
-        if (ret == Reader::Status::OK && _shuffle)
-            std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                                _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+        if (ret == Reader::Status::OK && _shuffle) {
+            if (_is_checkpointing_enabled) {
+                _backup_file_names = _file_names;
+            }
+            _rng.seed(_seed);
+            std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                         _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
+        }
     }
     return ret;
 }
@@ -189,14 +203,14 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
     auto shard_end_idx = shard_start_idx + actual_shard_size_without_padding();
     auto mid = std::upper_bound(_aspect_ratios.begin() + shard_start_idx, _aspect_ratios.begin() + shard_end_idx, 1.0f) - (_aspect_ratios.begin() + shard_start_idx);
     // Shuffle within groups using the mid element as the limit - [start, mid) and [mid, last)
-    std::random_shuffle(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_start_idx + mid);
-    std::random_shuffle(_file_names.begin() + shard_start_idx + mid, _file_names.begin() + shard_end_idx);
+    std::shuffle(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_start_idx + mid, _rng);
+    std::shuffle(_file_names.begin() + shard_start_idx + mid, _file_names.begin() + shard_end_idx, _rng);
     std::vector<std::string> shuffled_filenames;
     int split_count = (_file_names.size() /_shard_count) / _batch_size;  // Number of batches for current shard
     std::vector<int> indexes(split_count);
     std::iota(indexes.begin(), indexes.end(), 0);
     // Shuffle the index vector and use the index to fetch batch size elements for decoding
-    std::random_shuffle(indexes.begin(), indexes.end());
+    std::shuffle(indexes.begin(), indexes.end(), _rng);
     for (auto const idx : indexes)
         shuffled_filenames.insert(shuffled_filenames.end(), _file_names.begin() + shard_start_idx + idx * _batch_size, _file_names.begin() + shard_start_idx + idx * _batch_size + _batch_size);
     std::copy(_file_names.begin() + shard_start_idx, _file_names.begin() + shard_end_idx, std::back_inserter(shuffled_filenames));
@@ -205,10 +219,17 @@ void COCOFileSourceReader::shuffle_with_aspect_ratios() {
 void COCOFileSourceReader::reset() {
     if (_meta_data_reader && _meta_data_reader->get_aspect_ratio_grouping()) {
         _file_names = _sorted_file_names;
-        if (_shuffle) shuffle_with_aspect_ratios();
+        if (_shuffle) {
+            _rng.seed(_seed + (++_epoch_counter));
+            shuffle_with_aspect_ratios();
+        }
     } else if (_shuffle) {
-        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+        if (_is_checkpointing_enabled) {
+            _file_names = _backup_file_names;
+        }
+        _rng.seed(_seed + (++_epoch_counter));
+        std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                     _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
     }
     if (_stick_to_shard == false) // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();     // Should work for both single and multiple shards

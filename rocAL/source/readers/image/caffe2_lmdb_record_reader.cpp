@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #include "readers/image/caffe2_lmdb_record_reader.h"
+#include <algorithm>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -37,6 +39,7 @@ Caffe2LMDBRecordReader::Caffe2LMDBRecordReader() {
     _shuffle = false;
     _last_rec = false;
     _file_count_all_shards = 0;
+    _epoch_counter = 0;
 }
 
 Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
@@ -52,12 +55,19 @@ Reader::Status Caffe2LMDBRecordReader::initialize(ReaderConfig desc) {
     _pad_last_batch_repeated = _sharding_info.pad_last_batch_repeated;
     _stick_to_shard = _sharding_info.stick_to_shard;
     _shard_size = _sharding_info.shard_size;
+    _seed = desc.seed();
+    _is_checkpointing_enabled = desc.is_checkpointing_enabled();
     ret = folder_reading();
     _curr_file_idx = _shard_start_idx_vector[_shard_id]; // shard's start_idx would vary for every shard in the vector
     // shuffle dataset if set
-    if (ret == Reader::Status::OK && _shuffle)
-        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+    if (ret == Reader::Status::OK && _shuffle) {
+        if (_is_checkpointing_enabled) {
+            _backup_file_names = _file_names;
+        }
+        _rng.seed(_seed);
+        std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                     _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
+    }
 
     return ret;
 }
@@ -99,9 +109,14 @@ int Caffe2LMDBRecordReader::release() {
 }
 
 void Caffe2LMDBRecordReader::reset() {
-    if (_shuffle)
-        std::random_shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_end_idx_vector[_shard_id]);
+    if (_shuffle) {
+        if (_is_checkpointing_enabled) {
+            _file_names = _backup_file_names;
+        }
+        _rng.seed(_seed + (++_epoch_counter));
+        std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
+                     _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
+    }
     if (_stick_to_shard == false)  // Pick elements from the next shard - hence increment shard_id
         increment_shard_id();      // Should work for both single and multiple shards
     _read_counter = 0;

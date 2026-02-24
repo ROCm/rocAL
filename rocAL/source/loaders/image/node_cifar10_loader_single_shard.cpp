@@ -29,7 +29,8 @@ CIFAR10LoaderSingleShardNode::CIFAR10LoaderSingleShardNode(Tensor *output, void 
 }
 
 void CIFAR10LoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type,
-                                      bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix, const ShardingInfo& sharding_info) {
+                                      bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type, const std::string &file_prefix, const ShardingInfo& sharding_info,
+                                      bool enable_checkpointing, unsigned seed) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for CIFAR10LoaderSingleShardNode, cannot initialize")
     if (shard_count < 1)
@@ -44,6 +45,8 @@ void CIFAR10LoaderSingleShardNode::init(unsigned shard_id, unsigned shard_count,
     reader_cfg.set_file_prefix(file_prefix);
     reader_cfg.set_sharding_info(sharding_info);
     reader_cfg.set_batch_count(load_batch_count);
+    reader_cfg.enable_checkpointing(enable_checkpointing);
+    reader_cfg.set_seed(seed);
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::SKIP_DECODE), mem_type, _batch_size);
     _loader_module->start_loading();
 }

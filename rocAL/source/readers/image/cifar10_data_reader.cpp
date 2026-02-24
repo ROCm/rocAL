@@ -40,6 +40,7 @@ CIFAR10DataReader::CIFAR10DataReader() {
     _total_file_size = 0;
     _last_file_idx = 0;
     _file_count_all_shards = 0;
+    _epoch_counter = 0;
 }
 
 Reader::Status CIFAR10DataReader::initialize(ReaderConfig desc) {
@@ -55,14 +56,21 @@ Reader::Status CIFAR10DataReader::initialize(ReaderConfig desc) {
     _stick_to_shard = _sharding_info.stick_to_shard;
     _shard_size = _sharding_info.shard_size;
     _shuffle = desc.shuffle();
+    _seed = desc.seed();
+    _is_checkpointing_enabled = desc.is_checkpointing_enabled();
     ret = subfolder_reading();
     // shuffle dataset if set
     if (ret == Reader::Status::OK && _shuffle) {
-        std::mt19937 rng1(_shard_id);
-        auto rng2 = rng1;
-        auto rng3 = rng1;
+        if (_is_checkpointing_enabled) {
+            _backup_file_names = _file_names;
+            _backup_file_offsets = _file_offsets;
+            _backup_file_idx = _file_idx;
+        }
+        _rng.seed(_seed);
+        auto rng2 = _rng;
+        auto rng3 = _rng;
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_end_idx_vector[_shard_id], rng1);
+                            _file_names.begin() + _shard_end_idx_vector[_shard_id], _rng);
         std::shuffle(_file_offsets.begin() + _shard_start_idx_vector[_shard_id],
                             _file_offsets.begin() + _shard_end_idx_vector[_shard_id], rng2);
         std::shuffle(_file_idx.begin() + _shard_start_idx_vector[_shard_id],
@@ -152,11 +160,16 @@ int CIFAR10DataReader::release() {
 
 void CIFAR10DataReader::reset() {
     if (_shuffle) {
-        std::mt19937 rng1(_shard_id);
-        auto rng2 = rng1;
-        auto rng3 = rng1;
+        if (_is_checkpointing_enabled) {
+            _file_names = _backup_file_names;
+            _file_offsets = _backup_file_offsets;
+            _file_idx = _backup_file_idx;
+        }
+        _rng.seed(_seed + (++_epoch_counter));
+        auto rng2 = _rng;
+        auto rng3 = _rng;
         std::shuffle(_file_names.begin() + _shard_start_idx_vector[_shard_id],
-                            _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), rng1);
+                            _file_names.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), _rng);
         std::shuffle(_file_offsets.begin() + _shard_start_idx_vector[_shard_id],
                             _file_offsets.begin() + _shard_start_idx_vector[_shard_id] + actual_shard_size_without_padding(), rng2);
         std::shuffle(_file_idx.begin() + _shard_start_idx_vector[_shard_id],

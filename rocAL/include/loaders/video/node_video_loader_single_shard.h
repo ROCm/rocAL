@@ -40,7 +40,8 @@ class VideoLoaderSingleShardNode : public Node {
     /// The loader will repeat sequences if necessary to be able to have sequences in multiples of the load_batch_count,
     /// for example if there are 10 sequences in the dataset and load_batch_count is 3, the loader repeats 2 sequences as if there are 12 sequences available.
     void init(unsigned shard_id, unsigned shard_count, const std::string &source_path, StorageType storage_type, DecoderType decoder_type, DecodeMode decoder_mode,
-              unsigned sequence_length, unsigned step, unsigned stride, VideoProperties &video_prop, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type);
+              unsigned sequence_length, unsigned step, unsigned stride, VideoProperties &video_prop, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type,
+              bool enable_checkpointing = false, unsigned seed = 0);
 
     std::shared_ptr<LoaderModule> get_loader_module() override;
 

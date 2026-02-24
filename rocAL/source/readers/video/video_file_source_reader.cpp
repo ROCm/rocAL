@@ -22,6 +22,9 @@ THE SOFTWARE.
 
 #include "readers/video/video_file_source_reader.h"
 
+#include <algorithm>
+#include <random>
+
 #ifdef ROCAL_VIDEO
 VideoFileSourceReader::VideoFileSourceReader() {
     _curr_sequence_idx = 0;
@@ -29,6 +32,7 @@ VideoFileSourceReader::VideoFileSourceReader() {
     _sequence_id = 0;
     _shuffle = false;
     _sequence_count_all_shards = 0;
+    _epoch_counter = 0;
 }
 
 unsigned VideoFileSourceReader::count_items() {
@@ -54,6 +58,8 @@ VideoReader::Status VideoFileSourceReader::initialize(ReaderConfig desc) {
     _sequence_length = desc.get_sequence_length();
     _step = desc.get_frame_step();
     _stride = desc.get_frame_stride();
+    _seed = desc.seed();
+    _is_checkpointing_enabled = desc.is_checkpointing_enabled();
     _video_frame_count = _video_prop.frames_count;
     _start_end_frame = _video_prop.start_end_frame_num;
     _batch_count = desc.get_batch_size();
@@ -70,8 +76,13 @@ VideoReader::Status VideoFileSourceReader::initialize(ReaderConfig desc) {
         }
     }
     // shuffle dataset if set
-    if (ret == VideoReader::Status::OK && _shuffle)
-        std::random_shuffle(_sequences.begin(), _sequences.end());
+    if (ret == VideoReader::Status::OK && _shuffle) {
+        if (_is_checkpointing_enabled) {
+            _backup_sequences = _sequences;
+        }
+        _rng.seed(_seed);
+        std::shuffle(_sequences.begin(), _sequences.end(), _rng);
+    }
 
     return ret;
 }
@@ -93,8 +104,13 @@ VideoFileSourceReader::~VideoFileSourceReader() {
 }
 
 void VideoFileSourceReader::reset() {
-    if (_shuffle)
-        std::random_shuffle(_sequences.begin(), _sequences.end());
+    if (_shuffle) {
+        if (_is_checkpointing_enabled) {
+            _sequences = _backup_sequences;
+        }
+        _rng.seed(_seed + (++_epoch_counter));
+        std::shuffle(_sequences.begin(), _sequences.end(), _rng);
+    }
     _read_counter = 0;
     _curr_sequence_idx = 0;
 }
