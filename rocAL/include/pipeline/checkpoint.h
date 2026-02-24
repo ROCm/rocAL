@@ -44,6 +44,12 @@ inline std::string SerializeRNGToString(const std::mt19937 &rng) {
     return stream.str();
 }
 
+/*! \brief Deserialize an mt19937 RNG state from a checkpoint string. */
+inline void DeserializeRNGFromString(const std::string &data, std::mt19937 &rng) {
+    std::stringstream stream(data);
+    stream >> rng;
+}
+
 /*! \brief Holds per-operator checkpoint state during serialization. */
 class OperatorCheckpoint {
    public:
