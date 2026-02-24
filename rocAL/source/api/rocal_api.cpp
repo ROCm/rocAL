@@ -259,3 +259,21 @@ rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_
     }
     return ROCAL_OK;
 }
+
+// Restore pipeline state from a serialized checkpoint blob.
+RocalStatus ROCAL_API_CALL
+rocalRestoreFromSerializedCheckpoint(RocalContext rocal_context, const char* serialized_ckpt_string, size_t serialized_ckpt_size) {
+    auto context = static_cast<Context*>(rocal_context);
+    try {
+        if (!serialized_ckpt_string || serialized_ckpt_size == 0) {
+            THROW("Invalid serialized checkpoint buffer or size")
+        }
+        std::string ckpt(serialized_ckpt_string, serialized_ckpt_size);  // Copy checkpoint blob into a string.
+        context->master_graph->restore_from_serialized_checkpoint(ckpt);
+    } catch (const std::exception& e) {
+        context->capture_error(e.what());
+        ERR(e.what())
+        return ROCAL_RUNTIME_ERROR;
+    }
+    return ROCAL_OK;
+}

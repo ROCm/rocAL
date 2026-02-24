@@ -50,6 +50,8 @@ class ImageLoaderSingleShardNode : public Node {
     void save_state(std::shared_ptr<OperatorCheckpoint>& op_ckpt) override;
     /// Serialize the loader state checkpoint into a byte string.
     std::string serialize_state(const std::shared_ptr<OperatorCheckpoint>& op_ckpt) override;
+    /// Restore loader state from a checkpoint payload.
+    void restore_state(const std::string &operator_state_bytes) override;
 
    protected:
     void create_node() override{};

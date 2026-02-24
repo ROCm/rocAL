@@ -24,8 +24,9 @@ THE SOFTWARE.
 
 #include <cstdlib>
 #include <ctime>
-
 #include "parameters/parameter_simple.h"
+#include "pipeline/commons.h"
+
 ParameterFactory* ParameterFactory::_instance = nullptr;
 std::mutex ParameterFactory::_mutex;
 
@@ -212,4 +213,29 @@ std::vector<std::string> ParameterFactory::snapshot_rngs() {
         }, p);
     }
     return out;
+}
+
+// Restore RNG states for all tracked random parameters.
+void ParameterFactory::restore_rngs(const std::vector<std::string>& rng_states) {
+    if (rng_states.size() != _param_list.size()) {
+        THROW("ParameterFactory::restore_rngs: snapshot size mismatch with parameter list");
+    }
+    for (size_t i = 0; i < _param_list.size(); ++i) {
+        std::visit([&](auto* param) {
+            if (!param) {
+                return;
+            }
+            pParamCore key = param;
+            if (_parameters.find(key) == _parameters.end()) {
+                return;
+            }
+            param->deserialize_rng(rng_states[i]);
+        }, _param_list[i]);
+    }
+}
+
+// Reset the internal parameter ordering list used for RNG snapshots.
+void ParameterFactory::reset_param_list() {
+    _param_list.clear();
+    _seed_sequence_idx = 0;
 }
