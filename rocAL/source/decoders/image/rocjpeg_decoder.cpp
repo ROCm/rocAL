@@ -157,7 +157,7 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     }
     // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
     if (scaledw != widths[0] || scaledh != heights[0]) {
-        _resize_batch = true;   // If the size of any image in the batch is greater than max size, resize the complete batch
+        _enable_resize = true;   // If the size of any image in the batch is greater than max size, resize the complete batch
         max_widths[0] = (widths[0] + 8) &~ 7;
         max_heights[0] = (heights[0] + 8) &~ 7;
         _image_needs_rescaling[index] = true;
@@ -210,7 +210,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
                                                std::vector<size_t> original_image_width, std::vector<size_t> original_image_height,
                                                std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
     unsigned resize_count = 0;    // A count of how many images in the batch need resizing, used for launching the resize kernel.
-    if (_resize_batch && _rocjpeg_image_buff_size > 0) {
+    if (_enable_resize && _rocjpeg_image_buff_size > 0) {
         // Allocate memory for the intermediate decoded output for only the images that need resizing.
         const size_t resize_image_buff_bytes = (size_t)_rocjpeg_image_buff_size * (size_t)_num_channels;
         if (!_rocjpeg_image_buff) {
@@ -260,7 +260,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
 
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params.data(), _output_images.data()));
 
-    if (_resize_batch && resize_count) {
+    if (_enable_resize && resize_count) {
         HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0],
                             resize_count, _dev_src_width, _dev_src_height,
                             _dev_dst_width, _dev_dst_height, _dev_src_hstride, _dev_src_img_offset, _dev_dst_img_idx, _num_channels,
@@ -269,7 +269,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
         // Ensure the resize kernel has finished writing into the output tensor before we release the batch.
         CHECK_HIP(hipStreamSynchronize(_hip_stream));
     }
-    _resize_batch = false;  // Need to reset this value for every batch
+    _enable_resize = false;  // Need to reset this value for every batch
     _rocjpeg_image_buff_size = 0;
     _image_needs_rescaling.assign(_batch_size, false);   // Reset per-image flags for this batch
 

@@ -236,7 +236,7 @@ class HWRocJpegDecoder : public Decoder {
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params = {};
     uint32_t _num_channels = 0;
-    bool _resize_batch = false;
+    bool _enable_resize = false;
     int _device_id = 0;
     hipStream_t _hip_stream = nullptr;
 };
