@@ -205,7 +205,8 @@ void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments
                 if (op_arg.values.empty()) {
                     // Represent empty vector by adding an empty vector message of the right type
                     if (op_arg.type_name == "int" || op_arg.type_name == "shared_ptr"
-                        || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t") {
+                        || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t"
+                        || op_arg.type_name == "uint8_t") {
                         static_cast<void>(arg->add_int_vectors());
                     } else if (op_arg.type_name == "float") {
                         static_cast<void>(arg->add_float_vectors());
@@ -216,7 +217,8 @@ void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments
                         THROW("Vector type not supported for Argument " + op_arg.arg_name + " with type " + op_arg.type_name + ".");
                     }
                 } else {
-                    if (op_arg.type_name == "int" || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t") {
+                    if (op_arg.type_name == "int" || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t"
+                        || op_arg.type_name == "uint8_t") {
                         auto *vec = arg->add_int_vectors();
                         for (auto &v : op_arg.values) {
                             // Map unsigned/size_t to int64 for IntVector as per spec (only Int/Float/String vectors permitted)
@@ -224,6 +226,8 @@ void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments
                                 vec->add_values(static_cast<int64_t>(std::any_cast<unsigned>(v)));
                             } else if (op_arg.type_name == "size_t") {
                                 vec->add_values(static_cast<int64_t>(std::any_cast<size_t>(v)));
+                            } else if (op_arg.type_name == "uint8_t") {
+                                vec->add_values(static_cast<int64_t>(std::any_cast<uint8_t>(v)));
                             } else {
                                 vec->add_values(static_cast<int64_t>(std::any_cast<int>(v)));
                             }
@@ -261,6 +265,8 @@ void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments
                         arg->add_uints(std::any_cast<unsigned>(v));
                     } else if (op_arg.type_name == "size_t") {
                         arg->add_uints(std::any_cast<size_t>(v));
+                    } else if (op_arg.type_name == "uint8_t") {
+                        arg->add_uints(std::any_cast<uint8_t>(v));
                     } else {
                         THROW("Invalid type specified for the Argument " + op_arg.arg_name + ".");
                     }
@@ -387,6 +393,8 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                         arg.values.emplace_back(static_cast<size_t>(val));
                     } else if (arg.type_name == "shared_ptr" || arg.type_name == "int") {
                         arg.values.emplace_back(static_cast<int>(val));
+                    } else if (arg.type_name == "uint8_t") {
+                        arg.values.emplace_back(static_cast<uint8_t>(val));
                     }
                 }
             } else if (arg.type_name == "float") {
@@ -432,6 +440,10 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
         } else if (arg.type_name == "unsigned") {
             for (auto u : proto_arg.uints()) {
                 arg.values.emplace_back(static_cast<unsigned>(u));
+            }
+        } else if (arg.type_name == "uint8_t") {
+            for (auto u : proto_arg.uints()) {
+                arg.values.emplace_back(static_cast<uint8_t>(u));
             }
         } else if (arg.type_name == "size_t") {
             for (auto u : proto_arg.uints()) {

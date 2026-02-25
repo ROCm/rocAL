@@ -50,17 +50,13 @@ void SaturationNode::create_node() {
 void SaturationNode::init(float saturation) {
     _saturation.set_param(saturation);
     // Add all arguments as part of the Node
-    ArgumentSet args;
-    args.add_new_argument("saturation", saturation);
-    _args = args;
+    _args.add_new_argument("saturation", saturation);
 }
 
 void SaturationNode::init(FloatParam *saturation_param) {
     _saturation.set_param(core(saturation_param));
     // Add all arguments as part of the Node
-    ArgumentSet args;
-    args.add_new_argument("saturation_param", saturation_param);
-    _args = args;
+    _args.add_new_argument("saturation_param", saturation_param);
 }
 
 void SaturationNode::update_node() {
@@ -69,6 +65,6 @@ void SaturationNode::update_node() {
 
 void SaturationNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<SaturationNode, float>(this, {"saturation"}, arguments)) return;
-    if (init_args<SaturationNode, FloatParam*>(this, {"saturation"}, arguments)) return;
+    if (init_args<SaturationNode, FloatParam*>(this, {"saturation_param"}, arguments)) return;
     THROW("Unsupported argument types for SaturationNode");
 }

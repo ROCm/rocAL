@@ -125,6 +125,7 @@ constexpr const char* get_type_name() noexcept {
     
     if constexpr (std::is_same_v<DecayedType, int>) return "int";
     else if constexpr (std::is_same_v<DecayedType, unsigned>) return "unsigned";
+    else if constexpr (std::is_same_v<DecayedType, uint8_t>) return "uint8_t";
     else if constexpr (std::is_same_v<DecayedType, size_t>) return "size_t";
     else if constexpr (std::is_same_v<DecayedType, float>) return "float";
     else if constexpr (std::is_same_v<DecayedType, double>) return "double";
