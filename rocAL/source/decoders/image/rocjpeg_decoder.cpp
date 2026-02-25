@@ -154,6 +154,8 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
             scaledh = max_h;
             scaledw = static_cast<uint32_t>(((uint64_t)max_h * (uint64_t)in_w) / (uint64_t)in_h);
         }
+        scaledh = scaledh == 0 ? 1 : scaledh;   // Ensure scaled dimensions are at least 1
+        scaledw = scaledw == 0 ? 1 : scaledw;
     }
     // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
     if (scaledw != widths[0] || scaledh != heights[0]) {
