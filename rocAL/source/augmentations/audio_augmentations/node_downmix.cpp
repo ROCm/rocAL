@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(DownmixNode)
+
 DownmixNode::DownmixNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void DownmixNode::create_node() {
@@ -46,4 +48,9 @@ void DownmixNode::update_node() {
         output_tensor_shape[0] = tensor_shape[0];
         output_tensor_shape[1] = 1;  // Setting channels to 1 for downmix output
     }
+}
+
+void DownmixNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<DownmixNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for DownmixNode");
 }

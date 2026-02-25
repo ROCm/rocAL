@@ -33,6 +33,8 @@ class SnPNoiseNode : public Node {
     SnPNoiseNode() = delete;
     void init(float noise_prob, float salt_prob, float salt_value, float pepper_value, int seed);
     void init(FloatParam *noise_prob_param, FloatParam *salt_prob_param, FloatParam *salt_value_param, FloatParam *pepper_value_param, int seed);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "SnPNoiseNode"; }
 
    protected:
     void create_node() override;

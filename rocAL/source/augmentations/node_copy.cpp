@@ -41,3 +41,8 @@ void CopyNode::create_node() {
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the copy (vxCopyNode) node failed: " + TOSTR(status))
 }
+
+void CopyNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<CopyNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for CopyNode");
+}

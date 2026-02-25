@@ -32,6 +32,8 @@ class SnowNode : public Node {
     SnowNode() = delete;
     void init(float snow_threshold, float brightness_coefficient, int dark_mode);
     void init(FloatParam *snow_threshold_param, FloatParam *brightness_coefficient_param, IntParam *dark_mode_param);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "SnowNode"; }
 
    protected:
     void create_node() override;

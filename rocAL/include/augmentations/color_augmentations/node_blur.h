@@ -30,6 +30,9 @@ class BlurNode : public Node {
    public:
     BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     BlurNode() = delete;
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "BlurNode"; }
 
    protected:
     void update_node() override {};

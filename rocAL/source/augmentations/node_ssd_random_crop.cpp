@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SSDRandomCropNode)
+
 SSDRandomCropNode::SSDRandomCropNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs),
                                                                                                                   _dest_width(_outputs[0]->info().max_shape()[0]),
                                                                                                                   _dest_height(_outputs[0]->info().max_shape()[1]) {
@@ -198,4 +200,17 @@ void SSDRandomCropNode::init(FloatParam *crop_area_factor, FloatParam *crop_aspe
     _crop_param->set_area_factor(core(crop_area_factor));
     _crop_param->set_aspect_ratio(core(crop_aspect_ratio));
     _num_of_attempts = num_of_attempts;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("crop_area_factor", crop_area_factor);
+    args.add_new_argument("crop_aspect_ratio", crop_aspect_ratio);
+    args.add_new_argument("x_drift", x_drift);
+    args.add_new_argument("y_drift", y_drift);
+    args.add_new_argument("num_of_attempts", num_of_attempts);
+    _args = args;
+}
+
+void SSDRandomCropNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<SSDRandomCropNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*, int>(this, {"crop_area_factor", "crop_aspect_ratio", "x_drift", "y_drift", "num_of_attempts"}, arguments)) return;
+    THROW("Unsupported argument types for SSDRandomCropNode");
 }

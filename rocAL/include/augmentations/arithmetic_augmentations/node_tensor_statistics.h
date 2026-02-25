@@ -29,6 +29,9 @@ class TensorSumNode : public Node {
    public:
     TensorSumNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorSumNode() = delete;
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "TensorSumNode"; }
 
    protected:
     void create_node() override;
@@ -39,6 +42,9 @@ class TensorMinNode : public Node {
    public:
     TensorMinNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorMinNode() = delete;
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "TensorMinNode"; }
 
    protected:
     void create_node() override;
@@ -49,6 +55,9 @@ class TensorMaxNode : public Node {
    public:
     TensorMaxNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorMaxNode() = delete;
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "TensorMaxNode"; }
 
    protected:
     void create_node() override;
@@ -59,6 +68,9 @@ class TensorMeanNode : public Node {
    public:
     TensorMeanNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorMeanNode() = delete;
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "TensorMeanNode"; }
 
    protected:
     void create_node() override;
@@ -69,6 +81,9 @@ class TensorStdDevNode : public Node {
    public:
     TensorStdDevNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     TensorStdDevNode() = delete;
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "TensorStdDevNode"; }
 
    protected:
     void create_node() override;

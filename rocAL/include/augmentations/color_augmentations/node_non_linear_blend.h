@@ -33,6 +33,8 @@ class NonLinearBlendNode : public Node {
     // Fixed and dynamic stddev init
     void init(float stddev);
     void init(FloatParam* stddev);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "NonLinearBlendNode"; }
 
    protected:
     void create_node() override;

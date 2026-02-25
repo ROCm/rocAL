@@ -29,6 +29,8 @@ class ToDecibelsNode : public Node {
     ToDecibelsNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ToDecibelsNode() = delete;
     void init(float cutoff_db, float multiplier, float reference_magnitude);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ToDecibelsNode"; }
 
    protected:
     void create_node() override;

@@ -151,6 +151,7 @@ void find_video_properties(VideoProperties &video_props, const char *source_path
     unsigned max_height = 0;
     std::string _full_path = source_path;
     filesys::path pathObj(_full_path);
+    video_props.file_list_frame_num = file_list_frame_num;
     if (filesys::exists(pathObj) && filesys::is_regular_file(pathObj))  // Single video file / text file as input
     {
         if (pathObj.has_extension() && pathObj.extension().string() == ".txt") {

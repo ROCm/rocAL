@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_water.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(WaterNode)
+
 WaterNode::WaterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                    _amplitude_x(AMPLITUDE_RANGE[0], AMPLITUDE_RANGE[1]),
                                                                                                    _amplitude_y(AMPLITUDE_RANGE[0], AMPLITUDE_RANGE[1]),
@@ -72,6 +74,14 @@ void WaterNode::init(float amplitude_x, float amplitude_y, float frequency_x, fl
     _frequency_y.set_param(frequency_y);
     _phase_x.set_param(phase_x);
     _phase_y.set_param(phase_y);
+
+    // Add all arguments to the node
+    _args.add_new_argument("amplitude_x", amplitude_x);
+    _args.add_new_argument("amplitude_y", amplitude_y);
+    _args.add_new_argument("frequency_x", frequency_x);
+    _args.add_new_argument("frequency_y", frequency_y);
+    _args.add_new_argument("phase_x", phase_x);
+    _args.add_new_argument("phase_y", phase_y);
 }
 
 void WaterNode::init(FloatParam *amplitude_x_param, FloatParam *amplitude_y_param,
@@ -83,6 +93,14 @@ void WaterNode::init(FloatParam *amplitude_x_param, FloatParam *amplitude_y_para
     _frequency_y.set_param(core(frequency_y_param));
     _phase_x.set_param(core(phase_x_param));
     _phase_y.set_param(core(phase_y_param));
+
+    // Add all arguments to the node
+    _args.add_new_argument("amplitude_x_param", amplitude_x_param);
+    _args.add_new_argument("amplitude_y_param", amplitude_y_param);
+    _args.add_new_argument("frequency_x_param", frequency_x_param);
+    _args.add_new_argument("frequency_y_param", frequency_y_param);
+    _args.add_new_argument("phase_x_param", phase_x_param);
+    _args.add_new_argument("phase_y_param", phase_y_param);
 }
 
 void WaterNode::update_node() {
@@ -92,4 +110,10 @@ void WaterNode::update_node() {
     _frequency_y.update_array();
     _phase_x.update_array();
     _phase_y.update_array();
+}
+
+void WaterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<WaterNode, float, float, float, float, float, float>(this, {"amplitude_x", "amplitude_y", "frequency_x", "frequency_y", "phase_x", "phase_y"}, arguments)) return;
+    if (init_args<WaterNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, {"amplitude_x_param", "amplitude_y_param", "frequency_x_param", "frequency_y_param", "phase_x_param", "phase_y_param"}, arguments)) return;
+    THROW("Unsupported argument types for WaterNode");
 }

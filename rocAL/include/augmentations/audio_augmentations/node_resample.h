@@ -29,6 +29,8 @@ class ResampleNode : public Node {
     ResampleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ResampleNode() = delete;
     void init(Tensor *resample_rate, float quality);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ResampleNode"; }
 
    protected:
     void create_node() override;

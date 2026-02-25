@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include "loaders/audio/node_audio_loader_single_shard.h"
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(AudioLoaderSingleShardNode)
+
 #ifdef ROCAL_AUDIO
 
 AudioLoaderSingleShardNode::AudioLoaderSingleShardNode(Tensor *output, void *device_resources) : Node({}, {output}) {
@@ -48,17 +50,59 @@ void AudioLoaderSingleShardNode::Init(unsigned shard_id, unsigned shard_count, u
     reader_cfg.set_cpu_num_threads(cpu_num_threads);
     reader_cfg.set_file_list_path(file_list_path);
     reader_cfg.set_sharding_info(sharding_info);
+
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("shard_id", shard_id);
+    _args.add_new_argument("shard_count", shard_count);
+    _args.add_new_argument("cpu_num_threads", cpu_num_threads);
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("file_list_path", file_list_path);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("decoder_type", decoder_type);
+    _args.add_new_argument("shuffle", shuffle);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+    _args.add_new_argument("meta_data_reader", meta_data_reader);
+    _args.add_new_argument("last_batch_policy", sharding_info.last_batch_policy);
+    _args.add_new_argument("pad_last_batch_repeated", sharding_info.pad_last_batch_repeated);
+    _args.add_new_argument("stick_to_shard", sharding_info.stick_to_shard);
+    _args.add_new_argument("shard_size", sharding_info.shard_size);
+
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }
 
-std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::GetLoaderModule() {
+std::shared_ptr<LoaderModule> AudioLoaderSingleShardNode::get_loader_module() {
     if (!_loader_module)
-        WRN("AudioLoaderSingleShardNode's loader module is null, not initialized")
+        WRN("AudioLoaderSingleShardNode's loader module is null, not initialized");
     return _loader_module;
 }
 
 AudioLoaderSingleShardNode::~AudioLoaderSingleShardNode() {
     _loader_module = nullptr;
 }
+
+void AudioLoaderSingleShardNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    ShardingInfo sharding_info(arguments.get<RocalBatchPolicy>("last_batch_policy"), 
+                                arguments.get<bool>("stick_to_shard"), 
+                                arguments.get<bool>("pad_last_batch_repeated"), 
+                                arguments.get<int32_t>("shard_size"));
+
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->Init(arguments.get<unsigned>("shard_id"), 
+               arguments.get<unsigned>("shard_count"), 
+               arguments.get<unsigned>("cpu_num_threads"),
+               arguments.get<std::string>("source_path"), 
+               arguments.get<std::string>("file_list_path"), 
+               arguments.get<StorageType>("storage_type"), 
+               arguments.get<DecoderType>("decoder_type"), 
+               arguments.get<bool>("shuffle"), 
+               arguments.get<bool>("loop"), 
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"), 
+               meta_data_reader, 
+               sharding_info);
+}
+
 #endif

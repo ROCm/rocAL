@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(WarpAffineNode)
+
 WarpAffineNode::WarpAffineNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                           _x0(COEFFICIENT_RANGE_1[0], COEFFICIENT_RANGE_1[1]),
                                                                                                           _x1(COEFFICIENT_RANGE_0[0], COEFFICIENT_RANGE_0[1]),
@@ -87,6 +89,16 @@ void WarpAffineNode::init(float x0, float x1, float y0, float y1, float o0, floa
     _o0.set_param(o0);
     _o1.set_param(o1);
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("x0", x0);
+    args.add_new_argument("x1", x1);
+    args.add_new_argument("y0", y0);
+    args.add_new_argument("y1", y1);
+    args.add_new_argument("o0", o0);
+    args.add_new_argument("o1", o1);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    _args = args;
 }
 
 void WarpAffineNode::init(FloatParam* x0, FloatParam* x1, FloatParam* y0, FloatParam* y1,
@@ -98,8 +110,24 @@ void WarpAffineNode::init(FloatParam* x0, FloatParam* x1, FloatParam* y0, FloatP
     _o0.set_param(core(o0));
     _o1.set_param(core(o1));
     _interpolation_type = static_cast<int>(interpolation_type);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("x0", x0);
+    args.add_new_argument("x1", x1);
+    args.add_new_argument("y0", y0);
+    args.add_new_argument("y1", y1);
+    args.add_new_argument("o0", o0);
+    args.add_new_argument("o1", o1);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    _args = args;
 }
 
 void WarpAffineNode::update_node() {
     update_affine_array();
+}
+
+void WarpAffineNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<WarpAffineNode, float, float, float, float, float, float, ResizeInterpolationType>(this, {"x0", "x1", "y0", "y1", "o0", "o1", "interpolation_type"}, arguments)) return;
+    if (init_args<WarpAffineNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*, FloatParam*, FloatParam*, ResizeInterpolationType>(this, {"x0", "x1", "y0", "y1", "o0", "o1", "interpolation_type"}, arguments)) return;
+    THROW("Unsupported argument types for WarpAffineNode");
 }

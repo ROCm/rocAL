@@ -35,6 +35,8 @@ class SpatterNode : public Node {
     SpatterNode() = delete;
     void init(uint8_t red, uint8_t green, uint8_t blue);
     void init(IntParam *red, IntParam *green, IntParam *blue);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "SpatterNode"; }
 
    protected:
     void create_node() override;

@@ -22,6 +22,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_dilate.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(DilateNode)
+
 DilateNode::DilateNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -58,6 +60,14 @@ void DilateNode::create_node() {
 
 void DilateNode::init(unsigned kernel_size) {
     _kernel_size = kernel_size;
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("kernel_size", kernel_size);
+}
+
+void DilateNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<DilateNode, unsigned>(this, {"kernel_size"}, arguments)) return;
+    THROW("Unsupported argument types for DilateNode");
 }
 
 void DilateNode::update_node() {}

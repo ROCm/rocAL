@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SequenceRearrangeNode)
+
 SequenceRearrangeNode::SequenceRearrangeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void SequenceRearrangeNode::create_node() {
@@ -48,6 +50,15 @@ void SequenceRearrangeNode::create_node() {
 
 void SequenceRearrangeNode::init(std::vector<unsigned int> &new_order) {
     _new_order = new_order;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("new_order", new_order);
+    _args = args;
 }
 
 void SequenceRearrangeNode::update_node() {}
+
+void SequenceRearrangeNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<SequenceRearrangeNode, std::vector<unsigned int>>(this, {"new_order"}, arguments)) return;
+    THROW("Unsupported argument types for SequenceRearrangeNode");
+}

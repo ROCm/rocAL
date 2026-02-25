@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(Cifar10LoaderNode)
+
 Cifar10LoaderNode::Cifar10LoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<CIFAR10Loader>(device_resources);
 }
@@ -41,6 +43,15 @@ void Cifar10LoaderNode::init(const std::string &source_path, const std::string &
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::TURBO_JPEG),
                                mem_type, _batch_size);
     _loader_module->start_loading();
+
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("json_path", json_path);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+    _args.add_new_argument("file_prefix", file_prefix);
 }
 
 std::shared_ptr<LoaderModule> Cifar10LoaderNode::get_loader_module() {
@@ -51,4 +62,17 @@ std::shared_ptr<LoaderModule> Cifar10LoaderNode::get_loader_module() {
 
 Cifar10LoaderNode::~Cifar10LoaderNode() {
     _loader_module = nullptr;
+}
+
+void Cifar10LoaderNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    (void)meta_data_reader;
+    
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->init(arguments.get<std::string>("source_path"), 
+               arguments.get<std::string>("json_path"), 
+               arguments.get<StorageType>("storage_type"),
+               arguments.get<bool>("loop"), 
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"),
+               arguments.get<std::string>("file_prefix"));
 }

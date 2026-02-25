@@ -33,6 +33,8 @@ class NormalDistributionNode : public Node {
     NormalDistributionNode() = delete;
     void init(float mean, float stddev);
     void update_param();
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "NormalDistributionNode"; }
 
    protected:
     void create_node() override;

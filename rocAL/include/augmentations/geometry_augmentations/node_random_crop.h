@@ -34,6 +34,8 @@ class RandomCropNode : public CropNode {
     unsigned int get_dst_height() { return _outputs[0]->info().max_shape()[1]; }
     std::shared_ptr<RocalRandomCropParam> get_crop_param() { return _crop_param; }
     int get_num_of_attempts() { return _num_of_attempts; }
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "RandomCropNode"; }
 
    protected:
     void create_node() override;

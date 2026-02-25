@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_exposure.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ExposureNode)
+
 ExposureNode::ExposureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                         _exposure_factor(EXPOSURE_FACTOR_RANGE[0], EXPOSURE_FACTOR_RANGE[1]) {}
 
@@ -47,12 +49,26 @@ void ExposureNode::create_node() {
 
 void ExposureNode::init(float exposure_factor) {
     _exposure_factor.set_param(exposure_factor);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("exposure_factor", exposure_factor);
+    _args = args;
 }
 
 void ExposureNode::init(FloatParam *exposure_factor_param) {
     _exposure_factor.set_param(core(exposure_factor_param));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("exposure_factor_param", exposure_factor_param);
+    _args = args;
 }
 
 void ExposureNode::update_node() {
     _exposure_factor.update_array();
+}
+
+void ExposureNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ExposureNode, float>(this, {"exposure_factor"}, arguments)) return;
+    if (init_args<ExposureNode, FloatParam*>(this, {"exposure_factor_param"}, arguments)) return;
+    THROW("Unsupported argument types for ExposureNode");
 }

@@ -52,8 +52,18 @@ public:
     bool is_vector = false;               ///< True if the argument contains vector data
     bool is_parameter = false;            ///< True if the argument is a parameter object
     bool is_null_ptr = false;             ///< True if the argument represents a null pointer
+    bool is_tensor = false;               ///< True if the argument is a tensor reference
     std::vector<std::any> values;         ///< Storage for argument values
     pParam param;                         ///< Parameter stored for parameter-type arguments
+    std::string tensor_name;              ///< Name of the tensor for tensor reference arguments
+
+    // Method to get tensor name for external resolution
+    std::string GetTensorName() const {
+        if (!is_tensor) {
+            THROW("Argument is not a tensor type")
+        }
+        return tensor_name;
+    }
 
     /**
      * @brief Retrieves the value of the argument as the specified type.
@@ -103,12 +113,51 @@ public:
             if constexpr (is_vector_type<std::decay_t<T>>::value) {
                 using ElementType = typename std::decay_t<T>::value_type;
 
-                std::vector<ElementType> result;
-                result.reserve(values.size());
-                for (const auto& v : values) {
-                    result.push_back(std::any_cast<ElementType>(v));
+                // Special handling for CameraMatrix vector - deserialize from flat float array
+                if constexpr (std::is_same_v<ElementType, CameraMatrix>) {
+                    constexpr size_t fields_per_element = 4; // fx, cx, fy, cy
+                    if (values.size() % fields_per_element != 0) {
+                        THROW("CameraMatrix vector has invalid size: " + std::to_string(values.size()) + " (must be multiple of " + std::to_string(fields_per_element) + ")");
+                    }
+                    std::vector<CameraMatrix> result;
+                    result.reserve(values.size() / fields_per_element);
+                    for (size_t i = 0; i < values.size(); i += fields_per_element) {
+                        CameraMatrix cm;
+                        cm.fx = std::any_cast<float>(values[i]);
+                        cm.cx = std::any_cast<float>(values[i + 1]);
+                        cm.fy = std::any_cast<float>(values[i + 2]);
+                        cm.cy = std::any_cast<float>(values[i + 3]);
+                        result.push_back(cm);
+                    }
+                    return result;
                 }
-                return result;
+                // Special handling for DistortionCoeffs vector - deserialize from flat float array
+                else if constexpr (std::is_same_v<ElementType, DistortionCoeffs>) {
+                    constexpr size_t fields_per_element = 5; // k1, k2, p1, p2, k3
+                    if (values.size() % fields_per_element != 0) {
+                        THROW("DistortionCoeffs vector has invalid size: " + std::to_string(values.size()) + " (must be multiple of " + std::to_string(fields_per_element) + ")");
+                    }
+                    std::vector<DistortionCoeffs> result;
+                    result.reserve(values.size() / fields_per_element);
+                    for (size_t i = 0; i < values.size(); i += fields_per_element) {
+                        DistortionCoeffs dc;
+                        dc.k1 = std::any_cast<float>(values[i]);
+                        dc.k2 = std::any_cast<float>(values[i + 1]);
+                        dc.p1 = std::any_cast<float>(values[i + 2]);
+                        dc.p2 = std::any_cast<float>(values[i + 3]);
+                        dc.k3 = std::any_cast<float>(values[i + 4]);
+                        result.push_back(dc);
+                    }
+                    return result;
+                }
+                else {
+                    std::vector<ElementType> result;
+                    result.reserve(values.size());
+                    for (const auto& v : values) {
+                        result.push_back(std::any_cast<ElementType>(v));
+                    }
+                    return result;
+                }
             } 
             // Handle scalar types - return the single stored value
             else if (!is_vector) {
@@ -154,6 +203,21 @@ public:
         }
     }
 
+    // Constructor for Tensor* arguments - stores tensor name for later resolution
+    explicit inline Argument(std::string name, Tensor* tensor_ptr)
+        : arg_name(std::move(name)) {
+        type_name = "tensor";
+        is_tensor = true;
+        if (tensor_ptr == nullptr) {
+            is_null_ptr = true;
+            type_name = "nullptr";
+            return;
+        }
+        // Store the tensor name for later resolution during deserialization
+        // The actual tensor pointer will be resolved from MasterGraph's _pipeline_tensors map
+        tensor_name = tensor_ptr->tensor_name(); // This will be set during serialization with the actual tensor name
+        values.push_back(static_cast<Tensor*>(tensor_ptr)); // Store the pointer temporarily
+    }
 
 private:
     /**
@@ -212,8 +276,34 @@ private:
             values.reserve(val.size());
             
             auto&& local_val = std::forward<T>(val);
-            for (auto&& v : local_val) {
-                values.push_back(static_cast<ElementType>(std::forward<decltype(v)>(v)));
+            
+            // Special handling for CameraMatrix - flatten to float array
+            if constexpr (std::is_same_v<ElementType, CameraMatrix>) {
+                values.reserve(val.size() * 4);  // 4 floats per CameraMatrix
+                for (auto&& v : local_val) {
+                    values.push_back(v.fx);
+                    values.push_back(v.cx);
+                    values.push_back(v.fy);
+                    values.push_back(v.cy);
+                }
+            }
+            // Special handling for DistortionCoeffs - flatten to float array
+            else if constexpr (std::is_same_v<ElementType, DistortionCoeffs>) {
+                values.reserve(val.size() * 5);  // 5 floats per DistortionCoeffs
+                for (auto&& v : local_val) {
+                    values.push_back(v.k1);
+                    values.push_back(v.k2);
+                    values.push_back(v.p1);
+                    values.push_back(v.p2);
+                    values.push_back(v.k3);
+                }
+            }
+            // Default handling for other types
+            else {
+                values.reserve(val.size());
+                for (auto&& v : local_val) {
+                    values.push_back(static_cast<ElementType>(std::forward<decltype(v)>(v)));
+                }
             }
         } else {
             THROW("Unknown vector element type for argument " + arg_name);
@@ -427,10 +517,7 @@ std::tuple<Args...> unpack_arguments(const ArgumentSet& arguments, const std::ve
 template <typename NodeType, typename... Args>
 bool init_args(NodeType* node, const std::vector<std::string> &arg_names, const ArgumentSet& arguments) {
 
-    if (arguments.size() != sizeof...(Args)) {
-        THROW("Argument count mismatch: expected " + std::to_string(sizeof...(Args)) + 
-              " but got " + std::to_string(arguments.size()));
-    }
+    if (arguments.size() != sizeof...(Args)) return false; // Argument count mismatch
     try {
         // Unpack arguments with type-check and casting
         auto unpacked_args = unpack_arguments<Args...>(arguments, arg_names);

@@ -42,6 +42,8 @@ public:
     // crop_rois: length 16 or N*16 (replicated if 16) with per-sample 4x [x,y,w,h] or [l,t,r,b]
     void init(const std::vector<unsigned>& permutation,
               const std::vector<int>& crop_rois);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "RicapNode"; }
 
 protected:
     void create_node() override;

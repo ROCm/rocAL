@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <string>
 #include <stdexcept>
 #include "parameters/parameter_factory.h"
+#include "rocal_api_types.h"
 
 // Enhanced type traits, to check for the type of argument used for argument processing (C++17 compatible)
 
@@ -125,11 +126,14 @@ constexpr const char* get_type_name() noexcept {
     
     if constexpr (std::is_same_v<DecayedType, int>) return "int";
     else if constexpr (std::is_same_v<DecayedType, unsigned>) return "unsigned";
+    else if constexpr (std::is_same_v<DecayedType, uint8_t>) return "uint8_t";
     else if constexpr (std::is_same_v<DecayedType, size_t>) return "size_t";
     else if constexpr (std::is_same_v<DecayedType, float>) return "float";
     else if constexpr (std::is_same_v<DecayedType, double>) return "double";
     else if constexpr (std::is_same_v<DecayedType, bool>) return "bool";
     else if constexpr (std::is_same_v<DecayedType, std::string>) return "string";
     else if constexpr (std::is_same_v<DecayedType, char*> || std::is_same_v<DecayedType, const char*>) return "char_str";
+    else if constexpr (std::is_same_v<DecayedType, CameraMatrix>) return "CameraMatrix";
+    else if constexpr (std::is_same_v<DecayedType, DistortionCoeffs>) return "DistortionCoeffs";
     else return "unknown";
 }

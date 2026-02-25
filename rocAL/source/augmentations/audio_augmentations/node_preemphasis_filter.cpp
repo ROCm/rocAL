@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/audio_augmentations/node_preemphasis_filter.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(PreemphasisFilterNode)
+
 PreemphasisFilterNode::PreemphasisFilterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                                           _preemph_coeff(PREEMPH_COEFF_RANGE[0], PREEMPH_COEFF_RANGE[1]) {}
 
@@ -47,4 +49,14 @@ void PreemphasisFilterNode::init(FloatParam *preemph_coeff, AudioBorderType pree
         ERR("Invalid pre-Emphasis co-efficient passed")
     _preemph_coeff.set_param(core(preemph_coeff));
     _preemph_border = preemph_border;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("preemph_coeff", preemph_coeff);
+    args.add_new_argument("preemph_border", preemph_border);
+    _args = args;
+}
+
+void PreemphasisFilterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<PreemphasisFilterNode, FloatParam*, AudioBorderType>(this, {"preemph_coeff", "preemph_border"}, arguments)) return;
+    THROW("Unsupported argument types for PreemphasisFilterNode");
 }

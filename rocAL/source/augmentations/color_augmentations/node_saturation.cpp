@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_saturation.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SaturationNode)
+
 SaturationNode::SaturationNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _saturation(SAT_RANGE[0], SAT_RANGE[1]) {}
 
@@ -47,12 +49,22 @@ void SaturationNode::create_node() {
 
 void SaturationNode::init(float saturation) {
     _saturation.set_param(saturation);
+    // Add all arguments as part of the Node
+    _args.add_new_argument("saturation", saturation);
 }
 
 void SaturationNode::init(FloatParam *saturation_param) {
     _saturation.set_param(core(saturation_param));
+    // Add all arguments as part of the Node
+    _args.add_new_argument("saturation_param", saturation_param);
 }
 
 void SaturationNode::update_node() {
     _saturation.update_array();
+}
+
+void SaturationNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SaturationNode, float>(this, {"saturation"}, arguments)) return;
+    if (init_args<SaturationNode, FloatParam*>(this, {"saturation_param"}, arguments)) return;
+    THROW("Unsupported argument types for SaturationNode");
 }

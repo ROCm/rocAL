@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_vignette.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(VignetteNode)
+
 VignetteNode::VignetteNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                         _sdev(SDEV_RANGE[0], SDEV_RANGE[1]) {}
 
@@ -47,12 +49,26 @@ void VignetteNode::create_node() {
 
 void VignetteNode::init(float sdev) {
     _sdev.set_param(sdev);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("sdev", sdev);
+    _args = args;
 }
 
 void VignetteNode::init(FloatParam *sdev) {
     _sdev.set_param(core(sdev));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("sdev", sdev);
+    _args = args;
 }
 
 void VignetteNode::update_node() {
     _sdev.update_array();
+}
+
+void VignetteNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<VignetteNode, float>(this, {"sdev"}, arguments)) return;
+    if (init_args<VignetteNode, FloatParam*>(this, {"sdev"}, arguments)) return;
+    THROW("Unsupported argument types for VignetteNode");
 }

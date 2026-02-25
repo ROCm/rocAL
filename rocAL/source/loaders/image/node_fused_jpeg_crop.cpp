@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(FusedJpegCropNode)
+
 FusedJpegCropNode::FusedJpegCropNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<ImageLoaderSharded>(device_resources);
 }
@@ -36,6 +38,27 @@ void FusedJpegCropNode::init(unsigned internal_shard_count, unsigned cpu_num_thr
     if (internal_shard_count < 1)
         THROW("Shard count should be greater than or equal to one")
     _loader_module->set_output(_outputs[0]);
+
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("internal_shard_count", internal_shard_count);
+    _args.add_new_argument("cpu_num_threads", cpu_num_threads);
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("json_path", json_path);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("decoder_type", decoder_type);
+    _args.add_new_argument("shuffle", shuffle);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+    _args.add_new_argument("meta_data_reader", meta_data_reader);
+    _args.add_new_argument("num_attempts", num_attempts);
+    _args.add_new_argument("random_area", random_area);
+    _args.add_new_argument("random_aspect_ratio", random_aspect_ratio);
+    _args.add_new_argument("last_batch_policy", sharding_info.last_batch_policy);
+    _args.add_new_argument("pad_last_batch_repeated", sharding_info.pad_last_batch_repeated);
+    _args.add_new_argument("stick_to_shard", sharding_info.stick_to_shard);
+    _args.add_new_argument("shard_size", sharding_info.shard_size);
+
     // Set reader and decoder config accordingly for the FusedJpegCropNode
     auto reader_cfg = ReaderConfig(storage_type, source_path, json_path, std::map<std::string, std::string>(), shuffle, loop);
     reader_cfg.set_shard_count(internal_shard_count);
@@ -44,11 +67,12 @@ void FusedJpegCropNode::init(unsigned internal_shard_count, unsigned cpu_num_thr
     reader_cfg.set_meta_data_reader(meta_data_reader);
     reader_cfg.set_sharding_info(sharding_info);
     auto decoder_cfg = DecoderConfig(decoder_type);
-
     decoder_cfg.set_random_area(random_area);
     decoder_cfg.set_random_aspect_ratio(random_aspect_ratio);
     decoder_cfg.set_num_attempts(num_attempts);
     decoder_cfg.set_seed(ParameterFactory::instance()->get_seed());
+
+    // Initialize the loader module with the reader and decoder config and start loading
     _loader_module->initialize(reader_cfg, decoder_cfg,
                                mem_type,
                                _batch_size);
@@ -63,4 +87,30 @@ std::shared_ptr<LoaderModule> FusedJpegCropNode::get_loader_module() {
 
 FusedJpegCropNode::~FusedJpegCropNode() {
     _loader_module = nullptr;
+}
+
+void FusedJpegCropNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    auto random_area = arguments.get<std::vector<float>>("random_area");
+    auto random_aspect_ratio = arguments.get<std::vector<float>>("random_aspect_ratio");
+    ShardingInfo sharding_info(arguments.get<RocalBatchPolicy>("last_batch_policy"), 
+                                arguments.get<bool>("stick_to_shard"), 
+                                arguments.get<bool>("pad_last_batch_repeated"), 
+                                arguments.get<int32_t>("shard_size"));
+
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->init(arguments.get<unsigned>("internal_shard_count"), 
+               arguments.get<unsigned>("cpu_num_threads"), 
+               arguments.get<std::string>("source_path"),
+               arguments.get<std::string>("json_path"), 
+               arguments.get<StorageType>("storage_type"), 
+               arguments.get<DecoderType>("decoder_type"),
+               arguments.get<bool>("shuffle"), 
+               arguments.get<bool>("loop"), 
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"),
+               meta_data_reader, 
+               arguments.get<unsigned>("num_attempts"), 
+               random_area, 
+               random_aspect_ratio, 
+               sharding_info);
 }

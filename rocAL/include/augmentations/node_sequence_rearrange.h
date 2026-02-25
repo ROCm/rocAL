@@ -31,6 +31,8 @@ class SequenceRearrangeNode : public Node {
     SequenceRearrangeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SequenceRearrangeNode() = delete;
     void init(std::vector<unsigned int> &new_order);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "SequenceRearrangeNode"; }
 
    protected:
     void create_node() override;

@@ -33,6 +33,8 @@ class PosterizeNode : public Node {
     PosterizeNode() = delete;
     void init(int level_bits);
     void init(IntParam *level_bits_param);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "PosterizeNode"; }
 
    protected:
     void create_node() override;

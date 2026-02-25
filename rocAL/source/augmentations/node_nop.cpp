@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include <vx_ext_rpp.h>
 #include "pipeline/exception.h"
 
+REGISTER_NODE(NopNode)
+
 NopNode::NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void NopNode::create_node() {
@@ -38,3 +40,8 @@ void NopNode::create_node() {
 }
 
 void NopNode::update_node() {}
+
+void NopNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<NopNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for NopNode");
+}

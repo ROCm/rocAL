@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include <vx_ext_amd.h>
 #include "pipeline/exception.h"
 
+REGISTER_NODE(CropAndPatchNode)
+
 CropAndPatchNode::CropAndPatchNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -132,6 +134,10 @@ void CropAndPatchNode::init(const std::vector<int>& crop_roi_vec,
                             const std::vector<int>& patch_roi_vec) {
     _crop_roi_vec  = crop_roi_vec;
     _patch_roi_vec = patch_roi_vec;
+
+    // Add all arguments to the node for serialization
+    _args.add_new_argument("crop_roi_vec", crop_roi_vec);
+    _args.add_new_argument("patch_roi_vec", patch_roi_vec);
 }
 
 CropAndPatchNode::~CropAndPatchNode() {
@@ -158,4 +164,9 @@ CropAndPatchNode::~CropAndPatchNode() {
         if (_patch_roi_ptr) free(_patch_roi_ptr);
     }
     _crop_roi_ptr = _patch_roi_ptr = nullptr;
+}
+
+void CropAndPatchNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<CropAndPatchNode, std::vector<int>, std::vector<int>>(this, {"crop_roi_vec", "patch_roi_vec"}, arguments)) return;
+    THROW("Unsupported argument types for CropAndPatchNode");
 }

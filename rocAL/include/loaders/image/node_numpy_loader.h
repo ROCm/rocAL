@@ -44,6 +44,8 @@ class NumpyLoaderNode : public Node {
     void init(unsigned internal_shard_count, const std::string &source_path, const std::vector<std::string> &files, StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
               size_t load_batch_count, RocalMemType mem_type, unsigned seed = 0, const ShardingInfo& sharding_info = ShardingInfo());
     std::shared_ptr<LoaderModule> get_loader_module() override;
+    void initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) override;
+    std::string node_name() const override { return "NumpyLoaderNode"; }
 
    protected:
     void create_node() override {}

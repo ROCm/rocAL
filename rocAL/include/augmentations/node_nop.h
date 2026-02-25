@@ -28,6 +28,9 @@ class NopNode : public Node {
    public:
     NopNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     NopNode() = delete;
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "NopNode"; }
 
    protected:
     void create_node() override;

@@ -43,6 +43,8 @@ class VideoLoaderSingleShardNode : public Node {
               unsigned sequence_length, unsigned step, unsigned stride, VideoProperties &video_prop, bool shuffle, bool loop, size_t load_batch_count, RocalMemType mem_type);
 
     std::shared_ptr<LoaderModule> get_loader_module() override;
+    void initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) override;
+    std::string node_name() const override { return "VideoLoaderSingleShardNode"; }
 
    protected:
     void create_node() override{};

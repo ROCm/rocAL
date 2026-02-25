@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_crop_mirror_normalize.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(CropMirrorNormalizeNode)
+
 CropMirrorNormalizeNode::CropMirrorNormalizeNode(const std::vector<Tensor *> &inputs,
                                                  const std::vector<Tensor *> &outputs) : CropNode(inputs, outputs),
                                                                                          _mirror(MIRROR_RANGE[0], MIRROR_RANGE[1]) {
@@ -120,4 +122,20 @@ void CropMirrorNormalizeNode::init(int crop_h, int crop_w, float anchor_x, float
     _mean = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("crop_h", crop_h);
+    args.add_new_argument("crop_w", crop_w);
+    args.add_new_argument("anchor_x", anchor_x);
+    args.add_new_argument("anchor_y", anchor_y);
+    args.add_new_argument("mean", mean);
+    args.add_new_argument("std_dev", std_dev);
+    args.add_new_argument("mirror", mirror);
+    _args = args;
+}
+
+void CropMirrorNormalizeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<CropMirrorNormalizeNode, int, int, float, float, std::vector<float>, std::vector<float>, IntParam*>(this, 
+        {"crop_h", "crop_w", "anchor_x", "anchor_y", "mean", "std_dev", "mirror"}, arguments)) return;
+    THROW("Unsupported argument types for CropMirrorNormalizeNode");
 }

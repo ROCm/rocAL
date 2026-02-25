@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_jitter.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(JitterNode)
+
 JitterNode::JitterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                     _kernel_size(KERNEL_SIZE[0], KERNEL_SIZE[1]) {}
 
@@ -49,13 +51,29 @@ void JitterNode::create_node() {
 void JitterNode::init(int kernel_size, int seed) {
     _kernel_size.set_param(kernel_size);
     _seed = seed;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("kernel_size", kernel_size);
+    args.add_new_argument("seed", seed);
+    _args = args;
 }
 
 void JitterNode::init(IntParam *kernel_size, int seed) {
     _kernel_size.set_param(core(kernel_size));
     _seed = seed;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("kernel_size", kernel_size);
+    args.add_new_argument("seed", seed);
+    _args = args;
 }
 
 void JitterNode::update_node() {
     _kernel_size.update_array();
+}
+
+void JitterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<JitterNode, int, int>(this, {"kernel_size", "seed"}, arguments)) return;
+    if (init_args<JitterNode, IntParam*, int>(this, {"kernel_size", "seed"}, arguments)) return;
+    THROW("Unsupported argument types for JitterNode");
 }

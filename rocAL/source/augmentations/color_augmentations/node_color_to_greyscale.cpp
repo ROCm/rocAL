@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_color_to_greyscale.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ColorToGreyscaleNode)
+
 ColorToGreyscaleNode::ColorToGreyscaleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs), _layout(SubpixelLayout::RGB) {}
 
@@ -56,4 +58,11 @@ void ColorToGreyscaleNode::create_node() {
 
 void ColorToGreyscaleNode::init(SubpixelLayout layout) {
     _layout = layout;
+    // Add all arguments to the node
+    _args.add_new_argument("layout", layout);
+}
+
+void ColorToGreyscaleNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ColorToGreyscaleNode, SubpixelLayout>(this, {"layout"}, arguments)) return;
+    THROW("Unsupported argument types for ColorToGreyscaleNode");
 }

@@ -373,6 +373,8 @@ inline std::shared_ptr<FusedJpegCropNode> MasterGraph::add_node(const std::vecto
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
@@ -392,6 +394,8 @@ inline std::shared_ptr<FusedJpegCropSingleShardNode> MasterGraph::add_node(const
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
@@ -413,6 +417,8 @@ inline std::shared_ptr<Cifar10LoaderNode> MasterGraph::add_node(const std::vecto
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
@@ -432,6 +438,8 @@ template<> inline std::shared_ptr<CIFAR10LoaderSingleShardNode> MasterGraph::add
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));
 
@@ -454,6 +462,8 @@ inline std::shared_ptr<VideoLoaderNode> MasterGraph::add_node(const std::vector<
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
@@ -472,6 +482,8 @@ inline std::shared_ptr<VideoLoaderSingleShardNode> MasterGraph::add_node(const s
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
@@ -489,11 +501,13 @@ template<> inline std::shared_ptr<AudioLoaderNode> MasterGraph::add_node(const s
 #else
     auto node = std::make_shared<AudioLoaderNode>(outputs[0], nullptr);
 #endif
-    auto loader_module = node->GetLoaderModule();
+    auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));
 
@@ -506,11 +520,13 @@ template<> inline std::shared_ptr<AudioLoaderSingleShardNode> MasterGraph::add_n
 #else
     auto node = std::make_shared<AudioLoaderSingleShardNode>(outputs[0], nullptr);
 #endif
-    auto loader_module = node->GetLoaderModule();
+    auto loader_module = node->get_loader_module();
     loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for(auto& output: outputs)
         _tensor_map.insert(make_pair(output, node));
 
@@ -533,6 +549,8 @@ inline std::shared_ptr<NumpyLoaderNode> MasterGraph::add_node(const std::vector<
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
@@ -551,6 +569,8 @@ inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const s
     _loader_modules.emplace_back(loader_module);
     node->set_graph_id(_loaders_count++);
     _root_nodes.push_back(node);
+    // Add each operator to the pipeline operators list
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 

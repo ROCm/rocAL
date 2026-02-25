@@ -70,6 +70,8 @@ class SSDRandomCropNode : public CropNode {
     std::vector<std::pair<float, float>> get_iou_range() { return _iou_range; }
     bool is_entire_iou() { return _entire_iou; }
     void set_meta_data_batch() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "SSDRandomCropNode"; }
 
    protected:
     void create_node() override;

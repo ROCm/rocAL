@@ -29,6 +29,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ResizeMirrorNormalizeNode)
+
 ResizeMirrorNormalizeNode::ResizeMirrorNormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs), _mirror(_mirror_range[0], _mirror_range[1]) {}
 
 void ResizeMirrorNormalizeNode::create_node() {
@@ -130,6 +132,26 @@ void ResizeMirrorNormalizeNode::init(unsigned dest_width, unsigned dest_height, 
     _mean = mean;
     _std_dev = std_dev;
     _mirror.set_param(core(mirror));
+
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("dest_width", dest_width);
+    args.add_new_argument("dest_height", dest_height);
+    args.add_new_argument("scaling_mode", scaling_mode);
+    args.add_new_argument("max_size", max_size);
+    args.add_new_argument("interpolation_type", interpolation_type);
+    args.add_new_argument("mean", mean);
+    args.add_new_argument("std_dev", std_dev);
+    args.add_new_argument("mirror", mirror);
+    _args = args;
+}
+
+void ResizeMirrorNormalizeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ResizeMirrorNormalizeNode, unsigned, unsigned, ResizeScalingMode, std::vector<unsigned>, ResizeInterpolationType, 
+        std::vector<float>, std::vector<float>, IntParam*>(this, 
+        {"dest_width", "dest_height", "scaling_mode", "max_size", "interpolation_type", "mean", "std_dev", "mirror"},
+        arguments)) return;
+    THROW("Unsupported argument types for ResizeMirrorNormalizeNode");
 }
 
 void ResizeMirrorNormalizeNode::adjust_out_roi_size() {

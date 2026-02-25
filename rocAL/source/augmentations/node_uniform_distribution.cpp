@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(UniformDistributionNode)
+
 UniformDistributionNode::UniformDistributionNode(
     const std::vector<Tensor *> &inputs,
     const std::vector<Tensor *> &outputs)
@@ -60,4 +62,13 @@ void UniformDistributionNode::init(std::vector<float> &range) {
     BatchRNG<std::mt19937> rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
     _rngs = rng;
     update_param();
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("range", range);
+    _args = args;
+}
+
+void UniformDistributionNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<UniformDistributionNode, std::vector<float>>(this, {"range"}, arguments)) return;
+    THROW("Unsupported argument types for UniformDistributionNode");
 }

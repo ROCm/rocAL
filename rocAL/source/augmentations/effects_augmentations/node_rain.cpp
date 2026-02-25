@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(RainNode)
+
 RainNode::RainNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _rain_transparency(RAIN_TRANSPARENCY_RANGE[0], RAIN_TRANSPARENCY_RANGE[1]) {}
 
@@ -57,6 +59,14 @@ void RainNode::init(float rain_percentage, int rain_width, int rain_height, floa
     _rain_height = rain_height;
     _rain_slant_angle = rain_slant_angle;
     _rain_transparency.set_param(rain_transparency);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("rain_percentage", rain_percentage);
+    args.add_new_argument("rain_width", rain_width);
+    args.add_new_argument("rain_height", rain_height);
+    args.add_new_argument("rain_slant_angle", rain_slant_angle);
+    args.add_new_argument("rain_transparency", rain_transparency);
+    _args = args;
 }
 
 void RainNode::init(float rain_percentage, int rain_width, int rain_height, float rain_slant_angle, FloatParam *rain_transparency) {
@@ -65,8 +75,22 @@ void RainNode::init(float rain_percentage, int rain_width, int rain_height, floa
     _rain_height = rain_height;
     _rain_slant_angle = rain_slant_angle;
     _rain_transparency.set_param(core(rain_transparency));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("rain_percentage", rain_percentage);
+    args.add_new_argument("rain_width", rain_width);
+    args.add_new_argument("rain_height", rain_height);
+    args.add_new_argument("rain_slant_angle", rain_slant_angle);
+    args.add_new_argument("rain_transparency", rain_transparency);
+    _args = args;
 }
 
 void RainNode::update_node() {
     _rain_transparency.update_array();
+}
+
+void RainNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<RainNode, float, int, int, float, float>(this, {"rain_percentage", "rain_width", "rain_height", "rain_slant_angle", "rain_transparency"}, arguments)) return;
+    if (init_args<RainNode, float, int, int, float, FloatParam*>(this, {"rain_percentage", "rain_width", "rain_height", "rain_slant_angle", "rain_transparency"}, arguments)) return;
+    THROW("Unsupported argument types for RainNode");
 }

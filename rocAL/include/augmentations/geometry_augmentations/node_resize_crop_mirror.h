@@ -39,6 +39,8 @@ class ResizeCropMirrorNode : public CropNode {
     std::shared_ptr<RocalCropParam> get_crop_param() { return _crop_param; }
     vx_array get_mirror() { return _mirror.default_array(); }
     void adjust_out_roi_size();
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ResizeCropMirrorNode"; }
 
    protected:
     void create_node() override;

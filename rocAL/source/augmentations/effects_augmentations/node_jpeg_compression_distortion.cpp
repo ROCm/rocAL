@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_jpeg_compression_distortion.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(JpegCompressionDistortionNode)
+
 JpegCompressionDistortionNode::JpegCompressionDistortionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                                                            _quality(QUALITY_RANGE[0], QUALITY_RANGE[1]) {}
 
@@ -52,12 +54,24 @@ void JpegCompressionDistortionNode::create_node() {
 
 void JpegCompressionDistortionNode::init(int quality) {
     _quality.set_param(quality);
+
+    // Add all arguments to the node
+    _args.add_new_argument("quality", quality);
 }
 
 void JpegCompressionDistortionNode::init(IntParam *quality_param) {
     _quality.set_param(core(quality_param));
+
+    // Add all arguments to the node
+    _args.add_new_argument("quality_param", quality_param);
 }
 
 void JpegCompressionDistortionNode::update_node() {
     _quality.update_array();
+}
+
+void JpegCompressionDistortionNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<JpegCompressionDistortionNode, int>(this, {"quality"}, arguments)) return;
+    if (init_args<JpegCompressionDistortionNode, IntParam*>(this, {"quality_param"}, arguments)) return;
+    THROW("Unsupported argument types for JpegCompressionDistortionNode");
 }

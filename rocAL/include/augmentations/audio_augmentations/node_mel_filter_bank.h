@@ -29,6 +29,8 @@ class MelFilterBankNode : public Node {
      MelFilterBankNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
      MelFilterBankNode() = delete;
      void init(float freq_high, float freq_low, MelScaleFormula mel_formula, int nfilter, bool normalize, float sample_rate);
+     void initialize_args(const ArgumentSet& arguments) override;
+     std::string node_name() const override { return "MelFilterBankNode"; }
 
    protected:
      void create_node() override;

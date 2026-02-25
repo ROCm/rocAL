@@ -33,6 +33,8 @@ class GaussianNoiseNode : public Node {
     GaussianNoiseNode() = delete;
     void init(float mean, float stddev, int seed);
     void init(FloatParam *mean_param, FloatParam *stddev_param, int seed);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "GaussianNoiseNode"; }
 
    protected:
     void create_node() override;

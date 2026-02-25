@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_color_temperature.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ColorTemperatureNode)
+
 ColorTemperatureNode::ColorTemperatureNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                                         _adj_value_param(ADJUSTMENT_RANGE[0], ADJUSTMENT_RANGE[1]) {}
 
@@ -47,11 +49,25 @@ void ColorTemperatureNode::create_node() {
 
 void ColorTemperatureNode::init(int adjustment) {
     _adj_value_param.set_param(adjustment);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("adjustment", adjustment);
+    _args = args;
 }
 
 void ColorTemperatureNode::init(IntParam *adjustment) {
     _adj_value_param.set_param(core(adjustment));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("adjustment", adjustment);
+    _args = args;
 }
 void ColorTemperatureNode::update_node() {
     _adj_value_param.update_array();
+}
+
+void ColorTemperatureNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ColorTemperatureNode, int>(this, {"adjustment"}, arguments)) return;
+    if (init_args<ColorTemperatureNode, IntParam*>(this, {"adjustment"}, arguments)) return;
+    THROW("Unsupported argument types for ColorTemperatureNode");
 }

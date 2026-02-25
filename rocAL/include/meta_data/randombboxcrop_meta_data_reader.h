@@ -34,9 +34,12 @@ THE SOFTWARE.
 enum class RandomBBoxCrop_MetaDataReaderType {
     RandomBBoxCropReader = 0,
 };
+REGISTER_ENUM(RandomBBoxCrop_MetaDataReaderType)
+
 enum class RandomBBoxCrop_MetaDataType {
     BoundingBox
 };
+REGISTER_ENUM(RandomBBoxCrop_MetaDataType)
 
 struct RandomBBoxCrop_MetaDataConfig {
    private:

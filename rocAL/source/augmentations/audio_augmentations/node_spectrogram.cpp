@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SpectrogramNode)
+
 SpectrogramNode::SpectrogramNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void SpectrogramNode::create_node() {
@@ -66,4 +68,21 @@ void SpectrogramNode::init(bool is_center_windows, bool is_reflect_padding, int 
         _window_fn.resize(_window_length);
         hann_window(_window_fn.data(), _window_length);
     }
+    
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("is_center_windows", is_center_windows);
+    args.add_new_argument("is_reflect_padding", is_reflect_padding);
+    args.add_new_argument("power", power);
+    args.add_new_argument("nfft", nfft);
+    args.add_new_argument("window_length", window_length);
+    args.add_new_argument("window_step", window_step);
+    args.add_new_argument("window_fn", window_fn);
+    _args = args;
+}
+
+void SpectrogramNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SpectrogramNode, bool, bool, int, int, int, int, std::vector<float>>(this,
+         {"is_center_windows", "is_reflect_padding", "power", "nfft", "window_length", "window_step", "window_fn"}, arguments)) return;
+    THROW("Unsupported argument types for SpectrogramNode");
 }

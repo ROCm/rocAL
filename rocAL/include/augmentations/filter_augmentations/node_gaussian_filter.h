@@ -29,6 +29,8 @@ public:
     void init(FloatParam* stddev_param, int kernel_size, ImageBorderType border_type);
     // Fixed stddev with fixed kernel size
     void init(float stddev, int kernel_size, ImageBorderType border_type);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "GaussianFilterNode"; }
 
 protected:
     void create_node() override;

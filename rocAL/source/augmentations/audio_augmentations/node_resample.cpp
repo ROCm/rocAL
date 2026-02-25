@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ResampleNode)
+
 ResampleNode::ResampleNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void ResampleNode::create_node() {
@@ -52,4 +54,14 @@ void ResampleNode::update_node() {
 void ResampleNode::init(Tensor *output_resample_rate, float quality) {
     _output_resample_rate = output_resample_rate;
     _quality = quality;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("output_resample_rate", output_resample_rate);
+    args.add_new_argument("quality", quality);
+    _args = args;
+}
+
+void ResampleNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ResampleNode, Tensor*, float>(this, {"output_resample_rate", "quality"}, arguments)) return;
+    THROW("Unsupported argument types for ResampleNode");
 }

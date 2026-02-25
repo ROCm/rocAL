@@ -21,10 +21,12 @@ THE SOFTWARE.
 */
 #include <algorithm>
 #include <array>
+#include <set>
 #include <omp.h>
 #include <vx_ext_amd.h>
 #include <VX/vx_types.h>
 #include <cstring>
+#include <sstream>
 #include <sched.h>
 #include <unordered_map>
 #include <typeinfo>
@@ -1103,6 +1105,23 @@ TensorListVector* MasterGraph::create_coco_meta_data_reader(const char *source_p
     _meta_data_graph = create_meta_data_graph(config);
     _meta_data_reader = create_meta_data_reader(config, _augmented_meta_data);
     _meta_data_reader->read_all(source_path);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("CocoMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("is_output", is_output);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
+    reader_op->arguments.add_new_argument("metadata_type", metadata_type);
+    reader_op->arguments.add_new_argument("ltrb_bbox", ltrb_bbox);
+    reader_op->arguments.add_new_argument("is_box_encoder", is_box_encoder);
+    reader_op->arguments.add_new_argument("avoid_class_remapping", avoid_class_remapping);
+    reader_op->arguments.add_new_argument("aspect_ratio_grouping", aspect_ratio_grouping);
+    reader_op->arguments.add_new_argument("is_box_iou_matcher", is_box_iou_matcher);
+    reader_op->arguments.add_new_argument("sigma", sigma);
+    reader_op->arguments.add_new_argument("pose_output_width", pose_output_width);
+    reader_op->arguments.add_new_argument("pose_output_height", pose_output_height);
+    _pipeline_operators.push_back(reader_op);
+
     if (!ltrb_bbox) _augmented_meta_data->set_xywh_bbox();
     std::vector<size_t> dims;
     size_t max_objects = static_cast<size_t>(is_box_encoder ? MAX_SSD_ANCHORS : MAX_OBJECTS);
@@ -1204,6 +1223,14 @@ TensorListVector* MasterGraph::create_tf_record_meta_data_reader(const char *sou
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("TFRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
+    reader_op->arguments.add_new_argument("label_type", label_type);
+    reader_op->arguments.add_new_argument("feature_key_map", feature_key_map);
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1250,6 +1277,20 @@ TensorListVector* MasterGraph::create_webdataset_reader(
     if (_augmented_meta_data)
         THROW("Metadata can only have a single output")
 
+    auto flatten_extensions = [](const std::vector<std::set<std::string>>& exts) {
+        std::vector<std::string> flattened;
+        flattened.reserve(exts.size());
+        for (const auto& ext_set : exts) {
+            std::string combined;
+            for (auto it = ext_set.begin(); it != ext_set.end(); ++it) {
+                if (it != ext_set.begin()) combined += ",";
+                combined += *it;
+            }
+            flattened.push_back(std::move(combined));
+        }
+        return flattened;
+    };
+
     bool generate_index = (index_path[0] == '\0') ? true : false;
     if (generate_index)
         std::cerr << "Index file is not provided, it may take some time to infer it from the tar file";
@@ -1277,6 +1318,16 @@ TensorListVector* MasterGraph::create_webdataset_reader(
     }
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
+
+    auto reader_op = std::make_shared<PipelineOperator>("WebdatasetReader_" + std::to_string(_op_idx++), "reader");
+
+    // Add all arguments as part of the operator
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
+    reader_op->arguments.add_new_argument("index_path", index_path);
+    reader_op->arguments.add_new_argument("extensions", flatten_extensions(extensions));
+    reader_op->arguments.add_new_argument("missing_component_behaviour", missing_component_behaviour);
+    _pipeline_operators.push_back(reader_op);
 
     return &_metadata_output_tensor_list;
 }
@@ -1306,6 +1357,17 @@ TensorListVector* MasterGraph::create_video_label_reader(const char *source_path
     }
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
     _meta_data_reader->read_all(source_path);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("VideoLabelReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
+    reader_op->arguments.add_new_argument("sequence_length", sequence_length);
+    reader_op->arguments.add_new_argument("frame_step", frame_step);
+    reader_op->arguments.add_new_argument("frame_stride", frame_stride);
+    reader_op->arguments.add_new_argument("file_list_frame_num", file_list_frame_num);
+    _pipeline_operators.push_back(reader_op);
+
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
 
     return &_metadata_output_tensor_list;
@@ -1334,6 +1396,12 @@ TensorListVector* MasterGraph::create_mxnet_label_reader(const char *source_path
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("MxnetLabelReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("is_output", is_output);
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1346,6 +1414,22 @@ void MasterGraph::create_randombboxcrop_reader(RandomBBoxCrop_MetaDataReaderType
     RandomBBoxCrop_MetaDataConfig config(label_type, reader_type, all_boxes_overlap, no_crop, aspect_ratio, has_shape, crop_width, crop_height, num_attempts, scaling, total_num_attempts, seed);
     _randombboxcrop_meta_data_reader = create_meta_data_reader(config, _random_bbox_crop_cords_data);
     _randombboxcrop_meta_data_reader->set_meta_data(_meta_data_reader);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("RandomBBoxCropReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
+    reader_op->arguments.add_new_argument("label_type", label_type);
+    reader_op->arguments.add_new_argument("all_boxes_overlap", all_boxes_overlap);
+    reader_op->arguments.add_new_argument("no_crop", no_crop);
+    reader_op->arguments.add_new_argument("aspect_ratio", aspect_ratio);
+    reader_op->arguments.add_new_argument("has_shape", has_shape);
+    reader_op->arguments.add_new_argument("crop_width", crop_width);
+    reader_op->arguments.add_new_argument("crop_height", crop_height);
+    reader_op->arguments.add_new_argument("num_attempts", num_attempts);
+    reader_op->arguments.add_new_argument("scaling", scaling);
+    reader_op->arguments.add_new_argument("total_num_attempts", total_num_attempts);
+    reader_op->arguments.add_new_argument("seed", static_cast<int>(seed));
+    _pipeline_operators.push_back(reader_op);
 }
 
 void MasterGraph::box_encoder(std::vector<float> &anchors, float criteria, const std::vector<float> &means, const std::vector<float> &stds, bool offset, float scale) {
@@ -1412,6 +1496,13 @@ TensorListVector* MasterGraph::create_caffe2_lmdb_record_meta_data_reader(const 
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("Caffe2LmdbRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
+    reader_op->arguments.add_new_argument("label_type", label_type);
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1460,6 +1551,13 @@ TensorListVector* MasterGraph::create_caffe_lmdb_record_meta_data_reader(const c
 
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
 
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("CaffeLmdbRecordMetaDataReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("reader_type", reader_type);
+    reader_op->arguments.add_new_argument("label_type", label_type);
+    _pipeline_operators.push_back(reader_op);
+
     return &_metadata_output_tensor_list;
 }
 
@@ -1484,6 +1582,12 @@ TensorListVector* MasterGraph::create_cifar10_label_reader(const char *source_pa
     }
     _metadata_output_tensor_list.emplace_back(&_labels_tensor_list);
     _ring_buffer.init_metadata(RocalMemType::HOST, _meta_data_buffer_size);
+
+    // Add each operator to the pipeline operators list
+    auto reader_op = std::make_shared<PipelineOperator>("Cifar10LabelReader_" + std::to_string(_op_idx++), "reader");
+    reader_op->arguments.add_new_argument("source_path", source_path);
+    reader_op->arguments.add_new_argument("file_prefix", file_prefix);
+    _pipeline_operators.push_back(reader_op);
 
     return &_metadata_output_tensor_list;
 }
@@ -1895,6 +1999,11 @@ static const std::array<std::string, 8> GEOMETRIC_AUGMENTATIONS = {
     "CropMirrorNormalizeNode", "ResizeCropMirrorNode"
 };
 
+// Array of random distribution nodes, for which only internal tensor is created
+static const std::array<std::string, 2> RANDOM_DIST_NODES = {
+    "UniformDistributionNode", "NormalDistributionNode"
+};
+
 inline bool check_tensor_info(const TensorInfo& input_info, const rocal_proto::InputOutput &output) {
     
     if (input_info.num_of_dims() != output.dims_size())
@@ -1932,6 +2041,10 @@ std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const 
 #endif
         auto loader_module = node->get_loader_module();
         loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+        if (node_name == "FusedJpegCropNode" || node_name == "FusedJpegCropSingleShardNode") {
+            if (_randombboxcrop_meta_data_reader)
+                loader_module->set_random_bbox_data_reader(_randombboxcrop_meta_data_reader);
+        }
         _loader_modules.emplace_back(loader_module);
 
         // Assign a unique graph ID to this node based on the current loader count
@@ -1973,20 +2086,138 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
             if (op_def.module_name() == "reader") {
                 ArgumentSet args_list;
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
-                        THROW("Failed to deserialize arguments for reader : " + op_def.name());
-                if (get_node_name(op_def.name()) == "LabelReader") {
-                    create_label_reader(args_list.get<std::string>("source_path").c_str(), (args_list.get<MetaDataReaderType>("reader_type")));
+                    THROW("Failed to deserialize arguments for reader : " + op_def.name());
+
+                auto reader_name = get_node_name(op_def.name());
+                if (reader_name == "LabelReader") {
+                    // Extract arguments for LabelReader
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto reader_type = args_list.get<MetaDataReaderType>("reader_type");
+                    create_label_reader(source_path.c_str(), reader_type);
+                } else if (reader_name == "CocoMetaDataReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto is_output = args_list.get<bool>("is_output");
+                    auto reader_type = args_list.get<MetaDataReaderType>("reader_type");
+                    auto metadata_type = args_list.get<MetaDataType>("metadata_type");
+                    auto ltrb_bbox = args_list.get<bool>("ltrb_bbox");
+                    auto is_box_encoder = args_list.get<bool>("is_box_encoder");
+                    auto avoid_class_remapping = args_list.get<bool>("avoid_class_remapping");
+                    auto aspect_ratio_grouping = args_list.get<bool>("aspect_ratio_grouping");
+                    auto is_box_iou_matcher = args_list.get<bool>("is_box_iou_matcher");
+                    auto sigma = args_list.get<float>("sigma");
+                    auto pose_output_width = args_list.get<unsigned>("pose_output_width");
+                    auto pose_output_height = args_list.get<unsigned>("pose_output_height");
+                    create_coco_meta_data_reader(source_path.c_str(), is_output, reader_type, metadata_type, ltrb_bbox, is_box_encoder, avoid_class_remapping, aspect_ratio_grouping, is_box_iou_matcher, sigma, pose_output_width, pose_output_height);
+                } else if (reader_name == "TFRecordMetaDataReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto reader_type = args_list.get<MetaDataReaderType>("reader_type");
+                    auto label_type = args_list.get<MetaDataType>("label_type");
+                    auto feature_key_map = args_list.get<std::map<std::string, std::string>>("feature_key_map");
+                    create_tf_record_meta_data_reader(source_path.c_str(), reader_type, label_type, feature_key_map);
+                } else if (reader_name == "WebdatasetReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto index_path = args_list.get<std::string>("index_path");
+                    auto flat_extensions = args_list.get<std::vector<std::string>>("extensions");
+                    auto reader_type = args_list.get<MetaDataReaderType>("reader_type");
+                    auto missing_component_behaviour = args_list.get<MissingComponentsBehaviour>("missing_component_behaviour");
+                    auto parse_extensions = [](const std::vector<std::string>& flattened) {
+                        std::vector<std::set<std::string>> exts;
+                        exts.reserve(flattened.size());
+                        for (const auto& group : flattened) {
+                            std::set<std::string> ext_set;
+                            std::stringstream ss(group);
+                            std::string token;
+                            while (std::getline(ss, token, ',')) {
+                                if (!token.empty()) ext_set.insert(token);
+                            }
+                            exts.push_back(std::move(ext_set));
+                        }
+                        return exts;
+                    };
+                    create_webdataset_reader(source_path.c_str(), index_path.c_str(), parse_extensions(flat_extensions), reader_type, missing_component_behaviour);
+                } else if (reader_name == "VideoLabelReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto reader_type = args_list.get<MetaDataReaderType>("reader_type");
+                    auto sequence_length = args_list.get<unsigned>("sequence_length");
+                    auto frame_step = args_list.get<unsigned>("frame_step");
+                    auto frame_stride = args_list.get<unsigned>("frame_stride");
+                    auto file_list_frame_num = args_list.get<bool>("file_list_frame_num");
+                    create_video_label_reader(source_path.c_str(), reader_type, sequence_length, frame_step, frame_stride, file_list_frame_num);
+                } else if (reader_name == "MxnetLabelReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto is_output = args_list.get<bool>("is_output");
+                    create_mxnet_label_reader(source_path.c_str(), is_output);
+                } else if (reader_name == "RandomBBoxCropReader") {
+                    auto reader_type = args_list.get<RandomBBoxCrop_MetaDataReaderType>("reader_type");
+                    auto label_type = args_list.get<RandomBBoxCrop_MetaDataType>("label_type");
+                    auto all_boxes_overlap = args_list.get<bool>("all_boxes_overlap");
+                    auto no_crop = args_list.get<bool>("no_crop");
+                    auto aspect_ratio = args_list.get<FloatParam*>("aspect_ratio");
+                    auto has_shape = args_list.get<bool>("has_shape");
+                    auto crop_width = args_list.get<int>("crop_width");
+                    auto crop_height = args_list.get<int>("crop_height");
+                    auto num_attempts = args_list.get<int>("num_attempts");
+                    auto scaling = args_list.get<FloatParam*>("scaling");
+                    auto total_num_attempts = args_list.get<int>("total_num_attempts");
+                    auto seed = args_list.get<int>("seed");
+                    create_randombboxcrop_reader(reader_type, label_type, all_boxes_overlap, no_crop, aspect_ratio, has_shape, crop_width, crop_height, num_attempts, scaling, total_num_attempts, seed);
+                } else if (reader_name == "Caffe2LmdbRecordMetaDataReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto reader_type = args_list.get<MetaDataReaderType>("reader_type");
+                    auto label_type = args_list.get<MetaDataType>("label_type");
+                    create_caffe2_lmdb_record_meta_data_reader(source_path.c_str(), reader_type, label_type);
+                } else if (reader_name == "CaffeLmdbRecordMetaDataReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto reader_type = args_list.get<MetaDataReaderType>("reader_type");
+                    auto label_type = args_list.get<MetaDataType>("label_type");
+                    create_caffe_lmdb_record_meta_data_reader(source_path.c_str(), reader_type, label_type);
+                } else if (reader_name == "Cifar10LabelReader") {
+                    auto source_path = args_list.get<std::string>("source_path");
+                    auto file_prefix = args_list.get<std::string>("file_prefix");
+                    create_cifar10_label_reader(source_path.c_str(), file_prefix.c_str());
+                } else {
+                    THROW("Unsupported reader type: " + reader_name);
                 }
             } else if (op_def.module_name() == "loader") {
                 // fetch the output tensor details and create it
                 auto output_tensor = create_operator_output(op_def.outputs()[0], true);
-
-                auto loader_node = this->add_node(get_node_name(op_def.name()), {}, {output_tensor}, true);
+                auto node_name = get_node_name(op_def.name());
 
                 ArgumentSet args_list;
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
                     THROW("Failed to deserialize arguments for loader : " + op_def.name());
+                
+                // For Audio loader nodes, explicitly allocate the resample rate
+                if (node_name == "AudioLoaderNode" || node_name == "AudioLoaderSingleShardNode") {
+                    output_tensor->reset_audio_sample_rate();
+                }
 
+                if ((node_name == "ImageLoaderNode" || node_name == "ImageLoaderSingleShardNode") 
+                     && op_def.is_sequence_operator()) {
+                    set_sequence_reader_output();
+                    // Find sequence length in the list of args_list
+                    try {
+                        auto sequence_length = args_list.get<unsigned>("sequence_length");
+                        set_sequence_batch_size(sequence_length);
+                        output_tensor->set_sequence_batch_size(sequence_length);
+                    } catch (const std::exception& e) {
+                        THROW("Failed to extract sequence length value for sequence reader");
+                    }
+                }
+
+                auto loader_node = this->add_node(node_name, {}, {output_tensor}, true);
+                // Extract the loop argument from args_list and set it in MasterGraph
+                for (const auto& arg_pair : args_list) {
+                    auto& arg = arg_pair.second;
+                    if (arg.arg_name == "loop") {
+                        try {
+                            _loop = arg.get<bool>();
+                            break;
+                        } catch (const std::exception& e) {
+                            THROW("Failed to extract loop value");
+                        }
+                    }
+                }
                 loader_node->initialize_args(args_list, _meta_data_reader);
             } else {
                 std::vector<Tensor *> inputs_vector;
@@ -2010,6 +2241,15 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                         Tensor* reference_input = inputs_vector[0];
                         auto node_name = get_node_name(op_def.name());
                         bool is_geometric_aug = std::find(GEOMETRIC_AUGMENTATIONS.begin(), GEOMETRIC_AUGMENTATIONS.end(), node_name) != GEOMETRIC_AUGMENTATIONS.end();
+                        bool is_random_dist = std::find(RANDOM_DIST_NODES.begin(), RANDOM_DIST_NODES.end(), node_name) != RANDOM_DIST_NODES.end();
+                        
+                        // If the node uses uniform or normal random distribution, create only an internal tensor
+                        if (is_random_dist) {
+                            output_tensor = create_operator_output(op_def.outputs()[0], true);
+                            tensor_info_compatible = true;
+                        }
+
+                        // If the node uses geometric augmentations, create a new tensor with info different from the input
                         if (reference_input && check_tensor_info(reference_input->info(), op_output)
                             && !is_geometric_aug) {
                             output_tensor = create_tensor(reference_input->info(), false);
@@ -2037,7 +2277,19 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                ArgumentSet args_list;
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
                     THROW("Failed to deserialize arguments for node : " + op_def.name());
-
+                
+                // Resolve tensor arguments from _pipeline_tensors map
+                for (auto& argument : args_list) {
+                    Argument& arg = argument.second;
+                    if (arg.is_tensor && !arg.tensor_name.empty()) {
+                        if (_pipeline_tensors.find(arg.tensor_name) != _pipeline_tensors.end()) {
+                            // Replace the placeholder with the actual tensor pointer
+                            arg.values[0] = static_cast<Tensor*>(_pipeline_tensors[arg.tensor_name]);
+                        } else {
+                            THROW("Tensor '" + arg.tensor_name + "' not found in pipeline tensors for argument " + arg.arg_name);
+                        }
+                    }
+                }
                 node->initialize_args(args_list);
             }
         }

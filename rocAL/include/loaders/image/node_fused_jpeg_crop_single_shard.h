@@ -42,6 +42,8 @@ class FusedJpegCropSingleShardNode : public Node {
               unsigned num_attempts, std::vector<float> &random_area, std::vector<float> &random_aspect_ratio, const ShardingInfo& sharding_info = ShardingInfo());
 
     std::shared_ptr<LoaderModule> get_loader_module() override;
+    void initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) override;
+    std::string node_name() const override { return "FusedJpegCropSingleShardNode"; }
 
    protected:
     void create_node() override{};

@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(TensorMulScalarNode)
+
 TensorMulScalarNode::TensorMulScalarNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void TensorMulScalarNode::create_node() {
@@ -42,4 +44,13 @@ void TensorMulScalarNode::update_node() {}
 
 void TensorMulScalarNode::init(float scalar) {
     _scalar = scalar;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("scalar", scalar);
+    _args = args;
 }
+
+void TensorMulScalarNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<TensorMulScalarNode, float>(this, {"scalar"}, arguments)) return;
+    THROW("Unsupported argument types for TensorMulScalarNode");
+};

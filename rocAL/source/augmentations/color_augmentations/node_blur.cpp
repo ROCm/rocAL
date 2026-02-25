@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_blur.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(BlurNode)
+
 BlurNode::BlurNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void BlurNode::create_node() {
@@ -41,4 +43,9 @@ void BlurNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the blur (vxExtRppBlur) node failed: " + TOSTR(status))
+}
+
+void BlurNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<BlurNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for BlurNode");
 }

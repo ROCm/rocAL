@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_snow.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SnowNode)
+
 SnowNode::SnowNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _snow_value(SNOW_VALUE_RANGE[0], SNOW_VALUE_RANGE[1]),
                                                                                                 _brightness_coefficient(BRIGHTNESS_COEFFICIENT_RANGE[0], BRIGHTNESS_COEFFICIENT_RANGE[1]),
@@ -55,16 +57,35 @@ void SnowNode::init(float snow_threshold, float brightness_coefficient, int dark
     _snow_value.set_param(snow_threshold);
     _brightness_coefficient.set_param(brightness_coefficient);
     _dark_mode.set_param(dark_mode);
+
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("snow_threshold", snow_threshold);
+    args.add_new_argument("brightness_coefficient", brightness_coefficient);
+    args.add_new_argument("dark_mode", dark_mode);
+    _args = args;
 }
 
 void SnowNode::init(FloatParam *snow_threshold_param, FloatParam *brightness_coefficient_param, IntParam *dark_mode_param) {
     _snow_value.set_param(core(snow_threshold_param));
     _brightness_coefficient.set_param(core(brightness_coefficient_param));
     _dark_mode.set_param(core(dark_mode_param));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("snow_threshold", snow_threshold_param);
+    args.add_new_argument("brightness_coefficient", brightness_coefficient_param);
+    args.add_new_argument("dark_mode", dark_mode_param);
+    _args = args;
 }
 
 void SnowNode::update_node() {
     _snow_value.update_array();
     _brightness_coefficient.update_array();
     _dark_mode.update_array();
+}
+
+void SnowNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SnowNode, float, float, int>(this, {"snow_threshold", "brightness_coefficient", "dark_mode"}, arguments)) return;
+    if (init_args<SnowNode, FloatParam*, FloatParam*, IntParam*>(this, {"snow_threshold", "brightness_coefficient", "dark_mode"}, arguments)) return;
+    THROW("Unsupported argument types for SnowNode");
 }

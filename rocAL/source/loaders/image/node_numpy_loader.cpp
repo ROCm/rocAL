@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_LOADER_NODE(NumpyLoaderNode)
+
 NumpyLoaderNode::NumpyLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<NumpyLoaderSharded>(device_resources);
 }
@@ -44,6 +46,22 @@ void NumpyLoaderNode::init(unsigned internal_shard_count, const std::string &sou
     reader_cfg.set_seed(seed);
     _loader_module->initialize(reader_cfg, DecoderConfig(DecoderType::SKIP_DECODE), mem_type, _batch_size);
     _loader_module->start_loading();
+
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("internal_shard_count", internal_shard_count);
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("files", files);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("decoder_type", decoder_type);
+    _args.add_new_argument("shuffle", shuffle);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+    _args.add_new_argument("seed", seed);
+    _args.add_new_argument("last_batch_policy", sharding_info.last_batch_policy);
+    _args.add_new_argument("pad_last_batch_repeated", sharding_info.pad_last_batch_repeated);
+    _args.add_new_argument("stick_to_shard", sharding_info.stick_to_shard);
+    _args.add_new_argument("shard_size", sharding_info.shard_size);
 }
 
 std::shared_ptr<LoaderModule> NumpyLoaderNode::get_loader_module() {
@@ -54,4 +72,26 @@ std::shared_ptr<LoaderModule> NumpyLoaderNode::get_loader_module() {
 
 NumpyLoaderNode::~NumpyLoaderNode() {
     _loader_module = nullptr;
+}
+
+void NumpyLoaderNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    (void)meta_data_reader;
+    
+    ShardingInfo sharding_info(arguments.get<RocalBatchPolicy>("last_batch_policy"), 
+                                arguments.get<bool>("stick_to_shard"), 
+                                arguments.get<bool>("pad_last_batch_repeated"), 
+                                arguments.get<int32_t>("shard_size"));
+
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->init(arguments.get<unsigned>("internal_shard_count"), 
+               arguments.get<std::string>("source_path"), 
+               arguments.get<std::vector<std::string>>("files"),
+               arguments.get<StorageType>("storage_type"), 
+               arguments.get<DecoderType>("decoder_type"), 
+               arguments.get<bool>("shuffle"), 
+               arguments.get<bool>("loop"),
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"), 
+               arguments.get<unsigned>("seed"), 
+               sharding_info);
 }

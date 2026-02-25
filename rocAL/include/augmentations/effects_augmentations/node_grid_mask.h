@@ -31,6 +31,8 @@ class GridMaskNode : public Node {
 
     // Scalar-only parameters (uniform across the batch)
     void init(unsigned tile_width, float grid_ratio, float grid_angle_radians, unsigned translate_x, unsigned translate_y);
+    void initialize_args(const ArgumentSet &arguments) override;
+    std::string node_name() const override { return "GridMaskNode"; }
 
    protected:
     void create_node() override;

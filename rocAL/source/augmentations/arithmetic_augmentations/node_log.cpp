@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(LogNode)
+
 LogNode::LogNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void LogNode::create_node() {
@@ -43,4 +45,9 @@ void LogNode::create_node() {
 #else
     THROW("LogNode: vxExtRppLog requires vx_rpp version >= 3.1.5");
 #endif
+}
+
+void LogNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<LogNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for LogNode");
 }

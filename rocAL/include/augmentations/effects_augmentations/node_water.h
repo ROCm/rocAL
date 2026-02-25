@@ -34,6 +34,8 @@ class WaterNode : public Node {
     void init(FloatParam *amplitude_x_param, FloatParam *amplitude_y_param, 
               FloatParam *frequency_x_param, FloatParam *frequency_y_param,
               FloatParam *phase_x_param, FloatParam *phase_y_param);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "WaterNode"; }
 
    protected:
     void create_node() override;

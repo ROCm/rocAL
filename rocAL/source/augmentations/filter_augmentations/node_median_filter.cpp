@@ -21,6 +21,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_median_filter.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(MedianFilterNode)
+
 MedianFilterNode::MedianFilterNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -60,6 +62,15 @@ void MedianFilterNode::create_node() {
 void MedianFilterNode::init(int kernel_size, ImageBorderType border_type) {
     _kernel_size = kernel_size;
     _border_type = static_cast<int>(border_type);
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("kernel_size", kernel_size);
+    _args.add_new_argument("border_type", border_type);
+}
+
+void MedianFilterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<MedianFilterNode, int, ImageBorderType>(this, {"kernel_size", "border_type"}, arguments)) return;
+    THROW("Unsupported argument types for MedianFilterNode");
 }
 
 void MedianFilterNode::update_node() {}

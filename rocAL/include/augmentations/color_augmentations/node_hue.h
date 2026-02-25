@@ -31,6 +31,8 @@ class HueNode : public Node {
     HueNode() = delete;
     void init(float hue);
     void init(FloatParam *hue);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "HueNode"; }
 
    protected:
     void create_node() override;

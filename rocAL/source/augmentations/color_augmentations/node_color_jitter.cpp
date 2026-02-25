@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_color_jitter.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ColorJitterNode)
+
 ColorJitterNode::ColorJitterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs),
       _brightness(BRIGHTNESS_RANGE[0], BRIGHTNESS_RANGE[1]),
@@ -67,6 +69,12 @@ void ColorJitterNode::init(float brightness, float contrast, float hue, float sa
     _contrast.set_param(contrast);
     _hue.set_param(hue);
     _saturation.set_param(saturation);
+
+    // Add all arguments to the node
+    _args.add_new_argument("brightness", brightness);
+    _args.add_new_argument("contrast", contrast);
+    _args.add_new_argument("hue", hue);
+    _args.add_new_argument("saturation", saturation);
 }
 
 void ColorJitterNode::init(FloatParam *brightness_param, FloatParam *contrast_param, FloatParam *hue_param, FloatParam *saturation_param) {
@@ -74,6 +82,12 @@ void ColorJitterNode::init(FloatParam *brightness_param, FloatParam *contrast_pa
     _contrast.set_param(core(contrast_param));
     _hue.set_param(core(hue_param));
     _saturation.set_param(core(saturation_param));
+
+    // Add all arguments to the node
+    _args.add_new_argument("brightness_param", brightness_param);
+    _args.add_new_argument("contrast_param", contrast_param);
+    _args.add_new_argument("hue_param", hue_param);
+    _args.add_new_argument("saturation_param", saturation_param);
 }
 
 void ColorJitterNode::update_node() {
@@ -81,4 +95,10 @@ void ColorJitterNode::update_node() {
     _contrast.update_array();
     _hue.update_array();
     _saturation.update_array();
+}
+
+void ColorJitterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ColorJitterNode, float, float, float, float>(this, {"brightness", "contrast", "hue", "saturation"}, arguments)) return;
+    if (init_args<ColorJitterNode, FloatParam*, FloatParam*, FloatParam*, FloatParam*>(this, {"brightness_param", "contrast_param", "hue_param", "saturation_param"}, arguments)) return;
+    THROW("Unsupported argument types for ColorJitterNode");
 }

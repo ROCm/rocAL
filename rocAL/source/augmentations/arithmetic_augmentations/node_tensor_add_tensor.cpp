@@ -23,6 +23,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(TensorAddTensorNode)
+
 TensorAddTensorNode::TensorAddTensorNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void TensorAddTensorNode::create_node() {
@@ -35,3 +37,8 @@ void TensorAddTensorNode::create_node() {
 }
 
 void TensorAddTensorNode::update_node() {}
+
+void TensorAddTensorNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<TensorAddTensorNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for TensorAddTensorNode");
+}

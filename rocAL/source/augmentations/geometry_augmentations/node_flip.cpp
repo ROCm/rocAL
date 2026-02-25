@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/geometry_augmentations/node_flip.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(FlipNode)
+
 FlipNode::FlipNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _horizontal(HORIZONTAL_RANGE[0], HORIZONTAL_RANGE[1]),
                                                                                                 _vertical(VERTICAL_RANGE[0], VERTICAL_RANGE[1]) {}
@@ -51,14 +53,30 @@ void FlipNode::create_node() {
 void FlipNode::init(int h_flag, int v_flag) {
     _horizontal.set_param(h_flag);
     _vertical.set_param(v_flag);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("h_flag", h_flag);
+    args.add_new_argument("v_flag", v_flag);
+    _args = args;
 }
 
 void FlipNode::init(IntParam *h_flag, IntParam *v_flag) {
     _horizontal.set_param(core(h_flag));
     _vertical.set_param(core(v_flag));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("h_flag", h_flag);
+    args.add_new_argument("v_flag", v_flag);
+    _args = args;
 }
 
 void FlipNode::update_node() {
     _horizontal.update_array();
     _vertical.update_array();
+}
+
+void FlipNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<FlipNode, int, int>(this, {"h_flag", "v_flag"}, arguments)) return;
+    if (init_args<FlipNode, IntParam*, IntParam*>(this, {"h_flag", "v_flag"}, arguments)) return;
+    THROW("Unsupported argument types for FlipNode");
 }

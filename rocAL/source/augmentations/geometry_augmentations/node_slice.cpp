@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SliceNode)
+
 SliceNode::SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void SliceNode::create_node() {
@@ -60,4 +62,17 @@ void SliceNode::init(Tensor *anchor, Tensor *shape, std::vector<float> &fill_val
     // if fill values passed by user less than what is required, replicate the values
     if (_fill_values.size() == 1)
         std::fill(_fill_values_vec.begin(), _fill_values_vec.end(), _fill_values[0]);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("anchor", anchor);
+    args.add_new_argument("shape", shape);
+    args.add_new_argument("fill_values", fill_values);
+    args.add_new_argument("policy", policy);
+    _args = args;
+}
+
+void SliceNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SliceNode, Tensor*, Tensor*, std::vector<float>, OutOfBoundsPolicy>(this, 
+        {"anchor", "shape", "fill_values", "policy"}, arguments)) return;
+    THROW("Unsupported argument types for SliceNode");
 }

@@ -31,6 +31,8 @@ class LensCorrectionNode : public Node {
     LensCorrectionNode() = delete;
     void init(std::vector<CameraMatrix> camera_matrix, std::vector<DistortionCoeffs> distortion_coeffs);
     // void init(FloatParam *strength, FloatParam *zoom);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "LensCorrectionNode"; }
 
    protected:
     void create_node() override;

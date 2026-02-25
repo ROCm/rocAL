@@ -28,6 +28,8 @@ THE SOFTWARE.
 #include "pipeline/tensor.h"
 #include <cstring>
 
+REGISTER_NODE(EraseNode)
+
 EraseNode::EraseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs) {}
 
@@ -275,6 +277,12 @@ void EraseNode::init(std::vector<float> anchor,
     else {
         THROW("Invalid anchor/shape vector sizes");
     }
+
+    // Add all arguments to the node for serialization
+    _args.add_new_argument("anchor", anchor);
+    _args.add_new_argument("shape", shape);
+    _args.add_new_argument("num_boxes", num_boxes);
+    _args.add_new_argument("fill_value", fill_value);
 }
 
 void EraseNode::update_node() {}
@@ -311,4 +319,9 @@ EraseNode::~EraseNode() {
         if (_num_box_ptr) free(_num_box_ptr);
     }
     _anchor_ptr = _color_ptr = _num_box_ptr = nullptr;
+}
+
+void EraseNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<EraseNode, std::vector<float>, std::vector<float>, std::vector<unsigned>, std::vector<float>>(this, {"anchor", "shape", "num_boxes", "fill_value"}, arguments)) return;
+    THROW("Unsupported argument types for EraseNode");
 }

@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(NormalizeNode)
+
 NormalizeNode::NormalizeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void NormalizeNode::create_node() {
@@ -119,4 +121,18 @@ void NormalizeNode::init(std::vector<unsigned> &axes, std::vector<float> &mean, 
     _shift = shift;
     for (unsigned d = 0; d < axes.size(); d++)
         _axis_mask |= (1 << axes[d]);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("axes", axes);
+    args.add_new_argument("mean", mean);
+    args.add_new_argument("std_dev", std_dev);
+    args.add_new_argument("scale", scale);
+    args.add_new_argument("shift", shift);
+    _args = args;
+}
+
+void NormalizeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<NormalizeNode, std::vector<unsigned>, std::vector<float>, std::vector<float>, float, float>(this, 
+        {"axes", "mean", "std_dev", "scale", "shift"}, arguments)) return;
+    THROW("Unsupported argument types for NormalizeNode");
 }

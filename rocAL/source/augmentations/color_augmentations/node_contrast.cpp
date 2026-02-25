@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_contrast.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ContrastNode)
+
 ContrastNode::ContrastNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                         _factor(CONTRAST_FACTOR_RANGE[0], CONTRAST_FACTOR_RANGE[1]),
                                                                                                         _center(CONTRAST_CENTER_RANGE[0], CONTRAST_CENTER_RANGE[1]) {}
@@ -50,14 +52,30 @@ void ContrastNode::create_node() {
 void ContrastNode::init(float contrast_factor, float contrast_center) {
     _factor.set_param(contrast_factor);
     _center.set_param(contrast_center);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("contrast_factor", contrast_factor);
+    args.add_new_argument("contrast_center", contrast_center);
+    _args = args;
 }
 
 void ContrastNode::init(FloatParam *contrast_factor_param, FloatParam *contrast_center_param) {
     _factor.set_param(core(contrast_factor_param));
     _center.set_param(core(contrast_center_param));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("contrast_factor_param", contrast_factor_param);
+    args.add_new_argument("contrast_center_param", contrast_center_param);
+    _args = args;
 }
 
 void ContrastNode::update_node() {
     _factor.update_array();
     _center.update_array();
+}
+
+void ContrastNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ContrastNode, float, float>(this, {"contrast_factor", "contrast_center"}, arguments)) return;
+if (init_args<ContrastNode, FloatParam*, FloatParam*>(this, {"contrast_factor_param", "contrast_center_param"}, arguments)) return;
+    THROW("Unsupported argument types for ContrastNode");
 }

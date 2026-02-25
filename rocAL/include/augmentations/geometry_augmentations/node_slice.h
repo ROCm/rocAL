@@ -31,6 +31,8 @@ class SliceNode : public Node {
     SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SliceNode() = delete;
     void init(Tensor *anchor_param, Tensor *shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "SliceNode"; }
 
    protected:
     void create_node() override;

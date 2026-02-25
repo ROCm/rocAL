@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(TransposeNode)
+
 TransposeNode::TransposeNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void TransposeNode::create_node() {
@@ -81,4 +83,13 @@ void TransposeNode::update_node() {
 
 void TransposeNode::init(std::vector<unsigned> perm) {
     _perm = perm;
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("perm", perm);
+    _args = args;
+}
+
+void TransposeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<TransposeNode, std::vector<unsigned>>(this, {"perm"}, arguments)) return;
+    THROW("Unsupported argument types for TransposeNode");
 }

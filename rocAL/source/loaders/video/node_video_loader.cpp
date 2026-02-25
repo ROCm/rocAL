@@ -22,10 +22,15 @@ THE SOFTWARE.
 
 #include "loaders/video/node_video_loader.h"
 
+#include <array>
 #include <memory>
 #include <numeric>
 #include <sstream>
+#include "pipeline/exception.h"
+#include "readers/video/video_properties.h"
 #ifdef ROCAL_VIDEO
+
+REGISTER_LOADER_NODE(VideoLoaderNode)
 
 VideoLoaderNode::VideoLoaderNode(Tensor *output, void *device_resources) : Node({}, {output}) {
     _loader_module = std::make_shared<VideoLoaderSharded>(device_resources);
@@ -47,6 +52,22 @@ void VideoLoaderNode::init(unsigned internal_shard_count, const std::string &sou
     reader_cfg.set_frame_step(step);
     reader_cfg.set_frame_stride(stride);
     reader_cfg.set_video_properties(video_prop);
+
+    // Add arguments to ArgumentSet one by one
+    _args.add_new_argument("internal_shard_count", internal_shard_count);
+    _args.add_new_argument("source_path", source_path);
+    _args.add_new_argument("storage_type", storage_type);
+    _args.add_new_argument("decoder_type", decoder_type);
+    _args.add_new_argument("decoder_mode", decoder_mode);
+    _args.add_new_argument("sequence_length", sequence_length);
+    _args.add_new_argument("step", step);
+    _args.add_new_argument("stride", stride);
+    _args.add_new_argument("file_list_frame_num", video_prop.file_list_frame_num);
+    _args.add_new_argument("shuffle", shuffle);
+    _args.add_new_argument("loop", loop);
+    _args.add_new_argument("load_batch_count", load_batch_count);
+    _args.add_new_argument("mem_type", mem_type);
+
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size);
     _loader_module->start_loading();
 }
@@ -59,6 +80,31 @@ std::shared_ptr<LoaderModule> VideoLoaderNode::get_loader_module() {
 
 VideoLoaderNode::~VideoLoaderNode() {
     _loader_module = nullptr;
+}
+
+void VideoLoaderNode::initialize_args(const ArgumentSet &arguments, std::shared_ptr<MetaDataReader> meta_data_reader) {
+    (void)meta_data_reader;
+    
+    auto source_path = arguments.get<std::string>("source_path");
+    auto file_list_frame_num = arguments.get<bool>("file_list_frame_num");
+
+    VideoProperties video_prop;
+    find_video_properties(video_prop, source_path.c_str(), file_list_frame_num);
+    
+    // NOTE: Add respective arguments to init function in the same order as defined in init function
+    this->init(arguments.get<unsigned>("internal_shard_count"), 
+               source_path, 
+               arguments.get<StorageType>("storage_type"), 
+               arguments.get<DecoderType>("decoder_type"), 
+               arguments.get<DecodeMode>("decoder_mode"),
+               arguments.get<unsigned>("sequence_length"), 
+               arguments.get<unsigned>("step"), 
+               arguments.get<unsigned>("stride"), 
+               video_prop, 
+               arguments.get<bool>("shuffle"),
+               arguments.get<bool>("loop"), 
+               arguments.get<size_t>("load_batch_count"), 
+               arguments.get<RocalMemType>("mem_type"));
 }
 
 #endif

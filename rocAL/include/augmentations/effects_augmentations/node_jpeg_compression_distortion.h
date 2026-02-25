@@ -32,6 +32,8 @@ class JpegCompressionDistortionNode : public Node {
     JpegCompressionDistortionNode() = delete;
     void init(int quality);
     void init(IntParam *quality_param);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "JpegCompressionDistortionNode"; }
 
    protected:
     void create_node() override;

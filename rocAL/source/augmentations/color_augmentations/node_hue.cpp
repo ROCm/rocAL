@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_hue.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(HueNode)
+
 HueNode::HueNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                               _hue(HUE_RANGE[0], HUE_RANGE[1]) {}
 
@@ -47,12 +49,26 @@ void HueNode::create_node() {
 
 void HueNode::init(float hue) {
     _hue.set_param(hue);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("hue", hue);
+    _args = args;
 }
 
 void HueNode::init(FloatParam *hue) {
     _hue.set_param(core(hue));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("hue", hue);
+    _args = args;
 }
 
 void HueNode::update_node() {
     _hue.update_array();
+}
+
+void HueNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<HueNode, float>(this, {"hue"}, arguments)) return;
+    if (init_args<HueNode, FloatParam*>(this, {"hue"}, arguments)) return;
+    THROW("Unsupported argument types for HueNode");
 }

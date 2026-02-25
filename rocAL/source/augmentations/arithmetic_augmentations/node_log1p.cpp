@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(Log1pNode)
+
 Log1pNode::Log1pNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void Log1pNode::create_node() {
@@ -37,4 +39,9 @@ void Log1pNode::create_node() {
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the (vxExtRppLog1p) node failed: " + TOSTR(status))
+}
+
+void Log1pNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<Log1pNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for Log1pNode");
 }

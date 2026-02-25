@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_fog.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(FogNode)
+
 FogNode::FogNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                               _intensity_param(INTENSITY_VALUE_RANGE[0], INTENSITY_VALUE_RANGE[1]),
                                                                                               _gray_param(GRAY_VALUE_RANGE[0], GRAY_VALUE_RANGE[1]) {}
@@ -50,14 +52,30 @@ void FogNode::create_node() {
 void FogNode::init(float intensity_param, float gray_param) {
     _intensity_param.set_param(intensity_param);
     _gray_param.set_param(gray_param);
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("intensity_param", intensity_param);
+    args.add_new_argument("gray_param", gray_param);
+    _args = args;
 }
 
 void FogNode::init(FloatParam *intensity_param, FloatParam *gray_param) {
     _intensity_param.set_param(core(intensity_param));
     _gray_param.set_param(core(gray_param));
+    // Add all arguments as part of the Node
+    ArgumentSet args;
+    args.add_new_argument("intensity_param", intensity_param);
+    args.add_new_argument("gray_param", gray_param);
+    _args = args;
 }
 
 void FogNode::update_node() {
     _intensity_param.update_array();
     _gray_param.update_array();
+}
+
+void FogNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<FogNode, float, float>(this, {"intensity_param", "gray_param"}, arguments)) return;
+    if (init_args<FogNode, FloatParam*, FloatParam*>(this, {"intensity_param", "gray_param"}, arguments)) return;
+    THROW("Unsupported argument types for FogNode");
 }

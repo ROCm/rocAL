@@ -26,6 +26,8 @@ public:
 
     // Fixed kernel size across the batch
     void init(unsigned kernel_size);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ErodeNode"; }
 
 protected:
     void update_node() override;
