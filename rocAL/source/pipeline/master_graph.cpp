@@ -391,6 +391,10 @@ void MasterGraph::release() {
     // shut_down loader:: required for releasing any allocated resourses
     for (auto &loader_module : _loader_modules)
         loader_module->shut_down();
+    // Clear loader modules so their destructors (and any hipFile handle/buffer
+    // deregistrations inside NumpyDataReader) run before hipFileDriverClose().
+    _loader_module.reset();
+    _loader_modules.clear();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_HIP

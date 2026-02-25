@@ -396,7 +396,7 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
                                                           static_cast<hoff_t>(aligned_file_offset + chunk_offset),
                                                           static_cast<hoff_t>(chunk_offset));
                         if (nread < 0 || static_cast<size_t>(nread) != chunk_size) {
-                            WRN("hipFileRead failed in NumpyDataReader::read_numpy_data for " + _last_file_path +
+                            ERR("hipFileRead failed in NumpyDataReader::read_numpy_data for " + _last_file_path +
                                 " (" + std::string(IS_HIPFILE_ERR(nread) ? HIPFILE_ERRSTR(nread) : std::strerror(errno)) +
                                 ", nread=" + std::to_string(nread) + ")")
                             io_ok = false;
@@ -413,13 +413,13 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
                                 return read_size;
                             }
 
-                            // The AIS path may not support short reads; read the remaining tail via host.
+                            // The hipFile device-direct I/O path may not support short reads; read the remaining tail via host.
                             const size_t tail_offset = data_offset + direct_bytes;
                             const size_t tail_bytes = read_size - direct_bytes;
                             if (_host_staging.size() < tail_bytes) {
                                 _host_staging.resize(tail_bytes);
                             }
-                            if (std::fseek(_current_file_ptr, static_cast<long>(tail_offset), SEEK_SET)) {
+                            if (std::fseek(_current_file_ptr, static_cast<long>(tail_offset), SEEK_SET) != 0) {
                                 ERR("Seek operation failed for " + _last_file_path + ": " + std::strerror(errno));
                                 return direct_bytes;
                             }
@@ -432,12 +432,12 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
                                 hipMemcpy(static_cast<unsigned char*>(buf) + direct_bytes, _host_staging.data(), host_read_size,
                                           hipMemcpyHostToDevice);
                             if (hip_status != hipSuccess) {
-                                WRN("hipMemcpyHostToDevice failed in NumpyDataReader::read_numpy_data tail copy: " + TOSTR(hip_status))
+                                ERR("hipMemcpyHostToDevice failed in NumpyDataReader::read_numpy_data tail copy: " + TOSTR(hip_status))
                                 return direct_bytes;
                             }
                             return direct_bytes + host_read_size;
                         }
-                        WRN("hipMemcpyDeviceToDevice failed in NumpyDataReader::read_numpy_data: " + TOSTR(hip_status))
+                        ERR("hipMemcpyDeviceToDevice failed in NumpyDataReader::read_numpy_data: " + TOSTR(hip_status))
                     }
                 }
             }
@@ -465,7 +465,7 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
         }
         auto hip_status = hipMemcpy(buf, _host_staging.data(), output_bytes, hipMemcpyHostToDevice);
         if (hip_status != hipSuccess) {
-            WRN("hipMemcpyHostToDevice failed in NumpyDataReader::read_numpy_data: " + TOSTR(hip_status))
+            ERR("hipMemcpyHostToDevice failed in NumpyDataReader::read_numpy_data: " + TOSTR(hip_status))
             return 0;
         }
         return host_bytes_read;
@@ -710,14 +710,15 @@ bool NumpyDataReader::ensure_hipfile_open() {
 
     const int client_fd = ::fileno(_current_file_ptr);
     if (client_fd < 0) {
-        WRN("Failed to get file descriptor for hipFile: " + _last_file_path)
+        ERR("Failed to get file descriptor for hipFile: " + _last_file_path)
         return false;
     }
 
     struct stat st {};
-    if (::fstat(client_fd, &st) == 0 && st.st_size > 0) {
+    if (::fstat(client_fd, &st) == 0) {
         _hipfile_file_size = static_cast<size_t>(st.st_size);
     } else {
+        ERR("fstat failed for hipFile: " + _last_file_path + " (errno " + std::to_string(errno) + "): " + std::string(std::strerror(errno)))
         _hipfile_file_size = 0;
     }
 
@@ -728,7 +729,7 @@ bool NumpyDataReader::ensure_hipfile_open() {
     hipFileHandle_t handle = nullptr;
     auto err = hipFileHandleRegister(&handle, &descr);
     if (err.err != hipFileSuccess) {
-        WRN("hipFileHandleRegister failed for " + _last_file_path + ": " + std::string(hipFileGetOpErrorString(err.err)))
+        ERR("hipFileHandleRegister failed for " + _last_file_path + ": " + std::string(hipFileGetOpErrorString(err.err)))
         _hipfile_file_size = 0;
         return false;
     }
@@ -761,10 +762,14 @@ bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
         _hipfile_scratch_device_id = -1;
     }
 
+    if (size_in_bytes > std::numeric_limits<size_t>::max() - (kHipFileAlignment - 1)) {
+        ERR("Requested Numpy hipFile scratch buffer size is too large and would overflow during alignment")
+        return false;
+    }
     const size_t alloc_size = size_in_bytes + (kHipFileAlignment - 1);
     auto hip_status = hipMalloc(&_hipfile_scratch_alloc, alloc_size);
     if (hip_status != hipSuccess || !_hipfile_scratch_alloc) {
-        WRN("hipMalloc failed for Numpy hipFile scratch buffer: " + TOSTR(hip_status))
+        ERR("hipMalloc failed for Numpy hipFile scratch buffer: " + TOSTR(hip_status))
         return false;
     }
 
@@ -780,9 +785,15 @@ bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
     auto hipfile_err = hipFileBufRegister(_hipfile_scratch, _hipfile_scratch_size, 0);
     _hipfile_scratch_registered = (hipfile_err.err == hipFileSuccess);
     if (!_hipfile_scratch_registered) {
-        WRN("hipFileBufRegister failed for Numpy hipFile scratch buffer: " + std::string(hipFileGetOpErrorString(hipfile_err.err)))
+        ERR("hipFileBufRegister failed for Numpy hipFile scratch buffer: " + std::string(hipFileGetOpErrorString(hipfile_err.err)))
+        (void)hipFree(_hipfile_scratch_alloc);
+        _hipfile_scratch_alloc = nullptr;
+        _hipfile_scratch = nullptr;
+        _hipfile_scratch_size = 0;
+        _hipfile_scratch_device_id = -1;
+        return false;
     }
-    return _hipfile_scratch_registered;
+    return true;
 }
 #endif
 

@@ -182,7 +182,9 @@ NumpyLoader::load_routine() {
         hipError_t hip_status = hipSetDevice(device_id);
         if (hip_status != hipSuccess) {
             ERR("hipSetDevice failed in NumpyLoader::load_routine: " + TOSTR(hip_status))
-            return LoaderModuleStatus::DEVICE_BUFFER_SWAP_FAILED;
+            _internal_thread_running = false;
+            _circ_buff.unblock_reader();
+            return LoaderModuleStatus::NOT_INITIALIZED;
         }
     }
 #endif
