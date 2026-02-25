@@ -597,8 +597,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     // RocalTensor input = rocalResize(handle, decoded_output, resize_w, resize_h, false); // uncomment when processing images of different size
     RocalTensor output;
 
-    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 || 
-        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 || test_case == 64 || test_case == 65) && rgb == 0) {
+    if ((test_case == 48 || test_case == 49 || test_case == 50 || test_case == 21 || test_case == 22 || test_case == 24 || test_case == 16 || test_case == 43 ||
+        reader_type == 13 || reader_type == 21 || reader_type == 27 || reader_type == 28 ||
+        test_case == 64 || test_case == 65 || test_case == 93 || test_case == 94 || test_case == 97 || test_case == 105) && rgb == 0) {
+        std::cout << "Not a valid option! Exiting!\n";
+        rocalRelease(handle);
+        return -1;
+    }
+    if ((test_case == 93 || test_case == 94) && gpu == 1) {
         std::cout << "Not a valid option! Exiting!\n";
         rocalRelease(handle);
         return -1;
@@ -972,6 +978,219 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                                         0.005f, 0.005f, 1.0f};
             output = rocalWarpPerspective(handle, input, true, height, width, perspective_1d_matrix, ROCAL_LINEAR_INTERPOLATION);
 
+        }break;
+        case 78: {
+            std::cout << "Running rocalRemap (vector-based tables)" << std::endl;
+            // Build identity remap tables (row = y, col = x) for output size [height,width]
+            const int H = height;
+            const int W = width;
+            std::vector<float> row_remap(H * W);
+            std::vector<float> col_remap(H * W);
+            auto half_width = W / 2;
+            for (int y = 0; y < H; ++y) {
+                int x = 0;
+                for (; x < half_width; ++x) {
+                    row_remap[y * W + x] = static_cast<float>(y);
+                    col_remap[y * W + x] = static_cast<float>(half_width - x);
+                }
+                for (; x < W; ++x) {
+                    row_remap[y * W + x] = static_cast<float>(y);
+                    col_remap[y * W + x] = static_cast<float>(x);
+                }
+            }
+            // Use bilinear interpolation, default layout/dtype
+            output = rocalRemap(handle, input, true,
+                                H, W,
+                                row_remap, col_remap,
+                                ROCAL_LINEAR_INTERPOLATION,
+                                output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 79: {
+            std::cout << "Running rocalCropAndPatch" << std::endl;
+            // Create a simple second input (e.g., rotated version)
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            // Define XYWH ROIs (replicated across batch if size==4)
+            // dst_roi: place the patch at top-left corner with size WxH reduced
+            int roi_w = std::max(1, width / 4);
+            int roi_h = std::max(1, height / 4);
+            // crop_roi: crop region from input2
+            std::vector<int> crop_roi = {std::max(0, width/8), std::max(0, height/8), roi_w, roi_h};
+            // patch_roi: patch location inside destination where crop will be pasted
+            std::vector<int> patch_roi = {0, 0, roi_w, roi_h};
+            output = rocalCropAndPatch(handle, input, input2, true,
+                                       crop_roi, patch_roi,
+                                       output_tensor_layout,
+                                       output_tensor_dtype);
+        } break;
+        case 80: {
+            std::cout << "Running rocalRicap" << std::endl;
+            // Permutation for quadrants [q0,q1,q2,q3]; replicate across batch if size==4
+            std::vector<unsigned> permutation = {0, 1, 1, 0, 1, 0, 0, 1};
+            // Define 4 XYWH ROIs covering image quadrants; replicate across batch if size==16
+            int q_w = std::max(1, width / 2);
+            int q_h = std::max(1, height / 2);
+            std::vector<int> crop_rois = {
+                0,      0,      q_w, q_h,   // top-left
+                q_w,    0,      q_w, q_h,   // top-right
+                0,      q_h,    q_w, q_h,   // bottom-left
+                q_w,    q_h,    q_w, q_h    // bottom-right
+            };
+            output = rocalRicap(handle, input, true, permutation, crop_rois, output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 81: {
+            std::cout << "Running rocalBitwiseOps AND" << std::endl;
+            // Create second input tensor (rotate input to get variation)
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_AND,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 82: {
+            std::cout << "Running rocalBitwiseOps OR" << std::endl;
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_OR,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 83: {
+            std::cout << "Running rocalBitwiseOps XOR" << std::endl;
+            RocalTensor input2 = rocalRotateFixed(handle, input, 45, false);
+            output = rocalBitwiseOps(handle, input, input2, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_XOR,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 84: {
+            std::cout << "Running rocalBitwiseOps NOT (single input)" << std::endl;
+            // NOT uses only a single input; pass same tensor for second parameter (ignored internally)
+            output = rocalBitwiseOps(handle, input, input, true,
+                                     RocalBitwiseOp::ROCAL_BITWISE_NOT,
+                                     output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 85: {
+            std::cout << "Running rocalErase (vector inputs, single fill value)" << std::endl;
+            // Use vector-based API: provide anchor [x1,y1], shape [w,h], num_boxes, and a single fill value
+            // Replicate num_boxes across batch with a single entry
+            std::vector<unsigned> num_boxes = {2};
+
+            // Derive two boxes using input width/height; keep within image bounds
+            unsigned W = static_cast<unsigned>(width);
+            unsigned H = static_cast<unsigned>(height);
+            unsigned bw = std::max(1u, W / 4);
+            unsigned bh = std::max(1u, H / 4);
+
+            // Two anchors (x1, y1) and matching shapes (w, h) for a single-sample pattern
+            // Pattern will be replicated across the batch since num_boxes.size()==1
+            std::vector<float> anchor = {
+                static_cast<float>(W / 8), static_cast<float>(H / 8),
+                static_cast<float>(W / 2), static_cast<float>(H / 2)
+            };
+            std::vector<float> shape = {
+                static_cast<float>(bw), static_cast<float>(bh),
+                static_cast<float>(W - 50), static_cast<float>(H - 25)
+            };
+
+            // Single fill value replicated for all boxes and channels
+            std::vector<float> fill_value;
+            if (rgb) {
+                fill_value = {0.0f, 0.0f, 240.0f, 0.0f, 60.0f, 0.0f};
+            } else {
+                fill_value = {120.0f, 60.0f};
+            }
+
+            // Execute vector-based erase
+            output = rocalErase(handle, input, true,
+                                anchor, shape, num_boxes, fill_value,
+                                output_tensor_layout, output_tensor_dtype);
+        } break;
+        case 86: {
+            std::cout << "Running rocalGaussianNoise" << std::endl;
+            output = rocalGaussianNoise(handle, input, true);
+        } break;
+        case 87: {
+            std::cout << "Running rocalGaussianNoiseFixed" << std::endl;
+            output = rocalGaussianNoiseFixed(handle, input, true, 0.0f, 0.2f, 1255459);
+        } break;
+        case 88: {
+            std::cout << "Running rocalShotNoise" << std::endl;
+            output = rocalShotNoise(handle, input, true);
+        } break;
+        case 89: {
+            std::cout << "Running rocalShotNoiseFixed" << std::endl;
+            output = rocalShotNoiseFixed(handle, input, 80.0f, true, 1255459);
+        } break;
+        case 90: {
+            std::cout << "Running rocalSpatter" << std::endl;
+            output = rocalSpatter(handle, input, true);
+        } break;
+        case 91: {
+            std::cout << "Running rocalSpatterFixed" << std::endl;
+            output = rocalSpatterFixed(handle, input, 65, 50, 23, true);
+        } break;
+        case 92: {
+            std::cout << "Running rocalLog" << std::endl;
+            output = rocalLog(handle, input, true);
+        } break;
+        case 93: {
+            std::cout << "Running rocalColorJitter" << std::endl;
+            output = rocalColorJitter(handle, input, true);
+        } break;
+        case 94: {
+            std::cout << "Running rocalColorJitterFixed" << std::endl;
+            output = rocalColorJitterFixed(handle, input, 1.02f, 1.1f, 0.02f, 1.3f, true);
+        } break;
+        case 95: {
+            std::cout << "Running rocalWater" << std::endl;
+            output = rocalWater(handle, input, true);
+        } break;
+        case 96: {
+            std::cout << "Running rocalWaterFixed" << std::endl;
+            output = rocalWaterFixed(handle, input, 2.0f, 5.0f, 5.8f, 1.2f, 10.0f, 15.0f, true);
+        } break;
+        case 97: {
+            std::cout << "Running rocalChannelPermute" << std::endl;
+            std::vector<unsigned> permutation_order = {2, 1, 0};  // RGB to BGR
+            output = rocalChannelPermute(handle, input, permutation_order, true);
+        } break;
+        case 98: {
+            std::cout << "Running rocalJpegCompressionDistortion" << std::endl;
+            output = rocalJpegCompressionDistortion(handle, input, true);
+        } break;
+        case 99: {
+            std::cout << "Running rocalJpegCompressionDistortionFixed" << std::endl;
+            output = rocalJpegCompressionDistortionFixed(handle, input, 50, true);
+        } break;
+        case 100: {
+            std::cout << "Running rocalLUT" << std::endl;
+            output = rocalLUT(handle, input, true);
+        } break;
+        case 101: {
+            std::cout << "Running rocalPosterize" << std::endl;
+            output = rocalPosterize(handle, input, true);
+        } break;
+        case 102: {
+            std::cout << "Running rocalPosterizeFixed" << std::endl;
+            output = rocalPosterizeFixed(handle, input, 3, true);
+        } break;
+        case 103: {
+            std::cout << "Running rocalSolarize" << std::endl;
+            output = rocalSolarize(handle, input, true);
+        } break;
+        case 104: {
+            std::cout << "Running rocalSolarizeFixed" << std::endl;
+            output = rocalSolarizeFixed(handle, input, 0.5f, true);
+        } break;
+        case 105: {
+            std::cout << "Running rocalColorToGreyscale" << std::endl;
+            output = rocalColorToGreyscale(handle, input, true);
+        } break;
+        case 106: {
+            std::cout << "Running tensor reduction augmentations" << std::endl;
+            auto tensor_sum = rocalTensorSum(handle, input, false, ROCAL_NONE, ROCAL_FP32);
+            auto tensor_min = rocalTensorMin(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
+            auto tensor_max = rocalTensorMax(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
+            auto tensor_mean = rocalTensorMean(handle, input, false, ROCAL_NONE, ROCAL_FP32);
+            auto tensor_stddev = rocalTensorStdDev(handle, input, tensor_mean, false, ROCAL_NONE, ROCAL_FP32);
+            output = rocalCopy(handle, input, true);
         } break;
         default:
             std::cout << "Not a valid option! Exiting!\n";
@@ -998,9 +1217,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int w = rocalGetOutputWidth(handle);
     int output_color_format = rocalGetOutputColorFormat(handle);
     auto last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
-    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
+    // Use output_color_format to determine channels: 0=RGB24(3ch), 1=BGR24(3ch), 2=U8(1ch), 3=RGB_PLANAR(3ch)
+    int p = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? 3 : 1);
     const unsigned number_of_cols = 1;  // 1920 / w;
-    auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
+    auto cv_color_format = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h, w, cv_color_format);
     cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
@@ -1253,12 +1473,17 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         if (display_all)
             out_filename = std::string(outName) + std::to_string(index) + ".png";  // in case the user specifies non png filename
 
-        if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
+        if (output_color_format == 0) {  // RGB24
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
                 cv::imwrite(out_filename, mat_color, compression_params);
+        } else if (output_color_format == 1) {  // BGR24
+            if (DISPLAY)
+                cv::imshow("output", mat_output);
+            else
+                cv::imwrite(out_filename, mat_output, compression_params);
         } else {
             if (DISPLAY)
                 cv::imshow("output", mat_output);

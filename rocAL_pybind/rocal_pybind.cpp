@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
+#include <stdexcept>
 #if ENABLE_DLPACK
     #include <dlpack/dlpack.h>
 #endif
@@ -291,6 +292,14 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
 
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
+
+    // Add version attribute
+#ifdef ROCAL_VERSION
+    m.attr("__version__") = ROCAL_VERSION;
+#else
+    m.attr("__version__") = "unknown";
+#endif
+
     // Bind the C++ structure
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it", py::return_value_policy::reference);
@@ -320,6 +329,31 @@ PYBIND11_MODULE(rocal_pybind, m) {
         return py::bytes(buffer.data(), size);
     }, "Returns the serialized pipeline as string");
     m.def("rocalDeserialize", &rocalDeserialize, "Creates context from the serialized string", py::return_value_policy::reference);
+    // Return the serialized checkpoint blob as Python bytes.
+    m.def("checkpoint", [](RocalContext context) {
+        size_t size = 0;  // Serialized checkpoint size in bytes.
+        RocalStatus status = rocalCheckpoint(context, &size);
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to serialize checkpoint");
+        }
+        if (size == 0) {
+            throw std::runtime_error("Serialized checkpoint is empty");
+        }
+        std::string serialized_ckpt(size, '\0');  // Buffer for checkpoint bytes.
+        status = rocalGetSerializedCheckpointString(context, serialized_ckpt.data());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to get serialized checkpoint string");
+        }
+        return py::bytes(serialized_ckpt);
+    }, "Returns the serialized checkpoint as Python bytes");
+    // Restore pipeline state from a checkpoint bytes object.
+    m.def("restoreFromCheckpoint", [](RocalContext context, py::bytes checkpoint_bytes) {
+        std::string ckpt = checkpoint_bytes;  // Checkpoint blob copied from Python.
+        RocalStatus status = rocalRestoreFromSerializedCheckpoint(context, ckpt.data(), ckpt.size());
+        if (status != ROCAL_OK) {
+            throw std::runtime_error("Failed to restore from checkpoint");
+        }
+    }, "Restores the pipeline from a checkpoint bytes object");
     // rocal_api_types.h
     py::class_<TimingInfo>(m, "TimingInfo")
         .def_readwrite("load_time", &TimingInfo::load_time)
@@ -803,6 +837,13 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .value("CONSTANT", ROCAL_CONSTANT)
         .value("REFLECT_NO_EDGE", ROCAL_REFLECT_NO_EDGE)
         .export_values();
+    // Bitwise Ops enum
+    py::enum_<RocalBitwiseOp>(types_m, "RocalBitwiseOp", "Bitwise operation selector")
+        .value("BITWISE_AND", ROCAL_BITWISE_AND)
+        .value("BITWISE_OR",  ROCAL_BITWISE_OR)
+        .value("BITWISE_XOR", ROCAL_BITWISE_XOR)
+        .value("BITWISE_NOT", ROCAL_BITWISE_NOT)
+        .export_values();
     py::class_<ROIxywh>(m, "ROIxywh")
         .def(py::init<>())
         .def_readwrite("x", &ROIxywh::x)
@@ -1175,6 +1216,20 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("snpNoise", &rocalSnPNoise,
           py::return_value_policy::reference);
+    m.def("gaussianNoise", &rocalGaussianNoise,
+          py::return_value_policy::reference);
+    m.def("shotNoise", &rocalShotNoise,
+          py::return_value_policy::reference);
+    m.def("water", &rocalWater,
+          py::return_value_policy::reference);
+    m.def("lut", &rocalLUT,
+          py::return_value_policy::reference);
+    m.def("posterize", &rocalPosterize,
+          py::return_value_policy::reference);
+    m.def("solarize", &rocalSolarize,
+          py::return_value_policy::reference);
+    m.def("jpegCompressionDistortion", &rocalJpegCompressionDistortion,
+          py::return_value_policy::reference);
     m.def("exposure", &rocalExposure,
           py::return_value_policy::reference);
     m.def("pixelate", &rocalPixelate,
@@ -1184,6 +1239,14 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("randomCrop", &rocalRandomCrop,
           py::return_value_policy::reference);
     m.def("colorTemp", &rocalColorTemp,
+          py::return_value_policy::reference);
+    m.def("colorJitter", &rocalColorJitter,
+          py::return_value_policy::reference);
+    m.def("spatter", &rocalSpatter,
+          py::return_value_policy::reference);
+    m.def("channelPermute", &rocalChannelPermute,
+          py::return_value_policy::reference);
+    m.def("colorToGreyscale", &rocalColorToGreyscale,
           py::return_value_policy::reference);
     m.def("lensCorrection", &rocalLensCorrection,
           py::return_value_policy::reference);
@@ -1202,6 +1265,16 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("tensorMulScalar", &rocalTensorMulScalar,
           py::return_value_policy::reference);
     m.def("tensorAddTensor", &rocalTensorAddTensor,
+          py::return_value_policy::reference);
+    m.def("tensorSum", &rocalTensorSum,
+          py::return_value_policy::reference);
+    m.def("tensorMin", &rocalTensorMin,
+          py::return_value_policy::reference);
+    m.def("tensorMax", &rocalTensorMax,
+          py::return_value_policy::reference);
+    m.def("tensorMean", &rocalTensorMean,
+          py::return_value_policy::reference);
+    m.def("tensorStdDev", &rocalTensorStdDev,
           py::return_value_policy::reference);
     m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection,
           py::return_value_policy::reference);
@@ -1238,6 +1311,18 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("threshold", &rocalThreshold,
           py::return_value_policy::reference);
     m.def("warpPerspective", &rocalWarpPerspective,
+          py::return_value_policy::reference);
+    m.def("remap", &rocalRemap,
+          py::return_value_policy::reference);
+    m.def("cropAndPatch", &rocalCropAndPatch,
+          py::return_value_policy::reference);
+    m.def("bitwiseOps", &rocalBitwiseOps,
+          py::return_value_policy::reference);
+    m.def("erase", &rocalErase,
+          py::return_value_policy::reference);
+    m.def("ricap", &rocalRicap,
+          py::return_value_policy::reference);
+    m.def("log", &rocalLog,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

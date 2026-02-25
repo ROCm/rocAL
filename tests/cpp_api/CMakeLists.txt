@@ -269,3 +269,32 @@ add_test(NAME serialization_test_gpu
               COMMAND serialization_test 
               ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/serialization_test)
+
+# 19 - checkpoint_save
+add_test(
+  NAME
+    checkpoint_save
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "checkpoint_test"
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt
+            0
+)
+
+#20 - restore from checkpoint
+add_test(
+  NAME
+    checkpoint_restore
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command bash -c
+            "./checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0 && \
+             ./restore_checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0"
+) 
