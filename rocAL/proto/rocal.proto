@@ -96,6 +96,7 @@ message OperatorDef {
   // Inputs
   repeated InputOutput inputs = 4;
   repeated InputOutput outputs = 5;
+  optional bool is_sequence_operator = 6;
 }
 
 // Stores pipeline arguments and a list of nodes/operators

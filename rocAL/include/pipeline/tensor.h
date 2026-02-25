@@ -358,6 +358,7 @@ class Tensor : public rocalTensor {
     void reset_tensor_roi() { _info.reset_tensor_roi_buffers(); }
     void reset_audio_sample_rate() { _info.reallocate_tensor_sample_rate_buffers(); }
     void update_audio_tensor_sample_rate(const std::vector<float>& sample_rate);
+    void set_sequence_batch_size(unsigned sequence_length) { _info.set_sequence_batch_size(sequence_length); }
     void set_roi(unsigned* roi_ptr) { _info.set_roi_ptr(roi_ptr); }
     void copy_roi(void* roi_buffer) override { _info.copy_roi(roi_buffer); }
     size_t get_roi_dims_size() override { return _info.roi().no_of_dims(); }

@@ -2182,16 +2182,30 @@ void MasterGraph::deserialize(rocal_proto::PipelineDef *pipe_def) {
                 // fetch the output tensor details and create it
                 auto output_tensor = create_operator_output(op_def.outputs()[0], true);
                 auto node_name = get_node_name(op_def.name());
-                // For Audio loader nodes, explicitly allocate the resample rate
-                if (node_name == "AudioLoaderNode" || node_name == "AudioLoaderSingleShardNode") {
-                    output_tensor->reset_audio_sample_rate();
-                }
-                auto loader_node = this->add_node(node_name, {}, {output_tensor}, true);
 
                 ArgumentSet args_list;
                 if (_pipeline_serializer.deserialize_args_from_protobuf(op_def, args_list) != ROCAL_OK)
                     THROW("Failed to deserialize arguments for loader : " + op_def.name());
+                
+                // For Audio loader nodes, explicitly allocate the resample rate
+                if (node_name == "AudioLoaderNode" || node_name == "AudioLoaderSingleShardNode") {
+                    output_tensor->reset_audio_sample_rate();
+                }
 
+                if ((node_name == "ImageLoaderNode" || node_name == "ImageLoaderSingleShardNode") 
+                     && op_def.is_sequence_operator()) {
+                    set_sequence_reader_output();
+                    // Find sequence length in the list of args_list
+                    try {
+                        auto sequence_length = args_list.get<unsigned>("sequence_length");
+                        set_sequence_batch_size(sequence_length);
+                        output_tensor->set_sequence_batch_size(sequence_length);
+                    } catch (const std::exception& e) {
+                        THROW("Failed to extract sequence length value for sequence reader");
+                    }
+                }
+
+                auto loader_node = this->add_node(node_name, {}, {output_tensor}, true);
                 // Extract the loop argument from args_list and set it in MasterGraph
                 for (const auto& arg_pair : args_list) {
                     auto& arg = arg_pair.second;

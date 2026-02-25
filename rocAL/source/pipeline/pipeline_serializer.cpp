@@ -287,6 +287,22 @@ void PipelineSerializer::serialize_operators(std::vector<std::shared_ptr<Pipelin
         op->set_module_name(pipe_op->module_name);
         serialize_pipeop_arguments(pipe_op->get_arguments(), op);
 
+        // Check if sequence_length argument exists for this operator and set it in the protobuf if present
+        const ArgumentSet& args = pipe_op->get_arguments();
+        if (args.size() > 0) {
+            try {
+                auto seq_len_arg = args.get<unsigned>("sequence_length");
+                if (seq_len_arg > 0) {
+                    op->set_is_sequence_operator(true);
+                } else {
+                    op->set_is_sequence_operator(false);
+                }
+            } catch (const std::exception& e) {
+                // Argument 'sequence_length' does not exist, do nothing
+                op->set_is_sequence_operator(false);
+            }
+        }
+
         if (pipe_op->module_name == "reader")
             continue;  // Readers do not have tensor outputs, hence return
 
