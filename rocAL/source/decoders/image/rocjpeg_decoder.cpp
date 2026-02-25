@@ -77,7 +77,7 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _decode_params.resize(_batch_size);
     _image_needs_rescaling.resize(_batch_size);
 
-    // Allocate mem for width and height arrays for src and dst
+    // Allocate pinned memory for width and height arrays for src and dst.
     if (!_dev_src_width) CHECK_HIP(hipHostMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
     if (!_dev_src_height) CHECK_HIP(hipHostMalloc((void **)&_dev_src_height, _batch_size * sizeof(size_t)));
     if (!_dev_dst_width) CHECK_HIP(hipHostMalloc((void **)&_dev_dst_width, _batch_size * sizeof(size_t)));

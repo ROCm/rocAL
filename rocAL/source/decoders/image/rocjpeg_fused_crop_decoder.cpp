@@ -61,6 +61,10 @@ void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) {
     _crop_window.W = std::lround((_bbox_coord[2]) * _original_image_width);
     _crop_window.H = std::lround((_bbox_coord[3]) * _original_image_height);
 
+    // Clamp crop dimensions to max decoded dimensions to ensure ROI consistency with output constraints.
+    _crop_window.W = std::min(_crop_window.W, static_cast<unsigned int>(_max_decoded_width));
+    _crop_window.H = std::min(_crop_window.H, static_cast<unsigned int>(_max_decoded_height));
+
     _decode_params->crop_rectangle.left = _crop_window.x;
     _decode_params->crop_rectangle.top = _crop_window.y;
     _decode_params->crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
