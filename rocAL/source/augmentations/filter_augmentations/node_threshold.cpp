@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_threshold.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ThresholdNode)
+
 ThresholdNode::ThresholdNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs) {}
 
@@ -109,6 +111,15 @@ void ThresholdNode::create_node() {
 void ThresholdNode::init(std::vector<float>& min_val, std::vector<float>& max_val) {
     _min = min_val;
     _max = max_val;
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("min_val", min_val);
+    _args.add_new_argument("max_val", max_val);
+}
+
+void ThresholdNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ThresholdNode, std::vector<float>, std::vector<float>>(this, {"min_val", "max_val"}, arguments)) return;
+    THROW("Unsupported argument types for ThresholdNode");
 }
 
 void ThresholdNode::update_node() {}

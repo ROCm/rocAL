@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 #include "pipeline/tensor.h"
 
+REGISTER_NODE(ColorCastNode)
+
 static void fill_rgb_for_batch(std::vector<float> &rgb_out, unsigned batch_size, const std::vector<float> &rgb_in) {
     rgb_out.resize(batch_size * 3);
     if (rgb_in.size() == 3) {
@@ -113,11 +115,25 @@ void ColorCastNode::create_node() {
 void ColorCastNode::init(FloatParam *alpha_param, std::vector<float> rgb) {
     _alpha.set_param(core(alpha_param));
     fill_rgb_for_batch(_rgb, _batch_size, rgb);
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("alpha", alpha_param);
+    _args.add_new_argument("rgb", rgb);
 }
 
 void ColorCastNode::init(float alpha, std::vector<float> rgb) {
     _alpha.set_param(alpha);
     fill_rgb_for_batch(_rgb, _batch_size, rgb);
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("alpha", alpha);
+    _args.add_new_argument("rgb", rgb);
+}
+
+void ColorCastNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ColorCastNode, FloatParam*, std::vector<float>>(this, {"alpha", "rgb"}, arguments)) return;
+    if (init_args<ColorCastNode, float, std::vector<float>>(this, {"alpha", "rgb"}, arguments)) return;
+    THROW("Unsupported argument types for ColorCastNode");
 }
 
 void ColorCastNode::update_node() {

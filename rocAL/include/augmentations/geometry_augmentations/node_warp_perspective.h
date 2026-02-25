@@ -33,6 +33,8 @@ public:
 
     // Initialize with a perspective matrix (size == 9 or size == 9 * batch_size)
     void init(const std::vector<float>& perspective_matrix, ResizeInterpolationType interpolation_type);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "WarpPerspectiveNode"; }
 
 protected:
     void create_node() override;

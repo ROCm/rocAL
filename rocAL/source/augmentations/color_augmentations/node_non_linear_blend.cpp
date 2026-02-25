@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_non_linear_blend.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(NonLinearBlendNode)
+
 NonLinearBlendNode::NonLinearBlendNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs),
       _stddev(STDDEV_RANGE[0], STDDEV_RANGE[1]) {
@@ -64,10 +66,22 @@ void NonLinearBlendNode::create_node() {
 
 void NonLinearBlendNode::init(float stddev) {
     _stddev.set_param(stddev);
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("stddev", stddev);
 }
 
 void NonLinearBlendNode::init(FloatParam* stddev) {
     _stddev.set_param(core(stddev));
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("stddev", stddev);
+}
+
+void NonLinearBlendNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<NonLinearBlendNode, float>(this, {"stddev"}, arguments)) return;
+    if (init_args<NonLinearBlendNode, FloatParam*>(this, {"stddev"}, arguments)) return;
+    THROW("Unsupported argument types for NonLinearBlendNode");
 }
 
 void NonLinearBlendNode::update_node() {

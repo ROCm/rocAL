@@ -35,6 +35,8 @@ class ColorCastNode : public Node {
     void init(FloatParam *alpha_param, std::vector<float> rgb);
     // Fixed alpha and RGB triplet(s)
     void init(float alpha, std::vector<float> rgb);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ColorCastNode"; }
 
    protected:
     void create_node() override;

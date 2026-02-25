@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(GridMaskNode)
+
 GridMaskNode::GridMaskNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs) {}
 
@@ -78,6 +80,18 @@ void GridMaskNode::init(unsigned tile_width, float grid_ratio, float grid_angle_
     _grid_angle = grid_angle_radians;
     _translate_x = translate_x;
     _translate_y = translate_y;
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("tile_width", tile_width);
+    _args.add_new_argument("grid_ratio", grid_ratio);
+    _args.add_new_argument("grid_angle_radians", grid_angle_radians);
+    _args.add_new_argument("translate_x", translate_x);
+    _args.add_new_argument("translate_y", translate_y);
 }
 
 void GridMaskNode::update_node() {}
+
+void GridMaskNode::initialize_args(const ArgumentSet &arguments) {
+    if (init_args<GridMaskNode, unsigned, float, float, unsigned, unsigned>(this, {"tile_width", "grid_ratio", "grid_angle_radians", "translate_x", "translate_y"}, arguments)) return;
+    THROW("Unsupported argument types for GridMaskNode");
+}

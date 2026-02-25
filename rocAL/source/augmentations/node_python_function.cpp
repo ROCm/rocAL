@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include "augmentations/node_python_function.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(PythonFunctionNode)
+
 #ifdef ROCAL_PYTHON_FUNCTION
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -74,9 +76,17 @@ void PythonFunctionNode::create_node() {
 
 void PythonFunctionNode::init(unsigned long long function_id) {
     _function_id = function_id;
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("function_id", function_id);
 }
 
 void PythonFunctionNode::update_node() {}
+
+void PythonFunctionNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<PythonFunctionNode, unsigned long long>(this, {"function_id"}, arguments)) return;
+    THROW("Unsupported argument types for PythonFunctionNode");
+}
 
 std::pair<std::string, size_t> numpy_type_from_vx(vx_enum type) {
     switch (type) {

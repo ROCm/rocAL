@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_magnitude.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(MagnitudeNode)
+
 MagnitudeNode::MagnitudeNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -57,6 +59,11 @@ void MagnitudeNode::create_node() {
 #else
     THROW("MagnitudeNode: vxExtRppMagnitude requires amd_rpp version >= 3.1.3");
 #endif
+}
+
+void MagnitudeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<MagnitudeNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for MagnitudeNode");
 }
 
 void MagnitudeNode::update_node() {}

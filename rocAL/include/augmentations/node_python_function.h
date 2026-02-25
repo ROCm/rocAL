@@ -75,6 +75,8 @@ class PythonFunctionNode : public Node {
     PythonFunctionNode() = delete;
 
     void init(unsigned long long function_id);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "PythonFunctionNode"; }
 
    protected:
     void create_node() override;

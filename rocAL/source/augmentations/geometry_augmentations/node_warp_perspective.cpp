@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "pipeline/exception.h"
 
+REGISTER_NODE(WarpPerspectiveNode)
+
 WarpPerspectiveNode::WarpPerspectiveNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {
 }
@@ -101,6 +103,15 @@ void WarpPerspectiveNode::create_node() {
 void WarpPerspectiveNode::init(const std::vector<float>& perspective_matrix, ResizeInterpolationType interpolation_type) {
     _perspective = perspective_matrix;
     _interpolation_type = static_cast<int>(interpolation_type);
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("perspective_matrix", perspective_matrix);
+    _args.add_new_argument("interpolation_type", interpolation_type);
+}
+
+void WarpPerspectiveNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<WarpPerspectiveNode, const std::vector<float>, ResizeInterpolationType>(this, {"perspective_matrix", "interpolation_type"}, arguments)) return;
+    THROW("Unsupported argument types for WarpPerspectiveNode");
 }
 
 void WarpPerspectiveNode::update_node() {}

@@ -69,6 +69,6 @@ void ExposureNode::update_node() {
 
 void ExposureNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<ExposureNode, float>(this, {"exposure_factor"}, arguments)) return;
-    if (init_args<ExposureNode, FloatParam*>(this, {"exposure_factor"}, arguments)) return;
+    if (init_args<ExposureNode, FloatParam*>(this, {"exposure_factor_param"}, arguments)) return;
     THROW("Unsupported argument types for ExposureNode");
 }

@@ -22,6 +22,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_phase.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(PhaseNode)
+
 PhaseNode::PhaseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -56,6 +58,11 @@ void PhaseNode::create_node() {
 #else
     THROW("PhaseNode: vxExtRppPhase requires amd_rpp version >= 3.1.3");
 #endif
+}
+
+void PhaseNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<PhaseNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for PhaseNode");
 }
 
 void PhaseNode::update_node() {}

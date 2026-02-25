@@ -72,6 +72,6 @@ void GammaNode::update_node() {
 
 void GammaNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<GammaNode, float>(this, {"gamma"}, arguments)) return;
-    if (init_args<GammaNode, FloatParam*>(this, {"gamma"}, arguments)) return;
+    if (init_args<GammaNode, FloatParam*>(this, {"gamma_param"}, arguments)) return;
     THROW("Unsupported argument types for GammaNode");
 }

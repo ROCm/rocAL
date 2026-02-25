@@ -76,6 +76,6 @@ void ContrastNode::update_node() {
 
 void ContrastNode::initialize_args(const ArgumentSet& arguments) {
     if (init_args<ContrastNode, float, float>(this, {"contrast_factor", "contrast_center"}, arguments)) return;
-    if (init_args<ContrastNode, FloatParam*, FloatParam*>(this, {"contrast_factor", "contrast_center"}, arguments)) return;
+if (init_args<ContrastNode, FloatParam*, FloatParam*>(this, {"contrast_factor_param", "contrast_center_param"}, arguments)) return;
     THROW("Unsupported argument types for ContrastNode");
 }

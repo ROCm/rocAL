@@ -26,6 +26,8 @@ public:
 
     // Fixed parameters
     void init(int kernel_size, ImageBorderType border_type);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "MedianFilterNode"; }
 
 protected:
     void create_node() override;

@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_erode.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ErodeNode)
+
 ErodeNode::ErodeNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -59,6 +61,14 @@ void ErodeNode::create_node() {
 
 void ErodeNode::init(unsigned kernel_size) {
     _kernel_size = kernel_size;
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("kernel_size", kernel_size);
+}
+
+void ErodeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ErodeNode, unsigned>(this, {"kernel_size"}, arguments)) return;
+    THROW("Unsupported argument types for ErodeNode");
 }
 
 void ErodeNode::update_node() {}

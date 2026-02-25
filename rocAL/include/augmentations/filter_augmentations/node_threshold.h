@@ -32,6 +32,8 @@ class ThresholdNode : public Node {
     ThresholdNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     ThresholdNode() = delete;
     void init(std::vector<float>& min_val, std::vector<float>& max_val);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ThresholdNode"; }
 
    protected:
     void create_node() override;

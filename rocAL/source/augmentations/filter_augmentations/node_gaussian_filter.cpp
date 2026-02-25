@@ -21,6 +21,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_gaussian_filter.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(GaussianFilterNode)
+
 GaussianFilterNode::GaussianFilterNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs),
       _stddev(STDDEV_RANGE[0], STDDEV_RANGE[1]) {}
@@ -29,12 +31,28 @@ void GaussianFilterNode::init(float stddev, int kernel_size, ImageBorderType bor
     _stddev.set_param(stddev);
     _kernel_size = kernel_size;
     _border_type = static_cast<int>(border_type);
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("stddev", stddev);
+    _args.add_new_argument("kernel_size", kernel_size);
+    _args.add_new_argument("border_type", border_type);
 }
 
 void GaussianFilterNode::init(FloatParam* stddev_param, int kernel_size, ImageBorderType border_type) {
     _stddev.set_param(core(stddev_param));
     _kernel_size = kernel_size;
     _border_type = static_cast<int>(border_type);
+
+    // Add all arguments as part of the Node
+    _args.add_new_argument("stddev_param", stddev_param);
+    _args.add_new_argument("kernel_size", kernel_size);
+    _args.add_new_argument("border_type", border_type);
+}
+    
+void GaussianFilterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<GaussianFilterNode, float, int, ImageBorderType>(this, {"stddev", "kernel_size", "border_type"}, arguments)) return;
+    if (init_args<GaussianFilterNode, FloatParam*, int, ImageBorderType>(this, {"stddev_param", "kernel_size", "border_type"}, arguments)) return;
+    THROW("Unsupported argument types for GaussianFilterNode");
 }
 
 void GaussianFilterNode::create_node() {

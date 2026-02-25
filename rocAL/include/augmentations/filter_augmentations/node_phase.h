@@ -24,6 +24,10 @@ public:
     explicit PhaseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs);
     PhaseNode() = delete;
 
+    void init() {}
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "PhaseNode"; }
+
 protected:
     void create_node() override;
     void update_node() override;
