@@ -38,6 +38,8 @@ public:
     // Each vector supports per-sample [x, y, w, h] or [l, t, r, b] based on roi type.
     void init(const std::vector<int>& crop_roi_vec,
               const std::vector<int>& patch_roi_vec);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "CropAndPatchNode"; }
 
 protected:
     void create_node() override;

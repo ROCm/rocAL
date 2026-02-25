@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_posterize.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(PosterizeNode)
+
 PosterizeNode::PosterizeNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                           _level_bits(LEVEL_BITS_RANGE[0], LEVEL_BITS_RANGE[1]) {}
 
@@ -53,12 +55,24 @@ void PosterizeNode::create_node() {
 
 void PosterizeNode::init(int level_bits) {
     _level_bits.set_param(level_bits);
+
+    // Add all arguments to the node
+    _args.add_new_argument("level_bits", level_bits);
 }
 
 void PosterizeNode::init(IntParam* level_bits_param) {
     _level_bits.set_param(core(level_bits_param));
+
+    // Add all arguments to the node
+    _args.add_new_argument("level_bits_param", level_bits_param);
 }
 
 void PosterizeNode::update_node() {
     _level_bits.update_array();
+}
+
+void PosterizeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<PosterizeNode, int>(this, {"level_bits"}, arguments)) return;
+    if (init_args<PosterizeNode, IntParam*>(this, {"level_bits_param"}, arguments)) return;
+    THROW("Unsupported argument types for PosterizeNode");
 }

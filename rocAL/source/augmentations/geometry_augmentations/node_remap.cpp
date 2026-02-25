@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include <vx_ext_amd.h>
 #include "pipeline/exception.h"
 
+REGISTER_NODE(RemapNode)
+
 RemapNode::RemapNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -135,6 +137,11 @@ void RemapNode::init(const std::vector<float>& row_remap_vec,
     _row_remap_vec = row_remap_vec;
     _col_remap_vec = col_remap_vec;
     _interpolation_type = static_cast<int>(interpolation_type);
+
+    // Add all arguments to the node for serialization
+    _args.add_new_argument("row_remap_vec", row_remap_vec);
+    _args.add_new_argument("col_remap_vec", col_remap_vec);
+    _args.add_new_argument("interpolation_type", interpolation_type);
 }
 
 RemapNode::~RemapNode() {
@@ -162,4 +169,9 @@ RemapNode::~RemapNode() {
         if (_col_tbl_ptr) free(_col_tbl_ptr);
     }
     _row_tbl_ptr = _col_tbl_ptr = nullptr;
+}
+
+void RemapNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<RemapNode, std::vector<float>, std::vector<float>, ResizeInterpolationType>(this, {"row_remap_vec", "col_remap_vec", "interpolation_type"}, arguments)) return;
+    THROW("Unsupported argument types for RemapNode");
 }

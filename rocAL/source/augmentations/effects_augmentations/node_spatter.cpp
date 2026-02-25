@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_spatter.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SpatterNode)
+
 SpatterNode::SpatterNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs)
     : Node(inputs, outputs),
       _red_param(COLOR_RANGE[0], COLOR_RANGE[1]),
@@ -71,12 +73,22 @@ void SpatterNode::init(uint8_t red, uint8_t green, uint8_t blue) {
     _red_param.set_param(static_cast<int>(red));
     _green_param.set_param(static_cast<int>(green));
     _blue_param.set_param(static_cast<int>(blue));
+
+    // Add all arguments to the node
+    _args.add_new_argument("red", red);
+    _args.add_new_argument("green", green);
+    _args.add_new_argument("blue", blue);
 }
 
 void SpatterNode::init(IntParam *red, IntParam *green, IntParam *blue) {
     _red_param.set_param(core(red));
     _green_param.set_param(core(green));
     _blue_param.set_param(core(blue));
+
+    // Add all arguments to the node
+    _args.add_new_argument("red", red);
+    _args.add_new_argument("green", green);
+    _args.add_new_argument("blue", blue);
 }
 
 void SpatterNode::update_node() {
@@ -91,4 +103,10 @@ void SpatterNode::update_node() {
     _color[2] = static_cast<vx_uint8>(_blue_param.renew());
 
     vxCopyArrayRange(_color_array, 0, 3, sizeof(vx_uint8), _color.data(), VX_WRITE_ONLY, VX_MEMORY_TYPE_HOST);
+}
+
+void SpatterNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SpatterNode, uint8_t, uint8_t, uint8_t>(this, {"red", "green", "blue"}, arguments)) return;
+    if (init_args<SpatterNode, IntParam*, IntParam*, IntParam*>(this, {"red", "green", "blue"}, arguments)) return;
+    THROW("Unsupported argument types for SpatterNode");
 }

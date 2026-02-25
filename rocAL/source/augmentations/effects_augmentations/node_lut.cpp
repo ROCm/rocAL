@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 #include "pipeline/tensor.h"
 
+REGISTER_NODE(LutNode)
+
 LutNode::LutNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void LutNode::create_node() {
@@ -131,4 +133,9 @@ LutNode::~LutNode() {
         if (_lut_buffer) free(_lut_buffer);
     }
     if (_lut_tensor) vxReleaseTensor(&_lut_tensor);
+}
+
+void LutNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<LutNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for LutNode");
 }

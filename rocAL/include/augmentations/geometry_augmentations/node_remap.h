@@ -37,6 +37,8 @@ public:
     void init(const std::vector<float>& row_remap_vec,
               const std::vector<float>& col_remap_vec,
               ResizeInterpolationType interpolation_type);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "RemapNode"; }
 
 protected:
     void create_node() override;

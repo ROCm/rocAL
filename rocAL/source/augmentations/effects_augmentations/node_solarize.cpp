@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_solarize.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(SolarizeNode)
+
 SolarizeNode::SolarizeNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                         _threshold(THRESHOLD_RANGE[0], THRESHOLD_RANGE[1]) {}
 
@@ -53,12 +55,24 @@ void SolarizeNode::create_node() {
 
 void SolarizeNode::init(float threshold) {
     _threshold.set_param(threshold);
+
+    // Add all arguments to the node
+    _args.add_new_argument("threshold", threshold);
 }
 
 void SolarizeNode::init(FloatParam* threshold_param) {
     _threshold.set_param(core(threshold_param));
+
+    // Add all arguments to the node
+    _args.add_new_argument("threshold_param", threshold_param);
 }
 
 void SolarizeNode::update_node() {
     _threshold.update_array();
+}
+
+void SolarizeNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<SolarizeNode, float>(this, {"threshold"}, arguments)) return;
+    if (init_args<SolarizeNode, FloatParam*>(this, {"threshold_param"}, arguments)) return;
+    THROW("Unsupported argument types for SolarizeNode");
 }

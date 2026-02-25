@@ -33,6 +33,8 @@ class ColorJitterNode : public Node {
     ColorJitterNode() = delete;
     void init(float brightness, float contrast, float hue, float saturation);
     void init(FloatParam *brightness_param, FloatParam *contrast_param, FloatParam *hue_param, FloatParam *saturation_param);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ColorJitterNode"; }
 
    protected:
     void create_node() override;

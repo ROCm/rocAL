@@ -28,6 +28,12 @@ THE SOFTWARE.
 #include "augmentations/arithmetic_augmentations/node_tensor_statistics.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(TensorSumNode)
+REGISTER_NODE(TensorMinNode)
+REGISTER_NODE(TensorMaxNode)
+REGISTER_NODE(TensorMeanNode)
+REGISTER_NODE(TensorStdDevNode)
+
 #if VX_EXT_RPP_CHECK_VERSION(3, 1, 7)
 namespace {
 inline void tensor_reduction_create(Node *node,
@@ -142,6 +148,31 @@ void TensorStdDevNode::create_node() {
                          _inputs[1]->handle(),
                          _graph->get(),
                          _inputs[0]);
+}
+
+void TensorSumNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<TensorSumNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for TensorSumNode");
+}
+
+void TensorMinNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<TensorMinNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for TensorMinNode");
+}
+
+void TensorMaxNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<TensorMaxNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for TensorMaxNode");
+}
+
+void TensorMeanNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<TensorMeanNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for TensorMeanNode");
+}
+
+void TensorStdDevNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<TensorStdDevNode>(this, {}, arguments)) return;
+    THROW("Unsupported argument types for TensorStdDevNode");
 }
 
 #endif

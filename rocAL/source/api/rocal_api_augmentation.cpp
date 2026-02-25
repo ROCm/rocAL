@@ -3937,7 +3937,7 @@ rocalColorToGreyscale(
         }
         output_info.set_color_format(RocalColorFormat::U8);
         output = context->master_graph->create_tensor(output_info, is_output);
-        ColorToGreyscaleNode::SubpixelLayout layout = static_cast<ColorToGreyscaleNode::SubpixelLayout>(subpixel_layout);
+        SubpixelLayout layout = static_cast<SubpixelLayout>(subpixel_layout);
         context->master_graph->add_node<ColorToGreyscaleNode>({input}, {output})->init(layout);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);

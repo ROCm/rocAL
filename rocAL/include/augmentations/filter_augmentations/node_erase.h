@@ -40,6 +40,8 @@ class EraseNode : public Node {
               std::vector<float> shape,
               std::vector<unsigned> num_boxes,
               std::vector<float> fill_value);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "EraseNode"; }
 
    protected:
     void create_node() override;

@@ -31,7 +31,9 @@ public:
     BitwiseOpsNode() = delete;
 
     // Initialize the op to perform
-    void init(BitwiseOp op) { _operator = op; }
+    void init(BitwiseOp op);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "BitwiseOpsNode"; }
 
 protected:
     void create_node() override;

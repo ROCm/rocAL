@@ -33,6 +33,8 @@ class SolarizeNode : public Node {
     SolarizeNode() = delete;
     void init(float threshold);
     void init(FloatParam *threshold_param);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "SolarizeNode"; }
 
    protected:
     void create_node() override;

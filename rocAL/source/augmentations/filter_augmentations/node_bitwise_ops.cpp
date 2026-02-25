@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/filter_augmentations/node_bitwise_ops.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(BitwiseOpsNode)
+
 void BitwiseOpsNode::create_node() {
     if (_node) return;
 
@@ -65,3 +67,15 @@ void BitwiseOpsNode::create_node() {
 }
 
 void BitwiseOpsNode::update_node() { }
+
+void BitwiseOpsNode::init(BitwiseOp op) { 
+    _operator = op; 
+
+    // Add all arguments to the node
+    _args.add_new_argument("op", op);
+}
+
+void BitwiseOpsNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<BitwiseOpsNode, BitwiseOp>(this, {"op"}, arguments)) return;
+    THROW("Unsupported argument types for BitwiseOpsNode");
+}

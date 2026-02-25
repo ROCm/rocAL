@@ -33,6 +33,8 @@ class ShotNoiseNode : public Node {
     ShotNoiseNode() = delete;
     void init(float noise_factor, int seed);
     void init(FloatParam *noise_factor_param, int seed);
+    void initialize_args(const ArgumentSet& arguments) override;
+    std::string node_name() const override { return "ShotNoiseNode"; }
 
    protected:
     void create_node() override;

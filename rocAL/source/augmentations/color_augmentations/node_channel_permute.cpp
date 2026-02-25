@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/color_augmentations/node_channel_permute.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ChannelPermuteNode)
+
 ChannelPermuteNode::ChannelPermuteNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs) {}
 
 void ChannelPermuteNode::create_node() {
@@ -51,6 +53,8 @@ void ChannelPermuteNode::create_node() {
 
 void ChannelPermuteNode::init(const std::vector<unsigned> &permutation_order) {
     _permutation_order = permutation_order;
+    // Add all arguments to the node
+    _args.add_new_argument("permutation_order", permutation_order);
 }
 
 void ChannelPermuteNode::update_node() {
@@ -68,4 +72,9 @@ void ChannelPermuteNode::update_node() {
         THROW("ChannelPermuteNode: vxTruncateArray failed: " + TOSTR(status));
     if ((status = vxAddArrayItems(_permutation_array, _batch_size * 3, perm_tensor.data(), sizeof(vx_uint32))) != VX_SUCCESS)
         THROW("ChannelPermuteNode: vxAddArrayItems failed: " + TOSTR(status));
+}
+
+void ChannelPermuteNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ChannelPermuteNode, const std::vector<unsigned>>(this, {"permutation_order"}, arguments)) return;
+    THROW("Unsupported argument types for ChannelPermuteNode");
 }

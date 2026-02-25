@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_shot_noise.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(ShotNoiseNode)
+
 ShotNoiseNode::ShotNoiseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                           _noise_factor(NOISE_FACTOR_RANGE[0], NOISE_FACTOR_RANGE[1]) {}
 
@@ -55,13 +57,27 @@ void ShotNoiseNode::create_node() {
 void ShotNoiseNode::init(float noise_factor, int seed) {
     _noise_factor.set_param(noise_factor);
     _seed = seed;
+
+    // Add all arguments to the node
+    _args.add_new_argument("noise_factor", noise_factor);
+    _args.add_new_argument("seed", seed);
 }
 
 void ShotNoiseNode::init(FloatParam* noise_factor_param, int seed) {
     _noise_factor.set_param(core(noise_factor_param));
     _seed = seed;
+
+    // Add all arguments to the node
+    _args.add_new_argument("noise_factor_param", noise_factor_param);
+    _args.add_new_argument("seed", seed);
 }
 
 void ShotNoiseNode::update_node() {
     _noise_factor.update_array();
+}
+
+void ShotNoiseNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<ShotNoiseNode, float, int>(this, {"noise_factor", "seed"}, arguments)) return;
+    if (init_args<ShotNoiseNode, FloatParam*, int>(this, {"noise_factor_param", "seed"}, arguments)) return;
+    THROW("Unsupported argument types for ShotNoiseNode");
 }

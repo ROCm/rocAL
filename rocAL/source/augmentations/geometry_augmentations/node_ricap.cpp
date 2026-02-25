@@ -27,6 +27,8 @@ THE SOFTWARE.
 #include <vx_ext_amd.h>
 #include "pipeline/exception.h"
 
+REGISTER_NODE(RicapNode)
+
 RicapNode::RicapNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs)
     : Node(inputs, outputs) {}
 
@@ -151,6 +153,10 @@ void RicapNode::init(const std::vector<unsigned>& permutation,
                      const std::vector<int>& crop_rois) {
     _permutation_vec = permutation;
     _crop_rois_vec = crop_rois;
+
+    // Add all arguments to the node for serialization
+    _args.add_new_argument("permutation", permutation);
+    _args.add_new_argument("crop_rois", crop_rois);
 }
 
 void RicapNode::update_node() {}
@@ -187,4 +193,9 @@ RicapNode::~RicapNode() {
     }
     _perm_ptr = nullptr;
     _crop_rois_ptr = nullptr;
+}
+
+void RicapNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<RicapNode, std::vector<unsigned>, std::vector<int>>(this, {"permutation", "crop_rois"}, arguments)) return;
+    THROW("Unsupported argument types for RicapNode");
 }

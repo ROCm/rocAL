@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "augmentations/effects_augmentations/node_gaussian_noise.h"
 #include "pipeline/exception.h"
 
+REGISTER_NODE(GaussianNoiseNode)
+
 GaussianNoiseNode::GaussianNoiseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
                                                                                                                   _mean(MEAN_RANGE[0], MEAN_RANGE[1]),
                                                                                                                   _stddev(STDDEV_RANGE[0], STDDEV_RANGE[1]) {}
@@ -58,15 +60,31 @@ void GaussianNoiseNode::init(float mean, float stddev, int seed) {
     _mean.set_param(mean);
     _stddev.set_param(stddev);
     _seed = seed;
+
+    // Add all arguments to the node
+    _args.add_new_argument("mean", mean);
+    _args.add_new_argument("stddev", stddev);
+    _args.add_new_argument("seed", seed);
 }
 
 void GaussianNoiseNode::init(FloatParam* mean_param, FloatParam* stddev_param, int seed) {
     _mean.set_param(core(mean_param));
     _stddev.set_param(core(stddev_param));
     _seed = seed;
+
+    // Add all arguments to the node
+    _args.add_new_argument("mean_param", mean_param);
+    _args.add_new_argument("stddev_param", stddev_param);
+    _args.add_new_argument("seed", seed);
 }
 
 void GaussianNoiseNode::update_node() {
     _mean.update_array();
     _stddev.update_array();
+}
+
+void GaussianNoiseNode::initialize_args(const ArgumentSet& arguments) {
+    if (init_args<GaussianNoiseNode, float, float, int>(this, {"mean", "stddev", "seed"}, arguments)) return;
+    if (init_args<GaussianNoiseNode, FloatParam*, FloatParam*, int>(this, {"mean_param", "stddev_param", "seed"}, arguments)) return;
+    THROW("Unsupported argument types for GaussianNoiseNode");
 }
