@@ -208,7 +208,8 @@ void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments
                         || op_arg.type_name == "unsigned" || op_arg.type_name == "size_t"
                         || op_arg.type_name == "uint8_t") {
                         static_cast<void>(arg->add_int_vectors());
-                    } else if (op_arg.type_name == "float") {
+                    } else if (op_arg.type_name == "float" || op_arg.type_name == "CameraMatrix"
+                                || op_arg.type_name == "DistortionCoeffs") {
                         static_cast<void>(arg->add_float_vectors());
                     } else if (op_arg.type_name == "char_str" || op_arg.type_name == "string"
                                || op_arg.type_name == "map_string") {
@@ -232,7 +233,9 @@ void PipelineSerializer::serialize_pipeop_arguments(const ArgumentSet& arguments
                                 vec->add_values(static_cast<int64_t>(std::any_cast<int>(v)));
                             }
                         }
-                    } else if (op_arg.type_name == "float") {
+                    } else if (op_arg.type_name == "float" || op_arg.type_name == "CameraMatrix"
+                                || op_arg.type_name == "DistortionCoeffs") {
+                        // CameraMatrix and DistortionCoeffs are stored as flattened float arrays
                         auto *vec = arg->add_float_vectors();
                         for (auto &v : op_arg.values) {
                             vec->add_values(std::any_cast<float>(v));
@@ -397,8 +400,8 @@ RocalStatus PipelineSerializer::deserialize_args_from_protobuf(const rocal_proto
                         arg.values.emplace_back(static_cast<uint8_t>(val));
                     }
                 }
-            } else if (arg.type_name == "float") {
-                // Deserialize float vectors - expect exactly one vector
+            } else if (arg.type_name == "float" || arg.type_name == "CameraMatrix" || arg.type_name == "DistortionCoeffs") {
+                // Deserialize float vectors (including CameraMatrix and DistortionCoeffs which are flattened float arrays)
                 if (proto_arg.float_vectors_size() > 1) {
                     THROW("Expected at most one float vector for argument " + arg.arg_name + ", but found " + std::to_string(proto_arg.float_vectors_size()));
                 }
