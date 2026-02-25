@@ -171,7 +171,7 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
                     LOG("hipFile driver initialized successfully");
                 } else {
                     ERR("hipFile driver initialization failed (error: " + std::to_string(hf_err.err) +
-                        " - " + std::string(hipFileGetOpErrorString(hf_err)) +
+                        " - " + std::string(hipFileGetOpErrorString(hf_err.err)) +
                         "), falling back to standard I/O");
                 }
             }
