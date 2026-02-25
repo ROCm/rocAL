@@ -371,7 +371,9 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     // when any condition is not met.
     if (_output_is_device && hipfile_enabled()) {
         // hipFile path currently supports only contiguous output layouts
-        if (!hipfile_forced_compat_mode() && strides_in_dims[0] == _curr_file_header.size() && ensure_hipfile_open() && _hipfile_file_size > 0) {
+        if (!hipfile_forced_compat_mode() && strides_in_dims[0] == _curr_file_header.size() && ensure_hipfile_open() && _hipfile_file_size > 0 &&
+            _curr_file_header.data_offset >= 0 && static_cast<size_t>(_curr_file_header.data_offset) <= _hipfile_file_size &&
+            read_size <= _hipfile_file_size - static_cast<size_t>(_curr_file_header.data_offset)) {
             const size_t file_size = _hipfile_file_size;
             const size_t data_offset = static_cast<size_t>(_curr_file_header.data_offset);
             const size_t desired_end = data_offset + read_size;
@@ -444,6 +446,10 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
         }
 
         // Fallback: read to host and copy to device (supports both contiguous and strided outputs)
+        if (data_type_size > 0 && static_cast<size_t>(strides_in_dims[0]) > std::numeric_limits<size_t>::max() / data_type_size) {
+            ERR("Overflow computing output_bytes in NumpyDataReader::read_numpy_data for " + _last_file_path)
+            return 0;
+        }
         const size_t output_bytes = static_cast<size_t>(strides_in_dims[0]) * data_type_size;
         if (_host_staging.size() < output_bytes) {
             _host_staging.resize(output_bytes);
