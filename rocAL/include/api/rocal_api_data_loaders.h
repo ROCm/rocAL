@@ -115,7 +115,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReader(RocalContext context,
                                                           bool loop = false,
                                                           unsigned step = 0,
                                                           unsigned stride = 0,
-                                                          RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                          RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                          unsigned seed = 0);
 
 /*! \brief Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams. It accepts external sharding information to load a singe shard only.
  * \ingroup group_rocal_data_loaders
@@ -144,7 +145,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReaderSingleShard(RocalContex
                                                                      bool loop = false,
                                                                      unsigned step = 0,
                                                                      unsigned stride = 0,
-                                                                     RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                     RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                     unsigned seed = 0);
 
 /*! \brief JPEG image reader and decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -207,7 +209,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartial(RocalContex
                                                                      RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                      unsigned max_width = 0, unsigned max_height = 0,
                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
-                                                                     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                     unsigned seed = 0);
 
 /*! \brief Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -242,7 +245,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(
                                                                                 RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                 unsigned max_width = 0, unsigned max_height = 0,
                                                                                 RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
-                                                                                RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                                RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                                unsigned seed = 0);
 
 /*! \brief Creates JPEG image reader. It allocates the resources and objects required to read and decode COCO Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -487,7 +491,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCrop(RocalContext context,
                                                          RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                          unsigned max_width = 0, unsigned max_height = 0,
                                                          RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
-                                                         RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                         RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                         unsigned seed = 0);
 
 /*! \brief Creates JPEG image reader and partial decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It accepts external sharding information to load a singe shard. only
  * \ingroup group_rocal_data_loaders
@@ -521,7 +526,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext
                                                                     RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                     unsigned max_width = 0, unsigned max_height = 0,
                                                                     RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
-                                                                    RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                    RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                    unsigned seed = 0);
 
 /*! \brief Creates TensorFlow records JPEG image reader and decoder. It allocates the resources and objects required to read and decode Jpeg images stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants. If images are not Jpeg compressed they will be ignored.
  * \ingroup group_rocal_data_loaders
@@ -610,7 +616,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSource(RocalContext p_cont
                                                              bool loop = false,
                                                              unsigned out_width = 0, unsigned out_height = 0,
                                                              const char* record_name_prefix = "",
-                                                             RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                             RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                             unsigned seed = 0);
 
 /*! \brief Creates Raw image loader. It allocates the resources and objects required to load images stored on the file systems.
  * \ingroup group_rocal_data_loaders
@@ -637,7 +644,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRawTFRecordSourceSingleShard(RocalCon
                                                                         bool shuffle = false,
                                                                         bool loop = false,
                                                                         unsigned out_width = 0, unsigned out_height = 0,
-                                                                        RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                        RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                        unsigned seed = 0);
 
 /*! \brief Creates Numpy raw data reader and loader. It allocates the resources and objects required to read raw data stored on the numpy arrays.
  * \ingroup group_rocal_data_loaders
@@ -723,7 +731,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSource(RocalContext context,
                                                            unsigned step = 0,
                                                            unsigned stride = 0,
                                                            bool file_list_frame_num = true,
-                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                           unsigned seed = 0);
 
 /*! \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems. It accepts external sharding information to load a singe shard only.
  * \ingroup group_rocal_data_loaders
@@ -758,7 +767,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileSourceSingleShard(RocalConte
                                                                       unsigned step = 0,
                                                                       unsigned stride = 0,
                                                                       bool file_list_frame_num = true,
-                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                      unsigned seed = 0);
 
 /*! \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems. Resizes the decoded frames to the dest width and height.
  * \ingroup group_rocal_data_loaders
@@ -800,7 +810,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResize(RocalContext context,
                                                            unsigned resize_shorter = 0,
                                                            unsigned resize_longer = 0,
                                                            RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
-                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                           unsigned seed = 0);
 
 /*! \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems. Resizes the decoded frames to the dest width and height. It accepts external sharding information to load a singe shard only.
  * \ingroup group_rocal_data_loaders
@@ -844,7 +855,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalVideoFileResizeSingleShard(RocalConte
                                                                       unsigned resize_shorter = 0,
                                                                       unsigned resize_longer = 0,
                                                                       RocalResizeInterpolationType interpolation_type = ROCAL_LINEAR_INTERPOLATION,
-                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                      unsigned seed = 0);
 
 /*! \brief Creates CIFAR10 raw data reader and loader. It allocates the resources and objects required to read raw data stored on the file systems.
  * \ingroup group_rocal_data_loaders
@@ -935,7 +947,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourcePartialSingl
                                                                                        RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                        unsigned max_width = 0, unsigned max_height = 0,
                                                                                        RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
-                                                                                       RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                                       RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                                       unsigned seed = 0);
 
 /*! \brief Creates JPEG image reader and partial decoder for Caffe2 LMDB records. It allocates the resources and objects required to read and decode Jpeg images stored in Caffe22 LMDB Records. It has internal sharding capability to load/decode in parallel is user wants.
  * \ingroup group_rocal_data_loaders
@@ -968,7 +981,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSing
                                                                                         RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MOST_FREQUENT_SIZE,
                                                                                         unsigned max_width = 0, unsigned max_height = 0,
                                                                                         RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
-                                                                                        RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG);
+                                                                                        RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG,
+                                                                                        unsigned seed = 0);
 /*! \brief Creates JPEG external source image reader.
  * \ingroup group_rocal_data_loaders
  * \param [in] rocal_context Rocal context
@@ -1022,7 +1036,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSource(RocalContext context,
                                                            RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                            unsigned max_decoded_samples = 0,
                                                            unsigned max_decoded_channels = 0,
-                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                           RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                           unsigned seed = 0);
 
 /*! Creates Audio file reader and decoder. It allocates the resources and objects required to read and decode audio files stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
  * If the files are not in standard audio compression formats they will be ignored.
@@ -1053,7 +1068,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalAudioFileSourceSingleShard(RocalConte
                                                                       RocalImageSizeEvaluationPolicy decode_size_policy = ROCAL_USE_MAX_SIZE,
                                                                       unsigned max_decoded_samples = 0,
                                                                       unsigned max_decoded_channels = 0,
-                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+                                                                      RocalShardingInfo rocal_sharding_info = RocalShardingInfo(),
+                                                                      unsigned seed = 0);
 
 /*! Creates WebDataset tar files reader and decoder. It allocates the resources and objects required to read and decode files in webdataset format stored on the file systems. It has internal sharding capability to load/decode in parallel is user wants.
  * \param [in] context Rocal context

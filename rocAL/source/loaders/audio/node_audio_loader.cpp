@@ -30,9 +30,9 @@ AudioLoaderNode::AudioLoaderNode(Tensor *output, void *device_resources) : Node(
 }
 
 void AudioLoaderNode::Init(unsigned internal_shard_count, unsigned cpu_num_threads, const std::string &source_path, const std::string &file_list_path,
-                           StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop, 
+                           StorageType storage_type, DecoderType decoder_type, bool shuffle, bool loop,
                            size_t load_batch_count, RocalMemType mem_type, std::shared_ptr<MetaDataReader> meta_data_reader,
-                           const ShardingInfo& sharding_info) {
+                           const ShardingInfo& sharding_info, bool enable_checkpointing, unsigned seed) {
     if (!_loader_module)
         THROW("ERROR: loader module is not set for AudioLoaderNode, cannot initialize")
     if (internal_shard_count < 1)
@@ -46,6 +46,8 @@ void AudioLoaderNode::Init(unsigned internal_shard_count, unsigned cpu_num_threa
     reader_cfg.set_cpu_num_threads(cpu_num_threads);
     reader_cfg.set_file_list_path(file_list_path);
     reader_cfg.set_sharding_info(sharding_info);
+    reader_cfg.enable_checkpointing(enable_checkpointing);
+    reader_cfg.set_seed(seed);
     _loader_module->initialize(reader_cfg, DecoderConfig(decoder_type), mem_type, _batch_size, false);
     _loader_module->start_loading();
 }
