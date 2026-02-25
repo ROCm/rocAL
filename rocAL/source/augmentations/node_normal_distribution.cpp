@@ -63,7 +63,9 @@ void NormalDistributionNode::init(float mean, float std_dev) {
 
     if (_mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
-        hipError_t err = hipHostMalloc(&_normal_distribution_array, _batch_size * sizeof(float));
+        hipError_t err = hipHostMalloc(reinterpret_cast<void **>(&_normal_distribution_array),
+                                       _batch_size * sizeof(float),
+                                       hipHostMallocDefault);
         if (err != hipSuccess || !_normal_distribution_array)
             THROW("hipHostMalloc of size " + TOSTR(_batch_size * sizeof(float)) + " failed " + TOSTR(err))
 #else

@@ -63,7 +63,9 @@ void UniformDistributionNode::init(std::vector<float> &range) {
     _mem_type = _outputs[0]->info().mem_type();
     if (_mem_type == RocalMemType::HIP) {
 #if ENABLE_HIP
-        hipError_t err = hipHostMalloc(&_uniform_distribution_array, _batch_size * sizeof(float));
+        hipError_t err = hipHostMalloc(reinterpret_cast<void **>(&_uniform_distribution_array),
+                                       _batch_size * sizeof(float),
+                                       hipHostMallocDefault);
         if (err != hipSuccess || !_uniform_distribution_array)
             THROW("hipHostMalloc of size " + TOSTR(_batch_size * sizeof(float)) + " failed " + TOSTR(err))
 #else
