@@ -452,10 +452,7 @@ std::tuple<Args...> unpack_arguments(const ArgumentSet& arguments, const std::ve
 template <typename NodeType, typename... Args>
 bool init_args(NodeType* node, const std::vector<std::string> &arg_names, const ArgumentSet& arguments) {
 
-    if (arguments.size() != sizeof...(Args)) {
-        THROW("Argument count mismatch: expected " + std::to_string(sizeof...(Args)) + 
-              " but got " + std::to_string(arguments.size()));
-    }
+    if (arguments.size() != sizeof...(Args)) return false; // Argument count mismatch
     try {
         // Unpack arguments with type-check and casting
         auto unpacked_args = unpack_arguments<Args...>(arguments, arg_names);
