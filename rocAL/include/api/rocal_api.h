@@ -199,4 +199,26 @@ extern "C" RocalStatus ROCAL_API_CALL rocalCheckpoint(RocalContext rocal_context
  */
 extern "C" RocalStatus ROCAL_API_CALL rocalGetSerializedCheckpointString(RocalContext rocal_context, char* serialized_ckpt_string);
 
+/*!
+ * \brief Restore pipeline state from a serialized checkpoint blob.
+ * \ingroup group_rocal
+ *
+ * Restores the pipeline runtime state from a checkpoint blob previously produced by
+ * rocalCheckpoint()/rocalGetSerializedCheckpointString().
+ *
+ * \note Preconditions:
+ * - The pipeline must be built (rocalVerify() called) but not currently running.
+ * - Checkpointing must have been enabled at pipeline creation time (enable_checkpointing=True).
+ * - The checkpoint must originate from a pipeline with a compatible configuration
+ *   (same augmentation graph, batch size, and reader setup).
+ * - Any buffered data in the prefetch queue is discarded and re-filled from the
+ *   restored reader position.
+ *
+ * \param [in] rocal_context the rocAL context
+ * \param [in] serialized_ckpt_string pointer to checkpoint blob bytes
+ * \param [in] serialized_ckpt_size size in bytes of the checkpoint blob
+ * \return A \ref RocalStatus - A status code indicating the success or failure.
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalRestoreFromSerializedCheckpoint(RocalContext rocal_context, const char* serialized_ckpt_string, size_t serialized_ckpt_size);
+
 #endif

@@ -339,6 +339,37 @@ void ImageLoader::feed_external_input(const std::vector<std::string>& input_imag
     _image_loader->feed_external_input(input_images_names, input_buffer, roi_xywh, max_width, max_height, channels, mode, eos);
 }
 
+// Returns the most recent loader state captured during loading.
 const LoaderState& ImageLoader::get_loader_state() const {
     return _current_loader_state;
+}
+
+// Restore loader state and restart the loading thread from a checkpoint.
+void ImageLoader::restore_from_state(const LoaderState& s) {
+    if (_internal_thread_running) {
+        _internal_thread_running = false;
+        _circ_buff.unblock_writer();
+        if (_load_thread.joinable())
+            _load_thread.join();
+    }
+    _circ_buff.reset();  // Clear any buffered data before restoring.
+
+    _epoch_count = s.epoch_number;
+    _iteration_count = s.iteration_number;
+    _current_loader_state = s;
+
+    if (!_image_loader) {
+        THROW("ImageLoader restore failed: internal image loader is not initialized");
+    }
+    _image_loader->set_rng_state(s.rng);
+    _image_loader->set_curr_file_idx(s.curr_file_idx);
+
+    _remaining_image_count = _dataset_size;  // Reset remaining count based on restored position.
+    if (!_loop && s.curr_file_idx > 0) {
+        _remaining_image_count = (_dataset_size > s.curr_file_idx) ? (_dataset_size - s.curr_file_idx) : 0;
+    }
+
+    // Restart loading thread to resume prefetching from the restored state.
+    _internal_thread_running = true;
+    _load_thread = std::thread(&ImageLoader::load_routine, this);
 }
