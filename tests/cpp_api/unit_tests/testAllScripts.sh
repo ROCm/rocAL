@@ -220,7 +220,7 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}SSDRandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 54 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}RandomCrop_${rgb_name[$rgb]}_${device_name}" $width $height 59 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ROIResize_${rgb_name[$rgb]}_${device_name}" $width $height 60 $device $rgb 1 $display
-        ./unit_tests 2 "$coco_detection_path" "${output_path}Nop_${rgb_name[$rgb]}_${device_name}" $width $height 61 $device $rgb 1 $display
+        ./unit_tests 16 "$coco_keypoints_path" "${output_path}Nop_${rgb_name[$rgb]}_${device_name}" $width $height 61 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}ResizeMirrorNormalize_${rgb_name[$rgb]}_${device_name}" $width $height 56 $device $rgb 1 $display
 
         ./unit_tests 2 "$coco_detection_path" "${output_path}ColorCastRandom_${rgb_name[$rgb]}_${device_name}" $width $height 64 $device $rgb 1 $display

@@ -221,13 +221,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         return -1;
     }
 
-    // Some image augmentations add "meta nodes" which currently propagate bbox/polygon metadata but not pixelwise masks.
-    // For the pixelwise mask reader test (reader_type == 16), keep the graph metadata-only w.r.t masks to validate the reader + mask APIs.
-    if (reader_type == 16 && test_case != 61) {
-        std::cout << "INFO: Overriding test_case " << test_case << " -> 61 (rocalNop) for pixelwise mask validation\n";
-        test_case = 61;
-    }
-
     /*>>>>>>>>>>>>>>>> Getting the path for data  <<<<<<<<<<<<<<<<*/
 
     std::string rocal_data_path;
