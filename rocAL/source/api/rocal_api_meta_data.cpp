@@ -640,8 +640,8 @@ RocalTensor
 RocalTensorList
     ROCAL_API_CALL
     rocalRandomObjectBbox(RocalContext p_context, RocalTensor p_input, const char *output_format, int k_largest, float foreground_prob, bool cache_objects) {
-    if (p_context == nullptr)
-        return nullptr;
+    RocalTensorList output = nullptr;
+    ROCAL_INVALID_CONTEXT_EXCEPTION(p_context);
     auto context = static_cast<Context*>(p_context);
     try {
         if (p_input == nullptr) {
@@ -659,8 +659,7 @@ RocalTensorList
         } else {
             // 4D tensor-op path
             auto input = static_cast<Tensor*>(p_input);
-            return context->master_graph->random_object_bbox(input, std::string(output_format),
-                                                              k_largest, foreground_prob, cache_objects);
+            return context->master_graph->random_object_bbox(input, std::string(output_format), k_largest, foreground_prob, cache_objects);
         }
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);

@@ -127,8 +127,6 @@ def parse_args():
     coco_reader.add_argument('--mask-type', type=str, default="pixelwise",
                              choices=["pixelwise", "polygon"],
                              help='Mask mode for COCO reader semantic test: "pixelwise" (pixelwise_masks) or "polygon" (polygon_masks)')
-    coco_reader.add_argument('--save-npy', action="store_true",
-                             help='Also save raw numpy outputs (mask arrays, etc) alongside visualizations.')
     # caffe_reader.py related options
     caffe_pipeline = parser.add_argument_group(
         'caffe-pipeline', 'caffe-pipeline-related options')

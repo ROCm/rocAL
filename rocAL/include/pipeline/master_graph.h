@@ -58,7 +58,6 @@ THE SOFTWARE.
 #include "rocal_api_types.h"
 #include "pipeline/pipeline_serializer.h"
 #include "pipeline/checkpoint.h"
-#include "pipeline/seed_rng.h"
 
 #define MAX_STRING_LENGTH 100
 #define MAX_OBJECTS 50                // Setting an arbitrary value 50.(Max number of objects/image in COCO dataset is 93)
@@ -242,7 +241,7 @@ private:
     std::vector<TensorList> _ascii_tensor_list; // TensorList to store the ASCII values of all samples in a batch
     TensorList _bbox_tensor_list;
     TensorList _mask_tensor_list;
-    TensorList _matches_tensor_list;
+    TensorList _matches_tensor_list;                                                  //!< The count of total number of extensions used in the webdataset reader
     TensorList _random_mask_pixel_list;
     TensorList _select_mask_polygon_list;
     TensorList _random_object_bbox_list;

@@ -259,7 +259,6 @@ if(${BUILD_ROCAL})
     file(GLOB_RECURSE SOURCES "source/*.cpp")
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS}
                                 ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${rocdecode_SRCS} ${ROCAL_PROTO_SRCS} ${ROCAL_PROTO_HEADERS} ${PYCOCOTOOLS_SOURCES})
-
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/coco_RLE/include)
 
     if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)

@@ -31,7 +31,7 @@ import amd.rocal.fn as fn
 import amd.rocal.types as types
 
 
-def _parse_mask_ids(mask_ids):
+def parse_mask_ids(mask_ids):
     if not mask_ids:
         return [0]
     parsed = []
@@ -46,11 +46,11 @@ def _parse_mask_ids(mask_ids):
     return parsed or [0]
 
 
-def _ensure_dir(path: str) -> None:
+def ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
 
-def _tensor_to_cv2_bgr(img, device, dtype, layout):
+def tensor_to_cv2_bgr(img, device, dtype, layout):
     if device == "cpu":
         image = img.detach().numpy()
     else:
@@ -174,7 +174,7 @@ class ROCALCOCOIterator(object):
 
 def draw_patches(img, bboxes, device, dtype, layout, out_path=None, crop_w=None, crop_h=None):
     # image is expected as a tensor, bboxes as numpy
-    image = _tensor_to_cv2_bgr(img, device, dtype, layout)
+    image = tensor_to_cv2_bgr(img, device, dtype, layout)
     bboxes = np.reshape(bboxes, (-1, 4))
 
     for (l, t, r, b) in bboxes:
@@ -194,7 +194,7 @@ def draw_patches(img, bboxes, device, dtype, layout, out_path=None, crop_w=None,
     return image
 
 
-def _reshape_pixelwise_mask(mask, width: int, height: int):
+def reshape_pixelwise_mask(mask, width: int, height: int):
     mask = np.asarray(mask)
     if mask.ndim == 2:
         if mask.shape == (height, width):
@@ -207,13 +207,13 @@ def _reshape_pixelwise_mask(mask, width: int, height: int):
     return mask.reshape((-1,))
 
 
-def _save_pixelwise_semantic(out_dir, iter_idx, sample_idx, image_id, img_tensor, bboxes, device, dtype, layout,
+def save_pixelwise_semantic(out_dir, iter_idx, sample_idx, image_id, img_tensor, bboxes, device, dtype, layout,
                              img_sizes, mask, random_pixel, random_bbox):
     width = int(img_sizes[sample_idx * 2 + 0])
     height = int(img_sizes[sample_idx * 2 + 1])
 
     base_path = os.path.join(out_dir, "pixelwise")
-    _ensure_dir(base_path)
+    ensure_dir(base_path)
 
     bgr = draw_patches(
         img_tensor,
@@ -226,7 +226,7 @@ def _save_pixelwise_semantic(out_dir, iter_idx, sample_idx, image_id, img_tensor
         crop_h=height,
     )
 
-    mask_2d = _reshape_pixelwise_mask(mask, width, height)
+    mask_2d = reshape_pixelwise_mask(mask, width, height)
     if mask_2d.ndim != 2:
         return
 
@@ -254,13 +254,13 @@ def _save_pixelwise_semantic(out_dir, iter_idx, sample_idx, image_id, img_tensor
     cv2.imwrite(os.path.join(base_path, f"{image_id}_{iter_idx}_{sample_idx}_semantic.png"), blended)
 
 
-def _save_polygon_semantic(out_dir, iter_idx, sample_idx, image_id, img_tensor, bboxes, device, dtype, layout,
+def save_polygon_semantic(out_dir, iter_idx, sample_idx, image_id, img_tensor, bboxes, device, dtype, layout,
                            img_sizes, select_mask_polygons):
     width = int(img_sizes[sample_idx * 2 + 0])
     height = int(img_sizes[sample_idx * 2 + 1])
 
     base_path = os.path.join(out_dir, "polygon")
-    _ensure_dir(base_path)
+    ensure_dir(base_path)
 
     bgr = draw_patches(
         img_tensor,
@@ -303,7 +303,7 @@ def main():
     random_seed = args.seed
     tensor_format = types.NHWC if args.NHWC else types.NCHW
     tensor_dtype = types.FLOAT16 if args.fp16 else types.FLOAT
-    select_mask_ids = _parse_mask_ids(getattr(args, "select_mask_ids", "0"))
+    select_mask_ids = parse_mask_ids(getattr(args, "select_mask_ids", "0"))
     try:
         path = "output_folder/coco_reader_semantic/"
         isExist = os.path.exists(path)
@@ -386,7 +386,7 @@ def main():
                 for bi in range(batch_size):
                     img_id = int(it[3][bi].item()) if hasattr(it[3], "shape") else int(it[3][bi])
                     if args.mask_type == "polygon":
-                        _save_polygon_semantic(
+                        save_polygon_semantic(
                             path,
                             i,
                             bi,
@@ -400,7 +400,7 @@ def main():
                             it[8]
                         )
                     else:
-                        _save_pixelwise_semantic(
+                        save_pixelwise_semantic(
                             path,
                             i,
                             bi,

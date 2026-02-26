@@ -198,8 +198,8 @@ void COCOMetaDataReader::generate_pixelwise_mask(const std::string &filename, co
             const int mask_h = (mask.h > 0) ? mask.h : h;
             const int mask_w = (mask.w > 0) ? mask.w : w;
             if (mask_h != h || mask_w != w) {
-                std::cerr << "WARNING: RLE mask size mismatch for " << filename << " (mask "
-                          << mask_w << "x" << mask_h << " vs image " << w << "x" << h << ")\n";
+                ERR("WARNING: RLE mask size mismatch for " << filename << " (mask "
+                          << mask_w << "x" << mask_h << " vs image " << w << "x" << h << ")\n");
                 continue;
             }
             if (!mask.counts_str.empty()) {
@@ -550,9 +550,9 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                         if (rle_info.h <= 0) rle_info.h = image_size.h;
                         if (rle_info.w <= 0) rle_info.w = image_size.w;
                         if (rle_info.h != image_size.h || rle_info.w != image_size.w) {
-                            std::cerr << "WARNING: RLE mask size mismatch for " << itr->second << " (mask "
+                            ERR("WARNING: RLE mask size mismatch for " << itr->second << " (mask "
                                       << rle_info.w << "x" << rle_info.h << " vs image "
-                                      << image_size.w << "x" << image_size.h << ")\n";
+                                      << image_size.w << "x" << image_size.h << ")");
                         } else if (!rle_info.counts.empty()) {
                             int64_t total = 0;
                             for (uint32_t c : rle_info.counts) {
@@ -560,8 +560,8 @@ void COCOMetaDataReader::read_all(const std::string &path) {
                             }
                             int64_t expected = static_cast<int64_t>(rle_info.h) * static_cast<int64_t>(rle_info.w);
                             if (expected <= 0 || total != expected) {
-                                std::cerr << "WARNING: Invalid RLE counts for " << itr->second
-                                          << " (sum=" << total << " expected=" << expected << ")\n";
+                                ERR("WARNING: Invalid RLE counts for " << itr->second
+                                          << " (sum=" << total << " expected=" << expected << ")");
                             } else {
                                 _rle_masks_by_image[itr->second].push_back(std::move(rle_info));
                             }

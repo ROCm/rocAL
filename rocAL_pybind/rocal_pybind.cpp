@@ -912,14 +912,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         rocalGetImageSizes(context, ptr);
     });
     m.def("roiRandomCrop", &rocalROIRandomCrop, py::return_value_policy::reference);
-    m.def("randomObjectBbox", [](RocalContext context, RocalTensor input_image,
-                                    std::string format, int k_largest, float foreground_prob, bool cache_objects) {
-        return rocalRandomObjectBbox(context, input_image, format.c_str(),
-                                     k_largest, foreground_prob, cache_objects);
-    }, py::return_value_policy::reference,
-       py::arg("context"), py::arg("input_image"),
-       py::arg("format") = "anchor_shape", py::arg("k_largest") = -1,
-       py::arg("foreground_prob") = 1.0f, py::arg("cache_objects") = false);
+    m.def("randomObjectBbox", &rocalRandomObjectBbox, py::return_value_policy::reference);
     m.def("getROIImgSizes", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.request();
         int *ptr = static_cast<int *>(buf.ptr);

@@ -116,15 +116,15 @@ typedef class MetaDataInfo {
 class MetaData {
    public:
     virtual ~MetaData() = default;
-    virtual std::vector<int>& get_labels() { THROW("Not Implemented") }
-    virtual AsciiValues& get_ascii_values() { THROW("Not Implemented") }
-    virtual void set_labels(Labels label_ids) { THROW("Not Implemented") }
-    virtual BoundingBoxCords& get_bb_cords() { THROW("Not Implemented") }
-    virtual std::vector<int>& get_polygon_count() { THROW("Not Implemented") }
-    virtual std::vector<std::vector<int>>& get_vertices_count() { THROW("Not Implemented") }
-    virtual MaskCords& get_mask_cords() { THROW("Not Implemented") }
-    virtual std::vector<int>& get_pixelwise_label() { THROW("Not Implemented") }
-    virtual JointsData& get_joints_data() { THROW("Not Implemented") }
+    virtual std::vector<int>& get_labels() { THROW("Not Implemented") };
+    virtual AsciiValues& get_ascii_values() { THROW("Not Implemented") };
+    virtual void set_labels(Labels label_ids) { THROW("Not Implemented") };
+    virtual BoundingBoxCords& get_bb_cords() { THROW("Not Implemented") };
+    virtual std::vector<int>& get_polygon_count() { THROW("Not Implemented") };
+    virtual std::vector<std::vector<int>>& get_vertices_count() { THROW("Not Implemented") };
+    virtual MaskCords& get_mask_cords() { THROW("Not Implemented") };
+    virtual std::vector<int>& get_pixelwise_label() { THROW("Not Implemented") };
+    virtual JointsData& get_joints_data() { THROW("Not Implemented") };
     ImgSize& get_img_size() { return _info.img_size; }
     ImgSize& get_img_roi_size() { return _info.img_roi_size; }
     std::string& get_image_name() { return _info.img_name; }
