@@ -1690,23 +1690,9 @@ void MasterGraph::update_roi_random_crop() {
     auto seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     auto input_dims = _roi_random_crop_tensor->info().dims()[1];
 
-    // Determine the source of ROI begin and end coordinates:
-    //  1. Prefer explicitly provided ROI tensors (_roi_start_tensor/_roi_end_tensor), if available.
-    //  2. Fall back to random_object_bbox, if initialized.
-    //  3. If neither is available, throw an exception and abort ROI random crop to avoid null dereference.
-    int *roi_begin_batch = nullptr;
-    int *roi_end_batch = nullptr;
-
-    if (_roi_start_tensor && _roi_end_tensor) {
-        roi_begin_batch = static_cast<int *>(_roi_start_tensor->buffer());
-        roi_end_batch = static_cast<int *>(_roi_end_tensor->buffer());
-    } else if (_random_object_bbox) {
-        roi_begin_batch = static_cast<int *>(_random_object_bbox->box1_buf());
-        roi_end_batch = static_cast<int *>(_random_object_bbox->box2_buf());
-    } else {
-        THROW("update_roi_random_crop: No valid ROI source available. Either ROI start/end tensors or random_object_bbox must be initialized before calling rocalROIRandomCrop.")
-        return;
-    }
+    // get the roi_begin and roi_end values from random_object_bbox
+    int *roi_begin_batch = static_cast<int *>(_random_object_bbox->box1_buf());
+    int *roi_end_batch = static_cast<int *>(_random_object_bbox->box2_buf());
     BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
     for (uint i = 0; i < _user_batch_size; i++) {
         int sample_idx = i * input_dims;
