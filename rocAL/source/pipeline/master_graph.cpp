@@ -408,6 +408,9 @@ void MasterGraph::release() {
         _crop_shape_batch = nullptr;
     }
     _random_object_bbox.reset();
+    _random_mask_pixel.reset();
+    _select_mask_polygon.reset();
+    _random_object_bbox_pixelwise.reset();
 
     if (_graph != nullptr)
         _graph->release();
@@ -1718,11 +1721,11 @@ TensorList *MasterGraph::matched_index_meta_data() {
 TensorList *MasterGraph::random_object_bbox(Tensor *input, const std::string &output_format, int k_largest, float foreground_prob, bool cache_objects) {
     if (input == nullptr) {
         // 2D PixelwiseMask path — use metadata masks
-        if (!_pixelwise_bbox)
-            _pixelwise_bbox = std::make_unique<RandomObjectBboxPixelwise2D>(_user_batch_size, _cpu_num_threads);
-        auto masks = mask_meta_data(false);
-        return _pixelwise_bbox->run(masks, output_format, k_largest, foreground_prob,
-                                    cache_objects, _random_object_bbox_list);
+        if (!_random_object_bbox_pixelwise) {
+            _random_object_bbox_pixelwise = std::make_unique<RandomObjectBboxPixelwise2D>(_user_batch_size, _cpu_num_threads);
+        }
+        return _random_object_bbox_pixelwise->run(mask_meta_data(false), _random_object_bbox_list,
+                                                   output_format, k_largest, foreground_prob, cache_objects);
     } else {
         // 4D tensor-op path
         _random_object_bbox = std::make_unique<RandomObjectBbox>(_context, _user_batch_size, _cpu_num_threads);

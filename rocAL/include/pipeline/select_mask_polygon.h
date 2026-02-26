@@ -21,10 +21,8 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #include <cstddef>
-#include <map>
-#include <set>
-#include <string>
 #include <vector>
 
 #include "pipeline/tensor.h"
@@ -37,7 +35,7 @@ THE SOFTWARE.
  */
 class SelectMaskPolygon {
    public:
-    SelectMaskPolygon(size_t user_batch_size);
+    explicit SelectMaskPolygon(size_t user_batch_size);
 
     /*! \brief Run polygon selection on a batch.
      *  \param [in]  mask_data          Batch of polygon coordinate tensors.
@@ -47,19 +45,19 @@ class SelectMaskPolygon {
      *  \param [out] sel_vertices_counts Per-sample selected vertex counts.
      *  \param [out] sel_mask_ids       Per-sample selected mask IDs.
      *  \param [in]  reindex_mask       If true, remap mask IDs to sequential indices.
-     *  \param [out] output_list        TensorList to populate.
-     *  \return Pointer to output_list after population.
+     *  \param [out] out_list           TensorList to populate.
+     *  \return Pointer to out_list after population.
      */
     TensorList *run(rocalTensorList *mask_data,
-                    std::vector<std::vector<int>> polygon_counts,
-                    std::vector<std::vector<std::vector<int>>> vertices_counts,
-                    std::vector<int> mask_ids,
+                    const std::vector<std::vector<int>> &polygon_counts,
+                    const std::vector<std::vector<std::vector<int>>> &vertices_counts,
+                    const std::vector<int> &mask_ids,
                     std::vector<std::vector<int>> &sel_vertices_counts,
                     std::vector<std::vector<int>> &sel_mask_ids,
                     bool reindex_mask,
-                    TensorList &output_list);
+                    TensorList &out_list);
 
    private:
     size_t _user_batch_size;                        ///< Number of samples per batch
-    std::vector<std::vector<float>> _output_buffer; ///< Per-sample selected polygon coordinate storage
+    std::vector<std::vector<float>> _output;        ///< Per-sample selected polygon coordinate storage
 };

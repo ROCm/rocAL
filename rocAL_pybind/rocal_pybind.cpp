@@ -1174,23 +1174,23 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         }
         return per_image_select_mask;
     });
-    m.def("getRandomObjectBBox", [](RocalContext context, std::string format,
+    m.def("getRandomObjectBBox", [](RocalContext context, const std::string &output_format,
                                      int k_largest, float foreground_prob, bool cache_objects) {
-        rocalTensorList *boxes = rocalRandomObjectBbox(context, nullptr, format.c_str(),
+        rocalTensorList *boxes = rocalRandomObjectBbox(context, nullptr, output_format.c_str(),
                                                        k_largest, foreground_prob, cache_objects);
         py::list boxes_list;
         for (int i = 0; i < boxes->size(); i++) {
-            unsigned *box_buffer = static_cast<unsigned *>(boxes->at(i)->buffer());
+            int *box_buffer = static_cast<int *>(boxes->at(i)->buffer());
             py::array::ShapeContainer shape{4};
-            py::array::StridesContainer strides{static_cast<py::ssize_t>(sizeof(unsigned))};
-            py::array_t<unsigned> boxes_array(shape, strides);
-            std::memcpy(boxes_array.mutable_data(), box_buffer, 4 * sizeof(unsigned));
+            py::array::StridesContainer strides{static_cast<py::ssize_t>(sizeof(int))};
+            py::array_t<int> boxes_array(shape, strides);
+            std::memcpy(boxes_array.mutable_data(), box_buffer, 4 * sizeof(int));
             boxes_list.append(boxes_array);
         }
         return boxes_list;
-    }, py::arg("context"), py::arg("format"), py::arg("k_largest") = -1,
+    }, py::arg("context"), py::arg("output_format") = "box", py::arg("k_largest") = -1,
        py::arg("foreground_prob") = 1.0f, py::arg("cache_objects") = false,
-       "Returns a list of 4-element uint arrays (one per image). The returned arrays own their data.");
+       "Returns a list of 4-element int arrays (one per image). The returned arrays own their data.");
     m.def("getOneHotEncodedLabels", &wrapper_one_hot_label_copy, py::return_value_policy::reference);
     // rocal_api_data_loaders.h
     m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",

@@ -26,34 +26,38 @@ THE SOFTWARE.
 #include <omp.h>
 
 #include "parameters/parameter_factory.h"
+#include "pipeline/log.h"
 
 RandomMaskPixel::RandomMaskPixel(size_t user_batch_size, size_t cpu_num_threads)
     : _user_batch_size(user_batch_size), _cpu_num_threads(cpu_num_threads) {}
 
 void RandomMaskPixel::set_config(bool is_foreground, int value, bool is_threshold) {
     _is_foreground = is_foreground;
-    _pixel_value = value;
+    _value = value;
     _is_threshold = is_threshold;
 }
 
-void RandomMaskPixel::ensure_rngs() {
+void RandomMaskPixel::init_rngs() {
     const unsigned seed = ParameterFactory::instance()->get_seed();
-    if (_rng_seed == seed && _rngs.size() == _user_batch_size)
+    if (_seed == seed && _rngs.size() == _user_batch_size) {
         return;
-    _rng_seed = seed;
+    }
+    _seed = seed;
     _rngs.resize(_user_batch_size);
     for (size_t i = 0; i < _user_batch_size; i++) {
-        std::seed_seq seq{seed, 0x4D504958u, static_cast<unsigned>(i)};  // "MPIX"
-        _rngs[i].seed(seq);
+        std::seed_seq seq_pixel{seed, 0x4D504958u, static_cast<unsigned>(i)};  // "MPIX"
+        _rngs[i].seed(seq_pixel);
     }
 }
 
 int64_t RandomMaskPixel::find_pixel(const std::vector<int> &start, const std::vector<int> &foreground_count, int64_t val, int count) {
-    if (val < 0 || val >= count || start.empty() || foreground_count.empty() || start.size() != foreground_count.size())
+    if (val < 0 || val >= count || start.empty() || foreground_count.empty() || start.size() != foreground_count.size()) {
         return -1;
+    }
     auto it = std::upper_bound(foreground_count.begin(), foreground_count.end(), val);
-    if (it == foreground_count.begin())
+    if (it == foreground_count.begin()) {
         return -1;
+    }
     size_t idx = static_cast<size_t>(it - foreground_count.begin() - 1);
     return start[idx] + (val - foreground_count[idx]);
 }
@@ -64,84 +68,141 @@ int64_t RandomMaskPixel::find_pixel(const std::vector<int> &start, const std::ve
 // (using either threshold or equality matching), then uniformly samples
 // among foreground pixels. Falls back to a uniformly random pixel if no
 // foreground pixels exist in the mask.
-TensorList *RandomMaskPixel::run(rocalTensorList *input, TensorList &output_list) {
-    ensure_rngs();
-    _output_buffer.clear();
-    _output_buffer.resize(_user_batch_size * 2);
+TensorList *RandomMaskPixel::run(rocalTensorList *input, TensorList &out_list) {
+    init_rngs();
+    _output_coords.clear();
+    _output_coords.resize(_user_batch_size * 2);
+
     const int nthreads = static_cast<int>(std::max<size_t>(1, std::min(_cpu_num_threads, _user_batch_size)));
 
     if (!_is_foreground) {
 #pragma omp parallel for num_threads(nthreads)
         for (unsigned i = 0; i < _user_batch_size; i++) {
             auto &rng = _rngs[i];
-            auto width = input->at(i)->dims().at(0);
-            auto height = input->at(i)->dims().at(1);
-            auto row = std::uniform_int_distribution<int64_t>(0, height - 1)(rng);
-            auto col = std::uniform_int_distribution<int64_t>(0, width - 1)(rng);
-            _output_buffer[i * 2] = row;
-            _output_buffer[i * 2 + 1] = col;
+            const auto width = input->at(i)->dims().at(0);
+            const auto height = input->at(i)->dims().at(1);
+            if (width == 0 || height == 0) {
+                _output_coords[i * 2] = 0;
+                _output_coords[i * 2 + 1] = 0;
+                continue;
+            }
+            auto row = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(height) - 1)(rng);
+            auto col = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(width) - 1)(rng);
+            _output_coords[i * 2] = static_cast<int>(row);
+            _output_coords[i * 2 + 1] = static_cast<int>(col);
         }
-    } else {
-        auto process_foreground = [&](unsigned i, auto match_fn) {
+    } else if (_is_threshold) {
+#pragma omp parallel for num_threads(nthreads)
+        for (unsigned i = 0; i < _user_batch_size; i++) {
             std::vector<int> start;
             std::vector<int> foreground_count;
-            unsigned id = 0;
+            size_t id = 0;
             int count = 0;
             auto &rng = _rngs[i];
             int *mask_buffer = static_cast<int *>(input->at(i)->buffer());
-            auto width = input->at(i)->dims().at(0);
-            auto height = input->at(i)->dims().at(1);
-            auto buffer_size = width * height;
+            const auto width = input->at(i)->dims().at(0);
+            const auto height = input->at(i)->dims().at(1);
+            const size_t buffer_size = width * height;
+            if (!mask_buffer || buffer_size == 0) {
+                _output_coords[i * 2] = 0;
+                _output_coords[i * 2 + 1] = 0;
+                continue;
+            }
+
             while (id < buffer_size) {
-                if (!match_fn(mask_buffer[id])) {
+                if (mask_buffer[id] <= _value) {
                     id++;
                 } else {
-                    start.push_back(id++);
+                    start.push_back(static_cast<int>(id++));
                     foreground_count.push_back(count++);
-                    while (id < buffer_size && match_fn(mask_buffer[id])) {
+                    while (id < buffer_size && mask_buffer[id] > _value) {
                         id++;
                         count++;
                     }
                 }
             }
+
             if (count != 0) {
-                auto dist = std::uniform_int_distribution<int64_t>(0, count - 1);
+                auto dist = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(count) - 1);
                 auto flat_idx = find_pixel(start, foreground_count, dist(rng), count);
-                if (flat_idx >= 0) {
-                    _output_buffer[i * 2] = flat_idx / width;
-                    _output_buffer[i * 2 + 1] = flat_idx % width;
-                    return;
+                if (flat_idx < 0) {
+                    auto row = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(height) - 1)(rng);
+                    auto col = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(width) - 1)(rng);
+                    _output_coords[i * 2] = static_cast<int>(row);
+                    _output_coords[i * 2 + 1] = static_cast<int>(col);
+                    continue;
+                }
+                auto row = flat_idx / static_cast<int64_t>(width);
+                auto col = flat_idx % static_cast<int64_t>(width);
+                _output_coords[i * 2] = static_cast<int>(row);
+                _output_coords[i * 2 + 1] = static_cast<int>(col);
+            } else {
+                auto row = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(height) - 1)(rng);
+                auto col = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(width) - 1)(rng);
+                _output_coords[i * 2] = static_cast<int>(row);
+                _output_coords[i * 2 + 1] = static_cast<int>(col);
+            }
+        }
+    } else {
+#pragma omp parallel for num_threads(nthreads)
+        for (unsigned i = 0; i < _user_batch_size; i++) {
+            std::vector<int> start;
+            std::vector<int> foreground_count;
+            size_t id = 0;
+            int count = 0;
+            auto &rng = _rngs[i];
+            int *mask_buffer = static_cast<int *>(input->at(i)->buffer());
+            const auto width = input->at(i)->dims().at(0);
+            const auto height = input->at(i)->dims().at(1);
+            const size_t buffer_size = width * height;
+            if (!mask_buffer || buffer_size == 0) {
+                _output_coords[i * 2] = 0;
+                _output_coords[i * 2 + 1] = 0;
+                continue;
+            }
+
+            while (id < buffer_size) {
+                if (mask_buffer[id] != _value) {
+                    id++;
+                } else {
+                    start.push_back(static_cast<int>(id++));
+                    foreground_count.push_back(count++);
+                    while (id < buffer_size && mask_buffer[id] == _value) {
+                        id++;
+                        count++;
+                    }
                 }
             }
-            // Fallback: random pixel
-            auto row = std::uniform_int_distribution<int64_t>(0, height - 1)(rng);
-            auto col = std::uniform_int_distribution<int64_t>(0, width - 1)(rng);
-            _output_buffer[i * 2] = row;
-            _output_buffer[i * 2 + 1] = col;
-        };
 
-        if (_is_threshold) {
-            int threshold = _pixel_value;
-#pragma omp parallel for num_threads(nthreads)
-            for (unsigned i = 0; i < _user_batch_size; i++) {
-                process_foreground(i, [threshold](int val) { return val > threshold; });
-            }
-        } else {
-            int target = _pixel_value;
-#pragma omp parallel for num_threads(nthreads)
-            for (unsigned i = 0; i < _user_batch_size; i++) {
-                process_foreground(i, [target](int val) { return val == target; });
+            if (count != 0) {
+                auto dist = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(count) - 1);
+                auto flat_idx = find_pixel(start, foreground_count, dist(rng), count);
+                if (flat_idx < 0) {
+                    auto row = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(height) - 1)(rng);
+                    auto col = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(width) - 1)(rng);
+                    _output_coords[i * 2] = static_cast<int>(row);
+                    _output_coords[i * 2 + 1] = static_cast<int>(col);
+                    continue;
+                }
+                auto row = flat_idx / static_cast<int64_t>(width);
+                auto col = flat_idx % static_cast<int64_t>(width);
+                _output_coords[i * 2] = static_cast<int>(row);
+                _output_coords[i * 2 + 1] = static_cast<int>(col);
+            } else {
+                auto row = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(height) - 1)(rng);
+                auto col = std::uniform_int_distribution<int64_t>(0, static_cast<int64_t>(width) - 1)(rng);
+                _output_coords[i * 2] = static_cast<int>(row);
+                _output_coords[i * 2 + 1] = static_cast<int>(col);
             }
         }
     }
 
-    auto random_data_buffers = reinterpret_cast<unsigned int *>(_output_buffer.data());
-    auto random_tensor_dims = {(size_t)2};
+    int *random_data_buffers = _output_coords.data();
+    const std::vector<size_t> random_tensor_dims = {2};
     for (unsigned i = 0; i < _user_batch_size; i++) {
-        output_list[i]->set_dims(random_tensor_dims);
-        output_list[i]->set_mem_handle(static_cast<void *>(random_data_buffers));
+        out_list[i]->set_dims(random_tensor_dims);
+        out_list[i]->set_mem_handle(static_cast<void *>(random_data_buffers));
         random_data_buffers += 2;
     }
-
-    return &output_list;
+    return &out_list;
 }

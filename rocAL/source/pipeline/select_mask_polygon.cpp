@@ -22,10 +22,10 @@ THE SOFTWARE.
 
 #include "pipeline/select_mask_polygon.h"
 
-#include "pipeline/log.h"
+#include <map>
+#include <set>
 
-SelectMaskPolygon::SelectMaskPolygon(size_t user_batch_size)
-    : _user_batch_size(user_batch_size) {}
+SelectMaskPolygon::SelectMaskPolygon(size_t user_batch_size) : _user_batch_size(user_batch_size) {}
 
 // Filter per-sample polygon masks to only include objects whose index appears in mask_ids.
 // For each selected object, copies its polygon vertex coordinates into the output buffer
@@ -33,23 +33,19 @@ SelectMaskPolygon::SelectMaskPolygon(size_t user_batch_size)
 // the output mask IDs are remapped to sequential indices (0, 1, 2, ...) based on their
 // position in the mask_ids list; otherwise the original object indices are preserved.
 TensorList *SelectMaskPolygon::run(rocalTensorList *mask_data,
-                                   std::vector<std::vector<int>> polygon_counts,
-                                   std::vector<std::vector<std::vector<int>>> vertices_counts,
-                                   std::vector<int> mask_ids,
-                                   std::vector<std::vector<int>> &sel_vertices_counts,
-                                   std::vector<std::vector<int>> &sel_mask_ids,
-                                   bool reindex_mask,
-                                   TensorList &output_list) {
+                                  const std::vector<std::vector<int>> &polygon_counts,
+                                  const std::vector<std::vector<std::vector<int>>> &vertices_counts,
+                                  const std::vector<int> &mask_ids,
+                                  std::vector<std::vector<int>> &sel_vertices_counts,
+                                  std::vector<std::vector<int>> &sel_mask_ids,
+                                  bool reindex_mask,
+                                  TensorList &out_list) {
     std::set<int> unique_ids(mask_ids.begin(), mask_ids.end());
     if (unique_ids.size() != mask_ids.size())
         THROW("mask_ids should not contain duplicates");
 
-    if (_output_buffer.size() != 0) {
-        for (unsigned i = 0; i < _user_batch_size; i++)
-            _output_buffer[i].clear();
-    }
-    _output_buffer.clear();
-    _output_buffer.resize(_user_batch_size);
+    _output.clear();
+    _output.resize(_user_batch_size);
     sel_vertices_counts.resize(_user_batch_size);
     sel_mask_ids.resize(_user_batch_size);
 
@@ -65,14 +61,15 @@ TensorList *SelectMaskPolygon::run(rocalTensorList *mask_data,
             if (mask_id < 0 || static_cast<size_t>(mask_id) >= objects)
                 THROW("Requested mask id " + std::to_string(mask_id) + " is not present in the sample");
         }
+
         size_t buffer_offset = 0;
         for (unsigned obj_idx = 0; obj_idx < objects; obj_idx++) {
             bool select_object = unique_ids.find(static_cast<int>(obj_idx)) != unique_ids.end();
-            for (unsigned poly_idx = 0; poly_idx < polygon_counts[i][obj_idx]; poly_idx++) {
+            for (unsigned poly_idx = 0; poly_idx < static_cast<unsigned>(polygon_counts[i][obj_idx]); poly_idx++) {
                 auto vertex_count = vertices_counts[i][obj_idx][poly_idx];
                 if (select_object) {
-                    for (unsigned v = 0; v < vertex_count; v++) {
-                        _output_buffer[i].push_back(mask_buffer[buffer_offset + v]);
+                    for (int v = 0; v < vertex_count; v++) {
+                        _output[i].push_back(mask_buffer[buffer_offset + v]);
                     }
                     sel_vertices_counts[i].push_back(vertex_count);
                     if (reindex_mask)
@@ -80,16 +77,15 @@ TensorList *SelectMaskPolygon::run(rocalTensorList *mask_data,
                     else
                         sel_mask_ids[i].push_back(static_cast<int>(obj_idx));
                 }
-                buffer_offset += vertex_count;
+                buffer_offset += static_cast<size_t>(vertex_count);
             }
         }
     }
 
     for (unsigned i = 0; i < _user_batch_size; i++) {
-        auto select_mask_buffers = reinterpret_cast<float *>(_output_buffer[i].data());
-        output_list[i]->set_dims({_output_buffer[i].size(), 1});
-        output_list[i]->set_mem_handle(static_cast<void *>(select_mask_buffers));
+        float *select_mask_buffers = _output[i].data();
+        out_list[i]->set_dims({_output[i].size(), 1});
+        out_list[i]->set_mem_handle(static_cast<void *>(select_mask_buffers));
     }
-
-    return &output_list;
+    return &out_list;
 }

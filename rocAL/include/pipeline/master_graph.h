@@ -296,7 +296,7 @@ private:
     // ROI random crop variables
     bool _is_roi_random_crop = false;                          ///< True when the ROI random crop operator is active
     std::unique_ptr<RandomObjectBbox> _random_object_bbox;     ///< Connected-component random object bbox operator (provides ROI for roi_random_crop)
-    std::unique_ptr<RandomObjectBboxPixelwise2D> _pixelwise_bbox;  ///< 2D PixelwiseMask random object bbox operator
+    std::unique_ptr<RandomObjectBboxPixelwise2D> _random_object_bbox_pixelwise;  ///< 2D PixelwiseMask random object bbox operator
     int *_crop_shape_batch = nullptr;                          ///< Per-sample crop dimensions replicated across the batch [batch_size * num_dims]
     int *_roi_batch = nullptr;                                 ///< Pointer into the input tensor's ROI buffer (begin + end coordinates per sample)
     Tensor *_roi_random_crop_tensor = nullptr;                 ///< Output tensor holding the computed crop anchor coordinates

@@ -50,21 +50,21 @@ class RandomMaskPixel {
      *  \param [out] output_list TensorList to populate with (row, col) per sample.
      *  \return Pointer to output_list after population.
      */
-    TensorList *run(rocalTensorList *input, TensorList &output_list);
+    TensorList *run(rocalTensorList *input, TensorList &out_list);
 
    private:
     /// Lazy-initialize per-sample RNGs with ParameterFactory seed + "MPIX" salt.
-    void ensure_rngs();
+    void init_rngs();
     /// Binary-search helper: given run-length encoded foreground spans, find the flat pixel index
     /// corresponding to the val-th foreground pixel. Returns -1 on invalid input.
-    int64_t find_pixel(const std::vector<int> &start, const std::vector<int> &foreground_count, int64_t val, int count);
+    static int64_t find_pixel(const std::vector<int> &start, const std::vector<int> &foreground_count, int64_t val, int count);
 
     size_t _user_batch_size;                    ///< Number of samples per batch
     size_t _cpu_num_threads;                    ///< Number of CPU threads for OMP parallelism
-    unsigned _rng_seed = 0;                     ///< Cached seed to detect when RNGs need re-seeding
+    unsigned _seed = 0;                         ///< Cached seed to detect when RNGs need re-seeding
     std::vector<std::mt19937> _rngs;            ///< Per-sample Mersenne Twister RNGs
-    std::vector<unsigned> _output_buffer;       ///< Flat buffer holding (row, col) pairs for the batch
-    int _pixel_value = 0;                       ///< Label value (or threshold) defining foreground
+    std::vector<int> _output_coords;            ///< Flat buffer [batch * 2] as (row, col) per sample
+    int _value = 0;                             ///< Label value (or threshold) defining foreground
     bool _is_foreground = false;                ///< If true, restrict pixel selection to foreground
-    bool _is_threshold = false;                 ///< If true, foreground = pixel > _pixel_value; else pixel == _pixel_value
+    bool _is_threshold = false;                 ///< If true, foreground = pixel > _value; else pixel == _value
 };

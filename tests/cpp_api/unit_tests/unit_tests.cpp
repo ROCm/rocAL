@@ -1442,14 +1442,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                             std::cout << "\nImage " << i << " random_mask_pixel -> (row=" << row << ", col=" << col << "), label=0 (no foreground in mask)";
                         }
 
-                        unsigned int *bbox = static_cast<unsigned int *>(random_object_bboxes->at(i)->buffer());
+                        int *bbox = static_cast<int *>(random_object_bboxes->at(i)->buffer());
                         if (!bbox) {
                             std::cerr << "\nInvalid random_object_bbox output for image " << i;
                             return -1;
                         }
-                        unsigned y0 = bbox[0], x0 = bbox[1], y1 = bbox[2], x1 = bbox[3];  // OUT_BOX returns (y0, x0, y1, x1)
+                        int y0 = bbox[0], x0 = bbox[1], y1 = bbox[2], x1 = bbox[3];  // "box" returns (y0, x0, y1, x1)
                         std::cout << "\nImage " << i << " random_object_bbox -> (y0=" << y0 << ", x0=" << x0 << ", y1=" << y1 << ", x1=" << x1 << ")";
-                        if (y0 >= y1 || x0 >= x1 || y1 > (unsigned)mask_h || x1 > (unsigned)mask_w) {
+                        if (y0 < 0 || x0 < 0 || y1 <= y0 || x1 <= x0 || y1 > (int)mask_h || x1 > (int)mask_w) {
                             std::cerr << "\nrandom_object_bbox out of bounds/degenerate for image " << i
                                       << " -> (" << y0 << "," << x0 << "," << y1 << "," << x1 << ") for mask (" << mask_w << "x" << mask_h << ")";
                             return -1;
@@ -1457,9 +1457,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
                         if (nonzero > 0) {
                             bool found_fg = false;
-                            for (unsigned yy = y0; yy < y1 && !found_fg; yy++) {
+                            for (int yy = y0; yy < y1 && !found_fg; yy++) {
                                 size_t base = (size_t)yy * (size_t)mask_w;
-                                for (unsigned xx = x0; xx < x1; xx++) {
+                                for (int xx = x0; xx < x1; xx++) {
                                     if (mask_buffer[base + xx] > 0) {
                                         found_fg = true;
                                         break;
