@@ -110,11 +110,14 @@ class RandomObjectBbox {
     /// Returns a pointer to the raw buffer backing the second output tensor (shape or end coordinates). May be null for "box" format.
     void *box2_buf() const { return _box2_buf; }
 
-   private:
+    // --- CCL core methods (public so RandomObjectBboxPixelwise2D can reuse them) ---
+
     /// Scan the input label tensor to collect the set of unique label values present within the ROI.
-    void findLabels(const uint8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
+    template<typename T>
+    void findLabels(const T *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size);
     /// Produce a binary mask where each element is 1 if the input equals \p label, 0 otherwise.
-    void filterByLabel(const uint8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
+    template<typename T>
+    void filterByLabel(const T *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label);
     /// Assign connected-component labels to a single row of the binary mask using run-length encoding.
     void labelRow(const int *label_base, const int *in_row, int *out_row, unsigned length);
     /// Return the group representative for element \p x (identity function — reads the stored group).
@@ -128,13 +131,16 @@ class RandomObjectBbox {
     /// Merge adjacent rows by unifying component labels at positions where both rows share the same filtered label.
     void mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
     /// Core connected-component labeling: filters by a randomly selected label, labels rows, merges across dimensions, and remaps labels to sequential IDs. Returns the total number of connected components.
-    int labelMergeFunc(const uint8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
+    template<typename T>
+    int labelMergeFunc(const T *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
     /// Test and set a bit in the hit bitmap; returns true if the bit was already set.
     bool hit(std::vector<unsigned> &hits, unsigned idx);
     /// Compute or expand axis-aligned bounding boxes from a row of compact labels. Each box spans the min/max coordinates across all dimensions.
     void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> &ranges, std::vector<unsigned> &hits, int *in, std::vector<int> origin, unsigned width);
     /// Randomly select a bounding box index, optionally restricted to the k-largest by volume. Returns -1 if no boxes exist.
     int pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest = -1);
+
+   private:
 
     vx_context _context;                      ///< OpenVX context used for tensor creation
     size_t _user_batch_size;                   ///< Number of samples per batch
@@ -150,4 +156,48 @@ class RandomObjectBbox {
     float _foreground_prob = 1.0f;             ///< Probability of selecting a foreground object
     bool _cache_boxes = false;                 ///< Whether to cache bounding boxes by content hash
     std::unordered_map<content_hash_t, CacheEntry> _boxes_cache;  ///< Content-hash-keyed cache of per-input bounding boxes
+};
+
+/*! \brief Wrapper for 2D PixelwiseMask bounding-box extraction.
+ *
+ * Adapts the shared CCL core (from RandomObjectBbox) for 2D int32 segmentation masks
+ * provided by COCO PixelwiseMask metadata. Each 2D mask of shape {height, width} is
+ * treated as a degenerate 4D tensor with roi_size = {1, 1, height, width}, which makes
+ * the 4D CCL code run the outer loops once and skip the depth merge.
+ *
+ * The output is written into the caller-provided TensorList as 4-element unsigned int
+ * arrays (one per sample) in the requested format ("box", "start_end", or "anchor_shape").
+ */
+class RandomObjectBboxPixelwise2D {
+   public:
+    /*! \brief Construct a RandomObjectBboxPixelwise2D instance.
+     *  \param [in] user_batch_size  Number of samples in each batch.
+     *  \param [in] cpu_num_threads  Number of CPU threads available for parallel processing.
+     */
+    RandomObjectBboxPixelwise2D(size_t user_batch_size, size_t cpu_num_threads);
+
+    /*! \brief Run connected-component labeling on 2D int32 masks and select one bounding box per sample.
+     *  \param [in]  input           Batch of 2D int32 segmentation masks (from mask_meta_data).
+     *  \param [in]  output_format   Output format: "box", "start_end", or "anchor_shape".
+     *  \param [in]  k_largest       If positive, restrict selection to the k largest objects by area.
+     *  \param [in]  foreground_prob Probability of selecting a foreground object (otherwise full image).
+     *  \param [in]  cache_objects   If true, cache bounding boxes keyed by content hash.
+     *  \param [out] output_list     TensorList to fill with the selected bounding boxes.
+     *  \return Pointer to output_list after population.
+     */
+    TensorList *run(rocalTensorList *input, const std::string &output_format,
+                    int k_largest, float foreground_prob, bool cache_objects,
+                    TensorList &output_list);
+
+   private:
+    /// Lazy-initialize per-sample RNGs with ParameterFactory seed + "OBBX" salt.
+    void ensure_rngs();
+
+    size_t _user_batch_size;                                       ///< Number of samples per batch
+    size_t _cpu_num_threads;                                       ///< Number of CPU threads for OMP parallelism
+    unsigned _rng_seed = 0;                                        ///< Cached seed to detect when RNGs need re-seeding
+    std::vector<std::mt19937> _rngs;                               ///< Per-sample Mersenne Twister RNGs
+    std::unordered_map<content_hash_t, CacheEntry> _cache;         ///< Content-hash-keyed cache of per-input bounding boxes
+    std::vector<std::vector<unsigned>> _output_buffer;             ///< Per-sample 4-element output bounding boxes [batch][4]
+    RandomObjectBbox _ccl;  ///< CCL engine providing findLabels/filterByLabel/labelMergeFunc/get_label_boundingboxes/pick_box (vx_context is unused for the 2D path)
 };

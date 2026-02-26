@@ -357,18 +357,6 @@ extern "C" RocalTensorList ROCAL_API_CALL rocalRandomMaskPixel(RocalContext p_co
  */
 extern "C" void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool is_foreground = false, unsigned int value = 0, bool is_threshold = true);
 
-/*! \brief Get a random object bounding box from PixelwiseMask metadata
- * \ingroup group_rocal_meta_data
- * \param [in] p_context rocAL context
- * \param [in] format output format (see RocalRandomObjectBBoxFormat)
- * \param [in] k_largest if specified, only k_largest boxes by area are considered (-1 means all)
- * \param [in] foreground_prob probability of selecting a foreground object (1.0 = always foreground)
- * \param [in] cache_objects if true, cache object bounding boxes for repeated inputs
- * \return RocalTensorList of 4-element bounding boxes per image (valid only for PixelwiseMask metadata)
- */
-extern "C" RocalTensorList ROCAL_API_CALL RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format,
-                                                                 int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
-
 /*! \brief creates webdataset reader
  * \ingroup group_rocal_meta_data
  * \param [in] p_context rocal context
@@ -400,18 +388,21 @@ RocalMetaData ROCAL_API_CALL rocalGetAsciiDatas(RocalContext p_context);
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, const std::vector<int> &crop_shape);
 
-/*! \brief Find connected-component bounding boxes in a label/segmentation tensor and return a randomly selected one per sample.
+/*! \brief Find connected-component bounding boxes in a segmentation mask and return a randomly selected one per sample.
  * \ingroup group_rocal_meta_data
- * \note The input label tensor must have at least 4 spatial dimensions (e.g., NCDHW layout).
- *       For inputs with fewer than 4 dimensions, the operator throws an exception.
+ *
+ * When \p p_input is NULL, operates on 2D PixelwiseMask metadata from the COCO reader.
+ * When \p p_input is a valid tensor, operates on a 4D label/segmentation tensor
+ * (must have at least 4 spatial dimensions, e.g. NCDHW layout).
+ *
  * \param [in] p_context rocal context
- * \param [in] p_input Input label tensor (must have at least 4 spatial dimensions for connected-component labeling)
- * \param [in] output_format Output format for the returned tensors ("anchor_shape", "start_end", or "box")
+ * \param [in] p_input Input label tensor, or NULL to use PixelwiseMask metadata
+ * \param [in] output_format Output format: "box", "anchor_shape", or "start_end"
  * \param [in] k_largest If positive, selects from the k largest objects; otherwise selects from all
  * \param [in] foreground_prob Probability of selecting a foreground object (otherwise returns full image ROI)
  * \param [in] cache_objects If true, caches computed boxes for repeated inputs
  * \return A tensor list containing the selected ROI tensors
  */
-extern "C" RocalTensorList ROCAL_API_CALL rocalRandomObjectBbox(RocalContext p_context, RocalTensor p_input, std::string output_format="anchor_shape", int k_largest = -1, float foreground_prob = 1.0, bool cache_objects = false);
+extern "C" RocalTensorList ROCAL_API_CALL rocalRandomObjectBbox(RocalContext p_context, RocalTensor p_input, const char *output_format = "anchor_shape", int k_largest = -1, float foreground_prob = 1.0, bool cache_objects = false);
 
 #endif  // MIVISIONX_ROCAL_API_META_DATA_H

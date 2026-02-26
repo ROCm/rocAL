@@ -851,11 +851,6 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         .def_readwrite("y", &ROIxywh::y)
         .def_readwrite("w", &ROIxywh::w)
         .def_readwrite("h", &ROIxywh::h);
-    py::enum_<RocalRandomObjectBBoxFormat>(types_m, "RocalRandomObjectBBoxFormat", "Rocal Random object bbox types")
-        .value("OUT_BOX", ROCAL_OUT_BOX)
-        .value("OUT_ANCHORSHAPE", ROCAL_OUT_ANCHORSHAPE)
-        .value("OUT_STARTEND", ROCAL_OUT_STARTEND)
-        .export_values();
     py::class_<RocalShardingInfo>(m, "RocalShardingInfo")
         .def(py::init<>())
         .def(py::init<RocalLastBatchPolicy, bool, bool, int>())
@@ -917,7 +912,14 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         rocalGetImageSizes(context, ptr);
     });
     m.def("roiRandomCrop", &rocalROIRandomCrop, py::return_value_policy::reference);
-    m.def("randomObjectBbox", &rocalRandomObjectBbox, py::return_value_policy::reference);
+    m.def("randomObjectBbox", [](RocalContext context, RocalTensor input_image,
+                                    std::string format, int k_largest, float foreground_prob, bool cache_objects) {
+        return rocalRandomObjectBbox(context, input_image, format.c_str(),
+                                     k_largest, foreground_prob, cache_objects);
+    }, py::return_value_policy::reference,
+       py::arg("context"), py::arg("input_image"),
+       py::arg("format") = "anchor_shape", py::arg("k_largest") = -1,
+       py::arg("foreground_prob") = 1.0f, py::arg("cache_objects") = false);
     m.def("getROIImgSizes", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.request();
         int *ptr = static_cast<int *>(buf.ptr);
@@ -1172,9 +1174,10 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         }
         return per_image_select_mask;
     });
-    m.def("getRandomObjectBBox", [](RocalContext context, RocalRandomObjectBBoxFormat format,
+    m.def("getRandomObjectBBox", [](RocalContext context, std::string format,
                                      int k_largest, float foreground_prob, bool cache_objects) {
-        rocalTensorList *boxes = RocalRandomObjectBBox(context, format, k_largest, foreground_prob, cache_objects);
+        rocalTensorList *boxes = rocalRandomObjectBbox(context, nullptr, format.c_str(),
+                                                       k_largest, foreground_prob, cache_objects);
         py::list boxes_list;
         for (int i = 0; i < boxes->size(); i++) {
             unsigned *box_buffer = static_cast<unsigned *>(boxes->at(i)->buffer());

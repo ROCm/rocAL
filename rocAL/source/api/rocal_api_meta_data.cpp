@@ -442,31 +442,6 @@ void ROCAL_API_CALL rocalSetRandomPixelMaskConfig(RocalContext p_context, bool i
     context->master_graph->set_random_mask_pixel_config(is_foreground, value, is_threshold);
 }
 
-RocalTensorList
-    ROCAL_API_CALL
-    RocalRandomObjectBBox(RocalContext p_context, RocalRandomObjectBBoxFormat format,
-                          int k_largest, float foreground_prob, bool cache_objects) {
-    if (p_context == nullptr)
-        return nullptr;
-    auto context = static_cast<Context*>(p_context);
-    try {
-        auto meta_data = context->master_graph->meta_data();
-        if (!meta_data.second)
-            THROW("No mask has been loaded for this output image")
-        if (meta_data.second->get_metadata_type() != MetaDataType::PixelwiseMask)
-            THROW("RocalRandomObjectBBox is only valid for PixelwiseMask metadata")
-        size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
-        if (context->user_batch_size() != meta_data_batch_size)
-            THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
-        return context->master_graph->get_random_object_bbox(context->master_graph->mask_meta_data(false),
-                                                             format,
-                                                             k_largest, foreground_prob, cache_objects);
-    } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
-        return nullptr;
-    }
-}
-
 void
     ROCAL_API_CALL
     rocalGetImageSizes(RocalContext p_context, int* buf) {
@@ -664,11 +639,31 @@ RocalTensor
 
 RocalTensorList
     ROCAL_API_CALL
-    rocalRandomObjectBbox(RocalContext p_context, RocalTensor p_input, std::string output_format, int k_largest, float foreground_prob, bool cache_objects) {
-    RocalTensorList output = nullptr;
-    ROCAL_INVALID_CONTEXT_EXCEPTION(p_context);
-    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    rocalRandomObjectBbox(RocalContext p_context, RocalTensor p_input, const char *output_format, int k_largest, float foreground_prob, bool cache_objects) {
+    if (p_context == nullptr)
+        return nullptr;
     auto context = static_cast<Context*>(p_context);
-    auto input = static_cast<Tensor*>(p_input);
-    return context->master_graph->random_object_bbox(input, output_format, k_largest, foreground_prob, cache_objects);
+    try {
+        if (p_input == nullptr) {
+            // 2D PixelwiseMask metadata path
+            auto meta_data = context->master_graph->meta_data();
+            if (!meta_data.second)
+                THROW("No mask has been loaded for this output image")
+            if (meta_data.second->get_metadata_type() != MetaDataType::PixelwiseMask)
+                THROW("rocalRandomObjectBbox with null input is only valid for PixelwiseMask metadata")
+            size_t meta_data_batch_size = meta_data.second->get_labels_batch().size();
+            if (context->user_batch_size() != meta_data_batch_size)
+                THROW("meta data batch size is wrong " + TOSTR(meta_data_batch_size) + " != " + TOSTR(context->user_batch_size()))
+            return context->master_graph->random_object_bbox(nullptr, std::string(output_format),
+                                                              k_largest, foreground_prob, cache_objects);
+        } else {
+            // 4D tensor-op path
+            auto input = static_cast<Tensor*>(p_input);
+            return context->master_graph->random_object_bbox(input, std::string(output_format),
+                                                              k_largest, foreground_prob, cache_objects);
+        }
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        return nullptr;
+    }
 }

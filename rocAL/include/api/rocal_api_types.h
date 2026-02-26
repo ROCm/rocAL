@@ -406,20 +406,6 @@ enum RocalExternalSourceMode {
     ROCAL_EXTSOURCE_RAW_UNCOMPRESSED = 2,
 };
 
-/*! \brief RocalRandomObjectBBoxFormat enum
- * \ingroup group_rocal_types
- *
- * Output format for RocalRandomObjectBBox.
- */
-enum RocalRandomObjectBBoxFormat {
-    /*! \brief [y0, x0, y1, x1] (start/end) */
-    ROCAL_OUT_BOX = 0,
-    /*! \brief [y, x, h, w] (anchor/shape) */
-    ROCAL_OUT_ANCHORSHAPE = 1,
-    /*! \brief [y0, x0, y1, x1] (start/end) */
-    ROCAL_OUT_STARTEND = 2,
-};
-
 /*! \brief rocAL Audio Border Type enum
  * \ingroup group_rocal_types
  */

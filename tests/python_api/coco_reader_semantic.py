@@ -159,7 +159,7 @@ class ROCALCOCOIterator(object):
         else:
             pixelwise_labels = self.loader.get_pixelwise_labels()
             random_mask_pixel = self.loader.get_random_mask_pixel()
-            random_object_bbox = self.loader.get_random_object_bbox(types.OUT_BOX, k_largest=-1, foreground_prob=1.0, cache_objects=False)
+            random_object_bbox = self.loader.get_random_object_bbox("box", k_largest=-1, foreground_prob=1.0, cache_objects=False)
 
         if self.mask_type == "polygon":
             return (self.output), self.bboxes, self.labels, image_id_tensor, self.img_size.copy(), mask_count, polygon_size, polygons, select_mask_polygons

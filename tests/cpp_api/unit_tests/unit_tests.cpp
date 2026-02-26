@@ -1376,7 +1376,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 if (use_pixelwise_masks) {
                     RocalTensorList pixelwise_masks = rocalGetPixelwiseMaskLabels(handle);
                     RocalTensorList random_mask_pixels = rocalRandomMaskPixel(handle);
-                    RocalTensorList random_object_bboxes = RocalRandomObjectBBox(handle, ROCAL_OUT_BOX, -1, 1.0f, false);
+                    RocalTensorList random_object_bboxes = rocalRandomObjectBbox(handle, nullptr, "box", -1, 1.0f, false);
 
                     if (!pixelwise_masks || !random_mask_pixels || !random_object_bboxes) {
                         std::cerr << "\nSegmentation metadata API returned null";

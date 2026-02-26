@@ -48,6 +48,8 @@ THE SOFTWARE.
 #include "pipeline/ring_buffer.h"
 #include "pipeline/timing_debug.h"
 #include "pipeline/random_object_bbox.h"
+#include "pipeline/random_mask_pixel.h"
+#include "pipeline/select_mask_polygon.h"
 #if ENABLE_HIP
 #include "box_encoder_hip.h"
 #include "device/device_manager_hip.h"
@@ -84,41 +86,6 @@ const __m256i avx_pkdMaskG = _mm256_setr_epi32(0x80808001, 0x80808004, 0x8080800
 const __m256i avx_pkdMaskB = _mm256_setr_epi32(0x80808002, 0x80808005, 0x80808008, 0x8080800B, 0x80808002,
                                                0x80808005, 0x80808008, 0x8080800B);
 #endif
-
-// Cache entry for random_object_bbox caching
-struct RandomObjectBBoxCacheEntry {
-    std::set<int> labels;
-    std::unordered_map<int, std::vector<std::vector<std::pair<unsigned, unsigned>>>> class_boxes;
-    std::unordered_map<int, int> total_boxes;
-
-    bool Get(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes, int label) const {
-        auto it = class_boxes.find(label);
-        if (it == class_boxes.end())
-            return false;
-        boxes = it->second;
-        return true;
-    }
-
-    void Put(int label, const std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes) {
-        class_boxes[label] = boxes;
-    }
-};
-
-// Simple hash for caching
-inline size_t fast_hash_buffer(const void* data, size_t size) {
-    const uint8_t* bytes = static_cast<const uint8_t*>(data);
-    size_t hash = 0xcbf29ce484222325ULL;  // FNV-1a offset basis
-    for (size_t i = 0; i < size; ++i) {
-        hash ^= bytes[i];
-        hash *= 0x100000001b3ULL;  // FNV-1a prime
-    }
-    return hash;
-}
-
-inline size_t hash_combine(size_t seed, size_t value) {
-    // Similar to boost::hash_combine
-    return seed ^ (value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
-}
 
 class MasterGraph {
 public:
@@ -187,8 +154,6 @@ public:
     TensorList *bbox_meta_data();
     TensorList *mask_meta_data(bool is_polygon_mask);
     TensorList *get_random_mask_pixel(rocalTensorList *input);
-    TensorList *get_random_object_bbox(rocalTensorList *input, RocalRandomObjectBBoxFormat format,
-                                       int k_largest = -1, float foreground_prob = 1.0f, bool cache_objects = false);
     TensorList *matched_index_meta_data();
     TensorListVector * ascii_values_meta_data(); // Gets the pointer to a batch of ASCII values of all samples in the batch
     void set_loop(bool val) { _loop = val; }
@@ -229,10 +194,11 @@ public:
     Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, const int *crop_shape);
 
     /*! \brief Set up the random object bounding box operator.
-     * Creates a RandomObjectBbox instance that identifies connected components in a label
-     * tensor and returns a randomly selected bounding box per sample each iteration.
+     *
+     * When \p input is non-null, creates a RandomObjectBbox instance for 4D tensor-op path.
+     * When \p input is null, uses the 2D PixelwiseMask wrapper path with metadata masks.
      */
-    TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
+    TensorList* random_object_bbox(Tensor *input, const std::string &output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
     /// Recompute per-sample random crop anchors within the ROI region for the current batch.
     void update_roi_random_crop();
 private:
@@ -256,25 +222,6 @@ private:
     bool is_out_of_data();
     // Generates a unique identifier for tensor naming by incrementing and returning the _tensor_idx counter.
     inline std::string get_tensor_uid() { return std::to_string(_tensor_idx++); }
-    int64_t find_pixel(const std::vector<int> &start, const std::vector<int> &foreground_count, int64_t val, int count);
-    void init_semantic_rngs();
-    // Connected components helper functions using disjoint-set (union-find)
-    int disjoint_get_group(const int &x) { return x; }
-    int disjoint_set_group(int &x, int new_id);
-    int disjoint_find(int *items, int x);
-    int disjoint_merge(int *items, int x, int y);
-    void merge_row(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
-    void filter_by_label(int *in_row, int *out_row, unsigned N, int label);
-    int compact_rows(int *in, unsigned height, unsigned width);
-    void label_row(const int *label_base, const int *in_row, int *out_row, unsigned length);
-    void get_label_boundingboxes(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes,
-                                 std::vector<std::pair<unsigned, unsigned>> ranges,
-                                 std::vector<unsigned> hits,
-                                 int *in,
-                                 std::vector<unsigned> origin,
-                                 unsigned width);
-    bool hit(std::vector<unsigned> &hits, unsigned idx);
-    int pick_box(std::vector<std::vector<std::pair<unsigned, unsigned>>> &boxes, std::mt19937 &rng, int k_largest);
     RingBuffer _ring_buffer;                                                      //!< The queue that keeps the tensors that have benn processed by the internal thread (_output_thread) asynchronous to the user's thread
     pMetaDataBatch _augmented_meta_data = nullptr;                                //!< The output of the meta_data_graph,
     std::shared_ptr<CropCordBatch> _random_bbox_crop_cords_data = nullptr;
@@ -298,11 +245,8 @@ private:
     TensorList _matches_tensor_list;
     TensorList _random_mask_pixel_list;
     TensorList _select_mask_polygon_list;
-    std::vector<std::vector<float>> _output_select_mask_polygon;
     TensorList _random_object_bbox_list;
     std::vector<size_t> _meta_data_buffer_size;
-    std::vector<std::vector<unsigned>> _output_random_object_bbox;
-    std::unordered_map<size_t, RandomObjectBBoxCacheEntry> _random_object_bbox_cache;
 #if ENABLE_HIP
     DeviceManagerHip _device;                                                     //!< Keeps the device related constructs needed for running on GPU
 #endif
@@ -347,22 +291,18 @@ private:
     // box IoU matcher variables
     bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
     BoxIouMatcherInfo _iou_matcher_info;
-    int _random_mask_pixel_value = 0;
-    bool _is_random_mask_pixel_threshold = false;
-    bool _is_random_mask_pixel_foreground = false;
-    std::vector<unsigned> output_random_mask_pixel;
+    std::unique_ptr<RandomMaskPixel> _random_mask_pixel;           ///< Random mask pixel selector helper
+    std::unique_ptr<SelectMaskPolygon> _select_mask_polygon;      ///< Polygon selection helper
     // ROI random crop variables
     bool _is_roi_random_crop = false;                          ///< True when the ROI random crop operator is active
     std::unique_ptr<RandomObjectBbox> _random_object_bbox;     ///< Connected-component random object bbox operator (provides ROI for roi_random_crop)
+    std::unique_ptr<RandomObjectBboxPixelwise2D> _pixelwise_bbox;  ///< 2D PixelwiseMask random object bbox operator
     int *_crop_shape_batch = nullptr;                          ///< Per-sample crop dimensions replicated across the batch [batch_size * num_dims]
     int *_roi_batch = nullptr;                                 ///< Pointer into the input tensor's ROI buffer (begin + end coordinates per sample)
     Tensor *_roi_random_crop_tensor = nullptr;                 ///< Output tensor holding the computed crop anchor coordinates
     Tensor *_roi_start_tensor = nullptr;                       ///< Tensor providing per-sample ROI start coordinates
     Tensor *_roi_end_tensor = nullptr;                         ///< Tensor providing per-sample ROI end coordinates
     void *_roi_random_crop_buf = nullptr;                      ///< Raw host/pinned buffer backing _roi_random_crop_tensor
-    unsigned _semantic_rng_seed = 0;
-    std::vector<std::mt19937> _random_mask_pixel_rngs;
-    std::vector<std::mt19937> _random_object_bbox_rngs;
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif

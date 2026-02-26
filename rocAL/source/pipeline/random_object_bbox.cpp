@@ -143,7 +143,7 @@ void RandomObjectBbox::update() {
         if (roi_size.size() < 4) {
             THROW("RandomObjectBbox: Expected roi_size with at least 4 dimensions, got " + TOSTR(roi_size.size()))
         } else if (fg) {
-            total_box = labelMergeFunc(label, selected_label, roi_size, max_size, output_compact, _rng[i], cache_entry);
+            total_box = labelMergeFunc<uint8_t>(label, selected_label, roi_size, max_size, output_compact, _rng[i], cache_entry);
         }
         if (total_box) {
             if (!cache_entry || !cache_entry->Get(boxes, selected_label)) {
@@ -267,7 +267,8 @@ int RandomObjectBbox::pick_box(const std::vector<std::vector<std::vector<unsigne
 // Uses stride-based indexing to handle the gap between ROI dimensions and the
 // underlying max-allocated tensor dimensions.  Skips runs of identical values
 // for efficiency.
-void RandomObjectBbox::findLabels(const uint8_t *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size) {
+template<typename T>
+void RandomObjectBbox::findLabels(const T *input, std::set<int> &labels, std::vector<int> roi_size, std::vector<size_t> max_size) {
     if (!roi_size.size() || !max_size.size())
         return;
     int prev = input[0];
@@ -302,7 +303,8 @@ void RandomObjectBbox::findLabels(const uint8_t *input, std::set<int> &labels, s
 
 // Produce a binary mask from the input tensor: output[i] = 1 where input[i] == label, 0 otherwise.
 // Uses stride-based indexing identical to findLabels to respect the gap between ROI and max dims.
-void RandomObjectBbox::filterByLabel(const uint8_t *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label) {
+template<typename T>
+void RandomObjectBbox::filterByLabel(const T *input, std::vector<int> &output, std::vector<int> roi_size, std::vector<size_t> max_size, int label) {
     int num_dims = roi_size.size();
     std::vector<unsigned> strides(num_dims + 1);
     strides[num_dims] = 1;
@@ -438,7 +440,8 @@ void RandomObjectBbox::mergeRow(int *label_base, const int *in1, const int *in2,
 //      sequential IDs (0, 1, 2, ...).
 //
 // Returns the total number of distinct connected components found.
-int RandomObjectBbox::labelMergeFunc(const uint8_t *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry) {
+template<typename T>
+int RandomObjectBbox::labelMergeFunc(const T *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry) {
     int64_t total_buf_size = 1;
     for (auto val : size)
         total_buf_size *= val;
@@ -648,4 +651,179 @@ void RandomObjectBbox::get_label_boundingboxes(std::vector<std::vector<std::vect
             i++;  // skip one label
         }
     }
+}
+
+// Explicit template instantiations for supported input element types.
+// uint8_t: used by the 4D tensor-op path (RandomObjectBbox::update).
+// int:     used by the 2D PixelwiseMask path (RandomObjectBboxPixelwise2D).
+template void RandomObjectBbox::findLabels<uint8_t>(const uint8_t *, std::set<int> &, std::vector<int>, std::vector<size_t>);
+template void RandomObjectBbox::findLabels<int>(const int *, std::set<int> &, std::vector<int>, std::vector<size_t>);
+template void RandomObjectBbox::filterByLabel<uint8_t>(const uint8_t *, std::vector<int> &, std::vector<int>, std::vector<size_t>, int);
+template void RandomObjectBbox::filterByLabel<int>(const int *, std::vector<int> &, std::vector<int>, std::vector<size_t>, int);
+template int RandomObjectBbox::labelMergeFunc<uint8_t>(const uint8_t *, int &, std::vector<int> &, std::vector<size_t> &, std::vector<int> &, std::mt19937 &, CacheEntry *);
+template int RandomObjectBbox::labelMergeFunc<int>(const int *, int &, std::vector<int> &, std::vector<size_t> &, std::vector<int> &, std::mt19937 &, CacheEntry *);
+
+// ---------- RandomObjectBboxPixelwise2D ----------
+// Wrapper that reuses the 4D CCL pipeline from RandomObjectBbox for 2D int32 masks
+// from COCO PixelwiseMask metadata. Each 2D mask {H,W} is adapted as a degenerate
+// 4D tensor {1,1,H,W} so the CCL outer loops execute once and depth-merge is a no-op.
+
+RandomObjectBboxPixelwise2D::RandomObjectBboxPixelwise2D(size_t user_batch_size, size_t cpu_num_threads)
+    : _user_batch_size(user_batch_size),
+      _cpu_num_threads(cpu_num_threads),
+      _ccl(nullptr, user_batch_size, cpu_num_threads) {}
+
+void RandomObjectBboxPixelwise2D::ensure_rngs() {
+    const unsigned seed = ParameterFactory::instance()->get_seed();
+    if (_rng_seed == seed && _rngs.size() == _user_batch_size)
+        return;
+    _rng_seed = seed;
+    _rngs.resize(_user_batch_size);
+    for (size_t i = 0; i < _user_batch_size; i++) {
+        std::seed_seq seq{seed, 0x4F424258u, static_cast<unsigned>(i)};  // "OBBX"
+        _rngs[i].seed(seq);
+    }
+}
+
+// Process a batch of 2D int32 segmentation masks:
+//   1. Apply foreground probability check — may fallback to full-image bbox.
+//   2. Optionally compute/lookup a content hash for caching.
+//   3. Wrap the 2D mask as a degenerate 4D tensor and run CCL via _ccl.labelMergeFunc<int>.
+//   4. Compute axis-aligned bounding boxes from compact labels.
+//   5. Randomly pick one bbox (optionally restricted to k-largest by area).
+//   6. Extract the last 2 coords from the 4D box to produce 2D output.
+//   7. Write per-sample results to output_list in the requested format.
+// When cache_objects is false, samples are processed in parallel via OpenMP.
+TensorList *RandomObjectBboxPixelwise2D::run(rocalTensorList *input, const std::string &output_format,
+                                             int k_largest, float foreground_prob, bool cache_objects,
+                                             TensorList &output_list) {
+    if (output_format != "box" && output_format != "start_end" && output_format != "anchor_shape")
+        THROW("RandomObjectBboxPixelwise2D: invalid output_format '" + output_format + "'. Must be one of: 'box', 'start_end', 'anchor_shape'")
+
+    ensure_rngs();
+
+    // Resize output buffer
+    _output_buffer.clear();
+    _output_buffer.resize(_user_batch_size, std::vector<unsigned>(4, 0));
+
+    std::uniform_real_distribution<float> foreground_dist(0.0f, 1.0f);
+
+    auto process_sample = [&](unsigned id) {
+        int *in_mask_buffer = static_cast<int *>(input->at(id)->buffer());
+        unsigned width = input->at(id)->dims().at(0);
+        unsigned height = input->at(id)->dims().at(1);
+        unsigned buffer_size = width * height;
+        auto &rng = _rngs[id];
+
+        // Helper to write full-image fallback box
+        auto write_full_image = [&]() {
+            if (output_format == "anchor_shape") {
+                _output_buffer[id][0] = 0;
+                _output_buffer[id][1] = 0;
+                _output_buffer[id][2] = height;
+                _output_buffer[id][3] = width;
+            } else {
+                // "box" and "start_end" both produce [y0, x0, y1, x1]
+                _output_buffer[id][0] = 0;
+                _output_buffer[id][1] = 0;
+                _output_buffer[id][2] = height;
+                _output_buffer[id][3] = width;
+            }
+        };
+
+        // Check foreground probability
+        if (foreground_dist(rng) >= foreground_prob) {
+            write_full_image();
+            return;
+        }
+
+        // Check cache
+        CacheEntry *cache_entry = nullptr;
+        content_hash_t hash = {};
+        if (cache_objects) {
+            content_hash(hash, in_mask_buffer, buffer_size * sizeof(int));
+            static const std::size_t max_cache_entries = 1024;
+            if (_cache.size() > max_cache_entries)
+                _cache.clear();
+            cache_entry = &_cache[hash];
+        }
+
+        // Adapt 2D mask as degenerate 4D: [1, 1, height, width]
+        std::vector<int> roi_size = {1, 1, static_cast<int>(height), static_cast<int>(width)};
+        std::vector<size_t> max_size = {1, 1, static_cast<size_t>(height), static_cast<size_t>(width)};
+        std::vector<int> output_compact;
+        int selected_label = -1;
+
+        int total_box = _ccl.labelMergeFunc<int>(in_mask_buffer, selected_label, roi_size, max_size, output_compact, rng, cache_entry);
+
+        if (total_box <= 0) {
+            write_full_image();
+            return;
+        }
+
+        // Compute bounding boxes from compact labels
+        std::vector<std::vector<std::vector<unsigned>>> boxes;
+        if (!cache_entry || !cache_entry->Get(boxes, selected_label)) {
+            std::vector<std::pair<unsigned, unsigned>> ranges(total_box);
+            std::vector<unsigned> hits(total_box / 32 + !!(total_box % 32));
+            boxes.resize(total_box);
+            auto out_row = output_compact.data();
+            for (int d1 = 0; d1 < roi_size[0]; d1++) {
+                for (int d2 = 0; d2 < roi_size[1]; d2++) {
+                    for (int d3 = 0; d3 < roi_size[2]; d3++) {
+                        std::vector<int> origin{d1, d2, d3, 0};
+                        _ccl.get_label_boundingboxes(boxes, ranges, hits, out_row, origin, roi_size[3]);
+                        out_row += roi_size[3];
+                    }
+                }
+            }
+            if (cache_entry)
+                cache_entry->Put(selected_label, boxes);
+        }
+
+        int chosen_box_idx = _ccl.pick_box(boxes, rng, k_largest);
+
+        if (chosen_box_idx < 0 || chosen_box_idx >= static_cast<int>(boxes.size())) {
+            write_full_image();
+            return;
+        }
+
+        auto &selected_box = boxes[chosen_box_idx];
+        // Extract the last 2 coords from the 4D box: [0,0,y0,x0] / [0,0,y1,x1]
+        unsigned y0 = selected_box[0][2];
+        unsigned x0 = selected_box[0][3];
+        unsigned y1 = selected_box[1][2];
+        unsigned x1 = selected_box[1][3];
+
+        if (output_format == "box" || output_format == "start_end") {
+            _output_buffer[id][0] = y0;
+            _output_buffer[id][1] = x0;
+            _output_buffer[id][2] = y1;
+            _output_buffer[id][3] = x1;
+        } else {  // "anchor_shape"
+            _output_buffer[id][0] = y0;
+            _output_buffer[id][1] = x0;
+            _output_buffer[id][2] = y1 - y0;
+            _output_buffer[id][3] = x1 - x0;
+        }
+    };
+
+    if (cache_objects) {
+        for (unsigned i = 0; i < _user_batch_size; i++)
+            process_sample(i);
+    } else {
+        auto num_threads = _cpu_num_threads;
+#pragma omp parallel for num_threads(num_threads)
+        for (unsigned i = 0; i < _user_batch_size; i++)
+            process_sample(i);
+    }
+
+    // Set tensor memory handles on output_list
+    auto random_tensor_dims = {(size_t)4};
+    for (unsigned i = 0; i < _user_batch_size; i++) {
+        output_list[i]->set_dims(random_tensor_dims);
+        output_list[i]->set_mem_handle(static_cast<void *>(_output_buffer[i].data()));
+    }
+
+    return &output_list;
 }
