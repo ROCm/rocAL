@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/color_augmentations/node_brightness.h"
 #include "pipeline/exception.h"
 
@@ -28,7 +29,8 @@ REGISTER_NODE(BrightnessNode)
 
 BrightnessNode::BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                             _alpha(ALPHA_RANGE[0], ALPHA_RANGE[1]),
-                                                                                                            _beta(BETA_RANGE[0], BETA_RANGE[1]) {}
+                                                                                                            _beta(BETA_RANGE[0], BETA_RANGE[1]),
+                                                                                                            _conditional_execution(CONDITIONAL_EXECUTION_RANGE[0], CONDITIONAL_EXECUTION_RANGE[1]) {}
 
 void BrightnessNode::create_node() {
     if (_node)
@@ -43,41 +45,56 @@ void BrightnessNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    _node = vxExtRppBrightness(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _alpha.default_array(), _beta.default_array(), input_layout_vx, output_layout_vx,roi_type_vx);
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    _conditional_execution.create_array(_graph, VX_TYPE_INT32, _batch_size);
+    _node = vxExtRppBrightness(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _alpha.default_array(), _beta.default_array(), _conditional_execution.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
+#else
+    _node = vxExtRppBrightness(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _alpha.default_array(), _beta.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
+#endif
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the brightness (vxExtRppBrightness) node failed: " + TOSTR(status))
 }
 
-void BrightnessNode::init(float alpha, float beta) {
+void BrightnessNode::init(float alpha, float beta, int conditional_execution) {
     _alpha.set_param(alpha);
     _beta.set_param(beta);
+    _conditional_execution.set_param(conditional_execution);
 
     // Add all arguments as part of the Node
     ArgumentSet args;
     args.add_new_argument("alpha", alpha);
     args.add_new_argument("beta", beta);
+    args.add_new_argument("conditional_execution", conditional_execution);
     _args = args;
 }
 
-void BrightnessNode::init(FloatParam *alpha, FloatParam *beta) {
+void BrightnessNode::init(FloatParam *alpha, FloatParam *beta, IntParam *conditional_execution) {
     _alpha.set_param(core(alpha));
     _beta.set_param(core(beta));
+    if (conditional_execution)
+        _conditional_execution.set_param(core(conditional_execution));
+    else
+        _conditional_execution.set_param(CONDITIONAL_EXECUTION_RANGE[1]);
 
     // Add all arguments as part of the Node
     ArgumentSet args;
     args.add_new_argument("alpha", alpha);
     args.add_new_argument("beta", beta);
+    args.add_new_argument("conditional_execution", conditional_execution);
     _args = args;
 }
 
 void BrightnessNode::initialize_args(const ArgumentSet &arguments) {
-    if (init_args<BrightnessNode, float, float>(this, {"alpha", "beta"}, arguments)) return;
-    if (init_args<BrightnessNode, FloatParam*, FloatParam*>(this, {"alpha", "beta"}, arguments)) return;
+    if (init_args<BrightnessNode, float, float, int>(this, {"alpha", "beta", "conditional_execution"}, arguments)) return;
+    if (init_args<BrightnessNode, FloatParam*, FloatParam*, IntParam*>(this, {"alpha", "beta", "conditional_execution"}, arguments)) return;
     THROW("Unsupported argument types for BrightnessNode");
 }
 
 void BrightnessNode::update_node() {
     _alpha.update_array();
     _beta.update_array();
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    _conditional_execution.update_array();
+#endif
 }

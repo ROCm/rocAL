@@ -31,8 +31,8 @@ class GaussianNoiseNode : public Node {
    public:
     GaussianNoiseNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     GaussianNoiseNode() = delete;
-    void init(float mean, float stddev, int seed);
-    void init(FloatParam *mean_param, FloatParam *stddev_param, int seed);
+    void init(float mean, float stddev, int seed, int conditional_execution);
+    void init(FloatParam *mean_param, FloatParam *stddev_param, int seed, IntParam *conditional_execution_param);
 
    protected:
     void create_node() override;
@@ -40,7 +40,9 @@ class GaussianNoiseNode : public Node {
 
    private:
     ParameterVX<float> _mean, _stddev;
+    ParameterVX<int> _conditional_execution;  ///< Per-sample flag controlling whether the augmentation is applied (1) or bypassed (0)
     constexpr static float MEAN_RANGE[2] = {0.0, 1.0};
     constexpr static float STDDEV_RANGE[2] = {0.0, 1.0};
+    constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};  ///< Valid range for conditional execution flag: 0 = skip, 1 = execute
     int _seed;
 };

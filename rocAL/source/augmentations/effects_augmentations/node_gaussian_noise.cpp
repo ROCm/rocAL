@@ -26,14 +26,14 @@ THE SOFTWARE.
 #include "pipeline/exception.h"
 
 GaussianNoiseNode::GaussianNoiseNode(const std::vector<Tensor*>& inputs, const std::vector<Tensor*>& outputs) : Node(inputs, outputs),
-                                                                                                                  _mean(MEAN_RANGE[0], MEAN_RANGE[1]),
-                                                                                                                  _stddev(STDDEV_RANGE[0], STDDEV_RANGE[1]) {}
+                                                                                                      _mean(MEAN_RANGE[0], MEAN_RANGE[1]),
+                                                                                                      _stddev(STDDEV_RANGE[0], STDDEV_RANGE[1]),
+                                                                                                      _conditional_execution(CONDITIONAL_EXECUTION_RANGE[0], CONDITIONAL_EXECUTION_RANGE[1]) {}
 
 void GaussianNoiseNode::create_node() {
     if (_node)
         return;
 
-#if VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
     _mean.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     _stddev.create_array(_graph, VX_TYPE_FLOAT32, _batch_size);
     vx_scalar seed = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_UINT32, &_seed);
@@ -44,29 +44,43 @@ void GaussianNoiseNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
-    _node = vxExtRppGaussianNoise(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _mean.default_array(), _stddev.default_array(),
-                                   seed, input_layout_vx, output_layout_vx, roi_type_vx);
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    _conditional_execution.create_array(_graph, VX_TYPE_INT32, _batch_size);
+    _node = vxExtRppGaussianNoise(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _mean.default_array(),
+                          _stddev.default_array(), _conditional_execution.default_array(), seed, input_layout_vx, output_layout_vx, roi_type_vx);
+#elif VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
+    _node = vxExtRppGaussianNoise(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(), _mean.default_array(),
+                                   _stddev.default_array(), seed, input_layout_vx, output_layout_vx, roi_type_vx);
+#else
+    THROW("GaussianNoise node requires vx_rpp version >= 3.1.5")
+#endif
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the GaussianNoise (vxExtRppGaussianNoise) node failed: " + TOSTR(status))
-#else
-    THROW("GaussianNoiseNode: vxExtRppGaussianNoise requires vx_rpp version >= 3.1.5");
-#endif
 }
 
-void GaussianNoiseNode::init(float mean, float stddev, int seed) {
+void GaussianNoiseNode::init(float mean, float stddev, int seed, int conditional_execution) {
     _mean.set_param(mean);
     _stddev.set_param(stddev);
     _seed = seed;
+    _conditional_execution.set_param(conditional_execution);
 }
 
-void GaussianNoiseNode::init(FloatParam* mean_param, FloatParam* stddev_param, int seed) {
+void GaussianNoiseNode::init(FloatParam* mean_param, FloatParam* stddev_param, int seed, IntParam* conditional_execution_param) {
     _mean.set_param(core(mean_param));
     _stddev.set_param(core(stddev_param));
     _seed = seed;
+    if (conditional_execution_param) {
+        _conditional_execution.set_param(core(conditional_execution_param));
+    } else {
+        _conditional_execution.set_param(CONDITIONAL_EXECUTION_RANGE[1]); // Default to always execute
+    }
 }
 
 void GaussianNoiseNode::update_node() {
     _mean.update_array();
     _stddev.update_array();
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    _conditional_execution.update_array();
+#endif
 }

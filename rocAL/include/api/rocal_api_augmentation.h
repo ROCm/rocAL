@@ -254,12 +254,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalRotateFixed(RocalContext context, Roc
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] alpha controls contrast of the image
  * \param [in] beta controls brightness of the image
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, RocalTensor input, bool is_output,
-                                                      RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL,
+                                                      RocalFloatParam alpha = NULL, RocalFloatParam beta = NULL, RocalIntParam conditional_execution = NULL,
                                                       RocalTensorLayout output_layout = ROCAL_NONE,
                                                       RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -270,13 +271,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalBrightness(RocalContext context, Roca
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] alpha controls contrast of the image
  * \param [in] beta controls brightness of the image
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalBrightnessFixed(RocalContext context, RocalTensor input,
                                                            float alpha, float beta,
-                                                           bool is_output,
+                                                           bool is_output, int conditional_execution = 1,
                                                            RocalTensorLayout output_layout = ROCAL_NONE,
                                                            RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -353,12 +355,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalContrastFixed(RocalContext context, R
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] horizonal_flag  determines whether the input tensor should be flipped horizontally
  * \param [in] vertical_flag  determines whether the input tensor should be flipped vertically
+ * \param [in] depth_flag  determines whether the input tensor should be flipped along the depth axis
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTensor input, bool is_output,
-                                                RocalIntParam horizonal_flag = NULL, RocalIntParam vertical_flag = NULL,
+                                                RocalIntParam horizonal_flag = NULL, RocalIntParam vertical_flag = NULL, RocalIntParam depth_flag = NULL,
                                                 RocalTensorLayout output_layout = ROCAL_NONE,
                                                 RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -369,12 +372,13 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFlip(RocalContext context, RocalTenso
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] horizonal_flag  determines whether the input tensor should be flipped horizontally
  * \param [in] vertical_flag  determines whether the input tensor should be flipped vertically
+ * \param [in] depth_flag  determines whether the input tensor should be flipped along the depth axis
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalFlipFixed(RocalContext context, RocalTensor input,
-                                                     int horizonal_flag, int vertical_flag, bool is_output,
+                                                     int horizonal_flag, int vertical_flag, bool is_output, int depth_flag = 0,
                                                      RocalTensorLayout output_layout = ROCAL_NONE,
                                                      RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -607,6 +611,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
  * \param [in] mean specifies the mean value for the Gaussian noise distribution
  * \param [in] stddev specifies the standard deviation for the Gaussian noise distribution
  * \param [in] seed seed value for the random number generator
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
@@ -614,7 +619,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSnPNoiseFixed(RocalContext context, R
 extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoise(RocalContext context, RocalTensor input,
                                                          bool is_output,
                                                          RocalFloatParam mean = NULL, RocalFloatParam stddev = NULL,
-                                                         int seed = 0,
+                                                         int seed = 0, RocalIntParam conditional_execution = NULL,
                                                          RocalTensorLayout output_layout = ROCAL_NONE,
                                                          RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -626,13 +631,14 @@ extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoise(RocalContext context, R
  * \param [in] stddev specifies the standard deviation for the Gaussian noise distribution
  * \param [in] is_output is the output tensor part of the graph output
  * \param [in] seed seed value for the random number generator
+ * \param [in] conditional_execution determines whether the augmentation is applied to a sample in a batch(1 = apply, 0 = skip).
  * \param [in] output_layout the layout of the output tensor
  * \param [in] output_datatype the data type of the output tensor
  * \return RocalTensor
  */
 extern "C" RocalTensor ROCAL_API_CALL rocalGaussianNoiseFixed(RocalContext context, RocalTensor input,
                                                               bool is_output,
-                                                              float mean = 0.0, float stddev = 1.0, int seed = 0,
+                                                              float mean = 0.0, float stddev = 1.0, int seed = 0, int conditional_execution = 1,
                                                               RocalTensorLayout output_layout = ROCAL_NONE,
                                                               RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
@@ -1657,6 +1663,27 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSlice(RocalContext context,
                                                  std::vector<float> fill_values,
                                                  RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
                                                  RocalTensorOutputType output_datatype = ROCAL_FP32);
+
+/*! \brief Applies slice augmentation on tensors with a fixed output shape (same for every sample in the batch).
+ * \ingroup group_rocal_augmentations
+ * \param [in] context Rocal context
+ * \param [in] input Input Rocal tensor
+ * \param [in] is_output is the output tensor part of the graph output
+ * \param [in] anchor Anchor tensor used for slice
+ * \param [in] shape Shape vector describing slice dimensions (excluding batch dimension, in tensor dimension order)
+ * \param [in] fill_values Fill value for the slice padding
+ * \param [in] policy Padding policy used for slice augmentation
+ * \param [in] output_datatype the data type of the output tensor
+ * \return RocalTensor
+ */
+extern "C" RocalTensor ROCAL_API_CALL rocalSliceFixed(RocalContext context,
+                                                      RocalTensor input,
+                                                      bool is_output,
+                                                      RocalTensor anchor,
+                                                      std::vector<int> shape,
+                                                      std::vector<float> fill_values,
+                                                      RocalOutOfBoundsPolicy policy = RocalOutOfBoundsPolicy::ROCAL_ERROR,
+                                                      RocalTensorOutputType output_datatype = ROCAL_FP32);
 
 /*! \brief Performs mean-stddev normalization on images.
  * \ingroup group_rocal_augmentations

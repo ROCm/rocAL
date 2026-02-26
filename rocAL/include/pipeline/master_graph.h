@@ -47,6 +47,7 @@ THE SOFTWARE.
 #endif
 #include "pipeline/ring_buffer.h"
 #include "pipeline/timing_debug.h"
+#include "pipeline/random_object_bbox.h"
 #if ENABLE_HIP
 #include "box_encoder_hip.h"
 #include "device/device_manager_hip.h"
@@ -221,6 +222,19 @@ public:
     void get_serialized_checkpoint(size_t &serialized_ckpt_string_size);
     //! Returns the last serialized checkpoint buffer.
     const std::string& get_serialized_checkpoint_string() const { return _serialized_checkpoint; }
+    /*! \brief Set up the ROI random crop operator.
+     * Allocates the output anchor tensor and replicates the crop shape across the batch.
+     * The actual crop position is computed per-iteration in update_roi_random_crop().
+     */
+    Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, const int *crop_shape);
+
+    /*! \brief Set up the random object bounding box operator.
+     * Creates a RandomObjectBbox instance that identifies connected components in a label
+     * tensor and returns a randomly selected bounding box per sample each iteration.
+     */
+    TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
+    /// Recompute per-sample random crop anchors within the ROI region for the current batch.
+    void update_roi_random_crop();
 private:
     Status update_node_parameters();
     //! Populate a Checkpoint object with per-operator state for the current iteration.
@@ -337,6 +351,15 @@ private:
     bool _is_random_mask_pixel_threshold = false;
     bool _is_random_mask_pixel_foreground = false;
     std::vector<unsigned> output_random_mask_pixel;
+    // ROI random crop variables
+    bool _is_roi_random_crop = false;                          ///< True when the ROI random crop operator is active
+    std::unique_ptr<RandomObjectBbox> _random_object_bbox;     ///< Connected-component random object bbox operator (provides ROI for roi_random_crop)
+    int *_crop_shape_batch = nullptr;                          ///< Per-sample crop dimensions replicated across the batch [batch_size * num_dims]
+    int *_roi_batch = nullptr;                                 ///< Pointer into the input tensor's ROI buffer (begin + end coordinates per sample)
+    Tensor *_roi_random_crop_tensor = nullptr;                 ///< Output tensor holding the computed crop anchor coordinates
+    Tensor *_roi_start_tensor = nullptr;                       ///< Tensor providing per-sample ROI start coordinates
+    Tensor *_roi_end_tensor = nullptr;                         ///< Tensor providing per-sample ROI end coordinates
+    void *_roi_random_crop_buf = nullptr;                      ///< Raw host/pinned buffer backing _roi_random_crop_tensor
     unsigned _semantic_rng_seed = 0;
     std::vector<std::mt19937> _random_mask_pixel_rngs;
     std::vector<std::mt19937> _random_object_bbox_rngs;

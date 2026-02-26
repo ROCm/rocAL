@@ -339,6 +339,36 @@ int Tensor::create_from_handle(vx_context context) {
     return 0;
 }
 
+// Create an OpenVX tensor backed by an externally owned buffer pointer.
+// Unlike create_from_handle(), this does not allocate internal memory or create
+// a ROI tensor — the caller is responsible for the buffer's lifetime and for
+// providing ROI data separately if needed.
+int Tensor::create_from_ptr(vx_context context, void *ptr) {
+    if (!ptr)
+        THROW("ptr cannot be null")
+    if (_vx_handle) {
+        WRN("Tensor object create method is already called ")
+        return -1;
+    }
+
+    _context = context;
+    vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
+    unsigned num_of_dims = _info.num_of_dims();
+    std::vector<vx_size> stride(num_of_dims);
+
+    stride[0] = tensor_data_size(_info.data_type());
+    for (unsigned i = 1; i < num_of_dims; i++)
+        stride[i] = stride[i - 1] * _info.dims().at(i - 1);
+
+    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride.data(), ptr, vx_mem_type(_info._mem_type));
+    vx_status status;
+    if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
+        THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
+    _info._type = TensorInfo::Type::HANDLE;
+    _mem_handle = ptr;
+    return 0;
+}
+
 int Tensor::create(vx_context context) {
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")

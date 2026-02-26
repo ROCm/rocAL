@@ -21,12 +21,14 @@ THE SOFTWARE.
 */
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 #include "augmentations/geometry_augmentations/node_flip.h"
 #include "pipeline/exception.h"
 
 FlipNode::FlipNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) : Node(inputs, outputs),
                                                                                                 _horizontal(HORIZONTAL_RANGE[0], HORIZONTAL_RANGE[1]),
-                                                                                                _vertical(VERTICAL_RANGE[0], VERTICAL_RANGE[1]) {}
+                                                                                                _vertical(VERTICAL_RANGE[0], VERTICAL_RANGE[1]),
+                                                                                                _depth(DEPTH_RANGE[0], DEPTH_RANGE[1]) {}
 
 void FlipNode::create_node() {
     if (_node)
@@ -41,24 +43,38 @@ void FlipNode::create_node() {
     vx_scalar output_layout_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &output_layout);
     vx_scalar roi_type_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_INT32, &roi_type);
 
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    _depth.create_array(_graph, VX_TYPE_UINT32, _batch_size);
     _node = vxExtRppFlip(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
-                         _horizontal.default_array(), _vertical.default_array(), input_layout_vx, output_layout_vx,roi_type_vx);
+                         _horizontal.default_array(), _vertical.default_array(), _depth.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
+#else
+    _node = vxExtRppFlip(_graph->get(), _inputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->handle(),
+                         _horizontal.default_array(), _vertical.default_array(), input_layout_vx, output_layout_vx, roi_type_vx);
+#endif
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the flip (vxExtRppFlip) node failed: " + TOSTR(status))
 }
 
-void FlipNode::init(int h_flag, int v_flag) {
+void FlipNode::init(int h_flag, int v_flag, int d_flag) {
     _horizontal.set_param(h_flag);
     _vertical.set_param(v_flag);
+    _depth.set_param(d_flag);
 }
 
-void FlipNode::init(IntParam *h_flag, IntParam *v_flag) {
+void FlipNode::init(IntParam *h_flag, IntParam *v_flag, IntParam *d_flag) {
     _horizontal.set_param(core(h_flag));
     _vertical.set_param(core(v_flag));
+    if (d_flag)
+        _depth.set_param(core(d_flag));
+    else
+        _depth.set_param(DEPTH_RANGE[0]);
 }
 
 void FlipNode::update_node() {
     _horizontal.update_array();
     _vertical.update_array();
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    _depth.update_array();
+#endif
 }
