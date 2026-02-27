@@ -7,6 +7,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Added
 * Multi-version python `.so` build support for rocal pybind. Supports python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13
 * Adds support for pipeline checkpointing in rocAL.
+* Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
 
 ### Changes
 * Changes build instructions to omit building of wheels.
