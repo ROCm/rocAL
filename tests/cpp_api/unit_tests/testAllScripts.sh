@@ -239,6 +239,41 @@ do
         ./unit_tests 2 "$coco_detection_path" "${output_path}Threshold_${rgb_name[$rgb]}_${device_name}" $width $height 76 $device $rgb 1 $display
         ./unit_tests 2 "$coco_detection_path" "${output_path}WarpPerspective_${rgb_name[$rgb]}_${device_name}" $width $height 77 $device $rgb 1 $display
 
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Remap_${rgb_name[$rgb]}_${device_name}" $width $height 78 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}CropAndPatch_${rgb_name[$rgb]}_${device_name}" $width $height 79 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Ricap_${rgb_name[$rgb]}_${device_name}" $width $height 80 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseAnd_${rgb_name[$rgb]}_${device_name}" $width $height 81 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseOr_${rgb_name[$rgb]}_${device_name}" $width $height 82 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseXor_${rgb_name[$rgb]}_${device_name}" $width $height 83 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}BitwiseNot_${rgb_name[$rgb]}_${device_name}" $width $height 84 $device $rgb 1 $display
+        ./unit_tests 2 "$coco_detection_path" "${output_path}Erase_${rgb_name[$rgb]}_${device_name}" $width $height 85 $device $rgb 1 $display
+
+        ./unit_tests 2 "$coco_detection_path" "${output_path}GaussianNoiseRandom_${rgb_name[$rgb]}_${device_name}" $width $height 86 $device $rgb 1 $display
+        ./unit_tests 4 "$tf_classification_path" "${output_path}ShotNoiseRandom_${rgb_name[$rgb]}_${device_name}" $width $height 88 $device $rgb 1 $display
+        ./unit_tests 0 "$image_path" "${output_path}SpatterRandom_${rgb_name[$rgb]}_${device_name}" $width $height 90 $device $rgb 0 $display
+        ./unit_tests 8 "$caffe2_classification_path" "${output_path}Log_${rgb_name[$rgb]}_${device_name}" $width $height 92 $device $rgb 1 $display
+        ./unit_tests 0 "$image_path" "${output_path}ColorJitterRandom_${rgb_name[$rgb]}_${device_name}" $width $height 93 $device $rgb 0 $display
+        ./unit_tests 0 "$image_path" "${output_path}WaterRandom_${rgb_name[$rgb]}_${device_name}" $width $height 95 $device $rgb 1 $display
+
+        ./unit_tests 2 "$coco_detection_path" "${output_path}GaussianNoise_${rgb_name[$rgb]}_${device_name}" $width $height 87 $device $rgb 0 $display
+        ./unit_tests 4 "$tf_classification_path" "${output_path}ShotNoise_${rgb_name[$rgb]}_${device_name}" $width $height 89 $device $rgb 0 $display
+        ./unit_tests 0 "$image_path" "${output_path}Spatter_${rgb_name[$rgb]}_${device_name}" $width $height 91 $device $rgb 0 $display
+        ./unit_tests 0 "$image_path" "${output_path}ColorJitter_${rgb_name[$rgb]}_${device_name}" $width $height 94 $device $rgb 0 $display
+        ./unit_tests 0 "$image_path" "${output_path}Water_${rgb_name[$rgb]}_${device_name}" $width $height 96 $device $rgb 0 $display
+
+        ./unit_tests 0 "$image_path" "${output_path}ChannelPermute_${rgb_name[$rgb]}_${device_name}" $width $height 97 $device $rgb 1 $display
+        ./unit_tests 6 "$caffe_classification_path" "${output_path}JpegCompressionDistortionRandom_${rgb_name[$rgb]}_${device_name}" $width $height 98 $device $rgb 1 $display
+        ./unit_tests 11 "$mxnet_path" "${output_path}LUT_${rgb_name[$rgb]}_${device_name}" $width $height 100 $device $rgb 1 $display
+        ./unit_tests 14 "$image_path" "${output_path}PosterizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 101 $device $rgb 1 $display
+        ./unit_tests 15 "$coco_detection_path" "${output_path}SolarizeRandom_${rgb_name[$rgb]}_${device_name}" $width $height 103 $device $rgb 1 $display
+        ./unit_tests 0 "$image_path" "${output_path}ColorToGreyscale_${rgb_name[$rgb]}_${device_name}" $width $height 105 $device $rgb 0 $display
+
+        ./unit_tests 6 "$caffe_classification_path" "${output_path}JpegCompressionDistortion_${rgb_name[$rgb]}_${device_name}" $width $height 99 $device $rgb 0 $display
+        ./unit_tests 8 "$caffe2_classification_path" "${output_path}Posterize_${rgb_name[$rgb]}_${device_name}" $width $height 102 $device $rgb 0 $display
+        ./unit_tests 11 "$mxnet_path" "${output_path}Solarize_${rgb_name[$rgb]}_${device_name}" $width $height 104 $device $rgb 0 $display
+
+        ./unit_tests 0 "$image_path" "${output_path}TensorReduction_${rgb_name[$rgb]}_${device_name}" $width $height 106 $device $rgb 0 $display
+
         # to_tensor coverage tests
         for ((memcpy_backend=0;memcpy_backend<=1;memcpy_backend++))
         do

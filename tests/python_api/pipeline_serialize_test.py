@@ -67,7 +67,7 @@ def create_test_pipeline(data_path, rocal_cpu=True, batch_size=2):
             file_root=data_path, 
             shard_id=local_rank, 
             num_shards=world_size, 
-            random_shuffle=True
+            random_shuffle=False
         )
         
         # Brightness augmentation
@@ -169,9 +169,76 @@ def test_serialization(data_path, rocal_cpu=True, batch_size=2):
         traceback.print_exc()
         return None
 
+def test_deserialization(serialized_string, rocal_cpu=True, batch_size=2):
+    """Test pipeline deserialization functionality"""
+    print(f">>> Testing Pipeline Deserialization on {'CPU' if rocal_cpu else 'GPU'}")
+    
+    # Create output directory
+    output_dir = "output_folder/serialize_test"
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+    except OSError as error:
+        print(f"Error creating output directory: {error}")
+        return False
+
+    try:
+        if serialized_string is None:
+            print("ERROR: No serialized string provided")
+            return False
+            
+        print(f"Received serialized string of size: {len(serialized_string)} bytes")
+        
+        # Test deserialization from string
+        print("\n=== Testing Pipeline Deserialization from String ===")
+        
+        try:
+            deserialized_pipeline = Pipeline.deserialize(serialized_pipeline=serialized_string)
+            print("Deserialization from string: SUCCESS")
+        except Exception as e:
+            print(f"ERROR: Failed to deserialize from string: {str(e)}")
+            return False
+        
+        # Run deserialized pipeline from string and dump outputs
+        print("\n=== Running Deserialized Pipeline (String) and Dumping Outputs ===")
+        
+        imageIteratorDeserialized = ROCALClassificationIterator(deserialized_pipeline)
+        print(f"Available images: {deserialized_pipeline.get_remaining_images()}")
+        
+        iteration_count = 0
+        
+        for i, batch_data in enumerate(imageIteratorDeserialized):
+            print(f"\nDeserialized (String) - Iteration {iteration_count + 1}:")
+            images, labels = batch_data
+            
+            print(f"  Batch shape: {images[0].shape} images")
+            print(f"  Labels: {labels}")
+            
+            # Save output images
+            if len(images) > 0:
+                save_output_images(
+                    images[0][0],
+                    f"deserialization_{iteration_count}", 
+                    output_dir, 
+                    device=rocal_cpu, 
+                    layout="NCHW"
+                )
+                print(f"  Saved output image: deserialization_{iteration_count}.png")
+                
+            iteration_count += 1
+            
+        imageIteratorDeserialized.reset()
+        print("\n=== Deserialization Test Completed Successfully ===")
+        return True
+
+    except Exception as e:
+        print(f"ERROR: Exception during deserialization test: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 
 def main():
-    """Main function to run serialization tests"""
+    """Main function to run serialization and deserialization tests"""
     if len(sys.argv) < 2:
         print('Usage: python pipeline_serialize_test.py <image_folder> [cpu/gpu] [batch_size]')
         sys.exit(1)
@@ -188,12 +255,18 @@ def main():
     
     # Run the serialization test
     serialized_string = test_serialization(data_path, rocal_cpu, batch_size)
-    success = serialized_string is not None
+
+    if (serialized_string is None) or (len(serialized_string) == 0):
+        print("SERIALIZATION TEST FAILED - No valid serialized string produced")
+        sys.exit(1)
+
+    # Run the deserialization test
+    success = test_deserialization(serialized_string, rocal_cpu, batch_size)
     
     if success:
-        print("SERIALIZATION TESTS PASSED!")
+        print("SERIALIZATION AND DESERIALIZATION TESTS PASSED!")
     else:
-        print("SERIALIZATION TESTS FAILED")
+        print("SERIALIZATION OR DESERIALIZATION TESTS FAILED")
 
 
 if __name__ == '__main__':
