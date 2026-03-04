@@ -43,7 +43,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
         @param num_shards               Total number of shards for parallel processing.
         @param random_shuffle           Whether to shuffle images randomly.
         @param output_type              Color format of the output image.
-        @param decoder_type             Type of image decoder to use - TurboJpeg, OpenCV or rocJpeg
+        @param decoder_type             Type of image decoder to use - TurboJpeg or rocJpeg
         @param device                   Device to use for decoding ("gpu" or "cpu").
         @param decode_size_policy       Size policy for decoding images.
         @param max_decoded_width        Maximum width for decoded images.

@@ -44,7 +44,7 @@ THE SOFTWARE.
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \param [in] seed Seed for deterministic dataset shuffling when shuffle is enabled. Using a fixed seed makes file order reproducible across runs and when resuming from a checkpoint.
  * \return Reference to the output tensor
@@ -73,7 +73,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegFileSource(RocalContext context,
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \param [in] seed Seed for deterministic dataset shuffling when shuffle is enabled. Using a fixed seed makes file order reproducible across runs and when resuming from a checkpoint.
  * \return Reference to the output tensor
@@ -157,7 +157,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalSequenceReaderSingleShard(RocalContex
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -255,7 +255,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCOCOFileSourcePartialSingleShard(
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -314,7 +314,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSource(RocalContex
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -343,7 +343,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffeLMDBRecordSourceSingleShard(
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -372,7 +372,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSource(RocalConte
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -401,7 +401,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourceSingleShard
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -430,7 +430,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalMXNetRecordSource(RocalContext contex
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -527,7 +527,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalFusedJpegCropSingleShard(RocalContext
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output image
  */
@@ -558,7 +558,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegTFRecordSource(RocalContext conte
  * \param [in] decode_size_policy
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
  */
@@ -967,7 +967,7 @@ extern "C" RocalTensor ROCAL_API_CALL rocalJpegCaffe2LMDBRecordSourcePartialSing
  * \param [in] decode_size_policy is the RocalImageSizeEvaluationPolicy for decoding
  * \param [in] max_width The maximum width of the decoded images, larger or smaller will be resized to closest
  * \param [in] max_height The maximum height of the decoded images, larger or smaller will be resized to closest
- * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG, OpenCV or rocJPEG
+ * \param [in] rocal_decoder_type Determines the decoder_type, TurboJPEG or rocJPEG
  * \param [in] external_source_mode Determines the mode of the source passed from the user - file_names / uncompressed data / compressed data
  * \param [in] rocal_sharding_info The members of RocalShardingInfo determines how the data is distributed among the shards and how the last batch is processed by the pipeline.
  * \return Reference to the output tensor
