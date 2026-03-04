@@ -34,6 +34,12 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
+#define AUDIO_TEST_ATOL_DEFAULT_CPU        1e-20f   // Acceptable absolute error for audio decoder, pre-emphasis filter, to_decibels and resample test cases which are expected to have very high accuracy when run on CPU
+#define AUDIO_TEST_ATOL_NORMALIZE_CPU      1e-5f    // Acceptable absolute error for normalize test cases when run on CPU
+#define AUDIO_TEST_ATOL_SPECTROGRAM_GPU    1e-3f    // Acceptable absolute error for spectrogram test cases when run on GPU
+#define AUDIO_TEST_ATOL_NORMALIZE_GPU      1e-2f    // Acceptable absolute error for normalize test cases when run on GPU
+#define AUDIO_TEST_ATOL_DEFAULT_GPU        1e-5f    // Acceptable absolute error for other test cases when run on GPU
+
 using namespace std::chrono;
 
 int verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name, std::string rocal_data_path) {
@@ -102,14 +108,14 @@ int verify_output(float *dst_ptr, long int frames, long int channels, std::strin
 
     fin.close();
 
-    auto atol = (case_name != "normalize") ? 1e-20 : 1e-5;  // Absolute tolerance
+    auto atol = (case_name != "normalize") ? AUDIO_TEST_ATOL_DEFAULT_CPU : AUDIO_TEST_ATOL_NORMALIZE_CPU;  // Absolute tolerance
     if (gpu) {
         if (case_name == "spectrogram") {
-            atol = 1e-3;
+            atol = AUDIO_TEST_ATOL_SPECTROGRAM_GPU;
         } else if (case_name == "normalize") {
-            atol = 1e-2;
+            atol = AUDIO_TEST_ATOL_NORMALIZE_GPU;
         } else {
-            atol = 1e-5;
+            atol = AUDIO_TEST_ATOL_DEFAULT_GPU;
         }
     }
     int matched_indices = 0;
