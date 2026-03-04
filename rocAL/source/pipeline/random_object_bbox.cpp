@@ -34,7 +34,7 @@ RandomObjectBbox::RandomObjectBbox(vx_context context, size_t user_batch_size, s
     : _context(context), _user_batch_size(user_batch_size), _cpu_num_threads(cpu_num_threads) {}
 
 RandomObjectBbox::~RandomObjectBbox() {
-    _tensor_list.release();
+    _output_tensor_list.release();
     // Note: _box1_buf and _box2_buf are allocated via allocate_host_or_pinned_mem
     // with RocalMemType::HOST in init(). If the mem_type is changed to HIP in the
     // future, these must be freed with hipHostFree instead of free.
@@ -68,7 +68,7 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
 
         // allocate memory for the raw buffer pointer in tensor object
         allocate_host_or_pinned_mem(&_box1_buf, _user_batch_size * output_dims * sizeof(int), RocalMemType::HOST);
-        _box1_tensor->create_from_ptr(_context, _box1_buf);
+        _box1_tensor->create_from_handle(_context, _box1_buf);
 
         // create new instance of tensor class
         std::vector<size_t> box2_dims = {_user_batch_size, output_dims};
@@ -77,9 +77,9 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
 
         // allocate memory for the raw buffer pointer in tensor object
         allocate_host_or_pinned_mem(&_box2_buf, _user_batch_size * output_dims * sizeof(int), RocalMemType::HOST);
-        _box2_tensor->create_from_ptr(_context, _box2_buf);
-        _tensor_list.push_back(_box1_tensor);
-        _tensor_list.push_back(_box2_tensor);
+        _box2_tensor->create_from_handle(_context, _box2_buf);
+        _output_tensor_list.push_back(_box1_tensor);
+        _output_tensor_list.push_back(_box2_tensor);
     } else if (output_format == "box") {
         // create new instance of tensor class
         std::vector<size_t> box1_dims = {_user_batch_size, output_dims * 2};
@@ -88,10 +88,10 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
 
         // allocate memory for the raw buffer pointer in tensor object
         allocate_host_or_pinned_mem(&_box1_buf, _user_batch_size * output_dims * 2 * sizeof(int), RocalMemType::HOST);
-        _box1_tensor->create_from_ptr(_context, _box1_buf);
-        _tensor_list.push_back(_box1_tensor);
+        _box1_tensor->create_from_handle(_context, _box1_buf);
+        _output_tensor_list.push_back(_box1_tensor);
     }
-    return &_tensor_list;
+    return &_output_tensor_list;
 }
 
 // Called once per pipeline iteration to recompute bounding boxes for the current batch.
@@ -105,6 +105,9 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
 void RandomObjectBbox::update() {
     auto roi_dims = reinterpret_cast<int *>(_label_tensor->info().roi().get_ptr());
     std::vector<size_t> max_size = _label_tensor->info().max_shape();
+    if (_user_batch_size == 0) {
+        THROW("RandomObjectBbox: _user_batch_size must be > 0")
+    }
     const size_t single_image_bytes = _label_tensor->data_size() / _user_batch_size;
     const auto input_dims = _label_tensor->num_of_dims() - 1;
     if (input_dims != 4) {
@@ -114,8 +117,8 @@ void RandomObjectBbox::update() {
     int64_t seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
     std::uniform_real_distribution<float> foreground(0.0f, 1.0f);
-    int *box1_buf = static_cast<int *>(_box1_buf);
-    int *box2_buf = (_box2_buf != nullptr) ? static_cast<int *>(_box2_buf) : nullptr;
+    auto *box1_buf = static_cast<int *>(_box1_buf);
+    auto *box2_buf = static_cast<int *>(_box2_buf);
 
     // Generic lambda that processes the entire batch for a given label element type.
     // The type is deduced from the typed pointer passed in by the switch below.

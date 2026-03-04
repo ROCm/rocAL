@@ -48,9 +48,12 @@ using namespace std::chrono;
 //   Requires ROCAL_DATA_PATH env variable to be set. Reads npy files from $ROCAL_DATA_PATH/rocal_data/voxel_numpy/
 
 int main(int argc, const char **argv) {
+    // Usage: ./voxel_augmentations_test <gpu=1/cpu=0> <batch_size>
+    // Requires ROCAL_DATA_PATH env variable pointing to the test data directory.
+    // Reads npy files from $ROCAL_DATA_PATH/rocal_data/voxel_numpy/
     int argIdx = 1;
-    int processing_device = 0;
-    int batch_size = 2;
+    int processing_device = 0;  // processing_device: 0 = CPU, 1 = GPU (default: 0)
+    int batch_size = 2;         // batch_size: number of samples per batch (default: 2)
 
     if (argc > argIdx)
         processing_device = atoi(argv[argIdx++]);

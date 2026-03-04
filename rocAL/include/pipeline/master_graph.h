@@ -282,7 +282,7 @@ private:
     Tensor *_roi_random_crop_tensor = nullptr;                 ///< Output tensor holding the computed crop anchor coordinates
     Tensor *_roi_start_tensor = nullptr;                       ///< Tensor providing per-sample ROI start coordinates
     Tensor *_roi_end_tensor = nullptr;                         ///< Tensor providing per-sample ROI end coordinates
-    void *_roi_random_crop_buf = nullptr;                      ///< Raw host/pinned buffer backing _roi_random_crop_tensor
+    void *_roi_random_crop_tensor_buf_ptr = nullptr;            ///< Raw host/pinned buffer backing _roi_random_crop_tensor
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif

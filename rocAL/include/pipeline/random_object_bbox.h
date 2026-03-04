@@ -147,7 +147,7 @@ class RandomObjectBbox {
     Tensor *_box2_tensor = nullptr;            ///< Output tensor for shape/end coordinates (null for "box" format)
     void *_box1_buf = nullptr;                 ///< Raw host buffer backing _box1_tensor
     void *_box2_buf = nullptr;                 ///< Raw host buffer backing _box2_tensor
-    TensorList _tensor_list;                   ///< Holds output tensors returned by init()
+    TensorList _output_tensor_list;                   ///< Holds output tensors returned by init()
     std::string _output_format;                ///< Output format: "anchor_shape", "start_end", or "box"
     int _k_largest = -1;                       ///< If positive, restricts selection to the k largest objects
     float _foreground_prob = 1.0f;             ///< Probability of selecting a foreground object
