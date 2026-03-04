@@ -37,7 +37,6 @@ THE SOFTWARE.
 #include <cstdlib>
 #include <strings.h>
 #include <sys/stat.h>
-
 #include <hip/hip_runtime_api.h>
 #include <hipfile.h>
 #endif

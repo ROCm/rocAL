@@ -126,10 +126,10 @@ void CircularBuffer::pop() {
     if (random_bbox_crop_flag == true)
         _circ_crop_image_info.pop();
 }
-void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, size_t buffer_depth, bool use_hip_memory) {
+void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, size_t buffer_depth, bool use_device_memory) {
     if (_initialized)
         return;
-    _use_pinned_memory = !use_hip_memory; // Controls whether host-pinned buffers are used instead of direct device write buffers (for HIP backend, including HW decoder and hipFile direct I/O via numpy loader)
+    _use_pinned_memory = !use_device_memory; // Controls whether host-pinned buffers are used instead of direct device write buffers (for HIP backend, including HW decoder and hipFile direct I/O via numpy loader)
     _buff_depth = buffer_depth;
     _output_mem_type = output_mem_type;
     _output_mem_size = output_mem_size;
