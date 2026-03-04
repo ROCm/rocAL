@@ -28,5 +28,4 @@ This application demonstrates a basic usage of rocAL's C API to load images from
 NOTE:
 
 * default decoder type : TurboJpeg decoder
-* decoder type : 1 - OpenCV decoder
-* decoder type : 2 - rocJpeg decoder
+* decoder type : 1 - rocJpeg decoder

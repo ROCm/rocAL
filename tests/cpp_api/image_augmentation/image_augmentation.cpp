@@ -146,7 +146,6 @@ int main(int argc, const char** argv) {
     } else {
         // The jpeg file loader can automatically select the best size to decode all images to that size
         // User can alternatively set the size or change the policy that is used to automatically find the size
-        if (dec_type == RocalDecoderType::ROCAL_DECODER_OPENCV) std::cout << "Using OpenCV decoder for Jpeg Source\n";
         if (decode_height <= 0 || decode_width <= 0)
             input1 = rocalJpegFileSource(handle, folderPath1, color_format, shard_count, false, shuffle, false);
         else
