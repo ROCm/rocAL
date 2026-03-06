@@ -138,24 +138,21 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     uint scaledw = widths[0], scaledh = heights[0];
     // If original dims exceed max decode dims, compute output dims that fit within max while preserving aspect ratio.
     // Pick the scale based on the dimension that would be downscaled the most (largest original/max ratio).
-    if (max_decoded_width > 0 && max_decoded_height > 0 &&
-        (widths[0] > static_cast<uint32_t>(max_decoded_width) || heights[0] > static_cast<uint32_t>(max_decoded_height))) {
-        const uint32_t in_w = widths[0];
-        const uint32_t in_h = heights[0];
-        const uint32_t max_w = static_cast<uint32_t>(max_decoded_width);
-        const uint32_t max_h = static_cast<uint32_t>(max_decoded_height);
-        // Compare in_w/max_w vs in_h/max_h without FP: in_w * max_h ? in_h * max_w
-        if ((uint64_t)in_w * (uint64_t)max_h >= (uint64_t)in_h * (uint64_t)max_w) {
-            // Width is the limiting (largest) dimension.
-            scaledw = max_w;
-            scaledh = static_cast<uint32_t>(((uint64_t)max_w * (uint64_t)in_h) / (uint64_t)in_w);
-        } else {
-            // Height is the limiting (largest) dimension.
-            scaledh = max_h;
-            scaledw = static_cast<uint32_t>(((uint64_t)max_h * (uint64_t)in_w) / (uint64_t)in_h);
+    bool has_max_dims = max_decoded_width > 0 && max_decoded_height > 0;
+    bool exceeds_max_dims = (widths[0] > static_cast<uint32_t>(max_decoded_width)) || (heights[0] > static_cast<uint32_t>(max_decoded_height));
+    if (has_max_dims && exceeds_max_dims) {
+        const uint64_t in_w = widths[0];
+        const uint64_t in_h = heights[0];
+        const double scale_w = static_cast<double>(in_w) / max_decoded_width;   // How much width exceeds its max
+        const double scale_h = static_cast<double>(in_h) / max_decoded_height;  // How much height exceeds its max
+    
+        if (scale_w >= scale_h) {                                   // Width is the limiting dimension
+            scaledw = static_cast<uint32_t>(max_decoded_width);
+            scaledh = static_cast<uint32_t>(std::max(1.0, in_h / scale_w));
+        } else {                                                    // Height is the limiting dimension
+            scaledh = static_cast<uint32_t>(max_decoded_height);
+            scaledw = static_cast<uint32_t>(std::max(1.0, in_w / scale_h));
         }
-        scaledh = scaledh == 0 ? 1 : scaledh;   // Ensure scaled dimensions are at least 1
-        scaledw = scaledw == 0 ? 1 : scaledw;
     }
     // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
     if (scaledw != widths[0] || scaledh != heights[0]) {
@@ -236,7 +233,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
 
                 const unsigned pitch_width = (original_image_width[i] + 8) & ~7;
                 const unsigned pitch_height = (original_image_height[i] + 8) & ~7;
-                const size_t img_bytes = (size_t)pitch_width * (size_t)pitch_height * (size_t)_num_channels;
+                const size_t img_bytes = static_cast<size_t>(pitch_width) * static_cast<size_t>(pitch_height) * static_cast<size_t>(_num_channels);
 
                 _src_width[resize_count] = original_image_width[i];
                 _src_height[resize_count] = original_image_height[i];
