@@ -48,7 +48,7 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 3;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: basic_test <image_dataset_folder - required> <label_text_file_path - required> <test_case:0/1> <processing_device=1/cpu=0>  decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts decoder_type \n";
+        std::cout << "Usage: basic_test <image_dataset_folder - required> <label_text_file_path - required> <test_case:0/1> <processing_device=1/cpu=0> decode_width decode_height <gray_scale:0/rgb:1> decode_shard_counts decoder_type <tjpeg: 0/rocjpeg:1>" << std::endl;
         return -1;
     }
     int argIdx = 1;
@@ -88,8 +88,6 @@ int main(int argc, const char **argv) {
     // Set the rocAL decoder type
     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_TJPEG;
     if (decoder_type == 1) {
-        rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_OPENCV;
-    } else if (decoder_type == 2) {
         rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_ROCJPEG;
         processing_device = 1;  // Requires GPU backend for rocJpeg decoder
     }

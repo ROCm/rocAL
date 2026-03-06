@@ -275,24 +275,21 @@ enum RocalDecoderType {
     /*! \brief AMD ROCAL_DECODER_TJPEG
      */
     ROCAL_DECODER_TJPEG = 0,
-    /*! \brief AMD ROCAL_DECODER_OPENCV
-     */
-    ROCAL_DECODER_OPENCV = 1,
     /*! \brief AMD ROCAL_DECODER_VIDEO_FFMPEG_SW
      */
-    ROCAL_DECODER_VIDEO_FFMPEG_SW = 2,
+    ROCAL_DECODER_VIDEO_FFMPEG_SW = 1,
     /*! \brief AMD ROCAL_DECODER_AUDIO_GENERIC
      * Uses SndFile library to read audio files
      */
-    ROCAL_DECODER_AUDIO_GENERIC = 3,
+    ROCAL_DECODER_AUDIO_GENERIC = 2,
     /*! \brief AMD ROCAL_DECODER_VIDEO_ROCDECODE
      * Uses rocDecode library to decode videos on hardware
      */
-    ROCAL_DECODER_VIDEO_ROCDECODE = 4,
+    ROCAL_DECODER_VIDEO_ROCDECODE = 3,
     /*! \brief AMD ROCAL_DECODER_ROCJPEG
      * Uses rocJpeg library to decode images on hardware
      */
-    ROCAL_DECODER_ROCJPEG = 5
+    ROCAL_DECODER_ROCJPEG = 4
 };
 
 enum RocalOutputMemType {
