@@ -21,8 +21,6 @@ THE SOFTWARE.
 */
 // kernel definitions for HIP
 
-#include <cstdint>
-
 #define ENABLE_EVENT_BASED_SYNC 0
 int HipExecCopyInt8ToNHWC(
     hipStream_t stream,

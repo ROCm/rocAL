@@ -78,13 +78,13 @@ void HWRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _image_needs_rescaling.resize(_batch_size);
 
     // Allocate pinned memory for width and height arrays for src and dst.
-    if (!_dev_src_width) CHECK_HIP(hipHostMalloc((void **)&_dev_src_width, _batch_size * sizeof(size_t)));
-    if (!_dev_src_height) CHECK_HIP(hipHostMalloc((void **)&_dev_src_height, _batch_size * sizeof(size_t)));
-    if (!_dev_dst_width) CHECK_HIP(hipHostMalloc((void **)&_dev_dst_width, _batch_size * sizeof(size_t)));
-    if (!_dev_dst_height) CHECK_HIP(hipHostMalloc((void **)&_dev_dst_height, _batch_size * sizeof(size_t)));
-    if (!_dev_src_hstride) CHECK_HIP(hipHostMalloc((void **)&_dev_src_hstride, _batch_size * sizeof(size_t)));
-    if (!_dev_src_img_offset) CHECK_HIP(hipHostMalloc((void **)&_dev_src_img_offset, _batch_size * sizeof(size_t)));
-    if (!_dev_dst_img_idx) CHECK_HIP(hipHostMalloc((void **)&_dev_dst_img_idx, _batch_size * sizeof(uint32_t)));
+    if (!_src_width) CHECK_HIP(hipHostMalloc((void **)&_src_width, _batch_size * sizeof(size_t)));
+    if (!_src_height) CHECK_HIP(hipHostMalloc((void **)&_src_height, _batch_size * sizeof(size_t)));
+    if (!_dst_width) CHECK_HIP(hipHostMalloc((void **)&_dst_width, _batch_size * sizeof(size_t)));
+    if (!_dst_height) CHECK_HIP(hipHostMalloc((void **)&_dst_height, _batch_size * sizeof(size_t)));
+    if (!_src_hstride) CHECK_HIP(hipHostMalloc((void **)&_src_hstride, _batch_size * sizeof(size_t)));
+    if (!_src_img_offset) CHECK_HIP(hipHostMalloc((void **)&_src_img_offset, _batch_size * sizeof(size_t)));
+    if (!_dst_img_idx) CHECK_HIP(hipHostMalloc((void **)&_dst_img_idx, _batch_size * sizeof(uint32_t)));
 
 }
 
@@ -238,15 +238,15 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
                 const unsigned pitch_height = (original_image_height[i] + 8) & ~7;
                 const size_t img_bytes = (size_t)pitch_width * (size_t)pitch_height * (size_t)_num_channels;
 
-                _dev_src_width[resize_count] = original_image_width[i];
-                _dev_src_height[resize_count] = original_image_height[i];
+                _src_width[resize_count] = original_image_width[i];
+                _src_height[resize_count] = original_image_height[i];
                 // NOTE: dst sizes come from decode_info() (aspect-ratio fit). If these ever come in as 0 due to a
                 // caller-side issue, the resize kernel will early-exit and leave output unchanged.
-                _dev_dst_width[resize_count] = actual_decoded_width[i] ? actual_decoded_width[i] : max_decoded_width;
-                _dev_dst_height[resize_count] = actual_decoded_height[i] ? actual_decoded_height[i] : max_decoded_height;
-                _dev_src_hstride[resize_count] = static_cast<size_t>(pitch_width * _num_channels);
-                _dev_src_img_offset[resize_count] = src_offset;
-                _dev_dst_img_idx[resize_count] = i;
+                _dst_width[resize_count] = actual_decoded_width[i] ? actual_decoded_width[i] : max_decoded_width;
+                _dst_height[resize_count] = actual_decoded_height[i] ? actual_decoded_height[i] : max_decoded_height;
+                _src_hstride[resize_count] = static_cast<size_t>(pitch_width * _num_channels);
+                _src_img_offset[resize_count] = src_offset;
+                _dst_img_idx[resize_count] = i;
                 src_offset += img_bytes;
                 img_buff += img_bytes;
                 resize_count++;
@@ -264,8 +264,8 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
 
     if (_enable_resize && resize_count) {
         HipExecResizeTensor(_hip_stream, (void *)_rocjpeg_image_buff, (void *)output_buffer[0],
-                            resize_count, _dev_src_width, _dev_src_height,
-                            _dev_dst_width, _dev_dst_height, _dev_src_hstride, _dev_src_img_offset, _dev_dst_img_idx, _num_channels,
+                            resize_count, _src_width, _src_height,
+                            _dst_width, _dst_height, _src_hstride, _src_img_offset, _dst_img_idx, _num_channels,
                             max_decoded_width, max_decoded_height, max_decoded_width, max_decoded_height);
         // The circular buffer hands off `output_buffer` to the consumer immediately after `decode_batch()` returns.
         // Ensure the resize kernel has finished writing into the output tensor before we release the batch.
@@ -287,12 +287,12 @@ HWRocJpegDecoder::~HWRocJpegDecoder() {
         CHECK_ROCJPEG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
     }
     if (_rocjpeg_image_buff) CHECK_HIP(hipFree(_rocjpeg_image_buff));
-    if (_dev_src_width) CHECK_HIP(hipHostFree(_dev_src_width));
-    if (_dev_src_height) CHECK_HIP(hipHostFree(_dev_src_height));
-    if (_dev_dst_width) CHECK_HIP(hipHostFree(_dev_dst_width));
-    if (_dev_dst_height) CHECK_HIP(hipHostFree(_dev_dst_height));
-    if (_dev_src_hstride) CHECK_HIP(hipHostFree(_dev_src_hstride));
-    if (_dev_src_img_offset) CHECK_HIP(hipHostFree(_dev_src_img_offset));
-    if (_dev_dst_img_idx) CHECK_HIP(hipHostFree(_dev_dst_img_idx));
+    if (_src_width) CHECK_HIP(hipHostFree(_src_width));
+    if (_src_height) CHECK_HIP(hipHostFree(_src_height));
+    if (_dst_width) CHECK_HIP(hipHostFree(_dst_width));
+    if (_dst_height) CHECK_HIP(hipHostFree(_dst_height));
+    if (_src_hstride) CHECK_HIP(hipHostFree(_src_hstride));
+    if (_src_img_offset) CHECK_HIP(hipHostFree(_src_img_offset));
+    if (_dst_img_idx) CHECK_HIP(hipHostFree(_dst_img_idx));
 }
 #endif

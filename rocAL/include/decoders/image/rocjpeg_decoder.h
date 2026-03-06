@@ -227,11 +227,11 @@ class HWRocJpegDecoder : public Decoder {
     unsigned _batch_size;
     void * _rocjpeg_image_buff = nullptr;
     size_t _rocjpeg_image_buff_size = 0, _prev_image_buff_size = 0;
-    size_t *_dev_src_width = nullptr;
-    size_t *_dev_src_height = nullptr;
-    size_t *_dev_dst_width = nullptr, *_dev_dst_height = nullptr;
-    size_t *_dev_src_hstride = nullptr, *_dev_src_img_offset = nullptr;
-    uint32_t *_dev_dst_img_idx = nullptr;  // Maps resize-subset index -> original batch index in output tensor.
+    size_t *_src_width = nullptr;
+    size_t *_src_height = nullptr;
+    size_t *_dst_width = nullptr, *_dst_height = nullptr;
+    size_t *_src_hstride = nullptr, *_src_img_offset = nullptr;
+    uint32_t *_dst_img_idx = nullptr;  // Maps resize-subset index -> original batch index in output tensor.
     std::vector<bool> _image_needs_rescaling;   // A flag for each image in the batch, set to `true` if the image needs rescaling.
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params = {};
