@@ -608,7 +608,7 @@ __global__ void resize_generic_pln1_hip_tensor(T *src_ptr,
     col_coeff_sum = (col_coeff_sum == 0.0f) ? 1.0f : col_coeff_sum;
     inv_coeff_sum = 1 / (row_coeff_sum * col_coeff_sum);
     out_pixel *= inv_coeff_sum;
-    uint dst_idx = (out_z * dst_strides.x) + (id_y * dst_strides.z) + id_x;
+    size_t dst_idx = (out_z * dst_strides.x) + (id_y * dst_strides.z) + id_x;
     rpp_hip_pixel_check_and_store(out_pixel, &dst_ptr[dst_idx]);
 }
 
