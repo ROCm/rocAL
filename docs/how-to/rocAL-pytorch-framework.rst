@@ -79,10 +79,9 @@ The appropriate iterator is then used to load data and run the pipeline. In |ima
         pipe_train, device="cpu" if rocal_cpu else "cuda", device_id=local_rank)
     return Prefetcher(train_loader, rocal_cpu, batch_size)
 
-Two examples of PyTorch training using rocAL are available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/develop/docs/examples/pytorch/>`_.
+Two examples of PyTorch training using rocAL are available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/develop/docs/examples/pytorch/>`_.  `Jupyter Notebooks <https://github.com/ROCm/rocAL/tree/develop/docs/examples/notebooks>`_ are also available.
 
-
-A `rocAL PyTorch Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ is available for PyTorch training with rocAL.
+A `Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ is available for PyTorch training with rocAL.
 
 
 .. |imagenet.py| replace:: ``imagenet_training.py``
