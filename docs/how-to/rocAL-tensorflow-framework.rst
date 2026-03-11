@@ -15,7 +15,7 @@ The TensorFlow plugin for rocAL includes two iterators that can be used to proce
 
 The iterators run the training and validation :doc:`pipelines <../reference/rocAL-pipeline>`, prefetching and loading the next batch of files while the previous batch is being processed.
 
-Training and validation pipelines are created by either instantiating them with ``Pipeline()`` or decorating a graph function with ``@pipeline_def``. 
+Pipelines are created by either instantiating them with ``Pipeline()`` or decorating a graph function with ``@pipeline_def``. 
 
 The training and validation pipelines in |train.py|_ are both instantiated with ``Pipeline()``:
 
