@@ -34,11 +34,11 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
-#define AUDIO_TEST_ATOL_DEFAULT_CPU        1e-20f   // Acceptable absolute error for audio decoder, pre-emphasis filter, to_decibels and resample test cases which are expected to have very high accuracy when run on CPU
-#define AUDIO_TEST_ATOL_NORMALIZE_CPU      1e-5f    // Acceptable absolute error for normalize test cases when run on CPU
-#define AUDIO_TEST_ATOL_SPECTROGRAM_GPU    1e-3f    // Acceptable absolute error for spectrogram test cases when run on GPU
-#define AUDIO_TEST_ATOL_NORMALIZE_GPU      1e-2f    // Acceptable absolute error for normalize test cases when run on GPU
-#define AUDIO_TEST_ATOL_DEFAULT_GPU        1e-5f    // Acceptable absolute error for other test cases when run on GPU
+#define AUDIO_TEST_ATOL_DEFAULT_CPU        1e-20f   // Acceptable threshold for audio decoder, pre-emphasis filter, to_decibels and resample test cases which are expected to have very high accuracy when run on CPU
+#define AUDIO_TEST_ATOL_NORMALIZE_CPU      1e-5f    // Acceptable threshold for normalize test cases when run on CPU
+#define AUDIO_TEST_ATOL_SPECTROGRAM_GPU    1e-3f    // Acceptable threshold for spectrogram test cases when run on GPU
+#define AUDIO_TEST_ATOL_NORMALIZE_GPU      1e-2f    // Acceptable threshold for normalize test cases when run on GPU
+#define AUDIO_TEST_ATOL_DEFAULT_GPU        1e-5f    // Acceptable threshold for other test cases when run on GPU
 
 using namespace std::chrono;
 
