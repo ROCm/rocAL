@@ -263,6 +263,9 @@ private:
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif
+#if ENABLE_HIPFILE
+    bool _hipfile_driver_opened = false;  //!< Tracks whether hipFileDriverOpen() was called. Only true when ROCAL_USE_HIPFILE=1.
+#endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline
     int _op_idx = 0;  // Operator index used to uniquely name PipelineOperator entries

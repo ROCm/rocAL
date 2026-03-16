@@ -44,6 +44,11 @@ using half_float::half;
 #include <rocal_hip_kernels.h>
 #endif
 
+#if ENABLE_HIPFILE
+#include <cstdlib>
+#include <hipfile.h>
+#endif
+
 static void VX_CALLBACK log_callback(vx_context context, vx_reference ref, vx_status status, const vx_char *string) {
     size_t len = strnlen(string, MAX_STRING_LENGTH);
     if (len > 0) {
@@ -151,6 +156,24 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
                         THROW("vxSetContextAttribute for hipDevice(%d) failed " + TOSTR(hipDevice) + TOSTR(status))
                 } else
                     THROW("ERROR: HIP Device(%d) out of range" + TOSTR(gpu_id));
+            }
+#endif
+#if ENABLE_HIPFILE
+            // hipFile GPU Direct Storage is disabled by default. Users must explicitly
+            // set ROCAL_USE_HIPFILE=1 to enable direct NVMe-to-GPU reads for the numpy reader.
+            // This is beneficial for large datasets that exceed host RAM, where bypassing
+            // the OS page cache and reading directly to GPU memory avoids PCIe bottlenecks.
+            const char* hipfile_env = std::getenv("ROCAL_USE_HIPFILE");
+            if (hipfile_env && std::string(hipfile_env) == "1") {
+                hipFileError_t hf_err = hipFileDriverOpen();
+                if (hf_err.err == hipFileSuccess) {
+                    _hipfile_driver_opened = true;
+                    LOG("hipFile driver initialized successfully");
+                } else {
+                    ERR("hipFile driver initialization failed (error: " + std::to_string(hf_err.err) +
+                        " - " + std::string(hipFileGetOpErrorString(hf_err.err)) +
+                        "), falling back to standard I/O");
+                }
             }
 #endif
         }
@@ -368,6 +391,10 @@ void MasterGraph::release() {
     // shut_down loader:: required for releasing any allocated resourses
     for (auto &loader_module : _loader_modules)
         loader_module->shut_down();
+    // Clear loader modules so their destructors (and any hipFile handle/buffer
+    // deregistrations inside NumpyDataReader) run before hipFileDriverClose().
+    _loader_module.reset();
+    _loader_modules.clear();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_HIP
@@ -401,6 +428,13 @@ void MasterGraph::release() {
     _meta_data_graph = nullptr;
     _meta_data_reader = nullptr;
     delete _box_encoder_gpu;
+#if ENABLE_HIPFILE
+    if (_hipfile_driver_opened) {
+        (void)hipFileDriverClose();
+        _hipfile_driver_opened = false;
+        LOG("hipFile driver closed");
+    }
+#endif
     if (_context && (status = vxReleaseContext(&_context)) != VX_SUCCESS)
         LOG("Failed to call vxReleaseContext " + TOSTR(status))
 }

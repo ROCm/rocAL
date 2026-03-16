@@ -57,7 +57,7 @@ class CircularBuffer {
    public:
     CircularBuffer(void* devres);
     ~CircularBuffer();
-    void init(RocalMemType output_mem_type, size_t output_mem_size, size_t buff_depth, bool use_hip_memory = false);
+    void init(RocalMemType output_mem_type, size_t output_mem_size, size_t buff_depth, bool use_device_memory = false);
     void release();         // release resources
     void sync();            // Syncs device buffers with host
     void unblock_reader();  // Unblocks the thread currently waiting on a call to get_read_buffer
