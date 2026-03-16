@@ -13,7 +13,6 @@ The PyTorch plugin for rocAL includes four iterators that can be used to process
 * ``ROCALAudioIterator`` is used for audio processing pipelines.
 * ``ROCALGenericIterator`` is used for general data processing pipelines.
 * ``ROCALClassificationIterator`` is used for classification and training pipelines.
-* ``ROCALNumpyIterator`` is used for iterating over tensor pipelines.
 
 The iterators run the training and validation :doc:`pipelines <../reference/rocAL-pipeline>`, prefetching and loading the next batch of files while the previous batch is being processed.
 

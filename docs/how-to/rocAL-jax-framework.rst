@@ -33,7 +33,9 @@ Both Jax iterators can take a single pipeline if the dataset is being processed 
 
 Pipelines are created by either instantiating them with ``Pipeline()`` or decorating a graph function with ``@pipeline_def``. 
 
-In the :doc:`Jax Jupyter notebook <../examples/notebooks/jax_training_example>`, training is done over a mesh of GPUs. Each pipeline is assigned graph elements and built, then added to the array of pipelines:
+In the :doc:`Jax Jupyter notebook <../examples/notebooks/jax_training_example>`, training is done over a mesh of GPUs. 
+
+Each training pipelines is instantiated, populated with graph elements, and built, before being added to the array of pipelines:
 
 .. code:: python
 
