@@ -8,16 +8,9 @@ Using rocAL with TensorFlow for training
 
 .. _tensorflow:
 
-The TensorFlow plugin for rocAL includes two iterators that can be used to process different types of pipelines.
+The TensorFlow plugin for rocAL includes the ``ROCALIterator``. The ``ROCALIterator`` runs the training and validation :doc:`pipelines <../reference/rocAL-pipeline>`. It prefetches and loads the next batch of files while the previous batch is being processed.
 
-* ``ROCALIterator`` is used for general data processing pipelines.
-* ``ROCAL_Iterator`` is used for image processing pipelines.
-
-The iterators run the training and validation :doc:`pipelines <../reference/rocAL-pipeline>`, prefetching and loading the next batch of files while the previous batch is being processed.
-
-Pipelines are created by either instantiating them with ``Pipeline()`` or decorating a graph function with ``@pipeline_def``. 
-
-The training and validation pipelines in |train.py|_ are both instantiated with ``Pipeline()``:
+Pipelines are created by either instantiating them with ``Pipeline()`` or decorating a graph function with ``@pipeline_def``:
 
 .. code:: python
 
@@ -49,9 +42,7 @@ The training and validation pipelines in |train.py|_ are both instantiated with 
                                           output_layout=types.NHWC)
     trainPipe.set_outputs(cmn_images)
 
-Data is read from the dataset using ``readers.tfrecord``, which reads from TFRecord datasets.
-  
-The appropriate iterator is then used to load data and run the pipeline. In |train.py|, the ``ROCALIterator`` is used for both the training pipeline and the validation pipeline.
+Data is read from the dataset using ``readers.tfrecord``, which reads from TFRecord datasets. The ``ROCALIterator`` is then used to load data and run the pipeline. For example, in |train.py|_:
 
 .. code:: python
 
@@ -62,7 +53,7 @@ The appropriate iterator is then used to load data and run the pipeline. In |tra
   trainIterator = ROCALIterator(trainPipe, device=device)
   valIterator = ROCALIterator(valPipe, device=device)
 
-Two examples of TensorFlow training using rocAL are available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/develop/docs/examples/tf/>`_. `Jupyter Notebooks <https://github.com/ROCm/rocAL/tree/develop/docs/examples/notebooks>`_ are also available.
+An example of TensorFlow training using rocAL is available in the `rocAL GitHub repository <https://github.com/ROCm/rocAL/blob/develop/docs/examples/tf/>`_. `Jupyter Notebooks <https://github.com/ROCm/rocAL/tree/develop/docs/examples/notebooks>`_ are also available.
 
 A `Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ is available for PyTorch training with rocAL.
 
