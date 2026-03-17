@@ -8,7 +8,7 @@
 Using rocAL with PyTorch for training
 **************************************
 
-The PyTorch plugin for rocAL includes four iterators that can be used to process different types of pipelines.
+The PyTorch plugin for rocAL includes three iterators that can be used to process different types of pipelines.
 
 * ``ROCALAudioIterator`` is used for audio processing pipelines.
 * ``ROCALGenericIterator`` is used for general data processing pipelines.
