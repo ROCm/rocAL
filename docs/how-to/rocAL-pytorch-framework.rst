@@ -84,7 +84,7 @@ A `Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md
 
 
 .. |imagenet.py| replace:: ``imagenet_training.py``
-.. _imagenet.py: https://github.com/ROCm/rocAL/tree/develop/docs/examples/pytorch/toynet_training/train.py
+.. _imagenet.py: https://github.com/ROCm/rocAL/tree/develop/docs/examples/pytorch/imagenet_training/imagenet_training.py
 
 .. |train.py| replace:: ``train.py``
 .. _train.py: https://github.com/ROCm/rocAL/tree/develop/docs/examples/pytorch/toynet_training/train.py
