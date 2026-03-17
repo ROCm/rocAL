@@ -2940,7 +2940,7 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        std::vector<size_t> dims = {context->user_batch_size(), 1};
+        std::vector<size_t> dims = {context->user_batch_size(), 1, 1};
         auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
                                RocalTensorDataType::FP32);
@@ -2964,7 +2964,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        std::vector<size_t> dims = {context->user_batch_size(), 1};
+        std::vector<size_t> dims = {context->user_batch_size(), 1, 1};
         auto info = TensorInfo(dims,
                                context->master_graph->mem_type(),
                                RocalTensorDataType::FP32);
