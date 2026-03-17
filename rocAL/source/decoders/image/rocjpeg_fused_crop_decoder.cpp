@@ -61,10 +61,17 @@ void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) {
     _crop_window.W = std::lround((_bbox_coord[2]) * _original_image_width);
     _crop_window.H = std::lround((_bbox_coord[3]) * _original_image_height);
 
+    // Clamp crop dimensions to max decoded dimensions to ensure ROI consistency with output constraints.
+    _crop_window.W = std::min(_crop_window.W, static_cast<unsigned int>(_max_decoded_width));
+    _crop_window.H = std::min(_crop_window.H, static_cast<unsigned int>(_max_decoded_height));
+
     _decode_params->crop_rectangle.left = _crop_window.x;
     _decode_params->crop_rectangle.top = _crop_window.y;
     _decode_params->crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
     _decode_params->crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
+
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_width[_current_index] = _crop_window.W;
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_height[_current_index] = _crop_window.H;
 }
 
 void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) {
@@ -76,6 +83,9 @@ void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) {
     _decode_params->crop_rectangle.top = _crop_window.y;
     _decode_params->crop_rectangle.right = _crop_window.W + _crop_window.x - 1;
     _decode_params->crop_rectangle.bottom = _crop_window.H + _crop_window.y - 1;
+
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_width[_current_index] = _crop_window.W;
+    if (static_cast<size_t>(_current_index) < _batch_size) _roi_height[_current_index] = _crop_window.H;
 }
 
 void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
@@ -101,6 +111,8 @@ void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     _batch_size = batch_size;
     _output_images.resize(_batch_size);
     _decode_params_batch.resize(_batch_size);
+    _roi_width.assign(_batch_size, 0);
+    _roi_height.assign(_batch_size, 0);
 }
 
 // Obtains the decode info of the image, and modifies width and height based on the max decode params after scaling
@@ -143,7 +155,7 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     *height = heights[0];
     _max_decoded_width = max_decoded_width;
     _max_decoded_height = max_decoded_height;
-
+    _current_index = index;
     _decode_params = &_decode_params_batch[index];
 
     if (GetChannelPitchAndSizes(_decode_params_batch[index], subsampling, max_widths, max_heights, channels_size, _output_images[index], channel_sizes)) {
@@ -151,6 +163,8 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     }
     _original_image_width = *actual_width = widths[0];
     _original_image_height = *actual_height = heights[0];
+    _roi_width[index] = widths[0];
+    _roi_height[index] = heights[0];
 
     return Status::OK;
 }
@@ -173,7 +187,7 @@ Decoder::Status FusedCropRocJpegDecoder::decode_info(unsigned char *input_buffer
     if (widths[0] < 64 || heights[0] < 64) {
         return Status::CONTENT_DECODE_FAILED;
     }
-    if (subsampling == ROCJPEG_CSS_440 || subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
+    if (subsampling == ROCJPEG_CSS_411 || subsampling == ROCJPEG_CSS_UNKNOWN) {
         return Status::UNSUPPORTED;
     }
     return Status::OK;
@@ -185,6 +199,9 @@ Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char 
                                                       std::vector<size_t> &actual_decoded_width, std::vector<size_t> &actual_decoded_height) {
     for (unsigned i = 0; i < _batch_size; i++) {
         _output_images[i].channel[0] = static_cast<uint8_t *>(output_buffer[i]);  // For RGB
+        // Update the actual decoded width and height based on the crop window and max decode params
+        actual_decoded_width[i] = _roi_width[i];
+        actual_decoded_height[i] = _roi_height[i];
     }
     CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()));
 
