@@ -8,7 +8,7 @@ Using rocAL with TensorFlow for training
 
 .. _tensorflow:
 
-The TensorFlow plugin for rocAL includes the ``ROCALIterator``. The ``ROCALIterator`` runs the training and validation :doc:`pipelines <../reference/rocAL-pipeline>`. It prefetches and loads the next batch of files while the previous batch is being processed.
+The TensorFlow plugin for rocAL includes ``ROCALIterator``. ``ROCALIterator`` runs the training and validation :doc:`pipelines <../reference/rocAL-pipeline>`. It prefetches and loads the next batch of files while the previous batch is being processed.
 
 Pipelines are created by either instantiating them with ``Pipeline()`` or decorating a graph function with ``@pipeline_def``:
 
@@ -42,7 +42,7 @@ Pipelines are created by either instantiating them with ``Pipeline()`` or decora
                                           output_layout=types.NHWC)
     trainPipe.set_outputs(cmn_images)
 
-Data is read from the dataset using ``readers.tfrecord``, which reads from TFRecord datasets. The ``ROCALIterator`` is then used to load data and run the pipeline. For example, in |train.py|_:
+Data is read from the dataset using ``readers.tfrecord``, which reads from TFRecord datasets. ``ROCALIterator`` is then used to load data and run the pipeline. For example, in |train.py|_:
 
 .. code:: python
 
