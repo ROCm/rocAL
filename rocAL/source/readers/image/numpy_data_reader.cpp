@@ -22,13 +22,24 @@ THE SOFTWARE.
 
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
 #include <cstring>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <math.h>
 #include "pipeline/commons.h"
 #include "pipeline/filesystem.h"
 #include "readers/image/numpy_data_reader.h"
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+#include <cstdint>
+#include <cstdlib>
+#include <strings.h>
+#include <sys/stat.h>
+#include <hip/hip_runtime_api.h>
+#include <hipfile.h>
+#endif
 
 // the HEADER_OFFSET is a magic number - the first 10 bytes store info about numpy version and header len
 // The first 6 bytes are a magic string: exactly \x93NUMPY.
@@ -52,6 +63,63 @@ THE SOFTWARE.
             return return_value;                                         \
         }                                                                \
     }
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+namespace {
+/*
+ * hipFile Integration Notes:
+ * - hipFile GPU Direct I/O is disabled by default. Users must set ROCAL_USE_HIPFILE=1 to enable.
+ * - hipFile enables direct-to-GPU reads (GPU Direct Storage) from NVMe to GPU HBM, bypassing
+ *   the host staging path (fread -> pinned host memory -> zero-copy GPU mapping).
+ * - The AMD fastpath requires 4KB-aligned file offsets, buffer offsets, and IO sizes.
+ * - NumPy payload offsets are typically not 4KB-aligned (data_offset is 64-128 bytes for NPY v1),
+ *   so we read an aligned window into a reusable device scratch buffer registered with
+ *   hipFileBufRegister, then D2D copy the requested subrange into the final output.
+ * - If HIPFILE_FORCE_COMPAT_MODE=true, hipFile would internally add extra copies, so we bypass it.
+ * - The feature uses fileno() on the existing FILE* rather than a separate O_DIRECT open,
+ *   avoiding the overhead of a second open() syscall per file.
+ * - The scratch buffer is allocated once and reused across all file reads. For uniform-shape
+ *   datasets (common case), the aligned read size is the same for every file.
+ * - This feature is most beneficial when the dataset is too large to fit in the OS page cache.
+ *   When data fits in cache, fread() serves from RAM, while hipFile reads from NVMe.
+ *   hipFile wins for large (TB-scale) datasets or cold-storage scenarios.
+ */
+
+// hipFile fastpath uses 4KB/page alignment when statx dio-align data is unavailable.
+constexpr size_t kHipFileAlignment = 4096;
+// hipFileRead() max transfer size (~2GiB - 4KiB) from hipFile's MAX_RW_COUNT.
+constexpr size_t kHipFileMaxIoSize = 0x7ffff000LU;
+
+inline size_t align_down(size_t value, size_t alignment) {
+    return value & ~(alignment - 1);
+}
+
+inline size_t align_up(size_t value, size_t alignment) {
+    const size_t mask = alignment - 1;
+    if (value > (std::numeric_limits<size_t>::max() - mask)) {
+        return std::numeric_limits<size_t>::max() & ~mask;
+    }
+    return (value + mask) & ~mask;
+}
+
+inline bool hipfile_forced_compat_mode() {
+    static const bool cached = [] {
+        const char* v = std::getenv("HIPFILE_FORCE_COMPAT_MODE");
+        return v && (!strcasecmp(v, "true"));
+    }();
+    return cached;
+}
+
+// hipFile is disabled by default. Users must set ROCAL_USE_HIPFILE=1 to opt in.
+inline bool hipfile_enabled() {
+    static const bool cached = [] {
+        const char* v = std::getenv("ROCAL_USE_HIPFILE");
+        return v && (std::string(v) == "1");
+    }();
+    return cached;
+}
+}  // namespace
+#endif
 
 NumpyDataReader::NumpyDataReader() {
     _loop = false;
@@ -118,6 +186,10 @@ size_t NumpyDataReader::open() {
         }
     }
     fseek(_current_file_ptr, 0, SEEK_SET);  // Take the file pointer back to the start
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+    close_hipfile();
+#endif
     return _curr_file_header.numpy_data_nbytes();  // Returns the numpy array data size (in bytes)
 }
 
@@ -284,6 +356,127 @@ size_t NumpyDataReader::read_numpy_data(void* buf, size_t read_size, std::vector
     
     auto shape = _curr_file_header.shape();
     auto data_type_size = tensor_data_size(_curr_file_header.type());
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+    if (!_output_is_device_initialized) {
+        hipPointerAttribute_t attrs{};
+        auto status = hipPointerGetAttributes(&attrs, buf);
+        _output_is_device = (status == hipSuccess) && (attrs.type == hipMemoryTypeDevice);
+        _output_is_device_initialized = true;
+    }
+
+    // hipFile GPU Direct I/O: only active when ROCAL_USE_HIPFILE=1, output buffer is device
+    // memory, and HIPFILE_FORCE_COMPAT_MODE is not set. Falls back to the standard fread() path
+    // when any condition is not met.
+    if (_output_is_device && hipfile_enabled()) {
+        // hipFile path currently supports only contiguous output layouts
+        if (!hipfile_forced_compat_mode() && strides_in_dims[0] == _curr_file_header.size() && ensure_hipfile_open() && _hipfile_file_size > 0 &&
+            _curr_file_header.data_offset >= 0 && static_cast<size_t>(_curr_file_header.data_offset) <= _hipfile_file_size &&
+            read_size <= _hipfile_file_size - static_cast<size_t>(_curr_file_header.data_offset)) {
+            const size_t file_size = _hipfile_file_size;
+            const size_t data_offset = static_cast<size_t>(_curr_file_header.data_offset);
+            const size_t desired_end = data_offset + read_size;
+
+            const size_t aligned_file_offset = align_down(data_offset, kHipFileAlignment);
+            const size_t max_aligned_end = align_down(file_size, kHipFileAlignment);
+            size_t aligned_end = align_up(desired_end, kHipFileAlignment);
+            if (aligned_end > max_aligned_end) {
+                aligned_end = max_aligned_end;
+            }
+
+            if (aligned_end > aligned_file_offset) {
+                const size_t io_size = aligned_end - aligned_file_offset;
+                const size_t offset_in_scratch = data_offset - aligned_file_offset;
+                const size_t direct_bytes = std::min(read_size, aligned_end - data_offset);
+
+                if (ensure_hipfile_scratch(io_size)) {
+                    bool io_ok = true;
+                    for (size_t chunk_offset = 0; chunk_offset < io_size; chunk_offset += kHipFileMaxIoSize) {
+                        const size_t chunk_size = std::min(kHipFileMaxIoSize, io_size - chunk_offset);
+                        const ssize_t nread = hipFileRead(reinterpret_cast<hipFileHandle_t>(_hipfile_handle), _hipfile_scratch, chunk_size,
+                                                          static_cast<hoff_t>(aligned_file_offset + chunk_offset),
+                                                          static_cast<hoff_t>(chunk_offset));
+                        if (nread < 0 || static_cast<size_t>(nread) != chunk_size) {
+                            ERR("hipFileRead failed in NumpyDataReader::read_numpy_data for " + _last_file_path +
+                                " (" + std::string(IS_HIPFILE_ERR(nread) ? HIPFILE_ERRSTR(nread) : std::strerror(errno)) +
+                                ", nread=" + std::to_string(nread) + ")")
+                            io_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (io_ok) {
+                        auto hip_status =
+                            hipMemcpy(buf, static_cast<unsigned char*>(_hipfile_scratch) + offset_in_scratch, direct_bytes,
+                                      hipMemcpyDeviceToDevice);
+                        if (hip_status == hipSuccess) {
+                            if (direct_bytes == read_size) {
+                                return read_size;
+                            }
+
+                            // The hipFile device-direct I/O path may not support short reads; read the remaining tail via host.
+                            const size_t tail_offset = data_offset + direct_bytes;
+                            const size_t tail_bytes = read_size - direct_bytes;
+                            if (_host_staging.size() < tail_bytes) {
+                                _host_staging.resize(tail_bytes);
+                            }
+                            if (std::fseek(_current_file_ptr, static_cast<long>(tail_offset), SEEK_SET) != 0) {
+                                ERR("Seek operation failed for " + _last_file_path + ": " + std::strerror(errno));
+                                return direct_bytes;
+                            }
+                            const size_t host_read_size =
+                                std::fread(_host_staging.data(), sizeof(unsigned char), tail_bytes, _current_file_ptr);
+                            if (host_read_size == 0) {
+                                return direct_bytes;
+                            }
+                            hip_status =
+                                hipMemcpy(static_cast<unsigned char*>(buf) + direct_bytes, _host_staging.data(), host_read_size,
+                                          hipMemcpyHostToDevice);
+                            if (hip_status != hipSuccess) {
+                                ERR("hipMemcpyHostToDevice failed in NumpyDataReader::read_numpy_data tail copy: " + TOSTR(hip_status))
+                                return direct_bytes;
+                            }
+                            return direct_bytes + host_read_size;
+                        }
+                        ERR("hipMemcpyDeviceToDevice failed in NumpyDataReader::read_numpy_data: " + TOSTR(hip_status))
+                    }
+                }
+            }
+        }
+
+        // Fallback: read to host and copy to device (supports both contiguous and strided outputs)
+        if (data_type_size > 0 && static_cast<size_t>(strides_in_dims[0]) > std::numeric_limits<size_t>::max() / data_type_size) {
+            ERR("Overflow computing output_bytes in NumpyDataReader::read_numpy_data for " + _last_file_path)
+            return 0;
+        }
+        const size_t output_bytes = static_cast<size_t>(strides_in_dims[0]) * data_type_size;
+        if (_host_staging.size() < output_bytes) {
+            _host_staging.resize(output_bytes);
+        }
+        std::fill(_host_staging.begin(), _host_staging.begin() + output_bytes, 0);
+
+        if (std::fseek(_current_file_ptr, _curr_file_header.data_offset, SEEK_SET)) {
+            ERR("Seek operation failed for " + _last_file_path + ": " + std::strerror(errno));
+            return 0;
+        }
+        size_t host_bytes_read = 0;
+        if (strides_in_dims[0] == _curr_file_header.size()) {
+            host_bytes_read = std::fread(_host_staging.data(), sizeof(unsigned char), read_size, _current_file_ptr);
+        } else {
+            host_bytes_read = parse_numpy_data(_host_staging.data(), strides_in_dims, shape, data_type_size);
+        }
+        if (host_bytes_read == 0) {
+            return 0;
+        }
+        auto hip_status = hipMemcpy(buf, _host_staging.data(), output_bytes, hipMemcpyHostToDevice);
+        if (hip_status != hipSuccess) {
+            ERR("hipMemcpyHostToDevice failed in NumpyDataReader::read_numpy_data: " + TOSTR(hip_status))
+            return 0;
+        }
+        return host_bytes_read;
+    }
+#endif
+
     if (std::fseek(_current_file_ptr, _curr_file_header.data_offset, SEEK_SET)) {
         ERR("Seek operation failed for " + _last_file_path + ": " + std::strerror(errno));
         return 0;
@@ -327,11 +520,30 @@ int NumpyDataReader::close() {
 
 NumpyDataReader::~NumpyDataReader() {
     release();
+#if ENABLE_HIP && ENABLE_HIPFILE
+    if (_hipfile_scratch_alloc) {
+        if (_hipfile_scratch_device_id >= 0) {
+            (void)hipSetDevice(_hipfile_scratch_device_id);
+        }
+        if (_hipfile_scratch_registered) {
+            (void)hipFileBufDeregister(_hipfile_scratch);
+            _hipfile_scratch_registered = false;
+        }
+        (void)hipFree(_hipfile_scratch_alloc);
+        _hipfile_scratch_alloc = nullptr;
+        _hipfile_scratch = nullptr;
+        _hipfile_scratch_size = 0;
+        _hipfile_scratch_device_id = -1;
+    }
+#endif
 }
 
 int NumpyDataReader::release() {
     if (!_current_file_ptr)
         return 0;
+#if ENABLE_HIP && ENABLE_HIPFILE
+    close_hipfile();
+#endif
     fclose(_current_file_ptr);
     _current_file_ptr = nullptr;
     return 0;
@@ -480,6 +692,115 @@ Reader::Status NumpyDataReader::generate_file_names() {
 
     return ret;
 }
+
+#if ENABLE_HIP && ENABLE_HIPFILE
+void NumpyDataReader::close_hipfile() {
+    if (_hipfile_handle) {
+        hipFileHandleDeregister(reinterpret_cast<hipFileHandle_t>(_hipfile_handle));
+        _hipfile_handle = nullptr;
+    }
+    _hipfile_open_path.clear();
+    _hipfile_file_size = 0;
+}
+
+bool NumpyDataReader::ensure_hipfile_open() {
+    if (_hipfile_handle && _hipfile_open_path == _last_file_path) {
+        return true;
+    }
+
+    close_hipfile();
+    if (_last_file_path.empty() || !_current_file_ptr) {
+        return false;
+    }
+
+    const int client_fd = ::fileno(_current_file_ptr);
+    if (client_fd < 0) {
+        ERR("Failed to get file descriptor for hipFile: " + _last_file_path)
+        return false;
+    }
+
+    struct stat st {};
+    if (::fstat(client_fd, &st) == 0) {
+        _hipfile_file_size = static_cast<size_t>(st.st_size);
+    } else {
+        ERR("fstat failed for hipFile: " + _last_file_path + " (errno " + std::to_string(errno) + "): " + std::string(std::strerror(errno)))
+        _hipfile_file_size = 0;
+    }
+
+    hipFileDescr_t descr{};
+    descr.type = hipFileHandleTypeOpaqueFD;
+    descr.handle.fd = client_fd;
+
+    hipFileHandle_t handle = nullptr;
+    auto err = hipFileHandleRegister(&handle, &descr);
+    if (err.err != hipFileSuccess) {
+        ERR("hipFileHandleRegister failed for " + _last_file_path + ": " + std::string(hipFileGetOpErrorString(err.err)))
+        _hipfile_file_size = 0;
+        return false;
+    }
+
+    _hipfile_handle = handle;
+    _hipfile_open_path = _last_file_path;
+    return true;
+}
+
+bool NumpyDataReader::ensure_hipfile_scratch(size_t size_in_bytes) {
+    if (size_in_bytes == 0) {
+        return false;
+    }
+    if (_hipfile_scratch && _hipfile_scratch_size >= size_in_bytes) {
+        return _hipfile_scratch_registered;
+    }
+
+    if (_hipfile_scratch_alloc) {
+        if (_hipfile_scratch_registered) {
+            (void)hipFileBufDeregister(_hipfile_scratch);
+            _hipfile_scratch_registered = false;
+        }
+        if (_hipfile_scratch_device_id >= 0) {
+            (void)hipSetDevice(_hipfile_scratch_device_id);
+        }
+        (void)hipFree(_hipfile_scratch_alloc);
+        _hipfile_scratch_alloc = nullptr;
+        _hipfile_scratch = nullptr;
+        _hipfile_scratch_size = 0;
+        _hipfile_scratch_device_id = -1;
+    }
+
+    if (size_in_bytes > std::numeric_limits<size_t>::max() - (kHipFileAlignment - 1)) {
+        ERR("Requested Numpy hipFile scratch buffer size is too large and would overflow during alignment")
+        return false;
+    }
+    const size_t alloc_size = size_in_bytes + (kHipFileAlignment - 1);
+    auto hip_status = hipMalloc(&_hipfile_scratch_alloc, alloc_size);
+    if (hip_status != hipSuccess || !_hipfile_scratch_alloc) {
+        ERR("hipMalloc failed for Numpy hipFile scratch buffer: " + TOSTR(hip_status))
+        return false;
+    }
+
+    const uintptr_t addr = reinterpret_cast<uintptr_t>(_hipfile_scratch_alloc);
+    const uintptr_t aligned_addr = (addr + (kHipFileAlignment - 1)) & ~(static_cast<uintptr_t>(kHipFileAlignment - 1));
+    _hipfile_scratch = reinterpret_cast<void*>(aligned_addr);
+    _hipfile_scratch_size = size_in_bytes;
+    int device_id = -1;
+    if (hipGetDevice(&device_id) == hipSuccess) {
+        _hipfile_scratch_device_id = device_id;
+    }
+
+    auto hipfile_err = hipFileBufRegister(_hipfile_scratch, _hipfile_scratch_size, 0);
+    _hipfile_scratch_registered = (hipfile_err.err == hipFileSuccess);
+    if (!_hipfile_scratch_registered) {
+        ERR("hipFileBufRegister failed for Numpy hipFile scratch buffer: " + std::string(hipFileGetOpErrorString(hipfile_err.err)))
+        (void)hipFree(_hipfile_scratch_alloc);
+        _hipfile_scratch_alloc = nullptr;
+        _hipfile_scratch = nullptr;
+        _hipfile_scratch_size = 0;
+        _hipfile_scratch_device_id = -1;
+        return false;
+    }
+    return true;
+}
+#endif
 
 Reader::Status NumpyDataReader::subfolder_reading() {
     auto ret = generate_file_names();

@@ -145,4 +145,27 @@ class NumpyDataReader : public Reader {
     void incremenet_read_ptr();
     int release();
     Reader::Status generate_file_names();            // Function that would generate _file_names containing all the samples in the dataset
+
+    // hipFile GPU Direct I/O support. Disabled by default at runtime.
+    // Users must set environment variable ROCAL_USE_HIPFILE=1 to enable.
+    // When enabled, reads .npy data payloads directly from NVMe to a GPU scratch buffer
+    // via hipFileRead, then D2D copies to the output. Uses fileno() on the existing FILE*
+    // to avoid a separate O_DIRECT open per file. The scratch buffer is pre-allocated once
+    // and registered with hipFileBufRegister for optimal DMA performance.
+#if ENABLE_HIP && ENABLE_HIPFILE
+    void close_hipfile();
+    bool ensure_hipfile_open();
+    bool ensure_hipfile_scratch(size_t size_in_bytes);
+    void* _hipfile_handle = nullptr;           //!< Registered hipFile handle for the current file
+    void* _hipfile_scratch = nullptr;          //!< Aligned pointer within _hipfile_scratch_alloc for DMA target
+    void* _hipfile_scratch_alloc = nullptr;    //!< Raw hipMalloc allocation (may be slightly larger for alignment)
+    size_t _hipfile_scratch_size = 0;          //!< Usable size of the scratch buffer
+    size_t _hipfile_file_size = 0;             //!< Size of the currently opened file (for alignment boundary calculation)
+    bool _hipfile_scratch_registered = false;  //!< Whether scratch buffer is registered with hipFileBufRegister
+    int _hipfile_scratch_device_id = -1;       //!< GPU device ID for scratch cleanup (hipSetDevice before hipFree)
+    bool _output_is_device = false;            //!< True when the output buffer is hipMalloc device memory
+    bool _output_is_device_initialized = false; //!< One-time flag for hipPointerGetAttributes check
+    std::string _hipfile_open_path;            //!< Path of the currently registered hipFile handle
+    std::vector<unsigned char> _host_staging;  //!< Host staging buffer for tail reads and padded fallback
+#endif
 };
