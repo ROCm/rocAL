@@ -143,15 +143,15 @@ Decoder::Status HWRocJpegDecoder::decode_info(unsigned char *input_buffer, size_
     if (has_max_dims && exceeds_max_dims) {
         const uint64_t in_w = widths[0];
         const uint64_t in_h = heights[0];
-        const double scale_w = static_cast<double>(in_w) / max_decoded_width;   // How much width exceeds its max
-        const double scale_h = static_cast<double>(in_h) / max_decoded_height;  // How much height exceeds its max
+        const float scale_factor_w = static_cast<float>(in_w) / max_decoded_width;   // How much width exceeds its max
+        const float scale_factor_h = static_cast<float>(in_h) / max_decoded_height;  // How much height exceeds its max
     
-        if (scale_w >= scale_h) {                                   // Width is the limiting dimension
+        if (scale_factor_w >= scale_factor_h) {                                   // Width is the limiting dimension
             scaledw = static_cast<uint32_t>(max_decoded_width);
-            scaledh = static_cast<uint32_t>(std::max(1.0, in_h / scale_w));
+            scaledh = static_cast<uint32_t>(std::max(1.0f, in_h / scale_factor_w));
         } else {                                                    // Height is the limiting dimension
             scaledh = static_cast<uint32_t>(max_decoded_height);
-            scaledw = static_cast<uint32_t>(std::max(1.0, in_w / scale_h));
+            scaledw = static_cast<uint32_t>(std::max(1.0f, in_w / scale_factor_h));
         }
     }
     // If scaled width is different than original width and height, update max dims with the original width and height, to be used for decoding
@@ -270,7 +270,7 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
     }
     _enable_resize = false;  // Need to reset this value for every batch
     _rocjpeg_image_buff_size = 0;
-    _image_needs_rescaling.assign(_batch_size, false);   // Reset per-image flags for this batch
+    std::fill(_image_needs_rescaling.begin(), _image_needs_rescaling.end(), false); // Reset per-image flags for this batch
 
     return Status::OK;
 }
