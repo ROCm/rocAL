@@ -93,7 +93,7 @@ The validation pipeline in the :doc:`Jax Jupyter notebook <../examples/notebooks
   val_pipeline.build()
   validation_iterator = ROCALJaxIterator(val_pipeline)
 
-A `Docker container <https://github.com/ROCm/rocAL/blob/develop/docker/README.md>`_ is available for Jax training with rocAL.
+`Prebuilt Docker images with Jax pre-installed <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/3rd-party/jax-install.html#using-docker-with-jax-pre-installed>`_ are available.
 
 
 .. |jax.py| replace:: ``jax_classification_reader.py``
