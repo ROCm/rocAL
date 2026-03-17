@@ -35,7 +35,7 @@ Pipelines are created by either instantiating them with ``Pipeline()`` or decora
 
 In the :doc:`Jax Jupyter notebook <../examples/notebooks/jax_training_example>`, training is done over a mesh of GPUs. 
 
-Each training pipelines is instantiated, populated with graph elements, and built, before being added to the array of pipelines:
+Each training pipeline is instantiated, populated with graph elements, and built, before being added to the array of pipelines:
 
 .. code:: python
 
