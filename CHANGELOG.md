@@ -9,9 +9,6 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds support for pipeline checkpointing in rocAL.
 * Adds hipFile support in rocAL numpy reader
 
-### Changes
-* Changes build instructions to omit building of wheels.
-
 ### Removed
 * Removed building wheels for python.
 * `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
@@ -21,11 +18,15 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
+* Changes build instructions to omit building of wheels.
 * Adds new public APIs rocalSerialize(), rocalGetSerializedString(), and rocalDeserialize() for serializing and deserializing pipelines.
 * Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
 * Update EnumRegistry to support enum value lookup by type name.
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
+
+### Known Issues
+* Package installation on SLES requires manually installing `TurboJPEG`.
 
 ## rocAL 2.5.0 for ROCm 7.2.0
 

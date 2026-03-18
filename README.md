@@ -116,10 +116,12 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install liblmdb-dev
   ```
 
-* [Turbo JPEG](https://libjpeg-turbo.org/)
+* [TurboJPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
   ```shell
   sudo apt install libturbojpeg0-dev
   ```
+  > [!NOTE]
+  > If TurboJPEG `>= 2.0` is not available to install via your distribution's repository, it must be manually installed. Source: [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo).
 
 * Python3 and Python3 PIP
   ```shell
