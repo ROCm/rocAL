@@ -8,7 +8,7 @@ Creating and running a rocAL pipeline
 
 rocAL pipelines are used to load, decode, and augment audio, video, and image files that will be used in training and inference. 
 
-The pipeline can either be instantiated using the ``Pipeline()`` constructor or by using the ``@pipeline_def`` decorator. This document demonstrates how to use the decorator. For information about using the constructor, see :doc:`<../reference/rocAL-pipeline>`.
+The pipeline can either be instantiated using the ``Pipeline()`` constructor or by using the ``@pipeline_def`` decorator. This document demonstrates how to use the decorator. For information about using the constructor, see :doc:`the rocAL pipeline reference <../reference/rocAL-pipeline>`.
 
 To create and use a pipeline in your rocAL application with the ``@pipeline_def`` decorator, you'll need to import ``@pipeline_def`` from ``amd.rocal.pipeline``:
 
