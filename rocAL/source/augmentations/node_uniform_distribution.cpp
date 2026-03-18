@@ -38,7 +38,7 @@ void UniformDistributionNode::create_node() {
         update_param();
         _uniform_distribution_array[i] = _dist_uniform(_rngs[i]);
     }
-    _outputs[0]->swap_handle(static_cast<void *>(_uniform_distribution_array.data()));
+    _outputs[0]->swap_handle(static_cast<void *>(_uniform_distribution_array));
 }
 
 void UniformDistributionNode::update_node() {
@@ -56,8 +56,45 @@ void UniformDistributionNode::update_param() {
 void UniformDistributionNode::init(std::vector<float> &range) {
     _min = range[0];
     _max = range[1];
-    _uniform_distribution_array.resize(_batch_size);
+
+    if (_outputs.empty() || !_outputs[0])
+        THROW("UniformDistributionNode: output tensor is not initialized");
+
+    _mem_type = _outputs[0]->info().mem_type();
+    if (_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        hipError_t err = hipHostMalloc(reinterpret_cast<void **>(&_uniform_distribution_array),
+                                       _batch_size * sizeof(float),
+                                       hipHostMallocDefault);
+        if (err != hipSuccess || !_uniform_distribution_array)
+            THROW("hipHostMalloc of size " + TOSTR(_batch_size * sizeof(float)) + " failed " + TOSTR(err))
+#else
+        THROW("UniformDistributionNode: GPU memory requested but HIP support (ENABLE_HIP) is disabled")
+#endif
+    } else {
+        _uniform_distribution_array = new float[_batch_size];
+    }
+
     BatchRNG<std::mt19937> rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
     _rngs = rng;
     update_param();
+}
+
+UniformDistributionNode::~UniformDistributionNode() {
+    if (!_uniform_distribution_array)
+        return;
+
+    if (_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        hipError_t err = hipHostFree(_uniform_distribution_array);
+        if (err != hipSuccess)
+            std::cerr << "\n[ERR] hipHostFree failed for uniform distribution " << std::to_string(err) << "\n";
+#else
+        std::cerr << "\n[ERR] UniformDistributionNode: HIP memory requested but ENABLE_HIP is disabled\n";
+#endif
+    } else {
+        delete[] _uniform_distribution_array;
+    }
+
+    _uniform_distribution_array = nullptr;
 }

@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "augmentations/arithmetic_augmentations/node_tensor_mul_scalar.h"
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 
 #include "pipeline/exception.h"
 
@@ -31,8 +32,10 @@ TensorMulScalarNode::TensorMulScalarNode(const std::vector<Tensor *> &inputs, co
 void TensorMulScalarNode::create_node() {
     if (_node)
         return;
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 2)
     vx_scalar scalar_value_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scalar);
-    _node = vxExtRppTensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value_vx);
+    _node = vxExtRppTensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value_vx, _inputs[0]->get_roi_tensor());
+#endif
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the (vxExtRppTensorMulScalar) node failed: " + TOSTR(status))

@@ -70,14 +70,23 @@ def verify_non_silent_region_output(output_list, rocal_data_path, test_results, 
         print("FAILED!")
         test_results[case_name] = "FAILED"
 
-def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name, dimensions):
+def verify_output(audio_tensor, rocal_data_path, roi_tensor, test_results, case_name, dimensions, rocal_cpu):
     ref_path = f'{rocal_data_path}/rocal_data/GoldenOutputsTensor/reference_outputs_audio/{case_name}_output.bin'
     data_array = np.fromfile(ref_path, dtype=np.float32)
     audio_data = audio_tensor[0].detach().numpy().flatten()
     roi_data = roi_tensor.detach().numpy()
     buffer_size = roi_data[0] * roi_data[1]
     matched_indices = 0
-    atol = 1e-20 if case_name != "normalize" else 1e-5  # Reducing absolute tolerance for normalize test case to fix test case failures
+    if rocal_cpu:
+        atol = 1e-20 if case_name != "normalize" else 1e-5  # Reducing absolute tolerance for normalize test case to fix test case failures
+    else:
+        if case_name == "spectrogram":
+            atol = 1e-3
+        elif case_name == "normalize":
+            atol = 1e-2
+        else:
+            atol = 1e-5
+    
     for i in range(roi_data[0]):
         for j in range(roi_data[1]):
             ref_val = data_array[i * roi_data[1] + j]
@@ -329,9 +338,6 @@ def main():
     if rocal_data_path is None:
         print("Need to export ROCAL_DATA_PATH")
         sys.exit()
-    if not rocal_cpu:
-        print("The GPU support for Audio is not given yet. Running on CPU")
-        rocal_cpu = True
     if not audio_path and not file_list:
         audio_path = f'{rocal_data_path}/rocal_data/audio/'
         file_list = f'{rocal_data_path}/rocal_data/audio/wav_file_list.txt'
@@ -396,7 +402,7 @@ def main():
                 if case_name == "non_silent_region":
                     verify_non_silent_region_output(output_list[0], rocal_data_path, test_results, case_name)
                 else:
-                    verify_output(output_list[0], rocal_data_path, roi, test_results, case_name, dimensions)
+                    verify_output(output_list[0], rocal_data_path, roi, test_results, case_name, dimensions, rocal_cpu)
             print("EPOCH DONE", e)
 
         stop = timeit.default_timer()

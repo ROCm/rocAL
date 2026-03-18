@@ -31,6 +31,7 @@ class NormalDistributionNode : public Node {
    public:
     NormalDistributionNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     NormalDistributionNode() = delete;
+    ~NormalDistributionNode();
     void init(float mean, float stddev);
     void update_param();
 
@@ -41,6 +42,7 @@ class NormalDistributionNode : public Node {
    private:
     float _mean, _std_dev;
     std::normal_distribution<float> _dist_normal;
-    std::vector<float> _normal_distribution_array;
+    float* _normal_distribution_array = nullptr;
+    RocalMemType _mem_type = RocalMemType::HOST;
     BatchRNG<std::mt19937> _rngs = {89, 2};  // Random Seed & BatchSize for initialization
 };
