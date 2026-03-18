@@ -29,7 +29,7 @@ TensorAddTensorNode::TensorAddTensorNode(const std::vector<Tensor *> &inputs, co
 void TensorAddTensorNode::create_node() {
     if (_node)
         return;
-#if VX_EXT_RPP_CHECK_VERSION(3, 2, 1)
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 2)
     _node = vxExtRppTensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->get_roi_tensor());
 #endif
     vx_status status;

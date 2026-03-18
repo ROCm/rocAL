@@ -32,7 +32,7 @@ TensorMulScalarNode::TensorMulScalarNode(const std::vector<Tensor *> &inputs, co
 void TensorMulScalarNode::create_node() {
     if (_node)
         return;
-#if VX_EXT_RPP_CHECK_VERSION(3, 2, 1)
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 2)
     vx_scalar scalar_value_vx = vxCreateScalar(vxGetContext((vx_reference)_graph->get()), VX_TYPE_FLOAT32, &_scalar);
     _node = vxExtRppTensorMulScalar(_graph->get(), _inputs[0]->handle(), _outputs[0]->handle(), scalar_value_vx, _inputs[0]->get_roi_tensor());
 #endif
