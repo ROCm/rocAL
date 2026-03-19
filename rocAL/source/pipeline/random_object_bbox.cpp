@@ -54,11 +54,17 @@ RandomObjectBbox::~RandomObjectBbox() {
 TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int k_largest, float foreground_prob, bool cache_objects) {
     if (output_format != "start_end" && output_format != "anchor_shape" && output_format != "box")
         THROW("RandomObjectBbox: invalid output_format '" + output_format + "'. Must be one of: 'anchor_shape', 'start_end', 'box'")
+    if (_user_batch_size == 0) {
+        THROW("RandomObjectBbox: _user_batch_size must be > 0")
+    }
     _label_tensor = input;
     _k_largest = k_largest;
     _foreground_prob = foreground_prob;
     _cache_boxes = cache_objects;
     auto output_dims = _label_tensor->num_of_dims() - 1;
+    if (output_dims != 4) {
+        THROW("RandomObjectBbox: Expected 4 spatial dims (excluding batch), got " + TOSTR(output_dims))
+    }
     _output_format = output_format;
     if (output_format == "start_end" || output_format == "anchor_shape") {
         // create new instance of tensor class
@@ -105,14 +111,8 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
 void RandomObjectBbox::update() {
     auto roi_dims = reinterpret_cast<int *>(_label_tensor->info().roi().get_ptr());
     std::vector<size_t> max_size = _label_tensor->info().max_shape();
-    if (_user_batch_size == 0) {
-        THROW("RandomObjectBbox: _user_batch_size must be > 0")
-    }
     const size_t single_image_bytes = _label_tensor->data_size() / _user_batch_size;
     const auto input_dims = _label_tensor->num_of_dims() - 1;
-    if (input_dims != 4) {
-        THROW("RandomObjectBbox: Expected 4 spatial dims (excluding batch), got " + TOSTR(input_dims))
-    }
 
     int64_t seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
@@ -123,8 +123,8 @@ void RandomObjectBbox::update() {
     // Generic lambda that processes the entire batch for a given label element type.
     // The type is deduced from the typed pointer passed in by the switch below.
     auto process_samples = [&](auto *typed_input) {
-        using RawPtrT = decltype(typed_input);
-        using LabelT = std::remove_const_t<std::remove_pointer_t<RawPtrT>>;
+        using RawPtrT = decltype(typed_input); // Exact type of typed_input; e.g. if typed_input is declared as const MyLabel* typed_input, RawPtrT is const MyLabel*.
+        using LabelT = std::remove_const_t<std::remove_pointer_t<RawPtrT>>; // Underlying label type after stripping pointer and const; e.g. const MyLabel* -> MyLabel
         const size_t elems_per_sample = single_image_bytes / sizeof(LabelT);
 
         auto process_sample = [&](uint i) {
