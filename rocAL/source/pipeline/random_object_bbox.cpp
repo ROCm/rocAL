@@ -30,14 +30,19 @@ THE SOFTWARE.
 #include "parameters/parameter_factory.h"
 #include "pipeline/log.h"
 
+namespace {
+constexpr size_t kRandomObjectBboxSpatialDims = 4;              // RandomObjectBbox currently supports exactly 4 non-batch dimensions.
+constexpr std::size_t kRandomObjectBboxCacheEntryLimit = 1024;  // Heuristic soft cap on cached input hashes; the cache is cleared when it grows past this size.
+}  // namespace
+
 RandomObjectBbox::RandomObjectBbox(vx_context context, size_t user_batch_size, size_t cpu_num_threads)
-    : _context(context), _user_batch_size(user_batch_size), _cpu_num_threads(cpu_num_threads) {}
+    : _context(context),
+      _user_batch_size(user_batch_size),
+      _cpu_num_threads(cpu_num_threads),
+      _scratch_buffers(std::max<size_t>(1, cpu_num_threads)) {}
 
 RandomObjectBbox::~RandomObjectBbox() {
     _output_tensor_list.release();
-    // Note: _box1_buf and _box2_buf are allocated via allocate_host_or_pinned_mem
-    // with RocalMemType::HOST in init(). If the mem_type is changed to HIP in the
-    // future, these must be freed with hipHostFree instead of free.
     if (_box1_buf != nullptr) {
         free(_box1_buf);
         _box1_buf = nullptr;
@@ -61,39 +66,39 @@ TensorList *RandomObjectBbox::init(Tensor *input, std::string output_format, int
     _k_largest = k_largest;
     _foreground_prob = foreground_prob;
     _cache_boxes = cache_objects;
-    auto output_dims = _label_tensor->num_of_dims() - 1;
-    if (output_dims != 4) {
-        THROW("RandomObjectBbox: Expected 4 spatial dims (excluding batch), got " + TOSTR(output_dims))
+    auto spatial_dims = _label_tensor->num_of_dims() - 1;
+    if (spatial_dims != kRandomObjectBboxSpatialDims) {
+        THROW("RandomObjectBbox: Expected " + TOSTR(kRandomObjectBboxSpatialDims) + " spatial dims (excluding batch), got " + TOSTR(spatial_dims))
     }
     _output_format = output_format;
     if (output_format == "start_end" || output_format == "anchor_shape") {
         // create new instance of tensor class
-        std::vector<size_t> box1_dims = {_user_batch_size, output_dims};
+        std::vector<size_t> box1_dims = {_user_batch_size, spatial_dims};
         auto box1_info = TensorInfo(std::move(box1_dims), RocalMemType::HOST, RocalTensorDataType::INT32);
         _box1_tensor = new Tensor(box1_info);
 
         // allocate memory for the raw buffer pointer in tensor object
-        allocate_host_or_pinned_mem(&_box1_buf, _user_batch_size * output_dims * sizeof(int), RocalMemType::HOST);
+        allocate_host_or_pinned_mem(&_box1_buf, _user_batch_size * spatial_dims * sizeof(int), RocalMemType::HOST);
         _box1_tensor->create_from_handle(_context, _box1_buf);
 
         // create new instance of tensor class
-        std::vector<size_t> box2_dims = {_user_batch_size, output_dims};
+        std::vector<size_t> box2_dims = {_user_batch_size, spatial_dims};
         auto box2_info = TensorInfo(std::move(box2_dims), RocalMemType::HOST, RocalTensorDataType::INT32);
         _box2_tensor = new Tensor(box2_info);
 
         // allocate memory for the raw buffer pointer in tensor object
-        allocate_host_or_pinned_mem(&_box2_buf, _user_batch_size * output_dims * sizeof(int), RocalMemType::HOST);
+        allocate_host_or_pinned_mem(&_box2_buf, _user_batch_size * spatial_dims * sizeof(int), RocalMemType::HOST);
         _box2_tensor->create_from_handle(_context, _box2_buf);
         _output_tensor_list.push_back(_box1_tensor);
         _output_tensor_list.push_back(_box2_tensor);
     } else if (output_format == "box") {
         // create new instance of tensor class
-        std::vector<size_t> box1_dims = {_user_batch_size, output_dims * 2};
+        std::vector<size_t> box1_dims = {_user_batch_size, spatial_dims * 2};
         auto box1_info = TensorInfo(std::move(box1_dims), RocalMemType::HOST, RocalTensorDataType::INT32);
         _box1_tensor = new Tensor(box1_info);
 
         // allocate memory for the raw buffer pointer in tensor object
-        allocate_host_or_pinned_mem(&_box1_buf, _user_batch_size * output_dims * 2 * sizeof(int), RocalMemType::HOST);
+        allocate_host_or_pinned_mem(&_box1_buf, _user_batch_size * spatial_dims * 2 * sizeof(int), RocalMemType::HOST);
         _box1_tensor->create_from_handle(_context, _box1_buf);
         _output_tensor_list.push_back(_box1_tensor);
     }
@@ -115,10 +120,14 @@ void RandomObjectBbox::update() {
     const auto input_dims = _label_tensor->num_of_dims() - 1;
 
     int64_t seed = ParameterFactory::instance()->get_seed_from_seedsequence();
-    BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
+    BatchRNG rng_per_sample = {seed, static_cast<int>(_user_batch_size)};
     std::uniform_real_distribution<float> foreground(0.0f, 1.0f);
     auto *box1_buf = static_cast<int *>(_box1_buf);
     auto *box2_buf = static_cast<int *>(_box2_buf);
+    const bool has_second_output = (_output_format != "box");
+    if (box1_buf == nullptr || (has_second_output && box2_buf == nullptr)) {
+        THROW("RandomObjectBbox: output buffers are not initialized for format '" + _output_format + "'")
+    }
 
     // Generic lambda that processes the entire batch for a given label element type.
     // The type is deduced from the typed pointer passed in by the switch below.
@@ -136,19 +145,22 @@ void RandomObjectBbox::update() {
                 roi_size.push_back(input_shape[j]);
             }
 
-            std::vector<int> output_compact;
+            // Use omp_get_thread_num() to index per-thread scratch buffers, avoiding
+            // repeated heap allocations across samples. Returns 0 in the serial path.
+            auto &scratch = _scratch_buffers[omp_get_thread_num()];
             const LabelT *label = typed_input + i * elems_per_sample;
             int total_box = 0;
-            bool fg = foreground(_rng[i]) < _foreground_prob;
+            bool fg = foreground(rng_per_sample[i]) < _foreground_prob;
             CacheEntry *cache_entry = nullptr;
             content_hash_t hash = {};
-            // Note: when _cache_boxes is true, update() runs sequentially (not via OpenMP),
-            // so accessing _boxes_cache here is thread-safe.
-            if (_cache_boxes) {
+            // Cache lookups are only needed for foreground selections. The foreground RNG
+            // must still advance before any cache access to keep sampling deterministic.
+            // When caching is enabled, update() runs sequentially, so _boxes_cache access is thread-safe.
+            if (_cache_boxes && fg) {
                 content_hash(hash, label, elems_per_sample * sizeof(LabelT));
-                // Bound the number of cached entries to avoid unbounded memory growth.
-                static const std::size_t max_cache_entries = 1024;
-                if (_boxes_cache.size() > max_cache_entries) {
+                // The cache is keyed by full input content. Extremely large datasets can exceed
+                // this soft cap; in that case we clear and repopulate rather than allowing unbounded growth.
+                if (_boxes_cache.size() > kRandomObjectBboxCacheEntryLimit) {
                     _boxes_cache.clear();
                 }
                 cache_entry = &_boxes_cache[hash];
@@ -158,7 +170,7 @@ void RandomObjectBbox::update() {
             std::vector<std::vector<std::vector<unsigned>>> boxes;  // [box][{lo,hi}][dim]
 
             if (fg) {
-                total_box = labelMergeFunc(label, selected_label, roi_size, max_size, output_compact, _rng[i], cache_entry);
+                total_box = labelMergeFunc(label, selected_label, roi_size, max_size, scratch.output_filtered, scratch.output_compact, rng_per_sample[i], cache_entry);
             }
 
             if (total_box) {
@@ -168,7 +180,7 @@ void RandomObjectBbox::update() {
                     boxes.resize(total_box);
                     ranges.resize(total_box);
                     hits.resize((total_box / 32 + !!(total_box % 32)));
-                    auto out_row = output_compact.data();
+                    auto out_row = scratch.output_compact.data();
                     for (int d1 = 0; d1 < roi_size[0]; d1++) {
                         for (int d2 = 0; d2 < roi_size[1]; d2++) {
                             for (int d3 = 0; d3 < roi_size[2]; d3++) {
@@ -182,7 +194,7 @@ void RandomObjectBbox::update() {
                         cache_entry->Put(selected_label, boxes);
                 }
 
-                int chosen_box_idx = pick_box(boxes, _rng[i], _k_largest);
+                int chosen_box_idx = pick_box(boxes, rng_per_sample[i], _k_largest);
                 if (chosen_box_idx == -1) {
                     ERR("No ROI regions found in input. Setting input shape as ROI region");
                 }
@@ -239,6 +251,9 @@ void RandomObjectBbox::update() {
             }
         } else {
             auto num_threads = _cpu_num_threads;
+            // BatchRNG stores one RNG engine per sample. This is thread-safe because each
+            // OpenMP iteration touches only rng_per_sample[i], and labelMergeFunc uses only
+            // the per-sample engine reference passed into it.
 #pragma omp parallel for num_threads(num_threads)
             for (uint i = 0; i < _user_batch_size; i++) {
                 process_sample(i);
@@ -261,7 +276,7 @@ void RandomObjectBbox::update() {
 }
 
 // Select a random bounding box index from the list of boxes.
-// When k_largest > 0, sort boxes by volume (descending), then uniformly sample among the top-k.
+// When k_largest > 0, partition boxes so that the k largest by volume come first, then uniformly sample among them.
 // Otherwise, uniformly sample from all available boxes.
 // Returns -1 when no boxes are available.
 int RandomObjectBbox::pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest) {
@@ -272,21 +287,18 @@ int RandomObjectBbox::pick_box(const std::vector<std::vector<std::vector<unsigne
         std::vector<std::pair<int64_t, int>> vol_idx;
         vol_idx.resize(n);
         for (int i = 0; i < n; i++) {
-            std::vector<unsigned> crop_region;
-            std::transform(boxes[i][1].begin(),boxes[i][1].end(), boxes[i][0].begin(),
-               std::back_inserter(crop_region),
-               [](const auto& hi, const auto& lo)
-               {
-                   return hi - lo;
-               });
             int64_t volume_val = 1;
-            for (auto val : crop_region) {
-                volume_val *= val;
+            for (size_t dim = 0; dim < boxes[i][0].size(); dim++) {
+                volume_val *= static_cast<int64_t>(boxes[i][1][dim] - boxes[i][0][dim]);
             }
-            vol_idx[i] = {-volume_val, i};
+            vol_idx[i] = {volume_val, i};
         }
-        std::sort(vol_idx.begin(), vol_idx.end());
-        std::uniform_int_distribution<int> dist(0, std::min(n, k_largest) - 1);
+        const int top_k = std::min(n, k_largest);
+        std::nth_element(vol_idx.begin(), vol_idx.begin() + (top_k - 1), vol_idx.end(),
+                         [](const auto &lhs, const auto &rhs) {
+                             return lhs.first > rhs.first;
+                         });
+        std::uniform_int_distribution<int> dist(0, top_k - 1);
         return vol_idx[dist(rng)].second;
     } else {
         std::uniform_int_distribution<int> dist(0, n - 1);
@@ -472,15 +484,15 @@ void RandomObjectBbox::mergeRow(int *label_base, const int *in1, const int *in2,
 //
 // Returns the total number of distinct connected components found.
 template<typename T>
-int RandomObjectBbox::labelMergeFunc(const T *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry) {
+int RandomObjectBbox::labelMergeFunc(const T *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_filtered, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry) {
     int64_t total_buf_size = 1;
     for (auto val : size)
         total_buf_size *= val;
-    std::vector<int> output_filtered;
-    output_filtered.resize(total_buf_size);
-    output_compact.resize(total_buf_size);
-    std::fill(output_filtered.begin(), output_filtered.end(), 0);
-    std::fill(output_compact.begin(), output_compact.end(), -1);
+    // These are per-thread scratch buffers; assign() skips reallocation when the
+    // existing capacity already covers total_buf_size, making this effectively a
+    // no-op (just a memset) after the first sample in each thread.
+    output_filtered.assign(total_buf_size, 0);
+    output_compact.assign(total_buf_size, -1);
 
     if (selected_label == -1) {
         const std::set<int> *labels_ptr = nullptr;
@@ -515,19 +527,27 @@ int RandomObjectBbox::labelMergeFunc(const T *input, int &selected_label, std::v
         }
     }
     filterByLabel(input, output_filtered, size, max_size, selected_label);
+    // Pre-compute strides to avoid recomputing index expressions in the inner loops.
+    const int stride_0 = size[1] * size[2] * size[3];
+    const int stride_1 = size[2] * size[3];
+    const int stride_2 = size[3];
     for (int i = 0; i < size[0]; i++) {
+        const int offset_0 = i * stride_0;
         for (int j = 0; j < size[1]; j++) {
+            const int offset_1 = offset_0 + j * stride_1;
             for (int k = 0; k < size[2]; k++) {
+                const int offset = offset_1 + k * stride_2;
                 labelRow(output_compact.data(),
-                         output_filtered.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k * size[3]),
-                         output_compact.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k * size[3]),
+                         output_filtered.data() + offset,
+                         output_compact.data() + offset,
                          size[3]);
                 if (k > 0) {
+                    const int prev_offset = offset - stride_2;
                     mergeRow(output_compact.data(),
-                             output_filtered.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k - 1) * size[3],
-                             output_filtered.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k)*size[3],
-                             output_compact.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + ((k - 1) * size[3]),
-                             output_compact.data() + (i * size[1] * size[2] * size[3]) + (j * (size[2] * size[3])) + (k * size[3]),
+                             output_filtered.data() + prev_offset,
+                             output_filtered.data() + offset,
+                             output_compact.data() + prev_offset,
+                             output_compact.data() + offset,
                              size[3]);
                 }
             }
@@ -536,10 +556,10 @@ int RandomObjectBbox::labelMergeFunc(const T *input, int &selected_label, std::v
     for (int k = 0; k < size[0]; k++) {
         for (int stride = 1; stride <= size[1]; stride *= 2) {
             for (int i = stride; i < size[1]; i += 2 * stride) {
-                auto out_slice = output_compact.data() + (i * size[2] * size[3]);
-                auto in_slice = output_filtered.data() + (i * size[2] * size[3]);
-                auto prev_out = output_compact.data() + ((i - 1) * size[2] * size[3]);
-                auto prev_in = output_filtered.data() + ((i - 1) * size[2] * size[3]);
+                auto out_slice = output_compact.data() + i * stride_1;
+                auto in_slice = output_filtered.data() + i * stride_1;
+                auto prev_out = output_compact.data() + (i - 1) * stride_1;
+                auto prev_in = output_filtered.data() + (i - 1) * stride_1;
                 mergeRow(output_compact.data(),
                          prev_in, in_slice, prev_out, out_slice, size[2] * size[3]);
             }
@@ -616,7 +636,7 @@ void RandomObjectBbox::get_label_boundingboxes(std::vector<std::vector<std::vect
                                           std::vector<std::pair<unsigned, unsigned>> &ranges,
                                           std::vector<unsigned> &hits,
                                           int *in,
-                                          std::vector<int> origin,
+                                          const std::vector<int> &origin,
                                           unsigned width) {
     for (auto &mask : hits) {
         mask = 0u;  // mark all labels as not found in this row
@@ -641,14 +661,14 @@ void RandomObjectBbox::get_label_boundingboxes(std::vector<std::vector<std::vect
         }
     }
 
-    std::vector<unsigned> lo(4, 0);
-    std::vector<unsigned> hi(4, 0);
+    std::vector<unsigned> lo(kRandomObjectBboxSpatialDims, 0);
+    std::vector<unsigned> hi(kRandomObjectBboxSpatialDims, 0);
 
     for (int i = 0; i < ndim; i++) {
         lo[i] = origin[i];
         hi[i] = origin[i] + 1;  // one past
     }
-    const int d = 3;
+    const int d = kRandomObjectBboxSpatialDims - 1;
 
     for (uint word = 0; word < hits.size(); word++) {
         unsigned mask = hits[word];

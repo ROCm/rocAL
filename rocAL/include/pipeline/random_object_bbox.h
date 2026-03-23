@@ -131,26 +131,41 @@ class RandomObjectBbox {
     void mergeRow(int *label_base, const int *in1, const int *in2, int *out1, int *out2, unsigned n);
     /// Core connected-component labeling: filters by a randomly selected label, labels rows, merges across dimensions, and remaps labels to sequential IDs. Returns the total number of connected components.
     template<typename T>
-    int labelMergeFunc(const T *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
+    int labelMergeFunc(const T *input, int &selected_label, std::vector<int> &size, std::vector<size_t> &max_size, std::vector<int> &output_filtered, std::vector<int> &output_compact, std::mt19937 &rng, CacheEntry *cache_entry);
     /// Test and set a bit in the hit bitmap; returns true if the bit was already set.
     bool hit(std::vector<unsigned> &hits, unsigned idx);
     /// Compute or expand axis-aligned bounding boxes from a row of compact labels. Each box spans the min/max coordinates across all dimensions.
-    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> &ranges, std::vector<unsigned> &hits, int *in, std::vector<int> origin, unsigned width);
+    void get_label_boundingboxes(std::vector<std::vector<std::vector<unsigned>>> &boxes, std::vector<std::pair<unsigned, unsigned>> &ranges, std::vector<unsigned> &hits, int *in, const std::vector<int> &origin, unsigned width);
     /// Randomly select a bounding box index, optionally restricted to the k-largest by volume. Returns -1 if no boxes exist.
     int pick_box(const std::vector<std::vector<std::vector<unsigned>>> &boxes, std::mt19937 &rng, int k_largest = -1);
+
+    /*! \brief Per-thread scratch storage for connected-component labeling.
+     *
+     * Holds the intermediate buffers used by labelMergeFunc during
+     * connected-component analysis. One instance is allocated per CPU thread
+     * so that OpenMP workers can reuse memory across samples without
+     * conflicting with each other. After the first sample processed by a
+     * thread, subsequent assign() calls on these vectors skip reallocation
+     * when the existing capacity already covers the required size.
+     */
+    struct ScratchBuffers {
+        std::vector<int> output_filtered;  ///< Binary mask produced by filterByLabel (1 where input == selected label)
+        std::vector<int> output_compact;   ///< Compact label map produced by labelRow / mergeRow and path-compressed by disjointFind
+    };
 
     vx_context _context;                      ///< OpenVX context used for tensor creation
     size_t _user_batch_size;                   ///< Number of samples per batch
     size_t _cpu_num_threads;                   ///< Number of CPU threads for OMP parallelism
-    Tensor *_label_tensor = nullptr;           ///< Input label/segmentation tensor
-    Tensor *_box1_tensor = nullptr;            ///< Output tensor for anchor/start/box coordinates
-    Tensor *_box2_tensor = nullptr;            ///< Output tensor for shape/end coordinates (null for "box" format)
-    void *_box1_buf = nullptr;                 ///< Raw host buffer backing _box1_tensor
-    void *_box2_buf = nullptr;                 ///< Raw host buffer backing _box2_tensor
-    TensorList _output_tensor_list;                   ///< Holds output tensors returned by init()
+    Tensor *_label_tensor = nullptr;           ///< Non-owning pointer to the input label/segmentation tensor
+    Tensor *_box1_tensor = nullptr;            ///< Output tensor for anchor/start/box coordinates (owned by _output_tensor_list)
+    Tensor *_box2_tensor = nullptr;            ///< Output tensor for shape/end coordinates (owned by _output_tensor_list, null for "box" format)
+    void *_box1_buf = nullptr;                 ///< Raw host buffer backing _box1_tensor, freed in destructor
+    void *_box2_buf = nullptr;                 ///< Raw host buffer backing _box2_tensor, freed in destructor
+    TensorList _output_tensor_list;            ///< Holds output tensors returned by init()
     std::string _output_format;                ///< Output format: "anchor_shape", "start_end", or "box"
     int _k_largest = -1;                       ///< If positive, restricts selection to the k largest objects
     float _foreground_prob = 1.0f;             ///< Probability of selecting a foreground object
     bool _cache_boxes = false;                 ///< Whether to cache bounding boxes by content hash
     std::unordered_map<content_hash_t, CacheEntry> _boxes_cache;  ///< Content-hash-keyed cache of per-input bounding boxes
+    std::vector<ScratchBuffers> _scratch_buffers;  ///< Per-thread scratch storage reused across samples to avoid repeated allocations
 };

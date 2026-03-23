@@ -413,22 +413,25 @@ void MasterGraph::release() {
     _internal_tensor_list.release();  // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _output_tensor_list.release();    // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _metadata_output_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
-    _bbox_encoded_output.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
+    _bbox_encoded_output_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
     if (_is_roi_random_crop) {
-        delete _roi_random_crop_tensor;
-        _roi_random_crop_tensor = nullptr;
-        if (_roi_random_crop_tensor_buf_ptr != nullptr) {
-            if (_affinity == RocalAffinity::GPU) {
+        if (_roi_random_crop_tensor != nullptr) {
+            void *roi_random_crop_tensor_buf = _roi_random_crop_tensor->buffer();
+            if (roi_random_crop_tensor_buf != nullptr) {
+                if (_roi_random_crop_tensor->info().mem_type() == RocalMemType::HIP) {
 #if ENABLE_HIP
-                hipError_t err = hipHostFree(_roi_random_crop_tensor_buf_ptr);
-                if (err != hipSuccess) {
-                    std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
-                }
+                    hipError_t err = hipHostFree(roi_random_crop_tensor_buf);
+                    if (err != hipSuccess) {
+                        std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
+                    }
 #endif
-            } else {
-                free(_roi_random_crop_tensor_buf_ptr);
+                } else {
+                    free(roi_random_crop_tensor_buf);
+                }
+                _roi_random_crop_tensor->reset_mem_handle();
             }
-            _roi_random_crop_tensor_buf_ptr = nullptr;
+            delete _roi_random_crop_tensor;
+            _roi_random_crop_tensor = nullptr;
         }
         delete[] _crop_shape_batch;
         _crop_shape_batch = nullptr;
@@ -1706,8 +1709,9 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
     _roi_random_crop_tensor = new Tensor(info);
 
     // allocate memory for the raw buffer pointer in tensor object
-    allocate_host_or_pinned_mem(&_roi_random_crop_tensor_buf_ptr, _user_batch_size * input_dims * sizeof(int), input->info().mem_type());
-    _roi_random_crop_tensor->create_from_handle(_context, _roi_random_crop_tensor_buf_ptr);
+    void *roi_random_crop_tensor_buf = nullptr;
+    allocate_host_or_pinned_mem(&roi_random_crop_tensor_buf, _user_batch_size * input_dims * sizeof(int), input->info().mem_type());
+    _roi_random_crop_tensor->create_from_handle(_context, roi_random_crop_tensor_buf);
     return _roi_random_crop_tensor;
 }
 
@@ -1720,7 +1724,7 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
 //   3. If the ROI is smaller than the crop, place the crop so it covers the ROI
 //      while staying within the input bounds.
 void MasterGraph::update_roi_random_crop() {
-    int *crop_begin_batch = static_cast<int *>(_roi_random_crop_tensor_buf_ptr);
+    int *crop_begin_batch = static_cast<int *>(_roi_random_crop_tensor->buffer());
     auto seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     auto input_dims = _roi_random_crop_tensor->info().dims()[1];
 
@@ -1953,12 +1957,12 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes) {
         }
 
         // Set the labels and bbox tensorList to the box encoded output only for the first run
-        if (_bbox_encoded_output.size() == 0) {
-            _bbox_encoded_output.emplace_back(&_labels_tensor_list);
-            _bbox_encoded_output.emplace_back(&_bbox_tensor_list);
+        if (_bbox_encoded_output_tensor_list.size() == 0) {
+            _bbox_encoded_output_tensor_list.emplace_back(&_labels_tensor_list);
+            _bbox_encoded_output_tensor_list.emplace_back(&_bbox_tensor_list);
         }
     }
-    return &_bbox_encoded_output;
+    return &_bbox_encoded_output_tensor_list;
 }
 
 void MasterGraph::feed_external_input(const std::vector<std::string>& input_images_names, bool is_labels, const std::vector<unsigned char *>& input_buffer,
