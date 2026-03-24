@@ -1738,14 +1738,10 @@ void MasterGraph::update_roi_random_crop() {
     int *crop_begin = crop_begin_batch;
     int *input_shape = _roi_batch + input_dims;  // skip the begin coords in ROI buffer
     for (uint i = 0; i < _user_batch_size; i++, crop_shape += input_dims, roi_begin += input_dims,
-         roi_end += input_dims, crop_begin += input_dims, input_shape += input_dims * 2) {
+        roi_end += input_dims, crop_begin += input_dims, input_shape += input_dims * 2) {
 
         for (uint j = 0; j < input_dims; j++) {
-            if (crop_shape[j] > input_shape[j]) {
-                ERR("crop shape (" + std::to_string(crop_shape[j]) + ") cannot be greater than input shape (" + std::to_string(input_shape[j]) + "), clamping to input shape")
-                crop_shape[j] = input_shape[j];
-            }
-
+            crop_shape[j] = std::min(crop_shape[j], input_shape[j]);  // crop shape cannot be greater than the input shape
             const int roi_begin_val = std::max<int>(0, roi_begin[j]);
             int roi_end_val = std::min<int>(roi_end[j], input_shape[j]);
             roi_end_val = std::max<int>(roi_end_val, roi_begin_val);

@@ -122,12 +122,12 @@ void RandomObjectBbox::update() {
     int64_t seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     BatchRNG rng_per_sample = {seed, static_cast<int>(_user_batch_size)};
     std::uniform_real_distribution<float> foreground(0.0f, 1.0f);
-    auto *box1_buf = static_cast<int *>(_box1_buf);
-    auto *box2_buf = static_cast<int *>(_box2_buf);
     const bool has_second_output = (_output_format != "box");
-    if (box1_buf == nullptr || (has_second_output && box2_buf == nullptr)) {
+    if (_box1_buf == nullptr || (has_second_output && _box2_buf == nullptr)) {
         THROW("RandomObjectBbox: output buffers are not initialized for format '" + _output_format + "'")
     }
+    auto *box1_buf = static_cast<int *>(_box1_buf);
+    auto *box2_buf = static_cast<int *>(_box2_buf);
 
     // Generic lambda that processes the entire batch for a given label element type.
     // The type is deduced from the typed pointer passed in by the switch below.
