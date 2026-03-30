@@ -61,6 +61,7 @@ class NumpyLoader : public LoaderModule {
     LoaderModuleStatus update_output_tensor();
     LoaderModuleStatus load_routine();
     std::shared_ptr<Reader> _reader;
+    void* _dev_resources = nullptr;
     Tensor* _output_tensor;
     std::vector<std::string> _output_names;  //!< numpy file name/ids that are stores in the _output_tensor
     size_t _output_mem_size;

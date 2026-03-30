@@ -235,7 +235,7 @@ private:
     std::map<std::string, Tensor *> _pipeline_tensors;                        //!< Maps tensor names to tensor pointers during deserialization
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
-    TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder
+    TensorListVector _bbox_encoded_output_tensor_list;                             //!< Keeps a list of label and bounding box metadata TensorList for box encoder
     TensorListVector _webdataset_output_tensor_list;                              //!< Keeps a list of ascii metadata TensorList for the Webdataset reader
     TensorList _labels_tensor_list;
     std::vector<TensorList> _ascii_tensor_list; // TensorList to store the ASCII values of all samples in a batch
@@ -301,9 +301,11 @@ private:
     Tensor *_roi_random_crop_tensor = nullptr;                 ///< Output tensor holding the computed crop anchor coordinates
     Tensor *_roi_start_tensor = nullptr;                       ///< Tensor providing per-sample ROI start coordinates
     Tensor *_roi_end_tensor = nullptr;                         ///< Tensor providing per-sample ROI end coordinates
-    void *_roi_random_crop_buf = nullptr;                      ///< Raw host/pinned buffer backing _roi_random_crop_tensor
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
+#endif
+#if ENABLE_HIPFILE
+    bool _hipfile_driver_opened = false;  //!< Tracks whether hipFileDriverOpen() was called. Only true when ROCAL_USE_HIPFILE=1.
 #endif
     TimingDbg _rb_block_if_empty_time, _rb_block_if_full_time;
     std::vector<std::shared_ptr<PipelineOperator>> _pipeline_operators;     // Contains the info of all the operators present in the pipeline

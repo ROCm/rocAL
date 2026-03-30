@@ -34,6 +34,12 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 
+#define AUDIO_TEST_ATOL_DEFAULT_CPU        1e-20f   // Acceptable error threshold for audio decoder, pre-emphasis filter, to_decibels and resample test cases which are expected to have very high accuracy when run on CPU
+#define AUDIO_TEST_ATOL_NORMALIZE_CPU      1e-5f    // Acceptable error threshold for normalize test cases when run on CPU
+#define AUDIO_TEST_ATOL_SPECTROGRAM_GPU    1e-3f    // Acceptable error threshold for spectrogram test cases when run on GPU
+#define AUDIO_TEST_ATOL_NORMALIZE_GPU      1e-2f    // Acceptable error threshold for normalize test cases when run on GPU
+#define AUDIO_TEST_ATOL_DEFAULT_GPU        1e-5f    // Acceptable error threshold for other test cases when run on GPU
+
 using namespace std::chrono;
 
 int verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string case_name, std::string rocal_data_path) {
@@ -72,7 +78,7 @@ int verify_non_silent_region_output(int *nsr_begin, int *nsr_length, std::string
     return status;
 }
 
-int verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size, std::string rocal_data_path) {
+int verify_output(float *dst_ptr, long int frames, long int channels, std::string case_name, int max_samples, int max_channels, int buffer_size, std::string rocal_data_path, bool gpu) {
     int status = -1;
     // read data from golden outputs
     std::string ref_file_path = rocal_data_path + "rocal_data/GoldenOutputsTensor/reference_outputs_audio/" + case_name + "_output.bin";
@@ -102,7 +108,16 @@ int verify_output(float *dst_ptr, long int frames, long int channels, std::strin
 
     fin.close();
 
-    auto atol = (case_name != "normalize") ? 1e-20 : 1e-5;  // Absolute tolerance
+    auto atol = (case_name != "normalize") ? AUDIO_TEST_ATOL_DEFAULT_CPU : AUDIO_TEST_ATOL_NORMALIZE_CPU;  // Absolute tolerance
+    if (gpu) {
+        if (case_name == "spectrogram") {
+            atol = AUDIO_TEST_ATOL_SPECTROGRAM_GPU;
+        } else if (case_name == "normalize") {
+            atol = AUDIO_TEST_ATOL_NORMALIZE_GPU;
+        } else {
+            atol = AUDIO_TEST_ATOL_DEFAULT_GPU;
+        }
+    }
     int matched_indices = 0;
     for (int i = 0; i < frames; i++) {
         for (int j = 0; j < channels; j++) {
@@ -150,11 +165,6 @@ int main(int argc, const char **argv) {
 
     if (argc > argIdx)
         qa_mode = atoi(argv[argIdx++]);
-
-    if (gpu) {  // TODO - Will be removed when GPU support is added for Audio pipeline
-        std::cout << "WRN : Currently Audio unit test supports only HOST backend\n";
-        gpu = false;
-    }
 
     int return_val = test(test_case, path, qa_mode, downmix, gpu);
     return return_val;
@@ -340,7 +350,7 @@ int test(int test_case, const char *path, int qa_mode, int downmix, int gpu) {
             std::cout << "\n ROCAL_DATA_PATH env variable has not been set. ";
             exit(0);
         }
-        if (test_case != 8 && (verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path) == 0)) {
+        if (test_case != 8 && (verify_output(buffer, frames, channels, case_name, max_samples, max_channels, buffer_size, rocal_data_path, gpu) == 0)) {
             std::cout << "PASSED!\n\n";
         } else if (test_case == 8 && (verify_non_silent_region_output(nsr_begin, nsr_length, case_name, rocal_data_path) == 0)) {
             std::cout << "PASSED!\n\n";

@@ -1599,7 +1599,7 @@ def roi_random_crop(*inputs, roi_start, roi_end, crop_shape):
         @return    A RocalTensor containing the computed anchor coordinates for each sample in the batch.
     """
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "roi_start": roi_start, "roi_end": roi_end, "crop_shape": crop_shape}
+    kwargs_pybind = {"input_tensor": inputs[0], "roi_start": roi_start, "roi_end": roi_end, "crop_shape": crop_shape}
     anchor = b.roiRandomCrop(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (anchor)
 
@@ -1633,7 +1633,7 @@ def random_object_bbox(*inputs, format='anchor_shape', cache_objects=False, fore
         raise ValueError('format must be one of: "box", "anchor_shape", "start_end"')
 
     # pybind call arguments
-    kwargs_pybind = {"input_image": inputs[0], "format": format, "k_largest": k_largest, "foreground_prob": foreground_prob, "cache_objects": cache_objects}
+    kwargs_pybind = {"input_tensor": inputs[0], "format": format, "k_largest": k_largest, "foreground_prob": foreground_prob, "cache_objects": cache_objects}
     selected_roi = b.randomObjectBbox(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     if format == "box":
         return selected_roi

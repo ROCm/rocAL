@@ -88,12 +88,15 @@ class FusedCropRocJpegDecoder : public Decoder {
    private:
     std::vector<float> _bbox_coord;
     CropWindow _crop_window;
-    RocJpegHandle _rocjpeg_handle;
+    RocJpegHandle _rocjpeg_handle = nullptr;
     std::vector<RocJpegStreamHandle> _rocjpeg_streams;
     std::vector<RocJpegImage> _output_images = {};
     std::vector<RocJpegDecodeParams> _decode_params_batch;
-    RocJpegDecodeParams *_decode_params;
-    unsigned _batch_size;
-    int _max_decoded_width, _max_decoded_height, _original_image_width, _original_image_height;
+    RocJpegDecodeParams *_decode_params = nullptr;
+    unsigned _batch_size = 0;
+    int _max_decoded_width = 0, _max_decoded_height = 0, _original_image_width = 0, _original_image_height = 0;
+    std::vector<size_t> _roi_width;
+    std::vector<size_t> _roi_height;
+    int _current_index = -1;
 };
 #endif

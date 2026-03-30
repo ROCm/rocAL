@@ -618,7 +618,7 @@ RocalTensor
     ROCAL_API_CALL
     rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, const std::vector<int> &crop_shape) {
     RocalTensor output = nullptr;
-    ROCAL_INVALID_CONTEXT_EXCEPTION(p_context);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     if ((roi_start == nullptr) || (roi_end == nullptr)) {
         ERR("Invalid ROI tensor(s)")

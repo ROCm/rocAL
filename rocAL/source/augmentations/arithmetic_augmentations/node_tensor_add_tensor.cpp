@@ -20,6 +20,7 @@ THE SOFTWARE.
 #include "augmentations/arithmetic_augmentations/node_tensor_add_tensor.h"
 
 #include <vx_ext_rpp.h>
+#include <vx_ext_rpp_version.h>
 
 #include "pipeline/exception.h"
 
@@ -28,7 +29,9 @@ TensorAddTensorNode::TensorAddTensorNode(const std::vector<Tensor *> &inputs, co
 void TensorAddTensorNode::create_node() {
     if (_node)
         return;
+#if VX_EXT_RPP_CHECK_VERSION(3, 3, 2)
     _node = vxExtRppTensorAddTensor(_graph->get(), _inputs[0]->handle(), _inputs[1]->handle(), _outputs[0]->handle(), _inputs[0]->get_roi_tensor(), _outputs[0]->get_roi_tensor());
+#endif
     vx_status status;
     if ((status = vxGetStatus((vx_reference)_node)) != VX_SUCCESS)
         THROW("Adding the (vxExtRppTensorAddTensor) node failed: " + TOSTR(status))

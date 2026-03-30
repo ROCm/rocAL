@@ -37,13 +37,12 @@ THE SOFTWARE.
 enum class DecoderType {
     TURBO_JPEG = 0,        //!< Can only decode
     FUSED_TURBO_JPEG = 1,  //!< FOR PARTIAL DECODING
-    OPENCV = 2,            //!< for back_up decoding
-    SKIP_DECODE = 3,       //!< For skipping decoding in case of uncompressed data from reader
-    FFMPEG_VIDEO = 4,      //!< for video decoding using CPU and FFMPEG
-    ROCDECODE_VIDEO = 5,   //!< for video decoding using HW via rocDecode
-    AUDIO_SOFTWARE = 6,    //!< Uses sndfile to decode audio files
-    ROCJPEG = 7,           //!< rocJpeg hardware decoder for decoding jpeg files
-    ROCJPEG_CROPPED = 8    //!< For partial decoding of jpeg files using rocJpeg hardware decoder 
+    SKIP_DECODE = 2,       //!< For skipping decoding in case of uncompressed data from reader
+    FFMPEG_VIDEO = 3,      //!< for video decoding using CPU and FFMPEG
+    ROCDECODE_VIDEO = 4,   //!< for video decoding using HW via rocDecode
+    AUDIO_SOFTWARE = 5,    //!< Uses sndfile to decode audio files
+    ROCJPEG = 6,           //!< rocJpeg hardware decoder for decoding jpeg files
+    ROCJPEG_CROPPED = 7    //!< For partial decoding of jpeg files using rocJpeg hardware decoder 
 };
 REGISTER_ENUM(DecoderType)
 

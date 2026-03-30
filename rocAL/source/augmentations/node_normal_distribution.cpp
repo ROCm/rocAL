@@ -37,7 +37,7 @@ void NormalDistributionNode::create_node() {
         update_param();
         _normal_distribution_array[i] = _dist_normal(_rngs[i]);
     }
-    _outputs[0]->swap_handle((void *)_normal_distribution_array.data());
+    _outputs[0]->swap_handle((void *)_normal_distribution_array);
 }
 
 void NormalDistributionNode::update_node() {
@@ -55,8 +55,45 @@ void NormalDistributionNode::update_param() {
 void NormalDistributionNode::init(float mean, float std_dev) {
     _mean = mean;
     _std_dev = std_dev;
-    _normal_distribution_array.resize(_batch_size);
+
+    if (_outputs.empty() || !_outputs[0])
+        THROW("NormalDistributionNode: output tensor is not initialized");
+    
+    _mem_type = _outputs[0]->info().mem_type();
+
+    if (_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        hipError_t err = hipHostMalloc(reinterpret_cast<void **>(&_normal_distribution_array),
+                                       _batch_size * sizeof(float),
+                                       hipHostMallocDefault);
+        if (err != hipSuccess || !_normal_distribution_array)
+            THROW("hipHostMalloc of size " + TOSTR(_batch_size * sizeof(float)) + " failed " + TOSTR(err))
+#else
+        THROW("NormalDistributionNode: GPU memory requested but HIP support (ENABLE_HIP) is disabled")
+#endif
+    } else {
+        _normal_distribution_array = new float[_batch_size];
+    }
+
     BatchRNG<std::mt19937> rng = {ParameterFactory::instance()->get_seed_from_seedsequence(), static_cast<int>(_batch_size)};
     _rngs = rng;
     update_param();
+}
+
+NormalDistributionNode::~NormalDistributionNode() {
+    if (!_normal_distribution_array)
+        return;
+
+    if (_mem_type == RocalMemType::HIP) {
+#if ENABLE_HIP
+        hipError_t err = hipHostFree(_normal_distribution_array);
+        if (err != hipSuccess)
+            std::cerr << "\n[ERR] hipHostFree failed for normal distribution " << std::to_string(err) << "\n";
+#else
+        std::cerr << "\n[ERR] NormalDistributionNode: hipHostFree requested but ENABLE_HIP is disabled\n";
+#endif
+    } else {
+        delete[] _normal_distribution_array;
+    }
+    _normal_distribution_array = nullptr;
 }

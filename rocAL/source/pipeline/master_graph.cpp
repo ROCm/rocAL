@@ -45,6 +45,11 @@ using half_float::half;
 #include <rocal_hip_kernels.h>
 #endif
 
+#if ENABLE_HIPFILE
+#include <cstdlib>
+#include <hipfile.h>
+#endif
+
 static void VX_CALLBACK log_callback(vx_context context, vx_reference ref, vx_status status, const vx_char *string) {
     size_t len = strnlen(string, MAX_STRING_LENGTH);
     if (len > 0) {
@@ -152,6 +157,24 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
                         THROW("vxSetContextAttribute for hipDevice(%d) failed " + TOSTR(hipDevice) + TOSTR(status))
                 } else
                     THROW("ERROR: HIP Device(%d) out of range" + TOSTR(gpu_id));
+            }
+#endif
+#if ENABLE_HIPFILE
+            // hipFile GPU Direct Storage is disabled by default. Users must explicitly
+            // set ROCAL_USE_HIPFILE=1 to enable direct NVMe-to-GPU reads for the numpy reader.
+            // This is beneficial for large datasets that exceed host RAM, where bypassing
+            // the OS page cache and reading directly to GPU memory avoids PCIe bottlenecks.
+            const char* hipfile_env = std::getenv("ROCAL_USE_HIPFILE");
+            if (hipfile_env && std::string(hipfile_env) == "1") {
+                hipFileError_t hf_err = hipFileDriverOpen();
+                if (hf_err.err == hipFileSuccess) {
+                    _hipfile_driver_opened = true;
+                    LOG("hipFile driver initialized successfully");
+                } else {
+                    ERR("hipFile driver initialization failed (error: " + std::to_string(hf_err.err) +
+                        " - " + std::string(hipFileGetOpErrorString(hf_err.err)) +
+                        "), falling back to standard I/O");
+                }
             }
 #endif
         }
@@ -369,6 +392,10 @@ void MasterGraph::release() {
     // shut_down loader:: required for releasing any allocated resourses
     for (auto &loader_module : _loader_modules)
         loader_module->shut_down();
+    // Clear loader modules so their destructors (and any hipFile handle/buffer
+    // deregistrations inside NumpyDataReader) run before hipFileDriverClose().
+    _loader_module.reset();
+    _loader_modules.clear();
     // release output buffer if allocated
     if (_output_tensor_buffer != nullptr) {
 #if ENABLE_HIP
@@ -387,22 +414,25 @@ void MasterGraph::release() {
     _internal_tensor_list.release();  // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _output_tensor_list.release();    // It will call the vxReleaseTensor internally in the destructor for each tensor in the list
     _metadata_output_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
-    _bbox_encoded_output.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
+    _bbox_encoded_output_tensor_list.release(); // It will call the vxReleaseTensor internally in the destructor for each tensor in the list of TensorList
     if (_is_roi_random_crop) {
-        delete _roi_random_crop_tensor;
-        _roi_random_crop_tensor = nullptr;
-        if (_roi_random_crop_buf != nullptr) {
-            if (_affinity == RocalAffinity::GPU) {
+        if (_roi_random_crop_tensor != nullptr) {
+            void *roi_random_crop_tensor_buf = _roi_random_crop_tensor->buffer();
+            if (roi_random_crop_tensor_buf != nullptr) {
+                if (_roi_random_crop_tensor->info().mem_type() == RocalMemType::HIP) {
 #if ENABLE_HIP
-                hipError_t err = hipHostFree(_roi_random_crop_buf);
-                if (err != hipSuccess) {
-                    std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
-                }
+                    hipError_t err = hipHostFree(roi_random_crop_tensor_buf);
+                    if (err != hipSuccess) {
+                        std::cerr << "\n[ERR] hipHostFree failed  " << std::to_string(err) << "\n";
+                    }
 #endif
-            } else {
-                free(_roi_random_crop_buf);
+                } else {
+                    free(roi_random_crop_tensor_buf);
+                }
+                _roi_random_crop_tensor->reset_mem_handle();
             }
-            _roi_random_crop_buf = nullptr;
+            delete _roi_random_crop_tensor;
+            _roi_random_crop_tensor = nullptr;
         }
         delete[] _crop_shape_batch;
         _crop_shape_batch = nullptr;
@@ -426,6 +456,13 @@ void MasterGraph::release() {
     _meta_data_graph = nullptr;
     _meta_data_reader = nullptr;
     delete _box_encoder_gpu;
+#if ENABLE_HIPFILE
+    if (_hipfile_driver_opened) {
+        (void)hipFileDriverClose();
+        _hipfile_driver_opened = false;
+        LOG("hipFile driver closed");
+    }
+#endif
     if (_context && (status = vxReleaseContext(&_context)) != VX_SUCCESS)
         LOG("Failed to call vxReleaseContext " + TOSTR(status))
 }
@@ -1758,8 +1795,9 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
     _roi_random_crop_tensor = new Tensor(info);
 
     // allocate memory for the raw buffer pointer in tensor object
-    allocate_host_or_pinned_mem(&_roi_random_crop_buf, _user_batch_size * input_dims * sizeof(int), input->info().mem_type());
-    _roi_random_crop_tensor->create_from_ptr(_context, _roi_random_crop_buf);
+    void *roi_random_crop_tensor_buf = nullptr;
+    allocate_host_or_pinned_mem(&roi_random_crop_tensor_buf, _user_batch_size * input_dims * sizeof(int), input->info().mem_type());
+    _roi_random_crop_tensor->create_from_handle(_context, roi_random_crop_tensor_buf);
     return _roi_random_crop_tensor;
 }
 
@@ -1772,7 +1810,7 @@ Tensor* MasterGraph::roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *r
 //   3. If the ROI is smaller than the crop, place the crop so it covers the ROI
 //      while staying within the input bounds.
 void MasterGraph::update_roi_random_crop() {
-    int *crop_begin_batch = static_cast<int *>(_roi_random_crop_buf);
+    int *crop_begin_batch = static_cast<int *>(_roi_random_crop_tensor->buffer());
     auto seed = ParameterFactory::instance()->get_seed_from_seedsequence();
     auto input_dims = _roi_random_crop_tensor->info().dims()[1];
 
@@ -1780,20 +1818,16 @@ void MasterGraph::update_roi_random_crop() {
     int *roi_begin_batch = static_cast<int *>(_random_object_bbox->box1_buf());
     int *roi_end_batch = static_cast<int *>(_random_object_bbox->box2_buf());
     BatchRNG _rng = {seed, static_cast<int>(_user_batch_size)};
-    for (uint i = 0; i < _user_batch_size; i++) {
-        int sample_idx = i * input_dims;
-        int *crop_shape = &_crop_shape_batch[sample_idx];
-        int *roi_begin = &roi_begin_batch[sample_idx];
-        int *input_shape = &_roi_batch[sample_idx * 2 + input_dims];
-        int *roi_end = &roi_end_batch[sample_idx];
-        int *crop_begin = &crop_begin_batch[sample_idx];
+    int *crop_shape = _crop_shape_batch;
+    int *roi_begin = roi_begin_batch;
+    int *roi_end = roi_end_batch;
+    int *crop_begin = crop_begin_batch;
+    int *input_shape = _roi_batch + input_dims;  // skip the begin coords in ROI buffer
+    for (uint i = 0; i < _user_batch_size; i++, crop_shape += input_dims, roi_begin += input_dims,
+        roi_end += input_dims, crop_begin += input_dims, input_shape += input_dims * 2) {
 
         for (uint j = 0; j < input_dims; j++) {
-            if (crop_shape[j] > input_shape[j]) {
-                ERR("crop shape (" + std::to_string(crop_shape[j]) + ") cannot be greater than input shape (" + std::to_string(input_shape[j]) + "), clamping to input shape")
-                crop_shape[j] = input_shape[j];
-            }
-
+            crop_shape[j] = std::min(crop_shape[j], input_shape[j]);  // crop shape cannot be greater than the input shape
             const int roi_begin_val = std::max<int>(0, roi_begin[j]);
             int roi_end_val = std::min<int>(roi_end[j], input_shape[j]);
             roi_end_val = std::max<int>(roi_end_val, roi_begin_val);
@@ -2005,12 +2039,12 @@ MasterGraph::get_bbox_encoded_buffers(size_t num_encoded_boxes) {
         }
 
         // Set the labels and bbox tensorList to the box encoded output only for the first run
-        if (_bbox_encoded_output.size() == 0) {
-            _bbox_encoded_output.emplace_back(&_labels_tensor_list);
-            _bbox_encoded_output.emplace_back(&_bbox_tensor_list);
+        if (_bbox_encoded_output_tensor_list.size() == 0) {
+            _bbox_encoded_output_tensor_list.emplace_back(&_labels_tensor_list);
+            _bbox_encoded_output_tensor_list.emplace_back(&_bbox_tensor_list);
         }
     }
-    return &_bbox_encoded_output;
+    return &_bbox_encoded_output_tensor_list;
 }
 
 void MasterGraph::feed_external_input(const std::vector<std::string>& input_images_names, bool is_labels, const std::vector<unsigned char *>& input_buffer,
