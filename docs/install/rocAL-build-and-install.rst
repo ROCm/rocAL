@@ -12,7 +12,7 @@ The rocAL source code is available from https://github.com/ROCm/rocAL. The defau
 
 rocAL supports the HIP backend. 
 
-You can choose to use the |setup|_ setup script to install most :doc:`prerequisites <./rocAL-prerequisites>`
+You can choose to use the |setup|_ setup script to install most :doc:`prerequisites <./rocAL-prerequisites>`.
 
 .. note::
   
