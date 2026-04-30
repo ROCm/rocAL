@@ -8,7 +8,7 @@
 rocAL prerequisites
 ********************************************************************
 
-:doc:`Building rocAL from source <./rocAL-build-and-install>` requires CMake Version 3.10 or later, AMD Clang++ Version 18.0.0 or later, and the following compiler support:
+:doc:`Building rocAL from source <./rocAL-build-and-install>` requires CMake 3.10 or later, ``amdclang++`` 18.0.0 or later, and the following compiler support:
 
 * C++17
 * OpenMP

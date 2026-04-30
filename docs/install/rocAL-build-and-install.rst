@@ -10,7 +10,7 @@ Before building and installing rocAL, ensure ROCm is installed.
 
 The rocAL source code is available from https://github.com/ROCm/rocAL. The default develop branch is intended for developers who want to contribute to the rocAL project or who want to preview new features.
 
-rocAL supports the HIP backend. 
+rocAL supports the `HIP backend <https://rocm.docs.amd.com/projects/HIP/en/latest/index.html>`_. 
 
 You can choose to use the |setup|_ setup script to install most :doc:`prerequisites <./rocAL-prerequisites>`.
 
