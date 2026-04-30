@@ -368,9 +368,10 @@ else:
         ERROR_CHECK(os.system('(cd '+deps_dir+'/dlpack; mkdir -p build && cd build; '+linuxCMake+' ..; make -j$(nproc); sudo make install)'))
 
     # RapidJSON - Source TBD: Package install of RapidJSON has compile issues - https://github.com/Tencent/rapidjson.git -- master
-    ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +	
-            linuxCMake+' ../; make -j$(nproc); sudo make install)'))
-    
+    # CMake 4+ rejects cmake_minimum_required < 3.5 in some subtrees. CMAKE_POLICY_VERSION_MINIMUM floors policy version;
+    # RAPIDJSON_BUILD_* skips examples/tests/doc (faster; doc needs graphviz dot).
+    ERROR_CHECK(os.system('(cd '+deps_dir+'; git clone https://github.com/Tencent/rapidjson.git; cd rapidjson; mkdir build; cd build; ' +
+            linuxCMake+' ../ -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DRAPIDJSON_BUILD_EXAMPLES=OFF -DRAPIDJSON_BUILD_TESTS=OFF -DRAPIDJSON_BUILD_DOC=OFF; make -j$(nproc); sudo make install)'))
     # libtar - https://repo.or.cz/libtar.git ; version - v1.2.20
     libtar_version = 'v1.2.20'
     ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
