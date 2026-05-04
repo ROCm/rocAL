@@ -47,6 +47,7 @@ THE SOFTWARE.
 #endif
 #include "pipeline/ring_buffer.h"
 #include "pipeline/timing_debug.h"
+#include "pipeline/random_object_bbox.h"
 #if ENABLE_HIP
 #include "box_encoder_hip.h"
 #include "device/device_manager_hip.h"
@@ -173,6 +174,19 @@ public:
     void get_serialized_checkpoint(size_t &serialized_ckpt_string_size);
     //! Returns the last serialized checkpoint buffer.
     const std::string& get_serialized_checkpoint_string() const { return _serialized_checkpoint; }
+    /*! \brief Set up the ROI random crop operator.
+     * Allocates the output anchor tensor and replicates the crop shape across the batch.
+     * The actual crop position is computed per-iteration in update_roi_random_crop().
+     */
+    Tensor* roi_random_crop(Tensor *input, Tensor *roi_start, Tensor *roi_end, const int *crop_shape);
+
+    /*! \brief Set up the random object bounding box operator.
+     * Creates a RandomObjectBbox instance that identifies connected components in a label
+     * tensor and returns a randomly selected bounding box per sample each iteration.
+     */
+    TensorList* random_object_bbox(Tensor *input, std::string output_format, int k_largest = -1, float foreground_prob=1.0, bool cache_objects=false);
+    /// Recompute per-sample random crop anchors within the ROI region for the current batch.
+    void update_roi_random_crop();
 private:
     Status update_node_parameters();
     //! Populate a Checkpoint object with per-operator state for the current iteration.
@@ -208,7 +222,7 @@ private:
     std::map<std::string, Tensor *> _pipeline_tensors;                        //!< Maps tensor names to tensor pointers during deserialization
     void *_output_tensor_buffer = nullptr;                                        //!< In the GPU processing case , is used to convert the U8 samples to float32 before they are being transfered back to host
     TensorListVector _metadata_output_tensor_list;                                //!< Keeps a list of all the Metadata output TensorList
-    TensorListVector _bbox_encoded_output;                                        //!< Keeps a list of label and bounding box metadata TensorList for box encoder
+    TensorListVector _bbox_encoded_output_tensor_list;                             //!< Keeps a list of label and bounding box metadata TensorList for box encoder
     TensorListVector _webdataset_output_tensor_list;                              //!< Keeps a list of ascii metadata TensorList for the Webdataset reader
     TensorList _labels_tensor_list;
     std::vector<TensorList> _ascii_tensor_list; // TensorList to store the ASCII values of all samples in a batch
@@ -260,6 +274,14 @@ private:
     // box IoU matcher variables
     bool _is_box_iou_matcher = false;                                             // bool variable to set the box iou matcher
     BoxIouMatcherInfo _iou_matcher_info;
+    // ROI random crop variables
+    bool _is_roi_random_crop = false;                          ///< True when the ROI random crop operator is active
+    std::unique_ptr<RandomObjectBbox> _random_object_bbox;     ///< Connected-component random object bbox operator (provides ROI for roi_random_crop)
+    int *_crop_shape_batch = nullptr;                          ///< Per-sample crop dimensions replicated across the batch [batch_size * num_dims]
+    int *_roi_batch = nullptr;                                 ///< Pointer into the input tensor's ROI buffer (begin + end coordinates per sample)
+    Tensor *_roi_random_crop_tensor = nullptr;                 ///< Output tensor holding the computed crop anchor coordinates
+    Tensor *_roi_start_tensor = nullptr;                       ///< Tensor providing per-sample ROI start coordinates
+    Tensor *_roi_end_tensor = nullptr;                         ///< Tensor providing per-sample ROI end coordinates
 #if ENABLE_HIP
     BoxEncoderGpu *_box_encoder_gpu = nullptr;
 #endif

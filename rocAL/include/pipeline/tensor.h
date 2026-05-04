@@ -363,8 +363,10 @@ class Tensor : public rocalTensor {
     size_t get_roi_dims_size() override { return _info.roi().no_of_dims(); }
     vx_tensor get_roi_tensor() { return _vx_roi_handle; }
     // create_from_handle() no internal memory allocation is done here since
-    // tensor's handle should be swapped with external buffers before usage
-    int create_from_handle(vx_context context);
+    // tensor's handle should be swapped with external buffers before usage.
+    // When ptr is non-null, the caller supplies the buffer directly and no
+    // ROI tensor is created (for tensors not used inside the OpenVX graph).
+    int create_from_handle(vx_context context, void *ptr = nullptr);
     int create_virtual(vx_context context, vx_graph graph);
     bool is_handle_set() { return (_vx_handle != 0); }
     void set_dims(std::vector<size_t> dims) override { _info.set_dims(dims); }

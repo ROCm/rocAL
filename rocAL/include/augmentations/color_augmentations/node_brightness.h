@@ -31,8 +31,8 @@ class BrightnessNode : public Node {
     BrightnessNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     BrightnessNode() = delete;
 
-    void init(float alpha, float beta);
-    void init(FloatParam *alpha_param, FloatParam *beta_param);
+    void init(float alpha, float beta, int conditional_execution);
+    void init(FloatParam *alpha_param, FloatParam *beta_param, IntParam *conditional_execution);
     void initialize_args(const ArgumentSet& arguments) override;
     std::string node_name() const override { return "BrightnessNode"; }
 
@@ -43,6 +43,8 @@ class BrightnessNode : public Node {
    private:
     ParameterVX<float> _alpha;
     ParameterVX<float> _beta;
+    ParameterVX<int> _conditional_execution;  ///< Per-sample flag controlling whether the augmentation is applied (1) or bypassed (0)
     constexpr static float ALPHA_RANGE[2] = {0.1, 1.95};
     constexpr static float BETA_RANGE[2] = {0, 25};
+    constexpr static int CONDITIONAL_EXECUTION_RANGE[2] = {0, 1};  ///< Valid range for conditional execution flag: 0 = skip, 1 = execute
 };

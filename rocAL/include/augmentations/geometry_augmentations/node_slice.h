@@ -30,14 +30,23 @@ class SliceNode : public Node {
    public:
     SliceNode(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs);
     SliceNode() = delete;
+    ~SliceNode();
+    void init(Tensor *anchor_param, const std::vector<int> &shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
     void init(Tensor *anchor_param, Tensor *shape_param, std::vector<float> &fill_values_param, OutOfBoundsPolicy policy);
 
    protected:
     void create_node() override;
     void update_node() override;
+    /// Allocate and create a vx_tensor from _shape_vec for the fixed-shape path.
+    void create_shape_tensor();
 
    private:
-    Tensor *_anchor, *_shape;
-    std::vector<float> _fill_values, _fill_values_vec;
-    OutOfBoundsPolicy _policy = OutOfBoundsPolicy::ERROR;
+    void *_shape_array = nullptr;              ///< Raw host/pinned buffer holding the per-sample shape values (fixed-shape mode)
+    Tensor *_anchor = nullptr;                 ///< Tensor providing per-sample anchor (starting) coordinates
+    Tensor *_shape_tensor = nullptr;           ///< External Tensor providing per-sample shape (tensor-shape mode)
+    vx_tensor _shape_tensor_handle = nullptr;  ///< OpenVX tensor handle wrapping _shape_array (fixed-shape mode)
+    std::vector<float> _fill_values, _fill_values_vec;  ///< Fill values for out-of-bounds padding, expanded to batch size
+    std::vector<int> _shape_vec;               ///< Fixed shape dimensions (excluding batch), used when _use_shape_tensor is false
+    bool _use_shape_tensor = false;            ///< Selects between fixed-shape (false) and tensor-shape (true) modes
+    OutOfBoundsPolicy _policy = OutOfBoundsPolicy::ERROR;  ///< Policy for handling out-of-bounds regions
 };

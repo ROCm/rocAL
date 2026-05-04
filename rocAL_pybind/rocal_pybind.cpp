@@ -909,6 +909,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
         int *ptr = static_cast<int *>(buf.ptr);
         rocalGetImageSizes(context, ptr);
     });
+    m.def("roiRandomCrop", &rocalROIRandomCrop, py::return_value_policy::reference);
+    m.def("randomObjectBbox", &rocalRandomObjectBbox, py::return_value_policy::reference);
     m.def("getROIImgSizes", [](RocalContext context, py::array_t<int> array) {
         auto buf = array.request();
         int *ptr = static_cast<int *>(buf.ptr);
@@ -1278,6 +1280,8 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection,
           py::return_value_policy::reference);
     m.def("slice", &rocalSlice,
+          py::return_value_policy::reference);
+    m.def("sliceFixed", &rocalSliceFixed,
           py::return_value_policy::reference);
     m.def("normalize", &rocalNormalize,
           py::return_value_policy::reference);

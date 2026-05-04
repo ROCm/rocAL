@@ -313,7 +313,7 @@ int Tensor::create_virtual(vx_context context, vx_graph graph) {
     return 0;
 }
 
-int Tensor::create_from_handle(vx_context context) {
+int Tensor::create_from_handle(vx_context context, void *ptr) {
     if (_vx_handle) {
         WRN("Tensor object create method is already called ")
         return -1;
@@ -323,19 +323,32 @@ int Tensor::create_from_handle(vx_context context) {
     vx_enum tensor_data_type = interpret_tensor_data_type(_info.data_type());
     unsigned num_of_dims = _info.num_of_dims();
     std::vector<vx_size> stride(num_of_dims);
-    void *ptr[1] = {nullptr};
 
     stride[0] = tensor_data_size(_info.data_type());
     for (unsigned i = 1; i < num_of_dims; i++)
         stride[i] = stride[i - 1] * _info.dims().at(i - 1);
 
-    _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride.data(), ptr, vx_mem_type(_info._mem_type));
-    vx_status status;
-    if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
-        THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
-    _info._type = TensorInfo::Type::HANDLE;
-    void *roi_handle = reinterpret_cast<void *>(_info.roi().get_ptr());
-    create_roi_tensor_from_handle(&roi_handle);  // Create ROI tensor from handle
+    if (ptr) {
+        // Caller supplies an externally owned buffer directly; no ROI tensor
+        // is created since these tensors are not used inside the OpenVX graph.
+        _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride.data(), ptr, vx_mem_type(_info._mem_type));
+        vx_status status;
+        if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
+            THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
+        _info._type = TensorInfo::Type::HANDLE;
+        _mem_handle = ptr;
+    } else {
+        // No buffer supplied: tensor handle must be swapped with an external
+        // buffer before use. A ROI tensor is created to carry metadata.
+        void *null_ptr[1] = {nullptr};
+        _vx_handle = vxCreateTensorFromHandle(_context, _info.num_of_dims(), _info.dims().data(), tensor_data_type, 0, stride.data(), null_ptr, vx_mem_type(_info._mem_type));
+        vx_status status;
+        if ((status = vxGetStatus((vx_reference)_vx_handle)) != VX_SUCCESS)
+            THROW("Error: vxCreateTensorFromHandle(input: failed " + TOSTR(status))
+        _info._type = TensorInfo::Type::HANDLE;
+        void *roi_handle = reinterpret_cast<void *>(_info.roi().get_ptr());
+        create_roi_tensor_from_handle(&roi_handle);
+    }
     return 0;
 }
 

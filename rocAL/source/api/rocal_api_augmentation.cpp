@@ -709,15 +709,17 @@ rocalBrightness(
     bool is_output,
     RocalFloatParam p_alpha,
     RocalFloatParam p_beta,
+    RocalIntParam conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto alpha = static_cast<FloatParam*>(p_alpha);
     auto beta = static_cast<FloatParam*>(p_beta);
+    auto conditional_execution_value = static_cast<IntParam*>(conditional_execution);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -725,7 +727,7 @@ rocalBrightness(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta, conditional_execution_value);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -739,10 +741,11 @@ rocalBrightnessFixed(
     float alpha,
     float beta,
     bool is_output,
+    int conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
@@ -753,7 +756,7 @@ rocalBrightnessFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta);
+        context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta, conditional_execution);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1144,19 +1147,17 @@ rocalGaussianNoise(
     RocalFloatParam p_mean,
     RocalFloatParam p_stddev,
     int seed,
+    RocalIntParam conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
-#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
-    THROW("rocalGaussianNoise requires vx_rpp version >= 3.1.5");
-    return nullptr;
-#endif
     Tensor* output = nullptr;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto mean = static_cast<FloatParam*>(p_mean);
     auto stddev = static_cast<FloatParam*>(p_stddev);
+    auto conditional_execution_value = static_cast<IntParam*>(conditional_execution);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
@@ -1166,7 +1167,7 @@ rocalGaussianNoise(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, stddev, seed);
+        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, stddev, seed, conditional_execution_value);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1181,14 +1182,11 @@ rocalGaussianNoiseFixed(
     float mean,
     float stddev,
     int seed,
+    int conditional_execution,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
-#if !VX_EXT_RPP_CHECK_VERSION(3, 1, 5)
-    THROW("rocalGaussianNoiseFixed requires vx_rpp version >= 3.1.5");
-    return nullptr;
-#endif
     Tensor* output = nullptr;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
@@ -1201,7 +1199,7 @@ rocalGaussianNoiseFixed(
         output_info.set_tensor_layout(op_tensor_layout);
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
-        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, stddev, seed);
+        context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, stddev, seed, conditional_execution);
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1517,15 +1515,17 @@ rocalFlip(
     bool is_output,
     RocalIntParam p_horizontal_flag,
     RocalIntParam p_vertical_flag,
+    RocalIntParam p_depth_flag,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto horizontal_flag = static_cast<IntParam*>(p_horizontal_flag);
     auto vertical_flag = static_cast<IntParam*>(p_vertical_flag);
+    auto depth_flag = static_cast<IntParam*>(p_depth_flag);
     try {
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
@@ -1534,7 +1534,7 @@ rocalFlip(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<FlipNode> flip_node = context->master_graph->add_node<FlipNode>({input}, {output});
-        flip_node->init(horizontal_flag, vertical_flag);
+        flip_node->init(horizontal_flag, vertical_flag, depth_flag);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<FlipMetaNode, FlipNode>(flip_node);
     } catch (const std::exception& e) {
@@ -1550,10 +1550,11 @@ rocalFlipFixed(
     int horizontal_flag,
     int vertical_flag,
     bool is_output,
+    int depth_flag,
     RocalTensorLayout output_layout,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
@@ -1565,7 +1566,7 @@ rocalFlipFixed(
         output_info.set_data_type(op_tensor_datatype);
         output = context->master_graph->create_tensor(output_info, is_output);
         std::shared_ptr<FlipNode> flip_node = context->master_graph->add_node<FlipNode>({input}, {output});
-        flip_node->init(horizontal_flag, vertical_flag);
+        flip_node->init(horizontal_flag, vertical_flag, depth_flag);
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<FlipMetaNode, FlipNode>(flip_node);
     } catch (const std::exception& e) {
@@ -3027,8 +3028,10 @@ rocalSlice(
     RocalOutOfBoundsPolicy policy,
     RocalTensorOutputType output_datatype) {
     Tensor* output = nullptr;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
+    ROCAL_INVALID_INPUT_ERR(p_anchor, output);
+    ROCAL_INVALID_INPUT_ERR(p_shape, output);
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     auto anchor = static_cast<Tensor*>(p_anchor);
@@ -3040,6 +3043,52 @@ rocalSlice(
         output_info.set_max_shape();
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values, static_cast<OutOfBoundsPolicy>(policy));
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
+}
+
+RocalTensor ROCAL_API_CALL
+rocalSliceFixed(
+    RocalContext p_context,
+    RocalTensor p_input,
+    bool is_output,
+    RocalTensor p_anchor,
+    std::vector<int> shape,
+    std::vector<float> fill_values,
+    RocalOutOfBoundsPolicy policy,
+    RocalTensorOutputType output_datatype) {
+#if !VX_EXT_RPP_CHECK_VERSION(3, 3, 1)
+    THROW("rocalSliceFixed requires vx_rpp version >= 3.3.1");
+    return nullptr;
+#endif
+    Tensor* output = nullptr;
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    ROCAL_INVALID_INPUT_ERR(p_anchor, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto anchor = static_cast<Tensor*>(p_anchor);
+    try {
+        RocalTensorDataType op_tensor_datatype = static_cast<RocalTensorDataType>(output_datatype);
+        TensorInfo output_info = input->info();
+        output_info.set_data_type(op_tensor_datatype);
+
+        if (shape.empty())
+            THROW("SliceFixed node expects a non-empty shape vector");
+        auto output_dims = output_info.dims();
+        if (shape.size() != (output_dims.size() - 1))
+            THROW("SliceFixed shape vector must match the input tensor dimensions (excluding batch)");
+        for (size_t i = 0; i < shape.size(); i++) {
+            if (shape[i] <= 0)
+                THROW("SliceFixed shape dimensions must be positive");
+            output_dims[i + 1] = static_cast<size_t>(shape[i]);
+        }
+        output_info.set_dims(output_dims);
+
+        output = context->master_graph->create_tensor(output_info, is_output);
+        context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, std::move(shape), fill_values, static_cast<OutOfBoundsPolicy>(policy));
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

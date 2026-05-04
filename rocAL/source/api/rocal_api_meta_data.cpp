@@ -498,3 +498,37 @@ RocalTensorList
     auto context = static_cast<Context*>(p_context);
     return context->master_graph->matched_index_meta_data();
 }
+
+RocalTensor
+    ROCAL_API_CALL
+    rocalROIRandomCrop(RocalContext p_context, RocalTensor p_input, RocalTensor roi_start, RocalTensor roi_end, const std::vector<int> &crop_shape) {
+    RocalTensor output = nullptr;
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    if ((roi_start == nullptr) || (roi_end == nullptr)) {
+        ERR("Invalid ROI tensor(s)")
+        return output;
+    }
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    auto roi_start_tensor = static_cast<Tensor*>(roi_start);
+    auto roi_end_tensor = static_cast<Tensor*>(roi_end);
+    auto input_dims = input->info().is_image() ? input->num_of_dims() - 2 : input->num_of_dims() - 1;
+    // Validate crop_shape.size() == input_dims
+    if (crop_shape.size() != input_dims) {
+        ERR("Crop shape size " + TOSTR(crop_shape.size()) + " does not match input dimensions " + TOSTR(input_dims))
+        return output;
+    }
+    return context->master_graph->roi_random_crop(input, roi_start_tensor, roi_end_tensor, crop_shape.data());
+}
+
+RocalTensorList
+    ROCAL_API_CALL
+    rocalRandomObjectBbox(RocalContext p_context, RocalTensor p_input, std::string output_format, int k_largest, float foreground_prob, bool cache_objects) {
+    RocalTensorList output = nullptr;
+    ROCAL_INVALID_INPUT_ERR(p_context, output);
+    ROCAL_INVALID_INPUT_ERR(p_input, output);
+    auto context = static_cast<Context*>(p_context);
+    auto input = static_cast<Tensor*>(p_input);
+    return context->master_graph->random_object_bbox(input, output_format, k_largest, foreground_prob, cache_objects);
+}
