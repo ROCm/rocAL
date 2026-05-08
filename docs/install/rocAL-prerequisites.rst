@@ -8,17 +8,7 @@
 rocAL prerequisites
 ********************************************************************
 
-rocAL requires ROCm running on `GPUs based on the CDNA architecture <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_ installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/docs-6.4.1/install/install-methods/amdgpu-installer-index.html>`_.
-
-rocAL has been tested on the following Linux environments:
-  
-* Ubuntu 22.04 and 24.04
-* RHEL 8 and 9
-* SLES 15 SP7
-
-See `Supported operating systems <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-operating-systems>`_ for the complete list of ROCm supported Linux environments.
-
-:doc:`Building rocAL from source <./rocAL-build-and-install>` requires CMake Version 3.10 or later, AMD Clang++ Version 18.0.0 or later, and the following compiler support:
+:doc:`Building rocAL from source <./rocAL-build-and-install>` requires CMake 3.10 or later, ``amdclang++`` 18.0.0 or later, and the following compiler support:
 
 * C++17
 * OpenMP
@@ -26,7 +16,7 @@ See `Supported operating systems <https://rocm.docs.amd.com/projects/install-on-
 
 Most prerequisites are installed with the :doc:`package installer <./rocAL-package-install>`. 
 
-When building rocAL from source, the |setup| setup script can be used to install prerequisites:
+When building rocAL from source, the |setup|_ setup script can be used to install prerequisites:
 
 .. code:: shell
   
