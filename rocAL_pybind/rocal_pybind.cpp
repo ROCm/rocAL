@@ -886,10 +886,12 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     m.def("setOutputs", &rocalSetOutputs);
     m.def("tfReader", &rocalCreateTFReader, py::return_value_policy::reference);
     m.def("tfReaderDetection", &rocalCreateTFReaderDetection, py::return_value_policy::reference);
+#ifdef ROCAL_LMDB
     m.def("caffeReader", &rocalCreateCaffeLMDBLabelReader, py::return_value_policy::reference);
     m.def("caffe2Reader", &rocalCreateCaffe2LMDBLabelReader, py::return_value_policy::reference);
     m.def("caffeReaderDetection", &rocalCreateCaffeLMDBReaderDetection, py::return_value_policy::reference);
     m.def("caffe2ReaderDetection", &rocalCreateCaffe2LMDBReaderDetection, py::return_value_policy::reference);
+#endif
     m.def("mxnetReader", &rocalCreateMXNetReader, py::return_value_policy::reference);
     m.def("webDatasetReader", &rocalCreateWebDatasetReader, py::return_value_policy::reference);
     m.def("isEmpty", &rocalIsEmpty);
@@ -1108,6 +1110,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("tfImageDecoder", &rocalJpegTFRecordSource, "Reads file from the source given and decodes it according to the policy only for TFRecords",
           py::return_value_policy::reference);
+#ifdef ROCAL_LMDB
     m.def("caffeImageDecoder", &rocalJpegCaffeLMDBRecordSource, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
     m.def("caffeImageDecoderShard", &rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
@@ -1120,6 +1123,7 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
           py::return_value_policy::reference);
     m.def("caffe2ImageDecoderPartialShard", &rocalJpegCaffe2LMDBRecordSourcePartialSingleShard, "Reads file from the source given and partially decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
+#endif
     m.def("fusedDecoderCrop", &rocalFusedJpegCrop, "Reads file from the source and decodes them partially to output random crops",
           py::return_value_policy::reference);
     m.def("fusedDecoderCropShard", &rocalFusedJpegCropSingleShard, "Reads file from the source and decodes them partially to output random crops",

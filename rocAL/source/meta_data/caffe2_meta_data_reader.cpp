@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ROCAL_LMDB
 #include "meta_data/caffe2_meta_data_reader.h"
 
 #include <google/protobuf/message_lite.h>
@@ -168,3 +169,4 @@ void Caffe2MetaDataReader::release() {
 
 Caffe2MetaDataReader::Caffe2MetaDataReader() {
 }
+#endif  // ROCAL_LMDB

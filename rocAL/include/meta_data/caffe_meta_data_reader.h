@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#ifdef ROCAL_LMDB
 #include <dirent.h>
 #include <lmdb.h>
 
@@ -63,3 +64,4 @@ class CaffeMetaDataReader : public MetaDataReader {
     MDB_txn* _mdb_txn;
     MDB_cursor* _mdb_cursor;
 };
+#endif  // ROCAL_LMDB

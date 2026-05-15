@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ROCAL_LMDB
 #include <iostream>
 #include <fstream>
 #include <utility>
@@ -186,3 +187,4 @@ void CaffeMetaDataReaderDetection::release() {
 
 CaffeMetaDataReaderDetection::CaffeMetaDataReaderDetection() {
 }
+#endif  // ROCAL_LMDB

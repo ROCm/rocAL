@@ -175,10 +175,11 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
-# LMDB
-if(NOT LMDB_FOUND)
-    set(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires LMDB, Not Found ${ColourReset}")	
+# LMDB (optional)
+if(LMDB_FOUND)
+    message("-- ${White}rocAL built with LMDB - Caffe/Caffe2 LMDB reader support enabled${ColourReset}")
+else()
+    message("-- ${Yellow}NOTE: rocAL built without LMDB - Caffe/Caffe2 LMDB readers will not be supported${ColourReset}")
 endif()
 # RapidJSON
 if(NOT RapidJSON_FOUND)
@@ -211,9 +212,11 @@ if(${BUILD_ROCAL})
     # Protobuf
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
-    # LMDB
-    include_directories(${LMDB_INCLUDE_DIRS})	
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})	
+    # LMDB (optional)
+    if(LMDB_FOUND)
+        include_directories(${LMDB_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})
+    endif()	
     # RapidJSON
     include_directories(${RapidJSON_INCLUDE_DIRS})
     # Filesystem
@@ -342,6 +345,11 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     else()
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
+    endif()
+
+    # LMDB (optional)
+    if(LMDB_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_LMDB)
     endif()
 
     # LibTar
