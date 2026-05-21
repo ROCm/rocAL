@@ -178,8 +178,10 @@ export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=0  # disabled
 export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=1  # enabled
 ```
 
-`run_tests_twice_solution_on_off.sh` sets this internally for the relevant
-benchmark cases.
+The rocJPEG dedicated OpenMP split path is enabled by default. Set
+`ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=0` to restore the previous single-decoder
+rocJPEG path. `run_tests_twice_solution_on_off.sh` sets this internally for the
+relevant benchmark cases so the old and new behavior can be compared directly.
 
 ## Build Notes
 
@@ -187,6 +189,10 @@ If this folder is added under `tests/cpp_api/rocjpeg_decode_perf/`, keep it as a
 separate CMake target. Do not place `perf_sharded_launcher.cpp` inside existing
 folders such as `performance_tests/` or `dataloader_multithread/`, because those
 folders glob `*.cpp` files into a single executable.
+
+This harness is manual/performance-oriented and is not wired into the regular
+CTest flow. It is intended for explicit developer or PR-reviewer runs on systems
+with the needed dataset, rocAL build, rocJPEG build, and GPU configuration.
 
 Suggested minimal CMake target:
 
@@ -203,6 +209,10 @@ target_link_libraries(perf_sharded_launcher pthread)
 
 If installing this with rocAL test assets, include the shell and Python files as
 test support files rather than compiling them.
+
+This rocAL PR includes the rocAL-side changes only. Any rocJPEG decoder creation
+logging patch that targets `src/rocjpeg_decoder.cpp` belongs in the rocJPEG repo
+and is not included here.
 
 ## Typical Workflow
 
