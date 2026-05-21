@@ -83,6 +83,9 @@ class ImageReadAndDecode {
    private:
     std::vector<std::shared_ptr<Decoder>> _decoder;
     std::shared_ptr<Decoder> _rocjpeg_decoder;
+    std::vector<std::shared_ptr<Decoder>> _rocjpeg_decoders;
+    std::vector<size_t> _rocjpeg_sub_batch_sizes;
+    bool _use_rocjpeg_dedicated_omp_split = true;
     std::shared_ptr<Reader> _reader;
     std::vector<std::vector<unsigned char>> _compressed_buff;
     std::vector<size_t> _actual_read_size;
