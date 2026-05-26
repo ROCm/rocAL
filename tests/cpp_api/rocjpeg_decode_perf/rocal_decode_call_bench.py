@@ -68,10 +68,14 @@ def effective_batch_size(args):
     return args.batch_size * rocjpeg_decoder_threads
 
 
-def count_files(path):
+def is_jpeg_file(filename):
+    return os.path.splitext(filename)[1].lower() in (".jpg", ".jpeg")
+
+
+def count_jpeg_files(path):
     total = 0
     for _, _, files in os.walk(path, followlinks=True):
-        total += len(files)
+        total += sum(1 for filename in files if is_jpeg_file(filename))
     return total
 
 
@@ -107,6 +111,12 @@ def add_timing_info(total, batch_info):
     for key, value in batch_info.items():
         total[key] = total.get(key, 0) + value
     return total
+
+
+def decoded_image_count_from_timing(timing_info):
+    rocjpeg_count = timing_info.get("rocjpeg_decode_image_count", 0)
+    turbojpeg_count = timing_info.get("turbojpeg_decode_image_count", 0)
+    return rocjpeg_count + turbojpeg_count
 
 
 def run_one_shard(args, shard_id, num_shards, device_id, total_files):
@@ -167,7 +177,9 @@ def run_one_shard(args, shard_id, num_shards, device_id, total_files):
         extract_timing_info(pipe),
     )
 
-    decoded_images = shard_file_count if shard_file_count >= 0 else total_files
+    decoded_images = decoded_image_count_from_timing(accumulated_timing_info)
+    if decoded_images <= 0:
+        decoded_images = shard_file_count if shard_file_count >= 0 else total_files
 
     avg_time_per_image_ms = 0.0
     images_per_sec = 0.0
@@ -239,7 +251,7 @@ def print_multi_gpu_summary(results):
 def main():
     args = parse_args()
 
-    total_files = args.total_files_on_disk if args.total_files_on_disk >= 0 else count_files(args.path)
+    total_files = args.total_files_on_disk if args.total_files_on_disk >= 0 else count_jpeg_files(args.path)
     num_shards = max(1, args.num_shards)
     num_gpus = max(1, args.num_gpus)
 
@@ -247,11 +259,12 @@ def main():
         run_one_shard(args, 0, 1, args.device_id, total_files)
         return
 
+    mp_context = mp.get_context("spawn")
     workers = []
-    queue = mp.Queue()
+    queue = mp_context.Queue()
     for shard_id in range(num_shards):
         device_id = args.device_id + (shard_id % num_gpus)
-        process = mp.Process(
+        process = mp_context.Process(
             target=run_worker,
             args=(args, shard_id, num_shards, device_id, total_files, queue),
         )

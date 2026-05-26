@@ -1,11 +1,14 @@
 #include <algorithm>
 #include <cerrno>
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -13,12 +16,105 @@
 
 namespace fs = std::filesystem;
 
+static const char* kWorkDirMarker = ".rocjpeg_decode_perf_workdir";
+
 static bool is_jpeg(const fs::path& path) {
     std::string ext = path.extension().string();
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
     });
     return ext == ".jpg" || ext == ".jpeg";
+}
+
+static std::string sanitized_relative_name(const fs::path& dataset_dir, const fs::path& path, size_t index) {
+    std::error_code ec;
+    fs::path relative_path = fs::relative(path, dataset_dir, ec);
+    if (ec || relative_path.empty()) {
+        relative_path = path.filename();
+    }
+
+    std::string name = relative_path.generic_string();
+    for (char& c : name) {
+        const bool safe_char = std::isalnum(static_cast<unsigned char>(c)) ||
+                               c == '.' || c == '-' || c == '_';
+        if (!safe_char) {
+            c = '_';
+        }
+    }
+
+    std::ostringstream stream;
+    stream << std::setw(12) << std::setfill('0') << index << "_" << name;
+    return stream.str();
+}
+
+static bool prepare_work_dir(const fs::path& work_dir) {
+    if (work_dir.empty()) {
+        std::cerr << "work_dir must not be empty\n";
+        return false;
+    }
+
+    const fs::path absolute_work_dir = fs::absolute(work_dir).lexically_normal();
+    if (absolute_work_dir == absolute_work_dir.root_path()) {
+        std::cerr << "Refusing to use filesystem root as work_dir: "
+                  << absolute_work_dir << "\n";
+        return false;
+    }
+
+    std::error_code ec;
+    if (fs::is_symlink(fs::symlink_status(absolute_work_dir, ec))) {
+        std::cerr << "Refusing to use symlink as work_dir: "
+                  << absolute_work_dir << "\n";
+        return false;
+    }
+
+    const fs::path marker_path = absolute_work_dir / kWorkDirMarker;
+    if (fs::exists(absolute_work_dir)) {
+        if (!fs::is_directory(absolute_work_dir)) {
+            std::cerr << "work_dir exists but is not a directory: "
+                      << absolute_work_dir << "\n";
+            return false;
+        }
+
+        const bool has_marker = fs::exists(marker_path);
+        const bool is_empty = fs::is_empty(absolute_work_dir, ec);
+        if (ec) {
+            std::cerr << "Failed to inspect work_dir: " << absolute_work_dir
+                      << " error: " << ec.message() << "\n";
+            return false;
+        }
+
+        if (!has_marker && !is_empty) {
+            std::cerr << "Refusing to delete non-empty work_dir without marker "
+                      << marker_path << "\n";
+            return false;
+        }
+
+        if (has_marker) {
+            fs::remove_all(absolute_work_dir, ec);
+            if (ec) {
+                std::cerr << "Failed to remove work_dir: " << absolute_work_dir
+                          << " error: " << ec.message() << "\n";
+                return false;
+            }
+        }
+    }
+
+    fs::create_directories(absolute_work_dir, ec);
+    if (ec) {
+        std::cerr << "Failed to create work_dir: " << absolute_work_dir
+                  << " error: " << ec.message() << "\n";
+        return false;
+    }
+
+    FILE* marker_file = std::fopen(marker_path.c_str(), "w");
+    if (!marker_file) {
+        std::cerr << "Failed to create marker file: " << marker_path
+                  << " error: " << std::strerror(errno) << "\n";
+        return false;
+    }
+    std::fclose(marker_file);
+
+    return true;
 }
 
 static void usage(const char* prog) {
@@ -76,9 +172,16 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    fs::remove_all(work_dir);
-    fs::create_directories(work_dir);
-    fs::create_directories(log_dir);
+    if (!prepare_work_dir(work_dir)) {
+        return 1;
+    }
+    std::error_code log_ec;
+    fs::create_directories(log_dir, log_ec);
+    if (log_ec) {
+        std::cerr << "Failed to create log_dir: " << log_dir
+                  << " error: " << log_ec.message() << "\n";
+        return 1;
+    }
 
     std::vector<int> shard_counts(num_gpus, 0);
 
@@ -88,8 +191,7 @@ int main(int argc, char** argv) {
         fs::create_directories(shard_dir);
 
         const fs::path src = files[i];
-        const std::string link_name =
-            src.parent_path().filename().string() + "_" + src.filename().string();
+        const std::string link_name = sanitized_relative_name(dataset_dir, src, i);
         const fs::path dst = shard_dir / link_name;
 
         std::error_code ec;
@@ -107,6 +209,7 @@ int main(int argc, char** argv) {
     for (int gpu = 0; gpu < num_gpus; ++gpu) {
         std::cout << "GPU " << gpu << " shard files: " << shard_counts[gpu] << "\n";
     }
+    std::cout.flush();
 
     std::vector<pid_t> pids;
 
@@ -153,6 +256,7 @@ int main(int argc, char** argv) {
 
         std::cout << "Launched GPU " << gpu << " pid " << pid
                   << " log " << log_path << "\n";
+        std::cout.flush();
     }
 
     int failures = 0;

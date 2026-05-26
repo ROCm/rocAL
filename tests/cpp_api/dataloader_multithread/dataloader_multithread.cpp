@@ -250,6 +250,12 @@ int main(int argc, const char **argv) {
     if (argc > argIdx)
         cpu_thread_count = atoi(argv[argIdx++]);
 
+    if (cpu_thread_count < 1) {
+        std::cout << "Invalid cpu_thread_count " << cpu_thread_count
+                  << ", using 1" << std::endl;
+        cpu_thread_count = 1;
+    }
+
     std::cout << "Number of GPUs: " << num_gpus << std::endl;
 
     // launch threads process shards
