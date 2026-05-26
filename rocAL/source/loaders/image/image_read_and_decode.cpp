@@ -23,13 +23,27 @@ THE SOFTWARE.
 #include "loaders/image/image_read_and_decode.h"
 
 #include <algorithm>
+#include <cctype>
 #include <omp.h>
 #include <cstdlib>
 #include <cstring>
 #include <iterator>
+#include <string>
 
 #include "decoders/image/decoder_factory.h"
 #include "readers/image/external_source_reader.h"
+
+static bool env_flag_disabled(const char* name) {
+    const char* value = std::getenv(name);
+    if (!value || value[0] == '\0')
+        return false;
+
+    std::string text(value);
+    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return text == "0" || text == "no";
+}
 
 std::tuple<Decoder::ColorFormat, unsigned>
 interpret_color_format(RocalColorFormat color_format) {
@@ -94,13 +108,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
             for (int i = 0; i < batch_size; i++) {
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             }
-            const char *rocjpeg_omp_split_env = std::getenv("ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT");
-            _use_rocjpeg_dedicated_omp_split = !(rocjpeg_omp_split_env &&
-                                                 (std::strcmp(rocjpeg_omp_split_env, "0") == 0 ||
-                                                  std::strcmp(rocjpeg_omp_split_env, "OFF") == 0 ||
-                                                  std::strcmp(rocjpeg_omp_split_env, "off") == 0 ||
-                                                  std::strcmp(rocjpeg_omp_split_env, "FALSE") == 0 ||
-                                                  std::strcmp(rocjpeg_omp_split_env, "false") == 0));
+            _use_rocjpeg_dedicated_omp_split = !env_flag_disabled("ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT");
             if (_use_rocjpeg_dedicated_omp_split) {
                 const size_t rocjpeg_decoder_count = std::min(static_cast<size_t>(batch_size), std::max(static_cast<size_t>(1), std::min(static_cast<size_t>(4), _num_threads)));
                 _rocjpeg_decoders.resize(rocjpeg_decoder_count);
@@ -314,7 +322,9 @@ ImageReadAndDecode::load(unsigned char *buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-        if (_decoder_config._type != DecoderType::ROCJPEG && _decoder_config._type != DecoderType::ROCJPEG_CROPPED) {
+        const bool is_rocjpeg_decoder = _decoder_config._type == DecoderType::ROCJPEG ||
+                                        _decoder_config._type == DecoderType::ROCJPEG_CROPPED;
+        if (!is_rocjpeg_decoder) {
 #pragma omp parallel for num_threads(_num_threads)
             for (size_t i = 0; i < _batch_size; i++) {
                 // initialize the actual decoded height and width with the maximum
@@ -363,7 +373,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = scaledw;
                 _actual_decoded_height[i] = scaledh;
             }
-        } else if (_decoder_config._type == DecoderType::ROCJPEG || _decoder_config._type == DecoderType::ROCJPEG_CROPPED) {
+        } else {
 #if ENABLE_HIP
             // Set device ID for load routine thread once
             if (!_set_device_id) {
@@ -384,6 +394,7 @@ ImageReadAndDecode::load(unsigned char *buff,
 #pragma omp parallel for num_threads(rocjpeg_decoder_threads)
                 for (size_t shard = 0; shard < _rocjpeg_decoders.size(); shard++) {
 #if ENABLE_HIP
+                    // HIP current device is thread-local; set it for each OpenMP worker.
                     hipError_t hip_status = hipSetDevice(_device_id);
                     if (hip_status != hipSuccess) {
                         THROW("hipSetDevice failed inside rocJPEG shard worker");
