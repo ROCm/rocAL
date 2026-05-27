@@ -65,8 +65,10 @@ export DATASET_LABEL=ImageNet
 Python rocAL benchmark for exercising `fn.readers.file` and
 `fn.decoders.image`. It can run one shard in-process or launch one worker
 process per shard for multi-GPU tests. The script prints total decoded image
-count, total processing time, average per-image time, and rocAL internal timing
-fields when available.
+count derived from the filtered `.jpg` / `.jpeg` files assigned to each shard,
+total processing time, average per-image time, and rocAL internal timing fields
+when available. The public rocAL `TimingInfo` API is used for timing values;
+image-count reporting comes from the dataset file count, following symlinks.
 
 Expected usage:
 

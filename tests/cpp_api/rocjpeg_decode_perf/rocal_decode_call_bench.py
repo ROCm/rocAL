@@ -96,10 +96,6 @@ def extract_timing_info(pipe):
         "decode_time",
         "process_time",
         "transfer_time",
-        "rocjpeg_decode_only_time",
-        "turbojpeg_decode_only_time",
-        "rocjpeg_decode_image_count",
-        "turbojpeg_decode_image_count",
     ]:
         if hasattr(info, field):
             timing[field] = getattr(info, field)
@@ -111,12 +107,6 @@ def add_timing_info(total, batch_info):
     for key, value in batch_info.items():
         total[key] = total.get(key, 0) + value
     return total
-
-
-def decoded_image_count_from_timing(timing_info):
-    rocjpeg_count = timing_info.get("rocjpeg_decode_image_count", 0)
-    turbojpeg_count = timing_info.get("turbojpeg_decode_image_count", 0)
-    return rocjpeg_count + turbojpeg_count
 
 
 def run_one_shard(args, shard_id, num_shards, device_id, total_files):
@@ -177,9 +167,7 @@ def run_one_shard(args, shard_id, num_shards, device_id, total_files):
         extract_timing_info(pipe),
     )
 
-    decoded_images = decoded_image_count_from_timing(accumulated_timing_info)
-    if decoded_images <= 0:
-        decoded_images = shard_file_count if shard_file_count >= 0 else total_files
+    decoded_images = shard_file_count if shard_file_count >= 0 else total_files
 
     avg_time_per_image_ms = 0.0
     images_per_sec = 0.0

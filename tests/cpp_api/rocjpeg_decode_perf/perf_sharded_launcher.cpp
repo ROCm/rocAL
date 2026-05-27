@@ -156,14 +156,14 @@ int main(int argc, char** argv) {
     }
 
     std::vector<fs::path> files;
-	const auto options = fs::directory_options::follow_directory_symlink;
+    const auto options = fs::directory_options::follow_directory_symlink;
 
-	for (const auto& entry : fs::recursive_directory_iterator(dataset_dir, options)) {
-		std::error_code ec;
-		if (fs::is_regular_file(entry.status(ec)) && !ec && is_jpeg(entry.path())) {
-			files.push_back(entry.path());
-		}
-	}
+    for (const auto& entry : fs::recursive_directory_iterator(dataset_dir, options)) {
+        std::error_code ec;
+        if (fs::is_regular_file(entry.status(ec)) && !ec && is_jpeg(entry.path())) {
+            files.push_back(entry.path());
+        }
+    }
 
     std::sort(files.begin(), files.end());
 
