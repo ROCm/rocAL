@@ -241,7 +241,7 @@ rocmRPMPackages = [
 coreDebianPackages = [
     'nasm',
     'yasm',
-    'liblmdb-dev',
+    #'liblmdb-dev',  # optional: needed for Caffe/Caffe2 LMDB reader support
     #'rapidjson-dev',
     'libsndfile1-dev', # for audio features
     'python3-dev',
@@ -266,7 +266,7 @@ if "centos-8" in platformInfo:
 coreRPMPackages = [
     'nasm',
     'yasm',
-    'lmdb-devel',
+    #'lmdb-devel',  # optional: needed for Caffe/Caffe2 LMDB reader support
     'jsoncpp-devel',
     #'rapidjson-devel',
     str(libsndFile), # for audio features

@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ROCAL_LMDB
 #include "readers/image/caffe_lmdb_record_reader.h"
 
 #include "pipeline/commons.h"
@@ -260,3 +261,4 @@ void CaffeLMDBRecordReader::read_image(unsigned char *buff, std::string file_nam
     mdb_cursor_close(_read_mdb_cursor);
     _read_mdb_cursor = nullptr;
 }
+#endif  // ROCAL_LMDB

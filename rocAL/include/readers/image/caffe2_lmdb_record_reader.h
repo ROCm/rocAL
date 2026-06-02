@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#ifdef ROCAL_LMDB
 #include <dirent.h>
 #include <google/protobuf/message_lite.h>
 
@@ -97,3 +98,4 @@ class Caffe2LMDBRecordReader : public Reader {
     MDB_cursor* _read_mdb_cursor;
     void open_env_for_read_image();
 };
+#endif  // ROCAL_LMDB

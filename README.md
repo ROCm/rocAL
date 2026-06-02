@@ -111,11 +111,6 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install libprotobuf-dev
   ```
 
-* [LMBD Library](http://www.lmdb.tech/doc/)
-  ```shell
-  sudo apt install liblmdb-dev
-  ```
-
 * [TurboJPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
   ```shell
   sudo apt install libturbojpeg0-dev
@@ -131,6 +126,10 @@ rocAL can be currently used to perform the following operations either with rand
 * Python3 Wheel
   ```shell
   sudo apt install python3-wheel
+  ```
+* [LMDB Library](http://www.lmdb.tech/doc/) - **Optional**: needed only for Caffe/Caffe2 LMDB reader support
+  ```shell
+  sudo apt install liblmdb-dev
   ```
 
 * rocDecode - **Optional** for source install, but required for package install

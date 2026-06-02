@@ -462,6 +462,7 @@ rocalJpegCaffe2LMDBRecordSource(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_LMDB
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
@@ -496,6 +497,9 @@ rocalJpegCaffe2LMDBRecordSource(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Caffe2 LMDB reader is not enabled (rocAL built without LMDB support)")
+#endif
 
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
@@ -521,6 +525,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_LMDB
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
@@ -558,6 +563,9 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Caffe2 LMDB reader is not enabled (rocAL built without LMDB support)")
+#endif
 
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
@@ -582,6 +590,7 @@ rocalJpegCaffeLMDBRecordSource(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_LMDB
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
@@ -618,6 +627,9 @@ rocalJpegCaffeLMDBRecordSource(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Caffe LMDB reader is not enabled (rocAL built without LMDB support)")
+#endif
 
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
@@ -643,6 +655,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_LMDB
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
         bool decoder_keep_original = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED) || (decode_size_policy == ROCAL_USE_MAX_SIZE_RESTRICTED);
         DecoderType decType = DecoderType::TURBO_JPEG;  // default
@@ -680,6 +693,9 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Caffe LMDB reader is not enabled (rocAL built without LMDB support)")
+#endif
 
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
@@ -708,6 +724,7 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_LMDB
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
 
         if (shard_count < 1)
@@ -746,6 +763,9 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Caffe LMDB reader is not enabled (rocAL built without LMDB support)")
+#endif
 
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
@@ -774,6 +794,7 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
     Tensor* output = nullptr;
     auto context = static_cast<Context*>(p_context);
     try {
+#ifdef ROCAL_LMDB
         bool use_input_dimension = (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE) || (decode_size_policy == ROCAL_USE_USER_GIVEN_SIZE_RESTRICTED);
 
         if (shard_count < 1)
@@ -811,6 +832,9 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
+#else
+        THROW("Caffe2 LMDB reader is not enabled (rocAL built without LMDB support)")
+#endif
 
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
