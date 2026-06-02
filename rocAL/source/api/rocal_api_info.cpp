@@ -101,9 +101,13 @@ RocalMetaData
     rocalCreateCaffe2LMDBLabelReader(RocalContext p_context, const char *source_path, bool is_output) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateCaffe2LMDBLabelReader")
-
+#ifdef ROCAL_LMDB
     auto context = static_cast<Context *>(p_context);
     return context->master_graph->create_caffe2_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE2_META_DATA_READER, MetaDataType::Label);
+#else
+    THROW("Caffe2 LMDB reader is not enabled (rocAL built without LMDB support)")
+    return nullptr;
+#endif
 }
 
 RocalMetaData
@@ -111,9 +115,13 @@ RocalMetaData
     rocalCreateCaffe2LMDBReaderDetection(RocalContext p_context, const char *source_path, bool is_output) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateCaffe2LMDBReaderDetection")
+#ifdef ROCAL_LMDB
     auto context = static_cast<Context *>(p_context);
-
     return context->master_graph->create_caffe2_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE2_DETECTION_META_DATA_READER, MetaDataType::BoundingBox);
+#else
+    THROW("Caffe2 LMDB reader is not enabled (rocAL built without LMDB support)")
+    return nullptr;
+#endif
 }
 
 RocalMetaData
@@ -121,8 +129,13 @@ RocalMetaData
     rocalCreateCaffeLMDBLabelReader(RocalContext p_context, const char *source_path) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateCaffeLMDBLabelReader")
+#ifdef ROCAL_LMDB
     auto context = static_cast<Context *>(p_context);
     return context->master_graph->create_caffe_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE_META_DATA_READER, MetaDataType::Label);
+#else
+    THROW("Caffe LMDB reader is not enabled (rocAL built without LMDB support)")
+    return nullptr;
+#endif
 }
 
 RocalMetaData
@@ -130,9 +143,13 @@ RocalMetaData
     rocalCreateCaffeLMDBReaderDetection(RocalContext p_context, const char *source_path) {
     if (!p_context)
         THROW("Invalid rocal context passed to rocalCreateCaffeLMDBReaderDetection")
+#ifdef ROCAL_LMDB
     auto context = static_cast<Context *>(p_context);
-
     return context->master_graph->create_caffe_lmdb_record_meta_data_reader(source_path, MetaDataReaderType::CAFFE_DETECTION_META_DATA_READER, MetaDataType::BoundingBox);
+#else
+    THROW("Caffe LMDB reader is not enabled (rocAL built without LMDB support)")
+    return nullptr;
+#endif
 }
 
 size_t ROCAL_API_CALL rocalIsEmpty(RocalContext p_context) {

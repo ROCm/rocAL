@@ -81,7 +81,19 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)	
     # Set supported GPU Targets
     if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
-        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1151;gfx950;gfx1200;gfx1201")
+        find_package(ROCmCMakeBuildTools QUIET)
+        if(NOT ROCmCMakeBuildTools_FOUND)
+            find_package(ROCM QUIET)
+        endif()
+        include(ROCMCheckTargetIds OPTIONAL RESULT_VARIABLE HAS_ROCM_CHECK_TARGET_IDS)
+
+        set(OPTIONAL_GPU_TARGETS "gfx1250")
+        if(HAS_ROCM_CHECK_TARGET_IDS)
+            rocm_check_target_ids(OPTIONAL_GPU_TARGETS_AVAILABLE TARGETS ${OPTIONAL_GPU_TARGETS})
+        else() # if we don't have rocm_check_target_ids, just assume the targets are available
+            set(OPTIONAL_GPU_TARGETS_AVAILABLE "${OPTIONAL_GPU_TARGETS}")
+        endif()
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1151;gfx950;gfx1200;gfx1201;${OPTIONAL_GPU_TARGETS_AVAILABLE}")
     endif()
 
     # Set AMD GPU_TARGETS
@@ -175,10 +187,11 @@ if(NOT Threads_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires Threads, Not Found ${ColourReset}")
 endif()
-# LMDB
-if(NOT LMDB_FOUND)
-    set(BUILD_ROCAL false)
-    message("-- ${Yellow}NOTE: rocAL library requires LMDB, Not Found ${ColourReset}")	
+# LMDB (optional)
+if(LMDB_FOUND)
+    message("-- ${White}rocAL built with LMDB - Caffe/Caffe2 LMDB reader support enabled${ColourReset}")
+else()
+    message("-- ${Yellow}NOTE: rocAL built without LMDB - Caffe/Caffe2 LMDB readers will not be supported${ColourReset}")
 endif()
 # RapidJSON
 if(NOT RapidJSON_FOUND)
@@ -211,9 +224,11 @@ if(${BUILD_ROCAL})
     # Protobuf
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
-    # LMDB
-    include_directories(${LMDB_INCLUDE_DIRS})	
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})	
+    # LMDB (optional)
+    if(LMDB_FOUND)
+        include_directories(${LMDB_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${LMDB_LIBRARIES})
+    endif()	
     # RapidJSON
     include_directories(${RapidJSON_INCLUDE_DIRS})
     # Filesystem
@@ -342,6 +357,14 @@ if(${BUILD_ROCAL})
         target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_AUDIO)
     else()
         message("-- ${Yellow}NOTE: rocAL built without Audio support - Audio Functionalities will not be enabled${ColourReset}")
+    endif()
+
+    # LMDB (optional)
+    if(LMDB_FOUND)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_LMDB)
+    else()
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_LMDB=0)
+        message("-- ${Yellow}NOTE: rocAL built without LMDB - Caffe/Caffe2 LMDB readers will not be supported${ColourReset}")
     endif()
 
     # LibTar

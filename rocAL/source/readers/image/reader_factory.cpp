@@ -26,8 +26,10 @@ THE SOFTWARE.
 #include <stdexcept>
 
 #include "readers/file_source_reader.h"
+#ifdef ROCAL_LMDB
 #include "readers/image/caffe2_lmdb_record_reader.h"
 #include "readers/image/caffe_lmdb_record_reader.h"
+#endif
 #include "readers/image/cifar10_data_reader.h"
 #include "readers/image/coco_file_source_reader.h"
 #include "readers/image/external_source_reader.h"
@@ -69,6 +71,7 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
                 throw std::runtime_error("CFar10 data reader cannot access the storage");
             return ret;
         } break;
+#ifdef ROCAL_LMDB
         case StorageType::CAFFE_LMDB_RECORD: {
             auto ret = std::make_shared<CaffeLMDBRecordReader>();
             if (ret->initialize(config) != Reader::Status::OK)
@@ -81,6 +84,11 @@ std::shared_ptr<Reader> create_reader(ReaderConfig config) {
                 throw std::runtime_error("Caffe2LMDBRecordReader cannot access the storage");
             return ret;
         } break;
+#else
+        case StorageType::CAFFE_LMDB_RECORD:
+        case StorageType::CAFFE2_LMDB_RECORD:
+            throw std::runtime_error("LMDB reader is not enabled (rocAL built without LMDB support)");
+#endif
         case StorageType::MXNET_RECORDIO: {
             auto ret = std::make_shared<MXNetRecordIOReader>();
             if (ret->initialize(config) != Reader::Status::OK)
