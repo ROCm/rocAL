@@ -5,17 +5,17 @@ testing rocAL image decode behavior with rocJPEG and TurboJPEG. It is intended
 for developer and PR-reviewer runs that exercise the rocJPEG split-decoder path
 through both the C++ and Python rocAL entry points.
 
-Suggested location in rocAL:
+Location in rocAL:
 
 ```text
-tests/cpp_api/rocjpeg_decode_perf/
+tests/testScripts/
 ```
 
 ## Files
 
 ```text
 rocal_decode_call_bench.py
-run_tests_twice_solution_on_off.sh
+run_dataloader_multithread.sh
 ```
 
 ### `rocal_decode_call_bench.py`
@@ -47,7 +47,7 @@ python3 rocal_decode_call_bench.py \
   --num-shards <shard_count>
 ```
 
-For TurboJPEG comparison through the CPU decode path:
+For a TurboJPEG run through the CPU decode path:
 
 ```bash
 python3 rocal_decode_call_bench.py \
@@ -60,7 +60,7 @@ python3 rocal_decode_call_bench.py \
   --num-shards <shard_count>
 ```
 
-### `run_tests_twice_solution_on_off.sh`
+### `run_dataloader_multithread.sh`
 
 Main rocAL benchmark driver. It runs four cases and stores logs in `LOG_DIR`:
 
@@ -72,7 +72,7 @@ Python rocAL + TurboJPEG
 ```
 
 The rocJPEG split-decoder path is the rocAL default behavior for rocJPEG decode.
-The benchmark driver does not set a split comparison environment variable.
+The benchmark driver does not set a split toggle environment variable.
 
 Expected usage:
 
@@ -82,7 +82,7 @@ export ROCAL_CPP_BIN=/path/to/dataloader_multithread
 export ROCM_PATH=/opt/rocm
 export LOG_DIR=/tmp/rocjpeg_decode_perf
 
-./run_tests_twice_solution_on_off.sh <gpu_count>
+./run_dataloader_multithread.sh <gpu_count>
 ```
 
 ## Environment Variables
@@ -95,7 +95,7 @@ export ROCAL_CPP_BIN=/path/to/dataloader_multithread
 ```
 
 `DATASET` points to the input image directory. `ROCAL_CPP_BIN` points to the
-compiled rocAL `dataloader_multithread` binary used by the C++ comparison runs.
+compiled rocAL `dataloader_multithread` binary used by the C++ benchmark runs.
 
 ### Common Optional Variables
 
@@ -103,7 +103,7 @@ compiled rocAL `dataloader_multithread` binary used by the C++ comparison runs.
 export DATASET_LABEL=dataset
 export GPU_COUNT=1
 export LOG_DIR=/tmp/rocjpeg_decode_perf
-export WORKSPACE=/path/to/rocjpeg_decode_perf
+export WORKSPACE=/path/to/rocAL/tests/testScripts
 export ROCAL_PY_BENCH=$WORKSPACE/rocal_decode_call_bench.py
 ```
 
@@ -136,7 +136,7 @@ included here.
 ## Typical Workflow
 
 ```bash
-cd /path/to/rocAL/tests/cpp_api/rocjpeg_decode_perf
+cd /path/to/rocAL/tests/testScripts
 
 export DATASET=/path/to/image_dataset
 export DATASET_LABEL=my_dataset
@@ -144,7 +144,7 @@ export ROCAL_CPP_BIN=/path/to/dataloader_multithread
 export ROCM_PATH=/opt/rocm
 export LOG_DIR=/tmp/rocjpeg_decode_perf
 
-./run_tests_twice_solution_on_off.sh 1
+./run_dataloader_multithread.sh 1
 ```
 
 ## Output Logs
@@ -155,7 +155,7 @@ The scripts write logs to `LOG_DIR`. If `LOG_DIR` is not set, it defaults to:
 /tmp/rocjpeg_decode_perf
 ```
 
-rocAL comparison logs:
+rocAL benchmark logs:
 
 ```text
 $LOG_DIR/rocjpeg_<N>gpu.log
@@ -164,25 +164,25 @@ $LOG_DIR/py_rocjpeg_<N>gpu.log
 $LOG_DIR/py_turbojpeg_<N>gpu.log
 ```
 
-## Folder Name
+## Script Group
 
-This folder is named:
+These scripts are placed under:
 
 ```text
-rocjpeg_decode_perf
+tests/testScripts
 ```
 
-The name reflects the work performed by these files. The harness focuses on
-rocJPEG-backed image decode performance in rocAL, including sharded multi-GPU
-decode runs through rocAL and TurboJPEG comparison runs.
+This keeps the harness with other test support scripts while the files remain
+focused on rocJPEG-backed image decode performance in rocAL, including sharded
+multi-GPU decode runs through rocAL and TurboJPEG benchmark runs.
 
 ## Example to Set Env Vars Before Running Any Script
 
-For a local workspace where this folder is under `/workspace/EssamWork` and the
-test dataset is `/workspace/test_1300_files/train`, use:
+For a local workspace where this folder is under `/workspace/rocAL/tests/testScripts`
+and the test dataset is `/workspace/test_1300_files/train`, use:
 
 ```bash
-export WORKSPACE=/workspace/EssamWork
+export WORKSPACE=/workspace/rocAL/tests/testScripts
 cd "$WORKSPACE"
 
 export DATASET=/workspace/test_1300_files/train
@@ -192,8 +192,8 @@ export LOG_DIR=/tmp/rocjpeg_decode_perf
 export ROCAL_CPP_BIN=/workspace/rocAL/build/tests/cpp_api/dataloader_multithread_manual/dataloader_multithread
 ```
 
-Then run the main rocAL comparison:
+Then run the main rocAL benchmark:
 
 ```bash
-./run_tests_twice_solution_on_off.sh 1
+./run_dataloader_multithread.sh 1
 ```
