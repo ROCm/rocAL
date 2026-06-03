@@ -52,16 +52,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def split_path_enabled(args):
-    split_mode = os.environ.get("ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT", "")
-    return (
-        args.device == "gpu"
-        and split_mode not in ("0", "OFF", "off", "FALSE", "false")
-    )
-
-
 def effective_batch_size(args):
-    if not split_path_enabled(args):
+    if args.device != "gpu":
         return args.batch_size
 
     rocjpeg_decoder_threads = max(1, min(4, args.num_threads))

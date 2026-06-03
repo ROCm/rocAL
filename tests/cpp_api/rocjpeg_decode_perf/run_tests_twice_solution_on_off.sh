@@ -31,12 +31,10 @@ ROCAL_PY_BENCH="${ROCAL_PY_BENCH:-$WORKSPACE/rocal_decode_call_bench.py}"
 
 mkdir -p "$LOG_DIR"
 
-CPP_ROCJPEG_OFF_LOG="${CPP_ROCJPEG_OFF_LOG:-$LOG_DIR/rocjpeg_split_off_${GPU_COUNT}gpu.log}"
-CPP_ROCJPEG_ON_LOG="${CPP_ROCJPEG_ON_LOG:-$LOG_DIR/rocjpeg_split_on_${GPU_COUNT}gpu.log}"
+CPP_ROCJPEG_LOG="${CPP_ROCJPEG_LOG:-$LOG_DIR/rocjpeg_${GPU_COUNT}gpu.log}"
 CPP_TURBOJPEG_LOG="${CPP_TURBOJPEG_LOG:-$LOG_DIR/turbojpeg_${GPU_COUNT}gpu.log}"
 
-PY_ROCJPEG_OFF_LOG="${PY_ROCJPEG_OFF_LOG:-$LOG_DIR/py_rocjpeg_split_off_${GPU_COUNT}gpu.log}"
-PY_ROCJPEG_ON_LOG="${PY_ROCJPEG_ON_LOG:-$LOG_DIR/py_rocjpeg_split_on_${GPU_COUNT}gpu.log}"
+PY_ROCJPEG_LOG="${PY_ROCJPEG_LOG:-$LOG_DIR/py_rocjpeg_${GPU_COUNT}gpu.log}"
 PY_TURBOJPEG_LOG="${PY_TURBOJPEG_LOG:-$LOG_DIR/py_turbojpeg_${GPU_COUNT}gpu.log}"
 
 echo "WORKSPACE: $WORKSPACE"
@@ -51,51 +49,31 @@ echo "ROCAL_PY_BENCH: $ROCAL_PY_BENCH"
 echo ""
 
 echo "============================================================"
-echo "C++ rocAL + rocJPEG, solution OFF"
+echo "C++ rocAL + rocJPEG"
 echo "============================================================"
-export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=0
-"$ROCAL_CPP_BIN" "$DATASET" "$GPU_COUNT" "$SHARD_COUNT" 1024 1024 32 0 0 4 4 2>&1 | tee "$CPP_ROCJPEG_OFF_LOG"
-
-echo ""
-echo "============================================================"
-echo "C++ rocAL + rocJPEG, solution ON"
-echo "============================================================"
-export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=1
-"$ROCAL_CPP_BIN" "$DATASET" "$GPU_COUNT" "$SHARD_COUNT" 1024 1024 32 0 0 4 4 2>&1 | tee "$CPP_ROCJPEG_ON_LOG"
+"$ROCAL_CPP_BIN" "$DATASET" "$GPU_COUNT" "$SHARD_COUNT" 1024 1024 32 0 0 4 4 2>&1 | tee "$CPP_ROCJPEG_LOG"
 
 echo ""
 echo "============================================================"
 echo "C++ rocAL + TurboJPEG, one run only"
 echo "============================================================"
-export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=0
 "$ROCAL_CPP_BIN" "$DATASET" "$GPU_COUNT" "$SHARD_COUNT" 1024 1024 32 0 0 0 4 2>&1 | tee "$CPP_TURBOJPEG_LOG"
 
 echo ""
 echo "============================================================"
-echo "Python rocAL + rocJPEG, solution OFF"
+echo "Python rocAL + rocJPEG"
 echo "============================================================"
-export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=0
-python3 "$ROCAL_PY_BENCH" --path "$DATASET" --device gpu --batch-size 32 --num-threads 4 --device-id 0 --num-gpus "$GPU_COUNT" --num-shards "$SHARD_COUNT" 2>&1 | tee "$PY_ROCJPEG_OFF_LOG"
-
-echo ""
-echo "============================================================"
-echo "Python rocAL + rocJPEG, solution ON"
-echo "============================================================"
-export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=1
-python3 "$ROCAL_PY_BENCH" --path "$DATASET" --device gpu --batch-size 32 --num-threads 4 --device-id 0 --num-gpus "$GPU_COUNT" --num-shards "$SHARD_COUNT" 2>&1 | tee "$PY_ROCJPEG_ON_LOG"
+python3 "$ROCAL_PY_BENCH" --path "$DATASET" --device gpu --batch-size 32 --num-threads 4 --device-id 0 --num-gpus "$GPU_COUNT" --num-shards "$SHARD_COUNT" 2>&1 | tee "$PY_ROCJPEG_LOG"
 
 echo ""
 echo "============================================================"
 echo "Python rocAL + TurboJPEG, one run only"
 echo "============================================================"
-export ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT=0
 python3 "$ROCAL_PY_BENCH" --path "$DATASET" --device cpu --batch-size 32 --num-threads 4 --device-id 0 --num-gpus "$GPU_COUNT" --num-shards "$SHARD_COUNT" 2>&1 | tee "$PY_TURBOJPEG_LOG"
 
 echo ""
 echo "Done. Logs written to:"
-echo "  $CPP_ROCJPEG_OFF_LOG"
-echo "  $CPP_ROCJPEG_ON_LOG"
+echo "  $CPP_ROCJPEG_LOG"
 echo "  $CPP_TURBOJPEG_LOG"
-echo "  $PY_ROCJPEG_OFF_LOG"
-echo "  $PY_ROCJPEG_ON_LOG"
+echo "  $PY_ROCJPEG_LOG"
 echo "  $PY_TURBOJPEG_LOG"

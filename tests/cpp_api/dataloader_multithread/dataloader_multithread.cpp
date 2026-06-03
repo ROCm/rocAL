@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 #include <chrono>
 #include <algorithm>
-#include <cctype>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -57,18 +56,6 @@ using namespace cv;
 using namespace std::chrono;
 std::mutex g_mtx;  // mutex for critical section
 
-static bool env_flag_disabled(const char* name) {
-    const char* value = std::getenv(name);
-    if (!value || value[0] == '\0')
-        return false;
-
-    std::string text(value);
-    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
-    return text == "0" || text == "no";
-}
-
 int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, int shard_id, int num_shards, int dec_width, int dec_height, int batch_size, bool shuffle, bool display, int dec_mode, int cpu_thread_count) {
     std::unique_lock<std::mutex> lck(g_mtx, std::defer_lock);
     std::cout << "Running on "  << (gpu_mode >= 0 ? "GPU: " : "CPU: ") << gpu_mode << std::endl;
@@ -76,9 +63,8 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
     color_format = RocalImageColor::ROCAL_COLOR_RGB24;
     int gpu_id = (gpu_mode < 0) ? 0 : gpu_mode;
     RocalDecoderType dec_type = (RocalDecoderType)dec_mode;
-    const bool rocjpeg_omp_split_enabled = !env_flag_disabled("ROCAL_ROCJPEG_DEDICATED_OMP_SPLIT");
     const int rocjpeg_decoder_threads = std::max(1, std::min(4, cpu_thread_count));
-    const int effective_batch_size = (dec_mode == 4 && rocjpeg_omp_split_enabled) ? batch_size * rocjpeg_decoder_threads : batch_size;
+    const int effective_batch_size = (dec_mode == 4) ? batch_size * rocjpeg_decoder_threads : batch_size;
     if (effective_batch_size != batch_size) {
         std::cout << "per-decoder batch size: " << batch_size
                   << " effective rocAL batch size: " << effective_batch_size << std::endl;
@@ -217,7 +203,7 @@ int main(int argc, const char **argv) {
     if (argc < MIN_ARG_COUNT) {
         std::cout << "Usage: dataloader_multithread <image_dataset_folder - required> <num_gpus - 1 (gpu)/cpu=0> "
                   << "num_shards decode_width decode_height batch_size shuffle display_on_off "
-                  << "dec_mode<0(tjpeg)/1(opencv)/2(hwdec)/4(rocjpeg)> cpu_thread_count" << std::endl;
+                  << "dec_mode<0(tjpeg)/1(opencv)/4(rocjpeg)> cpu_thread_count" << std::endl;
         return -1;
     }
     int argIdx = 1;
