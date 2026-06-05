@@ -24,10 +24,12 @@ THE SOFTWARE.
 
 #include <memory>
 
+#ifdef ROCAL_LMDB
 #include "meta_data/caffe2_meta_data_reader.h"
 #include "meta_data/caffe2_meta_data_reader_detection.h"
 #include "meta_data/caffe_meta_data_reader.h"
 #include "meta_data/caffe_meta_data_reader_detection.h"
+#endif
 #include "meta_data/cifar10_meta_data_reader.h"
 #include "meta_data/coco_meta_data_reader.h"
 #include "meta_data/coco_meta_data_reader_key_points.h"
@@ -111,6 +113,7 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
+#ifdef ROCAL_LMDB
         case MetaDataReaderType::CAFFE_META_DATA_READER: {
             if (config.type() != MetaDataType::Label)
                 THROW("CAFFE_META_DATA_READER can only be used to load labels")
@@ -143,6 +146,13 @@ std::shared_ptr<MetaDataReader> create_meta_data_reader(const MetaDataConfig& co
             meta_data_reader->init(config, meta_data_batch);
             return meta_data_reader;
         } break;
+#else
+        case MetaDataReaderType::CAFFE_META_DATA_READER:
+        case MetaDataReaderType::CAFFE_DETECTION_META_DATA_READER:
+        case MetaDataReaderType::CAFFE2_META_DATA_READER:
+        case MetaDataReaderType::CAFFE2_DETECTION_META_DATA_READER:
+            THROW("LMDB meta data reader is not enabled (rocAL built without LMDB support)")
+#endif
         case MetaDataReaderType::MXNET_META_DATA_READER: {
             if (config.type() != MetaDataType::Label)
                 THROW("MXNetMetaDataReader can only be used to load labels")

@@ -95,6 +95,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
+        if not hasattr(b, 'caffe2ImageDecoderShard'):
+            raise RuntimeError("rocAL was built without LMDB support. Caffe2 LMDB decoders are not available.")
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -112,6 +114,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
 
     elif reader == "CaffeReader" or reader == "CaffeReaderDetection":
+        if not hasattr(b, 'caffeImageDecoderShard'):
+            raise RuntimeError("rocAL was built without LMDB support. Caffe LMDB decoders are not available.")
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -285,6 +289,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
         crop_output_image = b.tfImageDecoder(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
+        if not hasattr(b, 'caffeImageDecoderPartialShard'):
+            raise RuntimeError("rocAL was built without LMDB support. Caffe LMDB decoders are not available.")
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -303,6 +309,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
         crop_output_image = b.caffeImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
+        if not hasattr(b, 'caffe2ImageDecoderShard'):
+            raise RuntimeError("rocAL was built without LMDB support. Caffe2 LMDB decoders are not available.")
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -398,6 +406,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
         image_decoder_slice = b.cocoImageDecoderSliceShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
+        if not hasattr(b, 'caffeImageDecoderPartialShard'):
+            raise RuntimeError("rocAL was built without LMDB support. Caffe LMDB decoders are not available.")
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,
@@ -417,6 +427,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
         image_decoder_slice = b.caffeImageDecoderPartialShard(
             Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
+        if not hasattr(b, 'caffe2ImageDecoderShard'):
+            raise RuntimeError("rocAL was built without LMDB support. Caffe2 LMDB decoders are not available.")
         kwargs_pybind = {
             "source_path": path,
             "color_format": output_type,

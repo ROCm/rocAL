@@ -138,6 +138,8 @@ def caffe(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
 
         @return    caffe reader meta data, bboxes, and labels.
     """
+    if not hasattr(b, 'caffeReader'):
+        raise RuntimeError("rocAL was built without LMDB support. Caffe LMDB readers are not available.")
     # Output
     bboxes = []
     labels = []
@@ -168,6 +170,8 @@ def caffe2(path, bbox=False, stick_to_shard=False, pad_last_batch=False):
 
         @return    caffe2 reader meta data, bboxes, and labels.
     """
+    if not hasattr(b, 'caffe2Reader'):
+        raise RuntimeError("rocAL was built without LMDB support. Caffe2 LMDB readers are not available.")
     # Output
     bboxes = []
     labels = []
