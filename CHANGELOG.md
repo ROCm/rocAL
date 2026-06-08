@@ -19,6 +19,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
+* LMDB is now an optional dependency. When liblmdb is present at configure time, rocAL builds with Caffe/Caffe2 LMDB reader support; otherwise it builds without it.
 * Changes build instructions to omit building of wheels.
 * Adds new public APIs rocalSerialize(), rocalGetSerializedString(), and rocalDeserialize() for serializing and deserializing pipelines.
 * Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.

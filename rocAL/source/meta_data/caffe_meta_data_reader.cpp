@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifdef ROCAL_LMDB
 #include "meta_data/caffe_meta_data_reader.h"
 
 #include <string.h>
@@ -136,3 +137,4 @@ void CaffeMetaDataReader::read_lmdb_record(std::string _path, uint file_byte_siz
     mdb_txn_abort(_mdb_txn);
     mdb_env_close(_mdb_env);
 }
+#endif  // ROCAL_LMDB

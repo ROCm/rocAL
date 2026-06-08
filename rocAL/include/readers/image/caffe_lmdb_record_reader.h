@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#ifdef ROCAL_LMDB
 #include <dirent.h>
 #include <google/protobuf/message_lite.h>
 #include <lmdb.h>
@@ -95,3 +96,4 @@ class CaffeLMDBRecordReader : public Reader {
     void open_env_for_read_image();
     std::shared_ptr<MetaDataReader> _meta_data_reader = nullptr;
 };
+#endif  // ROCAL_LMDB

@@ -27,18 +27,22 @@ THE SOFTWARE.
 #include <vector>
 #include <random>
 
+#ifdef ROCAL_LMDB
 #include <lmdb.h>
+#endif
 #include "meta_data/meta_data_reader.h"
 #include "readers/video/video_properties.h"
 #include "pipeline/tensor.h"
 #include "pipeline/enum_registry.h"
 
+#ifdef ROCAL_LMDB
 #define CHECK_LMDB_RETURN_STATUS(status)                                                          \
     do {                                                                                          \
         if (status != MDB_SUCCESS)                                                                \
             THROW("LMDB error, " + std::string(__FILE__) + ":" + std::to_string(__LINE__) + " " + \
                   #status + ":" + std::string(mdb_strerror(status)));                             \
     } while (0)
+#endif
 
 enum class StorageType {
     FILE_SYSTEM = 0,
