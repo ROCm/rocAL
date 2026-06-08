@@ -68,6 +68,13 @@ find_package(LibTar QUIET)
 find_package(rocdecode 1.0.0 QUIET)
 find_package(rocjpeg 1.0.0 QUIET)
 find_package(hipFile CONFIG QUIET)
+# following is required for legacy ROCm build
+if(NOT hipFile_FOUND)
+     find_package(hipfile CONFIG QUIET)
+     if(hipfile_FOUND)
+         set(hipFile_FOUND TRUE)
+     endif()
+ endif()
 
 # HIP Backend
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
@@ -269,7 +276,7 @@ if(${BUILD_ROCAL})
             set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::hipfile)
             message("-- ${White}rocAL built with hipFile GPU Direct I/O for numpy reader (disabled by default, set ROCAL_USE_HIPFILE=1 to enable)${ColourReset}")
         else()
-            message("-- ${White}rocAL built without hipFile GPU Direct I/O for numpy reader (disabled by default, set ROCAL_USE_HIPFILE=1 to enable)${ColourReset}")
+            message("-- ${White}rocAL built without hipFile GPU Direct I/O for numpy reader (hipFile unavailable for this build) ${ColourReset}")
         endif()
 
         if(rocdecode_FOUND)
