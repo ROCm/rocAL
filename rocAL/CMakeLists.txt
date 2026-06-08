@@ -284,7 +284,7 @@ if(${BUILD_ROCAL})
             set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::hipfile)
             message("-- ${White}rocAL built with hipFile GPU Direct I/O for numpy reader (disabled by default, set ROCAL_USE_HIPFILE=1 to enable)${ColourReset}")
         else()
-            message("-- ${White}rocAL built without hipFile GPU Direct I/O for numpy reader (disabled by default, set ROCAL_USE_HIPFILE=1 to enable)${ColourReset}")
+            message("-- ${White}hipFile not found; rocAL will be built without hipFile GPU Direct I/O support for numpy reader (install hipFile and rebuild to enable)${ColourReset}")
         endif()
 
         if(rocdecode_FOUND)
