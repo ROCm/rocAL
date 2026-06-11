@@ -31,6 +31,25 @@ THE SOFTWARE.
 #include "decoders/image/decoder_factory.h"
 #include "readers/image/external_source_reader.h"
 
+namespace {
+constexpr size_t kMaxRocJpegDecoderCount = 4;
+constexpr size_t kMinRocJpegSubBatchSize = 32;
+
+size_t choose_rocjpeg_decoder_count(size_t batch_size, size_t num_threads) {
+    const size_t requested_decoder_count =
+        std::max<size_t>(1, std::min(kMaxRocJpegDecoderCount, num_threads));
+
+    // Multiple rocJPEG decoder instances are beneficial only when each decoder
+    // receives enough images to amortize OpenMP, rocJPEG, HIP, and resize/setup
+    // overhead. Keep small batches on one decoder instead of splitting them
+    // into small sub-batches.
+    const size_t batch_limited_decoder_count =
+        std::max<size_t>(1, batch_size / kMinRocJpegSubBatchSize);
+
+    return std::min(requested_decoder_count, batch_limited_decoder_count);
+}
+}  // namespace
+
 std::tuple<Decoder::ColorFormat, unsigned>
 interpret_color_format(RocalColorFormat color_format) {
     switch (color_format) {
@@ -94,7 +113,7 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
             for (int i = 0; i < batch_size; i++) {
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             }
-            const size_t rocjpeg_decoder_count = std::min(static_cast<size_t>(batch_size), std::max(static_cast<size_t>(1), std::min(static_cast<size_t>(4), _num_threads)));
+            const size_t rocjpeg_decoder_count = choose_rocjpeg_decoder_count(static_cast<size_t>(batch_size), _num_threads);
             _rocjpeg_decoders.resize(rocjpeg_decoder_count);
             _rocjpeg_sub_batch_sizes.resize(rocjpeg_decoder_count);
 
