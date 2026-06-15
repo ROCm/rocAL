@@ -30,8 +30,9 @@ THE SOFTWARE.
 #include <iostream>
 #include <vector>
 
-#include "opencv2/opencv.hpp"
 #include "rocal_api.h"
+#if ENABLE_OPENCV
+#include "opencv2/opencv.hpp"
 using namespace cv;
 
 #if USE_OPENCV_4
@@ -42,6 +43,7 @@ using namespace cv;
 #define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
+#endif
 #endif
 
 #define DISPLAY 0
@@ -496,6 +498,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     printf("Augmented copies count %lu\n", rocalGetAugmentationBranchCount(handle));
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
+#if ENABLE_OPENCV
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle);
     int w = rocalGetOutputWidth(handle);
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
@@ -504,6 +507,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     cv::Mat mat_color;
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+#endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
@@ -529,8 +533,10 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
+#if ENABLE_OPENCV
     mat_input.release();
     mat_output.release();
+#endif
 
     return 0;
 }

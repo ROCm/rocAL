@@ -28,8 +28,9 @@ THE SOFTWARE.
 #include <iostream>
 #include <vector>
 
-#include "opencv2/opencv.hpp"
 #include "rocal_api.h"
+#if ENABLE_OPENCV
+#include "opencv2/opencv.hpp"
 using namespace cv;
 #if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
@@ -40,6 +41,7 @@ using namespace cv;
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #define cvDestroyWindow destroyWindow
+#endif
 #endif
 
 #define DISPLAY
@@ -168,12 +170,14 @@ int main(int argc, const char **argv) {
                  ? 3
                  : 1);
     std::cout << "output width " << w << " output height " << h << " color planes " << p << " n " << n << std::endl;
+    std::vector<unsigned char> mat_input(h * w * p);
+#if ENABLE_OPENCV
     const unsigned number_of_cols = 1;  // no augmented case
     auto cv_color_format = ((p == 3) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h, w * number_of_cols, cv_color_format);
-    cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
+#endif
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
@@ -187,7 +191,7 @@ int main(int argc, const char **argv) {
             rocalRelease(handle);
             return -1;
         }
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        rocalCopyToOutput(handle, mat_input.data(), h * w * p);
         RocalTensorLayout output_layout = nchw ? RocalTensorLayout::ROCAL_NCHW : RocalTensorLayout::ROCAL_NHWC;
         if (!processing_device) {
             float *f32_batch_output = (float *)aligned_alloc(8, 8 * ((inputBatchSize * h * w * p * sizeof(float)) / 8 + 1));
@@ -216,8 +220,9 @@ int main(int argc, const char **argv) {
 
         if (!display)
             continue;
-
-        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+#if ENABLE_OPENCV
+        cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
+        mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
 
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB_PLANAR) {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
@@ -227,7 +232,7 @@ int main(int argc, const char **argv) {
                 for (int n = 0; n < inputBatchSize; n++) {
                     unsigned channel_size = w * single_h * p;
                     unsigned char *interleavedp = mat_output.data + channel_size * n;
-                    unsigned char *planarp = mat_input.data + channel_size * n;
+                    unsigned char *planarp = mat_input.data() + channel_size * n;
                     for (int i = 0; i < (w * single_h); i++) {
                         interleavedp[i * 3 + 0] = planarp[i + 0 * w * single_h];
                         interleavedp[i * 3 + 1] = planarp[i + 1 * w * single_h];
@@ -240,6 +245,7 @@ int main(int argc, const char **argv) {
         // Cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
         cv::waitKey(1);
         col_counter = (col_counter + 1) % number_of_cols;
+#endif
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -252,7 +258,8 @@ int main(int argc, const char **argv) {
     std::cout << ">>>>> " << counter << " images/frames Processed. Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalResetLoaders(handle);
     rocalRelease(handle);
-    mat_input.release();
+#if ENABLE_OPENCV
     mat_output.release();
+#endif
     return 0;
 }

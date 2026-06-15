@@ -30,8 +30,9 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "opencv2/opencv.hpp"
 #include "rocal_api.h"
+#if ENABLE_OPENCV
+#include "opencv2/opencv.hpp"
 using namespace cv;
 
 #if USE_OPENCV_4
@@ -42,6 +43,7 @@ using namespace cv;
 #define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
+#endif
 #endif
 
 #define DISPLAY 0
@@ -120,12 +122,14 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
+    std::vector<std::vector<unsigned char>> mat_input;
+#if ENABLE_OPENCV
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    std::vector<cv::Mat> mat_output, mat_input;
+    std::vector<cv::Mat> mat_output;
     cv::Mat mat_color;
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+#endif
     std::cerr << "Going to process images\n";
     std::cerr << "Remaining images " <<  rocalGetRemainingImages(handle) << "\n";
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -137,22 +141,28 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
             break;
 
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-
+#if ENABLE_OPENCV
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
+#endif
 
         for (unsigned idx = 0; idx < output_tensor_list->size(); idx++) {
             auto output_tensor = output_tensor_list->at(idx);
             int h = output_tensor->shape().at(1) * output_tensor->dims().at(0);
             int w = output_tensor->shape().at(0);
+            int p = (color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1;
             if (first_run) {
-                mat_input.emplace_back(cv::Mat(h, w, cv_color_format));
+                mat_input.emplace_back(h * w * p);
+#if ENABLE_OPENCV
                 mat_output.emplace_back(cv::Mat(h, w, cv_color_format));
+#endif
             }
 
-            output_tensor->copy_data(mat_input[idx].data, ROCAL_MEMCPY_HOST);
-            mat_input[idx].copyTo(mat_output[idx](cv::Rect(0, 0, w, h)));
+            output_tensor->copy_data(mat_input[idx].data(), ROCAL_MEMCPY_HOST);
+#if ENABLE_OPENCV
+            cv::Mat mat_in_view(h, w, cv_color_format, mat_input[idx].data());
+            mat_in_view.copyTo(mat_output[idx](cv::Rect(0, 0, w, h)));
 
             std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
             if (display_all)
@@ -170,6 +180,7 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
                 else
                     cv::imwrite(out_filename, mat_output[idx], compression_params);
             }
+#endif
         }
         first_run = false;
     }
@@ -182,10 +193,11 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
     std::cout << "Process  time " << rocal_timing.process_time << std::endl;
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
-    for (unsigned i = 0; i < mat_input.size(); i++) {
-        mat_input[i].release();
+#if ENABLE_OPENCV
+    for (unsigned i = 0; i < mat_output.size(); i++) {
         mat_output[i].release();
     }
+#endif
     rocalRelease(handle);
     return 0;
 }

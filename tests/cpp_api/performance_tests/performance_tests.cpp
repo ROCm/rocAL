@@ -30,8 +30,9 @@ THE SOFTWARE.
 #include <iostream>
 #include <vector>
 
-#include "opencv2/opencv.hpp"
 #include "rocal_api.h"
+#if ENABLE_OPENCV
+#include "opencv2/opencv.hpp"
 using namespace cv;
 #if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
@@ -42,6 +43,7 @@ using namespace cv;
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #define cvDestroyWindow destroyWindow
+#endif
 #endif
 
 #define DISPLAY

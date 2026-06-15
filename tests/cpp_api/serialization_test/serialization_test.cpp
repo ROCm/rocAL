@@ -30,8 +30,10 @@ THE SOFTWARE.
 #include <memory>
 
 #include "rocal_api.h"
+#if ENABLE_OPENCV
 #include "opencv2/opencv.hpp"
 using namespace cv;
+#endif
 
 int main(int argc, const char **argv) {
     // check command-line usage
@@ -177,20 +179,19 @@ int main(int argc, const char **argv) {
     int ImageNameLen[inputBatchSize];
     std::vector<std::string> names;
     names.resize(inputBatchSize);
-    /*>>>>>>>>>>>>>>>>>>> Display using OpenCV <<<<<<<<<<<<<<<<<*/
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
+    std::vector<unsigned char> mat_input(h * w * p);
+#if ENABLE_OPENCV
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h, w, cv_color_format);
-    cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
-
-    // Variables for OpenCV display
     int col_counter = 0;
     int number_of_cols = 1;
     bool display_all = true;
     const char* outName = "serialization_test_output";
+#endif
 
     for (int iter = 0; iter < test_iterations && !rocalIsEmpty(handle); iter++) {
         std::cout << "\nOriginal Pipeline - Iteration " << (iter + 1) << ":" << std::endl;
@@ -200,7 +201,11 @@ int main(int argc, const char **argv) {
             rocalRelease(handle);
             return -1;
         }
-        
+
+        // Copy the output batch before reading metadata: rocalCopyToOutput blocks until the
+        // processed batch is ready, whereas the metadata getters do not.
+        rocalCopyToOutput(handle, mat_input.data(), h * w * p);
+
         // Get labels
         RocalTensorList labels = rocalGetImageLabels(handle);
         // Get image names
@@ -216,9 +221,9 @@ int main(int argc, const char **argv) {
             std::cout << "  Original - Image: " << names[i] << " | Label: " << labels_buffer[i] << std::endl;
         }
 
-        // Copy Image data from handle
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
-        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+#if ENABLE_OPENCV
+        cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
+        mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         std::string out_filename = std::string("original_") + std::string(outName);
         if (display_all)
             out_filename += std::to_string(iter);
@@ -232,21 +237,20 @@ int main(int argc, const char **argv) {
         }
         std::cout << "  Original output saved as: " << out_filename << std::endl;
         col_counter = (col_counter + 1) % number_of_cols;
+#endif
     }
     
     /*>>>>>>>>>>>>>>>>>>> Test Deserialized Pipeline Execution <<<<<<<<<<<<<<<<<<<*/
     std::cout << "\n=== Testing Deserialized Pipeline Execution ===" << std::endl;
     std::cout << "Available images in deserialized pipeline: " << rocalGetRemainingImages(second_handle) << std::endl;
     
-    // Prepare OpenCV matrices for deserialized pipeline output
-    // Using the same dimensions as the original pipeline
+    std::vector<unsigned char> mat_deserialized_input(h * w * p);
+#if ENABLE_OPENCV
     cv::Mat mat_deserialized_output(h, w, cv_color_format);
-    cv::Mat mat_deserialized_input(h, w, cv_color_format);
     cv::Mat mat_deserialized_color;
-    
-    // Reset column counter for deserialized pipeline output
     col_counter = 0;
-    
+#endif
+
     // Run the same number of iterations on the deserialized pipeline to compare outputs
     for (int iter = 0; iter < test_iterations && !rocalIsEmpty(second_handle); iter++) {
         std::cout << "\nDeserialized Pipeline - Iteration " << (iter + 1) << ":" << std::endl;
@@ -258,7 +262,11 @@ int main(int argc, const char **argv) {
             rocalRelease(second_handle);
             return -1;
         }
-        
+
+        // Copy the output batch before reading metadata: rocalCopyToOutput blocks until the
+        // processed batch is ready, whereas the metadata getters do not.
+        rocalCopyToOutput(second_handle, mat_deserialized_input.data(), h * w * p);
+
         // Get labels from deserialized pipeline
         RocalTensorList deserialized_labels = rocalGetImageLabels(second_handle);
         
@@ -281,15 +289,15 @@ int main(int argc, const char **argv) {
             std::cout << "  Deserialized - Image: " << names_deserialized[i] << " | Label: " << labels_buffer_deserialized[i] << std::endl;
         }
         
-        // Copy processed image data from deserialized pipeline
-        rocalCopyToOutput(second_handle, mat_deserialized_input.data, h * w * p);
+#if ENABLE_OPENCV
         // Prepare output image with deserialized prefix for comparison
-        mat_deserialized_input.copyTo(mat_deserialized_output(cv::Rect(col_counter * w, 0, w, h)));
+        cv::Mat mat_deserialized_view(h, w, cv_color_format, mat_deserialized_input.data());
+        mat_deserialized_view.copyTo(mat_deserialized_output(cv::Rect(col_counter * w, 0, w, h)));
         std::string out_filename_deserialized = std::string("deserialized_") + std::string(outName);
         if (display_all)
             out_filename_deserialized += std::to_string(iter);
         out_filename_deserialized += ".png";
-        
+
         // Save the output image with proper color conversion if needed
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
             cv::cvtColor(mat_deserialized_output, mat_deserialized_color, cv::COLOR_RGB2BGR);
@@ -299,6 +307,7 @@ int main(int argc, const char **argv) {
         }
         std::cout << "  Deserialized output saved as: " << out_filename_deserialized << std::endl;
         col_counter = (col_counter + 1) % number_of_cols;
+#endif
     }
     
     std::cout << "\n=== Deserialization Test Completed Successfully ===" << std::endl;
