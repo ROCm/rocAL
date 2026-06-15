@@ -291,18 +291,6 @@ openclRPMPackages = [
     'ocl-icd-devel'
 ]
 
-opencvDebianPackages = [
-    'libopencv-dev'
-]
-
-opencvRPMPackages = [
-    'gtk2-devel',
-    'libjpeg-devel',
-    'libpng-devel',
-    'libtiff-devel',
-    'libavc1394'
-]
-
 # update
 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' '+osUpdate))
 
@@ -324,10 +312,6 @@ if backend == 'OCL':
         install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, openclDebianPackages)
     else:
         install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, openclRPMPackages)
-
-# OpenCV
-if "ubuntu" in platformInfo:
-    install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, opencvDebianPackages)
 
 #pip3 packages
 for i in range(len(pip3Packages)):
@@ -380,44 +364,5 @@ else:
         '(cd '+deps_dir+'; git clone -b '+ libtar_version+' https://repo.or.cz/libtar.git )'))
     ERROR_CHECK(os.system('(cd '+deps_dir+'/libtar; '+
             ' autoreconf --force --install; CFLAGS="-fPIC" ./configure; make -j$(nproc); sudo make install )'))
-    
-    # Install OpenCV -- TBD cleanup
-    ERROR_CHECK(os.system('(cd '+deps_dir+'/build; mkdir OpenCV )'))
-    # Install
-    if "ubuntu" in platformInfo:
-        info("STATUS: rocAL Setup: OpenCV Package installed for Ubuntu\n")
-    else:
-        if "centos" in platformInfo:
-            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' groupinstall \'Development Tools\''))
-        elif "sles" in platformInfo:
-            ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall+' '+linuxSystemInstall_check +
-                ' install -t pattern devel_basis'))
-
-        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, opencvRPMPackages)
-        # OpenCV 4.6.0
-        # Get Source and install
-        opencvVersion = '4.6.0'
-        ERROR_CHECK(os.system(
-            '(cd '+deps_dir+'; wget https://github.com/opencv/opencv/archive/'+opencvVersion+'.zip )'))
-        ERROR_CHECK(os.system('(cd '+deps_dir+'; unzip '+opencvVersion+'.zip )'))
-        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; '+linuxCMake +
-                        ' -D WITH_EIGEN=OFF \
-                        -D WITH_GTK=ON \
-                        -D WITH_JPEG=ON \
-                        -D BUILD_JPEG=ON \
-                        -D WITH_OPENCL=OFF \
-                        -D WITH_OPENCLAMDFFT=OFF \
-                        -D WITH_OPENCLAMDBLAS=OFF \
-                        -D WITH_VA_INTEL=OFF \
-                        -D WITH_OPENCL_SVM=OFF  \
-                        -D CMAKE_INSTALL_PREFIX=/usr/local \
-                        -D BUILD_LIST=core,features2d,highgui,imgcodecs,imgproc,photo,video,videoio  \
-                        -D CMAKE_PLATFORM_NO_VERSIONED_SONAME=ON \
-                        ../../opencv-'+opencvVersion+' )'))
-        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; make -j$(nproc))'))
-        ERROR_CHECK(os.system(sudoValidate))
-        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo make install)'))
-        ERROR_CHECK(os.system('(cd '+deps_dir+'/build/OpenCV; sudo ldconfig)'))
 
 info(f"{libraryName} Dependencies Installed with rocAL-setup.py V-"+__version__+" on "+platformInfo+"\n")

@@ -6,7 +6,7 @@ This application can be used to verify the functionality of the video API offere
 
 * Ubuntu Linux, version - `22.04` / `24.04`
 * rocAL library
-* [OpenCV 4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
+* Optional: OpenCV for display - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * [FFmpeg n4.4.2](https://github.com/FFmpeg/FFmpeg/releases/tag/n4.4.2)
 * ROCm Performance Primitives (RPP)
 

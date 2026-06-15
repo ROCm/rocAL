@@ -11,6 +11,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
 
 ### Removed
+* OpenCV is no longer a dependency. It has been removed from the core library, build, setup script, and C++ tests.
 * Removed building wheels for python.
 * `PipelineSerializer` class to implement pipeline serialization functionality in rocAL.
 * Python function execution support in rocAL.
