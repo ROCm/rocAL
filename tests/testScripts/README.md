@@ -147,6 +147,39 @@ export LOG_DIR=/tmp/rocjpeg_decode_perf
 ./run_dataloader_multithread.sh 1
 ```
 
+## MI300x8 Training-Style Validation Notes
+
+For MI300x8 training-style validation, choose rocAL batch and thread values
+that keep each rocJPEG decoder instance close to a hardware-friendly sub-batch
+size. In the ResNet50/ImageNet data-loader-only test, using a per-GPU batch of
+64 with two rocJPEG decoder instances per GPU kept each decoder at about 32
+images and avoided the long decode stalls seen with very large per-GPU batches.
+
+Recommended values for the tested MI300x8 setup:
+
+```bash
+export ROCAL_DECODE_MODE=hw
+export BATCH_SIZE=64
+export ROCAL_NUM_THREADS=2
+export ROCAL_PREFETCH_DEPTH=6
+export ROCAL_LOADER_RELOAD_INTERVAL=0
+```
+
+Measured 37-epoch data-loader-only result on MI300x8:
+
+| Mode | Per-GPU Batch | Total Time | Minutes | Final IPS |
+|---|---:|---:|---:|---:|
+| rocJPEG HW | 64 | 2779.26 sec | 46.32 min | 65017.28 |
+| TurboJPEG CPU | 64 | 3735.70 sec | 62.26 min | 13173.94 |
+
+In this run, rocJPEG HW saved 956.45 seconds, or 15.94 minutes, for a 1.34x
+speedup and a 25.6% total-time reduction versus TurboJPEG CPU.
+
+These values are recommendations for the tested MI300x8 configuration, not
+global rocAL defaults. Other systems should choose batch and thread values that
+match the available GPU count, JPEG decode hardware, dataset characteristics,
+and training global-batch requirements.
+
 ## Output Logs
 
 The scripts write logs to `LOG_DIR`. If `LOG_DIR` is not set, it defaults to:
