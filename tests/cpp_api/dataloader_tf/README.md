@@ -5,7 +5,7 @@ This application demonstrates a basic usage of rocAL's C API to load TfRecords f
 ## Pre-requisites
 
 *  Ubuntu 16.04/18.04 Linux
-*  [OpenCV 3.1](https://github.com/opencv/opencv/releases) or higher
+*  Optional: OpenCV for display - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 *  Google protobuf 3.11.1 or higher
 *  ROCm Performance Primitives (RPP)
 

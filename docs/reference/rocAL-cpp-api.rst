@@ -92,7 +92,7 @@ See `rocalRelease example <https://github.com/ROCm/rocAL/blob/develop/rocAL/incl
 Image Augmentation Using C++ API
 --------------------------------------------
 
-The example below shows how to create a pipeline, read JPEG images, perform certain augmentations on them, and show the output using OpenCV by utilizing `C++ API <https://github.com/ROCm/rocAL/blob/develop/tests/cpp_api/image_augmentation/image_augmentation.cpp#L103>`_.
+The example below shows how to create a pipeline, read JPEG images, and perform certain augmentations on them by utilizing the `C++ API <https://github.com/ROCm/rocAL/blob/develop/tests/cpp_api/image_augmentation/image_augmentation.cpp#L103>`_.
 
 .. code-block:: cpp
    :caption: Example Image Augmentation

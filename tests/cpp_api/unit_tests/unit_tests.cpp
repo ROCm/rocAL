@@ -33,9 +33,7 @@ THE SOFTWARE.
 #include <vector>
 #include <fstream>
 
-#include "opencv2/opencv.hpp"
 #include "rocal_api.h"
-using namespace cv;
 
 #if ENABLE_HIP
 #include <half/half.hpp>
@@ -43,6 +41,9 @@ using namespace cv;
 #include "hip/hip_runtime.h"
 #endif
 
+#if ENABLE_OPENCV
+#include "opencv2/opencv.hpp"
+using namespace cv;
 #if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
 #define CV_BGR2GRAY COLOR_BGR2GRAY
@@ -51,6 +52,7 @@ using namespace cv;
 #define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
+#endif
 #endif
 
 #define DISPLAY 0
@@ -1212,21 +1214,22 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         return -1;
     }
 
-    /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
     int w = rocalGetOutputWidth(handle);
     int output_color_format = rocalGetOutputColorFormat(handle);
     auto last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
     // Use output_color_format to determine channels: 0=RGB24(3ch), 1=BGR24(3ch), 2=U8(1ch), 3=RGB_PLANAR(3ch)
     int p = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? 3 : 1);
+    std::vector<unsigned char> mat_input(h * w * p);
+#if ENABLE_OPENCV
     const unsigned number_of_cols = 1;  // 1920 / w;
     auto cv_color_format = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h, w, cv_color_format);
-    cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+#endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int index = 0;
@@ -1239,6 +1242,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             return -1;
         }
         int image_name_length[input_batch_size];
+        // Copy the output batch before reading metadata: rocalCopyToOutput blocks until the
+        // processed batch is ready, whereas the metadata getters do not.
+        rocalCopyToOutput(handle, mat_input.data(), h * w * p);
         auto get_image_name_buffer = [&]() {
             const auto img_size = rocalGetImageNameLen(handle, image_name_length);
             std::vector<char> img_name(img_size + 1, '\0');
@@ -1418,8 +1424,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         auto last_colot_temp = rocalGetIntValue(color_temp_adj);
         rocalUpdateIntParameter(last_colot_temp + 1, color_temp_adj);
 
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
-        
         // Testing the rocalToTensor API for copy augmentation
         // Memory allocated here is freed after used in rocalToTensor API for memcopy
         if (test_case == 23) {
@@ -1460,11 +1464,13 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             }
         }
 
+#if ENABLE_OPENCV
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
         compression_params.push_back(9);
 
-        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+        cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
+        mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
         if (display_all)
             out_filename = std::string(outName) + std::to_string(index) + ".png";  // in case the user specifies non png filename
@@ -1487,6 +1493,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 cv::imwrite(out_filename, mat_output, compression_params);
         }
         col_counter = (col_counter + 1) % number_of_cols;
+#endif
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -1499,8 +1506,9 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     std::cout << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalResetLoaders(handle);
     rocalRelease(handle);
-    mat_input.release();
+#if ENABLE_OPENCV
     mat_output.release();
+#endif
     if (!output)
         return -1;
     return 0;

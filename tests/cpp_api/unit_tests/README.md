@@ -6,7 +6,7 @@ This application can be used to verify the functionality of the API offered by r
 
 * Ubuntu Linux, version `22.04` or later
 * rocAL library
-* [OpenCV 3.4+](https://github.com/opencv/opencv/releases/tag/3.4.0)
+* Optional: OpenCV for display - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * ROCm Performance Primitives (RPP)
 * Python3
 

@@ -26,6 +26,10 @@ THE SOFTWARE.
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <vector>
+
+#include "rocal_api.h"
+#if ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
@@ -36,8 +40,7 @@ using namespace cv;
 #else
 #include <opencv/highgui.h>
 #endif
-
-#include "rocal_api.h"
+#endif
 
 #define DISPLAY
 using namespace std::chrono;
@@ -206,6 +209,12 @@ int main(int argc, const char** argv) {
     std::cout << "Remaining images " << rocalGetRemainingImages(handle) << std::endl;
     std::cout << "Augmented copies count " << rocalGetAugmentationBranchCount(handle) << std::endl;
 
+    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
+    int w = rocalGetOutputWidth(handle);
+    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
+    std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
+    std::vector<unsigned char> mat_input(h * w * p);
+#if ENABLE_OPENCV
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     // initializations for logos and heading
     cv::Mat AMD_Epyc_Black_resize, AMD_ROCm_Black_resize;
@@ -214,15 +223,9 @@ int main(int argc, const char** argv) {
     int fontFace = CV_FONT_HERSHEY_DUPLEX;
     int thickness = 1;
     std::string bufferName = "rocAL Image Augmentation";
-
-    int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * inputBatchSize;
-    int w = rocalGetOutputWidth(handle);
-    int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
-    std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
     const unsigned number_of_cols = (decoder_mode >= 2) ? 1 : 10;
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h + AMD_ROCm_Black_resize.rows, w * number_of_cols, cv_color_format);
-    cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
 
@@ -236,6 +239,7 @@ int main(int argc, const char** argv) {
     cv::Mat mat_output_ROI_1 = mat_output(cv::Rect(0, 0, AMD_ROCm_Black_resize.cols, AMD_ROCm_Black_resize.rows));
     AMD_Epyc_Black_resize.copyTo(mat_output_ROI);
     AMD_ROCm_Black_resize.copyTo(mat_output_ROI_1);
+#endif
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
@@ -252,7 +256,7 @@ int main(int argc, const char** argv) {
 
         rocalUpdateIntParameter(rocalGetIntValue(color_temp_adj) + color_temp_increment, color_temp_adj);
         auto ouput_tensor_list = rocalGetOutputTensors(handle);
-        unsigned char* output = mat_input.data;
+        unsigned char* output = mat_input.data();
         for (uint i = 0; i < ouput_tensor_list->size(); i++) {
             ouput_tensor_list->at(i)->copy_data(output);
             output += ouput_tensor_list->at(i)->data_size();
@@ -260,9 +264,10 @@ int main(int argc, const char** argv) {
         counter += inputBatchSize;
         if (!display)
             continue;
-
-        std::string out_filename = std::string(outName) + ".png"; 
-        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, AMD_ROCm_Black_resize.rows, w, h)));
+#if ENABLE_OPENCV
+        cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
+        std::string out_filename = std::string(outName) + ".png";
+        mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, AMD_ROCm_Black_resize.rows, w, h)));
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
             cv::imwrite(out_filename, mat_color);
@@ -271,6 +276,7 @@ int main(int argc, const char** argv) {
         }
         cv::waitKey(1);
         col_counter = (col_counter + 1) % number_of_cols;
+#endif
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto dur = duration_cast<microseconds>(t2 - t1).count();
@@ -281,7 +287,8 @@ int main(int argc, const char** argv) {
     std::cout << "Transfer time " << rocal_timing.transfer_time << std::endl;
     std::cout << ">>>>> " << counter << " images/frames Processed. Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
-    mat_input.release();
+#if ENABLE_OPENCV
     mat_output.release();
+#endif
     return 0;
 }

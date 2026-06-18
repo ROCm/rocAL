@@ -32,8 +32,9 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "opencv2/opencv.hpp"
 #include "rocal_api.h"
+#if ENABLE_OPENCV
+#include "opencv2/opencv.hpp"
 using namespace cv;
 
 #if USE_OPENCV_4
@@ -44,6 +45,7 @@ using namespace cv;
 #define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
+#endif
 #endif
 
 using namespace std::chrono;
@@ -246,16 +248,20 @@ int main(int argc, const char **argv) {
     std::cout << "Augmented copies count " << rocalGetAugmentationBranchCount(handle) << std::endl;
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
+#if ENABLE_OPENCV
     if (save_frames)
         mkdir("output_frames", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);  // Create directory in which images will be stored
+#endif
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size * ouput_frames_per_sequence;
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     int single_image_height = h / (input_batch_size * ouput_frames_per_sequence);
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
+    std::vector<unsigned char> mat_input(h * w * p);
+#if ENABLE_OPENCV
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
-    cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color, mat_output;
+#endif
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
     int color_temp_increment = 1;
@@ -272,9 +278,11 @@ int main(int argc, const char **argv) {
             color_temp_increment *= -1;
 
         rocalUpdateIntParameter(rocalGetIntValue(color_temp_adj) + color_temp_increment, color_temp_adj);
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
+        rocalCopyToOutput(handle, mat_input.data(), h * w * p);
         counter += input_batch_size;
+#if ENABLE_OPENCV
         if (save_frames) {
+            cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
             std::string batch_path = "output_frames/" + std::to_string(count);
             int status = mkdir(batch_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             if (status) continue;
@@ -300,7 +308,7 @@ int main(int argc, const char **argv) {
                 for (unsigned i = 0; i < ouput_frames_per_sequence; i++)  // Iterates over the frames in each sequence
                 {
                     std::string save_image_path = seq_path + "_output_" + std::to_string(i) + ".png";
-                    mat_output = mat_input(cv::Rect(0, ((b * single_image_height * ouput_frames_per_sequence) + (i * single_image_height)), w, single_image_height));
+                    mat_output = mat_in_view(cv::Rect(0, ((b * single_image_height * ouput_frames_per_sequence) + (i * single_image_height)), w, single_image_height));
                     if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
                         cv::imwrite(save_image_path, mat_color);
@@ -313,6 +321,7 @@ int main(int argc, const char **argv) {
                 video_writer.release();
             }
         }
+#endif
         if (enable_metadata) {
             std::vector<int> image_name_length(input_batch_size);
             RocalTensorList labels = rocalGetImageLabels(handle);
@@ -355,6 +364,5 @@ int main(int argc, const char **argv) {
     std::cout << "Processed " << counter << " images/frames" << std::endl << "Total Elapsed Time " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalResetLoaders(handle);
     rocalRelease(handle);
-    mat_input.release();
     return 0;
 }

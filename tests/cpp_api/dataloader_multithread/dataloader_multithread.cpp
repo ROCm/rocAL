@@ -29,9 +29,14 @@ THE SOFTWARE.
 #include <cstring>
 #include <iostream>
 #include <mutex>
-#include <opencv2/opencv.hpp>
 #include <string>
 #include <thread>
+#include <vector>
+
+#include "rocal_api.h"
+#include "rocal_api_types.h"
+#if ENABLE_OPENCV
+#include <opencv2/opencv.hpp>
 using namespace cv;
 
 #if USE_OPENCV_4
@@ -46,9 +51,7 @@ using namespace cv;
 #else
 #include <opencv/highgui.h>
 #endif
-
-#include "rocal_api.h"
-#include "rocal_api_types.h"
+#endif
 
 #define PRINT_NAMES_AND_LABELS 0  // uncomment for printing names and labels
 // #define ROCAL_MEMCPY_TO_HOST 0 //For HOST 0 / GPU 1
@@ -126,21 +129,25 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
                  ? 3
                  : 1);
     std::cout << "output width " << w << " output height " << h << " color planes " << p << " n " << n << std::endl;
+    std::vector<unsigned char> mat_input(h * w * p);
+#if ENABLE_OPENCV
     const unsigned number_of_cols = 1;  // no augmented case
                                         //  printf("Allocated output tensor of size(flat) %d\n", h*w*p+256);
     auto cv_color_format = ((p == 3) ? CV_8UC3 : CV_8UC1);
     cv::Mat mat_output(h, w * number_of_cols, cv_color_format);
-    cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
+#endif
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
     std::vector<std::string> names;
     names.resize(effective_batch_size);
     std::vector<int> image_name_length(effective_batch_size);
+#if ENABLE_OPENCV
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+#endif
 
     while (!rocalIsEmpty(handle)) {
         if (rocalRun(handle) != 0) {
@@ -148,7 +155,8 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
             rocalRelease(handle);
             return -1;
         }
-        counter += effective_batch_size;
+        // copy output to host as image
+        rocalCopyToOutput(handle, mat_input.data(), h * w * p);
 #if PRINT_NAMES_AND_LABELS
         unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
         std::vector<char> img_name(img_name_size);
@@ -164,11 +172,12 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         }
         std::cout << std::endl;
 #endif
+        counter += effective_batch_size;
         if (!display)
             continue;
-        // copy output to host as image
-        rocalCopyToOutput(handle, mat_input.data, h * w * p);
-        mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+#if ENABLE_OPENCV
+        cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
+        mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
         if (DISPLAY)
             cv::imshow("output.png", mat_color);
@@ -176,6 +185,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
             cv::imwrite("output.png", mat_color);
 
         col_counter = (col_counter + 1) % number_of_cols;
+#endif
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -192,8 +202,9 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
               << " " << rocal_timing.transfer_time << std::endl;
     std::cout << "Processed " << counter << " images/frames." << std::endl << "Total Elapsed Time: " << dur / 1000000 << " sec " << dur % 1000000 << " us " << std::endl;
     rocalRelease(handle);
-    mat_input.release();
+#if ENABLE_OPENCV
     mat_output.release();
+#endif
     return 0;
 }
 
