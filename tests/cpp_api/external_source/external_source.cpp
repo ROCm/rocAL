@@ -28,10 +28,11 @@ THE SOFTWARE.
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include <vector>
 
 #include "rocal_api.h"
-
+#if ENABLE_OPENCV
+#include <opencv2/opencv.hpp>
 using namespace cv;
 #if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
@@ -43,15 +44,16 @@ using namespace cv;
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #endif
 
-#define DISPLAY
-using namespace std::chrono;
-
 template <typename T>
 void convert_float_to_uchar_buffer(T *input_float_buffer, unsigned char *output_uchar_buffer, size_t data_size) {
     for (size_t i = 0; i < data_size; i++) {
         output_uchar_buffer[i] = (unsigned char)(*(input_float_buffer + i) * 255);
     }
 }
+#endif
+
+#define DISPLAY
+using namespace std::chrono;
 
 const std::array<std::pair<RocalImageColor, int>, 3> color_mappings = {
         {std::make_pair(ROCAL_COLOR_U8, 1),
@@ -168,6 +170,7 @@ int main(int argc, const char **argv) {
                 srcsize_height[i] = actual_read_size;  // It stored the actual file size
             }
         } else if (mode == 2) {  // Raw un compressed
+#if ENABLE_OPENCV
             srcsize_height.resize(file_names.size());
             srcsize_width.resize(file_names.size());
             for (uint32_t i = 0; i < file_names.size(); i++) {
@@ -203,6 +206,11 @@ int main(int argc, const char **argv) {
                 }
                 input_buffer.push_back(temp_image);
             }
+#else
+            std::cerr << "Mode 2 (raw_uncompressed) requires OpenCV to decode input images; not supported in this build.\n";
+            rocalRelease(handle);
+            return -1;
+#endif
         }
     }
     if (max_height != 0 && max_width != 0) {
@@ -238,7 +246,9 @@ int main(int argc, const char **argv) {
     }
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
+#if ENABLE_OPENCV
     cv::Mat mat_color;
+#endif
     const unsigned number_of_cols = 1;  // no augmented case
     int col_counter = 0;
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
@@ -253,7 +263,9 @@ int main(int argc, const char **argv) {
     names.resize(input_batch_size);
     labels.resize(total_images);
     RocalTensorList output_tensor_list;
+#if ENABLE_OPENCV
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? ((tensor_output_type == RocalTensorOutputType::ROCAL_FP32) ? CV_32FC3 : CV_8UC3) : CV_8UC1);
+#endif
     std::vector<ROIxywh> ROI_xywh;
     ROI_xywh.resize(input_batch_size);
     while (static_cast<int>(rocalGetRemainingImages(handle)) >= input_batch_size) {
@@ -319,7 +331,8 @@ int main(int argc, const char **argv) {
 
         output_tensor_list = rocalGetOutputTensors(handle);
 
-        if (!display) continue;
+#if ENABLE_OPENCV
+        if (display) {
         // Dump the output image
         std::vector<int> compression_params;
         compression_params.push_back(IMWRITE_PNG_COMPRESSION);
@@ -388,6 +401,8 @@ int main(int argc, const char **argv) {
         mat_output.release();
 
         cv::waitKey(1);
+        }  // if (display)
+#endif
 
         uint pipeline_type = 1;  // External Source Reader Support given for the classification pipeline only
         switch (pipeline_type) {

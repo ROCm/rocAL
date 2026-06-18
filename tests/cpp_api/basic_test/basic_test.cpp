@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "rocal_api.h"
 #define TEST_2
 
+#if ENABLE_OPENCV
 #include "opencv2/opencv.hpp"
 using namespace cv;
 #if USE_OPENCV_4
@@ -42,6 +43,7 @@ using namespace cv;
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #define cvDestroyWindow destroyWindow
+#endif
 #endif
 #define DISPLAY 0
 int main(int argc, const char **argv) {
@@ -142,7 +144,9 @@ int main(int argc, const char **argv) {
     int w = rocalGetOutputWidth(handle);
     int p = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? 3 : 1);
     std::cout << "output width " << w << " output height " << h << " color planes " << p << std::endl;
+#if ENABLE_OPENCV
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
+#endif
 
     const int total_tests = 2;
     int test_id = -1;
@@ -157,17 +161,18 @@ int main(int argc, const char **argv) {
         std::cout << "Available images = " << rocalGetRemainingImages(handle) << std::endl;
         int process_image_count = ((test_case == 0) ? rocalGetRemainingImages(handle) : run_len[test_id]);
         std::cout << "Process " << process_image_count << " images" << std::endl;
+        std::vector<unsigned char> mat_input(h * w * p);
+#if ENABLE_OPENCV
         if (DISPLAY)
             cv::waitKey(0);
         const unsigned number_of_cols = process_image_count / inputBatchSize;
         cv::Mat mat_output(h, w * number_of_cols, cv_color_format);
-        cv::Mat mat_input(h, w, cv_color_format);
         cv::Mat mat_color;
         auto win_name = "output";
         if (DISPLAY)
             cv::namedWindow(win_name, CV_WINDOW_AUTOSIZE);
-
         int col_counter = 0;
+#endif
         int counter = 0;
 
         while ((test_case == 0) ? !rocalIsEmpty(handle) : (counter < run_len[test_id])) {
@@ -177,7 +182,7 @@ int main(int argc, const char **argv) {
                 return -1;
             }
 
-            rocalCopyToOutput(handle, mat_input.data, h * w * p);
+            rocalCopyToOutput(handle, mat_input.data(), h * w * p);
 
             counter += inputBatchSize;
             RocalTensorList labels = rocalGetImageLabels(handle);
@@ -196,7 +201,9 @@ int main(int argc, const char **argv) {
             }
             std::cout << std::endl;
 
-            mat_input.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+#if ENABLE_OPENCV
+            cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
+            mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
             if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                 cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
                 if (DISPLAY)
@@ -213,17 +220,19 @@ int main(int argc, const char **argv) {
             if (DISPLAY)
                 cv::waitKey(200);
             col_counter = (col_counter + 1) % number_of_cols;
+#endif
         }
         std::cout << "Completed test id: " << test_id << " processed " << counter << " images\n";
-        if (DISPLAY)
-            cv::waitKey(0);
         std::cout << "rocAL reset\n";
         rocalResetLoaders(handle);
-        mat_input.release();
+#if ENABLE_OPENCV
+        if (DISPLAY)
+            cv::waitKey(0);
         mat_output.release();
         mat_color.release();
         if (DISPLAY)
             cvDestroyWindow(win_name);
+#endif
     }
 
     rocalRelease(handle);

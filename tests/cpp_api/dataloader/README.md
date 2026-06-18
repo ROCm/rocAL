@@ -7,7 +7,7 @@ This application demonstrates a basic usage of rocAL's C API to load RAW images 
 
 * Ubuntu Linux, [version `16.04` or later](https://www.microsoft.com/software-download/windows10)
 * rocAL library
-* [OpenCV 3.1](https://github.com/opencv/opencv/releases) or higher
+* Optional: OpenCV for display - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * ROCm Performance Primitives (RPP)
 
 ## Build Instructions

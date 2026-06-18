@@ -17,7 +17,7 @@ The test validates the `rocalSerialize` and `rocalGetSerializedString` APIs by:
 
 * Ubuntu Linux, version `22.04` or later
 * rocAL library
-* [OpenCV 4.0+](https://github.com/opencv/opencv/releases/tag/4.0.0)
+* Optional: OpenCV for display - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
 * ROCm Performance Primitives ([RPP](https://github.com/ROCm/rpp))
 
 ## Building
