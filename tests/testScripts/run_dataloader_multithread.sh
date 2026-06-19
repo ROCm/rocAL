@@ -5,10 +5,10 @@ set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE="${WORKSPACE:-$SCRIPT_DIR}"
-ROCM_PATH="${ROCM_PATH:-/opt/rocm}"
 LOG_DIR="${LOG_DIR:-/tmp/rocjpeg_decode_perf}"
 
 GPU_COUNT="${1:-${GPU_COUNT:-1}}"
+ROCM_PATH="${2:-${ROCM_PATH:-/opt/rocm}}"
 SHARD_COUNT="$GPU_COUNT"
 
 if [ -z "${DATASET:-}" ]; then

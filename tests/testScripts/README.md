@@ -79,10 +79,9 @@ Expected usage:
 ```bash
 export DATASET=/path/to/image_dataset
 export ROCAL_CPP_BIN=/path/to/dataloader_multithread
-export ROCM_PATH=/opt/rocm
 export LOG_DIR=/tmp/rocjpeg_decode_perf
 
-./run_dataloader_multithread.sh <gpu_count>
+./run_dataloader_multithread.sh <gpu_count> [rocm_path]
 ```
 
 ## Environment Variables
@@ -117,8 +116,11 @@ export ROCM_PATH=/opt/rocm
 export ROCJPEG_DECODER_CREATE_LOG=1
 ```
 
-The scripts use `ROCM_PATH` to set `LD_LIBRARY_PATH` and `PYTHONPATH`. If
-`ROCM_PATH` is not set, it defaults to `/opt/rocm`.
+The scripts use `ROCM_PATH` to set `LD_LIBRARY_PATH` and `PYTHONPATH`. The
+path can be passed as the optional second argument to
+`run_dataloader_multithread.sh`, which is useful for environments where ROCm is
+not installed under `/opt/rocm`, such as TheRock builds. If neither the argument
+nor `ROCM_PATH` is set, it defaults to `/opt/rocm`.
 
 ## Build Notes
 
@@ -155,7 +157,7 @@ size. In the ResNet50/ImageNet data-loader-only test, using a per-GPU batch of
 64 with two rocJPEG decoder instances per GPU kept each decoder at about 32
 images and avoided the long decode stalls seen with very large per-GPU batches.
 
-Recommended values for the tested MI300x8 setup:
+Values used for the reported MI300x8 validation run:
 
 ```bash
 export ROCAL_DECODE_MODE=hw
@@ -164,6 +166,12 @@ export ROCAL_NUM_THREADS=2
 export ROCAL_PREFETCH_DEPTH=6
 export ROCAL_LOADER_RELOAD_INTERVAL=0
 ```
+
+The key tuning values in this validation were `BATCH_SIZE=64` and
+`ROCAL_NUM_THREADS=2`, which kept each rocJPEG decoder instance at about 32
+images. `ROCAL_PREFETCH_DEPTH=6` was held constant from the training launcher
+setup for this comparison and is not intended as a universal prefetch-depth
+recommendation.
 
 Measured 37-epoch data-loader-only result on MI300x8:
 
@@ -175,10 +183,10 @@ Measured 37-epoch data-loader-only result on MI300x8:
 In this run, rocJPEG HW saved 956.45 seconds, or 15.94 minutes, for a 1.34x
 speedup and a 25.6% total-time reduction versus TurboJPEG CPU.
 
-These values are recommendations for the tested MI300x8 configuration, not
-global rocAL defaults. Other systems should choose batch and thread values that
-match the available GPU count, JPEG decode hardware, dataset characteristics,
-and training global-batch requirements.
+These values are validation results for the tested MI300x8 configuration, not
+global rocAL defaults. Other systems should choose batch, thread, and prefetch
+values that match the available GPU count, JPEG decode hardware, dataset
+characteristics, and training global-batch requirements.
 
 ## Output Logs
 
@@ -228,5 +236,5 @@ export ROCAL_CPP_BIN=/workspace/rocAL/build/tests/cpp_api/dataloader_multithread
 Then run the main rocAL benchmark:
 
 ```bash
-./run_dataloader_multithread.sh 1
+./run_dataloader_multithread.sh 1 "$ROCM_PATH"
 ```
