@@ -22,12 +22,33 @@ THE SOFTWARE.
 
 #include "loaders/image/image_read_and_decode.h"
 
+#include <algorithm>
 #include <omp.h>
 #include <cstring>
 #include <iterator>
+#include <string>
 
 #include "decoders/image/decoder_factory.h"
 #include "readers/image/external_source_reader.h"
+
+namespace {
+constexpr size_t kMaxRocJpegDecoderCount = 4;
+constexpr size_t kMinRocJpegSubBatchSize = 32;
+
+size_t choose_rocjpeg_decoder_count(size_t batch_size, size_t num_threads) {
+    const size_t requested_decoder_count =
+        std::max<size_t>(1, std::min(kMaxRocJpegDecoderCount, num_threads));
+
+    // Multiple rocJPEG decoder instances are beneficial only when each decoder
+    // receives enough images to amortize OpenMP, rocJPEG, HIP, and resize/setup
+    // overhead. Keep small batches on one decoder instead of splitting them
+    // into small sub-batches.
+    const size_t batch_limited_decoder_count =
+        std::max<size_t>(1, batch_size / kMinRocJpegSubBatchSize);
+
+    return std::min(requested_decoder_count, batch_limited_decoder_count);
+}
+}  // namespace
 
 std::tuple<Decoder::ColorFormat, unsigned>
 interpret_color_format(RocalColorFormat color_format) {
@@ -66,6 +87,7 @@ ImageReadAndDecode::~ImageReadAndDecode() {
 void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decoder_config, int batch_size, int device_id) {
     // Can initialize it to any decoder types if needed
     _batch_size = batch_size;
+    _num_threads = reader_config.get_cpu_num_threads();
     _compressed_buff.resize(batch_size);
     _decoder.resize(batch_size);
     _actual_read_size.resize(batch_size);
@@ -91,8 +113,18 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
             for (int i = 0; i < batch_size; i++) {
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
             }
-            _rocjpeg_decoder = create_decoder(decoder_config);
-            _rocjpeg_decoder->initialize(device_id, batch_size);
+            const size_t rocjpeg_decoder_count = choose_rocjpeg_decoder_count(static_cast<size_t>(batch_size), _num_threads);
+            _rocjpeg_decoders.resize(rocjpeg_decoder_count);
+            _rocjpeg_sub_batch_sizes.resize(rocjpeg_decoder_count);
+
+            const size_t base_sub_batch = static_cast<size_t>(batch_size) / rocjpeg_decoder_count;
+            const size_t sub_batch_remainder = static_cast<size_t>(batch_size) % rocjpeg_decoder_count;
+            for (size_t decoder_index = 0; decoder_index < rocjpeg_decoder_count; decoder_index++) {
+                const size_t sub_batch_size = base_sub_batch + ((decoder_index < sub_batch_remainder) ? 1 : 0);
+                _rocjpeg_sub_batch_sizes[decoder_index] = sub_batch_size;
+                _rocjpeg_decoders[decoder_index] = create_decoder(decoder_config);
+                _rocjpeg_decoders[decoder_index]->initialize(device_id, sub_batch_size);
+            }
         } else {
             for (int i = 0; i < batch_size; i++) {
                 _compressed_buff[i].resize(MAX_COMPRESSED_SIZE);  // If we don't need MAX_COMPRESSED_SIZE we can remove this & resize in load module
@@ -101,7 +133,6 @@ void ImageReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
             }
         }
     }
-    _num_threads = reader_config.get_cpu_num_threads();
     _reader = create_reader(reader_config);
     _is_external_source = (reader_config.type() == StorageType::EXTERNAL_FILE_SOURCE);
 }
@@ -290,7 +321,9 @@ ImageReadAndDecode::load(unsigned char *buff,
         for (size_t i = 0; i < _batch_size; i++)
             _decompressed_buff_ptrs[i] = buff + image_size * i;
 
-        if (_decoder_config._type != DecoderType::ROCJPEG && _decoder_config._type != DecoderType::ROCJPEG_CROPPED) {
+        const bool is_rocjpeg_decoder = _decoder_config._type == DecoderType::ROCJPEG ||
+                                        _decoder_config._type == DecoderType::ROCJPEG_CROPPED;
+        if (!is_rocjpeg_decoder) {
 #pragma omp parallel for num_threads(_num_threads)
             for (size_t i = 0; i < _batch_size; i++) {
                 // initialize the actual decoded height and width with the maximum
@@ -339,7 +372,7 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _actual_decoded_width[i] = scaledw;
                 _actual_decoded_height[i] = scaledh;
             }
-        } else if (_decoder_config._type == DecoderType::ROCJPEG || _decoder_config._type == DecoderType::ROCJPEG_CROPPED) {
+        } else {
 #if ENABLE_HIP
             // Set device ID for load routine thread once
             if (!_set_device_id) {
@@ -350,53 +383,114 @@ ImageReadAndDecode::load(unsigned char *buff,
                 _set_device_id = true;
             }
 #endif
-            // Iterate through each image in the batch and obtain the decode info
-            for (size_t i = 0; i < _batch_size; i++) {
-                _actual_decoded_width[i] = max_decoded_width;
-                _actual_decoded_height[i] = max_decoded_height;
-                int original_width, original_height, decoded_width, decoded_height;
-                if (_rocjpeg_decoder->decode_info(_compressed_buff[i].data(), _actual_read_size[i], &original_width, &original_height,
-                                            &decoded_width, &decoded_height, 
-                                            max_decoded_width, max_decoded_height, decoder_color_format, i) != Decoder::Status::OK) {
-                    // Substituting the image which failed decoding with other image from the same batch
-                    int j = ((i + 1) != _batch_size) ? _batch_size - 1 : _batch_size - 2;
-                    while ((j >= 0)) {
-                        if (_rocjpeg_decoder->decode_info(_compressed_buff[j].data(), _actual_read_size[j], &original_width, &original_height,
-                                                    &decoded_width, &decoded_height, 
-                                                    max_decoded_width, max_decoded_height, decoder_color_format, i) == Decoder::Status::OK) {
-                            _image_names[i] = _image_names[j];
-                            _compressed_buff[i] = _compressed_buff[j];
-                            _actual_read_size[i] = _actual_read_size[j];
-                            _compressed_image_size[i] = _compressed_image_size[j];
+            std::vector<size_t> rocjpeg_sub_batch_offsets(_rocjpeg_sub_batch_sizes.size(), 0);
+            for (size_t shard = 1; shard < _rocjpeg_sub_batch_sizes.size(); shard++) {
+                rocjpeg_sub_batch_offsets[shard] = rocjpeg_sub_batch_offsets[shard - 1] + _rocjpeg_sub_batch_sizes[shard - 1];
+            }
+
+            const int rocjpeg_decoder_threads = static_cast<int>(_rocjpeg_decoders.size());
+            bool rocjpeg_worker_failed = false;
+            std::string rocjpeg_worker_error;
+            auto record_rocjpeg_worker_error = [&](const std::string& error_message) {
+#pragma omp critical(rocjpeg_worker_error)
+                {
+                    if (!rocjpeg_worker_failed) {
+                        rocjpeg_worker_failed = true;
+                        rocjpeg_worker_error = error_message;
+                    }
+                }
+            };
+#pragma omp parallel for num_threads(rocjpeg_decoder_threads)
+            for (size_t shard = 0; shard < _rocjpeg_decoders.size(); shard++) {
+#if ENABLE_HIP
+                // HIP current device is thread-local; set it for each OpenMP worker.
+                hipError_t hip_status = hipSetDevice(_device_id);
+                if (hip_status != hipSuccess) {
+                    record_rocjpeg_worker_error("hipSetDevice failed inside rocJPEG shard worker");
+                    continue;
+                }
+#endif
+                auto& rocjpeg_decoder = _rocjpeg_decoders[shard];
+                const size_t shard_begin = rocjpeg_sub_batch_offsets[shard];
+                const size_t shard_size = _rocjpeg_sub_batch_sizes[shard];
+                const size_t shard_end = shard_begin + shard_size;
+                bool shard_failed = false;
+
+                for (size_t i = shard_begin; i < shard_end; i++) {
+                    const size_t local_index = i - shard_begin;
+                    _actual_decoded_width[i] = max_decoded_width;
+                    _actual_decoded_height[i] = max_decoded_height;
+                    int original_width, original_height, decoded_width, decoded_height;
+                    bool decode_info_found = false;
+                    int candidate = static_cast<int>(i);
+                    const int shard_begin_index = static_cast<int>(shard_begin);
+                    const int shard_end_index = static_cast<int>(shard_end);
+                    while (candidate >= shard_begin_index) {
+                        if (rocjpeg_decoder->decode_info(_compressed_buff[candidate].data(), _actual_read_size[candidate], &original_width, &original_height,
+                                                         &decoded_width, &decoded_height,
+                                                         max_decoded_width, max_decoded_height, decoder_color_format, static_cast<int>(local_index)) == Decoder::Status::OK) {
+                            if (candidate != static_cast<int>(i)) {
+                                _image_names[i] = _image_names[candidate];
+                                _compressed_buff[i] = _compressed_buff[candidate];
+                                _actual_read_size[i] = _actual_read_size[candidate];
+                                _compressed_image_size[i] = _compressed_image_size[candidate];
+                            }
+                            decode_info_found = true;
                             break;
-                        } else
-                            j--;
-                        if (j < 0) {
-                            THROW("All images in the batch failed decoding with rocJpeg decoder\n");
+                        }
+
+                        if (candidate == static_cast<int>(i)) {
+                            candidate = shard_end_index - 1;
+                        } else {
+                            candidate--;
+                        }
+                        if (candidate == static_cast<int>(i)) {
+                            candidate--;
+                        }
+                    }
+                    if (!decode_info_found) {
+                        record_rocjpeg_worker_error("All images in the rocJpeg sub-batch failed decoding\n");
+                        shard_failed = true;
+                        break;
+                    }
+                    _original_height[i] = original_height;
+                    _original_width[i] = original_width;
+                    _actual_decoded_width[i] = decoded_width;
+                    _actual_decoded_height[i] = decoded_height;
+
+                    if (rocjpeg_decoder->is_cropped_decoder()) {
+                        if (_randombboxcrop_meta_data_reader) {
+                            rocjpeg_decoder->set_bbox_coords(_bbox_coords[i]);
+                        } else if (_random_crop_dec_param) {
+                            Shape dec_shape = {_original_height[i], _original_width[i]};
+                            auto crop_window = _random_crop_dec_param->generate_crop_window(dec_shape, i);
+                            rocjpeg_decoder->set_crop_window(crop_window);
                         }
                     }
                 }
-                _original_height[i] = original_height;
-                _original_width[i] = original_width;
-                _actual_decoded_width[i] = decoded_width;
-                _actual_decoded_height[i] = decoded_height;
-
-                if (_rocjpeg_decoder->is_cropped_decoder()) {
-                    if (_randombboxcrop_meta_data_reader) {
-                        _rocjpeg_decoder->set_bbox_coords(_bbox_coords[i]);
-                    } else if (_random_crop_dec_param) {
-                        Shape dec_shape = {_original_height[i], _original_width[i]};
-                        auto crop_window = _random_crop_dec_param->generate_crop_window(dec_shape, i);
-                        _rocjpeg_decoder->set_crop_window(crop_window);
-                    }
+                if (shard_failed) {
+                    continue;
                 }
-            }
-            
-            if (_rocjpeg_decoder->decode_batch(_decompressed_buff_ptrs,
-                                               max_decoded_width, max_decoded_height,
-                                               _original_width, _original_height,
-                                               _actual_decoded_width, _actual_decoded_height) != Decoder::Status::OK) {
 
+                std::vector<unsigned char *> shard_output(_decompressed_buff_ptrs.begin() + shard_begin, _decompressed_buff_ptrs.begin() + shard_end);
+                std::vector<size_t> shard_original_width(_original_width.begin() + shard_begin, _original_width.begin() + shard_end);
+                std::vector<size_t> shard_original_height(_original_height.begin() + shard_begin, _original_height.begin() + shard_end);
+                std::vector<size_t> shard_actual_decoded_width(_actual_decoded_width.begin() + shard_begin, _actual_decoded_width.begin() + shard_end);
+                std::vector<size_t> shard_actual_decoded_height(_actual_decoded_height.begin() + shard_begin, _actual_decoded_height.begin() + shard_end);
+
+                if (rocjpeg_decoder->decode_batch(shard_output,
+                                                  max_decoded_width, max_decoded_height,
+                                                  shard_original_width, shard_original_height,
+                                                  shard_actual_decoded_width, shard_actual_decoded_height) != Decoder::Status::OK) {
+                    record_rocjpeg_worker_error("rocJpeg sub-batch decode failed\n");
+                    continue;
+                }
+
+                std::copy(shard_actual_decoded_width.begin(), shard_actual_decoded_width.end(), _actual_decoded_width.begin() + shard_begin);
+                std::copy(shard_actual_decoded_height.begin(), shard_actual_decoded_height.end(), _actual_decoded_height.begin() + shard_begin);
+            }
+            if (rocjpeg_worker_failed) {
+                THROW(rocjpeg_worker_error);
             }
         }
 

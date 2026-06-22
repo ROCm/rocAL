@@ -23,11 +23,15 @@ THE SOFTWARE.
 */
 
 #include <chrono>
+#include <algorithm>
+#include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <mutex>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "rocal_api.h"
 #include "rocal_api_types.h"
@@ -55,16 +59,22 @@ using namespace cv;
 using namespace std::chrono;
 std::mutex g_mtx;  // mutex for critical section
 
-int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, int shard_id, int num_shards, int dec_width, int dec_height, int batch_size, bool shuffle, bool display, int dec_mode) {
+int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, int shard_id, int num_shards, int dec_width, int dec_height, int batch_size, bool shuffle, bool display, int dec_mode, int cpu_thread_count) {
     std::unique_lock<std::mutex> lck(g_mtx, std::defer_lock);
     std::cout << "Running on "  << (gpu_mode >= 0 ? "GPU: " : "CPU: ") << gpu_mode << std::endl;
     std::cout << "shard_id: " << shard_id << std::endl;
     color_format = RocalImageColor::ROCAL_COLOR_RGB24;
     int gpu_id = (gpu_mode < 0) ? 0 : gpu_mode;
     RocalDecoderType dec_type = (RocalDecoderType)dec_mode;
+    const int rocjpeg_decoder_threads = std::max(1, std::min(4, cpu_thread_count));
+    const int effective_batch_size = (dec_mode == 4) ? batch_size * rocjpeg_decoder_threads : batch_size;
+    if (effective_batch_size != batch_size) {
+        std::cout << "per-decoder batch size: " << batch_size
+                  << " effective rocAL batch size: " << effective_batch_size << std::endl;
+    }
     lck.lock();
     // looks like OpenVX has some issue loading kernels from multiple threads at the same time
-    auto handle = rocalCreate(batch_size, (gpu_mode < 0) ? RocalProcessMode::ROCAL_PROCESS_CPU : RocalProcessMode::ROCAL_PROCESS_GPU, gpu_id, 1);
+    auto handle = rocalCreate(effective_batch_size, (gpu_mode < 0) ? RocalProcessMode::ROCAL_PROCESS_CPU : RocalProcessMode::ROCAL_PROCESS_GPU, gpu_id, cpu_thread_count);
     lck.unlock();
     if (rocalGetStatus(handle) != ROCAL_OK) {
         std::cout << "Could not create the Rocal context"
@@ -112,7 +122,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
 
     /*>>>>>>>>>>>>>>>>>>> Diplay using OpenCV <<<<<<<<<<<<<<<<<*/
     int n = rocalGetAugmentationBranchCount(handle);
-    int h = n * rocalGetOutputHeight(handle) * batch_size;
+    int h = n * rocalGetOutputHeight(handle) * effective_batch_size;
     int w = rocalGetOutputWidth(handle);
     int p = (((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ||
               (color_format == RocalImageColor::ROCAL_COLOR_RGB_PLANAR))
@@ -132,8 +142,8 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     int counter = 0;
     std::vector<std::string> names;
-    names.resize(batch_size);
-    std::vector<int> image_name_length(batch_size);
+    names.resize(effective_batch_size);
+    std::vector<int> image_name_length(effective_batch_size);
 #if ENABLE_OPENCV
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
@@ -147,22 +157,22 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         }
         // copy output to host as image
         rocalCopyToOutput(handle, mat_input.data(), h * w * p);
+#if PRINT_NAMES_AND_LABELS
         unsigned img_name_size = rocalGetImageNameLen(handle, image_name_length.data());
         std::vector<char> img_name(img_name_size);
         rocalGetImageName(handle, img_name.data());
-#if PRINT_NAMES_AND_LABELS
         RocalTensorList labels = rocalGetImageLabels(handle);
         std::string imageNamesStr(img_name.data());
         int pos = 0;
         int *labels_buffer = reinterpret_cast<int *>(labels->at(0)->buffer());
-        for (int i = 0; i < batch_size; i++) {
+        for (int i = 0; i < effective_batch_size; i++) {
             names[i] = imageNamesStr.substr(pos, image_name_length[i]);
             pos += image_name_length[i];
             std::cout << "name: " << names[i] << " label: " << labels_buffer[i] << " - ";
         }
         std::cout << std::endl;
 #endif
-        counter += batch_size;
+        counter += effective_batch_size;
         if (!display)
             continue;
 #if ENABLE_OPENCV
@@ -202,8 +212,9 @@ int main(int argc, const char **argv) {
     // check command-line usage
     const int MIN_ARG_COUNT = 2;
     if (argc < MIN_ARG_COUNT) {
-        std::cout << "Usage: dataloader_multithread <image_dataset_folder - required> <num_gpus - 1 (gpu)/cpu=0> " <<
-                    "num_shards decode_width decode_height batch_size shuffle display_on_off dec_mode<0(tjpeg)/1(opencv)/2(hwdec)>" << std::endl;
+        std::cout << "Usage: dataloader_multithread <image_dataset_folder - required> <num_gpus - 1 (gpu)/cpu=0> "
+                  << "num_shards decode_width decode_height batch_size shuffle display_on_off "
+                  << "dec_mode<0(tjpeg)/1(opencv)/4(rocjpeg)> cpu_thread_count" << std::endl;
         return -1;
     }
     int argIdx = 1;
@@ -216,6 +227,7 @@ int main(int argc, const char **argv) {
     bool shuffle = 0;
     int num_gpus = 0;
     int dec_mode = 0;
+    int cpu_thread_count = 1;
 
     if (argc > argIdx)
         num_gpus = atoi(argv[argIdx++]);
@@ -241,6 +253,15 @@ int main(int argc, const char **argv) {
     if (argc > argIdx)
         dec_mode = atoi(argv[argIdx++]);
 
+    if (argc > argIdx)
+        cpu_thread_count = atoi(argv[argIdx++]);
+
+    if (cpu_thread_count < 1) {
+        std::cout << "Invalid cpu_thread_count " << cpu_thread_count
+                  << ", using 1" << std::endl;
+        cpu_thread_count = 1;
+    }
+
     std::cout << "Number of GPUs: " << num_gpus << std::endl;
 
     // launch threads process shards
@@ -249,7 +270,7 @@ int main(int argc, const char **argv) {
     int th_id;
     for (th_id = 0; th_id < num_shards; th_id++) {
         loader_threads[th_id] = std::thread(thread_func, path, gpu_id, RocalImageColor::ROCAL_COLOR_RGB24, th_id, num_shards, decode_width, decode_height, inputBatchSize,
-                                            shuffle, display, dec_mode);
+                                            shuffle, display, dec_mode, cpu_thread_count);
         if (num_gpus) gpu_id = (gpu_id + 1) % num_gpus;
     }
     for (auto &th : loader_threads) {
