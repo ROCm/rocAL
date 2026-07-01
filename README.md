@@ -175,7 +175,7 @@ For your convenience, we provide the setup script,[rocAL-setup.py](https://githu
 ```shell
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
-                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
+                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:HIP/CPU]]
                       --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 
@@ -270,14 +270,6 @@ git clone https://github.com/ROCm/rocAL.git
 
 >[!NOTE]
 > To run tests with verbose option, use `make test ARGS="-VV"`.
-
-#### OpenCL Backend
-* Instructions for building rocAL with [**OPENCL** GPU backend](https://github.com/ROCm/rocAL/wiki/OpenCL-Backend)
-
->[!NOTE]
-> + rocAL_pybind is not supported on OPENCL backend
-> + rocAL cannot be installed for both GPU backends in the same default folder (i.e., /opt/rocm/)
-> + if an app interested in installing rocAL with both GPU backends, then add **-DCMAKE_INSTALL_PREFIX** in the cmake commands to install rocAL with OPENCL and HIP backends into two separate custom folders.
 
 ## Verify installation
 

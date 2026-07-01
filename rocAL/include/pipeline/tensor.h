@@ -298,7 +298,7 @@ class TensorInfo {
     std::vector<size_t> _dims;                                   //!< denotes the dimensions of the tensor
     std::vector<size_t> _strides;                                //!< stores the stride for each dimension in the tensor
     unsigned _batch_size;                                        //!< the batch size
-    RocalMemType _mem_type;                                      //!< memory type, currently either OpenCL or Host
+    RocalMemType _mem_type;                                      //!< memory type, currently Host
     RocalROIType _roi_type = RocalROIType::XYWH;                 //!< ROI type, currently either XYWH or LTRB
     RocalTensorDataType _data_type = RocalTensorDataType::FP32;  //!< tensor data type
     RocalTensorlayout _layout = RocalTensorlayout::NONE;         //!< layout of the tensor
@@ -389,7 +389,7 @@ class Tensor : public rocalTensor {
     const std::string& tensor_name() const { return _tensor_name; }
    private:
     vx_tensor _vx_handle = nullptr;  //!< The OpenVX tensor
-    void* _mem_handle = nullptr;     //!< Pointer to the tensor's internal buffer (opencl or host)
+    void* _mem_handle = nullptr;     //!< Pointer to the tensor's internal buffer (host)
     TensorInfo _info;                //!< The structure holding the info related to the stored OpenVX tensor
     vx_context _context = nullptr;
     vx_tensor _vx_roi_handle = nullptr;  //!< The OpenVX tensor for ROI
