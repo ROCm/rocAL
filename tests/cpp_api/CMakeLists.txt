@@ -236,7 +236,7 @@ add_test(
 if(rocdecode_FOUND)
   add_test(NAME video_tests_rocdecode
             COMMAND video_tests
-            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 2
+            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
 endif()
 
