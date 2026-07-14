@@ -130,6 +130,11 @@ int main(int argc, const char **argv) {
     if (argc >= argIdx + MIN_ARG_COUNT)
         enable_sequence_rearrange = atoi(argv[++argIdx]) ? true : false;
 
+    if (!(decoder_type == 0  || decoder_type == 1)) {
+        std::cout << "Usage: video_tests <video_file/video_dataset_folder/text file> <reader_case> <processing_device=1/cpu=0> <hardware_decode_mode=0/1> <batch_size> <sequence_length> <frame_step> <frame_stride> <gray_scale/rgb> <display_on_off> <shuffle:0/1> <resize_width> <resize_height> <filelist_framenum:0/1> <enable_meta_data:0/1> <enable_framenumber:0/1> <enable_timestamps:0/1> <enable_sequence_rearrange:0/1>\n";
+        std::cout << "hardware_decode_mode must be 0 or 1\n";
+        return -1;
+    }
     auto decoder_mode = ((decoder_type == 1) ? RocalDecodeDevice::ROCAL_HW_DECODE : RocalDecodeDevice::ROCAL_SW_DECODE);
     RocalDecoderType rocal_decoder_type = RocalDecoderType::ROCAL_DECODER_VIDEO_FFMPEG_SW;
     if (decoder_type == 1) {
