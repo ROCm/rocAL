@@ -103,7 +103,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. DBUILD_PYPACKAGE=OFF -DCMAKE_DISABLE_FIND_PACKAGE_rocdecode=ON
+          cmake .. -DBUILD_PYPACKAGE=OFF -DCMAKE_DISABLE_FIND_PACKAGE_rocdecode=ON
           make -j$(nproc)
           make install
       - name: Run tests
