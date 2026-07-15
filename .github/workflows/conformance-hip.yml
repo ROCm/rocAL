@@ -39,6 +39,7 @@ defaults:
 env:
   ROCM_PATH: /opt/rocm
   LD_LIBRARY_PATH: /opt/rocm/lib
+  HIP_VISIBLE_DEVICES: 0
 
 # Cancel superseded runs of the same ref so rapid pushes to a PR don't queue up
 # many full GPU pipelines and starve the runners. Pushes to default branches keep
