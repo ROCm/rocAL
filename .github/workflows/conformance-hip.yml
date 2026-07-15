@@ -108,4 +108,5 @@ jobs:
           make install
       - name: Run tests
         run: |
+          cd build
           make test
