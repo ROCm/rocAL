@@ -79,13 +79,16 @@ jobs:
           amd-smi || true
       - name: Install RPP
         run: |
-          git clone --depth 1 https://github.com/ROCm/rpp.git
-          cd rpp
-          mkdir build && cd build
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/ROCm/rocm-libraries.git
+          cd rocm-libraries
+          git sparse-checkout set projects/rpp
+          cd projects/rpp
+          mkdir build
+          cd build
           cmake ..
           make -j$(nproc)
           make install
-          cd ../..
+          cd ../../../../
       - name: Install MIVisionX (HIP)
         run: |
           git clone --depth 1 https://github.com/ROCm/MIVisionX.git
@@ -109,4 +112,5 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          make test
+          ctest -VV
+          ctest -VV --rerun-failed
