@@ -388,6 +388,8 @@ void MasterGraph::release() {
     _meta_data_nodes.clear();
     _tensor_map.clear();
     _ring_buffer.release_gpu_res();
+    // pipelines' associated vx nodes must have vxReleaseNode called before vxReleaseContext to avoid race condition
+    _pipeline_operators.clear();
     // shut_down loader:: required for releasing any allocated resourses
     for (auto &loader_module : _loader_modules)
         loader_module->shut_down();
