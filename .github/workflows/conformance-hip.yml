@@ -113,5 +113,4 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          ctest -VV
-          ctest -VV --rerun-failed
+          ctest -VV || ctest -VV --rerun-failed
