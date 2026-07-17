@@ -91,11 +91,11 @@ REGISTER_ENUM(RocalColorFormat)
 
 /*! \brief Memory type, host or device
  *
- *  Currently supports HOST, will support HIP in future
+ *  OpenCL (1) deprecated
  */
 enum class RocalMemType {
     HOST = 0,
-    HIP
+    HIP = 2
 };
 REGISTER_ENUM(RocalMemType)
 
