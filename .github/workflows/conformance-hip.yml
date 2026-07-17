@@ -39,6 +39,7 @@ defaults:
 env:
   ROCM_PATH: /opt/rocm
   LD_LIBRARY_PATH: /opt/rocm/lib
+  LIBVA_DRIVERS_PATH: /opt/rocm/lib/rocm_sysdeps/lib
   HIP_VISIBLE_DEVICES: 0
 
 # Cancel superseded runs of the same ref so rapid pushes to a PR don't queue up
