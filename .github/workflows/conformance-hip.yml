@@ -40,6 +40,7 @@ env:
   ROCM_PATH: /opt/rocm
   LD_LIBRARY_PATH: /opt/rocm/lib
   LIBVA_DRIVERS_PATH: /opt/rocm/lib/rocm_sysdeps/lib
+  LD_PRELOAD: $ROCM_PATH/lib/rocm_sysdeps/lib/librocm_sysdeps_va.so.2:$ROCM_PATH/lib/rocm_sysdeps/lib/librocm_sysdeps_va-drm.so.2
   HIP_VISIBLE_DEVICES: 0
 
 # Cancel superseded runs of the same ref so rapid pushes to a PR don't queue up
