@@ -51,8 +51,7 @@ concurrency:
 jobs:
   build-and-test:
     name: Build rocAL (HIP)
-    runs-on:
-      group: linux-shark42-runner-group
+    runs-on: [self-hosted, linux]
     container:
       image: mivisionx/ubuntu-24.04:rocm-20260710
       options: --device /dev/kfd --device /dev/dri
