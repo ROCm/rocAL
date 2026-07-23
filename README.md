@@ -205,7 +205,7 @@ Alternatively, for your convenience, all the required dependencies for the packa
 ```shell
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
-                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
+                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:HIP/CPU]]
                       --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 

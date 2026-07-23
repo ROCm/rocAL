@@ -568,13 +568,6 @@ MasterGraph::timing() {
     return t;
 }
 
-#define CHECK_CL_CALL_RET(x)                                                                \
-    {                                                                                       \
-        cl_int ret;                                                                         \
-        ret = x;                                                                            \
-        if (ret != CL_SUCCESS) THROW("ocl call failed " + STR(#x) + " error " + TOSTR(ret)) \
-    }
-
 MasterGraph::Status
 MasterGraph::to_tensor(void *out_ptr, RocalTensorlayout format, float multiplier0, float multiplier1,
                        float multiplier2, float offset0, float offset1, float offset2, bool reverse_channels, RocalTensorDataType output_data_type, RocalOutputMemType output_mem_type, uint max_roi_height, uint max_roi_width) {
@@ -1796,7 +1789,7 @@ MasterGraph::copy_out_tensor_planar(void *out_ptr, RocalTensorlayout format, flo
 
     const size_t single_output_tensor_size = output_tensor_info.data_size();
 
-    if (output_tensor_info.mem_type() == RocalMemType::OCL || output_tensor_info.mem_type() == RocalMemType::HIP) {
+    if (output_tensor_info.mem_type() == RocalMemType::HIP) {
         THROW("copy_out_tensor_planar for GPU affinity is not implemented")
     } else if (output_tensor_info.mem_type() == RocalMemType::HOST) {
         auto dims = output_tensor_info.dims();

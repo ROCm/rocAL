@@ -72,7 +72,7 @@ parser.add_argument('--directory', 	type=str, default='~/rocal-deps',
 parser.add_argument('--rocm_path', 	type=str, default='/opt/rocm',
                     help='ROCm Installation Path - optional (default:/opt/rocm) - ROCm Installation Required')
 parser.add_argument('--backend', 	type=str, default='HIP',
-                    help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/OCL/HIP]')
+                    help='rocAL Dependency Backend - optional (default:HIP) [options:CPU/HIP]')
 parser.add_argument('--reinstall', 	type=str, default='OFF',
                     help='Remove previous setup and reinstall - optional (default:OFF) [options:ON/OFF]')
 args = parser.parse_args()
@@ -88,9 +88,9 @@ if reinstall not in ('OFF', 'ON'):
         "ERROR: Re-Install Option Not Supported - [Supported Options: OFF or ON]\n")
     parser.print_help()
     exit(-1)
-if backend not in ('OCL', 'HIP', 'CPU'):
+if backend not in ('HIP', 'CPU'):
     error(
-        "ERROR: Backend Option Not Supported - [Supported Options: CPU or OCL or HIP]\n")
+        "ERROR: Backend Option Not Supported - [Supported Options: CPU or HIP]\n")
     parser.print_help()
     exit(-1)
 
@@ -283,14 +283,6 @@ pip3Packages = [
     'wheel~=0.37.0'
 ]
 
-openclDebianPackages = [
-    'ocl-icd-opencl-dev'
-]
-
-openclRPMPackages = [
-    'ocl-icd-devel'
-]
-
 # update
 ERROR_CHECK(os.system('sudo '+linuxFlag+' '+linuxSystemInstall +' '+linuxSystemInstall_check+' '+osUpdate))
 
@@ -305,13 +297,6 @@ if backend == 'HIP':
     else:
         install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, rocmRPMPackages)
         install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, coreRPMPackages)
-
-# Install OpenCL ICD Loader
-if backend == 'OCL':
-    if "ubuntu" in platformInfo:
-        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, openclDebianPackages)
-    else:
-        install_packages(linuxFlag, linuxSystemInstall, linuxSystemInstall_check, openclRPMPackages)
 
 #pip3 packages
 for i in range(len(pip3Packages)):
