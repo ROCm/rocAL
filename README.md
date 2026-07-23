@@ -112,7 +112,7 @@ Additional required libraries for package install only (for source install, thes
 ## Installation instructions
 
 > [!IMPORTANT]
-> First, install ROCm on your system. Second, install the required prerequisites for both installation methods.
+> First, install ROCm on your system. Second, install the prerequisites (required for both installation methods).
 > Then, choose your installation method based on your environment:
 > 1. **ROCm `7.2.x` or below** — install the prebuilt packages (see [package install](#package-install)).
 > 2. **ROCm `7.13` or later** — build from source on top of the ROCm Core SDK (see [source install](#source-install)).
