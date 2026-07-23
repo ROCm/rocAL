@@ -217,7 +217,7 @@ AudioLoader::update_output_audio() {
     if (_stopped)
         return LoaderModuleStatus::OK;
     // _circ_buff.get_read_buffer_x() is blocking and puts the caller on sleep until new audios are written to the _circ_buff
-    if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP)) {
+    if (_mem_type == RocalMemType::HIP) {
         auto data_buffer = _circ_buff.get_read_buffer_dev();
         _swap_handle_time.start();
         if (_output_tensor->swap_handle(data_buffer) != 0)
