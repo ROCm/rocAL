@@ -243,8 +243,8 @@ python rocAL-setup.py --directory [setup directory - optional (default:~/)]
 
 
 ### Source install
-
 For **ROCm `7.13` and above**.
+
 Install the additional source prerequisites:
 * [MIVisionX](https://github.com/ROCm/MIVisionX) - Manual install
   * Source: `https://github.com/ROCm/MIVisionX`
