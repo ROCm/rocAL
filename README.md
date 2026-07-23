@@ -75,35 +75,58 @@ rocAL can be currently used to perform the following operations either with rand
 > * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 > * `gfx908` or higher GPU required
 
-* Install ROCm `6.4.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
-> [!IMPORTANT]
-> `sudo amdgpu-install --usecase=rocm`
-
 ### Compiler
 
 * AMD Clang++ Version 18.0.0 or later - installed with ROCm
 
 ### Libraries
+See [installation instructions](#installation-instructions) for more details and instructions on the prerequisite libraries.
 
 * CMake Version `3.10` or later
+* MIVisionX (note different installation instructions for package vs source)
+* Google Protobuf Version `3.12.4` or later
+* TurboJPEG Version `2.0` or later
+* Python3 and Python3 PIP
+* Python3 Wheel
+* LMDB Library (Optional, needed only for Caffe/Caffe2 LMDB reader support)
+* FFMPEG
+* PyBind11
+* RapidJSON
 
+Additional required libraries for package install only (for source install, these are provided by ROCm `7.13` or later):
+* HIP
+* Half-precision floating-point library Version `1.12.0` or higher
+* rocDecode
+* rocJPEG
+
+> [!IMPORTANT]
+> * Required compiler support
+>   * C++17
+>   * OpenMP
+>   * Threads
+> * On Ubuntu 22.04 - Additional package required: libstdc++-12-dev
+>  ```shell
+>  sudo apt install libstdc++-12-dev
+>  `````
+
+## Installation instructions
+
+> [!IMPORTANT]
+> First, install ROCm on your system. Second, install the required prerequisites for both installation methods.
+> Then, choose your installation method based on your environment:
+> 1. **ROCm `7.2.x` or below** — install the prebuilt packages (see [package install](#package-install)).
+> 2. **ROCm `7.13` or later** — build from source on top of the ROCm Core SDK (see [source install](#source-install)).
+
+### Install the ROCm Core SDK
+Follow the [ROCm install guide](https://rocm.docs.amd.com/en/latest/install/rocm.html) for your GPU and operating system. Verify your hardware is on the [compatibility matrix](https://rocm.docs.amd.com/en/latest/compatibility/compatibility-matrix.html) before proceeding.
+
+### Install prerequisites (required for both package and source installs)
+>[!NOTE]
+> * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
+
+* CMake Version `3.10` or later
   ```shell
   sudo apt install cmake
-  ```
-
-* HIP
-  ```shell
-  sudo apt install hip-dev
-  ```
-
-* [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
-  ```shell
-  sudo apt install mivisionx-dev
-  ```
-
-* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
-  ```shell
-  sudo apt install half
   ```
 
 * [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
@@ -122,7 +145,6 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   sudo apt install python3-dev python3-pip
   ```
-
 * Python3 Wheel
   ```shell
   sudo apt install python3-wheel
@@ -132,21 +154,12 @@ rocAL can be currently used to perform the following operations either with rand
   sudo apt install liblmdb-dev
   ```
 
-* rocDecode - **Optional** for source install, but required for package install
-  ```shell
-  sudo apt install rocdecode-dev
-  ```
-
-* [rocJPEG](https://github.com/ROCm/rocJPEG) - **Optional** for source install, but required for package install
-  ```shell
-  sudo apt install rocjpeg-dev
-  ```
- 
-* [FFMPEG](https://www.ffmpeg.org) - **Optional** for source install, but required for package install
+* [FFMPEG](https://www.ffmpeg.org)
   ```shell
   sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
   ```
 
+Required manual installs:
 * [PyBind11](https://github.com/pybind/pybind11) - Manual install
   * Source: `https://github.com/pybind/pybind11`
   * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
@@ -155,22 +168,35 @@ rocAL can be currently used to perform the following operations either with rand
   * Source: `https://github.com/Tencent/rapidjson.git`
   * Tag: `master`
 
-> [!IMPORTANT]
-> * Required compiler support
->   * C++17
->   * OpenMP
->   * Threads
-> * On Ubuntu 22.04 - Additional package required: libstdc++-12-dev
->  ```shell
->  sudo apt install libstdc++-12-dev
->  `````
+### Package install
+Available for **ROCm `7.2.x` and below**.
 
->[!NOTE]
-> * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
+Install the additional prerequisite libraries:
+* HIP
+  ```shell
+  sudo apt install hip-dev
+  ```
 
-### Prerequisites setup script
+* [MIVisionX](https://github.com/ROCm/MIVisionX) Components: [AMD OpenVX&trade;](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx) and AMD OpenVX&trade; Extensions: `VX_RPP` and `AMD Media`
+  ```shell
+  sudo apt install mivisionx-dev
+  ```
 
-For your convenience, we provide the setup script,[rocAL-setup.py](https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py), which installs all required dependencies. Run this script only once.
+* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+  ```shell
+  sudo apt install half
+  ```
+* rocDecode
+  ```shell
+  sudo apt install rocdecode-dev
+  ```
+
+* [rocJPEG](https://github.com/ROCm/rocJPEG)
+  ```shell
+  sudo apt install rocjpeg-dev
+  ```
+#### Prerequisites setup script
+Alternatively, for your convenience, all the required dependencies for the package install can be installed via the provided setup script, [rocAL-setup.py](https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py). Run this script only once.
 
 ```shell
 python rocAL-setup.py --directory [setup directory - optional (default:~/)]
@@ -179,20 +205,7 @@ python rocAL-setup.py --directory [setup directory - optional (default:~/)]
                       --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
 ```
 
-## Installation instructions
-
-The installation process uses the following steps:
-
-* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
-
-* Install ROCm `7.0.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
-
->[!IMPORTANT]
-> Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
-
-### Package install
-
-Install rocAL runtime, development, and test packages.
+#### Install rocAL runtime, development, and test packages
 
 * Runtime package - `rocal` only provides the dynamic libraries
 * Development package - `rocal-dev`/`rocal-devel` provides the libraries, executables, header files, and samples
@@ -228,38 +241,37 @@ Install rocAL runtime, development, and test packages.
 > * rocAL Python module: To use python module, you can set PYTHONPATH:
 >   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
 
+
 ### Source install
 
-To build rocAL from source and install, follow the steps below:
+For **ROCm `7.13` and above**.
+Install the additional source prerequisites:
+* [MIVisionX](https://github.com/ROCm/MIVisionX) - Manual install
+  * Source: `https://github.com/ROCm/MIVisionX`
+
+Then, build rocAL from source and install:
 
 * Clone rocAL source code
 
 ```shell
 git clone https://github.com/ROCm/rocAL.git
+cd rocAL
 ```
 
-#### HIP Backend
-
-* Instructions for building rocAL with the **HIP** GPU backend (default GPU backend):
-  + run the setup script to install all the dependencies required by the **HIP** GPU backend:
-  ```shell
-  cd rocAL
-  python rocAL-setup.py
-  ```
-
-  + run the below commands to build rocAL with the **HIP** GPU backend:
-  ```shell
-  mkdir build-hip
-  cd build-hip
-  cmake ../
-  make -j8
-  sudo make install
-  ```
+* Run the below commands to build rocAL with the **HIP** GPU backend:
+```shell
+mkdir build-hip
+cd build-hip
+cmake ../
+make -j8
+sudo make install
+```
 >[!NOTE]
 > * `PyPackageInstall` used for rocal_pybind installation
 
 
 >[!IMPORTANT]
+
 > * Use `-D PYTHON_VERSION_SUGGESTED=3.x` with `cmake` for using a specific Python3 version if required.
 > * Use `-D AUDIO_SUPPORT=ON` to enable Audio features, Audio support will be enabled by default with ROCm versions > 6.2
 
@@ -270,15 +282,6 @@ git clone https://github.com/ROCm/rocAL.git
 
 >[!NOTE]
 > To run tests with verbose option, use `make test ARGS="-VV"`.
-
-#### OpenCL Backend
-* Instructions for building rocAL with [**OPENCL** GPU backend](https://github.com/ROCm/rocAL/wiki/OpenCL-Backend)
-
->[!NOTE]
-> + rocAL_pybind is not supported on OPENCL backend
-> + rocAL cannot be installed for both GPU backends in the same default folder (i.e., /opt/rocm/)
-> + if an app interested in installing rocAL with both GPU backends, then add **-DCMAKE_INSTALL_PREFIX** in the cmake commands to install rocAL with OPENCL and HIP backends into two separate custom folders.
-
 ## Verify installation
 
 * The installer will copy
