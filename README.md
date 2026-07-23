@@ -82,10 +82,10 @@ rocAL can be currently used to perform the following operations either with rand
 ### Libraries
 See [installation instructions](#installation-instructions) for more details and instructions on the prerequisite libraries.
 
-* CMake Version `3.10` or later
-* MIVisionX (note different installation instructions for package vs source)
-* Google Protobuf Version `3.12.4` or later
-* TurboJPEG Version `2.0` or later
+* CMake (Version `3.10` or later)
+* MIVisionX (note different installation instructions for package and source)
+* Google Protobuf (Version `3.12.4` or later)
+* TurboJPEG (Version `2.0` or later)
 * Python3 and Python3 PIP
 * Python3 Wheel
 * LMDB Library (Optional, needed only for Caffe/Caffe2 LMDB reader support)
@@ -95,7 +95,7 @@ See [installation instructions](#installation-instructions) for more details and
 
 Additional required libraries for package install only (for source install, these are provided by ROCm `7.13` or later):
 * HIP
-* Half-precision floating-point library Version `1.12.0` or higher
+* Half-precision floating-point library (Version `1.12.0` or higher)
 * rocDecode
 * rocJPEG
 
