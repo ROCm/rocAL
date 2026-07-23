@@ -138,7 +138,7 @@ Follow the [ROCm install guide](https://rocm.docs.amd.com/en/latest/install/rocm
   ```shell
   sudo apt install libturbojpeg0-dev
   ```
-  > [!NOTE]
+>[!NOTE]
   > If TurboJPEG `>= 2.0` is not available to install via your distribution's repository, it must be manually installed. Source: [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo).
 
 * Python3 and Python3 PIP
@@ -271,7 +271,6 @@ sudo make install
 
 
 >[!IMPORTANT]
-
 > * Use `-D PYTHON_VERSION_SUGGESTED=3.x` with `cmake` for using a specific Python3 version if required.
 > * Use `-D AUDIO_SUPPORT=ON` to enable Audio features, Audio support will be enabled by default with ROCm versions > 6.2
 
