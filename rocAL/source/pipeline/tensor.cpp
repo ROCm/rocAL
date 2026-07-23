@@ -30,8 +30,6 @@ THE SOFTWARE.
 
 vx_enum vx_mem_type(RocalMemType mem) {
     switch (mem) {
-        case RocalMemType::OCL:
-            return VX_MEMORY_TYPE_OPENCL;
         case RocalMemType::HOST:
             return VX_MEMORY_TYPE_HOST;
         case RocalMemType::HIP:
