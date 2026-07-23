@@ -90,6 +90,7 @@ See [installation instructions](#installation-instructions) for more details and
 * Python3 Wheel
 * LMDB Library (Optional, needed only for Caffe/Caffe2 LMDB reader support)
 * FFMPEG
+* pkg-config
 * PyBind11
 * RapidJSON
 
@@ -128,15 +129,18 @@ Follow the [ROCm install guide](https://rocm.docs.amd.com/en/latest/install/rocm
   ```shell
   sudo apt install cmake
   ```
-
+* pkg-config
+  ```shell
+  sudo apt install pkg-config
+  ```
 * [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
   ```shell
-  sudo apt install libprotobuf-dev
+  sudo apt install libprotobuf-dev protobuf-compiler
   ```
 
 * [TurboJPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
   ```shell
-  sudo apt install libturbojpeg0-dev
+  sudo apt install libturbojpeg0-dev libjpeg-dev
   ```
 >[!NOTE]
   > If TurboJPEG `>= 2.0` is not available to install via your distribution's repository, it must be manually installed. Source: [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo).
