@@ -284,7 +284,13 @@ sudo make install
   ```
 
 >[!NOTE]
-> To run tests with verbose option, use `make test ARGS="-VV"`.
+> * Make sure all rocAL required libraries are in your PATH. It may also be necessary to set the LIBVA_DRIVERS_PATH and LD_PRELOAD:
+> ```shell
+> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
+> export LIBVA_DRIVERS_PATH=/opt/rocm/lib/rocm_sysdeps/lib
+> export LD_PRELOAD=$ROCM_PATH/lib/rocm_sysdeps/lib/librocm_sysdeps_va.so.2:$ROCM_PATH/lib/rocm_sysdeps/lib/librocm_sysdeps_va-drm.so.2
+> ```
+> * To run tests with verbose option, use `make test ARGS="-VV"`.
 ## Verify installation
 
 * The installer will copy
