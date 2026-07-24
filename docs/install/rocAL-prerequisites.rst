@@ -14,9 +14,10 @@ rocAL prerequisites
 * OpenMP
 * Threads
 
-The installation method used for rocAL depends on the version of ROCm. For ROCm 7.2.x or below, follow the :doc:`package install method </rocAL-package-install>`. For ROCm 7.13 or above, `build rocAL from source <./rocAL-build-and-install>` on top of the ROCm Core SDK.
+The installation method used for rocAL depends on the version of ROCm. For ROCm 7.2.x or below, follow the :doc:`package install method <./rocAL-package-install>`. For ROCm 7.13 or above, :doc:`build rocAL from source <./rocAL-build-and-install>` on top of the ROCm Core SDK.
 
 The following prerequisites are required by both installation methods:
+
 * cmake
 * pkg-config 
 * `Google Protobuf <https://developers.google.com/protocol-buffers>`_ version 3.12.4 or later
@@ -24,8 +25,8 @@ The following prerequisites are required by both installation methods:
 * Python3, Python3 pip, and Python3 wheel
 * `LMDB Library <http://www.lmdb.tech/doc/>`_
 * `FFMPEG <https://www.ffmpeg.org>`_
-* `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v2.11.1>`_ version 2.11.1 (`Manual install from <https://github.com/pybind/pybind11>`)
-* `RapidJSON <https://github.com/Tencent/rapidjson>`_ (`Manual install <https://github.com/Tencent/rapidjson.git>`)
+* `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v2.11.1>`_ version 2.11.1 (Manual install from `<https://github.com/pybind/pybind11>`_)
+* `RapidJSON <https://github.com/Tencent/rapidjson>`_ (Manual install from `<https://github.com/Tencent/rapidjson.git>`_)
 
 .. note::
 
@@ -70,9 +71,10 @@ Use the following commands to install those packages (make sure to also manually
       sudo zypper install python3-devel python3-pip python3-wheel
       sudo zypper install lmdb-devel # optional: needed for Caffe/Caffe2 LMDB reader support
 
-For source install, it is also required to install `MIVisionX manually <https://github.com/ROCm/MIVisionX>`. 
+For source install, it is also required to install MIVisionX manually (`<https://github.com/ROCm/MIVisionX>`_).
 
-The following prerequisites are only for package install:
+For package install, it is also required to install the following prerequisites:
+
 * `MIVisionX <https://rocm.docs.amd.com/projects/MIVisionX/en/latest/index.html>`_ with |openvx|_ and the VX_RPP and AMD Media extensions
 * `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/index.html>`_
 * `The half-precision floating-point library <https://half.sourceforge.net>`_ version 1.12.0 or later
