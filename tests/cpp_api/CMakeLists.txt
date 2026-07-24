@@ -244,11 +244,11 @@ endif()
 if(rocjpeg_FOUND)
   add_test(NAME basic_test_rocjpeg_gray
             COMMAND basic_test 
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 2
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 1
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
   add_test(NAME basic_test_rocjpeg_rgb
             COMMAND basic_test 
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 2
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 1
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
 endif()
 
