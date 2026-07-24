@@ -75,22 +75,107 @@ rocAL can be currently used to perform the following operations either with rand
 > * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 > * `gfx908` or higher GPU required
 
-* Install ROCm `6.4.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
-> [!IMPORTANT]
-> `sudo amdgpu-install --usecase=rocm`
-
 ### Compiler
 
 * AMD Clang++ Version 18.0.0 or later - installed with ROCm
 
 ### Libraries
+See [installation instructions](#installation-instructions) for more details and instructions on the prerequisite libraries.
+
+* CMake (Version `3.10` or later)
+* MIVisionX (note different installation instructions for package and source)
+* Google Protobuf (Version `3.12.4` or later)
+* TurboJPEG (Version `2.0` or later)
+* Python3 and Python3 PIP
+* Python3 Wheel
+* LMDB Library (Optional, needed only for Caffe/Caffe2 LMDB reader support)
+* FFMPEG
+* pkg-config
+* PyBind11
+* RapidJSON
+
+Additional required libraries for package install only (for source install, these are provided by ROCm `7.13` or later):
+* HIP
+* Half-precision floating-point library (Version `1.12.0` or higher)
+* rocDecode
+* rocJPEG
+
+> [!IMPORTANT]
+> * Required compiler support
+>   * C++17
+>   * OpenMP
+>   * Threads
+> * On Ubuntu 22.04 - Additional package required: libstdc++-12-dev
+>  ```shell
+>  sudo apt install libstdc++-12-dev
+>  `````
+
+## Installation instructions
+
+> [!IMPORTANT]
+> First, install ROCm on your system. Second, install the prerequisites (required for both installation methods).
+> Then, choose your installation method based on your environment:
+> 1. **ROCm `7.2.x` or below** — install the prebuilt packages (see [package install](#package-install)).
+> 2. **ROCm `7.13` or later** — build from source on top of the ROCm Core SDK (see [source install](#source-install)).
+
+### Install the ROCm Core SDK
+Follow the [ROCm install guide](https://rocm.docs.amd.com/en/latest/install/rocm.html) for your GPU and operating system. Verify your hardware is on the [compatibility matrix](https://rocm.docs.amd.com/en/latest/compatibility/compatibility-matrix.html) before proceeding.
+
+### Install prerequisites (required for both package and source installs)
+>[!NOTE]
+> * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
 
 * CMake Version `3.10` or later
-
   ```shell
   sudo apt install cmake
   ```
+* pkg-config
+  ```shell
+  sudo apt install pkg-config
+  ```
+* [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
+  ```shell
+  sudo apt install libprotobuf-dev protobuf-compiler
+  ```
 
+* [TurboJPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
+  ```shell
+  sudo apt install libturbojpeg0-dev libjpeg-dev
+  ```
+>[!NOTE]
+  > If TurboJPEG `>= 2.0` is not available to install via your distribution's repository, it must be manually installed. Source: [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo).
+
+* Python3 and Python3 PIP
+  ```shell
+  sudo apt install python3-dev python3-pip
+  ```
+* Python3 Wheel
+  ```shell
+  sudo apt install python3-wheel
+  ```
+* [LMDB Library](http://www.lmdb.tech/doc/) - **Optional**: needed only for Caffe/Caffe2 LMDB reader support
+  ```shell
+  sudo apt install liblmdb-dev
+  ```
+
+* [FFMPEG](https://www.ffmpeg.org)
+  ```shell
+  sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+  ```
+
+Required manual installs:
+* [PyBind11](https://github.com/pybind/pybind11) - Manual install
+  * Source: `https://github.com/pybind/pybind11`
+  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
+
+* [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
+  * Source: `https://github.com/Tencent/rapidjson.git`
+  * Tag: `master`
+
+### Package install
+Available for **ROCm `7.2.x` and below**.
+
+#### Install the additional prerequisite libraries:
 * HIP
   ```shell
   sudo apt install hip-dev
@@ -105,94 +190,17 @@ rocAL can be currently used to perform the following operations either with rand
   ```shell
   sudo apt install half
   ```
-
-* [Google Protobuf](https://developers.google.com/protocol-buffers) - Version `3.12.4` or higher
-  ```shell
-  sudo apt install libprotobuf-dev
-  ```
-
-* [TurboJPEG](https://libjpeg-turbo.org/) - Version `2.0` or higher
-  ```shell
-  sudo apt install libturbojpeg0-dev
-  ```
-  > [!NOTE]
-  > If TurboJPEG `>= 2.0` is not available to install via your distribution's repository, it must be manually installed. Source: [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo).
-
-* Python3 and Python3 PIP
-  ```shell
-  sudo apt install python3-dev python3-pip
-  ```
-
-* Python3 Wheel
-  ```shell
-  sudo apt install python3-wheel
-  ```
-* [LMDB Library](http://www.lmdb.tech/doc/) - **Optional**: needed only for Caffe/Caffe2 LMDB reader support
-  ```shell
-  sudo apt install liblmdb-dev
-  ```
-
-* rocDecode - **Optional** for source install, but required for package install
+* rocDecode
   ```shell
   sudo apt install rocdecode-dev
   ```
 
-* [rocJPEG](https://github.com/ROCm/rocJPEG) - **Optional** for source install, but required for package install
+* [rocJPEG](https://github.com/ROCm/rocJPEG)
   ```shell
   sudo apt install rocjpeg-dev
   ```
- 
-* [FFMPEG](https://www.ffmpeg.org) - **Optional** for source install, but required for package install
-  ```shell
-  sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
-  ```
 
-* [PyBind11](https://github.com/pybind/pybind11) - Manual install
-  * Source: `https://github.com/pybind/pybind11`
-  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
-
-* [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
-  * Source: `https://github.com/Tencent/rapidjson.git`
-  * Tag: `master`
-
-> [!IMPORTANT]
-> * Required compiler support
->   * C++17
->   * OpenMP
->   * Threads
-> * On Ubuntu 22.04 - Additional package required: libstdc++-12-dev
->  ```shell
->  sudo apt install libstdc++-12-dev
->  `````
-
->[!NOTE]
-> * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
-
-### Prerequisites setup script
-
-For your convenience, we provide the setup script,[rocAL-setup.py](https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py), which installs all required dependencies. Run this script only once.
-
-```shell
-python rocAL-setup.py --directory [setup directory - optional (default:~/)]
-                      --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
-                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:HIP/CPU]]
-                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
-```
-
-## Installation instructions
-
-The installation process uses the following steps:
-
-* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
-
-* Install ROCm `7.0.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
-
->[!IMPORTANT]
-> Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
-
-### Package install
-
-Install rocAL runtime, development, and test packages.
+#### Install rocAL runtime, development, and test packages
 
 * Runtime package - `rocal` only provides the dynamic libraries
 * Development package - `rocal-dev`/`rocal-devel` provides the libraries, executables, header files, and samples
@@ -228,33 +236,31 @@ Install rocAL runtime, development, and test packages.
 > * rocAL Python module: To use python module, you can set PYTHONPATH:
 >   + `export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH`
 
-### Source install
 
-To build rocAL from source and install, follow the steps below:
+### Source install
+For **ROCm `7.13` and above**.
+
+Install the additional source prerequisites:
+* [MIVisionX](https://github.com/ROCm/MIVisionX) - Manual install
+  * Source: `https://github.com/ROCm/MIVisionX`
+
+Then, build rocAL from source and install:
 
 * Clone rocAL source code
 
 ```shell
 git clone https://github.com/ROCm/rocAL.git
+cd rocAL
 ```
 
-#### HIP Backend
-
-* Instructions for building rocAL with the **HIP** GPU backend (default GPU backend):
-  + run the setup script to install all the dependencies required by the **HIP** GPU backend:
-  ```shell
-  cd rocAL
-  python rocAL-setup.py
-  ```
-
-  + run the below commands to build rocAL with the **HIP** GPU backend:
-  ```shell
-  mkdir build-hip
-  cd build-hip
-  cmake ../
-  make -j8
-  sudo make install
-  ```
+* Run the below commands to build rocAL with the **HIP** GPU backend:
+```shell
+mkdir build-hip
+cd build-hip
+cmake ../
+make -j8
+sudo make install
+```
 >[!NOTE]
 > * `PyPackageInstall` used for rocal_pybind installation
 
@@ -269,8 +275,13 @@ git clone https://github.com/ROCm/rocAL.git
   ```
 
 >[!NOTE]
-> To run tests with verbose option, use `make test ARGS="-VV"`.
-
+> * Make sure all rocAL required libraries are in your PATH. It may also be necessary to set the LIBVA_DRIVERS_PATH and LD_PRELOAD:
+> ```shell
+> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
+> export LIBVA_DRIVERS_PATH=/opt/rocm/lib/rocm_sysdeps/lib
+> export LD_PRELOAD=$ROCM_PATH/lib/rocm_sysdeps/lib/librocm_sysdeps_va.so.2:$ROCM_PATH/lib/rocm_sysdeps/lib/librocm_sysdeps_va-drm.so.2
+> ```
+> * To run tests with verbose option, use `make test ARGS="-VV"`.
 ## Verify installation
 
 * The installer will copy
