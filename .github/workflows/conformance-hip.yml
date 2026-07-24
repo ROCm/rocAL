@@ -52,7 +52,7 @@ jobs:
   build-and-test:
     name: Build rocAL (HIP)
     runs-on:
-      group: linux-shark42-runner-group
+      group: linux-shark39-runner-group
     container:
       image: mivisionx/ubuntu-24.04:rocm-20260710
       options: --device /dev/kfd --device /dev/dri
