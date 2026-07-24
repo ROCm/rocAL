@@ -71,9 +71,9 @@ Use the following commands to install those packages (make sure to also manually
       sudo zypper install python3-devel python3-pip python3-wheel
       sudo zypper install lmdb-devel # optional: needed for Caffe/Caffe2 LMDB reader support
 
-For source install, it is also required to install MIVisionX manually (`<https://github.com/ROCm/MIVisionX>`_).
+For **source install**, it is also required to install MIVisionX manually (`<https://github.com/ROCm/MIVisionX>`_).
 
-For package install, it is also required to install the following prerequisites:
+For **package install**, it is also required to install the following prerequisites:
 
 * `MIVisionX <https://rocm.docs.amd.com/projects/MIVisionX/en/latest/index.html>`_ with |openvx|_ and the VX_RPP and AMD Media extensions
 * `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/index.html>`_
