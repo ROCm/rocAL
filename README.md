@@ -175,7 +175,7 @@ Required manual installs:
 ### Package install
 Available for **ROCm `7.2.x` and below**.
 
-Install the additional prerequisite libraries:
+#### Install the additional prerequisite libraries:
 * HIP
   ```shell
   sudo apt install hip-dev
@@ -199,15 +199,6 @@ Install the additional prerequisite libraries:
   ```shell
   sudo apt install rocjpeg-dev
   ```
-#### Prerequisites setup script
-Alternatively, for your convenience, all the required dependencies for the package install can be installed via the provided setup script, [rocAL-setup.py](https://github.com/ROCm/rocAL/blob/develop/rocAL-setup.py). Run this script only once.
-
-```shell
-python rocAL-setup.py --directory [setup directory - optional (default:~/)]
-                      --rocm_path [ROCm Installation Path - optional (default:/opt/rocm)]
-                      --backend   [rocAL Dependency Backend - optional (default:HIP) [options:OCL/HIP]]
-                      --reinstall [Reinstall - optional (default:OFF)[options:ON/OFF]]
-```
 
 #### Install rocAL runtime, development, and test packages
 
