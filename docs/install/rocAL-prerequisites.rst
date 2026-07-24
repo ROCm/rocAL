@@ -22,7 +22,7 @@ When building rocAL from source, the |setup|_ setup script can be used to instal
   
   rocAL-setup.py [-h] [--directory DIRECTORY; default ~/] \
                       [--rocm_path ROCM_PATH; default /opt/rocm] \
-                      [--backend HIP|OCL; default HIP] \
+                      [--backend HIP|CPU; default HIP] \
                       [--ffmpeg ON|OFF; default OFF] \
                       [--reinstall ON|OFF; default OFF]
 

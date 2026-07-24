@@ -53,28 +53,28 @@ void RingBuffer::block_if_full() {
 
 std::pair<std::vector<void *>, std::vector<unsigned *>> RingBuffer::get_read_buffers() {
     block_if_empty();
-    if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+    if (_mem_type == RocalMemType::HIP)
         return std::make_pair(_dev_sub_buffer[_read_ptr], _dev_roi_buffers[_read_ptr]);
     return std::make_pair(_host_sub_buffers[_read_ptr], _host_roi_buffers[_read_ptr]);
 }
 
 std::pair<void *, void *> RingBuffer::get_box_encode_read_buffers() {
     block_if_empty();
-    if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+    if (_mem_type == RocalMemType::HIP)
         return std::make_pair(_dev_bbox_buffer[_read_ptr], _dev_labels_buffer[_read_ptr]);
     return std::make_pair(_host_meta_data_buffers[_read_ptr][1], _host_meta_data_buffers[_read_ptr][0]);
 }
 
 std::pair<std::vector<void *>, std::vector<unsigned *>> RingBuffer::get_write_buffers() {
     block_if_full();
-    if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+    if (_mem_type == RocalMemType::HIP)
         return std::make_pair(_dev_sub_buffer[_write_ptr], _dev_roi_buffers[_write_ptr]);
     return std::make_pair(_host_sub_buffers[_write_ptr], _host_roi_buffers[_write_ptr]);
 }
 
 std::pair<void *, void *> RingBuffer::get_box_encode_write_buffers() {
     block_if_full();
-    if ((_mem_type == RocalMemType::OCL) || (_mem_type == RocalMemType::HIP))
+    if (_mem_type == RocalMemType::HIP)
         return std::make_pair(_dev_bbox_buffer[_write_ptr], _dev_labels_buffer[_write_ptr]);
     return std::make_pair(_host_meta_data_buffers[_write_ptr][1], _host_meta_data_buffers[_write_ptr][0]);
 }
@@ -218,7 +218,7 @@ void RingBuffer::init_metadata(RocalMemType mem_type, std::vector<size_t> &sub_b
 
     // Allocating buffers
     _meta_data_sub_buffer_count = sub_buffer_size.size();
-    if (mem_type == RocalMemType::OCL || mem_type == RocalMemType::HIP) {
+    if (mem_type == RocalMemType::HIP) {
         THROW("Metadata is not supported with GPU backends")
     } else {
         _host_meta_data_buffers.resize(BUFF_DEPTH);
