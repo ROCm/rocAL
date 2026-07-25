@@ -80,6 +80,18 @@ jobs:
         run: |
           rocminfo
           amd-smi || true
+      - name: Install rocDecode
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/ROCm/rocm-systems.git
+          cd rocm-systems
+          git sparse-checkout set projects/rocdecode
+          cd projects/rocdecode
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc)
+          make install
+          cd ../../../../
       - name: Install RPP
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/ROCm/rocm-libraries.git
@@ -109,7 +121,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DBUILD_PYPACKAGE=OFF -DCMAKE_DISABLE_FIND_PACKAGE_rocdecode=ON
+          cmake .. -DBUILD_PYPACKAGE=OFF
           make -j$(nproc)
           make install
       - name: Run tests
