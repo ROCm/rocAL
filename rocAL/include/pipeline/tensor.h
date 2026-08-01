@@ -33,8 +33,6 @@ THE SOFTWARE.
 #if ENABLE_HIP
 #include "device/device_manager_hip.h"
 #include "hip/hip_runtime.h"
-#else
-#include "device/device_manager.h"
 #endif
 #include "pipeline/commons.h"
 #include "rocal_api_tensor.h"

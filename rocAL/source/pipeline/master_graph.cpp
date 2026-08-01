@@ -453,7 +453,9 @@ void MasterGraph::release() {
     _augmented_meta_data = nullptr;
     _meta_data_graph = nullptr;
     _meta_data_reader = nullptr;
-    delete _box_encoder_gpu;
+#if ENABLE_HIP
+   delete _box_encoder_gpu;
+#endif
 #if ENABLE_HIPFILE
     if (_hipfile_driver_opened) {
         (void)hipFileDriverClose();

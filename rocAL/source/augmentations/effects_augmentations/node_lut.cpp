@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include <vx_ext_rpp.h>
 #include <vx_ext_rpp_version.h>
+#include <vx_ext_amd.h>
 #include "augmentations/effects_augmentations/node_lut.h"
 #include "pipeline/exception.h"
 #include "pipeline/tensor.h"
@@ -79,9 +80,10 @@ void LutNode::create_lut_tensor() {
     stride[0] = element_size;
     
     vx_enum mem_type = VX_MEMORY_TYPE_HOST;
+#if ENABLE_HIP
     if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
         mem_type = VX_MEMORY_TYPE_HIP;
-    
+#endif
     allocate_host_or_pinned_mem(&_lut_buffer, _lut_size * element_size, _inputs[0]->info().mem_type());
 
     // Initialize LUT buffer before creating VX tensor
