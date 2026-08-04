@@ -123,6 +123,12 @@ if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
     message("-- ${White}${PROJECT_NAME} -- AMD GPU_TARGETS: ${GPU_TARGETS}${ColourReset}")
 endif()
 
+# Dependency Check
+# MIVisionX
+if(NOT MIVisionX_FOUND)
+    set(BUILD_ROCAL false)
+    message("-- ${Yellow}NOTE: rocAL library requires AMD's MIVisionX library, Not Found ${ColourReset}")
+endif()
 # Turbo JPEG
 if(NOT TurboJpeg_FOUND)
     set(BUILD_ROCAL false)
