@@ -115,48 +115,6 @@ else()
 endif()
 message("-- ${BoldBlue}rocAL Backend set to -- ${BACKEND}${ColourReset}")
 
-# CMake Config location
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-# Check if backend needs to be changed to CPU
-# HIP package
-if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
-  find_package(HIP QUIET)
-  if(HIP_FOUND)
-      message("-- ${White}rocAL -- Using HIP -- Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER} ${ColourReset})
-  else()
-    set(BACKEND "CPU")
-    set(GPU_SUPPORT OFF)
-    message("-- ${Yellow}NOTE: HIP Not Found ${ColourReset}")
-    message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
-    message("-- ${Yellow}NOTE: rocAL GPU_SUPPORT turned off ${ColourReset}")
-  endif()
-endif()
-# MIVisionX
-find_package(MIVisionX QUIET)
-if(MIVisionX_FOUND)
-    # find the MIVisionX backend type
-    set(MIVISIONX_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h)
-        file(READ ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h MIVISIONX_BACKEND_FILE)
-        string(REGEX MATCH "ENABLE_HIP ([0-9]*)" _ ${MIVISIONX_BACKEND_FILE})
-        set(MIVISIONX_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-    else()
-        message(FATAL_ERROR "${Red}ERROR: ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h file Not Found. MIVisionX Package REQUIRED ${ColourReset}")
-    endif()
-
-    if (GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-        if (NOT MIVISIONX_BACKEND_HIP_FOUND)
-            set(BACKEND "CPU")
-            set(GPU_SUPPORT OFF)
-            message("-- ${Red}WARNING: MIVisionX with the HIP backend Not Found (HINT: run setup script with the HIP backend)${ColourReset}")
-            message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
-            message("-- ${Yellow}NOTE: rocAL GPU_SUPPORT turned off ${ColourReset}")
-        endif()
-    endif()
-endif()
-
 # rocAL Build Type
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "rocAL Default Build Type" FORCE)
@@ -174,6 +132,10 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fPIC")
 endif()
 message("-- ${BoldBlue}rocAL Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
+
+# CMake Config location
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(HALF QUIET)
 
