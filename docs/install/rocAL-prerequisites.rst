@@ -71,7 +71,30 @@ Use the following commands to install those packages (make sure to also manually
       sudo zypper install python3-devel python3-pip python3-wheel
       sudo zypper install lmdb-devel # optional: needed for Caffe/Caffe2 LMDB reader support
 
-For **source install**, it is also required to install MIVisionX manually (`<https://github.com/ROCm/MIVisionX>`_).
+For **source install**, it is also required to install the following prerequisites:
+
+* MIVisionX manually (`<https://github.com/ROCm/MIVisionX>`_).
+* rocDecode test package:
+
+  .. tab-set::
+
+    .. tab-item:: Ubuntu
+
+      .. code:: shell
+
+        sudo apt install amdrocm-decode-test
+
+    .. tab-item:: RHEL
+
+      .. code:: shell
+
+        sudo dnf install amdrocm-decode-test
+
+    .. tab-item:: SLES
+
+      .. code:: shell
+
+        sudo zypper install amdrocm-decode-test
 
 For **package install**, it is also required to install the following prerequisites:
 
