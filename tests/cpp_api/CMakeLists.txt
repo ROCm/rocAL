@@ -81,7 +81,7 @@ endif(NOT ROCAL_FOUND)
 
 message("-- ${BoldBlue}Test backend set to -- ${BACKEND}${ColourReset}")
 if(NOT "${BACKEND}" STREQUAL "HIP")
-  message("-- ${Yellow}Warning: Not running GPU tests")
+  message("-- ${Yellow}Warning: Skipping GPU tests")
 endif()
 
 # 1 - basic_test_cpu
