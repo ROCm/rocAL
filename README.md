@@ -82,8 +82,8 @@ rocAL can be currently used to perform the following operations either with rand
 ### Libraries
 See [installation instructions](#installation-instructions) for more details and instructions on the prerequisite libraries.
 
-* CMake (Version `3.10` or later)
 * MIVisionX (note different installation instructions for package and source)
+* CMake (Version `3.10` or later)
 * Google Protobuf (Version `3.12.4` or later)
 * TurboJPEG (Version `2.0` or later)
 * Python3 and Python3 PIP
@@ -93,6 +93,9 @@ See [installation instructions](#installation-instructions) for more details and
 * pkg-config
 * PyBind11
 * RapidJSON
+
+Additional required libraries for  source install only:
+* rocDecode test package
 
 Additional required libraries for package install only (for source install, these are provided by ROCm `7.13` or later):
 * HIP
@@ -241,6 +244,10 @@ Available for **ROCm `7.2.x` and below**.
 For **ROCm `7.13` and above**.
 
 Install the additional source prerequisites:
+* rocDecode test package
+  ```shell
+  sudo apt install amdrocm-decode-test
+  ```
 * [MIVisionX](https://github.com/ROCm/MIVisionX) - Manual install
   * Source: `https://github.com/ROCm/MIVisionX`
 

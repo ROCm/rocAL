@@ -67,7 +67,8 @@ jobs:
           apt-get update -qq
           apt-get install -y --no-install-recommends build-essential cmake git python3 \
           libprotobuf-dev libprotoc-dev protobuf-compiler libturbojpeg0-dev liblmdb-dev libjpeg-dev \
-          pkg-config ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+          pkg-config ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev \
+          amdrocm-decode-test
           git clone --depth 1 https://github.com/Tencent/rapidjson.git
           cd rapidjson
           mkdir build
@@ -80,18 +81,6 @@ jobs:
         run: |
           rocminfo
           amd-smi || true
-      - name: Install rocDecode
-        run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/ROCm/rocm-systems.git
-          cd rocm-systems
-          git sparse-checkout set projects/rocdecode
-          cd projects/rocdecode
-          mkdir build
-          cd build
-          cmake ..
-          make -j$(nproc)
-          make install
-          cd ../../../../
       - name: Install RPP
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/ROCm/rocm-libraries.git
