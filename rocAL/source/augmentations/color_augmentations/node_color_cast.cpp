@@ -71,9 +71,10 @@ void ColorCastNode::create_node() {
     
     // Determine memory type based on input tensor
     vx_enum mem_type = VX_MEMORY_TYPE_HOST;
+#if ENABLE_HIP
     if (_inputs[0]->info().mem_type() == RocalMemType::HIP)
         mem_type = VX_MEMORY_TYPE_HIP;
-    
+#endif
     // Allocate pinned memory for RGB values
     size_t rgb_buffer_size = rgb_tensor_dims[1] * stride[1];
     allocate_host_or_pinned_mem(&_rgb_memory, rgb_buffer_size, _inputs[0]->info().mem_type());

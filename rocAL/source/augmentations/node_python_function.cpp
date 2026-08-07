@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <vx_ext_rpp.h>
+#include <vx_ext_amd.h>
 
 #include <cstdio>
 #include <cstring>
