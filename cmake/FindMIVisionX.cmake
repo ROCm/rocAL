@@ -64,6 +64,19 @@ find_library(VXRPP_LIBRARIES
 )
 mark_as_advanced(VXRPP_LIBRARIES)
 
+# RPP -- publicly-installed header exposing the *actual* backend vx_rpp was built with.
+# This is a sibling of MIVisionX_INCLUDE_DIRS (include/rpp/ vs include/mivisionx/), not nested under it.
+find_path(RPP_INCLUDE_DIR
+    NAMES rpp_backend.h
+    HINTS
+    $ENV{MIVisionX_PATH}/include/rpp
+    PATHS
+    ${MIVisionX_PATH}/include/rpp
+    /usr/include/rpp
+    ${ROCM_PATH}/include/rpp
+)
+mark_as_advanced(RPP_INCLUDE_DIR)
+
 if(OPENVX_LIBRARIES AND MIVisionX_INCLUDE_DIRS)
     set(MIVisionX_FOUND TRUE)
 endif( )
@@ -102,6 +115,20 @@ if(MIVisionX_FOUND)
             set(VX_EXT_RPP_VERSION_PATCH 0)
             set(VX_EXT_RPP_VERSION "0.0.0" CACHE INTERNAL "")
         endif()
+
+        # vx_rpp's actual compute backend is determined by RPP, not by MIVisionX core -- a MIVisionX
+        # build with HIP enabled does not guarantee vx_rpp/RPP were also built with HIP. RPP publishes
+        # this as RPP_BACKEND_HIP in its own installed rpp_backend.h; this is the authoritative signal.
+        set(RPP_BACKEND_HIP_FOUND 0)
+        if(RPP_INCLUDE_DIR AND EXISTS "${RPP_INCLUDE_DIR}/rpp_backend.h")
+            file(READ "${RPP_INCLUDE_DIR}/rpp_backend.h" RPP_BACKEND_FILE)
+            string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
+            set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+            message("-- ${White}Found RPP Backend -- ${RPP_INCLUDE_DIR}/rpp_backend.h (RPP_BACKEND_HIP=${RPP_BACKEND_HIP_FOUND})${ColourReset}")
+        else()
+            message("-- ${Yellow}NOTE: RPP backend header (rpp_backend.h) Not Found -- assuming vx_rpp/RPP is CPU-only${ColourReset}")
+        endif()
+        set(RPP_BACKEND_HIP_FOUND ${RPP_BACKEND_HIP_FOUND} CACHE INTERNAL "")
     else()
         message("-- ${Yellow}VX RPP - Not Found${ColourReset}")
     endif()
