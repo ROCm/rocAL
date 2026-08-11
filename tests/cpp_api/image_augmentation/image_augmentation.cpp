@@ -33,13 +33,9 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
-#if USE_OPENCV_4
 #define CV_FONT_HERSHEY_DUPLEX FONT_HERSHEY_DUPLEX
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #define CV_RGB2BGR cv::COLOR_BGR2RGB
-#else
-#include <opencv/highgui.h>
-#endif
 #endif
 
 #define DISPLAY

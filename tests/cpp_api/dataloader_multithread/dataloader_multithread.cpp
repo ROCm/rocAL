@@ -39,7 +39,6 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
-#if USE_OPENCV_4
 #define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
 #define CV_BGR2GRAY COLOR_BGR2GRAY
 #define CV_GRAY2RGB COLOR_GRAY2RGB
@@ -48,9 +47,6 @@ using namespace cv;
 #define CV_FILLED FILLED
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #define cvDestroyWindow destroyWindow
-#else
-#include <opencv/highgui.h>
-#endif
 #endif
 
 #define PRINT_NAMES_AND_LABELS 0  // uncomment for printing names and labels
