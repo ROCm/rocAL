@@ -22,6 +22,9 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ### Changes
 * Optimized data distribution for the rocJPEG backend to improve multi-threaded decode throughput.
 * LMDB is now an optional dependency. When liblmdb is present at configure time, rocAL builds with Caffe/Caffe2 LMDB reader support; otherwise it builds without it.
+* Packaging - rocAL Debian and RPM runtime packages now use automatic shared-library dependency detection (`dpkg-shlibdeps` / RPM auto-`Requires`) so the packaged `Depends:`/`Requires:` list stays in sync with what `librocal.so` actually links against, instead of a hand-maintained list.
+* Packaging - Added the previously missing Protobuf runtime dependency, and conditional LMDB/FFmpeg/libsndfile/hipFile runtime dependencies, to the rocAL package dependency lists.
+* Docs - README Prerequisites/Libraries section now distinguishes required dependencies from optional, feature-enabling ones (FFMPEG, rocDecode, rocJPEG, libsndfile, Libtar, DLPack, hipFile), and documents that building rocAL_pybind links the Python3 runtime into the core rocAL library.
 * Changes build instructions to omit building of wheels.
 * Adds new public APIs rocalSerialize(), rocalGetSerializedString(), and rocalDeserialize() for serializing and deserializing pipelines.
 * Add support to store the pipeline and introduce template-based serialization functions for different parameter types to convert to protobuf format.
