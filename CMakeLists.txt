@@ -113,7 +113,6 @@ else()
     set(BACKEND "HIP")
   endif()
 endif()
-message("-- ${BoldBlue}rocAL Backend set to -- ${BACKEND}${ColourReset}")
 
 # rocAL Build Type
 if(NOT CMAKE_BUILD_TYPE)
@@ -147,26 +146,21 @@ else()
   message("-- ${Blue}rocAL Built with float16 Support OFF${ColourReset}")
 endif()
 
-message("-- ${Cyan}rocAL Developer Options${ColourReset}")
-message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/HIP](default:HIP)]${ColourReset}")
-message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
-
-# rocAL's actual GPU capability is determined by vx_rpp/RPP (the MIVisionX extension that
-# implements the compute kernels), not by MIVisionX core as a whole -- a MIVisionX build with
-# HIP enabled does not guarantee vx_rpp/RPP were also built with HIP. Resolve this once, here,
-# before any add_subdirectory() call, so the corrected BACKEND/GPU_SUPPORT propagate consistently
-# to rocAL, rocAL_pybind, and tests/cpp_api via normal CMake parent-to-child variable scoping.
 if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
   find_package(MIVisionX QUIET)
   if(MIVisionX_FOUND AND NOT RPP_BACKEND_HIP_FOUND)
     set(BACKEND "CPU")
     set(GPU_SUPPORT OFF)
     message("-- ${Red}WARNING: vx_rpp/RPP found, but built with the CPU backend (HINT: rebuild RPP/MIVisionX with the HIP backend)${ColourReset}")
-    message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
   endif()
 endif()
+message("-- ${BoldBlue}rocAL Backend set to -- ${BACKEND}${ColourReset}")
+
+message("-- ${Cyan}rocAL Developer Options${ColourReset}")
+message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (default:ON)]${ColourReset}")
+message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/HIP](default:HIP)]${ColourReset}")
+message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
+message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
 
 add_subdirectory(rocAL)
 
