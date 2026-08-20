@@ -67,6 +67,11 @@ if(NOT ROCAL_FOUND)
     message("-- ${Yellow}${PROJECT_NAME} requires rocAL. Install rocAL before running CTests")
 endif()
 
+message("-- ${BoldBlue}Test backend set to -- ${BACKEND}${ColourReset}")
+if(NOT "${BACKEND}" STREQUAL "HIP")
+  message("-- ${Yellow}Warning: Skipping GPU tests")
+endif()
+
 # 1 - basic_test_cpu
 add_test(
   NAME
@@ -79,21 +84,23 @@ add_test(
             --test-command "basic_test"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
 )
-# 2 - basic_test_gpu
-add_test(NAME basic_test_gpu 
-              COMMAND basic_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
-# 3 - basic_test_gray
-add_test(NAME basic_test_gray 
-              COMMAND basic_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
-# 4 - basic_test_rgb
-add_test(NAME basic_test_rgb 
-              COMMAND basic_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+if("${BACKEND}" STREQUAL "HIP")
+  # 2 - basic_test_gpu
+  add_test(NAME basic_test_gpu 
+                COMMAND basic_test 
+                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  # 3 - basic_test_gray
+  add_test(NAME basic_test_gray 
+                COMMAND basic_test 
+                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  # 4 - basic_test_rgb
+  add_test(NAME basic_test_rgb 
+                COMMAND basic_test 
+                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+endif()
 
 # TBD - dataloader unit test options non-functional with database - NEEDS TO BE ADDED ONCE RESOLVED
 #add_test(
@@ -120,18 +127,20 @@ add_test(
             --test-command "dataloader_multithread"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
 )
-# 6 - dataloader_multithread_gpu
-add_test(
-  NAME
-  dataloader_multithread_gpu
-  COMMAND
-    "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
-                              "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread_gpu"
-            --build-generator "${CMAKE_GENERATOR}"
-            --test-command "dataloader_multithread"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
-)
+if("${BACKEND}" STREQUAL "HIP")
+  # 6 - dataloader_multithread_gpu
+  add_test(
+    NAME
+    dataloader_multithread_gpu
+    COMMAND
+      "${CMAKE_CTEST_COMMAND}"
+              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
+                                "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread_gpu"
+              --build-generator "${CMAKE_GENERATOR}"
+              --test-command "dataloader_multithread"
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+  )
+endif()
 
 # TBD - dataloader_tf unit test non-functional with tf dataset
 #add_test(
@@ -160,11 +169,13 @@ add_test(
             --test-command "performance_tests"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 0
 )
-# 8 - performance_tests_gpu
-add_test(NAME performance_tests_gpu 
-              COMMAND performance_tests 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests)
+if("${BACKEND}" STREQUAL "HIP")
+  # 8 - performance_tests_gpu
+  add_test(NAME performance_tests_gpu 
+                COMMAND performance_tests 
+                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests)
+endif()
 
 # 9 - performance_tests_with_depth_cpu
 add_test(
@@ -178,11 +189,13 @@ add_test(
             --test-command "performance_tests_with_depth"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 0
 )
-# 10 - performance_tests_with_depth_gpu
-add_test(NAME performance_tests_with_depth_gpu 
-              COMMAND performance_tests_with_depth 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth)
+if("${BACKEND}" STREQUAL "HIP")
+  # 10 - performance_tests_with_depth_gpu
+  add_test(NAME performance_tests_with_depth_gpu 
+                COMMAND performance_tests_with_depth 
+                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth)
+endif()
 
 # 11 - unit_tests_cpu
 add_test(
@@ -196,51 +209,55 @@ add_test(
             --test-command "unit_tests"
             0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 0 1
 )
-# 12 - unit_tests_gpu
-add_test(NAME unit_tests_gpu 
-              COMMAND unit_tests 
-              0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
-# 13 - unit_tests_gray
-add_test(NAME unit_tests_gray 
-              COMMAND unit_tests 
-              0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
-
-# 14 - video_tests -- video reader with ffmpeg decoder
-add_test(
-  NAME
-  video_tests_ffmpeg
-  COMMAND
-    "${CMAKE_CTEST_COMMAND}"
-            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
-                              "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
-            --build-generator "${CMAKE_GENERATOR}"
-            --test-command "video_tests"
-            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
-)
-
-# 15 - video_tests -- video reader with rocDecode
-if(rocdecode_FOUND)
-  add_test(NAME video_tests_rocdecode
-            COMMAND video_tests
-            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+if("${BACKEND}" STREQUAL "HIP")
+  # 12 - unit_tests_gpu
+  add_test(NAME unit_tests_gpu 
+                COMMAND unit_tests 
+                0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
+  # 13 - unit_tests_gray
+  add_test(NAME unit_tests_gray 
+                COMMAND unit_tests 
+                0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 endif()
 
-# 16 - basic_test_rocjpeg -- basic test with rocJpeg
-if(rocjpeg_FOUND)
-  add_test(NAME basic_test_rocjpeg_gray
-            COMMAND basic_test 
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 1
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
-  add_test(NAME basic_test_rocjpeg_rgb
-            COMMAND basic_test 
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 1
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+if("${BACKEND}" STREQUAL "HIP")
+  # 14 - video_tests -- video reader with ffmpeg decoder
+  add_test(
+    NAME
+    video_tests_ffmpeg
+    COMMAND
+      "${CMAKE_CTEST_COMMAND}"
+              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
+                                "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
+              --build-generator "${CMAKE_GENERATOR}"
+              --test-command "video_tests"
+              ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
+  )
+  # 15 - video_tests -- video reader with rocDecode
+  if(rocdecode_FOUND)
+    add_test(NAME video_tests_rocdecode
+              COMMAND video_tests
+              ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+  endif()
+
+  if(rocjpeg_FOUND)
+    # 16 - basic_test_rocjpeg_gray
+    add_test(NAME basic_test_rocjpeg_gray
+              COMMAND basic_test 
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 1
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+    # 17 - basic_test_rocjpeg_rgb
+    add_test(NAME basic_test_rocjpeg_rgb
+              COMMAND basic_test 
+              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 1
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
+  endif()
 endif()
 
-# 17 - serialization_test_cpu
+# 18 - serialization_test_cpu
 add_test(
   NAME
     serialization_test_cpu
@@ -252,13 +269,15 @@ add_test(
             --test-command "serialization_test"
             ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
 )
-# 18 - serialization_test_gpu
-add_test(NAME serialization_test_gpu 
-              COMMAND serialization_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/serialization_test)
+if("${BACKEND}" STREQUAL "HIP")
+  # 19 - serialization_test_gpu
+  add_test(NAME serialization_test_gpu 
+                COMMAND serialization_test 
+                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/serialization_test)
+endif()
 
-# 19 - checkpoint_save
+# 20 - checkpoint_save
 add_test(
   NAME
     checkpoint_save
@@ -273,7 +292,7 @@ add_test(
             0
 )
 
-#20 - restore from checkpoint
+#21 - restore from checkpoint
 add_test(
   NAME
     checkpoint_restore
