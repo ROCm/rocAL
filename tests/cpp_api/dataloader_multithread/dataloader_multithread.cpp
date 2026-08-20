@@ -27,7 +27,6 @@ THE SOFTWARE.
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <future>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -266,21 +265,15 @@ int main(int argc, const char **argv) {
     std::cout << "Number of GPUs: " << num_gpus << std::endl;
 
     // launch threads process shards
-    std::vector<std::future<int>> loader_threads(num_shards);
+    std::vector<std::thread> loader_threads(num_shards);
     auto gpu_id = num_gpus ? 0 : -1;
     int th_id;
     for (th_id = 0; th_id < num_shards; th_id++) {
-        loader_threads[th_id] = std::async(std::launch::async, thread_func, path, gpu_id, RocalImageColor::ROCAL_COLOR_RGB24, th_id, num_shards, decode_width, decode_height, inputBatchSize,
+        loader_threads[th_id] = std::thread(thread_func, path, gpu_id, RocalImageColor::ROCAL_COLOR_RGB24, th_id, num_shards, decode_width, decode_height, inputBatchSize,
                                             shuffle, display, dec_mode, cpu_thread_count);
         if (num_gpus) gpu_id = (gpu_id + 1) % num_gpus;
     }
-    int ret_status = 0;
-    for (th_id = 0; th_id < num_shards; th_id++) {
-        int shard_status = loader_threads[th_id].get();
-        if (shard_status != 0) {
-            std::cout << "shard_id: " << th_id << " failed with status " << shard_status << std::endl;
-            ret_status = -1;
-        }
+    for (auto &th : loader_threads) {
+        th.join();
     }
-    return ret_status;
 }
