@@ -31,9 +31,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gcc g++ git hwloc libavcodec-dev libavformat-dev libavutil-dev \
         libbz2-dev libdc1394-dev libdlpack-dev libdrm-dev libgflags-dev \
         libgoogle-glog-dev libgtk2.0-dev libhalf-dev libjpeg-dev libjsoncpp-dev \
-        liblmdb-dev libomp-dev libpng-dev libsndfile1-dev libssl-dev \
+        liblmdb-dev libomp-dev libpng-dev libprotobuf-dev libsndfile1-dev libssl-dev \
         libswscale-dev libtbb-dev libtbbmalloc2 libtiff-dev libtool libva-dev \
-        libva-drm2 make nasm numactl perl pkg-config python3-dev \
+        libturbojpeg0-dev libva-drm2 make nasm numactl perl pkg-config protobuf-compiler python3-dev \
         python3-pip unzip vainfo vim yasm zip \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p "${HALF_DIR}/include/half" \
@@ -48,26 +48,6 @@ RUN python3 -m pip install --upgrade pip --break-system-packages \
 
 WORKDIR /tmp/rocal-deps
 
-RUN git clone --depth 1 --branch 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git \
-    && cmake -S libjpeg-turbo -B libjpeg-turbo/build \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DENABLE_STATIC=OFF \
-        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib \
-        -DWITH_JPEG8=ON \
-    && cmake --build libjpeg-turbo/build -j"${BUILD_JOBS}" \
-    && cmake --install libjpeg-turbo/build \
-    && ldconfig
-
-RUN git clone --depth 1 --branch v3.21.9 https://github.com/protocolbuffers/protobuf.git \
-    && cd protobuf \
-    && git submodule update --init --recursive --depth 1 \
-    && ./autogen.sh \
-    && ./configure \
-    && make -j"${BUILD_JOBS}" \
-    && make install \
-    && ldconfig
-
 RUN git clone --depth 1 https://github.com/Tencent/rapidjson.git \
     && cmake -S rapidjson -B rapidjson/build -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     && cmake --build rapidjson/build -j"${BUILD_JOBS}" \
@@ -79,7 +59,7 @@ RUN git clone --depth 1 --branch "${ROCM_LIBRARIES_REF}" \
         -B /workspace/rocm-libraries/projects/rpp/build \
         -DBACKEND=HIP \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="${ROCAL_INSTALL}" \
+        -DCMAKE_INSTALL_PREFIX="${ROCM_PATH}" \
     && cmake --build /workspace/rocm-libraries/projects/rpp/build -j"${BUILD_JOBS}" \
     && cmake --install /workspace/rocm-libraries/projects/rpp/build \
     && ldconfig
@@ -88,7 +68,7 @@ RUN git clone --depth 1 https://github.com/ROCm/MIVisionX.git \
     && cmake -S MIVisionX -B MIVisionX/build \
         -DBACKEND=HIP \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="${ROCAL_INSTALL}" \
+        -DCMAKE_INSTALL_PREFIX="${ROCM_PATH}" \
     && cmake --build MIVisionX/build -j"${BUILD_JOBS}" \
     && cmake --install MIVisionX/build \
     && ldconfig
