@@ -3,7 +3,7 @@
 # Docker pulls this public image automatically when the image is not already
 # present locally. A separate `docker pull` inside the image is neither needed
 # nor possible without nesting a Docker daemon.
-ARG BASE_IMAGE=rocm/pytorch:rocm7.14_ubuntu26.04_py3.14_pytorch_release_2.12.0
+ARG BASE_IMAGE=rocm/pytorch:rocm10.0_ubuntu24.04_py3.12_pytorch_release_2.12.0
 FROM ${BASE_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -11,18 +11,18 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG ROCM_LIBRARIES_REF=develop
 ARG ROCAL_REF=develop
 ARG BUILD_JOBS=16
-ARG ROCM_WHEEL_INDEX=https://rocm.nightlies.amd.com/whl-multi-arch/
-ARG ROCM_DEVEL_VERSION=7.14.0a20260612
+ARG ROCM_WHEEL_INDEX=https://stable.repo.amd.com/rocm/whl-next
+ARG ROCM_DEVEL_VERSION=10.0.0
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    ROCM_PATH=/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel \
+    ROCM_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel \
     ROCAL_INSTALL=/workspace/install \
-    ROCM_HOME=/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel \
-    HIP_PATH=/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel \
+    ROCM_HOME=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel \
+    HIP_PATH=/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel \
     MIVisionX_PATH=/workspace/install \
-    PATH=/workspace/install/bin:/opt/venv/bin:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/bin:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib/llvm/bin:${PATH} \
-    LD_LIBRARY_PATH=/workspace/install/lib:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib/rocm_sysdeps/lib:/usr/lib/x86_64-linux-gnu \
-    CMAKE_PREFIX_PATH=/workspace/install:/opt/venv:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib/cmake:/workspace/install/lib/cmake \
+    PATH=/workspace/install/bin:/opt/venv/bin:/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/bin:/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/bin:${PATH} \
+    LD_LIBRARY_PATH=/workspace/install/lib:/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib:/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/llvm/lib:/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/rocm_sysdeps/lib:/usr/lib/x86_64-linux-gnu \
+    CMAKE_PREFIX_PATH=/workspace/install:/opt/venv:/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel:/opt/venv/lib/python3.12/site-packages/_rocm_sdk_devel/lib/cmake:/workspace/install/lib/cmake \
     PYTHONPATH=/workspace/install/lib
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -72,8 +72,6 @@ RUN git clone --depth 1 https://github.com/ROCm/MIVisionX.git \
 
 RUN git clone --depth 1 --branch "${ROCAL_REF}" https://github.com/ROCm/rocAL.git /workspace/rocAL \
     && cd /workspace/rocAL \
-    && sed -i 's/VERSION_GREATER "3.13"/VERSION_GREATER "3.14"/' CMakeLists.txt \
-    && sed -i 's/"3.13" "3.12"/"3.14" "3.13" "3.12"/' rocAL_pybind/CMakeLists.txt \
     && if ! grep -q 'find_package(JPEG QUIET)' rocAL/CMakeLists.txt; then \
          sed -i '/find_package(TurboJpeg QUIET)/a find_package(JPEG QUIET)' rocAL/CMakeLists.txt; \
        fi \
