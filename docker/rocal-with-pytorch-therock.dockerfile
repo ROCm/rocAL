@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         autoconf automake build-essential ca-certificates clang cmake ffmpeg \
         gcc g++ git hwloc libavcodec-dev libavformat-dev libavutil-dev \
         libbz2-dev libdc1394-dev libdlpack-dev libdrm-dev libgflags-dev \
-        libgoogle-glog-dev libgtk2.0-dev libhalf-dev libjpeg-dev libjsoncpp-dev \
+        libgoogle-glog-dev libgtk2.0-dev libjpeg-dev libjsoncpp-dev \
         liblmdb-dev libomp-dev libpng-dev libprotobuf-dev libsndfile1-dev libssl-dev \
         libswscale-dev libtbb-dev libtbbmalloc2 libtiff-dev libtool libva-dev \
         libturbojpeg0-dev libva-drm2 make nasm numactl perl pkg-config protobuf-compiler python3-dev \
