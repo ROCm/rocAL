@@ -20,7 +20,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     ROCM_HOME=/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel \
     HIP_PATH=/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel \
     MIVisionX_PATH=/workspace/install \
-    HALF_DIR=/workspace/install \
     PATH=/workspace/install/bin:/opt/venv/bin:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/bin:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib/llvm/bin:${PATH} \
     LD_LIBRARY_PATH=/workspace/install/lib:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib/rocm_sysdeps/lib:/usr/lib/x86_64-linux-gnu \
     CMAKE_PREFIX_PATH=/workspace/install:/opt/venv:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel:/opt/venv/lib/python3.14/site-packages/_rocm_sdk_devel/lib/cmake:/workspace/install/lib/cmake \
@@ -36,8 +35,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libturbojpeg0-dev libva-drm2 make nasm numactl perl pkg-config protobuf-compiler python3-dev \
         python3-pip unzip vainfo vim yasm zip \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p "${HALF_DIR}/include/half" \
-    && cp /usr/include/half.hpp "${HALF_DIR}/include/half/half.hpp" \
     && python3 -m pip install --no-cache-dir --index-url "${ROCM_WHEEL_INDEX}" \
         "rocm-sdk-devel==${ROCM_DEVEL_VERSION}" \
     && rocm-sdk init
