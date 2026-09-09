@@ -34,15 +34,7 @@ THE SOFTWARE.
 #if ENABLE_OPENCV
 #include <opencv2/opencv.hpp>
 using namespace cv;
-#if USE_OPENCV_4
-#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
-#define CV_BGR2GRAY COLOR_BGR2GRAY
-#define CV_GRAY2RGB COLOR_GRAY2RGB
 #define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
-#define CV_FILLED FILLED
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
-#endif
 
 template <typename T>
 void convert_float_to_uchar_buffer(T *input_float_buffer, unsigned char *output_uchar_buffer, size_t data_size) {
