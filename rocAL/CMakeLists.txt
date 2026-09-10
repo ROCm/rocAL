@@ -138,25 +138,10 @@ endif()
 if(NOT MIVisionX_FOUND)
     set(BUILD_ROCAL false)
     message("-- ${Yellow}NOTE: rocAL library requires AMD's MIVisionX library, Not Found ${ColourReset}")
-else()
-    #find the MIVisionX backend type
-    set(MIVISIONX_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h)
-        file(READ ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h MIVISIONX_BACKEND_FILE)
-        string(REGEX MATCH "ENABLE_HIP ([0-9]*)" _ ${MIVISIONX_BACKEND_FILE})
-        set(MIVISIONX_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-    else()
-        message(FATAL_ERROR "${Red}ERROR: ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h file Not Found. MIVisionX Package REQUIRED ${ColourReset}")
-    endif()
-
-    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-        if (NOT MIVISIONX_BACKEND_HIP_FOUND)
-            set(BACKEND "CPU")
-            message("-- ${Red}WARNING: MIVisionX with the HIP backend Not Found (HINT: run setup script with the HIP backend)${ColourReset}")
-            message("-- ${Yellow}NOTE: rocAL Backend set to CPU ${ColourReset}")
-        endif()
-    endif()
 endif()
+# Note: the vx_rpp/RPP backend (HIP vs CPU) mismatch check is resolved once in the root
+# CMakeLists.txt (before add_subdirectory(rocAL)) and inherited here via BACKEND/GPU_SUPPORT --
+# it is not re-checked in this file.
 # Turbo JPEG
 if(NOT TurboJpeg_FOUND)
     set(BUILD_ROCAL false)

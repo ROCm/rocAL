@@ -29,6 +29,7 @@ else()
     set(SHARED_LIB_TYPE ".so")
 endif()
 
+if(NOT MIVisionX_FOUND)
 find_path(MIVisionX_INCLUDE_DIRS
     NAMES vx_ext_amd.h
     HINTS
@@ -102,6 +103,25 @@ if(MIVisionX_FOUND)
             set(VX_EXT_RPP_VERSION_PATCH 0)
             set(VX_EXT_RPP_VERSION "0.0.0" CACHE INTERNAL "")
         endif()
+
+        set(RPP_BACKEND_HIP_FOUND 0)
+        set(RPP_BACKEND_HEADER_FOUND FALSE)
+        if(EXISTS "${ROCM_PATH}/include/rpp/rpp_backend.h")
+            set(RPP_BACKEND_HEADER_FOUND TRUE)
+            file(READ "${ROCM_PATH}/include/rpp/rpp_backend.h" RPP_BACKEND_FILE)
+            string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]+)" _ "${RPP_BACKEND_FILE}")
+            # Only override the safe "0" default when the macro was actually matched --
+            # an unmatched regex clears CMAKE_MATCH_1, which would otherwise silently
+            # overwrite the default with an empty value.
+            if(CMAKE_MATCH_1)
+                set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+            endif()
+            message("-- ${White}Found RPP Backend -- ${ROCM_PATH}/include/rpp/rpp_backend.h (RPP_BACKEND_HIP=${RPP_BACKEND_HIP_FOUND})${ColourReset}")
+        else()
+            message("-- ${Yellow}NOTE: RPP backend header (rpp_backend.h) Not Found -- assuming vx_rpp/RPP is CPU-only${ColourReset}")
+        endif()
+        set(RPP_BACKEND_HIP_FOUND ${RPP_BACKEND_HIP_FOUND} CACHE INTERNAL "")
+        set(RPP_BACKEND_HEADER_FOUND ${RPP_BACKEND_HEADER_FOUND} CACHE INTERNAL "")
     else()
         message("-- ${Yellow}VX RPP - Not Found${ColourReset}")
     endif()
@@ -110,4 +130,5 @@ else()
         message(FATAL_ERROR "{Red}FindMIVisionX -- NOT FOUND${ColourReset}")
     endif()
     message( "-- ${Yellow}NOTE: FindMIVisionX failed to find -- openvx${ColourReset}" )
+endif()
 endif()

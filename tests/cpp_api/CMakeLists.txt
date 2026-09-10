@@ -65,19 +65,28 @@ endif()
 
 if(NOT ROCAL_FOUND)
     message("-- ${Yellow}${PROJECT_NAME} requires rocAL. Install rocAL before running CTests")
-else()
+endif()
+
+# When built as part of the top-level rocAL project, BACKEND is already resolved
+# in the root CMakeLists.txt and inherited here via normal CMake scoping. When
+# this directory is configured standalone (e.g. from the installed test package
+# under ${ROCM_PATH}/share/rocal/test), BACKEND is not defined, so fall back to
+# auto-detecting it from RPP's own rpp_backend.h.
+if(NOT DEFINED BACKEND)
     set(RPP_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${ROCM_PATH}/include/rpp/rpp_backend.h)
-        file(READ ${ROCM_PATH}/include/rpp/rpp_backend.h RPP_BACKEND_FILE)
-        string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-        set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+    if(EXISTS "${ROCM_PATH}/include/rpp/rpp_backend.h")
+        file(READ "${ROCM_PATH}/include/rpp/rpp_backend.h" RPP_BACKEND_FILE)
+        string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]+)" _ "${RPP_BACKEND_FILE}")
+        if(CMAKE_MATCH_1)
+            set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+        endif()
     endif()
-    if(NOT DEFINED BACKEND AND RPP_BACKEND_HIP_FOUND)
+    if(RPP_BACKEND_HIP_FOUND)
         set(BACKEND "HIP")
-    elseif(NOT DEFINED BACKEND)
+    else()
         set(BACKEND "CPU")
     endif()
-endif(NOT ROCAL_FOUND)
+endif()
 
 message("-- ${BoldBlue}Test backend set to -- ${BACKEND}${ColourReset}")
 if(NOT "${BACKEND}" STREQUAL "HIP")
