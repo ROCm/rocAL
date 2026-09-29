@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "loaders/video/node_video_loader_single_shard.h"
 #include "loaders/image/node_numpy_loader.h"
 #include "loaders/image/node_numpy_loader_single_shard.h"
+#include "loaders/node_hdf5_loader.h"
 #ifdef ROCAL_AUDIO
 #include "loaders/audio/node_audio_loader.h"
 #include "loaders/audio/node_audio_loader_single_shard.h"
@@ -579,5 +580,26 @@ inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const s
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
+    return node;
+}
+
+template <>
+inline std::shared_ptr<Hdf5LoaderNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs,
+                                                             const std::vector<Tensor*>& outputs) {
+    (void)inputs;
+#if ENABLE_HIP
+    auto node = std::make_shared<Hdf5LoaderNode>(outputs, (void*)_device.resources());
+#else
+    auto node = std::make_shared<Hdf5LoaderNode>(outputs, nullptr);
+#endif
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_graph_id(_loaders_count++);
+    _root_nodes.push_back(node);
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(
+        node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
+    for (auto* output : outputs)
+        _tensor_map.insert(std::make_pair(output, node));
     return node;
 }

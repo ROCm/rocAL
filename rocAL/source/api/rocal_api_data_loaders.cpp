@@ -25,6 +25,8 @@ THE SOFTWARE.
 #include "pipeline/context.h"
 #include "loaders/image_source_evaluator.h"
 #include "loaders/numpy_source_evaluator.h"
+#include "loaders/hdf5_source_evaluator.h"
+#include <limits>
 #include "loaders/image/node_cifar10_loader.h"
 #include "loaders/image/node_cifar10_loader_single_shard.h"
 #include "augmentations/node_copy.h"
@@ -34,6 +36,7 @@ THE SOFTWARE.
 #include "loaders/image/node_image_loader_single_shard.h"
 #include "loaders/image/node_numpy_loader.h"
 #include "loaders/image/node_numpy_loader_single_shard.h"
+#include "loaders/node_hdf5_loader.h"
 #ifdef ROCAL_AUDIO
 #include "loaders/audio/audio_source_evaluator.h"
 #include "loaders/audio/node_audio_loader.h"
@@ -1747,6 +1750,103 @@ rocalNumpyFileSourceSingleShard(
     return output;
 }
 
+std::vector<RocalTensor> ROCAL_API_CALL
+rocalHdf5FileSourceSingleShard(
+    RocalContext p_context,
+    const char* source_path,
+    const std::vector<std::string>& dataset_keys,
+    const std::vector<RocalTensorLayout>& output_layouts,
+    const std::vector<std::string>& files,
+    bool shuffle,
+    bool loop,
+    unsigned shard_id,
+    unsigned shard_count,
+    unsigned seed,
+    RocalShardingInfo rocal_sharding_info) {
+    std::vector<RocalTensor> outputs;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, outputs);
+    auto context = static_cast<Context*>(p_context);
+    try {
+        if (!source_path)
+            THROW("HDF5 reader requires a non-null source path")
+        if (context->master_graph->is_checkpointing_enabled())
+            THROW("HDF5 reader does not support checkpointing")
+        if (shard_count < 1)
+            THROW("Shard count should be bigger than 0")
+        if (shard_id >= shard_count)
+            THROW("Shard id should be smaller than shard count")
+        if (dataset_keys.size() != output_layouts.size())
+            THROW("HDF5 reader requires one output layout for every dataset key")
+
+        Hdf5SourceEvaluator source_evaluator;
+        auto source_info = source_evaluator.evaluate(source_path, files, dataset_keys);
+        std::vector<Tensor*> internal_outputs;
+        internal_outputs.reserve(source_info.datasets.size());
+        outputs.reserve(source_info.datasets.size());
+
+        for (size_t index = 0; index < source_info.datasets.size(); ++index) {
+            const auto& dataset = source_info.datasets[index];
+            std::vector<size_t> dimensions;
+            dimensions.reserve(dataset.max_shape.size() + 1);
+            dimensions.push_back(context->user_batch_size());
+            dimensions.insert(dimensions.end(), dataset.max_shape.begin(), dataset.max_shape.end());
+
+            // The output Copy kernel supports at most five dimensions, including batch.
+            constexpr size_t copy_max_rank = 5;
+            vx_size max_rank = 0;
+            if (dimensions.size() > copy_max_rank || vxQueryContext(context->master_graph->get_vx_context(), VX_CONTEXT_MAX_TENSOR_DIMS,
+                               &max_rank, sizeof(max_rank)) != VX_SUCCESS || dimensions.size() > max_rank)
+                THROW("HDF5 dataset rank exceeds the tensor backend limit")
+            const auto layout = static_cast<RocalTensorlayout>(output_layouts[index]);
+            size_t expected_rank = 0;
+            switch (layout) {
+                case RocalTensorlayout::NONE: break;
+                case RocalTensorlayout::NHW:
+                case RocalTensorlayout::NFT:
+                case RocalTensorlayout::NTF: expected_rank = 3; break;
+                case RocalTensorlayout::NHWC:
+                case RocalTensorlayout::NCHW: expected_rank = 4; break;
+                case RocalTensorlayout::NDHWC:
+                case RocalTensorlayout::NCDHW: expected_rank = 5; break;
+                default: THROW("HDF5 reader does not support this tensor layout")
+            }
+            if (expected_rank && dimensions.size() != expected_rank)
+                THROW("HDF5 dataset rank does not match the requested layout")
+            size_t bytes = tensor_data_size(dataset.data_type);
+            for (size_t dimension : dimensions) {
+                if (!dimension || bytes > std::numeric_limits<size_t>::max() / dimension)
+                    THROW("HDF5 tensor byte size overflows the allocation limit")
+                bytes *= dimension;
+            }
+            // CircularBuffer rounds allocations up to a 256-byte boundary.
+            if (bytes > std::numeric_limits<size_t>::max() - 256)
+                THROW("HDF5 tensor byte size exceeds the allocation limit")
+            auto info = TensorInfo(std::move(dimensions),
+                                   context->master_graph->mem_type(),
+                                   dataset.data_type,
+                                   static_cast<RocalTensorlayout>(output_layouts[index]));
+            auto output = context->master_graph->create_internal_tensor(info);
+            internal_outputs.push_back(output);
+            outputs.push_back(output);
+        }
+
+        ShardingInfo sharding_info(
+            convert_last_batch_policy(rocal_sharding_info.last_batch_policy),
+            rocal_sharding_info.pad_last_batch_repeated,
+            rocal_sharding_info.stick_to_shard,
+            rocal_sharding_info.shard_size);
+        context->master_graph->add_node<Hdf5LoaderNode>({}, internal_outputs)
+            ->init(shard_id, shard_count, source_path, source_info.files, dataset_keys,
+                   shuffle, loop, context->user_batch_size(),
+                   context->master_graph->mem_type(), seed, sharding_info);
+        context->master_graph->set_loop(loop);
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+        outputs.clear();
+    }
+    return outputs;
+}
+
 RocalTensor  ROCAL_API_CALL
 rocalVideoFileSourceSingleShard(
     RocalContext p_context,
@@ -2461,6 +2561,7 @@ rocalResetLoaders(RocalContext p_context) {
     auto context = static_cast<Context*>(p_context);
     try {
         context->master_graph->reset();
+        context->capture_error("");
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
         return ROCAL_RUNTIME_ERROR;

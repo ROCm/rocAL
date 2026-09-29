@@ -153,7 +153,10 @@ message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU
 message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
 
+enable_testing()
+include(CTest)
 add_subdirectory(rocAL)
+get_directory_property(ROCAL_HDF5_FOUND DIRECTORY rocAL DEFINITION HDF5_FOUND)
 
 if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.13"))
   message("-- ${Red}NOTE: rocAL pybind supported on Python versions - 3.8, 3.9, 3.10, 3.11, 3.12, 3.13. Not Found, Please provide supported version${ColourReset}")
@@ -174,8 +177,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp_api/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 # CTest - Needs rocAL Installed
-enable_testing()
-include(CTest)
 add_subdirectory(tests/cpp_api)
 
 # set package information
@@ -263,6 +264,13 @@ set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE ${CPACK_PACKAGE_HOMEPAGE})
 set(CPACK_RPM_PACKAGE_URL ${CPACK_PACKAGE_HOMEPAGE})
 set(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
+if(ROCAL_HDF5_FOUND)
+  # Resolve HDF5 runtime package names from the linked libraries on the build OS.
+  set(CPACK_DEBIAN_RUNTIME_PACKAGE_SHLIBDEPS ON)
+  set(CPACK_DEBIAN_ASAN_PACKAGE_SHLIBDEPS ON)
+  set(CPACK_RPM_RUNTIME_PACKAGE_AUTOREQPROV "yes")
+  set(CPACK_RPM_ASAN_PACKAGE_AUTOREQPROV "yes")
+endif()
 # Debian package - COMPONENT
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")

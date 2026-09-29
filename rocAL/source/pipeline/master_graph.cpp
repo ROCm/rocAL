@@ -214,6 +214,8 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 
 MasterGraph::Status
 MasterGraph::run() {
+    for (auto& loader : _loader_modules)
+        loader->rethrow_if_error();
     if (!_processing)  // The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
 
@@ -224,6 +226,8 @@ MasterGraph::run() {
     _rb_block_if_empty_time.start();
     _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     _rb_block_if_empty_time.end();
+    for (auto& loader : _loader_modules)
+        loader->rethrow_if_error();
 
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
@@ -239,6 +243,10 @@ MasterGraph::run() {
         return MasterGraph::Status::NO_MORE_DATA;
     }
 
+    // Popping the previous batch can leave the next batch still in flight.
+    _ring_buffer.block_if_empty();
+    for (auto& loader : _loader_modules)
+        loader->rethrow_if_error();
     decrease_image_count();
 
     return MasterGraph::Status::OK;

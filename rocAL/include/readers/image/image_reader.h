@@ -56,7 +56,8 @@ enum class StorageType {
     VIDEO_FILE_SYSTEM = 8,
     EXTERNAL_FILE_SOURCE = 9,      // to support reading from external source
     WEBDATASET_RECORDS = 10, // tar files - webdataset format
-    NUMPY_DATA = 11          // to support reading from numpy files
+    NUMPY_DATA = 11,         // to support reading from numpy files
+    HDF5_DATA = 12           // to support reading multiple datasets from HDF5 files
 };
 REGISTER_ENUM(StorageType)
 
@@ -117,6 +118,7 @@ struct ReaderConfig {
         _sharding_info = sharding_info;
     }
     void set_files_list(const std::vector<std::string> &files) { _file_names = files; }
+    void set_dataset_keys(const std::vector<std::string>& dataset_keys) { _dataset_keys = dataset_keys; }
     void set_seed(unsigned seed) { _seed = seed; }
     //! Enable reader state capture for checkpointing.
     void enable_checkpointing(bool enable_checkpointing) { _checkpointing_enabled = enable_checkpointing; }
@@ -128,6 +130,7 @@ struct ReaderConfig {
     size_t get_frame_step() { return _sequence_frame_step; }
     size_t get_frame_stride() { return _sequence_frame_stride; }
     std::vector<std::string> get_files() { return _file_names; }
+    const std::vector<std::string>& get_dataset_keys() const { return _dataset_keys; }
     std::string path() { return _path; }
     unsigned seed() { return _seed; }
 #ifdef ROCAL_VIDEO
@@ -167,6 +170,7 @@ struct ReaderConfig {
     ExternalSourceFileMode _file_mode = ExternalSourceFileMode::NONE;
     ShardingInfo _sharding_info;
     std::vector<std::string> _file_names;
+    std::vector<std::string> _dataset_keys;
     unsigned _seed = 0;
 #ifdef ROCAL_VIDEO
     VideoProperties _video_prop;
