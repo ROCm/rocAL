@@ -694,10 +694,12 @@ extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext context,
  * \param [in] shard_count Total number of shards
  * \param [in] seed Seed used to shuffle the input file order
  * \param [in] rocal_sharding_info Controls shard and last-batch behavior
- * \return Output tensors in dataset_keys order
+ * \param [out] outputs Output tensors in dataset_keys order; cleared on failure
+ * \return ROCAL_OK on success, otherwise an error status
  */
-std::vector<RocalTensor> ROCAL_API_CALL rocalHdf5FileSourceSingleShard(
+extern "C" RocalStatus ROCAL_API_CALL rocalHdf5FileSourceSingleShard(
     RocalContext context,
+    std::vector<RocalTensor>& outputs,
     const char* source_path,
     const std::vector<std::string>& dataset_keys,
     const std::vector<RocalTensorLayout>& output_layouts,

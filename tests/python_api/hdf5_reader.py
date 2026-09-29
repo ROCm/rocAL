@@ -370,6 +370,30 @@ def lifecycle(root, cpu):
                 pipe.rocal_release()
 
 
+def end_of_input(root, cpu):
+    create_fixture(root, count=3)
+    for policy, expected in (
+        (types.LAST_BATCH_FILL, [0, 1, 2, 2]),
+        (types.LAST_BATCH_DROP, [0, 1]),
+        (types.LAST_BATCH_PARTIAL, [0, 1, 2]),
+    ):
+        pipe = make_pipeline(root, cpu, last_batch_policy=policy,
+                             pad_last_batch=True)
+        try:
+            pipe.build()
+            for epoch in range(20):
+                if epoch % 2:
+                    # Also cover EOF published before the consumer starts.
+                    time.sleep(0.01)
+                assert consume(pipe, root, partial=policy == types.LAST_BATCH_PARTIAL) == expected
+                for _ in range(3):
+                    assert pipe.rocal_run() != types.OK
+                    assert pipe.get_remaining_images() == 0
+                assert pipe.rocal_reset_loaders() == types.OK
+        finally:
+            pipe.rocal_release()
+
+
 def pytorch(root, cpu):
     from amd.rocal.plugin.pytorch import ROCALNumpyIterator
 
@@ -426,6 +450,7 @@ CASES = {
         schema,
         read_errors,
         lifecycle,
+        end_of_input,
         pytorch,
         disabled,
     )

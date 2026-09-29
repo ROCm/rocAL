@@ -1750,9 +1750,10 @@ rocalNumpyFileSourceSingleShard(
     return output;
 }
 
-std::vector<RocalTensor> ROCAL_API_CALL
+RocalStatus ROCAL_API_CALL
 rocalHdf5FileSourceSingleShard(
     RocalContext p_context,
+    std::vector<RocalTensor>& outputs,
     const char* source_path,
     const std::vector<std::string>& dataset_keys,
     const std::vector<RocalTensorLayout>& output_layouts,
@@ -1763,8 +1764,8 @@ rocalHdf5FileSourceSingleShard(
     unsigned shard_count,
     unsigned seed,
     RocalShardingInfo rocal_sharding_info) {
-    std::vector<RocalTensor> outputs;
-    ROCAL_INVALID_CONTEXT_ERR(p_context, outputs);
+    outputs.clear();
+    ROCAL_INVALID_CONTEXT_ERR(p_context, ROCAL_CONTEXT_INVALID);
     auto context = static_cast<Context*>(p_context);
     try {
         if (!source_path)
@@ -1843,8 +1844,9 @@ rocalHdf5FileSourceSingleShard(
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
         outputs.clear();
+        return ROCAL_RUNTIME_ERROR;
     }
-    return outputs;
+    return ROCAL_OK;
 }
 
 RocalTensor  ROCAL_API_CALL

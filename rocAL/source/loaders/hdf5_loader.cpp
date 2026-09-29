@@ -191,6 +191,16 @@ LoaderModuleStatus Hdf5Loader::load_routine() {
 #else
     std::string file_path, dataset_key;
     try {
+#if ENABLE_HIP
+        if (_mem_type == RocalMemType::HIP) {
+            if (!_device_resources)
+                THROW("HDF5 loader has no HIP device resources")
+            const int device_id = static_cast<DeviceResourcesHip*>(_device_resources)->device_id;
+            const auto status = hipSetDevice(device_id);
+            if (status != hipSuccess)
+                THROW("hipSetDevice failed in Hdf5Loader::load_routine: " + TOSTR(status))
+        }
+#endif
         while (true) {
             std::vector<unsigned char*> write_buffers;
             {
@@ -267,7 +277,8 @@ LoaderModuleStatus Hdf5Loader::load_routine() {
         }
     } catch (...) {
         std::exception_ptr error;
-        const auto location = "HDF5 read failed in file '" + file_path + "', dataset '" + dataset_key + "': ";
+        const auto location = file_path.empty() ? std::string("HDF5 worker initialization failed: ")
+            : "HDF5 read failed in file '" + file_path + "', dataset '" + dataset_key + "': ";
         try {
             throw;
         } catch (const H5::Exception& cause) {
