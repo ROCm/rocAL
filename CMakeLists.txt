@@ -70,6 +70,11 @@ option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
+# The PythonFunction operator embeds the CPython C-API in the core rocAL library, which leaves
+# librocal.so with unresolved Py* symbols and makes it unusable from plain C/C++ applications
+# (https://github.com/ROCm/rocAL/issues/522). It stays disabled until the operator is moved out
+# of the core library into the pybind module.
+option(ROCAL_PYTHON_FUNCTION "Build rocAL with the PythonFunction operator (adds a libpython dependency to librocal.so)" OFF)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
