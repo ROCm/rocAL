@@ -214,6 +214,11 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 
 MasterGraph::Status
 MasterGraph::run() {
+    // An aborting output routine also clears _processing, so the failure has to be checked
+    // first, otherwise the caller would be told NOT_RUNNING instead of the actual error.
+    if (_processing_failed)
+        THROW("Graph execution failed: " + _processing_error)
+
     if (!_processing)  // The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
 
@@ -224,6 +229,12 @@ MasterGraph::run() {
     _rb_block_if_empty_time.start();
     _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     _rb_block_if_empty_time.end();
+
+    // The output routine releases blocked callers before it exits, so reaching this point does
+    // not mean a batch was produced. Report a failure here, against the batch it affects,
+    // instead of returning OK and handing back an output tensor that was never written.
+    if (_processing_failed)
+        THROW("Graph execution failed: " + _processing_error)
 
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
@@ -1038,6 +1049,10 @@ void MasterGraph::output_routine() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        // Publish the reason before raising the flag, so a run() call that observes
+        // _processing_failed is guaranteed to also see the matching message.
+        _processing_error = e.what();
+        _processing_failed = true;
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
@@ -1106,6 +1121,10 @@ void MasterGraph::output_routine_multiple_loaders() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        // Publish the reason before raising the flag, so a run() call that observes
+        // _processing_failed is guaranteed to also see the matching message.
+        _processing_error = e.what();
+        _processing_failed = true;
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
@@ -1113,6 +1132,10 @@ void MasterGraph::output_routine_multiple_loaders() {
 
 void MasterGraph::start_processing() {
     _processing = true;
+    // Clear any failure recorded by a previous output routine, so a pipeline restarted
+    // through reset() does not immediately report the old error.
+    _processing_error.clear();
+    _processing_failed = false;
     _remaining_count = _loader_modules[0]->remaining_count();
     for (int i = 1; i < _loaders_count; i++) {
         // Stores the least remaining count value of all loaders
