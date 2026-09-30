@@ -3851,8 +3851,15 @@ RocalTensor rocalLog(RocalContext p_context,
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
-        // Preserve FP16 inputs, promote everything else to FP32 to avoid precision loss.
         RocalTensorDataType input_dtype = static_cast<RocalTensorDataType>(input->data_type());
+        // RPP's log kernel implements only u8->f32, i8->f32, f16->f16 and f32->f32. Reject the
+        // remaining input types here, while the graph is being built, rather than letting the
+        // pipeline fail later inside the processing thread.
+        if (input_dtype != RocalTensorDataType::UINT8 && input_dtype != RocalTensorDataType::INT8 &&
+            input_dtype != RocalTensorDataType::FP16 && input_dtype != RocalTensorDataType::FP32) {
+            THROW("Log augmentation is supported only for uint8, int8, float16 and float32 inputs")
+        }
+        // Preserve FP16 inputs, promote everything else to FP32 to avoid precision loss.
         RocalTensorDataType op_tensor_data_type = (input_dtype == RocalTensorDataType::FP16)
                                                       ? RocalTensorDataType::FP16
                                                       : RocalTensorDataType::FP32;
