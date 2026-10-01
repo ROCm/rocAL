@@ -3254,7 +3254,15 @@ rocalPythonFunction(
     }
     return output;
 #else
-        THROW("PythonFunction node is not enabled since python/pybind11 is not present")
+    Tensor* output = nullptr;
+    ROCAL_INVALID_CONTEXT_ERR(p_context, output);
+    auto context = static_cast<Context*>(p_context);
+    try {
+        THROW("PythonFunction operator is disabled in this build of rocAL. Rebuild with -DROCAL_PYTHON_FUNCTION=ON to enable it (see https://github.com/ROCm/rocAL/issues/522)")
+    } catch (const std::exception& e) {
+        ROCAL_PRINT_EXCEPTION(context, e);
+    }
+    return output;
 #endif
 }
 
