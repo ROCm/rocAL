@@ -214,28 +214,21 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 
 MasterGraph::Status
 MasterGraph::run() {
-    // An aborting output routine also clears _processing, so the failure has to be checked
-    // first, otherwise the caller would be told NOT_RUNNING instead of the actual error.
-    if (_processing_failed)
-        THROW("Graph execution failed: " + _processing_error)
-
-    if (!_processing)  // The user should not call the run function before the build() is called or while reset() is happening
+    // An aborting output routine also clears _processing on its way out, so a latched failure has
+    // to be told apart from a pipeline that was never built or is being reset, otherwise the
+    // caller is given NOT_RUNNING instead of the actual error. The failure itself is reported
+    // further down, once the batches produced before it have been handed over.
+    if (!_processing && !_processing_failed)  // The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
 
     if (no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
 
-    _rb_block_if_empty_time.start();
-    _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
-    _rb_block_if_empty_time.end();
-
-    // The output routine releases blocked callers before it exits, so reaching this point does
-    // not mean a batch was produced. Report a failure here, against the batch it affects,
-    // instead of returning OK and handing back an output tensor that was never written.
-    if (_processing_failed)
-        THROW("Graph execution failed: " + _processing_error)
-
+    // Release the slot the caller consumed on the previous call *before* waiting on the ring
+    // buffer. block_if_empty() only waits while the buffer is empty, so leaving the consumed slot
+    // in place satisfies the wait with a batch the caller already has, and this call would then
+    // hand out the next slot before the output routine has written it.
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
         // they've not used anything yet, so we don't pop a batch from the _ring_buffer
@@ -248,6 +241,25 @@ MasterGraph::run() {
     // User should check using the IsEmpty() API and not call run() or copy() API when there is no more data. run() will return MasterGraph::Status::NO_MORE_DATA flag to notify it.
     if (no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
+    }
+
+    _rb_block_if_empty_time.start();
+    _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
+    _rb_block_if_empty_time.end();
+
+    // The output routine releases every blocked caller before it exits, both when it runs out of
+    // data and when it aborts, so returning from the wait above does not mean a batch was
+    // produced. An empty ring buffer here means this call has nothing to hand out: report the
+    // failure against the batch it affects instead of returning OK with an output tensor that was
+    // never written. A non-empty buffer means this batch was produced before the failure and is
+    // safe to consume, so a latched failure does not discard batches already in flight.
+    if (_ring_buffer.empty()) {
+        if (_processing_failed)
+            THROW("Graph execution failed: " + _processing_error)
+
+        if (no_more_processed_data()) {
+            return MasterGraph::Status::NO_MORE_DATA;
+        }
     }
 
     decrease_image_count();
