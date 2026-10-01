@@ -536,7 +536,11 @@ MasterGraph::Status
 MasterGraph::reset() {
     // stop the internal processing thread so that the
     _processing = false;
-    _ring_buffer.unblock_writer();
+    // Latch the release rather than firing a bare notification: the output thread may be waiting
+    // on a ring buffer the user never drained, in which case a notification alone leaves its wait
+    // condition unsatisfied and the join() below never returns. _ring_buffer.reset() clears the
+    // flag again a few lines down.
+    _ring_buffer.release_all_blocked_calls();
     if (_output_thread.joinable())
         _output_thread.join();
     _set_device_id = false;
@@ -1175,8 +1179,10 @@ void MasterGraph::start_processing() {
 
 void MasterGraph::stop_processing() {
     _processing = false;
-    _ring_buffer.unblock_reader();
-    _ring_buffer.unblock_writer();
+    // Latched, for the same reason as in reset(): a bare notification does not satisfy the wait
+    // condition of a thread blocked on a full or empty ring buffer, so the join() would hang.
+    // Both callers either reset the ring buffer afterwards or are tearing the graph down.
+    _ring_buffer.release_all_blocked_calls();
     if (_output_thread.joinable())
         _output_thread.join();
 }
