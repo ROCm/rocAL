@@ -317,3 +317,24 @@ add_test(
             "./checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0 && \
              ./restore_checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0"
 ) 
+
+# 22 - pipeline_status_test
+add_test(
+  NAME
+    pipeline_status_test
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/pipeline_status_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/pipeline_status_test"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "pipeline_status_test"
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet
+            0
+)
+if("${BACKEND}" STREQUAL "HIP")
+  # 23 - pipeline_status_test_gpu
+  add_test(NAME pipeline_status_test_gpu
+                COMMAND pipeline_status_test
+                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pipeline_status_test)
+endif()
