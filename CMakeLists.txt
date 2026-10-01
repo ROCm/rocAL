@@ -74,7 +74,7 @@ option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
 # librocal.so with unresolved Py* symbols and makes it unusable from plain C/C++ applications
 # (https://github.com/ROCm/rocAL/issues/522). It stays disabled until the operator is moved out
 # of the core library into the pybind module.
-option(ROCAL_PYTHON_FUNCTION "Build rocAL with the PythonFunction operator (adds a libpython dependency to librocal.so)" OFF)
+option(ROCAL_PYTHON_FUNCTION "Build rocAL with the PythonFunction operator (leaves unresolved CPython symbols in librocal.so)" OFF)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
