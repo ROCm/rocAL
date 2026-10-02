@@ -21,9 +21,11 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <atomic>
 #include <list>
 #include <map>
 #include <memory>
+#include <string>
 #include <variant>
 #include <mutex>
 
@@ -250,6 +252,8 @@ private:
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     bool _first_run = true;
     bool _processing;                                                             //!< Indicates if internal processing thread should keep processing or not
+    std::atomic_bool _processing_failed{false};                                   //!< Set by the output routine when it aborts on an exception, so run() can report the failure
+    std::string _processing_error;                                                //!< Description of the failure recorded by the output routine, published before _processing_failed is set
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
     int _remaining_count;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
     bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not

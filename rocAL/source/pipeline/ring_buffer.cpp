@@ -34,21 +34,18 @@ RingBuffer::RingBuffer(unsigned buffer_depth) : BUFF_DEPTH(buffer_depth),
 
 void RingBuffer::block_if_empty() {
     std::unique_lock<std::mutex> lock(_lock);
-    if (empty()) {  // if the current read buffer is being written wait on it
-        if (_dont_block)
-            return;
-        _wait_for_load.wait(lock);
-    }
+    // if the current read buffer is being written wait on it.
+    // Every condition that ends the wait is latched and written under _lock, so a producer that
+    // raises one between the predicate check and the wait cannot have its notification missed:
+    // the waiter is guaranteed to re-evaluate and observe it. This also discards spurious
+    // wake-ups, which would otherwise return a slot that has not been written yet.
+    _wait_for_load.wait(lock, [this] { return !empty() || _dont_block || _no_more_data; });
 }
 
 void RingBuffer::block_if_full() {
     std::unique_lock<std::mutex> lock(_lock);
     // Write the whole buffer except for the last spot which is being read by the reader thread
-    if (full()) {
-        if (_dont_block)
-            return;
-        _wait_for_unload.wait(lock);
-    }
+    _wait_for_unload.wait(lock, [this] { return !full() || _dont_block; });
 }
 
 std::pair<std::vector<void *>, std::vector<unsigned *>> RingBuffer::get_read_buffers() {
@@ -113,13 +110,29 @@ void RingBuffer::unblock_reader() {
 }
 
 void RingBuffer::release_all_blocked_calls() {
-    _dont_block = true;
+    {
+        // Raise the flag under _lock, otherwise it can be set between a waiter's predicate check
+        // and its wait, and the notification below is lost -- leaving the caller blocked on a
+        // producer that has already aborted.
+        std::unique_lock<std::mutex> lock(_lock);
+        _dont_block = true;
+    }
     unblock_reader();
     unblock_writer();
 }
 
 void RingBuffer::release_if_empty() {
-    if (empty()) unblock_reader();
+    {
+        // Same reasoning as release_all_blocked_calls(): latch the terminal state under _lock so
+        // the reader observes it even if it has not registered its wait yet. The producer is out
+        // of data and the buffer has drained, so no further load will ever arrive; reset() clears
+        // this when the pipeline is restarted for another epoch.
+        std::unique_lock<std::mutex> lock(_lock);
+        if (!empty())
+            return;
+        _no_more_data = true;
+    }
+    unblock_reader();
 }
 
 void RingBuffer::unblock_writer() {
@@ -254,6 +267,7 @@ void RingBuffer::reset() {
     _read_ptr = 0;
     _level = 0;
     _dont_block = false;
+    _no_more_data = false;
     while (!_meta_ring_buffer.empty())
         _meta_ring_buffer.pop();
 }

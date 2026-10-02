@@ -214,17 +214,21 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 
 MasterGraph::Status
 MasterGraph::run() {
-    if (!_processing)  // The user should not call the run function before the build() is called or while reset() is happening
+    // An aborting output routine also clears _processing on its way out, so a latched failure has
+    // to be told apart from a pipeline that was never built or is being reset, otherwise the
+    // caller is given NOT_RUNNING instead of the actual error. The failure itself is reported
+    // further down, once the batches produced before it have been handed over.
+    if (!_processing && !_processing_failed)  // The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
 
     if (no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
     }
 
-    _rb_block_if_empty_time.start();
-    _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
-    _rb_block_if_empty_time.end();
-
+    // Release the slot the caller consumed on the previous call *before* waiting on the ring
+    // buffer. block_if_empty() only waits while the buffer is empty, so leaving the consumed slot
+    // in place satisfies the wait with a batch the caller already has, and this call would then
+    // hand out the next slot before the output routine has written it.
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
         // they've not used anything yet, so we don't pop a batch from the _ring_buffer
@@ -237,6 +241,25 @@ MasterGraph::run() {
     // User should check using the IsEmpty() API and not call run() or copy() API when there is no more data. run() will return MasterGraph::Status::NO_MORE_DATA flag to notify it.
     if (no_more_processed_data()) {
         return MasterGraph::Status::NO_MORE_DATA;
+    }
+
+    _rb_block_if_empty_time.start();
+    _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
+    _rb_block_if_empty_time.end();
+
+    // The output routine releases every blocked caller before it exits, both when it runs out of
+    // data and when it aborts, so returning from the wait above does not mean a batch was
+    // produced. An empty ring buffer here means this call has nothing to hand out: report the
+    // failure against the batch it affects instead of returning OK with an output tensor that was
+    // never written. A non-empty buffer means this batch was produced before the failure and is
+    // safe to consume, so a latched failure does not discard batches already in flight.
+    if (_ring_buffer.empty()) {
+        if (_processing_failed)
+            THROW("Graph execution failed: " + _processing_error)
+
+        if (no_more_processed_data()) {
+            return MasterGraph::Status::NO_MORE_DATA;
+        }
     }
 
     decrease_image_count();
@@ -513,7 +536,11 @@ MasterGraph::Status
 MasterGraph::reset() {
     // stop the internal processing thread so that the
     _processing = false;
-    _ring_buffer.unblock_writer();
+    // Latch the release rather than firing a bare notification: the output thread may be waiting
+    // on a ring buffer the user never drained, in which case a notification alone leaves its wait
+    // condition unsatisfied and the join() below never returns. _ring_buffer.reset() clears the
+    // flag again a few lines down.
+    _ring_buffer.release_all_blocked_calls();
     if (_output_thread.joinable())
         _output_thread.join();
     _set_device_id = false;
@@ -1038,6 +1065,10 @@ void MasterGraph::output_routine() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        // Publish the reason before raising the flag, so a run() call that observes
+        // _processing_failed is guaranteed to also see the matching message.
+        _processing_error = e.what();
+        _processing_failed = true;
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
@@ -1106,6 +1137,10 @@ void MasterGraph::output_routine_multiple_loaders() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        // Publish the reason before raising the flag, so a run() call that observes
+        // _processing_failed is guaranteed to also see the matching message.
+        _processing_error = e.what();
+        _processing_failed = true;
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
@@ -1113,6 +1148,10 @@ void MasterGraph::output_routine_multiple_loaders() {
 
 void MasterGraph::start_processing() {
     _processing = true;
+    // Clear any failure recorded by a previous output routine, so a pipeline restarted
+    // through reset() does not immediately report the old error.
+    _processing_error.clear();
+    _processing_failed = false;
     _remaining_count = _loader_modules[0]->remaining_count();
     for (int i = 1; i < _loaders_count; i++) {
         // Stores the least remaining count value of all loaders
@@ -1140,8 +1179,10 @@ void MasterGraph::start_processing() {
 
 void MasterGraph::stop_processing() {
     _processing = false;
-    _ring_buffer.unblock_reader();
-    _ring_buffer.unblock_writer();
+    // Latched, for the same reason as in reset(): a bare notification does not satisfy the wait
+    // condition of a thread blocked on a full or empty ring buffer, so the join() would hang.
+    // Both callers either reset the ring buffer afterwards or are tearing the graph down.
+    _ring_buffer.release_all_blocked_calls();
     if (_output_thread.joinable())
         _output_thread.join();
 }

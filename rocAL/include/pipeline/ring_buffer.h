@@ -104,7 +104,8 @@ class RingBuffer {
     std::vector<std::vector<void *>> _host_meta_data_buffers;
     std::vector<void *> _dev_bbox_buffer;
     std::vector<void *> _dev_labels_buffer;
-    bool _dont_block = false;
+    bool _dont_block = false;    //!< Latched by release_all_blocked_calls() when the producer aborts or shuts down; guarded by _lock so a waiter cannot sleep through it
+    bool _no_more_data = false;  //!< Latched by release_if_empty() when the producer has run out of data and the buffer has drained; guarded by _lock, cleared by reset()
     RocalMemType _mem_type;
     void *_dev;
     size_t _write_ptr;
