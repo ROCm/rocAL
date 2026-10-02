@@ -283,6 +283,33 @@ if(${BUILD_ROCAL_PYBIND})
             install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/pybind DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
             install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/python_api DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/test COMPONENT test)
 
+            if(BUILD_TESTING)
+                execute_process(COMMAND "${Python3_EXECUTABLE}" -c "import h5py, numpy"
+                    RESULT_VARIABLE _hdf5_test_deps OUTPUT_QUIET ERROR_QUIET)
+                if(_hdf5_test_deps EQUAL 0)
+                    set(_hdf5_devices cpu)
+                    if(GPU_SUPPORT AND BACKEND STREQUAL "HIP")
+                        list(APPEND _hdf5_devices gpu)
+                    endif()
+                    foreach(_device IN LISTS _hdf5_devices)
+                        set(_hdf5_case "")
+                        if(NOT ROCAL_HDF5_FOUND)
+                            set(_hdf5_case --case disabled)
+                        endif()
+                        add_test(NAME hdf5_reader_${_device}_${PY_VERSION}
+                            COMMAND "${CMAKE_COMMAND}" -E env
+                                "PYTHONPATH=$<TARGET_FILE_DIR:${mod_tgt}>:${CMAKE_CURRENT_SOURCE_DIR}:$ENV{PYTHONPATH}"
+                                "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:rocal>:$ENV{LD_LIBRARY_PATH}"
+                                "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tests/python_api/hdf5_reader.py"
+                                --device ${_device} ${_hdf5_case})
+                        set_tests_properties(hdf5_reader_${_device}_${PY_VERSION} PROPERTIES
+                            LABELS "hdf5" TIMEOUT 300 RUN_SERIAL TRUE)
+                    endforeach()
+                else()
+                    message(STATUS "HDF5 Python tests need h5py and NumPy; skipping test registration")
+                endif()
+            endif()
+
             message("-- ${Green}Radeon Augmentation Library Python Binding - ${mod_tgt} module added ${ColourReset}")
 
         endif()

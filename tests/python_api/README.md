@@ -66,6 +66,32 @@ golden_output_path (contains augmented images to cross verify correctness of eac
 * The default value of number of gpu's is "1" & display is "ON" by default
 `./readers_test_file.sh`
 
+### HDF5 reader tests
+
+The self-contained HDF5 reader test creates temporary sample files and checks
+exact tensor values, output/file ordering, supported data types, final-batch
+policies, deterministic epochs and sharding, schema/read failures, and repeated
+reset and teardown. Each group runs in a separate process with a timeout:
+
+```shell
+python3 hdf5_reader.py --device cpu
+python3 hdf5_reader.py --device gpu
+```
+
+The generated-fixture test requires test-only ``h5py`` and ``numpy``. When
+``torch`` is available, it also checks the PyTorch iterator. The reader itself
+uses native HDF5 and does not require ``h5py`` at runtime.
+
+With ``BUILD_TESTING=ON`` and the fixture dependencies installed for the selected
+Python, CMake registers the HDF5 checks. Run ``ctest -L hdf5 --output-on-failure``
+after building. HDF5-disabled builds instead verify the unsupported-feature error.
+HIP builds need GPU device access even for CPU pipeline checks.
+
+An HDF5-enabled binary package needs the corresponding native HDF5 runtime
+libraries. DEB/RPM package generation enables automatic dependency scanning to
+use the build distribution's package names. Package builders should use packaged
+HDF5 libraries, or supply/bundle dependencies for a custom HDF5 installation.
+
 ### Options
 
 * To test a single reader / multiple reader pipelines: Use the same script `readers_test_file.sh` as above and make the respective " Pipeline " to test equal to "1"

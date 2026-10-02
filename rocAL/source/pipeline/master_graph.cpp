@@ -214,6 +214,8 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 
 MasterGraph::Status
 MasterGraph::run() {
+    for (auto& loader : _loader_modules)
+        loader->rethrow_if_error();
     if (!_processing)  // The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
 
@@ -224,6 +226,8 @@ MasterGraph::run() {
     _rb_block_if_empty_time.start();
     _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     _rb_block_if_empty_time.end();
+    for (auto& loader : _loader_modules)
+        loader->rethrow_if_error();
 
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
@@ -239,6 +243,14 @@ MasterGraph::run() {
         return MasterGraph::Status::NO_MORE_DATA;
     }
 
+    // Popping the previous batch can leave the next batch still in flight.
+    _ring_buffer.block_if_empty();
+    for (auto& loader : _loader_modules)
+        loader->rethrow_if_error();
+    if (no_more_processed_data())
+        return Status::NO_MORE_DATA;
+    if (!_processing)
+        return Status::NOT_RUNNING;
     decrease_image_count();
 
     return MasterGraph::Status::OK;
@@ -513,7 +525,7 @@ MasterGraph::Status
 MasterGraph::reset() {
     // stop the internal processing thread so that the
     _processing = false;
-    _ring_buffer.unblock_writer();
+    _ring_buffer.release_all_blocked_calls();
     if (_output_thread.joinable())
         _output_thread.join();
     _set_device_id = false;
@@ -932,8 +944,8 @@ void MasterGraph::output_routine() {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
                 notify_user_thread();
-                // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
-                _ring_buffer.release_if_empty();
+                // Remember EOF even if the consumer has not started waiting yet.
+                _ring_buffer.release_all_blocked_calls();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
@@ -1061,8 +1073,8 @@ void MasterGraph::output_routine_multiple_loaders() {
                 // If the internal process routine ,output_routine(), has finished processing all the images, and last
                 // processed images stored in the _ring_buffer will be consumed by the user when it calls the run() func
                 notify_user_thread();
-                // the following call is required in case the ring buffer is waiting for more data to be loaded and there is no more data to process.
-                _ring_buffer.release_if_empty();
+                // Remember EOF even if the consumer has not started waiting yet.
+                _ring_buffer.release_all_blocked_calls();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
@@ -1140,8 +1152,7 @@ void MasterGraph::start_processing() {
 
 void MasterGraph::stop_processing() {
     _processing = false;
-    _ring_buffer.unblock_reader();
-    _ring_buffer.unblock_writer();
+    _ring_buffer.release_all_blocked_calls();
     if (_output_thread.joinable())
         _output_thread.join();
 }
