@@ -1,0 +1,95 @@
+# Copyright (c) 2015 - 2026 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# L-rocal-gaps: WebDataset golden cases still registered although the reader is disabled (no libtar)
+# Generated 2026-09-27 from the results.jsonl of a validation run; 72 IDs.
+# group=golden-* name-contains=- exclude-name=- also-failing-in=- message-regex=WEB DATASET|in webdataset
+rocal::golden-cpp-strict.hip.gray::CropMirrorNormalize_gray_hip_webdataset
+rocal::golden-cpp-strict.hip.gray::Crop_gray_hip_webdataset
+rocal::golden-cpp-strict.hip.gray::FogRandom_gray_hip
+rocal::golden-cpp-strict.hip.gray::Normalize_gray_hip
+rocal::golden-cpp-strict.hip.gray::Resize_gray_hip_triangular_notsmaller_webdataset
+rocal::golden-cpp-strict.hip.gray::Transpose_gray_hip
+rocal::golden-cpp-strict.hip.rgb::CropMirrorNormalize_rgb_hip_webdataset
+rocal::golden-cpp-strict.hip.rgb::Crop_rgb_hip_webdataset
+rocal::golden-cpp-strict.hip.rgb::FogRandom_rgb_hip
+rocal::golden-cpp-strict.hip.rgb::Normalize_rgb_hip
+rocal::golden-cpp-strict.hip.rgb::Resize_rgb_hip_triangular_notsmaller_webdataset
+rocal::golden-cpp-strict.hip.rgb::Transpose_rgb_hip
+rocal::golden-cpp-strict.host.gray::CropMirrorNormalize_gray_host_webdataset
+rocal::golden-cpp-strict.host.gray::Crop_gray_host_webdataset
+rocal::golden-cpp-strict.host.gray::FogRandom_gray_host
+rocal::golden-cpp-strict.host.gray::Normalize_gray_host
+rocal::golden-cpp-strict.host.gray::Resize_gray_host_triangular_notsmaller_webdataset
+rocal::golden-cpp-strict.host.gray::Transpose_gray_host
+rocal::golden-cpp-strict.host.rgb::CropMirrorNormalize_rgb_host_webdataset
+rocal::golden-cpp-strict.host.rgb::Crop_rgb_host_webdataset
+rocal::golden-cpp-strict.host.rgb::FogRandom_rgb_host
+rocal::golden-cpp-strict.host.rgb::Normalize_rgb_host
+rocal::golden-cpp-strict.host.rgb::Resize_rgb_host_triangular_notsmaller_webdataset
+rocal::golden-cpp-strict.host.rgb::Transpose_rgb_host
+rocal::golden-cpp.hip.gray::CropMirrorNormalize_gray_hip_webdataset
+rocal::golden-cpp.hip.gray::Crop_gray_hip_webdataset
+rocal::golden-cpp.hip.gray::FogRandom_gray_hip
+rocal::golden-cpp.hip.gray::Normalize_gray_hip
+rocal::golden-cpp.hip.gray::Resize_gray_hip_triangular_notsmaller_webdataset
+rocal::golden-cpp.hip.gray::Transpose_gray_hip
+rocal::golden-cpp.hip.rgb::CropMirrorNormalize_rgb_hip_webdataset
+rocal::golden-cpp.hip.rgb::Crop_rgb_hip_webdataset
+rocal::golden-cpp.hip.rgb::FogRandom_rgb_hip
+rocal::golden-cpp.hip.rgb::Normalize_rgb_hip
+rocal::golden-cpp.hip.rgb::Resize_rgb_hip_triangular_notsmaller_webdataset
+rocal::golden-cpp.hip.rgb::Transpose_rgb_hip
+rocal::golden-cpp.host.gray::CropMirrorNormalize_gray_host_webdataset
+rocal::golden-cpp.host.gray::Crop_gray_host_webdataset
+rocal::golden-cpp.host.gray::FogRandom_gray_host
+rocal::golden-cpp.host.gray::Normalize_gray_host
+rocal::golden-cpp.host.gray::Resize_gray_host_triangular_notsmaller_webdataset
+rocal::golden-cpp.host.gray::Transpose_gray_host
+rocal::golden-cpp.host.rgb::CropMirrorNormalize_rgb_host_webdataset
+rocal::golden-cpp.host.rgb::Crop_rgb_host_webdataset
+rocal::golden-cpp.host.rgb::FogRandom_rgb_host
+rocal::golden-cpp.host.rgb::Normalize_rgb_host
+rocal::golden-cpp.host.rgb::Resize_rgb_host_triangular_notsmaller_webdataset
+rocal::golden-cpp.host.rgb::Transpose_rgb_host
+rocal::golden-py.cpu.gray::Blur_gray_host~web_dataset
+rocal::golden-py.cpu.gray::Brightness_gray_host~web_dataset
+rocal::golden-py.cpu.gray::CropMirrorNormalize_gray_host_webDataset
+rocal::golden-py.cpu.gray::Crop_gray_host_webDataset
+rocal::golden-py.cpu.gray::Gamma_gray_host~web_dataset
+rocal::golden-py.cpu.gray::Resize_gray_host_bilinear_stretch_webDataset
+rocal::golden-py.cpu.rgb::Blur_rgb_host~web_dataset
+rocal::golden-py.cpu.rgb::Brightness_rgb_host~web_dataset
+rocal::golden-py.cpu.rgb::CropMirrorNormalize_rgb_host_webDataset
+rocal::golden-py.cpu.rgb::Crop_rgb_host_webDataset
+rocal::golden-py.cpu.rgb::Gamma_rgb_host~web_dataset
+rocal::golden-py.cpu.rgb::Resize_rgb_host_bilinear_stretch_webDataset
+rocal::golden-py.gpu.gray::Blur_gray_hip~web_dataset
+rocal::golden-py.gpu.gray::Brightness_gray_hip~web_dataset
+rocal::golden-py.gpu.gray::CropMirrorNormalize_gray_hip_webDataset
+rocal::golden-py.gpu.gray::Crop_gray_hip_webDataset
+rocal::golden-py.gpu.gray::Gamma_gray_hip~web_dataset
+rocal::golden-py.gpu.gray::Resize_gray_hip_bilinear_stretch_webDataset
+rocal::golden-py.gpu.rgb::Blur_rgb_hip~web_dataset
+rocal::golden-py.gpu.rgb::Brightness_rgb_hip~web_dataset
+rocal::golden-py.gpu.rgb::CropMirrorNormalize_rgb_hip_webDataset
+rocal::golden-py.gpu.rgb::Crop_rgb_hip_webDataset
+rocal::golden-py.gpu.rgb::Gamma_rgb_hip~web_dataset
+rocal::golden-py.gpu.rgb::Resize_rgb_hip_bilinear_stretch_webDataset

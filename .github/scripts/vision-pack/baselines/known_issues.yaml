@@ -1,0 +1,394 @@
+# Copyright (c) 2015 - 2026 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Known findings: the only place a failing result becomes "known" (report/triage.py).
+#
+# This copy holds the entries for the rocAL vision-pack QA workflow: the rocal
+# suite and the rocAL checks of robustness and robustness-nogpu. Entries that
+# also cover other libraries keep only the globs for these result IDs; the IDs
+# are the same in every library's copy.
+#
+# Seeded from the manual QA report of 25 Sep 2026 (C1-C2 critical, H1-H19 high,
+# M1-M23 medium, low items L-*) and the provisional findings N1-N4; N5 onwards
+# were found while porting the suites (27 Sep 2026).
+#
+# Each entry:
+#   id, title, severity (critical|high|medium|low), owner
+#   kind:   xfail (expected to fail; a pass is reported as "fixed"),
+#           flaky, skip (expected to be blocked/skipped), quarantine (ignored)
+#   match:  shell-style globs over result IDs <suite>::<group>::<name>. Match
+#           only the failing tests: a glob that also covers passing tests turns
+#           them into "fixed" every night. "[" must be written "[[]".
+#   match_file: a list under lists/ (relative to this file), one result ID or
+#           glob per line, for findings that cover many parameterised results
+#   gfx:    optional globs over the tested GPU (default: every GPU, and nights
+#           without one); [none] scopes an entry to nights on a runner without
+#           a usable GPU, when only the needs_gpu: false suites run
+#   tiers:  optional; issue: upstream URL; added / review_by: YYYY-MM-DD
+#   strict: report the entry in the verdict reasons once all its tests pass
+# Once review_by has passed, re-verify the finding and extend review_by (with an
+# upstream issue link), or remove the entry.
+schema: 1
+issues:
+  # ------------------------------------------------------------------ critical
+  - id: C2
+    title: Bundled LMDB 1.0.1 cannot open standard LMDB 0.9 databases; rocAL Caffe/Caffe2 readers fail
+    severity: critical
+    owner: vision-pack
+    kind: xfail
+    match:
+      - "rocal::lmdb::bundled-open.*"
+      - "rocal::readers.*::caffe*-lmdb*"
+    # Golden cases read through the Caffe/Caffe2 readers, attributed by their
+    # abort message (most IDs are plain augmentation names).
+    match_file: lists/C2-rocal-golden.txt
+    issue: https://github.com/kiritigowda/vision-pack/issues/58
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+
+  # ---------------------------------------------------------------------- high
+  - id: H1
+    title: librocal needs libpython (113 undefined CPython symbols, no libpython dependency)
+    severity: high
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::probe::h1-link-without-libpython"
+    issue: https://github.com/ROCm/rocAL/issues/522
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+  - id: H2
+    title: Built without FFmpeg - rocAL video readers compiled out
+    severity: high
+    owner: vision-pack
+    kind: xfail
+    match:
+      - "rocal::ctest::video_tests_*"
+      - "rocal::readers.*::video"
+    issue: https://github.com/kiritigowda/vision-pack/issues/62
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+  - id: H5
+    title: All rocAL audio augmentations fail - the SDK's RPP is built without audio support
+    severity: high
+    owner: ROCm SDK
+    kind: xfail
+    # Every audio case except the decoder (audio_decoder passes), in the C++
+    # audio_tests (audio-cpp.*), the Python QA (audio.*) and the torch-free check.
+    match:
+      - "rocal::audio*::downmix"
+      - "rocal::audio*::mel_filter_bank"
+      - "rocal::audio*::non_silent_region"
+      - "rocal::audio*::normalize"
+      - "rocal::audio*::preemphasis_filter"
+      - "rocal::audio*::resample"
+      - "rocal::audio*::slice"
+      - "rocal::audio*::spectrogram"
+      - "rocal::audio*::tensor_add_tensor"
+      - "rocal::audio*::tensor_mul_scalar"
+      - "rocal::audio*::to_decibels"
+    issue: https://github.com/ROCm/rocAL/issues/528
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+  - id: H6
+    title: vx_rpp Median, Gaussian, Dilate and Erode (as used by rocAL) return an image shifted by 12 bytes
+    severity: high
+    owner: MIVisionX
+    kind: xfail
+    match:
+      # rocAL uses the same vx_rpp nodes (Dilate/Erode fail on hip only).
+      - "rocal::golden-*::MedianFilter_*"
+      - "rocal::golden-*::GaussianFilter_*"
+      - "rocal::golden-*::Dilate_*_hip"
+      - "rocal::golden-*::Erode_*_hip"
+    issue: https://github.com/ROCm/MIVisionX/issues/1770
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+  - id: H7
+    title: RPP multi-threaded CPU resize zeroes the first 8 bytes of images
+    severity: high
+    owner: ROCm SDK
+    kind: xfail
+    match:
+      - "rocal::probe::cpu-threads-resize.cpu"
+    issue: https://github.com/ROCm/rocAL/issues/530
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+  - id: H8
+    title: rocalLog / fn.log / fn.log1p return garbage (CPU wrong or NaN, GPU all zeros)
+    severity: high
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::probe::log.*"
+      - "rocal::probe::log1p.*"
+    # Also filed for fn.log with int16 input: https://github.com/ROCm/rocAL/issues/524
+    issue: https://github.com/ROCm/rocAL/issues/523
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+  - id: H9
+    title: rocJPEG hardware decode fails with more than 6 images in flight on gfx1201
+    severity: high
+    owner: ROCm SDK
+    kind: xfail
+    # Batch 8 is the crash-guarded reproducer (CI only); batch 6 is its passing control.
+    match:
+      - "rocal::probe::rocjpeg-batch8.gpu"
+    gfx: ["gfx120*"]
+    issue: https://github.com/ROCm/rocAL/issues/529
+    added: 2026-09-25
+    review_by: 2026-12-31
+    strict: true
+
+  # -------------------------------------------------------------------- medium
+  - id: M5
+    title: Python API is unsafe for concurrent pipeline construction
+    severity: medium
+    owner: rocAL
+    # A race: some nights all concurrent runs agree.
+    kind: flaky
+    match:
+      - "rocal::probe::concurrent-*"
+    issue: https://github.com/ROCm/rocAL/issues/531
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M6
+    title: SSD box-encoder pipelines segfault in rocalRelease
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::golden-*::CropResizeRandom_*"
+      - "rocal::probe::box-encoder-release*"
+    issue: https://github.com/ROCm/rocAL/issues/532
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M7
+    title: fn.crop ignores crop_pos_x / crop_pos_y
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::probe::crop-pos.*"
+    issue: https://github.com/ROCm/rocAL/issues/533
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M8
+    title: Pipeline.build() calls exit(0) when verification fails
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "robustness::exit-code::rocal-build-exit0"
+      - "robustness-nogpu::rocal::cpu-decode-resize"
+      - "rocal::probe::build-exit-status"
+    issue: https://github.com/ROCm/rocAL/issues/534
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M9
+    title: rocalCopyToOutput returns OK without copying on a size mismatch
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::probe::copy-to-output-size.*"
+      # The black numpy Crop / CropMirrorNormalize and blank BlendRandom outputs.
+      - "rocal::golden-*::Crop_*_numpy"
+      - "rocal::golden-*::CropMirrorNormalize_*_numpy"
+      - "rocal::golden-cpp-strict.hip.*::BlendRandom_*_hip"
+    issue: https://github.com/ROCm/rocAL/issues/535
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M10
+    title: Symlinked datasets break every label reader
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::probe::labels-symlink-dataset.*"
+    issue: https://github.com/ROCm/rocAL/issues/538
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M11
+    title: One-hot labels fail on GPU pipelines
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::probe::one-hot*.gpu"
+      - "rocal::golden-py.gpu.*::OneHot_*"
+    issue: https://github.com/ROCm/rocAL/issues/539
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M12
+    title: external_source_reader hangs (reported for a missing path separator; on 27 Sep it also hung with the separator)
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "robustness::hang::external-source-no-separator*"
+      - "robustness::hang::external-source-with-separator"
+      - "rocal::probe::external-source-nosep.*"
+      - "rocal::probe::external-source-sep.*"
+    issue: https://github.com/ROCm/rocAL/issues/540
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M13
+    title: CPU mode still requires a GPU (hipSetDevice failed without a visible GPU)
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "robustness-nogpu::rocal::cpu-decode-only"
+    issue: https://github.com/ROCm/rocAL/issues/541
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: M14
+    title: LMDB readers write to the dataset (read-write open, no MDB_NOLOCK)
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::lmdb::lock-unchanged.*"
+    issue: https://github.com/ROCm/rocAL/issues/542
+    added: 2026-09-25
+    review_by: 2026-12-31
+
+  # ----------------------------------------------------- provisional (N1-N4)
+  - id: N3
+    title: rocAL's pybind test CMake sets a literal PYTHONPATH that replaces the environment
+    severity: low
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::env::pybind-pythonpath"
+    issue: https://github.com/ROCm/rocAL/issues/543
+    added: 2026-09-27
+    review_by: 2026-12-31
+
+  # ------------------------------------------- found while porting (N5 onwards)
+  - id: N9
+    title: Scripts exit 0 on bad input (readers.tfrecord() calls exit() on a bad key map)
+    severity: low
+    owner: rocAL
+    kind: xfail
+    match:
+      - "robustness::exit-code::rocal-tfrecord-missing-key-exit0"
+    issue: https://github.com/ROCm/rocAL/issues/544
+    added: 2026-09-27
+    review_by: 2026-12-31
+  - id: N14
+    title: rocAL host Phase and Bitwise golden outputs differ on 0.05-0.09% of pixels (host only; consistent with the H7 zeroed bytes)
+    severity: medium
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::golden-*::Phase_*_host"
+      - "rocal::golden-*::BitwiseAnd_*_host"
+      - "rocal::golden-*::BitwiseOr_*_host"
+      - "rocal::golden-*::BitwiseXor_*_host"
+    issue: https://github.com/ROCm/rocAL/issues/545
+    added: 2026-09-27
+    review_by: 2026-12-31
+
+  # ----------------------------------------------------------------- low items
+  - id: L-rocal-gaps
+    title: rocAL low items (rocalNop uninitialized memory, color_jitter without GPU path,
+      WebDataset cases registered while disabled, CHECK_LMDB_RETURN_STATUS double evaluation)
+    severity: low
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::probe::nop-uninitialized.*"
+      - "rocal::golden-cpp-strict.*::Nop_*"
+      - "rocal::probe::color-jitter.gpu"
+      - "rocal::golden-py.gpu.rgb::ColorJitter_rgb_hip"
+      - "rocal::readers.*::webdataset"
+      - "rocal::lmdb::error-message"
+    match_file: lists/L-webdataset-golden.txt
+    # Sub-issues of the tracking issue: #548 rocalNop, #549 color_jitter, #550 WebDataset, #551 LMDB macro.
+    issue: https://github.com/ROCm/rocAL/issues/521
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: L-rocal-harness
+    title: rocAL harness gaps (image comparator always exits 0, TF tests print "Install tensorflow" and exit 0, audio test always exits 0)
+    severity: low
+    owner: rocAL
+    kind: xfail
+    match:
+      - "robustness::exit-code::rocal-image-comparison-exit0"
+      - "robustness::exit-code::rocal-unit-test-missing-tensorflow-exit0"
+      - "robustness::exit-code::rocal-audio-unit-test-exit0"
+      - "rocal::audio.*::qa-run"
+      # The upstream comparators' totals (they always exit 0); each failing case is baselined on its own.
+      - "rocal::golden-cpp::upstream-comparator"
+      - "rocal::golden-py::upstream-comparator"
+    issue: https://github.com/ROCm/rocAL/issues/552
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: L-rocal-drift
+    title: rocAL golden drift - Hue/Saturation off by 1 LSB; WarpPerspective, Remap and ColorTemp differ on a few border pixels
+    severity: low
+    owner: rocAL
+    kind: xfail
+    match:
+      - "rocal::golden-*::Hue_rgb_*"
+      - "rocal::golden-*::Saturation_rgb_hip"
+      - "rocal::golden-*::ColorTemp_rgb_host"
+      - "rocal::golden-*::WarpPerspective_*_hip"
+      - "rocal::golden-*::Remap_gray_hip"
+    issue: https://github.com/ROCm/rocAL/issues/554
+    added: 2026-09-25
+    review_by: 2026-12-31
+  - id: L-rocal-crashes
+    title: rocAL crashes instead of reporting errors (grey raw TFRecord, BlendRandom numpy on host, the crash probes)
+    severity: low
+    owner: rocAL
+    # The grey tf_raw cases flip between "Not a valid option" (skip) and SIGSEGV.
+    kind: xfail
+    match:
+      - "rocal::golden-cpp*.*.gray::*_tfraw"
+      - "rocal::golden-cpp*.host.*::BlendRandom_*"
+      - "rocal::probe::crash.*"
+    issue: https://github.com/ROCm/rocAL/issues/553
+    added: 2026-09-25
+    review_by: 2026-12-31
+
+  # ------------------------------------------------ expected to be blocked
+  - id: L-extended-only
+    title: Checks that need ROCm torch, tensorflow or jax run only in the extended image
+    severity: low
+    owner: vision-pack QA
+    kind: skip
+    match:
+      - "rocal::golden-py*::*jax*"
+      - "rocal::readers.*::tfrecord"
+      - "rocal::extended::*"
+    # The TFRecord-reader Python golden cases have plain augmentation names.
+    match_file: lists/L-tf-golden.txt
+    added: 2026-09-27
+    review_by: 2026-12-31

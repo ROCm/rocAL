@@ -1,0 +1,51 @@
+# Copyright (c) 2015 - 2026 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Floors on the number of result IDs per suite and group, for runs WITHOUT the
+# rocal_data dataset (VP_DATA unset or without rocal_data/). The workflow passes
+# this file to report/triage.py --expected instead of expected_counts.yaml
+# whenever the dataset step was skipped, so a missing dataset only reports
+# blocked checks (yellow) and does not fail the run on result counts.
+#
+# It is expected_counts.yaml minus the floors that a run without the dataset
+# cannot reach, because the suite then records a single `<group>::dataset`
+# placeholder instead of the individual cases: audio-cpp.*, audio.* (standard
+# and up), probe, readers.* and lmdb (comprehensive and up). Everything else is
+# kept verbatim: the golden-* groups still record every case as blocked, and
+# ctest, pybind, perf and the robustness floors do not use the dataset. Keep the
+# two files in step: when a floor changes in expected_counts.yaml, change it here
+# too.
+schema: 1
+counts:
+  # ----------------------------------------------------------------- rocal
+  - {suite: rocal, group: ctest, min: 3, tiers: [quick]}
+  - {suite: rocal, group: ctest, min: 21, tiers: [standard, comprehensive, full]}
+  - {suite: rocal, group: pybind, min: 6, tiers: [standard, comprehensive, full]}
+  - {suite: rocal, group: golden-cpp.*, min: 612, tiers: [comprehensive, full], note: "153 unit_tests runs per backend/colour pair"}
+  - {suite: rocal, group: golden-cpp-strict.*, min: 612, tiers: [comprehensive, full]}
+  - {suite: rocal, group: golden-py.*, min: 358, tiers: [comprehensive, full], note: "91 per rgb pair, 88 per gray pair"}
+  - {suite: rocal, group: perf, min: 23, tiers: [full]}
+
+  # ------------------------------------------------------------ robustness
+  - {suite: robustness, group: exit-code, min: 5}
+  - {suite: robustness, group: hang, min: 2}
+  - {suite: robustness-nogpu, group: env, min: 1}
+  - {suite: robustness-nogpu, group: import, min: 9}
+  - {suite: robustness-nogpu, group: rocal, min: 3}

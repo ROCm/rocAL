@@ -1,0 +1,58 @@
+# Copyright (c) 2015 - 2026 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Floors on the number of result IDs per suite and group, so silently dropped
+# tests turn the run red (report/triage.py). `group` is a glob over the second
+# ID component (<suite>::<group>::<name>); `tiers` default to every tier the
+# suite runs in. Values come from the validation run of 27 Sep 2026 on
+# nightly-20260926. When upstream legitimately adds or removes tests, update the
+# floor in the same PR. Hardware-dependent groups (unsupported-GPU probes) and
+# environment-dependent ones (build.*, harness) are deliberately not guarded.
+#
+# The rocal floors assume the rocal_data dataset (VP_DATA). Without it audio,
+# readers, lmdb and most of probe record only blocked placeholders, so
+# audio-cpp.*, audio.*, probe, readers.* and lmdb miss their floors; the golden
+# groups still count their blocked cases.
+#
+# The robustness and robustness-nogpu floors count only the rocAL checks of this
+# copy of those suites.
+schema: 1
+counts:
+  # ----------------------------------------------------------------- rocal
+  - {suite: rocal, group: ctest, min: 3, tiers: [quick]}
+  - {suite: rocal, group: ctest, min: 21, tiers: [standard, comprehensive, full]}
+  - {suite: rocal, group: pybind, min: 6, tiers: [standard, comprehensive, full]}
+  - {suite: rocal, group: audio-cpp.*, min: 24, tiers: [standard, comprehensive, full], note: "12 cases per backend"}
+  - {suite: rocal, group: audio.*, min: 26, tiers: [standard, comprehensive, full]}
+  - {suite: rocal, group: probe, min: 40, tiers: [comprehensive, full],
+     note: "box-encoder-release expands to 4 IDs once unit_tests is built"}
+  - {suite: rocal, group: golden-cpp.*, min: 612, tiers: [comprehensive, full], note: "153 unit_tests runs per backend/colour pair"}
+  - {suite: rocal, group: golden-cpp-strict.*, min: 612, tiers: [comprehensive, full]}
+  - {suite: rocal, group: golden-py.*, min: 358, tiers: [comprehensive, full], note: "91 per rgb pair, 88 per gray pair"}
+  - {suite: rocal, group: readers.*, min: 22, tiers: [comprehensive, full]}
+  - {suite: rocal, group: lmdb, min: 25, tiers: [comprehensive, full]}
+  - {suite: rocal, group: perf, min: 23, tiers: [full]}
+
+  # ------------------------------------------------------------ robustness
+  - {suite: robustness, group: exit-code, min: 5}
+  - {suite: robustness, group: hang, min: 2}
+  - {suite: robustness-nogpu, group: env, min: 1}
+  - {suite: robustness-nogpu, group: import, min: 9}
+  - {suite: robustness-nogpu, group: rocal, min: 3}
