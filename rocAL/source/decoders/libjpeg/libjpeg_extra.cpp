@@ -73,9 +73,13 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     volatile int retval = 0;
     int i;
 
+    // This function runs inside an OpenMP parallel region, where an escaping C++ exception
+    // is undefined behaviour, so every failure is reported through the return value.
     if (jpegBuf == NULL || jpegSize <= 0 || dstBuf == NULL || width < 0 ||
-        pitch < 0 || height < 0 || pixelFormat < 0 || pixelFormat >= TJ_NUMPF)
-        THROW("tjDecompress2_partial(): Invalid argument");
+        pitch < 0 || height < 0 || pixelFormat < 0 || pixelFormat >= TJ_NUMPF) {
+        ERR("tjDecompress2_partial(): Invalid argument");
+        return -1;
+    }
 
     struct jpeg_decompress_struct cinfo;
     // Initialize libjpeg structures to have a memory source
@@ -116,11 +120,8 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     if (pitch == 0) pitch = cinfo.output_width * tjPixelSize[pixelFormat];
 
     if ((row_pointer = (JSAMPROW *)malloc(sizeof(JSAMPROW) * cinfo.output_height)) == NULL) {
-      THROW("tjDecompress2_partial(): Memory allocation failure");
-      if (setjmp(jerr.setjmp_buffer)) {
-          /* If we get here, the JPEG code has signaled an error. */
-          retval = -1;  goto bailout;
-      }
+      ERR("tjDecompress2_partial(): Memory allocation failure");
+      retval = -1;  goto bailout;
     }
     
     // set row pointer for destination
@@ -172,9 +173,12 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     tjscalingfactor *scalingFactors = NULL;
     int numScalingFactors = 0;
 
-    if (jpegBuf == NULL || jpegSize <= 0 || dstBuf == NULL || width < 0 || 
+    // Like tjDecompress2_partial(), this runs inside an OpenMP parallel region, so it
+    // reports every failure through the return value rather than throwing.
+    if (jpegBuf == NULL || jpegSize <= 0 || dstBuf == NULL || width < 0 ||
           pitch < 0 || height < 0 || pixelFormat < 0 || pixelFormat >= TJ_NUMPF) {
-        THROW("tjDecompress2_partial_scale(): Invalid argument");
+        ERR("tjDecompress2_partial_scale(): Invalid argument");
+        return -1;
     }
 
     struct jpeg_decompress_struct cinfo;
@@ -202,8 +206,10 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jpegwidth = cinfo.image_width;  jpegheight = cinfo.image_height;
     if (width == 0) width = jpegwidth;
     if (height == 0) height = jpegheight;
-    if ((scalingFactors = tjGetScalingFactors(&numScalingFactors)) == NULL)
-        THROW("tjDecompress2_partial_scale(): error getting scaling factors");
+    if ((scalingFactors = tjGetScalingFactors(&numScalingFactors)) == NULL) {
+        ERR("tjDecompress2_partial_scale(): error getting scaling factors");
+        retval = -1;  goto bailout;
+    }
 
     for (i = 0; i < numScalingFactors; i++) {
       scaledw = TJSCALED(crop_width, scalingFactors[i]);
@@ -212,12 +218,17 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
         break;
     }
 
-    if (i >= numScalingFactors)
-      THROW("tjDecompress2_partial_scale(): Could not scale down to desired image dimensions");
-    
-    if (cinfo.num_components > 3)
-      THROW("tjDecompress2_partial_scale(): JPEG image must have 3 or fewer components");
-    
+    if (i >= numScalingFactors) {
+      ERR("tjDecompress2_partial_scale(): Could not scale down to desired image dimensions");
+      retval = -1;  goto bailout;
+    }
+
+    // Reached by a CMYK or YCCK source, which decode_info() does not filter out.
+    if (cinfo.num_components > 3) {
+      ERR("tjDecompress2_partial_scale(): JPEG image must have 3 or fewer components");
+      retval = -1;  goto bailout;
+    }
+
     //width = scaledw;  height = scaledh;
     cinfo.scale_num = scalingFactors[i].num;
     cinfo.scale_denom = scalingFactors[i].denom;
@@ -238,10 +249,15 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     if (pitch == 0) pitch = cinfo.output_width * tjPixelSize[pixelFormat];
 
     if ((row_pointer =
-        (JSAMPROW *)malloc(sizeof(JSAMPROW) * cinfo.output_height)) == NULL)
-        THROW("tjDecompress2_partial_scale(): Memory allocation failure");
+        (JSAMPROW *)malloc(sizeof(JSAMPROW) * cinfo.output_height)) == NULL) {
+        ERR("tjDecompress2_partial_scale(): Memory allocation failure");
+        retval = -1;  goto bailout;
+    }
     // allocate row of tmp storage for storing discarded data
-    tmp_row = (unsigned char *)malloc((size_t)pitch);
+    if ((tmp_row = (unsigned char *)malloc((size_t)pitch)) == NULL) {
+        ERR("tjDecompress2_partial_scale(): Memory allocation failure");
+        retval = -1;  goto bailout;
+    }
 
     for (i = 0; i < (int)cinfo.output_height; i++) {
         if (i < height) {
