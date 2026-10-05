@@ -174,6 +174,8 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     // Initialize libjpeg structures to have a memory source
     // Modify the usual jpeg error manager to catch fatal errors.
     struct my_error_mgr jerr;
+    // Written after the setjmp below, so it must not be cached in a register.
+    volatile bool decompress_created = false;
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
@@ -181,6 +183,9 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
         return -1;
     }
 
+    // cinfo is unusable until it is created: jpeg_mem_src() dereferences cinfo.mem.
+    jpeg_create_decompress(&cinfo);
+    decompress_created = true;
     jpeg_mem_src(&cinfo, jpegBuf, jpegSize);
     jpeg_read_header(&cinfo, TRUE);
     cinfo.out_color_space = pf2cs[pixelFormat];
@@ -259,7 +264,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jpeg_finish_decompress(&cinfo);
 
   bailout:
-    jpeg_destroy_decompress(&cinfo);
+    if (decompress_created) jpeg_destroy_decompress(&cinfo);
     if (row_pointer) free(row_pointer);
     if (tmp_row) free(tmp_row);
     return retval;
