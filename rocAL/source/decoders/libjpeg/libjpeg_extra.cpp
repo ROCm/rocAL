@@ -68,8 +68,10 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
                                     unsigned int crop_x, unsigned int crop_y,
                                     unsigned int crop_width, unsigned int crop_height)
 {
-    JSAMPROW *row_pointer = NULL;
-    int i, retval = 0;
+    // volatile: read at bailout after a possible longjmp, see -Wclobbered.
+    JSAMPROW *volatile row_pointer = NULL;
+    volatile int retval = 0;
+    int i;
 
     if (jpegBuf == NULL || jpegSize <= 0 || dstBuf == NULL || width < 0 ||
         pitch < 0 || height < 0 || pixelFormat < 0 || pixelFormat >= TJ_NUMPF)
@@ -79,15 +81,18 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     // Initialize libjpeg structures to have a memory source
     // Modify the usual jpeg error manager to catch fatal errors.
     struct my_error_mgr jerr;
+    // Written after the setjmp below, so it must not be cached in a register.
+    volatile bool decompress_created = false;
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
       /* If we get here, the JPEG code has signaled an error. */
-      return -1;
+      retval = -1;  goto bailout;
     }
 
     // set up, read header, set image parameters, save size
     jpeg_create_decompress(&cinfo);
+    decompress_created = true;
     jpeg_mem_src(&cinfo, jpegBuf, jpegSize);
     jpeg_read_header(&cinfo, TRUE);
     cinfo.out_color_space = pf2cs[pixelFormat];
@@ -145,7 +150,7 @@ int tjDecompress2_partial(tjhandle handle, const unsigned char *jpegBuf,
     jpeg_finish_decompress(&cinfo);
 
   bailout:
-    jpeg_destroy_decompress(&cinfo);
+    if (decompress_created) jpeg_destroy_decompress(&cinfo);
     if (row_pointer) free(row_pointer);
     return retval;
 }
@@ -158,13 +163,15 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
                             int width, int pitch, int height, int pixelFormat,
                             int flags, unsigned int crop_width, unsigned int crop_height)
 {
-    JSAMPROW *row_pointer = NULL;
-    int i, retval = 0, jpegwidth, jpegheight;
+    // volatile: read at bailout after a possible longjmp, see -Wclobbered.
+    JSAMPROW *volatile row_pointer = NULL;
+    unsigned char *volatile tmp_row = NULL;
+    volatile int retval = 0;
+    int i, jpegwidth, jpegheight;
     unsigned int scaledw, scaledh, crop_x, crop_y, max_crop_width;
     tjscalingfactor *scalingFactors = NULL;
     int numScalingFactors = 0;
 
-    unsigned char *tmp_row = NULL;
     if (jpegBuf == NULL || jpegSize <= 0 || dstBuf == NULL || width < 0 || 
           pitch < 0 || height < 0 || pixelFormat < 0 || pixelFormat >= TJ_NUMPF) {
         THROW("tjDecompress2_partial_scale(): Invalid argument");
@@ -180,7 +187,7 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
     jerr.pub.error_exit = my_error_exit;
     if (setjmp(jerr.setjmp_buffer)) {
         /* If we get here, the JPEG code has signaled an error. */
-        return -1;
+        retval = -1;  goto bailout;
     }
 
     // cinfo is unusable until it is created: jpeg_mem_src() dereferences cinfo.mem.
@@ -235,11 +242,6 @@ int tjDecompress2_partial_scale(tjhandle handle, const unsigned char *jpegBuf,
         THROW("tjDecompress2_partial_scale(): Memory allocation failure");
     // allocate row of tmp storage for storing discarded data
     tmp_row = (unsigned char *)malloc((size_t)pitch);
-
-    if (setjmp(jerr.setjmp_buffer)) {
-      /* If we get here, the JPEG code has signaled an error. */
-      retval = -1;  goto bailout;
-    }
 
     for (i = 0; i < (int)cinfo.output_height; i++) {
         if (i < height) {
