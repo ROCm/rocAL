@@ -21,6 +21,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
+* The PythonFunction operator (`fn.python_function`) is disabled by default. It embedded the CPython C-API in `librocal.so`, which left the core library with unresolved `Py*` symbols and unusable from C/C++ applications. It can be re-enabled with `-DROCAL_PYTHON_FUNCTION=ON`, which reintroduces that limitation.
 * Optimized data distribution for the rocJPEG backend to improve multi-threaded decode throughput.
 * LMDB is now an optional dependency. When liblmdb is present at configure time, rocAL builds with Caffe/Caffe2 LMDB reader support; otherwise it builds without it.
 * Changes build instructions to omit building of wheels.

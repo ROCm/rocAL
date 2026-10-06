@@ -300,6 +300,14 @@ PYBIND11_MODULE(rocal_pybind, m) {
     m.attr("__version__") = "unknown";
 #endif
 
+    // Reports whether librocal was built with the PythonFunction operator. Disabled by default,
+    // see https://github.com/ROCm/rocAL/issues/522.
+#ifdef ROCAL_PYTHON_FUNCTION
+    m.attr("ROCAL_PYTHON_FUNCTION_ENABLED") = true;
+#else
+    m.attr("ROCAL_PYTHON_FUNCTION_ENABLED") = false;
+#endif
+
     // Bind the C++ structure
     // rocal_api.h
     m.def("rocalCreate", &rocalCreate, "Creates context with the arguments sent and returns it", py::return_value_policy::reference);
