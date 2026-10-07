@@ -1706,12 +1706,21 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
     
     Notes
     -----
+    - This operation is temporarily disabled, see https://github.com/ROCm/rocAL/issues/522
     - This operation accepts only a single input tensor
     - This operation is CPU-only and requires the GIL for execution
     - The input is provided as a zero-copy NumPy view when possible
     - The function must maintain the batch dimension size
     - For best performance, avoid heavy computations in the Python function
     """
+    if not getattr(b, "ROCAL_PYTHON_FUNCTION_ENABLED", False):
+        raise RuntimeError(
+            "fn.python_function is disabled in this build of rocAL. The operator embeds the "
+            "CPython C-API in librocal.so, which makes the core library unusable from C/C++ "
+            "applications (https://github.com/ROCm/rocAL/issues/522). Rebuild rocAL with "
+            "-DROCAL_PYTHON_FUNCTION=ON to enable it."
+        )
+
     # Validate inputs
     if not inputs:
         raise ValueError("python_function requires at least one input tensor")

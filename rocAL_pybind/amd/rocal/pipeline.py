@@ -166,6 +166,15 @@ class Pipeline(object):
             b.getOneHotEncodedLabels(self._handle, array_ptr, self._num_classes, dest_device_type)
 
     def set_outputs(self, *output_list):
+        for index, output in enumerate(output_list):
+            if output is None:
+                # An augmentation that rejects its input returns a null tensor and reports the
+                # reason through rocalGetErrorMessage instead of raising. Surface it here: passing
+                # the null on to rocalSetOutputs dereferences it and segfaults the interpreter.
+                error_message = b.rocalGetErrorMessage(self._handle)
+                raise RuntimeError(
+                    f"Output {index} is not a valid tensor. The augmentation that produced it "
+                    f"failed to build: {error_message}")
         b.setOutputs(self._handle, len(output_list), output_list)
 
     def __enter__(self):
