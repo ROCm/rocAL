@@ -392,7 +392,9 @@ int main(int argc, const char **argv) {
         mat_input.release();
         mat_output.release();
 
+#if ENABLE_OPENCV_HIGHGUI
         cv::waitKey(1);
+#endif
         }  // if (display)
 #endif
 

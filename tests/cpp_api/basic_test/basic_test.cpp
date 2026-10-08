@@ -35,8 +35,10 @@ THE SOFTWARE.
 #include "opencv2/opencv.hpp"
 using namespace cv;
 #define CV_RGB2BGR COLOR_RGB2BGR
+#if ENABLE_OPENCV_HIGHGUI
 #define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #define cvDestroyWindow destroyWindow
+#endif
 #endif
 #define DISPLAY 0
 int main(int argc, const char **argv) {
@@ -156,14 +158,18 @@ int main(int argc, const char **argv) {
         std::cout << "Process " << process_image_count << " images" << std::endl;
         std::vector<unsigned char> mat_input(h * w * p);
 #if ENABLE_OPENCV
+#if ENABLE_OPENCV_HIGHGUI
         if (DISPLAY)
             cv::waitKey(0);
+#endif
         const unsigned number_of_cols = process_image_count / inputBatchSize;
         cv::Mat mat_output(h, w * number_of_cols, cv_color_format);
         cv::Mat mat_color;
+#if ENABLE_OPENCV_HIGHGUI
         auto win_name = "output";
         if (DISPLAY)
             cv::namedWindow(win_name, CV_WINDOW_AUTOSIZE);
+#endif
         int col_counter = 0;
 #endif
         int counter = 0;
@@ -199,19 +205,25 @@ int main(int argc, const char **argv) {
             mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
             if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                 cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+#if ENABLE_OPENCV_HIGHGUI
                 if (DISPLAY)
                     cv::imshow(win_name, mat_color);
                 else
+#endif
                     cv::imwrite("output.png", mat_color);
             } else {
+#if ENABLE_OPENCV_HIGHGUI
                 if (DISPLAY)
                     cv::imshow(win_name, mat_output);
                 else
+#endif
                     cv::imwrite("output.png", mat_output);
             }
             // The delay here simulates possible latency between runs due to training
+#if ENABLE_OPENCV_HIGHGUI
             if (DISPLAY)
                 cv::waitKey(200);
+#endif
             col_counter = (col_counter + 1) % number_of_cols;
 #endif
         }
@@ -219,12 +231,16 @@ int main(int argc, const char **argv) {
         std::cout << "rocAL reset\n";
         rocalResetLoaders(handle);
 #if ENABLE_OPENCV
+#if ENABLE_OPENCV_HIGHGUI
         if (DISPLAY)
             cv::waitKey(0);
+#endif
         mat_output.release();
         mat_color.release();
+#if ENABLE_OPENCV_HIGHGUI
         if (DISPLAY)
             cvDestroyWindow(win_name);
+#endif
 #endif
     }
 

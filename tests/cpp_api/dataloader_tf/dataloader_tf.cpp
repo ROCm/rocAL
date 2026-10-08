@@ -213,9 +213,11 @@ int main(int argc, const char **argv) {
             cv::Mat mat_color;
             mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+#if ENABLE_OPENCV_HIGHGUI
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
+#endif
                 cv::imwrite("output.png", mat_output);
         } else if (color_format == RocalImageColor::ROCAL_COLOR_RGB_PLANAR) {
             // convert planar to packed for OPENCV
@@ -234,19 +236,25 @@ int main(int argc, const char **argv) {
                     }
                 }
             }
+#if ENABLE_OPENCV_HIGHGUI
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
+#endif
                 cv::imwrite("output.png", mat_output);
         } else {
             mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
+#if ENABLE_OPENCV_HIGHGUI
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
+#endif
                 cv::imwrite("output.png", mat_output);
         }
+#if ENABLE_OPENCV_HIGHGUI
         if (DISPLAY)
             cv::waitKey(1);
+#endif
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
     }

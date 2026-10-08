@@ -1220,8 +1220,10 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     cv::Mat mat_output(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
+#if ENABLE_OPENCV_HIGHGUI
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+#endif
 #endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -1470,19 +1472,25 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
         if (output_color_format == 0) {  // RGB24
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+#if ENABLE_OPENCV_HIGHGUI
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
+#endif
                 cv::imwrite(out_filename, mat_color, compression_params);
         } else if (output_color_format == 1) {  // BGR24
+#if ENABLE_OPENCV_HIGHGUI
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
+#endif
                 cv::imwrite(out_filename, mat_output, compression_params);
         } else {
+#if ENABLE_OPENCV_HIGHGUI
             if (DISPLAY)
                 cv::imshow("output", mat_output);
             else
+#endif
                 cv::imwrite(out_filename, mat_output, compression_params);
         }
         col_counter = (col_counter + 1) % number_of_cols;

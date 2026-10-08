@@ -269,7 +269,9 @@ int main(int argc, const char** argv) {
         } else {
             cv::imwrite(out_filename, mat_output);
         }
+#if ENABLE_OPENCV_HIGHGUI
         cv::waitKey(1);
+#endif
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
     }

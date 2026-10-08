@@ -120,8 +120,10 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     std::vector<cv::Mat> mat_output;
     cv::Mat mat_color;
+#if ENABLE_OPENCV_HIGHGUI
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+#endif
 #endif
     std::cerr << "Going to process images\n";
     std::cerr << "Remaining images " <<  rocalGetRemainingImages(handle) << "\n";
@@ -163,14 +165,18 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
 
             if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                 cv::cvtColor(mat_output[idx], mat_color, CV_RGB2BGR);
+#if ENABLE_OPENCV_HIGHGUI
                 if (DISPLAY)
                     cv::imshow("output", mat_output[idx]);
                 else
+#endif
                     cv::imwrite(out_filename, mat_color, compression_params);
             } else {
+#if ENABLE_OPENCV_HIGHGUI
                 if (DISPLAY)
                     cv::imshow("output", mat_output[idx]);
                 else
+#endif
                     cv::imwrite(out_filename, mat_output[idx], compression_params);
             }
 #endif

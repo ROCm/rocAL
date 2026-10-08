@@ -135,7 +135,7 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
     std::vector<std::string> names;
     names.resize(effective_batch_size);
     std::vector<int> image_name_length(effective_batch_size);
-#if ENABLE_OPENCV
+#if ENABLE_OPENCV && ENABLE_OPENCV_HIGHGUI
     if (DISPLAY)
         cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
 #endif
@@ -170,9 +170,11 @@ int thread_func(const char *path, int gpu_mode, RocalImageColor color_format, in
         cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
         mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
+#if ENABLE_OPENCV_HIGHGUI
         if (DISPLAY)
             cv::imshow("output.png", mat_color);
         else
+#endif
             cv::imwrite("output.png", mat_color);
 
         col_counter = (col_counter + 1) % number_of_cols;

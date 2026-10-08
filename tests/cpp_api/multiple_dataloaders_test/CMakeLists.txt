@@ -48,7 +48,6 @@ project (multiple_dataloaders_test)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../cmake)
 
-find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
@@ -56,20 +55,8 @@ link_directories(${ROCM_PATH}/lib)
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
 
-if(OpenCV_FOUND)
-    if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 4)
-        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=1)
-        include_directories(${OpenCV_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-    else()
-        message("-- WARNING: OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X is not supported. Building without display support")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
-    endif()
-else()
-    message("-- WARNING: OpenCV Not Found -- No Display Support")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
-endif()
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestOpenCV.cmake)
+rocal_test_enable_opencv(${PROJECT_NAME})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them

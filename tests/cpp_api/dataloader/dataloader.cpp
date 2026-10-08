@@ -234,7 +234,9 @@ int main(int argc, const char **argv) {
             cv::imwrite("output.png", mat_output);
         }
         // Cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
+#if ENABLE_OPENCV_HIGHGUI
         cv::waitKey(1);
+#endif
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
     }
