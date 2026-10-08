@@ -31,6 +31,10 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 
+### Resolved issues
+* Resolve a crash in the TurboJPEG decoder when a source image is more than eight times larger than the requested decode size.
+* Resolve a memory leak and a process abort on TurboJPEG decode failures.
+
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
 
