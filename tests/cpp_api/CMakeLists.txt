@@ -58,6 +58,18 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 find_package(rocdecode 1.0.0 QUIET)
 find_package(rocjpeg 1.0.0 QUIET)
 
+# Detect whether rocAL was built with ffmpeg. The ffmpeg video reader links
+# libavcodec; if librocal.so does not reference avcodec, ffmpeg was disabled
+# (e.g. -DCMAKE_DISABLE_FIND_PACKAGE_FFmpeg=ON) and the ffmpeg video test must
+# be skipped instead of failing.
+set(ROCAL_WITH_FFMPEG FALSE)
+execute_process(
+  COMMAND sh -c "readelf -d \"${ROCM_PATH}/lib/librocal.so\" 2>/dev/null | grep -q avcodec"
+  RESULT_VARIABLE _rocal_no_ffmpeg)
+if(_rocal_no_ffmpeg EQUAL 0)
+  set(ROCAL_WITH_FFMPEG TRUE)
+endif()
+
 if(ROCAL_LIBRARY AND ROCAL_INCLUDE_DIR)
     set(ROCAL_FOUND TRUE)
     message("-- ${White}${PROJECT_NAME}: Using rocAL -- \n\tLibraries:${ROCAL_LIBRARY} \n\tIncludes:${ROCAL_INCLUDE_DIR}${ColourReset}")
@@ -235,24 +247,28 @@ if("${BACKEND}" STREQUAL "HIP")
 endif()
 
 if("${BACKEND}" STREQUAL "HIP")
-  # 14 - video_tests -- video reader with ffmpeg decoder
-  add_test(
-    NAME
-    video_tests_ffmpeg
-    COMMAND
-      "${CMAKE_CTEST_COMMAND}"
-              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
-                                "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
-              --build-generator "${CMAKE_GENERATOR}"
-              --test-command "video_tests"
-              ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
-  )
-  # 15 - video_tests -- video reader with rocDecode
-  if(rocdecode_FOUND)
-    add_test(NAME video_tests_rocdecode
-              COMMAND video_tests
-              ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+  if(ROCAL_WITH_FFMPEG)
+    # 14 - video_tests -- video reader with ffmpeg decoder
+    add_test(
+      NAME
+      video_tests_ffmpeg
+      COMMAND
+        "${CMAKE_CTEST_COMMAND}"
+                --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
+                                  "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
+                --build-generator "${CMAKE_GENERATOR}"
+                --test-command "video_tests"
+                ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
+    )
+    # 15 - video_tests -- video reader with rocDecode
+    if(rocdecode_FOUND)
+      add_test(NAME video_tests_rocdecode
+                COMMAND video_tests
+                ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+    endif()
+  else()
+    message(STATUS "rocAL built without ffmpeg -- skipping video_tests_ffmpeg and video_tests_rocdecode")
   endif()
 
   if(rocjpeg_FOUND)
