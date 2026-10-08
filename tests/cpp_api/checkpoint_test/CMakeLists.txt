@@ -58,7 +58,7 @@ add_executable(${PROJECT_NAME} ${My_Source_Files})
 file(GLOB Restore_Source_Files ./restore_checkpoint_test.cpp)
 add_executable(restore_checkpoint_test ${Restore_Source_Files})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
 target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
