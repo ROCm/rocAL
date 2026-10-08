@@ -189,3 +189,5 @@ else()
     endif()
   endif()
 endif()
+
+set(FFMPEG_FOUND ${FFMPEG_FOUND} CACHE INTERNAL "")
