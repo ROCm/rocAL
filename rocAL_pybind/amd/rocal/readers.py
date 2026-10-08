@@ -401,6 +401,84 @@ def numpy(*inputs, file_root='', files=[], num_shards=1, output_layout=types.NON
         Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
     return (numpy_reader_output)
 
+def hdf5(*inputs, file_root='', files=[], dataset_keys=[], output_layouts=[],
+         num_shards=1, random_shuffle=False, shard_id=0, stick_to_shard=True,
+         shard_size=-1, last_batch_policy=types.LAST_BATCH_FILL,
+         pad_last_batch=False, seed=0):
+    """Reads multiple datasets atomically from each HDF5 file.
+
+    Supported storage types are float32, uint8, uint32, int16 and int32.
+    Each dataset must have one to four nonempty dimensions (excluding batch).
+    HDF5 API calls are serialized within rocAL; every reader prefetches batches
+    on a background worker. Checkpointing is not supported by this reader.
+
+    The returned tuple follows ``dataset_keys`` order. Every requested dataset
+    must exist with a consistent shape and data type in every input file.
+    HDF5 files are discovered directly under ``file_root`` unless ``files`` is
+    provided. Relative entries in ``files`` are resolved against ``file_root``.
+
+    Args:
+        file_root: Directory containing ``.h5`` or ``.hdf5`` sample files.
+        files: Optional ordered subset of relative or absolute file paths.
+        dataset_keys: Ordered HDF5 dataset paths read from every sample file.
+        output_layouts: One rocAL tensor layout per dataset key. Defaults to
+            ``types.NONE`` for every output. NHW/NFT/NTF require two sample
+            dimensions; NHWC/NCHW require three; NDHWC/NCDHW require four.
+            Layouts describe the stored data; the reader does not transpose it.
+        num_shards: Number of data-parallel shards.
+        random_shuffle: Shuffle within the shard using ``seed + epoch``.
+        shard_id: Zero-based round-robin shard assigned to this reader.
+        stick_to_shard: Keep shard membership on reset; otherwise rotate to
+            the next shard. Reset starts a new epoch.
+        shard_size: Maximum files per shard, or -1 for all assigned files.
+        last_batch_policy: FILL balances shard batch counts and fills the last
+            batch; DROP omits incomplete batches; PARTIAL preserves remaining
+            samples for iterator trimming. DROP/PARTIAL reject configurations
+            with unequal batch counts across shards; use FILL or shard_size.
+        pad_last_batch: FILL repeats the last sample if True, or wraps within
+            the current shard if False. Reset starts at the next epoch's first
+            sample, independent of padding consumed in the previous epoch.
+        seed: Seed for deterministic file-order shuffling.
+
+    Returns:
+        A tuple of output tensors in ``dataset_keys`` order.
+
+    Raises:
+        ValueError: If keys or layouts are invalid.
+        RuntimeError: If native reader construction or schema validation fails.
+    """
+    if Pipeline._current_pipeline._enable_checkpointing:
+        raise ValueError("HDF5 reader does not support checkpointing")
+    if not dataset_keys:
+        raise ValueError("dataset_keys must contain at least one HDF5 dataset path")
+    if not output_layouts:
+        output_layouts = [types.NONE] * len(dataset_keys)
+    if len(output_layouts) != len(dataset_keys):
+        raise ValueError("output_layouts must contain one layout per dataset key")
+
+    Pipeline._current_pipeline._reader = "HDF5Reader"
+    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    sharding_info = b.RocalShardingInfo(
+        last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
+    kwargs_pybind = {
+        "source_path": file_root,
+        "dataset_keys": dataset_keys,
+        "output_layouts": output_layouts,
+        "files": files,
+        "shuffle": random_shuffle,
+        "loop": False,
+        "shard_id": shard_id,
+        "shard_count": num_shards,
+        "seed": seed,
+        "sharding_info": sharding_info,
+    }
+    outputs = tuple(b.hdf5Reader(
+        Pipeline._current_pipeline._handle, *(kwargs_pybind.values())))
+    if len(outputs) != len(dataset_keys):
+        message = b.rocalGetErrorMessage(Pipeline._current_pipeline._handle)
+        raise RuntimeError(message or "Failed to create the HDF5 reader")
+    return outputs
+
 def cifar10(*inputs, file_root='', num_shards=1, image_type=types.RGB_PLANAR, filename_prefix='data_batch_',
           random_shuffle=False, shard_id=0, stick_to_shard=True, shard_size=-1,
           last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch=True):
