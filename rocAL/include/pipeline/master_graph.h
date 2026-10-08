@@ -68,7 +68,7 @@ THE SOFTWARE.
 #if ENABLE_SIMD
 #if _WIN32
 #include <intrin.h>
-#else
+#elif defined(__x86_64__) || defined(__i386__)
 #include <immintrin.h>
 #include <smmintrin.h>
 #include <x86intrin.h>
