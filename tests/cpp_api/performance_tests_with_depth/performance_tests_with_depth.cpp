@@ -32,13 +32,10 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
-
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #endif
 
-#define DISPLAY 0
 using namespace std::chrono;
 
 int test(int test_case, const char* path, int rgb, int gpu, int width, int height, int batch_size, int graph_depth);
@@ -497,8 +494,7 @@ int test(int test_case, const char* path, int rgb, int gpu, int width, int heigh
     cv::Mat mat_output(h, w, cv_color_format);
     cv::Mat mat_input(h, w, cv_color_format);
     cv::Mat mat_color;
-    if (DISPLAY)
-        cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+    rocal_test_output_open("output");
 #endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
