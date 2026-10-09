@@ -58,12 +58,12 @@ link_directories(${ROCM_PATH}/lib)
 add_executable(${PROJECT_NAME} image_augmentation.cpp)
 
 # OpenCV 4+ Support
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestOpenCV.cmake)
-rocal_test_enable_opencv(${PROJECT_NAME})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+find_package(OpenCVComponents MODULE QUIET)
 
 # Link Libraries & Set CXX Flags
 # -mf16c -- Support F16C built-in functions and code generation.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mf16c -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
-target_link_libraries(${PROJECT_NAME} rocal ${OpenCV_LIBRARIES} $<TARGET_NAME_IF_EXISTS:Python3::Python>)
+target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)

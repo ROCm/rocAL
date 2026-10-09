@@ -94,8 +94,8 @@ if("${BACKEND}" STREQUAL "HIP")
     endif()
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestOpenCV.cmake)
-rocal_test_enable_opencv(${PROJECT_NAME})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+find_package(OpenCVComponents MODULE QUIET)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them

@@ -87,8 +87,8 @@ file(GLOB Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${Source_Files})
 
 # OpenCV configuration
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/RocalTestOpenCV.cmake)
-rocal_test_enable_opencv(${PROJECT_NAME})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+find_package(OpenCVComponents MODULE QUIET)
 
 # Compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")

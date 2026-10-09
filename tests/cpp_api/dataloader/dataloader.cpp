@@ -30,12 +30,11 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
 #define CV_RGB2BGR COLOR_RGB2BGR
 #endif
 
-#define DISPLAY
 using namespace std::chrono;
 
 int main(int argc, const char **argv) {
@@ -231,12 +230,10 @@ int main(int argc, const char **argv) {
                     }
                 }
             }
-            cv::imwrite("output.png", mat_output);
+            rocal_test_output_image(mat_output, mat_output, "output.png");
         }
         // Cifar10 dataloader only supports ROCAL_COLOR_RGB_PLANAR
-#if ENABLE_OPENCV_HIGHGUI
-        cv::waitKey(1);
-#endif
+        rocal_test_output_pause(1);
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
     }

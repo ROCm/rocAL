@@ -32,14 +32,11 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
 
 #define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #endif
-
-#define DISPLAY 0
 
 using namespace std::chrono;
 
@@ -120,10 +117,7 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
     auto cv_color_format = ((color_format == RocalImageColor::ROCAL_COLOR_RGB24) ? CV_8UC3 : CV_8UC1);
     std::vector<cv::Mat> mat_output;
     cv::Mat mat_color;
-#if ENABLE_OPENCV_HIGHGUI
-    if (DISPLAY)
-        cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
-#endif
+    rocal_test_output_open("output");
 #endif
     std::cerr << "Going to process images\n";
     std::cerr << "Remaining images " <<  rocalGetRemainingImages(handle) << "\n";
@@ -136,11 +130,6 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
             break;
 
         RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
-#if ENABLE_OPENCV
-        std::vector<int> compression_params;
-        compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        compression_params.push_back(9);
-#endif
 
         for (unsigned idx = 0; idx < output_tensor_list->size(); idx++) {
             auto output_tensor = output_tensor_list->at(idx);
@@ -165,19 +154,9 @@ int test(const char *path, const char *outName, int gpu, int display_all) {
 
             if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                 cv::cvtColor(mat_output[idx], mat_color, CV_RGB2BGR);
-#if ENABLE_OPENCV_HIGHGUI
-                if (DISPLAY)
-                    cv::imshow("output", mat_output[idx]);
-                else
-#endif
-                    cv::imwrite(out_filename, mat_color, compression_params);
+                rocal_test_output_image(mat_output[idx], mat_color, out_filename, "output", -1, 9);
             } else {
-#if ENABLE_OPENCV_HIGHGUI
-                if (DISPLAY)
-                    cv::imshow("output", mat_output[idx]);
-                else
-#endif
-                    cv::imwrite(out_filename, mat_output[idx], compression_params);
+                rocal_test_output_image(mat_output[idx], mat_output[idx], out_filename, "output", -1, 9);
             }
 #endif
         }

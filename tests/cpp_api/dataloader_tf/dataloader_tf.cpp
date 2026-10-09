@@ -30,12 +30,11 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
 #define CV_RGB2BGR COLOR_RGB2BGR
 #endif
 
-#define DISPLAY 0
 using namespace std::chrono;
 
 int main(int argc, const char **argv) {
@@ -213,12 +212,7 @@ int main(int argc, const char **argv) {
             cv::Mat mat_color;
             mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-#if ENABLE_OPENCV_HIGHGUI
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-#endif
-                cv::imwrite("output.png", mat_output);
+            rocal_test_output_image(mat_output, mat_output, "output.png");
         } else if (color_format == RocalImageColor::ROCAL_COLOR_RGB_PLANAR) {
             // convert planar to packed for OPENCV
             for (int j = 0; j < n; j++) {
@@ -236,25 +230,12 @@ int main(int argc, const char **argv) {
                     }
                 }
             }
-#if ENABLE_OPENCV_HIGHGUI
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-#endif
-                cv::imwrite("output.png", mat_output);
+            rocal_test_output_image(mat_output, mat_output, "output.png");
         } else {
             mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
-#if ENABLE_OPENCV_HIGHGUI
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-#endif
-                cv::imwrite("output.png", mat_output);
+            rocal_test_output_image(mat_output, mat_output, "output.png");
         }
-#if ENABLE_OPENCV_HIGHGUI
-        if (DISPLAY)
-            cv::waitKey(1);
-#endif
+        rocal_test_output_wait(1);
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
     }

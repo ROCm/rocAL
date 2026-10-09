@@ -30,14 +30,13 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include <opencv2/opencv.hpp>
+#include "image_output.h"
 using namespace cv;
 
 #define CV_FONT_HERSHEY_DUPLEX FONT_HERSHEY_DUPLEX
 #define CV_RGB2BGR cv::COLOR_BGR2RGB
 #endif
 
-#define DISPLAY
 using namespace std::chrono;
 
 int main(int argc, const char** argv) {
@@ -265,13 +264,11 @@ int main(int argc, const char** argv) {
         mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, AMD_ROCm_Black_resize.rows, w, h)));
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            cv::imwrite(out_filename, mat_color);
+            rocal_test_output_image(mat_color, mat_color, out_filename);
         } else {
-            cv::imwrite(out_filename, mat_output);
+            rocal_test_output_image(mat_output, mat_output, out_filename);
         }
-#if ENABLE_OPENCV_HIGHGUI
-        cv::waitKey(1);
-#endif
+        rocal_test_output_pause(1);
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
     }

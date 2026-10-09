@@ -26,7 +26,10 @@
 
 # Image output (core, imgproc, imgcodecs) and display (highgui) are separate.
 # A headless OpenCV build still provides cv::Mat, cvtColor, and imwrite.
+# tests/cpp_api/common holds image_output.h, the shared show-or-save helper.
 function(rocal_test_enable_opencv target)
+    target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../common")
+
     find_package(OpenCV QUIET)
 
     set(_io_ok FALSE)
@@ -59,4 +62,13 @@ function(rocal_test_enable_opencv target)
         message(STATUS "${target}: OpenCV highgui disabled; display calls compiled out")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV_HIGHGUI=0)
     endif()
+
+    # Visible to find_package. False is a valid build: image output or highgui may be absent.
+    set(OpenCVComponents_FOUND ${_io_ok} PARENT_SCOPE)
+    set(OpenCVComponents_HIGHGUI_FOUND ${_highgui_ok} PARENT_SCOPE)
 endfunction()
+
+# Loaded by find_package after add_executable(), so PROJECT_NAME is that test.
+rocal_test_enable_opencv(${PROJECT_NAME})
+message(STATUS "OpenCVComponents_FOUND=${OpenCVComponents_FOUND}")
+message(STATUS "OpenCVComponents_HIGHGUI_FOUND=${OpenCVComponents_HIGHGUI_FOUND}")

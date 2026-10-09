@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include <opencv2/opencv.hpp>
+#include "image_output.h"
 using namespace cv;
 #define CV_RGB2BGR COLOR_RGB2BGR
 
@@ -44,7 +44,6 @@ void convert_float_to_uchar_buffer(T *input_float_buffer, unsigned char *output_
 }
 #endif
 
-#define DISPLAY
 using namespace std::chrono;
 
 const std::array<std::pair<RocalImageColor, int>, 3> color_mappings = {
@@ -326,10 +325,6 @@ int main(int argc, const char **argv) {
 #if ENABLE_OPENCV
         if (display) {
         // Dump the output image
-        std::vector<int> compression_params;
-        compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        compression_params.push_back(9);
-
         cv::Mat mat_input;
         cv::Mat mat_output;
         int h = 0, w = 0 ;
@@ -383,18 +378,16 @@ int main(int argc, const char **argv) {
 
             if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
                 cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-                cv::imwrite(out_filename, mat_color, compression_params);
+                rocal_test_output_image(mat_color, mat_color, out_filename, "output", -1, 9);
             } else {
-                cv::imwrite(out_filename, mat_output, compression_params);
+                rocal_test_output_image(mat_output, mat_output, out_filename, "output", -1, 9);
             }
             // if(out_buffer != nullptr) free(out_buffer);
         }
         mat_input.release();
         mat_output.release();
 
-#if ENABLE_OPENCV_HIGHGUI
-        cv::waitKey(1);
-#endif
+        rocal_test_output_pause(1);
         }  // if (display)
 #endif
 
