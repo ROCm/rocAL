@@ -66,21 +66,9 @@ find_package(HALF QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
 
 # Backend
+# Note: BACKEND/GPU_SUPPORT (including the vx_rpp/RPP backend mismatch check) are resolved once
+# in the root CMakeLists.txt before add_subdirectory(rocAL_pybind) and inherited here.
 if(BUILD_PYPACKAGE)
-    if(NOT DEFINED BACKEND)
-        set(BACKEND "HIP")   # set default backend to HIP
-    else()
-        if("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
-            set(BACKEND "HIP")
-        elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
-            set(BACKEND "CPU")
-            set(GPU_SUPPORT OFF)
-        else()
-            message("-- ${Red}Warning: rocAL PyBind backend option: ${BACKEND} -- unknown${ColourReset}")
-            message("-- ${Red}Warning: rocAL PyBind default backend will be enforced${ColourReset}")
-            set(BACKEND "HIP")
-        endif()
-    endif()
     message("-- ${BoldBlue}rocAL PyBind Backend set to -- ${BACKEND}${ColourReset}")
 
     # Find HIP Support
@@ -108,23 +96,6 @@ endif()
 if(NOT MIVisionX_FOUND)
     set(BUILD_ROCAL_PYBIND false)
     message("-- ${Yellow}NOTE: rocAL PyBind library requires AMD's MIVisionX library, Not Found ${ColourReset}")
-else()
-    #find the MIVisionX backend type
-    set(MIVISIONX_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h)
-        file(READ ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h MIVISIONX_BACKEND_FILE)
-        string(REGEX MATCH "ENABLE_HIP ([0-9]*)" _ ${MIVISIONX_BACKEND_FILE})
-        set(MIVISIONX_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-    else()
-        message(FATAL_ERROR "${Red}ERROR: ${MIVisionX_INCLUDE_DIRS}/openvx_backend.h file Not Found. MIVisionX Package REQUIRED ${ColourReset}")
-    endif()
-
-    if("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
-        if (NOT MIVISIONX_BACKEND_HIP_FOUND)
-            set(BUILD_ROCAL_PYBIND false)
-            message("-- ${Red}ERROR: rocAL PyBind -- MIVisionX with the HIP backend Not Found${ColourReset}")
-        endif()
-    endif()
 endif()
 # Turbo JPEG
 if(NOT TurboJpeg_FOUND)
