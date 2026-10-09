@@ -20,6 +20,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Introduce `NodeFactory` for dynamic node registration and creation.
 
 ### Changes
+* The PythonFunction operator (`fn.python_function`) is disabled by default. It embedded the CPython C-API in `librocal.so`, which left the core library with unresolved `Py*` symbols and unusable from C/C++ applications. It can be re-enabled with `-DROCAL_PYTHON_FUNCTION=ON`, which reintroduces that limitation.
 * Optimized data distribution for the rocJPEG backend to improve multi-threaded decode throughput.
 * LMDB is now an optional dependency. When liblmdb is present at configure time, rocAL builds with Caffe/Caffe2 LMDB reader support; otherwise it builds without it.
 * Changes build instructions to omit building of wheels.
@@ -28,6 +29,10 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Update EnumRegistry to support enum value lookup by type name.
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
+
+### Resolved issues
+* Resolve a crash in the TurboJPEG decoder when a source image is more than eight times larger than the requested decode size.
+* Resolve a memory leak and a process abort on TurboJPEG decode failures.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
