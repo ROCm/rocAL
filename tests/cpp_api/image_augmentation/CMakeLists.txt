@@ -58,7 +58,7 @@ link_directories(${ROCM_PATH}/lib)
 add_executable(${PROJECT_NAME} image_augmentation.cpp)
 
 # OpenCV 4+ Support
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
 find_package(OpenCVComponents MODULE QUIET)
 
 # Link Libraries & Set CXX Flags

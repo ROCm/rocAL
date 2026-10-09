@@ -87,7 +87,7 @@ file(GLOB Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${Source_Files})
 
 # OpenCV configuration
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
 find_package(OpenCVComponents MODULE QUIET)
 
 # Compiler flags

@@ -26,9 +26,13 @@
 
 # Image output (core, imgproc, imgcodecs) and display (highgui) are separate.
 # A headless OpenCV build still provides cv::Mat, cvtColor, and imwrite.
-# tests/cpp_api/common holds image_output.h, the shared show-or-save helper.
+# image_output.h lives next to this module (../common), including after install
+# under share/rocal/test. CI copies a single test directory out of that tree,
+# so the header path follows this file rather than the test source directory.
+set(_ROCAL_TEST_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}")
+
 function(rocal_test_enable_opencv target)
-    target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../common")
+    target_include_directories(${target} PRIVATE "${_ROCAL_TEST_CMAKE_DIR}/../common")
 
     find_package(OpenCV QUIET)
 
