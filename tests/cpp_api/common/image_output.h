@@ -24,14 +24,11 @@ THE SOFTWARE.
 
 // Show or save an image for the cpp_api tests.
 // This is the only place that checks OpenCV and highgui.
-// A test asks to show or save an image. DISPLAY in this header chooses which.
-// When it is 1 and highgui is available, the image is shown. Otherwise it is written.
+// A caller passes display=true to request a window. The default writes the image.
+// A window is shown only when display is true and highgui is available.
 // Replacing OpenCV with another utility means changing this file only.
 
 #pragma once
-
-// 0 writes the image to a file. 1 requests a window when highgui is available.
-#define DISPLAY 0
 
 #include <string>
 
@@ -47,9 +44,10 @@ inline void rocal_test_output_image(const cv::Mat& displayed,
                                      const std::string& path,
                                      const char* window = "output",
                                      int wait_ms = -1,
-                                     int png_compression = -1) {
+                                     int png_compression = -1,
+                                     bool display = false) {
 #if ENABLE_OPENCV_HIGHGUI
-    if (DISPLAY) {
+    if (display) {
         cv::namedWindow(window, cv::WINDOW_AUTOSIZE);
         cv::imshow(window, displayed);
         if (wait_ms >= 0)
@@ -60,6 +58,7 @@ inline void rocal_test_output_image(const cv::Mat& displayed,
     (void)displayed;
     (void)window;
     (void)wait_ms;
+    (void)display;
 #endif
     if (png_compression >= 0) {
         const std::vector<int> params = {cv::IMWRITE_PNG_COMPRESSION, png_compression};
@@ -70,12 +69,13 @@ inline void rocal_test_output_image(const cv::Mat& displayed,
 }
 
 // Wait only when a window was requested and highgui is available.
-inline void rocal_test_output_wait(int wait_ms) {
+inline void rocal_test_output_wait(int wait_ms, bool display = false) {
 #if ENABLE_OPENCV_HIGHGUI
-    if (DISPLAY)
+    if (display)
         cv::waitKey(wait_ms);
 #else
     (void)wait_ms;
+    (void)display;
 #endif
 }
 
@@ -88,21 +88,23 @@ inline void rocal_test_output_pause(int wait_ms) {
 #endif
 }
 
-inline void rocal_test_output_open(const char* window) {
+inline void rocal_test_output_open(const char* window, bool display = false) {
 #if ENABLE_OPENCV_HIGHGUI
-    if (DISPLAY)
+    if (display)
         cv::namedWindow(window, cv::WINDOW_AUTOSIZE);
 #else
     (void)window;
+    (void)display;
 #endif
 }
 
-inline void rocal_test_output_close(const char* window) {
+inline void rocal_test_output_close(const char* window, bool display = false) {
 #if ENABLE_OPENCV_HIGHGUI
-    if (DISPLAY)
+    if (display)
         cv::destroyWindow(window);
 #else
     (void)window;
+    (void)display;
 #endif
 }
 
