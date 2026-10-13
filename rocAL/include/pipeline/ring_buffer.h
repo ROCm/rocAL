@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
 #include <memory>
@@ -109,7 +110,7 @@ class RingBuffer {
     void *_dev;
     size_t _write_ptr;
     size_t _read_ptr;
-    size_t _level;
+    std::atomic<size_t> _level{0};
     std::mutex _names_buff_lock;
     const size_t MEM_ALIGNMENT = 256;
     bool _box_encoder = false;

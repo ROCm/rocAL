@@ -91,7 +91,8 @@ class Pipeline(object):
         self._check_ops_decoder = [
             "ImageDecoder", "ImageDecoderSlice", "ImageDecoderRandomCrop", "ImageDecoderRaw"]
         self._check_ops_reader = ["labelReader", "TFRecordReaderClassification", "TFRecordReaderDetection",
-                                  "COCOReader", "Caffe2Reader", "Caffe2ReaderDetection", "CaffeReader", "CaffeReaderDetection", "NumpyReader"]
+                                  "COCOReader", "Caffe2Reader", "Caffe2ReaderDetection", "CaffeReader", "CaffeReaderDetection", "NumpyReader",
+                                  "HDF5Reader"]
         self._batch_size = batch_size
         self._num_threads = num_threads
         self._device_id = device_id
@@ -138,6 +139,8 @@ class Pipeline(object):
         """
         status = b.rocalVerify(self._handle)
         if (status != types.OK):
+            if self._reader == "HDF5Reader":
+                raise RuntimeError(b.rocalGetErrorMessage(self._handle) or "HDF5 graph verification failed")
             print("Verify graph failed")
             exit(0)
         return self
@@ -146,6 +149,10 @@ class Pipeline(object):
         """! Run the pipeline using rocalRun call
         """
         status = b.rocalRun(self._handle)
+        if status != types.OK and self._reader == "HDF5Reader":
+            error = b.rocalGetErrorMessage(self._handle)
+            if error:
+                raise RuntimeError(error)
         return status
 
     def define_graph(self):
@@ -318,7 +325,9 @@ class Pipeline(object):
             if self.get_remaining_images() > 0:
                 self.rocal_run()
                 return b.getOutputTensors(self._handle)
-        except:
+        except Exception:
+            if self._reader == "HDF5Reader":
+                raise
             raise StopIteration
     
     def serialize(self, filename=None):

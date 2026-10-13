@@ -453,6 +453,7 @@ class ROCALNumpyIterator(object):
 
     def reset(self):
         b.rocalResetLoaders(self.loader._handle)
+        self.last_batch_size = None
 
     def __iter__(self):
         return self

@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 
 #pragma once
+
+#include <atomic>
 #include <list>
 #include <map>
 #include <memory>
@@ -41,6 +43,7 @@ THE SOFTWARE.
 #include "loaders/video/node_video_loader_single_shard.h"
 #include "loaders/image/node_numpy_loader.h"
 #include "loaders/image/node_numpy_loader_single_shard.h"
+#include "loaders/node_hdf5_loader.h"
 #ifdef ROCAL_AUDIO
 #include "loaders/audio/node_audio_loader.h"
 #include "loaders/audio/node_audio_loader_single_shard.h"
@@ -249,12 +252,12 @@ private:
     std::shared_ptr<MetaDataGraph> _meta_data_graph = nullptr;
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     bool _first_run = true;
-    bool _processing;                                                             //!< Indicates if internal processing thread should keep processing or not
+    std::atomic<bool> _processing{false};                                                             //!< Indicates if internal processing thread should keep processing or not
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
     int _remaining_count;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
     bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not
     size_t _prefetch_queue_depth;
-    bool _output_routine_finished_processing = false;
+    std::atomic<bool> _output_routine_finished_processing{false};
     bool _is_random_bbox_crop = false;
     std::vector<std::vector<size_t>> _sequence_start_framenum_vec;                //!< Stores the starting frame number of the sequences.
     std::vector<std::vector<std::vector<float>>> _sequence_frame_timestamps_vec;  //!< Stores the timestamps of the frames in a sequences.
@@ -579,5 +582,26 @@ inline std::shared_ptr<NumpyLoaderSingleShardNode> MasterGraph::add_node(const s
     for (auto &output : outputs)
         _tensor_map.insert(std::make_pair(output, node));
 
+    return node;
+}
+
+template <>
+inline std::shared_ptr<Hdf5LoaderNode> MasterGraph::add_node(const std::vector<Tensor*>& inputs,
+                                                             const std::vector<Tensor*>& outputs) {
+    (void)inputs;
+#if ENABLE_HIP
+    auto node = std::make_shared<Hdf5LoaderNode>(outputs, (void*)_device.resources());
+#else
+    auto node = std::make_shared<Hdf5LoaderNode>(outputs, nullptr);
+#endif
+    auto loader_module = node->get_loader_module();
+    loader_module->set_prefetch_queue_depth(_prefetch_queue_depth);
+    _loader_modules.emplace_back(loader_module);
+    node->set_graph_id(_loaders_count++);
+    _root_nodes.push_back(node);
+    _pipeline_operators.push_back(std::make_shared<PipelineOperator>(
+        node->node_name() + "_" + std::to_string(_op_idx++), "loader", node));
+    for (auto* output : outputs)
+        _tensor_map.insert(std::make_pair(output, node));
     return node;
 }
