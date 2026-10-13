@@ -2,6 +2,7 @@ doxygen_output*
 
 # documentation artifacts
 build/
+build_verify/
 _build/
 _images/
 _static/
