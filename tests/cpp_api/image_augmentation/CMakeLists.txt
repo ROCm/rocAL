@@ -50,7 +50,6 @@ project(image_augmentation)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 
 find_package(AMDRPP QUIET)
-find_package(OpenCV QUIET)
 
 # Application Includes & Libraries
 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
@@ -59,24 +58,12 @@ link_directories(${ROCM_PATH}/lib)
 add_executable(${PROJECT_NAME} image_augmentation.cpp)
 
 # OpenCV 4+ Support
-if(OpenCV_FOUND)
-    if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 4)
-        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=1)
-        include_directories(${OpenCV_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-    else()
-        message("-- WARNING: OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X is not supported. Building without display support")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
-    endif()
-else()
-    message("-- WARNING: OpenCV Not Found -- No Display Support")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
-endif()
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
+find_package(OpenCVComponents MODULE QUIET)
 
 # Link Libraries & Set CXX Flags
 # -mf16c -- Support F16C built-in functions and code generation.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mf16c -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
-target_link_libraries(${PROJECT_NAME} rocal ${OpenCV_LIBRARIES} $<TARGET_NAME_IF_EXISTS:Python3::Python>)
+target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
