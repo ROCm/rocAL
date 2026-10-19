@@ -30,10 +30,21 @@ using OpenVideoContextFn = void (*)(const char *, Properties &);
 using FindVideoPropertiesFn = void (*)(VideoProperties &, const char *, bool);
 using GetVideoPropertiesFromTxtFileFn = void (*)(VideoProperties &, const char *, bool);
 
-OpenVideoContextFn g_open_video_context = nullptr;
-FindVideoPropertiesFn g_find_video_properties = nullptr;
-GetVideoPropertiesFromTxtFileFn g_get_video_properties_from_txt_file = nullptr;
-std::mutex g_properties_registry_mutex;
+struct PropertiesRegistry {
+    OpenVideoContextFn open_video_context = nullptr;
+    FindVideoPropertiesFn find_video_properties = nullptr;
+    GetVideoPropertiesFromTxtFileFn get_video_properties_from_txt_file = nullptr;
+};
+
+PropertiesRegistry & properties_registry() {
+    static PropertiesRegistry registry;
+    return registry;
+}
+
+std::mutex & properties_registry_mutex() {
+    static std::mutex mtx;
+    return mtx;
+}
 
 }  // namespace
 
@@ -50,29 +61,29 @@ void register_video_properties_functions(
     void (*open_video_context_fn)(const char *, Properties &),
     void (*get_video_properties_from_txt_file_fn)(VideoProperties &, const char *, bool),
     void (*find_video_properties_fn)(VideoProperties &, const char *, bool)) {
-    std::lock_guard<std::mutex> lock(g_properties_registry_mutex);
-    g_open_video_context = open_video_context_fn;
-    g_get_video_properties_from_txt_file = get_video_properties_from_txt_file_fn;
-    g_find_video_properties = find_video_properties_fn;
+    std::lock_guard<std::mutex> lock(properties_registry_mutex());
+    properties_registry().open_video_context = open_video_context_fn;
+    properties_registry().get_video_properties_from_txt_file = get_video_properties_from_txt_file_fn;
+    properties_registry().find_video_properties = find_video_properties_fn;
 }
 
 void open_video_context(const char *video_file_path, Properties &props) {
-    std::lock_guard<std::mutex> lock(g_properties_registry_mutex);
-    if (!g_open_video_context)
+    std::lock_guard<std::mutex> lock(properties_registry_mutex());
+    if (!properties_registry().open_video_context)
         THROW("No video properties adapter is registered. Link rocal_video_ffmpeg if video support is required.");
-    g_open_video_context(video_file_path, props);
+    properties_registry().open_video_context(video_file_path, props);
 }
 
 void get_video_properties_from_txt_file(VideoProperties &video_props, const char *file_path, bool file_list_frame_num) {
-    std::lock_guard<std::mutex> lock(g_properties_registry_mutex);
-    if (!g_get_video_properties_from_txt_file)
+    std::lock_guard<std::mutex> lock(properties_registry_mutex());
+    if (!properties_registry().get_video_properties_from_txt_file)
         THROW("No video properties adapter is registered. Link rocal_video_ffmpeg if video support is required.");
-    g_get_video_properties_from_txt_file(video_props, file_path, file_list_frame_num);
+    properties_registry().get_video_properties_from_txt_file(video_props, file_path, file_list_frame_num);
 }
 
 void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num) {
-    std::lock_guard<std::mutex> lock(g_properties_registry_mutex);
-    if (!g_find_video_properties)
+    std::lock_guard<std::mutex> lock(properties_registry_mutex());
+    if (!properties_registry().find_video_properties)
         THROW("No video properties adapter is registered. Link rocal_video_ffmpeg if video support is required.");
-    g_find_video_properties(video_props, source_path, file_list_frame_num);
+    properties_registry().find_video_properties(video_props, source_path, file_list_frame_num);
 }

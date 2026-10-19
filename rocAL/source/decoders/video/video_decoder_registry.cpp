@@ -31,29 +31,38 @@ namespace video {
 
 namespace {
 
-static std::map<DecoderType, VideoDecoderFactory> g_decoder_factories;
-static std::mutex g_decoder_registry_mutex;
+using DecoderRegistry = std::map<DecoderType, VideoDecoderFactory>;
+
+DecoderRegistry& decoder_registry() {
+    static DecoderRegistry registry;
+    return registry;
+}
+
+std::mutex& decoder_registry_mutex() {
+    static std::mutex mtx;
+    return mtx;
+}
 
 }  // namespace
 
 void register_decoder_factory(DecoderType type, VideoDecoderFactory factory) {
-    std::lock_guard<std::mutex> lock(g_decoder_registry_mutex);
-    g_decoder_factories[type] = std::move(factory);
+    std::lock_guard<std::mutex> lock(decoder_registry_mutex());
+    decoder_registry()[type] = std::move(factory);
 }
 
 std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, const DecoderConfig& cfg) {
-    std::lock_guard<std::mutex> lock(g_decoder_registry_mutex);
-    auto it = g_decoder_factories.find(type);
-    if (it == g_decoder_factories.end() || !it->second)
+    std::lock_guard<std::mutex> lock(decoder_registry_mutex());
+    auto it = decoder_registry().find(type);
+    if (it == decoder_registry().end() || !it->second)
         THROW("No video decoder factory is registered for decoder type " + TOSTR(type) +
               ". Link the rocal_video_ffmpeg adapter if video support is required.");
     return it->second(cfg);
 }
 
 bool is_decoder_registered(DecoderType type) {
-    std::lock_guard<std::mutex> lock(g_decoder_registry_mutex);
-    auto it = g_decoder_factories.find(type);
-    return it != g_decoder_factories.end() && static_cast<bool>(it->second);
+    std::lock_guard<std::mutex> lock(decoder_registry_mutex());
+    auto it = decoder_registry().find(type);
+    return it != decoder_registry().end() && static_cast<bool>(it->second);
 }
 
 }  // namespace video
