@@ -62,7 +62,9 @@ find_package(HALF QUIET)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 # optional packages
-find_package(FFmpeg QUIET)
+if(NOT ROCAL_VIDEO_FFMPEG_ADAPTER)
+    find_package(FFmpeg QUIET)
+endif()
 find_package(SndFile QUIET)
 find_package(LibTar QUIET)
 find_package(rocdecode 1.0.0 QUIET)
@@ -227,7 +229,7 @@ if(${BUILD_ROCAL})
     # half
     include_directories(${HALF_INCLUDE_DIRS})
     #rocDecode
-    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND)
+    if ("${BACKEND}" STREQUAL "HIP" AND HIP_FOUND AND rocdecode_FOUND AND NOT ROCAL_VIDEO_FFMPEG_ADAPTER)
         include_directories(${rocdecode_INCLUDE_DIR} ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode)
         include_directories(${ROCM_PATH}/share/rocdecode/utils)
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocdecode::rocdecode)
@@ -261,6 +263,11 @@ if(${BUILD_ROCAL})
     link_directories(${AMDRPP_LIBRARIES_DIRS} ${TurboJpeg_LIBRARIES_DIRS} ${PROTOBUF_LIBRARY_DIRS} /usr/local/lib/)
 
     file(GLOB_RECURSE SOURCES "source/*.cpp")
+    # Exclude FFmpeg-dependent decoder sources from core when using the adapter.
+    if(ROCAL_VIDEO_FFMPEG_ADAPTER)
+        list(FILTER SOURCES EXCLUDE REGEX ".*/decoders/video/ffmpeg_video_decoder\\.cpp$")
+        list(FILTER SOURCES EXCLUDE REGEX ".*/decoders/video/rocdec_video_decoder\\.cpp$")
+    endif()
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
                                 ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${rocdecode_SRCS} ${ROCAL_PROTO_SRCS} ${ROCAL_PROTO_HEADERS})
 
@@ -278,7 +285,7 @@ if(${BUILD_ROCAL})
             message("-- ${White}hipFile not found; rocAL will be built without hipFile GPU Direct I/O support for numpy reader (install hipFile and rebuild to enable)${ColourReset}")
         endif()
 
-        if(rocdecode_FOUND)
+        if(rocdecode_FOUND AND NOT ROCAL_VIDEO_FFMPEG_ADAPTER)
             target_compile_definitions(${PROJECT_NAME} PUBLIC -DENABLE_ROCDECODE)
             message("-- ${White}rocAL built with rocDecode video decode capabilities${ColourReset}")
         endif()
@@ -300,7 +307,10 @@ if(${BUILD_ROCAL})
     message("-- ${White}rocAL built with ENABLE_SIMD")
 
     # FFMPEG
-    if(NOT FFMPEG_FOUND)
+    if(ROCAL_VIDEO_FFMPEG_ADAPTER)
+        message("-- ${White}rocAL built without FFmpeg in core; FFmpeg video support is in rocal_video_ffmpeg adapter${ColourReset}")
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
+    elseif(NOT FFMPEG_FOUND)
         message("-- ${Yellow}NOTE: rocAL built without FFmpeg video decode functionality${ColourReset}")
     else()
         # FFMPEG multi-version support

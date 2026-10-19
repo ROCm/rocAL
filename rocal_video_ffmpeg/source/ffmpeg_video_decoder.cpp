@@ -20,12 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "decoders/video/ffmpeg_video_decoder.h"
+#include "rocal_video_ffmpeg/ffmpeg_video_decoder.h"
 
 #include "pipeline/commons.h"
 #include <stdio.h>
-
-#ifdef ROCAL_VIDEO
 
 #define DECODER_ERROR_RETURN(err_msg, status) \
     do {                                      \
@@ -34,7 +32,20 @@ THE SOFTWARE.
         return status;                        \
     } while (0);
 
-FFmpegVideoDecoder::FFmpegVideoDecoder(){};
+static AVPixelFormat to_av_pixel_format(rocal::video::VideoPixelFormat fmt) {
+    switch (fmt) {
+        case rocal::video::VideoPixelFormat::RGB24:
+            return AV_PIX_FMT_RGB24;
+        case rocal::video::VideoPixelFormat::BGR24:
+            return AV_PIX_FMT_BGR24;
+        case rocal::video::VideoPixelFormat::GRAY8:
+            return AV_PIX_FMT_GRAY8;
+        default:
+            return AV_PIX_FMT_NONE;
+    }
+}
+
+FFmpegVideoDecoder::FFmpegVideoDecoder() {}
 
 int FFmpegVideoDecoder::SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) {
     auto seek_time = av_rescale_q((int64_t)frame_number, av_inv_q(avg_frame_rate), AV_TIME_BASE_Q);
@@ -48,14 +59,19 @@ int FFmpegVideoDecoder::SeekFrame(AVRational avg_frame_rate, AVRational time_bas
 }
 
 // Seeks to the frame_number in the video file and decodes each frame in the sequence.
-VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_pix_format) {
+VideoDecoder::Status FFmpegVideoDecoder::Decode(unsigned char *out_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, rocal::video::VideoPixelFormat out_pix_format) {
     VideoDecoder::Status status = Status::OK;
+    AVPixelFormat out_av_pix_format = to_av_pixel_format(out_pix_format);
+    if (out_av_pix_format == AV_PIX_FMT_NONE) {
+        ERR("Unsupported output pixel format requested");
+        return Status::FAILED;
+    }
 
     // Initialize the SwsContext
     SwsContext *swsctx = nullptr;
-    if ((out_width != _codec_width) || (out_height != _codec_height) || (out_pix_format != _dec_pix_fmt)) {
+    if ((out_width != _codec_width) || (out_height != _codec_height) || (out_av_pix_format != _dec_pix_fmt)) {
         swsctx = sws_getCachedContext(nullptr, _codec_width, _codec_height, _dec_pix_fmt,
-                                      out_width, out_height, out_pix_format, SWS_BILINEAR, nullptr, nullptr, nullptr);
+                                      out_width, out_height, out_av_pix_format, SWS_BILINEAR, nullptr, nullptr, nullptr);
         if (!swsctx) {
             ERR("Fail to get sws_getCachedContext");
             return Status::FAILED;
@@ -202,4 +218,3 @@ void FFmpegVideoDecoder::Release() {
 FFmpegVideoDecoder::~FFmpegVideoDecoder() {
     Release();
 }
-#endif

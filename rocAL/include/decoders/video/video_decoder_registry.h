@@ -22,31 +22,19 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <functional>
+#include <memory>
+#include "decoders/image/decoder.h"
 #include "video_decoder.h"
 
-#ifdef ROCAL_VIDEO
-class FFmpegVideoDecoder : public VideoDecoder {
-   public:
-    //! Default constructor
-    FFmpegVideoDecoder();
-    VideoDecoder::Status Initialize(const char *src_filename, int device_id = 0) override;
-    VideoDecoder::Status Decode(unsigned char *output_buffer, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_format) override;
-    int SeekFrame(AVRational avg_frame_rate, AVRational time_base, unsigned frame_number) override;
-    void Release() override;
-    ~FFmpegVideoDecoder() override;
+namespace rocal {
+namespace video {
 
-   private:
-    const char *_src_filename = NULL;
-    AVFormatContext *_fmt_ctx = NULL;
-    AVCodecContext *_video_dec_ctx = NULL;
-#if USE_AVCODEC_GREATER_THAN_58_134
-    const AVCodec *_decoder = NULL;
-#else
-    AVCodec *_decoder = NULL;
-#endif
-    AVStream *_video_stream = NULL;
-    int _video_stream_idx = -1;
-    AVPixelFormat _dec_pix_fmt;
-    int _codec_width, _codec_height;
-};
-#endif
+using VideoDecoderFactory = std::function<std::shared_ptr<VideoDecoder>(const DecoderConfig&)>;
+
+void register_decoder_factory(DecoderType type, VideoDecoderFactory factory);
+std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, const DecoderConfig& cfg);
+bool is_decoder_registered(DecoderType type);
+
+}  // namespace video
+}  // namespace rocal

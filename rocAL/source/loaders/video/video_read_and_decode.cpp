@@ -22,19 +22,20 @@ THE SOFTWARE.
 
 #include "loaders/video/video_read_and_decode.h"
 #include "decoders/video/video_decoder_factory.h"
+#include "pipeline/timing_debug.h"
 
 #ifdef ROCAL_VIDEO
-std::tuple<VideoDecoder::ColorFormat, unsigned, AVPixelFormat>
+std::tuple<VideoDecoder::ColorFormat, unsigned, rocal::video::VideoPixelFormat>
 video_interpret_color_format(RocalColorFormat color_format) {
     switch (color_format) {
         case RocalColorFormat::RGB24:
-            return std::make_tuple(VideoDecoder::ColorFormat::RGB, 3, AV_PIX_FMT_RGB24);
+            return std::make_tuple(VideoDecoder::ColorFormat::RGB, 3, rocal::video::VideoPixelFormat::RGB24);
 
         case RocalColorFormat::BGR24:
-            return std::make_tuple(VideoDecoder::ColorFormat::BGR, 3, AV_PIX_FMT_BGR24);
+            return std::make_tuple(VideoDecoder::ColorFormat::BGR, 3, rocal::video::VideoPixelFormat::BGR24);
 
         case RocalColorFormat::U8:
-            return std::make_tuple(VideoDecoder::ColorFormat::GRAY, 1, AV_PIX_FMT_GRAY8);
+            return std::make_tuple(VideoDecoder::ColorFormat::GRAY, 1, rocal::video::VideoPixelFormat::GRAY8);
 
         default:
             throw std::invalid_argument("Invalid color format\n");
@@ -49,8 +50,8 @@ VideoReadAndDecode::timing() {
     return t;
 }
 
-VideoReadAndDecode::VideoReadAndDecode() : _file_load_time("FileLoadTime", DBG_TIMING),
-                                           _decode_time("DecodeTime", DBG_TIMING) {
+VideoReadAndDecode::VideoReadAndDecode() : _file_load_time("FileLoadTime", true),
+                                           _decode_time("DecodeTime", true) {
 }
 
 VideoReadAndDecode::~VideoReadAndDecode() {
@@ -74,7 +75,7 @@ void VideoReadAndDecode::create(ReaderConfig reader_config, DecoderConfig decode
     _video_decoder_config = decoder_config;
     _device_id = device_id;
 
-    // Initialize the ffmpeg context once for the video files.
+    // Initialize the video decoder context once for the video files.
     size_t i = 0;
     for (; i < _video_process_count; i++) {
         _video_decoder[i] = create_video_decoder(decoder_config);
@@ -173,7 +174,6 @@ VideoReadAndDecode::load(unsigned char *buff,
         _decompressed_buff_ptrs[i] = buff + (i * image_size * _sequence_length);
 
         // Check if the video file is already initialized otherwise use an existing decoder instance to initialize the video
-        // std::cerr << "\nThe source video is " << _sequence_video_path[i] << " MAP : "<<_video_file_name_map.find(_sequence_video_path[i])->second._video_map_idx << "\tThe start index is : " << _sequence_start_frame_num[i] << "\n";
         std::map<std::string, video_map>::iterator itr = _video_file_name_map.find(_sequence_video_path[i]);
         if (itr->second._is_decoder_instance == false) {
             std::map<std::string, video_map>::iterator temp_itr;
