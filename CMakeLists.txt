@@ -169,7 +169,7 @@ else()
     # sources are still shipped under COMPONENT dev so users can build it on the
     # target machine if they want to opt into the adapter workflow.
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rocal_video_ffmpeg/
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal_video_ffmpeg
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/rocal_video_ffmpeg
         COMPONENT dev
         FILES_MATCHING
         PATTERN "*.h"

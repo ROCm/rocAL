@@ -124,7 +124,7 @@ install(TARGETS ${PROJECT_NAME}
 
 # Install adapter sources under COMPONENT dev (issue comment #2).
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/rocal_video_ffmpeg
     COMPONENT dev
     FILES_MATCHING
     PATTERN "*.h"
