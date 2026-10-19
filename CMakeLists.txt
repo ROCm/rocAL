@@ -192,6 +192,10 @@ endif()
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/
 install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal COMPONENT runtime)
 
+# Install CMake helper modules used by standalone adapter builds under the dev package.
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/cmake
+    COMPONENT dev)
 # test package
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)

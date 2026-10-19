@@ -28,6 +28,58 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(ROCAL_VIDEO_FFMPEG_ADAPTER_STATIC "Build rocal_video_ffmpeg as a static library" OFF)
 
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+
+# Default backend options when this CMake is invoked standalone from installed sources.
+if(NOT DEFINED GPU_SUPPORT)
+    option(GPU_SUPPORT "Build with GPU support" ON)
+endif()
+if(NOT DEFINED BACKEND)
+    set(BACKEND "HIP" CACHE STRING "Backend [CPU/HIP]")
+endif()
+
+# Detect whether we are building inside the full rocAL source tree or standalone
+# from the sources shipped with the rocAL dev package.
+if(EXISTS ${CMAKE_SOURCE_DIR}/rocAL/include)
+    set(ROCAL_VIDEO_FFMPEG_IN_TREE ON)
+else()
+    set(ROCAL_VIDEO_FFMPEG_IN_TREE OFF)
+endif()
+
+if(ROCAL_VIDEO_FFMPEG_IN_TREE)
+    message("-- ${White}rocal_video_ffmpeg: building in-tree${ColourReset}")
+    set(ROCAL_TARGET rocal)
+    set(ROCAL_INCLUDE_DIRS
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/rocAL/include
+        ${CMAKE_SOURCE_DIR}/rocAL/include/api
+        ${CMAKE_BINARY_DIR}/rocAL
+    )
+else()
+    message("-- ${White}rocal_video_ffmpeg: building standalone from installed sources${ColourReset}")
+    # Allow standalone builds to find rocAL's custom CMake modules (e.g. FindFFmpeg.cmake).
+    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/cmake)
+    # Find the installed rocAL library.
+    find_library(ROCAL_LIBRARY NAMES rocal PATHS ${ROCM_PATH}/lib ${CMAKE_INSTALL_PREFIX}/lib)
+    if(NOT ROCAL_LIBRARY)
+        message(FATAL_ERROR "-- ${Red}rocal_video_ffmpeg: rocAL library not found under ${ROCM_PATH}/lib or ${CMAKE_INSTALL_PREFIX}/lib${ColourReset}")
+    endif()
+    add_library(rocal_imported SHARED IMPORTED)
+    set_target_properties(rocal_imported PROPERTIES IMPORTED_LOCATION ${ROCAL_LIBRARY})
+    set(ROCAL_TARGET rocal_imported)
+    set(ROCAL_INCLUDE_DIRS
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${ROCM_PATH}/include/rocal
+    )
+endif()
+
 # FFmpeg is mandatory for the adapter.
 find_package(FFmpeg REQUIRED)
 
@@ -51,10 +103,7 @@ if(ROCAL_VIDEO_FFMPEG_HIP)
 endif()
 
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/rocAL/include
-    ${CMAKE_SOURCE_DIR}/rocAL/include/api
-    ${CMAKE_BINARY_DIR}/rocAL
+    ${ROCAL_INCLUDE_DIRS}
     ${AVUTIL_INCLUDE_DIR}
     ${AVCODEC_INCLUDE_DIR}
     ${SWSCALE_INCLUDE_DIR}
@@ -101,7 +150,7 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    rocal
+    ${ROCAL_TARGET}
     ${FFMPEG_LIBRARIES}
 )
 
@@ -109,6 +158,12 @@ if(ROCAL_VIDEO_FFMPEG_HIP AND ROCAL_VIDEO_FFMPEG_ROCDECODE)
     target_link_libraries(${PROJECT_NAME} PUBLIC rocdecode::rocdecode)
 endif()
 
+if(NOT DEFINED rocal_VERSION)
+    set(rocal_VERSION "2.5.0")
+endif()
+if(NOT DEFINED rocal_VERSION_MAJOR)
+    string(REGEX MATCH "^([0-9]+)" rocal_VERSION_MAJOR "${rocal_VERSION}")
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION ${rocal_VERSION}
     SOVERSION ${rocal_VERSION_MAJOR}

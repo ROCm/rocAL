@@ -424,6 +424,20 @@ if(${BUILD_ROCAL})
             include/api/rocal_api_meta_data.h
             include/api/rocal_api_tensor.h
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal COMPONENT dev)
+    # install internal rocAL headers so the optional FFmpeg adapter can be built
+    # from installed sources on the target machine.
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
+            COMPONENT dev
+            FILES_MATCHING
+            PATTERN "*.h"
+            PATTERN "*.hpp"
+            PATTERN "api/*" EXCLUDE)
+    # install generated protobuf headers needed by some internal headers
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/rocAL/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocal
+            COMPONENT dev
+            FILES_MATCHING PATTERN "*.pb.h")
 else()
     message(FATAL_ERROR "-- ${Red}rocAL dependencies not satisfied${ColourReset}")
 endif()
