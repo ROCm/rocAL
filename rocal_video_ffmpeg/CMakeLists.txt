@@ -105,7 +105,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     ${FFMPEG_LIBRARIES}
 )
 
-if(ENABLE_HIP AND rocdecode_FOUND)
+if(ROCAL_VIDEO_FFMPEG_HIP AND ROCAL_VIDEO_FFMPEG_ROCDECODE)
     target_link_libraries(${PROJECT_NAME} PUBLIC rocdecode::rocdecode)
 endif()
 
