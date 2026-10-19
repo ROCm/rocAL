@@ -268,6 +268,21 @@ if(${BUILD_ROCAL})
         list(FILTER SOURCES EXCLUDE REGEX ".*/decoders/video/ffmpeg_video_decoder\\.cpp$")
         list(FILTER SOURCES EXCLUDE REGEX ".*/decoders/video/rocdec_video_decoder\\.cpp$")
     endif()
+
+    # In monolithic (default) mode, compile the adapter sources directly into
+    # librocal.so so FFmpeg video support is part of the core library as before.
+    # The adapter headers are also needed by those sources.
+    if(NOT ROCAL_VIDEO_FFMPEG_ADAPTER AND FFMPEG_FOUND)
+        include_directories(${CMAKE_SOURCE_DIR}/rocal_video_ffmpeg/include)
+        list(APPEND SOURCES
+            ${CMAKE_SOURCE_DIR}/rocal_video_ffmpeg/source/register.cpp
+            ${CMAKE_SOURCE_DIR}/rocal_video_ffmpeg/source/ffmpeg_video_decoder.cpp
+            ${CMAKE_SOURCE_DIR}/rocal_video_ffmpeg/source/video_properties.cpp)
+        if(rocdecode_FOUND AND "${BACKEND}" STREQUAL "HIP" AND HIP_FOUND)
+            list(APPEND SOURCES ${CMAKE_SOURCE_DIR}/rocal_video_ffmpeg/source/rocdec_video_decoder.cpp)
+        endif()
+    endif()
+
     add_library(${PROJECT_NAME} SHARED ${SOURCES} ${TF_PROTO_SRCS} ${TF_PROTO_HEADERS} ${CAFFE_PROTO_HEADERS} 
                                 ${CAFFE_PROTO_SRCS} ${CAFFE2_PROTO_SRCS} ${CAFFE2_PROTO_HEADERS} ${rocdecode_SRCS} ${ROCAL_PROTO_SRCS} ${ROCAL_PROTO_HEADERS})
 

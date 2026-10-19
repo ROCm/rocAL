@@ -31,9 +31,23 @@ option(ROCAL_VIDEO_FFMPEG_ADAPTER_STATIC "Build rocal_video_ffmpeg as a static l
 # FFmpeg is mandatory for the adapter.
 find_package(FFmpeg REQUIRED)
 
-# rocDecode is optional and only required on HIP/ENABLE_ROCDECODE builds.
-if(ENABLE_HIP)
-    find_package(rocdecode QUIET)
+# Detect HIP backend independently so the adapter can compile rocDecode support
+# even though ENABLE_HIP is only a compile definition of the core target.
+set(ROCAL_VIDEO_FFMPEG_HIP OFF)
+if(GPU_SUPPORT AND "${BACKEND}" STREQUAL "HIP")
+    find_package(HIP QUIET)
+    if(HIP_FOUND)
+        set(ROCAL_VIDEO_FFMPEG_HIP ON)
+    endif()
+endif()
+
+# rocDecode is optional and only required on HIP builds.
+set(ROCAL_VIDEO_FFMPEG_ROCDECODE OFF)
+if(ROCAL_VIDEO_FFMPEG_HIP)
+    find_package(rocdecode 1.0.0 QUIET)
+    if(rocdecode_FOUND)
+        set(ROCAL_VIDEO_FFMPEG_ROCDECODE ON)
+    endif()
 endif()
 
 include_directories(
@@ -53,9 +67,10 @@ set(ROCAL_VIDEO_FFMPEG_SOURCES
     source/video_properties.cpp
 )
 
-if(ENABLE_HIP AND rocdecode_FOUND)
+if(ROCAL_VIDEO_FFMPEG_HIP AND ROCAL_VIDEO_FFMPEG_ROCDECODE)
     list(APPEND ROCAL_VIDEO_FFMPEG_SOURCES source/rocdec_video_decoder.cpp)
     include_directories(
+        ${ROCM_PATH}/include
         ${rocdecode_INCLUDE_DIR}
         ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode
         ${ROCM_PATH}/share/rocdecode/utils
@@ -76,11 +91,13 @@ else()
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE ROCAL_VIDEO)
-if(ENABLE_HIP)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_HIP=1)
-    if(rocdecode_FOUND)
+if(ROCAL_VIDEO_FFMPEG_HIP)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_HIP=1 __HIP_PLATFORM_AMD__)
+    if(ROCAL_VIDEO_FFMPEG_ROCDECODE)
         target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_ROCDECODE)
     endif()
+else()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_HIP=0)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC

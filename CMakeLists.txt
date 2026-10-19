@@ -164,6 +164,18 @@ add_subdirectory(rocAL)
 
 if(ROCAL_VIDEO_FFMPEG_ADAPTER)
     add_subdirectory(rocal_video_ffmpeg)
+else()
+    # In monolithic mode the adapter is not built as a separate library, but its
+    # sources are still shipped under COMPONENT dev so users can build it on the
+    # target machine if they want to opt into the adapter workflow.
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rocal_video_ffmpeg/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal_video_ffmpeg
+        COMPONENT dev
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.cpp"
+        PATTERN "*.hpp"
+        PATTERN "CMakeLists.txt")
 endif()
 
 if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.13"))
