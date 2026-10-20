@@ -62,6 +62,10 @@ if(ROCAL_VIDEO_FFMPEG_IN_TREE)
         ${CMAKE_SOURCE_DIR}/rocAL/include/api
         ${CMAKE_BINARY_DIR}/rocAL
     )
+    if(MIVisionX_INCLUDE_DIRS)
+        list(APPEND ROCAL_INCLUDE_DIRS ${MIVisionX_INCLUDE_DIRS})
+    endif()
+    list(APPEND ROCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/rocAL/include)
 else()
     message("-- ${White}rocal_video_ffmpeg: building standalone from installed sources${ColourReset}")
     # Allow standalone builds to find rocAL's custom CMake modules (e.g. FindFFmpeg.cmake).
@@ -74,10 +78,20 @@ else()
     add_library(rocal_imported SHARED IMPORTED)
     set_target_properties(rocal_imported PROPERTIES IMPORTED_LOCATION ${ROCAL_LIBRARY})
     set(ROCAL_TARGET rocal_imported)
+    # rocAL dev package install headers under <prefix>/include/rocal but internal
+    # headers include each other with relative paths like "decoders/video/..." or
+    # "readers/video/...". Add both the prefix and the rocal subdirectory so the
+    # adapter can find them without rewriting all include statements.
     set(ROCAL_INCLUDE_DIRS
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${ROCM_PATH}/include
         ${ROCM_PATH}/include/rocal
+        ${CMAKE_INSTALL_PREFIX}/include/rocal
     )
+    find_path(MIVisionX_INCLUDE_DIR NAMES vx_ext_amd.h PATHS ${MIVisionX_PATH}/include/mivisionx ${ROCM_PATH}/include/mivisionx NO_DEFAULT_PATH)
+    if(MIVisionX_INCLUDE_DIR)
+        list(APPEND ROCAL_INCLUDE_DIRS ${MIVisionX_INCLUDE_DIR})
+    endif()
 endif()
 
 # FFmpeg is mandatory for the adapter.
@@ -164,6 +178,10 @@ endif()
 if(NOT DEFINED rocal_VERSION_MAJOR)
     string(REGEX MATCH "^([0-9]+)" rocal_VERSION_MAJOR "${rocal_VERSION}")
 endif()
+
+# GNUInstallDirs is required for the standalone install layout below.
+include(GNUInstallDirs)
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION ${rocal_VERSION}
     SOVERSION ${rocal_VERSION_MAJOR}

@@ -178,11 +178,16 @@ VideoDecoder::Status FFmpegVideoDecoder::Initialize(const char *src_filename, in
         DECODER_ERROR_RETURN("Could not find video stream in the input, aborting", Status::FAILED)
 
     // find decoder for the stream
-    _decoder = avcodec_find_decoder(_video_stream->codecpar->codec_id);
-    if (!_decoder) {
+    const AVCodec *decoder = avcodec_find_decoder(_video_stream->codecpar->codec_id);
+    if (!decoder) {
         DECODER_ERROR_RETURN("Failed to find " +
             STR(av_get_media_type_string(AVMEDIA_TYPE_VIDEO)) + " codec", Status::FAILED)
     }
+#if USE_AVCODEC_GREATER_THAN_58_134
+    _decoder = decoder;
+#else
+    _decoder = const_cast<AVCodec*>(decoder);
+#endif
 
     // Allocate a codec context for the decoder
     _video_dec_ctx = avcodec_alloc_context3(_decoder);
