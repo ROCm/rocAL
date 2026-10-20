@@ -5,11 +5,11 @@
 # every pull request. Scanner selection and policy are defined by the pinned
 # ROCm/rocm-security-gh `security-baseline.yml` reusable workflow.
 #
-# Requests human-readable reports only: findings are uploaded as a build
-# artifact and printed to the job summary, never to the Security tab, so
-# fork PRs (which never receive elevated tokens) behave identically to
-# same-repo PRs. See the scheduled counterpart (weekly-security-scan.yml)
-# for the SARIF / code-scanning upload.
+# Requests human-readable reports for Bandit, Gitleaks, Trivy, and Zizmor:
+# findings are uploaded as build artifacts and printed to the job summary.
+# CodeQL still uploads its SARIF results to the Security tab. See the
+# scheduled counterpart (weekly-security-scan.yml) for full-repository SARIF
+# scans.
 
 name: Security scan (PR)
 
