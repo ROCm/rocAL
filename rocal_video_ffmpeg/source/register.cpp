@@ -46,9 +46,9 @@ class FFmpegAdapterRegistrar {
                                  [](const DecoderConfig& cfg) { return std::make_shared<RocDecVideoDecoder>(cfg.get_hip_stream()); });
 #endif
         register_video_properties_functions(
-            [](const char *path, Properties &props) { ffmpeg_open_video_context(path, props); },
-            [](VideoProperties &video_props, const char *file_path, bool flag) { ffmpeg_get_video_properties_from_txt_file(video_props, file_path, flag); },
-            [](VideoProperties &video_props, const char *source_path, bool flag) { ffmpeg_find_video_properties(video_props, source_path, flag); });
+            [](const char *path, Properties &props) { rocal_video_ffmpeg_open_video_context(path, props); },
+            [](VideoProperties &video_props, const char *file_path, bool flag) { rocal_video_ffmpeg_get_video_properties_from_txt_file(video_props, file_path, flag); },
+            [](VideoProperties &video_props, const char *source_path, bool flag) { rocal_video_ffmpeg_find_video_properties(video_props, source_path, flag); });
     }
 };
 

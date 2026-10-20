@@ -41,3 +41,25 @@ void register_ffmpeg_decoders();
 
 }  // namespace video
 }  // namespace rocal
+
+// The adapter implementation in video_properties.cpp defines the property helpers
+// in the global namespace.  Provide rocal::video aliases for them so that
+// register.cpp can use the namespaced form while video_properties.cpp keeps the
+// global form.  This avoids a link mismatch where register.cpp calls
+// rocal::video::ffmpeg_* but the .so only exports the undecorated symbols.
+extern "C++" {
+void ffmpeg_open_video_context(const char *video_file_path, Properties &props);
+void ffmpeg_get_video_properties_from_txt_file(VideoProperties &video_props, const char *file_path, bool file_list_frame_num);
+void ffmpeg_find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num);
+}
+
+namespace rocal {
+namespace video {
+inline void rocal_video_ffmpeg_open_video_context(const char *video_file_path, Properties &props) { ::ffmpeg_open_video_context(video_file_path, props); }
+inline void rocal_video_ffmpeg_get_video_properties_from_txt_file(VideoProperties &video_props, const char *file_path, bool file_list_frame_num) { ::ffmpeg_get_video_properties_from_txt_file(video_props, file_path, file_list_frame_num); }
+inline void rocal_video_ffmpeg_find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num) { ::ffmpeg_find_video_properties(video_props, source_path, file_list_frame_num); }
+}  // namespace video
+}  // namespace rocal
+
+// C-compatible symbol that core can look up if needed.
+extern "C" void rocal_video_ffmpeg_register();
