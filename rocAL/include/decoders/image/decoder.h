@@ -61,7 +61,7 @@ class DecoderConfig {
     void set_seed(int seed) { _seed = seed; }
     int get_seed() { return _seed; }
 #if ENABLE_HIP
-    hipStream_t &get_hip_stream() { return _hip_stream; }
+    hipStream_t &get_hip_stream() const { return _hip_stream; }
     void set_hip_stream(hipStream_t &stream) { _hip_stream = stream; }
 #endif
 
