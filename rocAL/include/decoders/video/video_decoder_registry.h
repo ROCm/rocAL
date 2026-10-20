@@ -30,10 +30,10 @@ THE SOFTWARE.
 namespace rocal {
 namespace video {
 
-using VideoDecoderFactory = std::function<std::shared_ptr<VideoDecoder>(const DecoderConfig&)>;
+using VideoDecoderFactory = std::function<std::shared_ptr<VideoDecoder>(DecoderConfig&)>;
 
 void register_decoder_factory(DecoderType type, VideoDecoderFactory factory);
-std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, const DecoderConfig& cfg);
+std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, DecoderConfig& cfg);
 bool is_decoder_registered(DecoderType type);
 
 }  // namespace video

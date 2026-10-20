@@ -40,10 +40,10 @@ class FFmpegAdapterRegistrar {
    public:
     FFmpegAdapterRegistrar() {
         register_decoder_factory(DecoderType::FFMPEG_VIDEO,
-                                 [](const DecoderConfig& cfg) { return std::make_shared<FFmpegVideoDecoder>(); });
+                                 [](DecoderConfig& cfg) { return std::make_shared<FFmpegVideoDecoder>(); });
 #if ENABLE_HIP && ENABLE_ROCDECODE
         register_decoder_factory(DecoderType::ROCDECODE_VIDEO,
-                                 [](const DecoderConfig& cfg) { return std::make_shared<RocDecVideoDecoder>(cfg.get_hip_stream()); });
+                                 [](DecoderConfig& cfg) { return std::make_shared<RocDecVideoDecoder>(cfg.get_hip_stream()); });
 #endif
         register_video_properties_functions(
             [](const char *path, Properties &props) { rocal_video_ffmpeg_open_video_context(path, props); },

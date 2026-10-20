@@ -50,7 +50,7 @@ void register_decoder_factory(DecoderType type, VideoDecoderFactory factory) {
     decoder_registry()[type] = std::move(factory);
 }
 
-std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, const DecoderConfig& cfg) {
+std::shared_ptr<VideoDecoder> create_decoder(DecoderType type, DecoderConfig& cfg) {
     std::lock_guard<std::mutex> lock(decoder_registry_mutex());
     auto it = decoder_registry().find(type);
     if (it == decoder_registry().end() || !it->second)
