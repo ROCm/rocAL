@@ -316,4 +316,25 @@ add_test(
             --test-command bash -c
             "./checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0 && \
              ./restore_checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0"
-) 
+)
+
+# 22 - basic_test_cpu_partial_scale
+# The dataset images are 299x299 and 299 > 8 * 32, so a 32x32 decode size sends the
+# TurboJPEG decoder down the tjDecompress2_partial_scale() path that basic_test_cpu's
+# 224x224 never reaches. basic_test crop-resizes to 224x224 afterwards either way.
+add_test(
+  NAME
+    basic_test_cpu_partial_scale
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/basic_test"
+                              "${CMAKE_CURRENT_BINARY_DIR}/basic_test"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "basic_test"
+            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 32 32
+)
+# A failed decode leaves a blank image and the pipeline carries on, so basic_test exits 0
+# either way. The decoder's complaint on stderr is the only signal, hence the regex.
+set_tests_properties(basic_test_cpu_partial_scale PROPERTIES
+    FAIL_REGULAR_EXPRESSION "Buffer passed to JPEG library is too small;\\[ERR\\]")
+

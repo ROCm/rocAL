@@ -164,7 +164,7 @@ if(${BUILD_ROCAL_PYBIND})
             Python3_SOABI
             Python3_EXTENSION_SUFFIX
             Python3_Interpreter_FOUND
-            Python3_Development_FOUND
+            Python3_Development.Module_FOUND
             Python3_INCLUDE_DIRS
             Python3_LIBRARY
             Python3_LIBRARIES
@@ -177,20 +177,26 @@ if(${BUILD_ROCAL_PYBIND})
 
         set(Python3_FIND_VIRTUALENV FIRST)
 
-        find_package(Python3 "${PY_VERSION}" EXACT QUIET COMPONENTS Interpreter Development)
+        find_package(Python3 "${PY_VERSION}" EXACT QUIET COMPONENTS Interpreter Development.Module)
         set(PYTHON_FOUND_${PY_VERSION} ${Python3_FOUND})
 
         if(NOT PYTHON_FOUND_${PY_VERSION})
             message("-- ${Yellow}NOTE: Python${PY_VERSION} Not Found, not building rocAL pybind for Python${PY_VERSION}${ColourReset}")
             continue()
         else()
-            # Enable PythonFunction operator in core rocAL library when building pybind
-            # and all Python/pybind11/MIVisionX conditions are satisfied.
-            if (VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.1")
+            # Enable the PythonFunction operator in the core rocAL library when it is explicitly
+            # requested and all Python/pybind11/MIVisionX conditions are satisfied.
+            # Disabled by default: the operator compiles the CPython C-API into librocal.so,
+            # which leaves the core library with unresolved Py* symbols and unusable from plain
+            # C/C++ applications (https://github.com/ROCm/rocAL/issues/522).
+            if(NOT ROCAL_PYTHON_FUNCTION)
+                message("-- ${Yellow}NOTE: rocAL PythonFunction operator disabled - set -DROCAL_PYTHON_FUNCTION=ON to enable${ColourReset}")
+            elseif(VX_EXT_RPP_VERSION VERSION_GREATER_EQUAL "3.1.1")
                 target_compile_definitions(rocal PUBLIC ROCAL_PYTHON_FUNCTION)
                 target_include_directories(rocal PRIVATE ${Python3_INCLUDE_DIRS} ${pybind11_INCLUDE_DIRS})
                 target_link_libraries(rocal ${Python3_LIBRARIES})
                 message("-- ${White}rocAL PythonFunction operator enabled for pybind${ColourReset}")
+                message("-- ${Yellow}WARNING: ROCAL_PYTHON_FUNCTION=ON embeds the CPython C-API in librocal.so. The Python module works, but C/C++ applications will fail to link or dlopen librocal.so (https://github.com/ROCm/rocAL/issues/522)${ColourReset}")
             else()
                 message("-- ${Yellow}NOTE: rocAL PythonFunction operator disabled - requires Python3, pybind11 and MIVisionX vx_rpp >= 3.1.1${ColourReset}")
             endif()

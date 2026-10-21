@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 #include "rocal_api.h"
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
 #endif
 
@@ -231,9 +231,9 @@ int main(int argc, const char **argv) {
 
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
             cv::cvtColor(mat_output, mat_color, cv::COLOR_RGB2BGR);
-            cv::imwrite(out_filename, mat_color);
+            rocal_test_output_image(mat_color, mat_color, out_filename);
         } else {
-            cv::imwrite(out_filename, mat_output);
+            rocal_test_output_image(mat_output, mat_output, out_filename);
         }
         std::cout << "  Original output saved as: " << out_filename << std::endl;
         col_counter = (col_counter + 1) % number_of_cols;
@@ -301,9 +301,9 @@ int main(int argc, const char **argv) {
         // Save the output image with proper color conversion if needed
         if (color_format == RocalImageColor::ROCAL_COLOR_RGB24) {
             cv::cvtColor(mat_deserialized_output, mat_deserialized_color, cv::COLOR_RGB2BGR);
-            cv::imwrite(out_filename_deserialized, mat_deserialized_color);
+            rocal_test_output_image(mat_deserialized_color, mat_deserialized_color, out_filename_deserialized);
         } else {
-            cv::imwrite(out_filename_deserialized, mat_deserialized_output);
+            rocal_test_output_image(mat_deserialized_output, mat_deserialized_output, out_filename_deserialized);
         }
         std::cout << "  Deserialized output saved as: " << out_filename_deserialized << std::endl;
         col_counter = (col_counter + 1) % number_of_cols;

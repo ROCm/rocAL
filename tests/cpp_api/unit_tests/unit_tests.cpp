@@ -49,20 +49,11 @@ static void check_hip(hipError_t status, const char *msg) {
 #endif
 
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
-#if USE_OPENCV_4
-#define CV_LOAD_IMAGE_COLOR IMREAD_COLOR
-#define CV_BGR2GRAY COLOR_BGR2GRAY
-#define CV_GRAY2RGB COLOR_GRAY2RGB
 #define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_FONT_HERSHEY_SIMPLEX FONT_HERSHEY_SIMPLEX
-#define CV_FILLED FILLED
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
-#endif
 #endif
 
-#define DISPLAY 0
 #define RANDOMBBOXCROP
 
 using namespace std::chrono;
@@ -1234,8 +1225,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     cv::Mat mat_output(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
-    if (DISPLAY)
-        cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+    rocal_test_output_open("output");
 #endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -1476,10 +1466,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         }
 
 #if ENABLE_OPENCV
-        std::vector<int> compression_params;
-        compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        compression_params.push_back(9);
-
         cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
         mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
@@ -1488,20 +1474,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
         if (output_color_format == 0) {  // RGB24
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-                cv::imwrite(out_filename, mat_color, compression_params);
+            rocal_test_output_image(mat_output, mat_color, out_filename, "output", -1, 9);
         } else if (output_color_format == 1) {  // BGR24
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-                cv::imwrite(out_filename, mat_output, compression_params);
+            rocal_test_output_image(mat_output, mat_output, out_filename, "output", -1, 9);
         } else {
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-                cv::imwrite(out_filename, mat_output, compression_params);
+            rocal_test_output_image(mat_output, mat_output, out_filename, "output", -1, 9);
         }
         col_counter = (col_counter + 1) % number_of_cols;
 #endif
