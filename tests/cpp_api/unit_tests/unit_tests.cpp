@@ -1305,7 +1305,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
                 // Get output matched indices
                 if (enable_iou_matcher) {
-                    rocalGetMatchedIndices(handle); // TODO - To verify the output
+                    (void)rocalGetMatchedIndices(handle); // TODO - To verify the output
                 }
             } break;
             case 3: {   // keypoints pipeline
