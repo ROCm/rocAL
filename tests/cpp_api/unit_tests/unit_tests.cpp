@@ -1215,7 +1215,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
     int w = rocalGetOutputWidth(handle);
     int output_color_format = rocalGetOutputColorFormat(handle);
-    rocalGetLastBatchPaddedSize(handle);
+    size_t last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
+    // By definition last_batch_padded_size is the number of samples padded into the final
+    // batch (batch_size - padded_samples), so it can never reach/exceed the batch size itself.
+    if (last_batch_padded_size >= (size_t)input_batch_size) {
+        std::cout << "Invalid last_batch_padded_size " << last_batch_padded_size
+                   << " (batch size " << input_batch_size << ")" << std::endl;
+        return -1;
+    }
     // Use output_color_format to determine channels: 0=RGB24(3ch), 1=BGR24(3ch), 2=U8(1ch), 3=RGB_PLANAR(3ch)
     int p = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? 3 : 1);
     std::vector<unsigned char> mat_input(h * w * p);
