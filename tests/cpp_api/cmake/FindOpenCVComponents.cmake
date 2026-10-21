@@ -53,7 +53,12 @@ function(rocal_test_enable_opencv target)
         message(STATUS "${target}: OpenCV ${OpenCV_VERSION} image output enabled")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV=1)
         target_include_directories(${target} PRIVATE ${OpenCV_INCLUDE_DIRS})
-        target_link_libraries(${target} ${OpenCV_LIBRARIES})
+        # Link the modules the tests actually use, not ${OpenCV_LIBRARIES}: that
+        # expands to every module the installation provides, and a distribution
+        # OpenCV brings in opencv_dnn, whose protobuf collides with the one the
+        # caffe/caffe2 readers already load. The two sets of static initializers
+        # crash the test before main() runs.
+        target_link_libraries(${target} opencv_core opencv_imgproc opencv_imgcodecs)
     else()
         message(STATUS "${target}: OpenCV image output disabled")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV=0)
@@ -62,6 +67,7 @@ function(rocal_test_enable_opencv target)
     if(_highgui_ok)
         message(STATUS "${target}: OpenCV highgui enabled")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV_HIGHGUI=1)
+        target_link_libraries(${target} opencv_highgui)
     else()
         message(STATUS "${target}: OpenCV highgui disabled; display calls compiled out")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV_HIGHGUI=0)
