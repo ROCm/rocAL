@@ -31,6 +31,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 
 ### Resolved issues
+* Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
 * Resolve a crash in the TurboJPEG decoder when a source image is more than eight times larger than the requested decode size.
 * Resolve a memory leak and a process abort on TurboJPEG decode failures.
 * Resolve the cpp_api tests linking every OpenCV module, which segfaulted before `main()` on a second protobuf and failed to link at all against an OpenCV built without `highgui`.

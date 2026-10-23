@@ -1297,6 +1297,24 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                                 std::cout << idx_value << "\t";
                             }
                         }
+                        // The one hot row has to name the same class as the integer label, otherwise
+                        // every target handed to a model belongs to a different class than its image.
+                        std::vector<int> hot_indices;
+                        for (int j = 0; j < num_of_classes; j++) {
+                            if (label_one_hot_encoded[(i * num_of_classes) + j] != 0)
+                                hot_indices.push_back(j);
+                        }
+                        if (hot_indices.size() != 1 || hot_indices[0] != label_id[i]) {
+                            std::cout << "\nOne hot encoding does not match label " << label_id[i] << ": ";
+                            if (hot_indices.empty())
+                                std::cout << "no column is set" << std::endl;
+                            else if (hot_indices.size() > 1)
+                                std::cout << hot_indices.size() << " columns are set" << std::endl;
+                            else
+                                std::cout << "column " << hot_indices[0] << " is set" << std::endl;
+                            rocalRelease(handle);
+                            return -1;
+                        }
                     }
                     std::cout << "\n";
                 }

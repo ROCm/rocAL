@@ -338,3 +338,20 @@ add_test(
 set_tests_properties(basic_test_cpu_partial_scale PROPERTIES
     FAIL_REGULAR_EXPRESSION "Buffer passed to JPEG library is too small;\\[ERR\\]")
 
+# 23 - unit_tests_one_hot
+# unit_tests fails the run when the one hot row of a sample names a different class than its
+# integer label. The dataset is one flat folder, so the folder label reader labels every sample
+# 0 and the expected row is 1 0; an encoder that reserves the last column for label 0 writes
+# 0 1 instead and the test catches it.
+add_test(
+  NAME
+    unit_tests_one_hot
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/unit_tests_one_hot"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "unit_tests"
+            0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet one_hot 224 224 0 0 1 2
+)
+
