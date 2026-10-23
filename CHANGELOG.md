@@ -38,6 +38,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a `TypeError` from `fn.decoders.image_random_crop` on the file, COCO, Caffe, and Caffe2 readers, whose branches omitted `dec_type` and called the decoder binding one argument short.
 * Resolve the rocJPEG decoders calling `exit(1)` on a rocJPEG or HIP failure, which ended the process with no error the caller could handle.
 * Resolve a decode failure on the loader thread calling `std::terminate()`, and a second release of an already released pipeline, instead of reporting the error to the caller.
+* Resolve a pipeline failure reaching Python as an empty iteration, which was indistinguishable from the end of an epoch, instead of raising the reported error.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.

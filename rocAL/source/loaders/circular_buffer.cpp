@@ -181,6 +181,12 @@ void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, 
 }
 
 void CircularBuffer::release() {
+    // A setup failure can skip init(), which leaves _buff_depth and _output_mem_type unset and the
+    // buffer vectors empty, so the loop below would index them with a garbage bound. Clearing the
+    // flag also makes a second release() a no-op, for the same reason.
+    if (!_initialized)
+        return;
+    _initialized = false;
     for (size_t buffIdx = 0; buffIdx < _buff_depth; buffIdx++) {
 #if ENABLE_HIP
             if (_output_mem_type == RocalMemType::HIP) {

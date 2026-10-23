@@ -203,6 +203,11 @@ Decoder::Status HWRocJpegDecoder::decode_batch(std::vector<unsigned char *> &out
             _prev_image_buff_size = resize_image_buff_bytes;
         } else if (resize_image_buff_bytes > _prev_image_buff_size) {  // Reallocate if intermediate output exceeds allocated memory
             CHECK_HIP_RETURN(hipFree((void *)_rocjpeg_image_buff), Status::NO_MEMORY);
+            // The free succeeded, so drop the stale pointer and size before reallocating. A failed
+            // hipMalloc is recoverable now, and leaving the freed pointer in place would make the
+            // next decode_batch() free it a second time or hand it to the resize kernel.
+            _rocjpeg_image_buff = nullptr;
+            _prev_image_buff_size = 0;
             CHECK_HIP_RETURN(hipMalloc((void **)&_rocjpeg_image_buff, resize_image_buff_bytes), Status::NO_MEMORY);
             _prev_image_buff_size = resize_image_buff_bytes;
         }

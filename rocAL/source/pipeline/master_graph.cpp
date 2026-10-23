@@ -227,6 +227,10 @@ MasterGraph::run() {
     _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     _rb_block_if_empty_time.end();
 
+    // An output routine may have failed while this thread was blocked above, which is what woke it.
+    // Check before touching the batch state below, so run() cannot report OK without a valid batch.
+    rethrow_process_exception();
+
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
         // they've not used anything yet, so we don't pop a batch from the _ring_buffer
