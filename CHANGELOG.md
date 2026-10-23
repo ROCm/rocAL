@@ -34,6 +34,9 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
 * Resolve a crash in the TurboJPEG decoder when a source image is more than eight times larger than the requested decode size.
 * Resolve a memory leak and a process abort on TurboJPEG decode failures.
+* Resolve the cpp_api tests linking every OpenCV module, which segfaulted before `main()` on a second protobuf and failed to link at all against an OpenCV built without `highgui`.
+* Resolve `rocalCopyToOutput()` reporting success on an output size mismatch, which let the `Log` augmentation auto-pass the pixel comparison instead of being checked against a golden.
+* Resolve a `TypeError` from `fn.decoders.image_random_crop` on the file, COCO, Caffe, and Caffe2 readers, whose branches omitted `dec_type` and called the decoder binding one argument short.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
