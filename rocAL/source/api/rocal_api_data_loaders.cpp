@@ -40,10 +40,8 @@ THE SOFTWARE.
 #include "loaders/audio/node_audio_loader_single_shard.h"
 #include "augmentations/audio_augmentations/node_downmix.h"
 #endif
-#ifdef ROCAL_VIDEO
 #include "loaders/video/node_video_loader.h"
 #include "loaders/video/node_video_loader_single_shard.h"
-#endif
 #include "augmentations/geometry_augmentations/node_resize.h"
 #include "rocal_api.h"
 
@@ -1618,7 +1616,6 @@ rocalVideoFileSource(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -1647,9 +1644,6 @@ rocalVideoFileSource(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1768,7 +1762,6 @@ rocalVideoFileSourceSingleShard(
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -1803,9 +1796,6 @@ rocalVideoFileSourceSingleShard(
             auto actual_output = context->master_graph->create_tensor(info, is_output);
             context->master_graph->add_node<CopyNode>({output}, {actual_output});
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1839,7 +1829,6 @@ rocalVideoFileResize(
     ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -1947,9 +1936,6 @@ rocalVideoFileResize(
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }
@@ -1984,7 +1970,6 @@ rocalVideoFileResizeSingleShard(
     ROCAL_INVALID_CONTEXT_ERR(p_context, resize_output);
     auto context = static_cast<Context*>(p_context);
     try {
-#ifdef ROCAL_VIDEO
         if (sequence_length == 0)
             THROW("Sequence length passed should be bigger than 0")
 
@@ -2096,9 +2081,6 @@ rocalVideoFileResizeSingleShard(
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
             }
         }
-#else
-        THROW("Video decoder is not enabled since ffmpeg is not present")
-#endif
     } catch (const std::exception& e) {
         ROCAL_PRINT_EXCEPTION(context, e);
     }

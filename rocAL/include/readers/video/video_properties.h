@@ -27,15 +27,10 @@ THE SOFTWARE.
 #include <iostream>
 #include <sstream>
 #include <tuple>
-#ifdef ROCAL_VIDEO
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-}
-#endif
+#include <vector>
+#include <string>
 #include "pipeline/commons.h"
 
-#ifdef ROCAL_VIDEO
 typedef struct VideoProperties {
     unsigned width, height, videos_count;
     float frame_rate = 0;
@@ -51,7 +46,14 @@ typedef struct Properties {
 } Properties;
 
 void substring_extraction(std::string const &str, const char delim, std::vector<std::string> &out);
+
+// The two functions below are provided by the video adapter (or built-in FFmpeg code
+// when the adapter is disabled).  Core declares them here and calls them from the
+// neutral video reader pipeline.
 void open_video_context(const char *video_file_path, Properties &props);
 void get_video_properties_from_txt_file(VideoProperties &video_props, const char *file_path, bool file_list_frame_num);
 void find_video_properties(VideoProperties &video_props, const char *source_path, bool file_list_frame_num);
-#endif
+void register_video_properties_functions(
+    void (*open_video_context_fn)(const char *, Properties &),
+    void (*get_video_properties_from_txt_file_fn)(VideoProperties &, const char *, bool),
+    void (*find_video_properties_fn)(VideoProperties &, const char *, bool));

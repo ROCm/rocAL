@@ -21,9 +21,8 @@ THE SOFTWARE.
 */
 
 #include <iomanip>
-#include "decoders/video/rocdec_video_decoder.h"
+#include "rocal_video_ffmpeg/rocdec_video_decoder.h"
 
-#ifdef ROCAL_VIDEO
 #if ENABLE_HIP && ENABLE_ROCDECODE
 
 // callback function to flush last frames and save it to file when reconfigure happens
@@ -79,7 +78,7 @@ VideoDecoder::Status RocDecVideoDecoder::Initialize(const char *src_filename, in
 }
 
 // Seeks to the frame_number in the video file and decodes each frame in the sequence.
-VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, AVPixelFormat out_pix_format) {
+VideoDecoder::Status RocDecVideoDecoder::Decode(unsigned char *output_buffer_ptr, unsigned seek_frame_number, size_t sequence_length, size_t stride, int out_width, int out_height, int out_stride, rocal::video::VideoPixelFormat out_pix_format) {
     
     VideoDecoder::Status status = Status::OK;
     VideoSeekContext video_seek_ctx;
@@ -170,5 +169,4 @@ RocDecVideoDecoder::~RocDecVideoDecoder() {
     Release();
 }
 
-#endif
 #endif

@@ -46,8 +46,14 @@ endif()
 
 project (unit_tests)
 
-find_library(ROCAL_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
-find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${ROCM_PATH}/include/rocal)
+# Prefer a local rocAL install prefix over the system ROCm layout.
+if(CMAKE_INSTALL_PREFIX)
+    find_library(ROCAL_LIBRARY NAMES rocal HINTS ${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
+    find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${CMAKE_INSTALL_PREFIX}/include/rocal ${ROCM_PATH}/include/rocal)
+else()
+    find_library(ROCAL_LIBRARY NAMES rocal HINTS ${ROCM_PATH}/lib)
+    find_path(ROCAL_INCLUDE_DIR NAMES rocal_api.h PATHS ${ROCM_PATH}/include/rocal)
+endif()
 
 if(ROCAL_LIBRARY AND ROCAL_INCLUDE_DIR)
     set(ROCAL_FOUND TRUE)
@@ -76,8 +82,22 @@ list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/test/cmake)
 
 find_package(AMDRPP QUIET)
 
-include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
-link_directories(${ROCM_PATH}/lib)
+# Prefer CMAKE_INSTALL_PREFIX/include/rocal when building against a local install,
+# falling back to the system ROCm layout.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/include/rocal/rocal_api.h")
+    set(ROCAL_INCLUDE_ROOT ${CMAKE_INSTALL_PREFIX}/include/rocal)
+else()
+    set(ROCAL_INCLUDE_ROOT ${ROCM_PATH}/include/rocal)
+endif()
+include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
+
+# Prefer the same prefix for the library location.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
+    link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+else()
+    link_directories(${ROCM_PATH}/lib)
+endif()
+
 file(GLOB My_Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${My_Source_Files})
 

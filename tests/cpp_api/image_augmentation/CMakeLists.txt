@@ -52,8 +52,21 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 find_package(AMDRPP QUIET)
 
 # Application Includes & Libraries
-include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
-link_directories(${ROCM_PATH}/lib)
+# Prefer CMAKE_INSTALL_PREFIX/include/rocal when building against a local install,
+# falling back to the system ROCm layout.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/include/rocal/rocal_api.h")
+    set(ROCAL_INCLUDE_ROOT ${CMAKE_INSTALL_PREFIX}/include/rocal)
+else()
+    set(ROCAL_INCLUDE_ROOT ${ROCM_PATH}/include/rocal)
+endif()
+include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
+
+# Prefer the same prefix for the library location.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
+    link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+else()
+    link_directories(${ROCM_PATH}/lib)
+endif()
 
 add_executable(${PROJECT_NAME} image_augmentation.cpp)
 
