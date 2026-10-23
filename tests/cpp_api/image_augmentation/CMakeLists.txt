@@ -62,8 +62,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/
 find_package(OpenCVComponents MODULE QUIET)
 
 # Link Libraries & Set CXX Flags
-# -mf16c -- Support F16C built-in functions and code generation.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mf16c -Wall ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
 target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
