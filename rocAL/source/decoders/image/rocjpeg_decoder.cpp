@@ -269,7 +269,7 @@ HWRocJpegDecoder::~HWRocJpegDecoder() {
         _rocjpeg_handle = nullptr;
     }
     for (size_t j = 0; j < _rocjpeg_streams.size(); j++) {
-        CHECK_ROCJPEG_LOG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
+        if (_rocjpeg_streams[j]) CHECK_ROCJPEG_LOG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
     }
     if (_rocjpeg_image_buff) CHECK_HIP_LOG(hipFree(_rocjpeg_image_buff));
     if (_src_width) CHECK_HIP_LOG(hipHostFree(_src_width));

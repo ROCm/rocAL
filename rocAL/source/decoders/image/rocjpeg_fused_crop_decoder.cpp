@@ -195,9 +195,14 @@ Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char 
 FusedCropRocJpegDecoder::~FusedCropRocJpegDecoder() {
     // Log and keep going: a failure here must not throw out of a destructor, and releasing the
     // remaining resources still matters.
-    CHECK_ROCJPEG_LOG(rocJpegDestroy(_rocjpeg_handle));
-    for (auto j = 0; j < _batch_size; j++) {
-        CHECK_ROCJPEG_LOG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
+    // Walk the handles, not _batch_size: it is assigned after the stream creation loop, so a
+    // failure inside that loop leaves it at zero and leaks the streams already created.
+    if (_rocjpeg_handle) {
+        CHECK_ROCJPEG_LOG(rocJpegDestroy(_rocjpeg_handle));
+        _rocjpeg_handle = nullptr;
+    }
+    for (size_t j = 0; j < _rocjpeg_streams.size(); j++) {
+        if (_rocjpeg_streams[j]) CHECK_ROCJPEG_LOG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
     }
 }
 #endif

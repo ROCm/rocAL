@@ -37,6 +37,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalCopyToOutput()` reporting success on an output size mismatch, which let the `Log` augmentation auto-pass the pixel comparison instead of being checked against a golden.
 * Resolve a `TypeError` from `fn.decoders.image_random_crop` on the file, COCO, Caffe, and Caffe2 readers, whose branches omitted `dec_type` and called the decoder binding one argument short.
 * Resolve the rocJPEG decoders calling `exit(1)` on a rocJPEG or HIP failure, which ended the process with no error the caller could handle.
+* Resolve a decode failure on the loader thread calling `std::terminate()`, and a second release of an already released pipeline, instead of reporting the error to the caller.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
