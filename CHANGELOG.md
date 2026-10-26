@@ -40,6 +40,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the rocJPEG decoders calling `exit(1)` on a rocJPEG or HIP failure, which ended the process with no error the caller could handle.
 * Resolve a decode failure on the loader thread calling `std::terminate()`, and a second release of an already released pipeline, instead of reporting the error to the caller.
 * Resolve a pipeline failure reaching Python as an empty iteration, which was indistinguishable from the end of an epoch, instead of raising the reported error.
+* Resolve a segfault in `rocalRelease()` on box encoder pipelines, where the labels and bounding box tensor lists were reachable from two tensor list vectors and every tensor in them was deleted twice.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
