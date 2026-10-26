@@ -242,12 +242,13 @@ void
     std::vector<int> one_hot_encoded(meta_data_batch_size * num_of_classes, 0);
     auto labels = meta_data.second->get_labels_batch();
     for (uint i = 0; i < meta_data_batch_size; i++) {
+        // The label readers number classes from 0, so column `label` is the one to set. Anything
+        // outside [0, num_of_classes) cannot be encoded; report it instead of emitting a row that
+        // belongs to another class or an all-zero row that no caller can tell apart from a miss.
         int label_index = labels[i][0];
-        if (label_index > 0 && label_index <= num_of_classes) {
-            one_hot_encoded[(i * num_of_classes) + label_index - 1] = 1;
-        } else if (!label_index) {
-            one_hot_encoded[(i * num_of_classes) + num_of_classes - 1] = 1;
-        }
+        if (label_index < 0 || label_index >= num_of_classes)
+            THROW("Label " + TOSTR(label_index) + " of sample " + TOSTR(i) + " in the batch is outside the one hot encoding range [0, " + TOSTR(num_of_classes) + ")")
+        one_hot_encoded[(i * num_of_classes) + label_index] = 1;
     }
     if (output_mem_type == RocalOutputMemType::ROCAL_MEMCPY_HOST)
         memcpy(buf, one_hot_encoded.data(), sizeof(int) * meta_data_batch_size * num_of_classes);
