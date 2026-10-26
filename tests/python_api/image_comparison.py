@@ -119,7 +119,9 @@ def main():
             logging.info("PASSED ")
         elif file_name_split[0] in spl_case_meta_data:
             total_case_count = total_case_count + 1
-            reference_list = [[1, 0], [1, 0]]
+            # Both samples of the last batch come from the labels_folder subdirectory the folder
+            # label reader numbers 1, so column 1 is the one that carries the 1.
+            reference_list = [[0, 1], [0, 1]]
             rocal_file_path = rocal_output_path + aug_name
             if os.path.exists(rocal_file_path):
                 logging.info("Running %s ", aug_name.split(".")[0])

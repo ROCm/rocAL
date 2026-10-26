@@ -235,6 +235,8 @@ extern "C" RocalMetaData ROCAL_API_CALL rocalCreateTextCifar10LabelReader(RocalC
 
 /*! \brief get one hot image labels
  * \ingroup group_rocal_meta_data
+ * Labels are zero based: the row of a sample labelled k has a 1 in column k and 0 elsewhere.
+ * A label outside [0, numOfClasses) cannot be encoded and raises an error.
  * \param [in] meta_data RocalMetaData object that contains info about the images and labels
  * \param [in] numOfClasses the number of classes for a image dataset
  * \param [out] buf user's buffer that will be filled with labels. Its needs to be at least of size batch_size.
