@@ -29,6 +29,20 @@ import numpy as np
 import ctypes
 import functools
 import inspect
+import threading
+
+# The pipeline a `with` block makes current is per thread: operators are added to the graph of
+# the pipeline on top of the calling thread's stack. A stack rather than a single value, so that
+# leaving a nested `with` block restores the pipeline that was current around it.
+_pipeline_stack = threading.local()
+
+
+def _current_pipeline_stack():
+    """!Return the calling thread's stack of entered pipelines, creating it on first use."""
+    stack = getattr(_pipeline_stack, "stack", None)
+    if stack is None:
+        stack = _pipeline_stack.stack = []
+    return stack
 
 
 class Pipeline(object):
@@ -62,7 +76,6 @@ class Pipeline(object):
           cpu_threads (default 1)
     This returns a context'''
     _handle = None
-    _current_pipeline = None
 
     def __init__(self, batch_size=-1, num_threads=0, device_id=0, seed=1,
                  exec_pipelined=True, prefetch_queue_depth=2,
@@ -123,7 +136,6 @@ class Pipeline(object):
         self._num_classes = None
         self._one_hot_encoding = False
         self._castLabels = False
-        self._current_pipeline = None
         self._reader = None
         self._define_graph_set = False
         self.set_seed(self._seed)
@@ -177,12 +189,23 @@ class Pipeline(object):
                     f"failed to build: {error_message}")
         b.setOutputs(self._handle, len(output_list), output_list)
 
+    @staticmethod
+    def current():
+        """!Return the pipeline the calling thread is currently building, or None.
+
+        Operators are added to the graph of this pipeline. It is the innermost pipeline the
+        calling thread has entered with a `with` block, so pipelines built concurrently in
+        different threads, and nested `with` blocks, stay separate.
+        """
+        stack = _current_pipeline_stack()
+        return stack[-1] if stack else None
+
     def __enter__(self):
-        Pipeline._current_pipeline = self
+        _current_pipeline_stack().append(self)
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        pass
+        _current_pipeline_stack().pop()
 
     def set_seed(self, seed=0):
         return b.setSeed(seed)
@@ -487,13 +510,13 @@ def pipeline_def(fn=None, **pipeline_kwargs):
         when new parameters are added to the Pipeline constructor.
 
     To access any pipeline arguments within the body of a ``@pipeline_def`` function, the function
-    :meth:`amd.rocal.Pipeline.current()` can be used:: ( note: this is not supported yet)
+    :meth:`amd.rocal.Pipeline.current()` can be used::
 
         @pipeline_def()
         def my_pipe():
             pipe = Pipeline.current()
-            batch_size = pipe.batch_size
-            num_threads = pipe.num_threads
+            batch_size = pipe._batch_size
+            num_threads = pipe._num_threads
             ...
 
         pipe = my_pipe(batch_size=42, num_threads=3)
