@@ -222,6 +222,15 @@ ImageReadAndDecode::load(unsigned char *buff,
     // Decode with the height and size equal to a single image
     // File read is done serially since I/O parallelization does not work very well.
     _file_load_time.start();  // Debug timing
+    // This branch is reached only by the raw TFRecord sources, i.e. TFRecordReader.
+    // ImageReadAndDecode is constructed only by ImageLoader, which is only built by
+    // ImageLoaderNode / ImageLoaderSingleShardNode / FusedJpegCropNode /
+    // FusedJpegCropSingleShardNode. Of all the rocal_api_data_loaders.cpp call sites that
+    // construct those nodes, the only two passing DecoderType::SKIP_DECODE are the raw
+    // TFRecord sources, and both pass StorageType::TF_RECORD. Every other source passes
+    // TURBO_JPEG, including the external file source, which has its own branch below.
+    // CIFAR10 and Numpy do set SKIP_DECODE, but on their own loader modules, which do not
+    // use ImageReadAndDecode at all.
     if (_decoder_config._type == DecoderType::SKIP_DECODE) {
         while ((file_counter != _batch_size) && _reader->count_items() > 0) {
             auto read_ptr = buff + image_size * file_counter;
@@ -231,9 +240,20 @@ ImageReadAndDecode::load(unsigned char *buff,
                 continue;
             }
 
-            _actual_read_size[file_counter] = _reader->read_data(read_ptr, fsize);
+            // Bound the read by the capacity of this slot rather than by the record size.
+            // The record is stored raw, so it is larger than the slot whenever the output
+            // color format has fewer planes than the stored data (for example a U8
+            // grayscale output for a 3 plane record), which would otherwise overrun buff.
+            if (fsize > image_size)
+                WRN("Raw record " + _reader->id() + " of size " + TOSTR(fsize) +
+                    " bytes exceeds the output slot of " + TOSTR(image_size) + " bytes (" +
+                    TOSTR(max_decoded_width) + "x" + TOSTR(max_decoded_height) + "x" +
+                    TOSTR(output_planes) + "), it will be truncated. Check that the output"
+                    " color format matches the raw data.");
+
+            _actual_read_size[file_counter] = _reader->read_data(read_ptr, image_size);
             if (_actual_read_size[file_counter] < fsize)
-                LOG("Reader read less than requested bytes of size: " + _actual_read_size[file_counter]);
+                LOG("Reader read less than requested bytes of size: " + TOSTR(_actual_read_size[file_counter]));
 
             _image_names[file_counter] = _reader->id();
             _reader->close();

@@ -136,13 +136,14 @@ class Pipeline(object):
 
     def build(self):
         """!Build the pipeline using rocalVerify call
+
+        @raise RuntimeError If the augmentation graph fails verification.
         """
         status = b.rocalVerify(self._handle)
         if (status != types.OK):
-            if self._reader == "HDF5Reader":
-                raise RuntimeError(b.rocalGetErrorMessage(self._handle) or "HDF5 graph verification failed")
-            print("Verify graph failed")
-            exit(0)
+            error_message = b.rocalGetErrorMessage(self._handle)
+            raise RuntimeError(
+                f"Failed to verify the augmentation graph: {error_message}")
         return self
 
     def rocal_run(self):
