@@ -1942,6 +1942,11 @@ rocalVideoFileResize(
                 context->master_graph->add_node<CopyNode>({resize_output}, {actual_output});
             }
         } else {
+            // Decoded at native size: there is no resize node, so the decoded tensor is this
+            // call's result. Returning it is what every sibling loader does, rocalVideoFileSource
+            // among them; without it the function hands back nullptr even though it succeeded,
+            // leaving the caller with no handle to chain or inspect.
+            resize_output = output;
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
@@ -2091,6 +2096,11 @@ rocalVideoFileResizeSingleShard(
                 context->master_graph->add_node<CopyNode>({resize_output}, {actual_output});
             }
         } else {
+            // Decoded at native size: there is no resize node, so the decoded tensor is this
+            // call's result. Returning it is what every sibling loader does, rocalVideoFileSource
+            // among them; without it the function hands back nullptr even though it succeeded,
+            // leaving the caller with no handle to chain or inspect.
+            resize_output = output;
             if (is_output) {
                 auto actual_output = context->master_graph->create_tensor(info, is_output);
                 context->master_graph->add_node<CopyNode>({output}, {actual_output});
