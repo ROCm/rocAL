@@ -24,6 +24,7 @@ The following prerequisites are required by both installation methods:
 * `TurboJPEG <https://libjpeg-turbo.org/>`_
 * Python3, Python3 pip, and Python3 wheel
 * `LMDB Library <http://www.lmdb.tech/doc/>`_
+* `HDF5 <https://www.hdfgroup.org/solutions/hdf5/>`_ (Optional, required only for HDF5 reader support)
 * `FFMPEG <https://www.ffmpeg.org>`_
 * `PyBind11 <https://github.com/pybind/pybind11/releases/tag/v2.11.1>`_ version 2.11.1 (Manual install from `<https://github.com/pybind/pybind11>`_)
 * `RapidJSON <https://github.com/Tencent/rapidjson>`_ (Manual install from `<https://github.com/Tencent/rapidjson.git>`_)
@@ -48,6 +49,7 @@ Use the following commands to install those packages (make sure to also manually
       sudo apt install libturbojpeg0-dev libjpeg-dev
       sudo apt install python3-dev python3-pip python3-wheel
       sudo apt install liblmdb-dev # optional: needed for Caffe/Caffe2 LMDB reader support
+      sudo apt install libhdf5-dev # optional: needed for HDF5 reader support
       sudo apt install ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
 
   .. tab-item:: RHEL
@@ -60,6 +62,7 @@ Use the following commands to install those packages (make sure to also manually
       sudo yum install turbojpeg-devel libjpeg-turbo-devel
       sudo yum install python3-devel python3-pip python3-wheel
       sudo yum install lmdb-devel # optional: needed for Caffe/Caffe2 LMDB reader support
+      sudo yum install hdf5-devel # optional: needed for HDF5 reader support
 
   .. tab-item:: SLES
 
@@ -70,6 +73,7 @@ Use the following commands to install those packages (make sure to also manually
       sudo zypper install protobuf-devel libprotobuf-c-devel
       sudo zypper install python3-devel python3-pip python3-wheel
       sudo zypper install lmdb-devel # optional: needed for Caffe/Caffe2 LMDB reader support
+      sudo zypper install hdf5-devel # optional: needed for HDF5 reader support
 
 For **source install**, it is also required to install the following prerequisites:
 

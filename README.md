@@ -89,6 +89,7 @@ See [installation instructions](#installation-instructions) for more details and
 * Python3 and Python3 PIP
 * Python3 Wheel
 * LMDB Library (Optional, needed only for Caffe/Caffe2 LMDB reader support)
+* HDF5 C++ Library (Optional, needed only for HDF5 reader support)
 * FFMPEG
 * pkg-config
 * PyBind11
@@ -159,6 +160,11 @@ Follow the [ROCm install guide](https://rocm.docs.amd.com/en/latest/install/rocm
 * [LMDB Library](http://www.lmdb.tech/doc/) - **Optional**: needed only for Caffe/Caffe2 LMDB reader support
   ```shell
   sudo apt install liblmdb-dev
+  ```
+
+* [HDF5](https://www.hdfgroup.org/solutions/hdf5/) - **Optional**: needed only for HDF5 reader support
+  ```shell
+  sudo apt install libhdf5-dev
   ```
 
 * [FFMPEG](https://www.ffmpeg.org)

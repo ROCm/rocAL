@@ -681,6 +681,36 @@ extern "C" RocalTensor rocalNumpyFileSourceSingleShard(RocalContext context,
                                                        unsigned seed = 0,
                                                        RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
 
+/*! \brief Creates an HDF5 reader that loads multiple datasets from each input file atomically.
+ * \ingroup group_rocal_data_loaders
+ * \param [in] context Rocal context
+ * \param [in] source_path Directory containing HDF5 files
+ * \param [in] dataset_keys Ordered HDF5 dataset paths to load from every file
+ * \param [in] output_layouts Layout for each output tensor, in dataset_keys order
+ * \param [in] files Optional list of file paths, relative to source_path or absolute
+ * \param [in] shuffle Determines whether to shuffle the file order
+ * \param [in] loop Determines whether to loop indefinitely over the input files
+ * \param [in] shard_id Shard ID for this reader
+ * \param [in] shard_count Total number of shards
+ * \param [in] seed Seed used to shuffle the input file order
+ * \param [in] rocal_sharding_info Controls shard and last-batch behavior
+ * \param [out] outputs Output tensors in dataset_keys order; cleared on failure
+ * \return ROCAL_OK on success, otherwise an error status
+ */
+extern "C" RocalStatus ROCAL_API_CALL rocalHdf5FileSourceSingleShard(
+    RocalContext context,
+    std::vector<RocalTensor>& outputs,
+    const char* source_path,
+    const std::vector<std::string>& dataset_keys,
+    const std::vector<RocalTensorLayout>& output_layouts,
+    const std::vector<std::string>& files = {},
+    bool shuffle = false,
+    bool loop = false,
+    unsigned shard_id = 0,
+    unsigned shard_count = 1,
+    unsigned seed = 0,
+    RocalShardingInfo rocal_sharding_info = RocalShardingInfo());
+
 /*!
  * \brief Creates a video reader and decoder as a source. It allocates the resources and objects required to read and decode mp4 videos stored on the file systems.
  * \ingroup group_rocal_data_loaders

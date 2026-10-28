@@ -1162,6 +1162,20 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
             py::return_value_policy::reference);
     m.def("numpyReader", &rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
           py::return_value_policy::reference);
+    m.def("hdf5Reader", [](RocalContext context, const char* source_path,
+                           const std::vector<std::string>& dataset_keys,
+                           const std::vector<RocalTensorLayout>& output_layouts,
+                           const std::vector<std::string>& files, bool shuffle, bool loop,
+                           unsigned shard_id, unsigned shard_count, unsigned seed,
+                           RocalShardingInfo sharding_info) {
+              std::vector<RocalTensor> outputs;
+              rocalHdf5FileSourceSingleShard(context, outputs, source_path, dataset_keys,
+                                            output_layouts, files, shuffle, loop, shard_id,
+                                            shard_count, seed, sharding_info);
+              return outputs;
+          },
+          "Reads an ordered set of datasets atomically from each HDF5 file",
+          py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
