@@ -360,6 +360,35 @@ MasterGraph::create_tensor(const TensorInfo &info, bool is_output) {
     return output;
 }
 
+void MasterGraph::discard_tensor(Tensor *tensor) {
+    if (tensor == nullptr)
+        return;
+
+    // A tensor that already produces for a node must outlive this call: deleting it would leave
+    // that node holding a dangling output. Reached when an entry point throws after add_node()
+    // succeeded, for instance from the node's init().
+    if (_tensor_map.find(tensor) != _tensor_map.end())
+        return;
+
+    // create_tensor(info, true) appends to both lists and allocates a user-facing replica. Only the
+    // most recent entry point can be rolled back, which is the one that just failed.
+    if (!_internal_tensor_list.empty() && _internal_tensor_list.back() == tensor) {
+        _internal_tensor_list.pop_back();
+        delete _output_tensor_list.back();
+        _output_tensor_list.pop_back();
+        delete tensor;
+        return;
+    }
+
+    // create_internal_tensor() hands ownership to _internal_tensors, which release() frees.
+    if (std::find(_internal_tensors.begin(), _internal_tensors.end(), tensor) != _internal_tensors.end())
+        return;
+
+    // create_tensor(info, false): nothing holds it yet, since the virtual tensor is only created
+    // once the graph is built. Without this the tensor leaks for the whole process.
+    delete tensor;
+}
+
 void MasterGraph::set_output(Tensor *output_tensor) {
     if (output_tensor->is_handle_set() == false) {
         if (output_tensor->create_from_handle(_context) != 0)

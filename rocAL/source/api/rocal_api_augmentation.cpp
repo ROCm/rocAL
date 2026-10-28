@@ -3015,7 +3015,14 @@ rocalNonSilentRegionDetection(
         output.anchor = anchor_output;
         output.shape = shape_output;
     } catch (const std::exception& e) {
-        ROCAL_HANDLE_EXCEPTION(context, e, output);
+        // Open-coded rather than ROCAL_HANDLE_EXCEPTION because this is the one entry point whose
+        // result is a struct of two tensors. Discarded newest first: discard_tensor() identifies an
+        // output tensor by its position at the back of the output lists, so unwinding in creation
+        // order would leave shape_output stranded there.
+        ROCAL_PRINT_EXCEPTION(context, e);
+        context->master_graph->discard_tensor(shape_output);
+        context->master_graph->discard_tensor(anchor_output);
+        output = {};
     }
 
     return output;
