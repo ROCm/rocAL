@@ -42,13 +42,11 @@ THE SOFTWARE.
 #endif
 
 #if ENABLE_OPENCV
-#include "opencv2/opencv.hpp"
+#include "image_output.h"
 using namespace cv;
 #define CV_RGB2BGR COLOR_RGB2BGR
-#define CV_WINDOW_AUTOSIZE WINDOW_AUTOSIZE
 #endif
 
-#define DISPLAY 0
 #define RANDOMBBOXCROP
 
 using namespace std::chrono;
@@ -1220,8 +1218,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     cv::Mat mat_output(h, w, cv_color_format);
     cv::Mat mat_color;
     int col_counter = 0;
-    if (DISPLAY)
-        cv::namedWindow("output", CV_WINDOW_AUTOSIZE);
+    rocal_test_output_open("output");
 #endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -1237,7 +1234,38 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         int image_name_length[input_batch_size];
         // Copy the output batch before reading metadata: rocalCopyToOutput blocks until the
         // processed batch is ready, whereas the metadata getters do not.
-        rocalCopyToOutput(handle, mat_input.data(), h * w * p);
+        RocalTensorList output_tensor_list = rocalGetOutputTensors(handle);
+        if (output_tensor_list == nullptr || output_tensor_list->size() == 0) {
+            std::cout << "Failed to get the output tensors" << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
+        auto output_tensor = output_tensor_list->at(0);
+        if (output_tensor->data_type() == RocalTensorOutputType::ROCAL_FP32) {
+            // rocalLog is the only augmentation reachable here that promotes its uint8 input to
+            // FP32, so the batch no longer fits the uint8 buffer. Scale the values to fill the
+            // 0-255 range of the PNG rather than casting them: log() of a uint8 input spans only
+            // 0 to log(255), which a plain cast would collapse into six distinct levels.
+            const size_t element_count = output_tensor->data_size() / sizeof(float);
+            if (element_count != static_cast<size_t>(h * w * p)) {
+                std::cout << "Unexpected FP32 output element count " << element_count
+                          << ", expected " << (h * w * p) << std::endl;
+                rocalRelease(handle);
+                return -1;
+            }
+            std::vector<float> fp32_output(element_count);
+            output_tensor->copy_data(fp32_output.data(), RocalOutputMemType::ROCAL_MEMCPY_HOST);
+            const float scale = 255.0f / std::log(255.0f);
+            for (size_t i = 0; i < element_count; i++) {
+                // log(0) is -inf, so clamp the non-finite values rather than let them saturate high
+                float value = std::isfinite(fp32_output[i]) ? fp32_output[i] * scale : 0.0f;
+                mat_input[i] = static_cast<unsigned char>(std::min(std::max(value, 0.0f), 255.0f));
+            }
+        } else if (rocalCopyToOutput(handle, mat_input.data(), h * w * p) != ROCAL_OK) {
+            std::cout << "rocalCopyToOutput failed: " << rocalGetErrorMessage(handle) << std::endl;
+            rocalRelease(handle);
+            return -1;
+        }
         auto get_image_name_buffer = [&]() {
             const auto img_size = rocalGetImageNameLen(handle, image_name_length);
             std::vector<char> img_name(img_size + 1, '\0');
@@ -1268,6 +1296,24 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                             {
                                 std::cout << idx_value << "\t";
                             }
+                        }
+                        // The one hot row has to name the same class as the integer label, otherwise
+                        // every target handed to a model belongs to a different class than its image.
+                        std::vector<int> hot_indices;
+                        for (int j = 0; j < num_of_classes; j++) {
+                            if (label_one_hot_encoded[(i * num_of_classes) + j] != 0)
+                                hot_indices.push_back(j);
+                        }
+                        if (hot_indices.size() != 1 || hot_indices[0] != label_id[i]) {
+                            std::cout << "\nOne hot encoding does not match label " << label_id[i] << ": ";
+                            if (hot_indices.empty())
+                                std::cout << "no column is set" << std::endl;
+                            else if (hot_indices.size() > 1)
+                                std::cout << hot_indices.size() << " columns are set" << std::endl;
+                            else
+                                std::cout << "column " << hot_indices[0] << " is set" << std::endl;
+                            rocalRelease(handle);
+                            return -1;
                         }
                     }
                     std::cout << "\n";
@@ -1458,10 +1504,6 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         }
 
 #if ENABLE_OPENCV
-        std::vector<int> compression_params;
-        compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-        compression_params.push_back(9);
-
         cv::Mat mat_in_view(h, w, cv_color_format, mat_input.data());
         mat_in_view.copyTo(mat_output(cv::Rect(col_counter * w, 0, w, h)));
         std::string out_filename = std::string(outName) + ".png";  // in case the user specifies non png filename
@@ -1470,20 +1512,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
         if (output_color_format == 0) {  // RGB24
             cv::cvtColor(mat_output, mat_color, CV_RGB2BGR);
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-                cv::imwrite(out_filename, mat_color, compression_params);
+            rocal_test_output_image(mat_output, mat_color, out_filename, "output", -1, 9);
         } else if (output_color_format == 1) {  // BGR24
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-                cv::imwrite(out_filename, mat_output, compression_params);
+            rocal_test_output_image(mat_output, mat_output, out_filename, "output", -1, 9);
         } else {
-            if (DISPLAY)
-                cv::imshow("output", mat_output);
-            else
-                cv::imwrite(out_filename, mat_output, compression_params);
+            rocal_test_output_image(mat_output, mat_output, out_filename, "output", -1, 9);
         }
         col_counter = (col_counter + 1) % number_of_cols;
 #endif

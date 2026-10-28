@@ -77,7 +77,6 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/test/cmake)
 
 # Find required packages
-find_package(OpenCV QUIET)
 find_package(AMDRPP QUIET)
 
 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rocal)
@@ -88,20 +87,8 @@ file(GLOB Source_Files ./*.cpp)
 add_executable(${PROJECT_NAME} ${Source_Files})
 
 # OpenCV configuration
-if(OpenCV_FOUND)
-    if(${OpenCV_VERSION_MAJOR} GREATER_EQUAL 4)
-        message("-- OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X Supported")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=1)
-        include_directories(${OpenCV_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-    else()
-        message("-- WARNING: OpenCV Found -- Version-${OpenCV_VERSION_MAJOR}.${OpenCV_VERSION_MINOR}.X is not supported. Building without display support")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
-    endif()
-else()
-    message("-- WARNING: OpenCV Not Found -- building without display support")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_OPENCV=0)
-endif()
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake ${ROCM_PATH}/share/rocal/test/cmake)
+find_package(OpenCVComponents MODULE QUIET)
 
 # Compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
