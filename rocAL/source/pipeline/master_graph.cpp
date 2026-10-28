@@ -2094,15 +2094,18 @@ std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const 
         for (auto &output : outputs)
             _tensor_map.insert(std::make_pair(output, node));
     } else {
+        // Validate the inputs before anything is created or linked, so that a rejected
+        // operator leaves the graph exactly as it was.
+        for (auto &input : inputs)
+            if (_tensor_map.find(input) == _tensor_map.end())
+                THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
+
         node = NodeFactory::instance().create_node(node_name, inputs, outputs);
         _nodes.push_back(node);
 
         _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
         for (auto &input : inputs) {
-            if (_tensor_map.find(input) == _tensor_map.end())
-                THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
-
             auto parent_node = _tensor_map.find(input)->second;
             parent_node->add_next(node);
             node->add_previous(parent_node);

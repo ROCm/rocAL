@@ -28,6 +28,9 @@ THE SOFTWARE.
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
 #if ENABLE_DLPACK
     #include <dlpack/dlpack.h>
 #endif
@@ -289,6 +292,50 @@ std::unordered_map<int, std::string> rocalToPybindOutputDtype = {
         return out;
     }
 #endif
+
+// The reason recorded for the context's last failure, empty if it has none.
+static std::string rocal_last_error(RocalContext context) {
+    if (context == nullptr)
+        return {};
+    const char *error = rocalGetErrorMessage(context);
+    return error == nullptr ? std::string() : std::string(error);
+}
+
+// Builds the message for an entry point that failed. An entry point that threw internally
+// recorded its reason through ROCAL_PRINT_EXCEPTION, but the argument checks in
+// ROCAL_INVALID_CONTEXT_ERR and ROCAL_INVALID_INPUT_ERR only log theirs. The context holds the
+// last reason until it is destroyed, so `last_error` - read just before the call - is what
+// tells the two apart: an unchanged message means this call recorded nothing and the one in
+// the context belongs to an earlier call, which it would be misleading to report here.
+static std::string rocal_failure_message(const char *op_name, RocalContext context, const std::string &last_error) {
+    std::string message = std::string("rocAL operator '") + op_name + "' failed: ";
+    if (context == nullptr)
+        return message + "invalid rocAL context";
+    std::string error = rocal_last_error(context);
+    if (error.empty() || error == last_error)
+        return message + "the operator rejected its arguments, see the rocAL error output above";
+    return message + error;
+}
+
+// Wraps an entry point that adds an operator to the graph so that a failure raises in Python at
+// the call that caused it. Without this the caller gets an ordinary tensor or None back and only
+// finds out at set_outputs() - or, when the result is never used as a pipeline output, not at
+// all, and goes on to run a graph the operator never joined. See ROCm/rocAL#537.
+template <typename R, typename... Args>
+static auto check_op(const char *op_name, R (*api_fn)(RocalContext, Args...)) {
+    static_assert(std::is_pointer_v<R>, "check_op() expects an entry point that returns a tensor");
+    return [op_name, api_fn](RocalContext context, Args... args) -> R {
+        std::string last_error = rocal_last_error(context);
+        R output = api_fn(context, std::forward<Args>(args)...);
+        if (output == nullptr)
+            throw std::runtime_error(rocal_failure_message(op_name, context, last_error));
+        return output;
+    };
+}
+
+// Binds a graph-building entry point under `name`, reporting its failures as Python exceptions.
+// Use this instead of module.def() for every reader, decoder and augmentation.
+#define ROCAL_DEF_OP(module, name, api_fn, ...) module.def(name, check_op(name, &api_fn), __VA_ARGS__)
 
 PYBIND11_MODULE(rocal_pybind, m) {
     m.doc() = "Python bindings for the C++ portions of ROCAL";
@@ -1104,240 +1151,252 @@ py::class_<rocalListOfTensorList>(m, "rocalListOfTensorList")
     });
     m.def("getOneHotEncodedLabels", &wrapper_one_hot_label_copy, py::return_value_policy::reference);
     // rocal_api_data_loaders.h
-    m.def("cocoImageDecoderSlice", &rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",
+    ROCAL_DEF_OP(m, "cocoImageDecoderSlice", rocalJpegCOCOFileSourcePartial, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
-    m.def("cocoImageDecoderSliceShard", &rocalJpegCOCOFileSourcePartialSingleShard, "Reads file from the source given and decodes it according to the policy",
+    ROCAL_DEF_OP(m, "cocoImageDecoderSliceShard", rocalJpegCOCOFileSourcePartialSingleShard, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
-    m.def("imageDecoder", &rocalJpegFileSource, "Reads file from the source given and decodes it according to the policy",
+    ROCAL_DEF_OP(m, "imageDecoder", rocalJpegFileSource, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
-    m.def("imageDecoderShard", &rocalJpegFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
+    ROCAL_DEF_OP(m, "imageDecoderShard", rocalJpegFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
-    m.def("cocoImageDecoder", &rocalJpegCOCOFileSource, "Reads file from the source given and decodes it according to the policy",
+    ROCAL_DEF_OP(m, "cocoImageDecoder", rocalJpegCOCOFileSource, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
-    m.def("cocoImageDecoderShard", &rocalJpegCOCOFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
+    ROCAL_DEF_OP(m, "cocoImageDecoderShard", rocalJpegCOCOFileSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
-    m.def("tfImageDecoder", &rocalJpegTFRecordSource, "Reads file from the source given and decodes it according to the policy only for TFRecords",
+    ROCAL_DEF_OP(m, "tfImageDecoder", rocalJpegTFRecordSource, "Reads file from the source given and decodes it according to the policy only for TFRecords",
           py::return_value_policy::reference);
 #ifdef ROCAL_LMDB
-    m.def("caffeImageDecoder", &rocalJpegCaffeLMDBRecordSource, "Reads file from the source given and decodes it according to the policy",
+    ROCAL_DEF_OP(m, "caffeImageDecoder", rocalJpegCaffeLMDBRecordSource, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
-    m.def("caffeImageDecoderShard", &rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
+    ROCAL_DEF_OP(m, "caffeImageDecoderShard", rocalJpegCaffeLMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
-    m.def("caffeImageDecoderPartialShard", &rocalJpegCaffeLMDBRecordSourcePartialSingleShard, "Reads file from the source given and partially decodes it according to the shard id and number of shards",
+    ROCAL_DEF_OP(m, "caffeImageDecoderPartialShard", rocalJpegCaffeLMDBRecordSourcePartialSingleShard, "Reads file from the source given and partially decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
-    m.def("caffe2ImageDecoder", &rocalJpegCaffe2LMDBRecordSource, "Reads file from the source given and decodes it according to the policy",
+    ROCAL_DEF_OP(m, "caffe2ImageDecoder", rocalJpegCaffe2LMDBRecordSource, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
-    m.def("caffe2ImageDecoderShard", &rocalJpegCaffe2LMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
+    ROCAL_DEF_OP(m, "caffe2ImageDecoderShard", rocalJpegCaffe2LMDBRecordSourceSingleShard, "Reads file from the source given and decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
-    m.def("caffe2ImageDecoderPartialShard", &rocalJpegCaffe2LMDBRecordSourcePartialSingleShard, "Reads file from the source given and partially decodes it according to the shard id and number of shards",
+    ROCAL_DEF_OP(m, "caffe2ImageDecoderPartialShard", rocalJpegCaffe2LMDBRecordSourcePartialSingleShard, "Reads file from the source given and partially decodes it according to the shard id and number of shards",
           py::return_value_policy::reference);
 #endif
-    m.def("fusedDecoderCrop", &rocalFusedJpegCrop, "Reads file from the source and decodes them partially to output random crops",
+    ROCAL_DEF_OP(m, "fusedDecoderCrop", rocalFusedJpegCrop, "Reads file from the source and decodes them partially to output random crops",
           py::return_value_policy::reference);
-    m.def("fusedDecoderCropShard", &rocalFusedJpegCropSingleShard, "Reads file from the source and decodes them partially to output random crops",
+    ROCAL_DEF_OP(m, "fusedDecoderCropShard", rocalFusedJpegCropSingleShard, "Reads file from the source and decodes them partially to output random crops",
           py::return_value_policy::reference);
-    m.def("tfImageDecoderRaw", &rocalRawTFRecordSource, "Reads file from the source given and decodes it according to the policy only for TFRecords",
+    ROCAL_DEF_OP(m, "tfImageDecoderRaw", rocalRawTFRecordSource, "Reads file from the source given and decodes it according to the policy only for TFRecords",
           py::return_value_policy::reference);
-    m.def("cifar10Decoder", &rocalRawCIFAR10Source, "Reads file from the source given and decodes it according to the policy",
+    ROCAL_DEF_OP(m, "cifar10Decoder", rocalRawCIFAR10Source, "Reads file from the source given and decodes it according to the policy",
           py::return_value_policy::reference);
-    m.def("videoDecoder", &rocalVideoFileSource, "Reads videos from the source given and decodes it according to the policy only for videos as inputs",
+    ROCAL_DEF_OP(m, "videoDecoder", rocalVideoFileSource, "Reads videos from the source given and decodes it according to the policy only for videos as inputs",
           py::return_value_policy::reference);
-    m.def("videoDecoderResize", &rocalVideoFileResize, "Reads videos from the source given and decodes it according to the policy only for videos as inputs. Resizes the decoded frames to the dest width and height.",
+    ROCAL_DEF_OP(m, "videoDecoderResize", rocalVideoFileResize, "Reads videos from the source given and decodes it according to the policy only for videos as inputs. Resizes the decoded frames to the dest width and height.",
           py::return_value_policy::reference);
-    m.def("sequenceReader", &rocalSequenceReader, "Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
+    ROCAL_DEF_OP(m, "sequenceReader", rocalSequenceReader, "Creates JPEG image reader and decoder. Reads [Frames] sequences from a directory representing a collection of streams.",
           py::return_value_policy::reference);
-    m.def("mxnetDecoder", &rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
+    ROCAL_DEF_OP(m, "mxnetDecoder", rocalMXNetRecordSourceSingleShard, "Reads file from the source given and decodes it according to the policy only for mxnet records",
           py::return_value_policy::reference);
-    m.def("externalFileSource", &rocalJpegExternalFileSource,
+    ROCAL_DEF_OP(m, "externalFileSource", rocalJpegExternalFileSource,
           py::return_value_policy::reference);
     m.def("externalSourceFeedInput", &wrapperRocalExternalSourceFeedInput,
           py::return_value_policy::reference);
-    m.def("webdatasetSourceSingleShard", &rocalWebDatasetSourceSingleShard, "Reads file from the source given and decodes it",
+    ROCAL_DEF_OP(m, "webdatasetSourceSingleShard", rocalWebDatasetSourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
-    m.def("audioDecoderSingleShard", &rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
+    ROCAL_DEF_OP(m, "audioDecoderSingleShard", rocalAudioFileSourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
-    m.def("cifar10Reader", &rocalRawCIFAR10SourceSingleShard, "Reads file from the source given and decodes it",
+    ROCAL_DEF_OP(m, "cifar10Reader", rocalRawCIFAR10SourceSingleShard, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
-    m.def("audioDecoder", &rocalAudioFileSource, "Reads file from the source given and decodes it",
+    ROCAL_DEF_OP(m, "audioDecoder", rocalAudioFileSource, "Reads file from the source given and decodes it",
             py::return_value_policy::reference);
-    m.def("numpyReader", &rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
+    ROCAL_DEF_OP(m, "numpyReader", rocalNumpyFileSourceSingleShard, "Reads data from numpy files according to the shard id and number of shards",
           py::return_value_policy::reference);
     m.def("rocalResetLoaders", &rocalResetLoaders);
     m.def("videoMetaDataReader", &rocalCreateVideoLabelReader, py::return_value_policy::reference);
     // rocal_api_augmentation.h
-    m.def("ssdRandomCrop", &rocalSSDRandomCrop,
+    ROCAL_DEF_OP(m, "ssdRandomCrop", rocalSSDRandomCrop,
           py::return_value_policy::reference);
-    m.def("resize", &rocalResize,
+    ROCAL_DEF_OP(m, "resize", rocalResize,
           py::return_value_policy::reference);
-    m.def("resizeMirrorNormalize", &rocalResizeMirrorNormalize,
+    ROCAL_DEF_OP(m, "resizeMirrorNormalize", rocalResizeMirrorNormalize,
           py::return_value_policy::reference);
-    m.def("resizeCropMirrorFixed", &rocalResizeCropMirrorFixed,
+    ROCAL_DEF_OP(m, "resizeCropMirrorFixed", rocalResizeCropMirrorFixed,
           py::return_value_policy::reference);
-    m.def("cropResize", &rocalCropResize,
+    ROCAL_DEF_OP(m, "cropResize", rocalCropResize,
           py::return_value_policy::reference);
-    m.def("roiResize", &rocalROIResize,
+    ROCAL_DEF_OP(m, "roiResize", rocalROIResize,
           py::return_value_policy::reference);
-    m.def("randomResizedCrop", &rocalRandomResizedCrop,
+    ROCAL_DEF_OP(m, "randomResizedCrop", rocalRandomResizedCrop,
           py::return_value_policy::reference);
-    m.def("copy", &rocalCopy,
+    ROCAL_DEF_OP(m, "copy", rocalCopy,
           py::return_value_policy::reference);
-    m.def("nop", &rocalNop,
+    ROCAL_DEF_OP(m, "nop", rocalNop,
           py::return_value_policy::reference);
-    m.def("colorTwist", &rocalColorTwist,
+    ROCAL_DEF_OP(m, "colorTwist", rocalColorTwist,
           py::return_value_policy::reference);
-    m.def("colorTwistFixed", &rocalColorTwistFixed,
+    ROCAL_DEF_OP(m, "colorTwistFixed", rocalColorTwistFixed,
           py::return_value_policy::reference);
-    m.def("cropMirrorNormalize", &rocalCropMirrorNormalize,
+    ROCAL_DEF_OP(m, "cropMirrorNormalize", rocalCropMirrorNormalize,
           py::return_value_policy::reference);
-    m.def("crop", &rocalCrop,
+    ROCAL_DEF_OP(m, "crop", rocalCrop,
           py::return_value_policy::reference);
-    m.def("cropFixed", &rocalCropFixed,
+    ROCAL_DEF_OP(m, "cropFixed", rocalCropFixed,
           py::return_value_policy::reference);
-    m.def("centerCropFixed", &rocalCropCenterFixed,
+    ROCAL_DEF_OP(m, "centerCropFixed", rocalCropCenterFixed,
           py::return_value_policy::reference);
-    m.def("brightness", &rocalBrightness,
+    ROCAL_DEF_OP(m, "brightness", rocalBrightness,
           py::return_value_policy::reference);
-    m.def("brightnessFixed", &rocalBrightnessFixed,
+    ROCAL_DEF_OP(m, "brightnessFixed", rocalBrightnessFixed,
           py::return_value_policy::reference);
-    m.def("gammaCorrection", &rocalGamma,
+    ROCAL_DEF_OP(m, "gammaCorrection", rocalGamma,
           py::return_value_policy::reference);
-    m.def("rain", &rocalRain,
+    ROCAL_DEF_OP(m, "rain", rocalRain,
           py::return_value_policy::reference);
-    m.def("snow", &rocalSnow,
+    ROCAL_DEF_OP(m, "snow", rocalSnow,
           py::return_value_policy::reference);
-    m.def("blur", &rocalBlur,
+    ROCAL_DEF_OP(m, "blur", rocalBlur,
           py::return_value_policy::reference);
-    m.def("contrast", &rocalContrast,
+    ROCAL_DEF_OP(m, "contrast", rocalContrast,
           py::return_value_policy::reference);
-    m.def("flip", &rocalFlip,
+    ROCAL_DEF_OP(m, "flip", rocalFlip,
           py::return_value_policy::reference);
-    m.def("jitter", &rocalJitter,
+    ROCAL_DEF_OP(m, "jitter", rocalJitter,
           py::return_value_policy::reference);
-    m.def("rotate", &rocalRotate,
+    ROCAL_DEF_OP(m, "rotate", rocalRotate,
           py::return_value_policy::reference);
-    m.def("hue", &rocalHue,
+    ROCAL_DEF_OP(m, "hue", rocalHue,
           py::return_value_policy::reference);
-    m.def("saturation", &rocalSaturation,
+    ROCAL_DEF_OP(m, "saturation", rocalSaturation,
           py::return_value_policy::reference);
-    m.def("warpAffineFixed", &rocalWarpAffineFixed,
+    ROCAL_DEF_OP(m, "warpAffineFixed", rocalWarpAffineFixed,
           py::return_value_policy::reference);
-    m.def("fog", &rocalFog,
+    ROCAL_DEF_OP(m, "fog", rocalFog,
           py::return_value_policy::reference);
-    m.def("fishEye", &rocalFishEye,
+    ROCAL_DEF_OP(m, "fishEye", rocalFishEye,
           py::return_value_policy::reference);
-    m.def("vignette", &rocalVignette,
+    ROCAL_DEF_OP(m, "vignette", rocalVignette,
           py::return_value_policy::reference);
-    m.def("snpNoise", &rocalSnPNoise,
+    ROCAL_DEF_OP(m, "snpNoise", rocalSnPNoise,
           py::return_value_policy::reference);
-    m.def("gaussianNoise", &rocalGaussianNoise,
+    ROCAL_DEF_OP(m, "gaussianNoise", rocalGaussianNoise,
           py::return_value_policy::reference);
-    m.def("shotNoise", &rocalShotNoise,
+    ROCAL_DEF_OP(m, "shotNoise", rocalShotNoise,
           py::return_value_policy::reference);
-    m.def("water", &rocalWater,
+    ROCAL_DEF_OP(m, "water", rocalWater,
           py::return_value_policy::reference);
-    m.def("lut", &rocalLUT,
+    ROCAL_DEF_OP(m, "lut", rocalLUT,
           py::return_value_policy::reference);
-    m.def("posterize", &rocalPosterize,
+    ROCAL_DEF_OP(m, "posterize", rocalPosterize,
           py::return_value_policy::reference);
-    m.def("solarize", &rocalSolarize,
+    ROCAL_DEF_OP(m, "solarize", rocalSolarize,
           py::return_value_policy::reference);
-    m.def("jpegCompressionDistortion", &rocalJpegCompressionDistortion,
+    ROCAL_DEF_OP(m, "jpegCompressionDistortion", rocalJpegCompressionDistortion,
           py::return_value_policy::reference);
-    m.def("exposure", &rocalExposure,
+    ROCAL_DEF_OP(m, "exposure", rocalExposure,
           py::return_value_policy::reference);
-    m.def("pixelate", &rocalPixelate,
+    ROCAL_DEF_OP(m, "pixelate", rocalPixelate,
           py::return_value_policy::reference);
-    m.def("blend", &rocalBlend,
+    ROCAL_DEF_OP(m, "blend", rocalBlend,
           py::return_value_policy::reference);
-    m.def("randomCrop", &rocalRandomCrop,
+    ROCAL_DEF_OP(m, "randomCrop", rocalRandomCrop,
           py::return_value_policy::reference);
-    m.def("colorTemp", &rocalColorTemp,
+    ROCAL_DEF_OP(m, "colorTemp", rocalColorTemp,
           py::return_value_policy::reference);
-    m.def("colorJitter", &rocalColorJitter,
+    ROCAL_DEF_OP(m, "colorJitter", rocalColorJitter,
           py::return_value_policy::reference);
-    m.def("spatter", &rocalSpatter,
+    ROCAL_DEF_OP(m, "spatter", rocalSpatter,
           py::return_value_policy::reference);
-    m.def("channelPermute", &rocalChannelPermute,
+    ROCAL_DEF_OP(m, "channelPermute", rocalChannelPermute,
           py::return_value_policy::reference);
-    m.def("colorToGreyscale", &rocalColorToGreyscale,
+    ROCAL_DEF_OP(m, "colorToGreyscale", rocalColorToGreyscale,
           py::return_value_policy::reference);
-    m.def("lensCorrection", &rocalLensCorrection,
+    ROCAL_DEF_OP(m, "lensCorrection", rocalLensCorrection,
           py::return_value_policy::reference);
-    m.def("preEmphasisFilter", &rocalPreEmphasisFilter, 
+    ROCAL_DEF_OP(m, "preEmphasisFilter", rocalPreEmphasisFilter, 
             py::return_value_policy::reference);
-    m.def("spectrogram", &rocalSpectrogram,
+    ROCAL_DEF_OP(m, "spectrogram", rocalSpectrogram,
           py::return_value_policy::reference);
-    m.def("toDecibels", &rocalToDecibels,
+    ROCAL_DEF_OP(m, "toDecibels", rocalToDecibels,
           py::return_value_policy::reference);
-    m.def("resample", &rocalResample,
+    ROCAL_DEF_OP(m, "resample", rocalResample,
           py::return_value_policy::reference);
-    m.def("normalDistribution", &rocalNormalDistribution,
+    ROCAL_DEF_OP(m, "normalDistribution", rocalNormalDistribution,
           py::return_value_policy::reference);
-    m.def("uniformDistribution", &rocalUniformDistribution,
+    ROCAL_DEF_OP(m, "uniformDistribution", rocalUniformDistribution,
           py::return_value_policy::reference);
-    m.def("tensorMulScalar", &rocalTensorMulScalar,
+    ROCAL_DEF_OP(m, "tensorMulScalar", rocalTensorMulScalar,
           py::return_value_policy::reference);
-    m.def("tensorAddTensor", &rocalTensorAddTensor,
+    ROCAL_DEF_OP(m, "tensorAddTensor", rocalTensorAddTensor,
           py::return_value_policy::reference);
-    m.def("tensorSum", &rocalTensorSum,
+    ROCAL_DEF_OP(m, "tensorSum", rocalTensorSum,
           py::return_value_policy::reference);
-    m.def("tensorMin", &rocalTensorMin,
+    ROCAL_DEF_OP(m, "tensorMin", rocalTensorMin,
           py::return_value_policy::reference);
-    m.def("tensorMax", &rocalTensorMax,
+    ROCAL_DEF_OP(m, "tensorMax", rocalTensorMax,
           py::return_value_policy::reference);
-    m.def("tensorMean", &rocalTensorMean,
+    ROCAL_DEF_OP(m, "tensorMean", rocalTensorMean,
           py::return_value_policy::reference);
-    m.def("tensorStdDev", &rocalTensorStdDev,
+    ROCAL_DEF_OP(m, "tensorStdDev", rocalTensorStdDev,
           py::return_value_policy::reference);
-    m.def("nonSilentRegionDetection", &rocalNonSilentRegionDetection,
+    // The only graph-building entry point that does not return a tensor, so it gets its own
+    // check rather than ROCAL_DEF_OP: on failure both tensors of the pair come back null.
+    m.def(
+        "nonSilentRegionDetection",
+        [](RocalContext context, RocalTensor input, bool is_output, float cutoff_db,
+           float reference_power, int reset_interval, int window_length) {
+            std::string last_error = rocal_last_error(context);
+            RocalNSROutput output = rocalNonSilentRegionDetection(context, input, is_output, cutoff_db,
+                                                                 reference_power, reset_interval, window_length);
+            if (output.anchor == nullptr || output.shape == nullptr)
+                throw std::runtime_error(rocal_failure_message("nonSilentRegionDetection", context, last_error));
+            return output;
+        },
+        py::return_value_policy::reference);
+    ROCAL_DEF_OP(m, "slice", rocalSlice,
           py::return_value_policy::reference);
-    m.def("slice", &rocalSlice,
+    ROCAL_DEF_OP(m, "sliceFixed", rocalSliceFixed,
           py::return_value_policy::reference);
-    m.def("sliceFixed", &rocalSliceFixed,
+    ROCAL_DEF_OP(m, "normalize", rocalNormalize,
           py::return_value_policy::reference);
-    m.def("normalize", &rocalNormalize,
+    ROCAL_DEF_OP(m, "melFilterBank", rocalMelFilterBank,
           py::return_value_policy::reference);
-    m.def("melFilterBank", &rocalMelFilterBank,
+    ROCAL_DEF_OP(m, "transpose", rocalTranspose,
           py::return_value_policy::reference);
-    m.def("transpose", &rocalTranspose,
+    ROCAL_DEF_OP(m, "log1p", rocalLog1p,
           py::return_value_policy::reference);
-    m.def("log1p", &rocalLog1p,
+    ROCAL_DEF_OP(m, "pythonFunction", rocalPythonFunction,
           py::return_value_policy::reference);
-    m.def("pythonFunction", &rocalPythonFunction,
+    ROCAL_DEF_OP(m, "colorCast", rocalColorCast,
           py::return_value_policy::reference);
-    m.def("colorCast", &rocalColorCast,
+    ROCAL_DEF_OP(m, "gridMask", rocalGridMask,
           py::return_value_policy::reference);
-    m.def("gridMask", &rocalGridMask,
+    ROCAL_DEF_OP(m, "gaussianFilter", rocalGaussianFilter,
           py::return_value_policy::reference);
-    m.def("gaussianFilter", &rocalGaussianFilter,
+    ROCAL_DEF_OP(m, "medianFilter", rocalMedianFilter,
           py::return_value_policy::reference);
-    m.def("medianFilter", &rocalMedianFilter,
+    ROCAL_DEF_OP(m, "nonLinearBlend", rocalNonLinearBlend,
           py::return_value_policy::reference);
-    m.def("nonLinearBlend", &rocalNonLinearBlend,
+    ROCAL_DEF_OP(m, "dilate", rocalDilate,
           py::return_value_policy::reference);
-    m.def("dilate", &rocalDilate,
+    ROCAL_DEF_OP(m, "erode", rocalErode,
           py::return_value_policy::reference);
-    m.def("erode", &rocalErode,
+    ROCAL_DEF_OP(m, "magnitude", rocalMagnitude,
           py::return_value_policy::reference);
-    m.def("magnitude", &rocalMagnitude,
+    ROCAL_DEF_OP(m, "phase", rocalPhase,
           py::return_value_policy::reference);
-    m.def("phase", &rocalPhase,
+    ROCAL_DEF_OP(m, "threshold", rocalThreshold,
           py::return_value_policy::reference);
-    m.def("threshold", &rocalThreshold,
+    ROCAL_DEF_OP(m, "warpPerspective", rocalWarpPerspective,
           py::return_value_policy::reference);
-    m.def("warpPerspective", &rocalWarpPerspective,
+    ROCAL_DEF_OP(m, "remap", rocalRemap,
           py::return_value_policy::reference);
-    m.def("remap", &rocalRemap,
+    ROCAL_DEF_OP(m, "cropAndPatch", rocalCropAndPatch,
           py::return_value_policy::reference);
-    m.def("cropAndPatch", &rocalCropAndPatch,
+    ROCAL_DEF_OP(m, "bitwiseOps", rocalBitwiseOps,
           py::return_value_policy::reference);
-    m.def("bitwiseOps", &rocalBitwiseOps,
+    ROCAL_DEF_OP(m, "erase", rocalErase,
           py::return_value_policy::reference);
-    m.def("erase", &rocalErase,
+    ROCAL_DEF_OP(m, "ricap", rocalRicap,
           py::return_value_policy::reference);
-    m.def("ricap", &rocalRicap,
-          py::return_value_policy::reference);
-    m.def("log", &rocalLog,
+    ROCAL_DEF_OP(m, "log", rocalLog,
           py::return_value_policy::reference);
 }
 }  // namespace rocal

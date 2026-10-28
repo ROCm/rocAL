@@ -77,7 +77,7 @@ rocalSequenceRearrange(RocalContext p_context,
         std::shared_ptr<SequenceRearrangeNode> sequence_rearrange_node = context->master_graph->add_node<SequenceRearrangeNode>({input}, {output});
         sequence_rearrange_node->init(new_order);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -117,7 +117,7 @@ rocalRotate(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<RotateMetaNode, RotateNode>(rotate_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -157,7 +157,7 @@ rocalRotateFixed(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<RotateMetaNode, RotateNode>(rotate_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -185,7 +185,7 @@ rocalGamma(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<GammaNode>({input}, {output})->init(gamma);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -212,7 +212,7 @@ rocalGammaFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<GammaNode>({input}, {output})->init(gamma);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -240,7 +240,7 @@ rocalHue(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<HueNode>({input}, {output})->init(hue);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -267,7 +267,7 @@ rocalHueFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<HueNode>({input}, {output})->init(hue);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -295,7 +295,7 @@ rocalSaturation(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SaturationNode>({input}, {output})->init(saturation);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -322,7 +322,7 @@ rocalSaturationFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SaturationNode>({input}, {output})->init(saturation);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -367,7 +367,7 @@ rocalCropResize(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(crop_resize_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -407,7 +407,7 @@ rocalRandomResizedCrop(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(random_resize_crop_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -447,7 +447,7 @@ rocalCropResizeFixed(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(crop_resize_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -489,7 +489,7 @@ rocalROIResize(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropResizeMetaNode, CropResizeNode>(roi_resize_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -585,7 +585,7 @@ rocalResize(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMetaNode, ResizeNode>(resize_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -697,7 +697,7 @@ RocalTensor ROCAL_API_CALL
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeMirrorNormalizeMetaNode, ResizeMirrorNormalizeNode>(rmn_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -729,7 +729,7 @@ rocalBrightness(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta, conditional_execution_value);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -758,7 +758,7 @@ rocalBrightnessFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<BrightnessNode>({input}, {output})->init(alpha, beta, conditional_execution);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -784,7 +784,7 @@ rocalBlur(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<BlurNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -816,7 +816,7 @@ rocalBlend(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<BlendNode>({input1, input2}, {output})->init(ratio);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -847,7 +847,7 @@ rocalBlendFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<BlendNode>({input1, input2}, {output})->init(ratio);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -891,7 +891,7 @@ rocalWarpAffine(
 
         context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, static_cast<ResizeInterpolationType>(interpolation_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -930,7 +930,7 @@ rocalWarpAffineFixed(
 
         context->master_graph->add_node<WarpAffineNode>({input}, {output})->init(x0, x1, y0, y1, o0, o1, static_cast<ResizeInterpolationType>(interpolation_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -956,7 +956,7 @@ rocalFishEye(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<FisheyeNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -984,7 +984,7 @@ rocalVignette(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<VignetteNode>({input}, {output})->init(sdev);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1011,7 +1011,7 @@ rocalVignetteFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<VignetteNode>({input}, {output})->init(sdev);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1040,7 +1040,7 @@ rocalJitter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<JitterNode>({input}, {output})->init(kernel_size, seed);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1068,7 +1068,7 @@ rocalJitterFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<JitterNode>({input}, {output})->init(kernel_size, seed);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1103,7 +1103,7 @@ rocalSnPNoise(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SnPNoiseNode>({input}, {output})->init(noise_probability, salt_probability, salt_value, pepper_value, seed);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1134,7 +1134,7 @@ rocalSnPNoiseFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SnPNoiseNode>({input}, {output})->init(noise_prob, salt_prob, salt_val, pepper_val, seed);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1169,7 +1169,7 @@ rocalGaussianNoise(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, stddev, seed, conditional_execution_value);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1201,7 +1201,7 @@ rocalGaussianNoiseFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<GaussianNoiseNode>({input}, {output})->init(mean, stddev, seed, conditional_execution);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1236,7 +1236,7 @@ rocalShotNoise(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ShotNoiseNode>({input}, {output})->init(noise_factor, seed);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1270,7 +1270,7 @@ rocalShotNoiseFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ShotNoiseNode>({input}, {output})->init(noise_factor, seed);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1302,7 +1302,7 @@ rocalLUT(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<LutNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1336,7 +1336,7 @@ rocalPosterize(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PosterizeNode>({input}, {output})->init(num_bits);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1369,7 +1369,7 @@ rocalPosterizeFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PosterizeNode>({input}, {output})->init(num_bits);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1403,7 +1403,7 @@ rocalSolarize(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SolarizeNode>({input}, {output})->init(threshold);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1436,7 +1436,7 @@ rocalSolarizeFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SolarizeNode>({input}, {output})->init(threshold);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1470,7 +1470,7 @@ rocalJpegCompressionDistortion(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<JpegCompressionDistortionNode>({input}, {output})->init(quality);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1503,7 +1503,7 @@ rocalJpegCompressionDistortionFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<JpegCompressionDistortionNode>({input}, {output})->init(quality);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1538,7 +1538,7 @@ rocalFlip(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<FlipMetaNode, FlipNode>(flip_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1570,7 +1570,7 @@ rocalFlipFixed(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<FlipMetaNode, FlipNode>(flip_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1600,7 +1600,7 @@ rocalContrast(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ContrastNode>({input}, {output})->init(contrast_factor, contrast_center);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1628,7 +1628,7 @@ rocalContrastFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ContrastNode>({input}, {output})->init(contrast_factor, contrast_center);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1660,7 +1660,7 @@ rocalSnow(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SnowNode>({input}, {output})->init(snow_value, brightness_coefficient, dark_mode);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1689,7 +1689,7 @@ rocalSnowFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SnowNode>({input}, {output})->init(snow_value, brightness_coefficient, dark_mode);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1721,7 +1721,7 @@ rocalRain(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<RainNode>({input}, {output})->init(rain_percentage, rain_width, rain_height, rain_slant_angle, rain_transparency);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1752,7 +1752,7 @@ rocalRainFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<RainNode>({input}, {output})->init(rain_percentage, rain_width, rain_height, rain_slant_angle, rain_transparency);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1790,7 +1790,7 @@ rocalSpatter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SpatterNode>({input}, {output})->init(red, green, blue);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1825,7 +1825,7 @@ rocalSpatterFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SpatterNode>({input}, {output})->init(red, green, blue);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1853,7 +1853,7 @@ rocalColorTemp(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorTemperatureNode>({input}, {output})->init(adj_value_param);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1880,7 +1880,7 @@ rocalColorTempFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorTemperatureNode>({input}, {output})->init(adj_value_param);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1920,7 +1920,7 @@ rocalColorJitter(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorJitterNode>({input}, {output})->init(brightness, contrast, hue, saturation);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1956,7 +1956,7 @@ rocalColorJitterFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorJitterNode>({input}, {output})->init(brightness, contrast, hue, saturation);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1989,7 +1989,7 @@ rocalChannelPermute(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ChannelPermuteNode>({input}, {output})->init(permutation);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2019,7 +2019,7 @@ rocalFog(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<FogNode>({input}, {output})->init(intensity_param, gray_param);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2047,7 +2047,7 @@ rocalFogFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<FogNode>({input}, {output})->init(intensity_param, gray_param);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2074,7 +2074,7 @@ rocalPixelate(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PixelateNode>({input}, {output})->init(pixelate_percent);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2108,7 +2108,7 @@ rocalLensCorrection(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<LensCorrectionNode>({input}, {output})->init(camera_matrix, distortion_coeffs);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2136,7 +2136,7 @@ rocalExposure(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ExposureNode>({input}, {output})->init(exposure_factor);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2163,7 +2163,7 @@ rocalExposureFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ExposureNode>({input}, {output})->init(exposure_factor);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2197,7 +2197,7 @@ rocalColorTwist(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorTwistNode>({input}, {output})->init(alpha, beta, hue, sat);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2227,7 +2227,7 @@ rocalColorTwistFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorTwistNode>({input}, {output})->init(alpha, beta, hue, sat);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2260,7 +2260,7 @@ rocalCropMirrorNormalize(RocalContext p_context, RocalTensor p_input, unsigned c
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropMirrorNormalizeMetaNode, CropMirrorNormalizeNode>(cmn_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2301,7 +2301,7 @@ rocalCrop(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropMetaNode, CropNode>(crop_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2341,7 +2341,7 @@ rocalCropFixed(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropMetaNode, CropNode>(crop_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2379,7 +2379,7 @@ rocalCropCenterFixed(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<CropMetaNode, CropNode>(crop_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2420,7 +2420,7 @@ rocalResizeCropMirrorFixed(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeCropMirrorMetaNode, ResizeCropMirrorNode>(rcm_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2457,7 +2457,7 @@ RocalTensor ROCAL_API_CALL rocalResizeCropMirror(
         if (context->master_graph->meta_data_graph())
             context->master_graph->meta_add_node<ResizeCropMirrorMetaNode, ResizeCropMirrorNode>(rcm_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2497,7 +2497,7 @@ rocalRandomCrop(
         // if (context->master_graph->meta_data_graph())
         //     context->master_graph->meta_add_node<SSDRandomCropMetaNode,RandomCropNode>(crop_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2538,7 +2538,7 @@ rocalSSDRandomCrop(
         // if (context->master_graph->meta_data_graph())
         //     context->master_graph->meta_add_node<SSDRandomCropMetaNode,SSDRandomCropNode>(crop_node);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2557,7 +2557,7 @@ rocalCopy(
         output = context->master_graph->create_tensor(input->info(), is_output);
         context->master_graph->add_node<CopyNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2576,7 +2576,7 @@ rocalNop(
         output = context->master_graph->create_tensor(input->info(), is_output);
         context->master_graph->add_node<NopNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2604,7 +2604,7 @@ rocalPreEmphasisFilter(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PreemphasisFilterNode>({input}, {output})->init(preemph_coeff, static_cast<AudioBorderType>(preemph_border_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2664,7 +2664,7 @@ rocalSpectrogram(
                                                                                   power, nfft, window_length,
                                                                                   window_step, window_fn);
     } catch(const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2695,7 +2695,7 @@ rocalToDecibels(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ToDecibelsNode>({input}, {output})->init(cutoff_db, multiplier, reference_magnitude);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2736,7 +2736,7 @@ rocalResample(RocalContext p_context,
         resampled_output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ResampleNode>({input}, {resampled_output})->init(output_resample_rate, quality);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, resampled_output);
     }
     return resampled_output;
 }
@@ -2761,7 +2761,7 @@ RocalTensor rocalTensorMulScalar(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMulScalarNode>({input}, {output})->init(scalar);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2788,7 +2788,7 @@ RocalTensor rocalTensorAddTensor(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorAddTensorNode>({input1, input2}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2815,7 +2815,7 @@ RocalTensor ROCAL_API_CALL rocalTensorSum(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorSumNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2842,7 +2842,7 @@ RocalTensor ROCAL_API_CALL rocalTensorMin(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMinNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2869,7 +2869,7 @@ RocalTensor ROCAL_API_CALL rocalTensorMax(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMaxNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2896,7 +2896,7 @@ RocalTensor ROCAL_API_CALL rocalTensorMean(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorMeanNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2926,7 +2926,7 @@ RocalTensor ROCAL_API_CALL rocalTensorStdDev(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<TensorStdDevNode>({input, mean_tensor}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2949,7 +2949,7 @@ RocalTensor rocalUniformDistribution(RocalContext p_context,
         output = context->master_graph->create_internal_tensor(info);
         context->master_graph->add_node<UniformDistributionNode>({input}, {output})->init(range);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2973,7 +2973,7 @@ RocalTensor rocalNormalDistribution(RocalContext p_context,
         output = context->master_graph->create_internal_tensor(info);
         context->master_graph->add_node<NormalDistributionNode>({input}, {output})->init(mean, stddev);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2989,7 +2989,11 @@ rocalNonSilentRegionDetection(
     int window_length) {
     Tensor* anchor_output = nullptr;
     Tensor* shape_output = nullptr;
-    RocalNSROutput output;
+    // Value-initialized so that output.anchor and output.shape are null: this operator signals
+    // failure through those two tensors the way every other one signals it through the single
+    // tensor it returns, and the early returns below would otherwise hand back indeterminate
+    // pointers.
+    RocalNSROutput output = {};
     ROCAL_INVALID_CONTEXT_ERR(p_context, output);
     ROCAL_INVALID_INPUT_ERR(p_input, output);
     auto context = static_cast<Context*>(p_context);
@@ -3011,7 +3015,7 @@ rocalNonSilentRegionDetection(
         output.anchor = anchor_output;
         output.shape = shape_output;
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
 
     return output;
@@ -3044,7 +3048,7 @@ rocalSlice(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, shape, fill_values, static_cast<OutOfBoundsPolicy>(policy));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3090,7 +3094,7 @@ rocalSliceFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<SliceNode>({input}, {output})->init(anchor, std::move(shape), fill_values, static_cast<OutOfBoundsPolicy>(policy));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3113,7 +3117,7 @@ rocalNormalize(RocalContext p_context, RocalTensor p_input, std::vector<unsigned
         std::shared_ptr<NormalizeNode> normalize_node = context->master_graph->add_node<NormalizeNode>({input}, {output});
         normalize_node->init(axes, mean, std_dev, scale, shift);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3151,7 +3155,7 @@ rocalMelFilterBank(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<MelFilterBankNode>({input}, {output})->init(freq_high, freq_low, static_cast<MelScaleFormula>(mel_formula), nfilter, normalize, sample_rate);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3183,7 +3187,7 @@ rocalTranspose(
         std::shared_ptr<TransposeNode> transpose_node = context->master_graph->add_node<TransposeNode>({input}, {output});
         transpose_node->init(perm);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3207,7 +3211,7 @@ RocalTensor rocalLog1p(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<Log1pNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3250,7 +3254,7 @@ rocalPythonFunction(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<PythonFunctionNode>({input}, {output})->init(function_id);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 #else
@@ -3260,7 +3264,7 @@ rocalPythonFunction(
     try {
         THROW("PythonFunction operator is disabled in this build of rocAL. Rebuild with -DROCAL_PYTHON_FUNCTION=ON to enable it (see https://github.com/ROCm/rocAL/issues/522)")
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 #endif
@@ -3290,7 +3294,7 @@ rocalColorCast(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorCastNode>({input}, {output})->init(alpha, rgb);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3318,7 +3322,7 @@ rocalColorCastFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ColorCastNode>({input}, {output})->init(alpha, rgb);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3348,7 +3352,7 @@ rocalMedianFilter(
             ->add_node<MedianFilterNode>({input}, {output})
             ->init(kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3380,7 +3384,7 @@ rocalGaussianFilter(
             ->add_node<GaussianFilterNode>({input}, {output})
             ->init(stddev, kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3411,7 +3415,7 @@ rocalGaussianFilterFixed(
             ->add_node<GaussianFilterNode>({input}, {output})
             ->init(stddev, kernel_size, static_cast<ImageBorderType>(border_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3442,7 +3446,7 @@ rocalGridMask(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<GridMaskNode>({input}, {output})->init(tile_width, grid_ratio, grid_angle, translate_x, translate_y);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3474,7 +3478,7 @@ rocalNonLinearBlend(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<NonLinearBlendNode>({input1, input2}, {output})->init(stddev);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3505,7 +3509,7 @@ rocalNonLinearBlendFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<NonLinearBlendNode>({input1, input2}, {output})->init(stddev);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3531,7 +3535,7 @@ rocalDilate(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<DilateNode>({input}, {output})->init(kernel_size);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3557,7 +3561,7 @@ rocalErode(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ErodeNode>({input}, {output})->init(kernel_size);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3586,7 +3590,7 @@ rocalMagnitude(RocalContext p_context,
         context->master_graph
             ->add_node<MagnitudeNode>({input1, input2}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3615,7 +3619,7 @@ rocalPhase(RocalContext p_context,
         context->master_graph
             ->add_node<PhaseNode>({input1, input2}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3643,7 +3647,7 @@ rocalThreshold(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<ThresholdNode>({input}, {output})->init(min, max);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3682,7 +3686,7 @@ rocalWarpPerspective(
             ->add_node<WarpPerspectiveNode>({input}, {output})
             ->init(perspective, static_cast<ResizeInterpolationType>(interpolation_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3715,7 +3719,7 @@ rocalErase(
         auto erase_node = context->master_graph->add_node<EraseNode>({input}, {output});
         erase_node->init(anchor, shape, num_boxes, fill_value);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3750,7 +3754,7 @@ rocalRemap(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<RemapNode>({input}, {output})->init(row_remap, col_remap, static_cast<ResizeInterpolationType>(interpolation_type));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3781,7 +3785,7 @@ rocalCropAndPatch(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<CropAndPatchNode>({input1, input2}, {output})->init(crop_roi_vec, patch_roi_vec);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3811,7 +3815,7 @@ rocalRicap(RocalContext p_context,
         auto ricap_node = context->master_graph->add_node<RicapNode>({input}, {output});
         ricap_node->init(permutation, crop_rois);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3841,7 +3845,7 @@ rocalBitwiseOps(RocalContext p_context,
         auto node = context->master_graph->add_node<BitwiseOpsNode>({input1, input2}, {output});
         node->init(static_cast<BitwiseOp>(op));
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3876,7 +3880,7 @@ RocalTensor rocalLog(RocalContext p_context,
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<LogNode>({input}, {output});
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3920,7 +3924,7 @@ rocalWater(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<WaterNode>({input}, {output})->init(amplitude_x, amplitude_y, frequency_x, frequency_y, phase_x, phase_y);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -3958,7 +3962,7 @@ rocalWaterFixed(
         output = context->master_graph->create_tensor(output_info, is_output);
         context->master_graph->add_node<WaterNode>({input}, {output})->init(amplitude_x, amplitude_y, frequency_x, frequency_y, phase_x, phase_y);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -4004,7 +4008,7 @@ rocalColorToGreyscale(
         ColorToGreyscaleNode::SubpixelLayout layout = static_cast<ColorToGreyscaleNode::SubpixelLayout>(subpixel_layout);
         context->master_graph->add_node<ColorToGreyscaleNode>({input}, {output})->init(layout);
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }

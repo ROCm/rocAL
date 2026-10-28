@@ -61,6 +61,18 @@ THE SOFTWARE.
         std::cerr << e.what() << '\n';    \
     } while (0)
 
+/*! An entry point that fails must also discard the output tensor it had already created:
+ *  these are extern "C" and cannot let the exception escape, so callers - the Python bindings
+ *  among them - read a null return as "this call failed" and take the reason from
+ *  rocalGetErrorMessage(). Returning the tensor of an operator that never joined the graph
+ *  builds a pipeline that runs but produces nothing. Value-initializing rather than assigning
+ *  nullptr lets this cover rocalNonSilentRegionDetection, whose output is a pair of tensors. */
+#define ROCAL_HANDLE_EXCEPTION(context, e, output) \
+    do {                                           \
+        ROCAL_PRINT_EXCEPTION(context, e);         \
+        output = {};                               \
+    } while (0)
+
 /*!
  * \file
  * \brief The AMD rocAL Library.

@@ -246,7 +246,7 @@ rocalJpegFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -307,7 +307,7 @@ rocalJpegFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -373,7 +373,7 @@ rocalSequenceReader(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -440,7 +440,7 @@ rocalSequenceReaderSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -502,7 +502,7 @@ rocalJpegCaffe2LMDBRecordSource(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -568,7 +568,7 @@ rocalJpegCaffe2LMDBRecordSourceSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -632,7 +632,7 @@ rocalJpegCaffeLMDBRecordSource(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -698,7 +698,7 @@ rocalJpegCaffeLMDBRecordSourceSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -768,7 +768,7 @@ rocalJpegCaffeLMDBRecordSourcePartialSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -837,7 +837,7 @@ rocalJpegCaffe2LMDBRecordSourcePartialSingleShard(
 #endif
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -898,7 +898,7 @@ rocalMXNetRecordSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -961,7 +961,7 @@ rocalMXNetRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1023,7 +1023,7 @@ rocalJpegCOCOFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1086,7 +1086,7 @@ rocalJpegCOCOFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1146,7 +1146,7 @@ rocalFusedJpegCrop(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1210,7 +1210,7 @@ rocalJpegCOCOFileSourcePartial(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1277,7 +1277,7 @@ rocalJpegCOCOFileSourcePartialSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1344,7 +1344,7 @@ rocalJpegTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1415,7 +1415,7 @@ rocalJpegTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1470,7 +1470,7 @@ rocalRawTFRecordSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1529,7 +1529,7 @@ rocalRawTFRecordSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1593,7 +1593,7 @@ rocalFusedJpegCropSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1651,7 +1651,7 @@ rocalVideoFileSource(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1693,7 +1693,7 @@ rocalNumpyFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1742,7 +1742,7 @@ rocalNumpyFileSourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1807,7 +1807,7 @@ rocalVideoFileSourceSingleShard(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -1951,7 +1951,7 @@ rocalVideoFileResize(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, resize_output);
     }
     return resize_output;
 }
@@ -2100,7 +2100,7 @@ rocalVideoFileResizeSingleShard(
         THROW("Video decoder is not enabled since ffmpeg is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, resize_output);
     }
     return resize_output;
 }
@@ -2145,7 +2145,7 @@ rocalRawCIFAR10Source(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2196,7 +2196,7 @@ rocalRawCIFAR10SourceSingleShard(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2252,7 +2252,7 @@ rocalJpegExternalFileSource(
         }
 
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2321,7 +2321,7 @@ rocalAudioFileSourceSingleShard(
         THROW("Audio decoder is not enabled since sndfile is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2387,7 +2387,7 @@ rocalAudioFileSource(
         THROW("Audio decoder is not enabled since sndfile is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }
@@ -2451,7 +2451,7 @@ rocalWebDatasetSourceSingleShard(
         THROW("Webdataset reader is not enabled since libtar is not present")
 #endif
     } catch (const std::exception& e) {
-        ROCAL_PRINT_EXCEPTION(context, e);
+        ROCAL_HANDLE_EXCEPTION(context, e, output);
     }
     return output;
 }

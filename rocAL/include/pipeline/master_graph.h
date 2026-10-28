@@ -307,6 +307,14 @@ private:
 
 template <typename T>
 std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
+    // Validate the inputs before anything is created or linked, so that a rejected operator
+    // leaves the graph exactly as it was. Checking while linking used to leave the new node in
+    // _nodes and _pipeline_operators with no parent, and the parents it had already reached
+    // pointing back at it.
+    for (auto &input : inputs)
+        if (_tensor_map.find(input) == _tensor_map.end())
+            THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
+
     auto node = std::make_shared<T>(inputs, outputs);
     _nodes.push_back(node);
 
@@ -314,9 +322,6 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, co
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
     for (auto &input : inputs) {
-        if (_tensor_map.find(input) == _tensor_map.end())
-            THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
-
         auto parent_node = _tensor_map.find(input)->second;
         parent_node->add_next(node);
         node->add_previous(parent_node);
