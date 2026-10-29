@@ -1,0 +1,121 @@
+{
+  "_comment": [
+    "Expected test inventories and known-failing sets for the rocal-validate skill.",
+    "Everything here is a GATE, not documentation. If a number drifts, the skill fails",
+    "and names what moved. Update deliberately, in a reviewed commit, never to make a",
+    "red run go green."
+  ],
+
+  "ctest": {
+    "_comment": [
+      "tests/cpp_api/CMakeLists.txt registers tests conditionally. A missing dependency",
+      "SHRINKS the run instead of failing it, so '100% passed' on a short list is the",
+      "trap this gate exists to catch. Tiers mirror the if() blocks in that file."
+    ],
+    "tiers": {
+      "always": [
+        "basic_test_cpu",
+        "basic_test_cpu_partial_scale",
+        "checkpoint_restore",
+        "checkpoint_save",
+        "dataloader_multithread_cpu",
+        "performance_tests_cpu",
+        "performance_tests_with_depth_cpu",
+        "serialization_test_cpu",
+        "unit_tests_cpu",
+        "unit_tests_one_hot"
+      ],
+      "hip": [
+        "basic_test_gpu",
+        "basic_test_gray",
+        "basic_test_rgb",
+        "dataloader_multithread_gpu",
+        "performance_tests_gpu",
+        "performance_tests_with_depth_gpu",
+        "serialization_test_gpu",
+        "unit_tests_gpu",
+        "unit_tests_gray",
+        "video_tests_ffmpeg"
+      ],
+      "rocdecode": [
+        "video_tests_rocdecode"
+      ],
+      "rocjpeg": [
+        "basic_test_rocjpeg_gray",
+        "basic_test_rocjpeg_rgb"
+      ]
+    },
+    "totals": {
+      "cpu_only": 10,
+      "hip": 20,
+      "hip_rocdecode_rocjpeg": 23
+    },
+    "disabled_in_cmake": {
+      "dataloader": "tests/cpp_api/CMakeLists.txt add_test commented out - non-functional with database",
+      "dataloader_tf": "tests/cpp_api/CMakeLists.txt add_test commented out - non-functional with tf dataset"
+    }
+  },
+
+  "pybind": {
+    "_comment": [
+      "tests/pybind is NOT in the top-level build; configure it as its own project.",
+      "Its CMakeLists gates every add_test on EXISTS ${ROCM_PATH}/lib/amd/rocal, so when",
+      "pybind is not installed ctest prints 'No tests were found!!!' and EXITS 0.",
+      "(Verified: a project with no tests gives `ctest; echo $?` -> 0.) An exit-code-only",
+      "check passes a run that tested nothing. Treat zero discovered tests as a HARD FAIL."
+    ],
+    "expected": [
+      "rocal_pybind_test_decoders",
+      "rocal_pybind_test_functions",
+      "rocal_pybind_test_pipelines",
+      "rocal_pybind_test_randoms",
+      "rocal_pybind_test_readers",
+      "rocal_pybind_test_types"
+    ],
+    "coverage_caveat": "These are import/smoke tests. 6/6 green means the module loads, not that it computes correctly."
+  },
+
+  "python_api": {
+    "_comment": [
+      "tests/python_api sets no exit code anywhere, so the gate is parsed from the",
+      "image_comparison.py summary. Case names are normalised by stripping the trailing",
+      "'.png' and the '_host'/'_hip' backend suffix, because image_comparison.py reports",
+      "'Failing cases:' as golden filenames like 'Hue_rgb_host.png'.",
+      "",
+      "MEASURED 2026-10-28 on a HIP machine and reproduced independently by the user.",
+      "These failures are KNOWN, NOT root-caused, and NOT accepted. The report repeats",
+      "that caveat every run so they do not quietly become permanent."
+    ],
+    "measured_on": "2026-10-28",
+    "host": {
+      "total": 139,
+      "passed": 120,
+      "failed": 19,
+      "failing": [
+        "BitwiseAnd_gray", "BitwiseAnd_rgb",
+        "BitwiseOr_gray", "BitwiseOr_rgb",
+        "BitwiseXor_gray", "BitwiseXor_rgb",
+        "Blur_gray", "Blur_rgb",
+        "FishEye_gray", "FishEye_rgb",
+        "GaussianFilter_gray", "GaussianFilter_rgb",
+        "Hue_rgb",
+        "MedianFilter_gray", "MedianFilter_rgb",
+        "Phase_gray", "Phase_rgb",
+        "ResizeCropMirror_gray", "ResizeCropMirror_rgb"
+      ]
+    },
+    "hip": {
+      "total": 139,
+      "passed": 122,
+      "failed": 17,
+      "failing": null,
+      "failing_note": "Count measured at 17/139 but the exact name set was not captured on 2026-10-28. The skill treats a null 'failing' list as UNPINNED: it gates on the total and on the failed count, reports the observed names, and offers to pin them."
+    }
+  },
+
+  "audio": {
+    "_comment": "Only runs when the build reports AUDIO_SUPPORT. audio_unit_test.py prints 'Number of FAILED tests: N'.",
+    "expected_failed": 0,
+    "pinned": false
+  }
+}
