@@ -87,6 +87,10 @@ rocalCreate(
 RocalStatus ROCAL_API_CALL
 rocalRun(RocalContext p_context) {
     auto context = static_cast<Context*>(p_context);
+    // Drop any message from an earlier call, so a captured error always belongs to this run. A
+    // normal end of epoch returns non-OK without capturing one, which is how the caller tells a
+    // finished epoch from a failed pipeline.
+    context->capture_error("");
     try {
         auto ret = context->master_graph->run();
         if (ret != MasterGraph::Status::OK)

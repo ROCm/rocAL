@@ -37,6 +37,9 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve the cpp_api tests linking every OpenCV module, which segfaulted before `main()` on a second protobuf and failed to link at all against an OpenCV built without `highgui`.
 * Resolve `rocalCopyToOutput()` reporting success on an output size mismatch, which let the `Log` augmentation auto-pass the pixel comparison instead of being checked against a golden.
 * Resolve a `TypeError` from `fn.decoders.image_random_crop` on the file, COCO, Caffe, and Caffe2 readers, whose branches omitted `dec_type` and called the decoder binding one argument short.
+* Resolve the rocJPEG decoders calling `exit(1)` on a rocJPEG or HIP failure, which ended the process with no error the caller could handle.
+* Resolve a decode failure on the loader thread calling `std::terminate()`, and a second release of an already released pipeline, instead of reporting the error to the caller.
+* Resolve a pipeline failure reaching Python as an empty iteration, which was indistinguishable from the end of an epoch, instead of raising the reported error.
 * Resolve a heap buffer overrun in the raw TFRecord reader, which copied the whole record into the loader's output slot without honouring its capacity.
 * Resolve a segfault in `rocalRelease()` on box encoder pipelines, where the labels and bounding box tensor lists were reachable from two tensor list vectors and every tensor in them was deleted twice.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.

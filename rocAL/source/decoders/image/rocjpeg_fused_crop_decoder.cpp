@@ -35,24 +35,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
 #include "rocal_hip_kernels.h"
-
-#define CHECK_HIP(call)                                                                                                        \
-    {                                                                                                                          \
-        hipError_t hip_status = (call);                                                                                        \
-        if (hip_status != hipSuccess) {                                                                                        \
-            std::cerr << "HIP failure: 'status: " << hipGetErrorName(hip_status) << "' at " << __FILE__ << ":" << __LINE__ << std::endl;\
-            exit(1);                                                      \
-        }                                                                                                                      \
-    }
-
-#define CHECK_ROCJPEG(call)                                                                                                \
-    {                                                                                                                      \
-        RocJpegStatus rocjpeg_status = (call);                                                                             \
-        if (rocjpeg_status != ROCJPEG_STATUS_SUCCESS) {                                                                    \
-            std::cerr << #call << " returned " << rocJpegGetErrorName(rocjpeg_status) << " at " <<  __FILE__ << ":" << __LINE__ << std::endl;\
-            exit(1);                                                        \
-        }                                                                     \
-    }
+#include "decoders/image/rocjpeg_error_check.h"
 
 void FusedCropRocJpegDecoder::set_bbox_coords(std::vector<float> bbox_coord) {
     _bbox_coord = bbox_coord;
@@ -90,22 +73,23 @@ void FusedCropRocJpegDecoder::set_crop_window(CropWindow &crop_window) {
 
 void FusedCropRocJpegDecoder::initialize(int device_id, unsigned batch_size) {
     int num_devices;
-    CHECK_HIP(hipGetDeviceCount(&num_devices));
+    CHECK_HIP_THROW(hipGetDeviceCount(&num_devices));
+    // These two used to print and return, which left the decoder with a null _rocjpeg_handle that
+    // the first decode would then use. Throw instead so the pipeline fails where the problem is.
     if (num_devices < 1) {
-        std::cerr << "ERROR: didn't find any GPU!" << std::endl;
-        return;
+        THROW("didn't find any GPU!")
     }
     if (device_id >= num_devices) {
-        std::cerr << "ERROR: the requested device_id is not found!" << std::endl;
-        return;
+        THROW("the requested device_id " + TOSTR(device_id) + " is not found, " +
+              TOSTR(num_devices) + " device(s) available")
     }
-    CHECK_HIP(hipSetDevice(device_id));
+    CHECK_HIP_THROW(hipSetDevice(device_id));
     RocJpegBackend rocjpeg_backend = ROCJPEG_BACKEND_HARDWARE;
     // Create stream and handle
-    CHECK_ROCJPEG(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
+    CHECK_ROCJPEG_THROW(rocJpegCreate(rocjpeg_backend, device_id, &_rocjpeg_handle));
     _rocjpeg_streams.resize(batch_size);
     for (unsigned i = 0; i < batch_size; i++) {
-        CHECK_ROCJPEG(rocJpegStreamCreate(&_rocjpeg_streams[i]));
+        CHECK_ROCJPEG_THROW(rocJpegStreamCreate(&_rocjpeg_streams[i]));
     }
 
     _batch_size = batch_size;
@@ -203,15 +187,22 @@ Decoder::Status FusedCropRocJpegDecoder::decode_batch(std::vector<unsigned char 
         actual_decoded_width[i] = _roi_width[i];
         actual_decoded_height[i] = _roi_height[i];
     }
-    CHECK_ROCJPEG(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()));
+    CHECK_ROCJPEG_RETURN(rocJpegDecodeBatched(_rocjpeg_handle, _rocjpeg_streams.data(), _batch_size, _decode_params_batch.data(), _output_images.data()), Status::CONTENT_DECODE_FAILED);
 
     return Status::OK;
 }
 
 FusedCropRocJpegDecoder::~FusedCropRocJpegDecoder() {
-    CHECK_ROCJPEG(rocJpegDestroy(_rocjpeg_handle));
-    for (auto j = 0; j < _batch_size; j++) {
-        CHECK_ROCJPEG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
+    // Log and keep going: a failure here must not throw out of a destructor, and releasing the
+    // remaining resources still matters.
+    // Walk the handles, not _batch_size: it is assigned after the stream creation loop, so a
+    // failure inside that loop leaves it at zero and leaks the streams already created.
+    if (_rocjpeg_handle) {
+        CHECK_ROCJPEG_LOG(rocJpegDestroy(_rocjpeg_handle));
+        _rocjpeg_handle = nullptr;
+    }
+    for (size_t j = 0; j < _rocjpeg_streams.size(); j++) {
+        if (_rocjpeg_streams[j]) CHECK_ROCJPEG_LOG(rocJpegStreamDestroy(_rocjpeg_streams[j]));
     }
 }
 #endif
