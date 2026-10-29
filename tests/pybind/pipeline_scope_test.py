@@ -22,7 +22,6 @@
 thread that entered it. Operators build into Pipeline.current(), so a pipeline that stays current
 after its block ends, or that leaks into another thread, silently builds the wrong graph."""
 
-import asyncio
 import sys
 import threading
 
@@ -91,36 +90,6 @@ def test_blocks_that_close_out_of_order_leave_the_open_one_current():
     check(Pipeline.current() is None, 'neither block is current once both have been left')
 
 
-def test_tasks_on_one_thread_do_not_see_each_others_pipelines():
-    """asyncio runs tasks on a single thread, so scoping the current pipeline per thread would
-    not keep pipelines built by interleaved tasks apart."""
-    task_count = 2
-    results = [None] * task_count
-
-    async def build(index, entered, every_task_entered):
-        pipeline = make_pipeline()
-        with pipeline:
-            entered.set()
-            # Suspend inside the block, so the other task enters its own while this one is open.
-            await every_task_entered()
-            results[index] = Pipeline.current() is pipeline
-
-    async def main():
-        entered = [asyncio.Event() for _ in range(task_count)]
-
-        async def every_task_entered():
-            await asyncio.wait_for(
-                asyncio.gather(*(event.wait() for event in entered)), timeout=60)
-
-        await asyncio.wait_for(
-            asyncio.gather(*(build(index, entered[index], every_task_entered)
-                             for index in range(task_count))),
-            timeout=60)
-
-    asyncio.run(main())
-    check(all(results), 'each task only ever sees the pipeline it entered')
-
-
 def test_threads_do_not_see_each_others_pipelines():
     """Each thread builds its own pipeline at the same time, as one loader per worker does."""
     thread_count = 4
@@ -182,7 +151,6 @@ test_no_pipeline_outside_a_with_block()
 test_nesting_restores_the_outer_pipeline()
 test_an_exception_still_leaves_the_block()
 test_blocks_that_close_out_of_order_leave_the_open_one_current()
-test_tasks_on_one_thread_do_not_see_each_others_pipelines()
 test_threads_do_not_see_each_others_pipelines()
 test_a_fresh_thread_starts_with_no_pipeline()
 

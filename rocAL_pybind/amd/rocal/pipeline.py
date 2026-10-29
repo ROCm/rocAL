@@ -29,14 +29,20 @@ import numpy as np
 import ctypes
 import functools
 import inspect
-import contextvars
+import threading
 
-# The pipeline a `with` block makes current is scoped to that block and to the caller that
-# entered it: operators are added to the graph of the pipeline on top of the caller's stack. A
-# context variable rather than a plain global, because a context is per thread and, within a
-# thread, per asyncio task, so pipelines built concurrently stay separate. A stack rather than a
-# single value, so that leaving a nested `with` block restores the pipeline around it.
-_pipeline_stack = contextvars.ContextVar("rocal_pipeline_stack", default=())
+# The pipeline a `with` block makes current is per thread: operators are added to the graph of
+# the pipeline on top of the calling thread's stack. A stack rather than a single value, so that
+# leaving a nested `with` block restores the pipeline that was current around it.
+_pipeline_stack = threading.local()
+
+
+def _current_pipeline_stack():
+    """!Return the calling thread's stack of entered pipelines, creating it on first use."""
+    stack = getattr(_pipeline_stack, "stack", None)
+    if stack is None:
+        stack = _pipeline_stack.stack = []
+    return stack
 
 
 class Pipeline(object):
@@ -188,28 +194,30 @@ class Pipeline(object):
 
     @staticmethod
     def current():
-        """!Return the pipeline the caller is currently building, or None.
+        """!Return the pipeline the calling thread is currently building, or None.
 
         Operators are added to the graph of this pipeline. It is the innermost pipeline the
-        caller has entered with a `with` block, so pipelines built concurrently in different
-        threads or asyncio tasks, and nested `with` blocks, stay separate.
+        calling thread has entered with a `with` block, so pipelines built concurrently in
+        different threads, and nested `with` blocks, stay separate.
         """
-        stack = _pipeline_stack.get()
+        stack = _current_pipeline_stack()
         return stack[-1] if stack else None
 
     def __enter__(self):
-        _pipeline_stack.set(_pipeline_stack.get() + (self,))
+        _current_pipeline_stack().append(self)
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        stack = _pipeline_stack.get()
+        stack = _current_pipeline_stack()
         # Blocks usually close in reverse order of entry, leaving this pipeline on top, but a
         # generator holding its `with` block across a `yield` can close them out of order.
         # Remove this pipeline rather than whichever is on top, so a block that is still open
-        # stays current; innermost first, so re-entering the same pipeline stays correct.
+        # stays current. Blocks are expected to nest: entering one pipeline from two blocks
+        # that overlap without nesting cannot be told apart here, since both entries are this
+        # same object, and the innermost is the one removed.
         for index in reversed(range(len(stack))):
             if stack[index] is self:
-                _pipeline_stack.set(stack[:index] + stack[index + 1:])
+                del stack[index]
                 break
 
     def set_seed(self, seed=0):

@@ -42,7 +42,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a pipeline failure reaching Python as an empty iteration, which was indistinguishable from the end of an epoch, instead of raising the reported error.
 * Resolve a heap buffer overrun in the raw TFRecord reader, which copied the whole record into the loader's output slot without honouring its capacity.
 * Resolve a segfault in `rocalRelease()` on box encoder pipelines, where the labels and bounding box tensor lists were reachable from two tensor list vectors and every tensor in them was deleted twice.
-* Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built concurrently; it is now scoped to the `with` block that entered it and readable through `Pipeline.current()`.
+* Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
 
 ### Known Issues
