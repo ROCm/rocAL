@@ -1863,7 +1863,10 @@ rocalVideoFileResize(
         context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
         context->master_graph->set_loop(loop);
 
-        if (dest_width != video_prop.width && dest_height != video_prop.height) {
+        // Only a request that matches the source in *both* dimensions needs no resize node. Using &&
+        // here let a request like 2048x512 on a 2048x1024 clip fall through to the native-size branch
+        // and come back unresized.
+        if (dest_width != video_prop.width || dest_height != video_prop.height) {
             if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if ((dest_width | dest_height) && (resize_longer | resize_shorter))
@@ -2018,7 +2021,10 @@ rocalVideoFileResizeSingleShard(
         context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
         context->master_graph->set_loop(loop);
 
-        if (dest_width != video_prop.width && dest_height != video_prop.height) {
+        // Only a request that matches the source in *both* dimensions needs no resize node. Using &&
+        // here let a request like 2048x512 on a 2048x1024 clip fall through to the native-size branch
+        // and come back unresized.
+        if (dest_width != video_prop.width || dest_height != video_prop.height) {
             if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if ((dest_width | dest_height) && (resize_longer | resize_shorter))
