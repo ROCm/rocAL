@@ -83,10 +83,16 @@ def main():
     log_text = open(args.log, errors="replace").read()
     passed, failed, total, failing, skipped, no_golden = parse(log_text)
 
-    if total is None:
-        print("PYTHON_API GATE FAILED: no 'Total case passed/failed' line in the log.")
-        print("  The suite did not reach image_comparison.py. Common cause: ROCAL_DATA_PATH")
-        print("  unset - unit_tests.sh exits 0 after printing 'Need to export ROCAL_DATA_PATH'.")
+    if total is None or passed is None or failed is None:
+        missing = [n for n, v in (("passed", passed), ("failed", failed)) if v is None]
+        print("PYTHON_API GATE FAILED: the log is missing the "
+              f"'Total case {' and '.join(missing) or 'passed/failed'}' summary line.")
+        print("  Both summary lines are required. A log carrying only one of them is a")
+        print("  truncated or interrupted run, and every comparison below would be drawn")
+        print("  from partial data.")
+        print("  The suite may not have reached image_comparison.py at all. Common cause:")
+        print("  ROCAL_DATA_PATH unset - unit_tests.sh exits 0 after printing")
+        print("  'Need to export ROCAL_DATA_PATH'.")
         return 1
 
     print(f"  backend    : {args.backend}")
@@ -127,11 +133,20 @@ def main():
     # The names on the 'Failing cases:' line must account for the reported failed count.
     # If they do not, the line was truncated or the regex missed something, and every
     # set-based conclusion below would be drawn from bad input.
-    if failed is not None and failing and len(failing) != failed:
+    # Deliberately checked even when `failing` is empty. image_comparison.py emits the
+    # 'Failing cases:' line only when something failed, so an empty list is correct for
+    # failed == 0 and WRONG for anything else. Skipping the check on an empty list let a
+    # log that reported 19 failures but lost the names pass the gate, with all 19 pinned
+    # failures then reported as improvements.
+    parse_ok = failed is None or len(failing) == failed
+    if not parse_ok:
         problems.append(
             f"parse inconsistency: {len(failing)} name(s) on the 'Failing cases:' line but "
-            f"the summary reports {failed} failure(s). Do not trust the set comparison - "
-            "check the log by hand."
+            f"the summary reports {failed} failure(s)."
+            + (" The line is absent entirely - the log is truncated, or the names were "
+               "written somewhere this parser cannot see."
+               if not failing else
+               " Do not trust the set comparison - check the log by hand.")
         )
 
     # --- failing set ---------------------------------------------------------
@@ -155,10 +170,16 @@ def main():
             problems.append("NEW FAILURES (not in baseline):\n      - " +
                             "\n      - ".join(new_failures))
         if now_passing:
-            # Only call it an improvement if the denominator held. When the total shrank,
-            # a name leaving the failing list usually means the case stopped running -
-            # reporting that as "improved" would invert the truth.
-            if total == bl["total"]:
+            # Only call it an improvement if the denominator held AND the names account
+            # for the failure count. When the total shrank, a name leaving the failing
+            # list usually means the case stopped running; when the names are missing
+            # entirely, every pinned failure looks "fixed". Both invert the truth.
+            if not parse_ok:
+                notes.append(
+                    f"{len(now_passing)} baseline failure(s) appear absent, but the "
+                    "failing-name list does not account for the reported failure count. "
+                    "These are NOT fixes - the names are simply missing from the log.")
+            elif total == bl["total"]:
                 notes.append("IMPROVED - these were failing and now pass:\n      - " +
                              "\n      - ".join(now_passing))
             else:
@@ -185,6 +206,19 @@ def main():
 
     # --- update --------------------------------------------------------------
     if args.update:
+        # Never pin a baseline from a run whose numbers do not add up. Doing so would
+        # bake a truncated log in as the new truth, and every later run would be compared
+        # against it.
+        inconsistent = [p for p in problems if p.startswith("parse inconsistency")]
+        if inconsistent or (passed + failed != total):
+            print("\nREFUSING TO UPDATE: this run's numbers are internally inconsistent.")
+            for p in inconsistent:
+                print("  - " + p)
+            if passed + failed != total:
+                print(f"  - passed ({passed}) + failed ({failed}) != total ({total})")
+            print("  Fix the run first; a baseline pinned from a bad parse poisons every")
+            print("  later comparison.")
+            return 1
         bl.update({"total": total, "passed": passed, "failed": failed,
                    "failing": failing})
         bl.pop("failing_note", None)

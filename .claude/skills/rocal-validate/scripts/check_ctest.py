@@ -12,10 +12,20 @@ distinguish "everything passed" from "almost nothing ran".
 This script compares discovered test names against the tiered inventory in baselines.json
 and names the specific tests that went missing.
 
+The expected set is built from independent dependency flags rather than a fixed ladder,
+because rocdecode_FOUND and rocjpeg_FOUND are separate if() blocks
+(tests/cpp_api/CMakeLists.txt:251-270). A HIP box with rocDecode but no rocJPEG registers
+21 tests and a box with rocJPEG but no rocDecode registers 22 - both are valid, and a
+three-rung ladder of cpu/hip/everything would wrongly flag one as missing tests and the
+other as having unexpected ones.
+
 Usage:
     check_ctest.py --build-dir build --baselines baselines.json \\
-                   [--tier hip_rocdecode_rocjpeg | --expect-names a,b,c] [--log ctest.log]
+                   --backend hip [--rocdecode] [--rocjpeg] [--log ctest.log]
+    check_ctest.py --build-dir build --baselines baselines.json --backend cpu
     check_ctest.py --suite pybind --build-dir build/validate/pybind --baselines baselines.json
+
+Pass --expect-names to override the computed set entirely.
 
 Exit 0 = exit code clean AND the expected set ran. Exit 1 otherwise.
 """
@@ -54,7 +64,12 @@ def main():
     ap.add_argument("--build-dir", required=True)
     ap.add_argument("--baselines", required=True)
     ap.add_argument("--suite", choices=["cpp_api", "pybind"], default="cpp_api")
-    ap.add_argument("--tier", help="cpp_api only: cpu_only | hip | hip_rocdecode_rocjpeg")
+    ap.add_argument("--backend", choices=["cpu", "hip"],
+                    help="cpp_api only: the BACKEND the tests were configured with")
+    ap.add_argument("--rocdecode", action="store_true",
+                    help="rocdecode_FOUND was true at configure time")
+    ap.add_argument("--rocjpeg", action="store_true",
+                    help="rocjpeg_FOUND was true at configure time")
     ap.add_argument("--expect-names", help="comma-separated override of the expected set")
     ap.add_argument("--log", help="path to a ctest run log; if omitted, this script runs ctest")
     args = ap.parse_args()
@@ -69,16 +84,23 @@ def main():
         expected = sorted(base["pybind"]["expected"])
     else:
         tiers = base["ctest"]["tiers"]
-        if not args.tier:
-            ap.error("cpp_api needs --tier (or --expect-names)")
-        wanted = {
-            "cpu_only": ["always"],
-            "hip": ["always", "hip"],
-            "hip_rocdecode_rocjpeg": ["always", "hip", "rocdecode", "rocjpeg"],
-        }.get(args.tier)
-        if wanted is None:
-            ap.error(f"unknown tier {args.tier!r}")
+        if not args.backend:
+            ap.error("cpp_api needs --backend cpu|hip (or --expect-names)")
+        # rocDecode and rocJPEG only ever register tests inside the HIP block, so their
+        # flags are ignored on a CPU backend rather than silently inflating the set.
+        wanted = ["always"]
+        if args.backend == "hip":
+            wanted.append("hip")
+            if args.rocdecode:
+                wanted.append("rocdecode")
+            if args.rocjpeg:
+                wanted.append("rocjpeg")
+        elif args.rocdecode or args.rocjpeg:
+            print("  note: --rocdecode/--rocjpeg ignored on a CPU backend - those tests "
+                  "are registered only inside the HIP block")
         expected = sorted(n for key in wanted for n in tiers[key])
+        print(f"  config     : backend={args.backend}"
+              f" rocdecode={args.rocdecode} rocjpeg={args.rocjpeg}")
 
     # ---- discovered set -----------------------------------------------------
     discovered, _ = discover(args.build_dir)

@@ -80,14 +80,44 @@ COVERAGE_MAP = [
     ("rocAL_pybind", "Python bindings",
      [("tests/pybind import tests", "SMOKE"),
       ("tests/python_api golden suite", "GATED")]),
-    ("tests/", "the test suites themselves", [("n/a - this is test code", "GATED")]),
+
+    # Test code itself. These must precede the catch-all below: a blanket "tests/ is
+    # GATED" rule claims coverage for the very directories nothing runs, which suppresses
+    # exactly the warning this script exists to raise. Editing tests/cpp_api/audio_tests
+    # and being told it is covered would be the worst possible output.
+    ("tests/cpp_api/audio_tests", "audio_tests (test code)",
+     [("no add_test in tests/cpp_api/CMakeLists.txt", "ORPHAN")]),
+    ("tests/cpp_api/external_source", "external_source (test code)",
+     [("no add_test in tests/cpp_api/CMakeLists.txt", "ORPHAN")]),
+    ("tests/cpp_api/image_augmentation", "image_augmentation (test code)",
+     [("no add_test in tests/cpp_api/CMakeLists.txt", "ORPHAN")]),
+    ("tests/cpp_api/multiple_dataloaders_test", "multiple_dataloaders_test (test code)",
+     [("no add_test in tests/cpp_api/CMakeLists.txt", "ORPHAN")]),
+    ("tests/cpp_api/voxel_augmentations_test", "voxel_augmentations_test (test code)",
+     [("no add_test in tests/cpp_api/CMakeLists.txt", "ORPHAN")]),
+    ("tests/cpp_api/dataloader_tf", "dataloader_tf (test code)",
+     [("add_test commented out - non-functional with tf dataset", "DISABLED")]),
+    ("tests/cpp_api/dataloader/", "dataloader (test code)",
+     [("add_test commented out - non-functional with database", "DISABLED")]),
+    ("tests/cpp_api/unit_tests/testAllScripts.sh", "testAllScripts.sh",
+     [("not run - does sudo rm -rf and self-builds", "UNGATED")]),
+    ("tests/cpp_api/video_tests/testScript.sh", "video_tests/testScript.sh",
+     [("not run - does sudo rm -rvf build*", "UNGATED")]),
+    ("tests/python_api/readers_test_file.sh", "readers_test_file.sh",
+     [("no goldens, no comparison, no exit code", "UNGATED")]),
+    ("tests/python_api/python_function_example.py", "python_function_example.py",
+     [("needs -DROCAL_PYTHON_FUNCTION=ON, off by default", "UNGATED")]),
+
+    # Catch-all for test code that IS exercised by a phase of this skill.
+    ("tests/", "test code (run by this skill)",
+     [("the phase that runs it", "GATED")]),
 ]
 
 # Paths that genuinely need no test coverage. Anything else that fails to map is
 # reported, because a silently unmapped source file gets no scoping at all - which is
 # exactly the blind spot this script exists to remove.
 IGNORABLE = re.compile(
-    r"(^|/)(docs?|\.github|cmake|rocAL-setup\.py|CHANGELOG\.md|README\.md|LICENSE)"
+    r"(^|/)(docs?|\.github|\.claude|cmake|rocAL-setup\.py|CHANGELOG\.md|README\.md|LICENSE)"
     r"|\.(md|rst|txt|ya?ml|json|toml|cfg|in|png|jpg|svg)$"
 )
 
@@ -125,6 +155,19 @@ def scope_paths(paths):
             if not IGNORABLE.search(path):
                 unmapped.append(path)
     return implicated, unmapped
+
+
+def porcelain_path(line):
+    """Pull the path out of a `git status --porcelain` line.
+
+    Format is two status chars, a space, then the path. A rename shows as
+    'R  old -> new'; the new path is the one on disk, so that is what gets scoped.
+    Quoted paths (those with spaces or non-ASCII) keep their quotes in porcelain output.
+    """
+    path = line[3:].strip()
+    if " -> " in path:
+        path = path.split(" -> ", 1)[1].strip()
+    return path.strip('"')
 
 
 def git(*args, cwd=None, check=True):
@@ -190,14 +233,24 @@ def main():
             base_ref = cand
             break
 
-    merge_base = changed = None
+    merge_base = committed = None
     if base_ref:
         merge_base = git("merge-base", "HEAD", base_ref, cwd=root, check=False) or None
         if merge_base:
             out = git("diff", "--name-only", f"{merge_base}..HEAD", cwd=root, check=False)
-            changed = [l for l in out.splitlines() if l.strip()]
+            committed = [l for l in out.splitlines() if l.strip()]
 
-    is_baseline_run = not changed
+    # Uncommitted work counts. The build and every suite validate the WORKING TREE, so
+    # scoping only committed changes would omit coverage warnings for exactly the files
+    # under active edit - and would call a dirty develop checkout a clean baseline run.
+    working = sorted({porcelain_path(l) for l in dirty_files if len(l) > 3})
+
+    # None (no base, so the diff is unknown) is not the same as [] (resolved, genuinely
+    # empty). Conflating them turns a failed base lookup into a confident "no changes",
+    # silently dropping every PR-specific coverage finding.
+    diff_known = committed is not None
+    changed = sorted(set((committed or []) + working)) if diff_known else working
+    is_baseline_run = diff_known and not changed
 
     # ---- scope the gaps -----------------------------------------------------
     implicated, unmapped = scope_paths(changed or [])
@@ -213,12 +266,29 @@ def main():
     else:
         print("  tree       : clean")
 
-    if is_baseline_run:
-        print("\n  Mode: BASELINE RUN - no diff against the base branch.")
+    if not diff_known:
+        print(f"\n  Mode: UNKNOWN DIFF - could not resolve a base"
+              f"{' (no merge-base with ' + base_ref + ')' if base_ref else ''}.")
+        print(f"  '{args.base}' and 'origin/{args.base}' were both unavailable, or HEAD")
+        print("  shares no history with them. The committed diff is UNKNOWN - this is NOT")
+        print("  the same as 'no changes', so no coverage finding below can be trusted to")
+        print("  be complete. Fetch the base branch and re-run before relying on the")
+        print("  scoped findings.")
+        if working:
+            print(f"\n  Scoping the {len(working)} uncommitted file(s) only:")
+    elif is_baseline_run:
+        print("\n  Mode: BASELINE RUN - no diff against the base branch, clean tree.")
         print("  This validates the branch as it stands; it does not validate a change.")
         print("  Every coverage gap applies; none can be ruled out as untouched.")
     else:
-        print(f"\n  Mode: PR RUN - {len(changed)} file(s) changed vs {base_ref}")
+        n_c, n_w = len(committed or []), len(working)
+        print(f"\n  Mode: PR RUN - {len(changed)} file(s) vs {base_ref}"
+              f"  ({n_c} committed, {n_w} uncommitted)")
+        if working:
+            print("  Uncommitted files are included: the suites validate the working tree,")
+            print("  so they are part of what is being tested.")
+
+    if not is_baseline_run:
         blind = [i for i in implicated if i["status"] in ("ORPHAN", "DISABLED", "UNGATED")]
         smoke = [i for i in implicated if i["status"] == "SMOKE"]
         if blind:
@@ -249,8 +319,13 @@ def main():
     payload = {
         "branch": branch, "head": sha, "base": base_ref, "merge_base": merge_base,
         "switched": switched, "dirty": dirty_files,
-        "mode": "baseline" if is_baseline_run else "pr",
-        "changed_files": changed or [], "implicated": implicated,
+        "mode": ("unknown_diff" if not diff_known
+                 else "baseline" if is_baseline_run else "pr"),
+        "diff_known": diff_known,
+        "changed_files": changed or [],
+        "committed_changes": committed or [],
+        "working_tree_changes": working,
+        "implicated": implicated,
         "unmapped": unmapped, "orphan_dirs": ORPHAN_DIRS,
     }
     if args.json_out:
@@ -258,6 +333,15 @@ def main():
             json.dump(payload, fh, indent=2)
             fh.write("\n")
         print(f"\n  wrote {args.json_out}")
+
+    # Exit 2 for an unresolved base, distinct from 0 (resolved) and 1 (hard error). The
+    # scoped findings are incomplete in that state, and a caller that treats it as success
+    # would silently publish a report claiming coverage it never established.
+    if not diff_known:
+        print("\n  Exiting 2: base unresolved, scoped findings are incomplete.")
+        print("  Fetch the base branch and re-run, or state in the report that the diff")
+        print("  scoping was unavailable for this run.")
+        return 2
     return 0
 
 

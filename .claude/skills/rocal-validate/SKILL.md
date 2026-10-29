@@ -58,6 +58,15 @@ and the dirty-tree state - so the report states exactly what was validated. It a
 the diff onto test areas and **promotes any area the diff touches that has no working
 test** (`ORPHAN`, `DISABLED`, `UNGATED`) or only an import smoke test (`SMOKE`).
 
+The changed-file list includes **uncommitted** work (staged, unstaged and untracked). The
+build and every suite validate the working tree, so scoping only committed changes would
+drop the warnings for exactly the files under active edit.
+
+Exit codes: `0` resolved, `1` hard error, **`2` the base could not be resolved**. On `2`
+the committed diff is unknown - which is not the same as "no changes" - so the scoped
+findings are incomplete. Fetch the base branch and re-run, or state plainly in the report
+that diff scoping was unavailable. Do not report a `2` run as if it were a clean baseline.
+
 That scoping is the point. rocAL's gaps are not uniform: a diff inside `color_augmentations`
 is well covered, while an identically sized diff inside `audio_augmentations` is covered by
 nothing in ctest. Carry that finding into the Phase 6 report prominently - a green run on an
@@ -83,11 +92,18 @@ both. Never hardcode machine-specific paths into the skill.
 ## Phase 1 - build
 
 ```bash
-cmake -S . -B build -DROCM_PATH="$ROCM_PATH" -DCMAKE_INSTALL_PREFIX="$ROCM_PATH"
-cmake --build build -j"$(nproc)" 2>&1 | tee build/validate/<ts>/build.log
+set -o pipefail   # REQUIRED - without it the pipeline returns tee's status, so a
+                  # failed compile exits 0 and carries stale artifacts into validation
+cmake -S . -B build -DROCM_PATH="$ROCM_PATH" -DCMAKE_INSTALL_PREFIX="$ROCM_PATH" \
+      2>&1 | tee build/validate/<ts>/configure.log \
+  && cmake --build build -j"$(nproc)" 2>&1 | tee build/validate/<ts>/build.log
 ```
 
-Hard fail on non-zero. From the configure output record which optional dependencies were
+Configure and build are chained with `&&`: building on top of a failed configure just
+reruns the previous configuration and produces a confusingly stale result.
+
+Hard fail on non-zero. Check the status explicitly rather than trusting the absence of
+error text on screen. From the configure output record which optional dependencies were
 found - **rocDecode, rocJPEG, FFmpeg, libsndfile/AUDIO_SUPPORT, TurboJPEG, LMDB** - and
 whether the backend is HIP or CPU. These pick the expected test counts in Phases 3 and 4,
 and a dependency that disappeared since the last run is itself a finding worth reporting
@@ -109,11 +125,22 @@ python3 -I $SK/scripts/verify_install.py \
   --build-dir build --rocm-path "$ROCM_PATH" --repo-root .
 ```
 
-This compares the `.text` section of the built and installed `librocal.so` and
-`rocal_pybind*.so`, diffs the 9 public headers, and checks for the installed test-data and
-pybind-script directories. Whole-file checksums cannot do this job: `make install` rewrites
-RUNPATH in place, so the installed `.so` differs byte-for-byte at identical size and mtime
-even when the code is identical.
+This compares **every ELF section** of the built and installed `librocal.so` and
+`rocal_pybind*.so` - name, size and content - plus the dynamic entries, normalising away
+only the RUNPATH carriers (`.dynstr`, `.dynamic`). It also diffs the 9 public headers, the
+installed Python package, and the test-data directory.
+
+Whole-file checksums cannot do this job: `make install` rewrites RUNPATH in place, so the
+installed `.so` differs byte-for-byte at identical size and mtime even when the code is
+identical. Hashing `.text` alone is also not enough - it covers host instructions only, so
+a change confined to `.rodata` (lookup tables) or `.hip_fatbin` (embedded GPU device code)
+would pass. Measured on a real `librocal.so.2.5.0`, a RUNPATH rewrite changes exactly one
+section, `.dynstr`, leaving everything else comparable.
+
+The installed **Python package** matters as much as the binaries: `rocAL_pybind/amd/`
+installs to `$ROCM_PATH/lib/amd/`, and Phase 5 imports that installed copy. A change
+confined to `fn.py` leaves every `.so` and header identical, so this is the only check that
+catches it.
 
 **Any mismatch aborts the run.** This is the gate that catches install skew.
 
@@ -122,13 +149,26 @@ even when the code is identical.
 ```bash
 python3 -I $SK/scripts/check_ctest.py \
   --build-dir build --baselines $SK/baselines.json \
-  --tier <cpu_only|hip|hip_rocdecode_rocjpeg> \
+  --backend <cpu|hip> [--rocdecode] [--rocjpeg] \
   --log build/validate/<ts>/ctest.log
 ```
 
-Pick the tier from the dependencies detected in Phase 1. Two gates, not one: the exit code
-must be clean **and** the discovered test set must match the tier's expected set. Fewer
-tests than expected is a FAIL naming the missing tests, not a pass.
+Set the flags from what Phase 1 actually detected. They are **independent**, not a ladder:
+`rocdecode_FOUND` and `rocjpeg_FOUND` are separate `if()` blocks nested inside the HIP
+block, so 20, 21, 22 and 23 tests are all legitimate HIP configurations. Passing a
+coarse "everything" tier on a box with only one of the two decoders would report the
+other's tests as missing.
+
+| backend | rocDecode | rocJPEG | expected |
+|---|---|---|---|
+| cpu | — | — | 10 |
+| hip | no | no | 20 |
+| hip | yes | no | 21 |
+| hip | no | yes | 22 |
+| hip | yes | yes | 23 |
+
+Two gates, not one: the exit code must be clean **and** the discovered test set must match
+the expected set. Fewer tests than expected is a FAIL naming the missing tests, not a pass.
 
 Report plainly that ctest exercises **8 of the 15** `tests/cpp_api` directories and list
 the 7 it does not touch (`references/coverage-gaps.md`), so the gap is visible rather than
@@ -155,23 +195,33 @@ report so nobody reads 6/6 as functional coverage.
 
 ## Phase 5 - python_api golden suite
 
-Run from `tests/python_api` - the scripts resolve siblings relative to their own cwd.
+The suite must run from `tests/python_api` - its scripts resolve siblings relative to
+their own cwd. Everything else in this skill is rooted at the repo, so pin absolute paths
+up front and come back to the root before gating:
 
 ```bash
-cd tests/python_api
-export ROCAL_DATA_PATH PYTHONPATH="$ROCM_PATH/lib" \
-       LD_LIBRARY_PATH="$ROCM_PATH/lib:$ROCM_PATH/lib/llvm/lib"
-bash unit_tests.sh 0 2>&1 | tee <abs>/build/validate/<ts>/python_api_host.log   # host
-bash unit_tests.sh 1 2>&1 | tee <abs>/build/validate/<ts>/python_api_hip.log    # hip
+ROOT="$(git rev-parse --show-toplevel)"
+OUT="$ROOT/build/validate/<ts>"
+
+( cd "$ROOT/tests/python_api" \
+  && export ROCAL_DATA_PATH PYTHONPATH="$ROCM_PATH/lib" \
+            LD_LIBRARY_PATH="$ROCM_PATH/lib:$ROCM_PATH/lib/llvm/lib" \
+  && bash unit_tests.sh 0 2>&1 | tee "$OUT/python_api_host.log" )   # host
+( cd "$ROOT/tests/python_api" && ... bash unit_tests.sh 1 2>&1 | tee "$OUT/python_api_hip.log" )  # hip
 ```
 
-Then gate each backend:
+The subshells keep the `cd` from leaking. `set -o pipefail` is pointless here - the suite
+exits 0 regardless - which is exactly why the gate below parses the log instead.
+
+Then gate each backend, **from the repo root**, with absolute paths. The output directory
+is created inside `tests/python_api`, so resolve it there, not from the cwd:
 
 ```bash
-python3 -I $SK/scripts/check_python_api.py \
-  --log build/validate/<ts>/python_api_host.log --backend host \
-  --baselines $SK/baselines.json \
-  --output-dir <the rocal_python_unittest_output_folder_* this run produced> \
+cd "$ROOT"
+python3 -I "$ROOT/.claude/skills/rocal-validate/scripts/check_python_api.py" \
+  --log "$OUT/python_api_host.log" --backend host \
+  --baselines "$ROOT/.claude/skills/rocal-validate/baselines.json" \
+  --output-dir "$ROOT/tests/python_api/<the rocal_python_unittest_output_folder_* this run produced>" \
   --golden-dir "$ROCAL_DATA_PATH/rocal_data/GoldenOutputsTensor"
 ```
 

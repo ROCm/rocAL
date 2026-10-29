@@ -10,7 +10,12 @@
     "_comment": [
       "tests/cpp_api/CMakeLists.txt registers tests conditionally. A missing dependency",
       "SHRINKS the run instead of failing it, so '100% passed' on a short list is the",
-      "trap this gate exists to catch. Tiers mirror the if() blocks in that file."
+      "trap this gate exists to catch. Tiers mirror the if() blocks in that file.",
+      "",
+      "These are INDEPENDENT flags, not a ladder. rocdecode_FOUND and rocjpeg_FOUND are",
+      "separate if() blocks nested inside the HIP block (CMakeLists.txt:251-270), so all",
+      "four HIP combinations below are legitimate. check_ctest.py composes the expected",
+      "set from --backend plus --rocdecode/--rocjpeg rather than picking a single rung."
     ],
     "tiers": {
       "always": [
@@ -46,9 +51,12 @@
       ]
     },
     "totals": {
-      "cpu_only": 10,
+      "_comment": "Reference only - check_ctest.py computes the set, not these numbers.",
+      "cpu": 10,
       "hip": 20,
-      "hip_rocdecode_rocjpeg": 23
+      "hip+rocdecode": 21,
+      "hip+rocjpeg": 22,
+      "hip+rocdecode+rocjpeg": 23
     },
     "disabled_in_cmake": {
       "dataloader": "tests/cpp_api/CMakeLists.txt add_test commented out - non-functional with database",
