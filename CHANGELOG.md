@@ -31,8 +31,15 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
 
 ### Resolved issues
+* Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.
 * Resolve a crash in the TurboJPEG decoder when a source image is more than eight times larger than the requested decode size.
 * Resolve a memory leak and a process abort on TurboJPEG decode failures.
+* Resolve the cpp_api tests linking every OpenCV module, which segfaulted before `main()` on a second protobuf and failed to link at all against an OpenCV built without `highgui`.
+* Resolve `rocalCopyToOutput()` reporting success on an output size mismatch, which let the `Log` augmentation auto-pass the pixel comparison instead of being checked against a golden.
+* Resolve a `TypeError` from `fn.decoders.image_random_crop` on the file, COCO, Caffe, and Caffe2 readers, whose branches omitted `dec_type` and called the decoder binding one argument short.
+* Resolve a heap buffer overrun in the raw TFRecord reader, which copied the whole record into the loader's output slot without honouring its capacity.
+* Resolve a segfault in `rocalRelease()` on box encoder pipelines, where the labels and bounding box tensor lists were reachable from two tensor list vectors and every tensor in them was deleted twice.
+* Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.

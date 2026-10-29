@@ -1014,6 +1014,10 @@ def random_bbox_crop(*inputs, all_boxes_above_threshold=True, allow_no_crop=True
 def one_hot(*inputs, num_classes=0, device=None):
     """!Applies one-hot encoding to the input images.
 
+        Labels are zero based: a sample labelled k is encoded with a 1 in column k and 0 elsewhere,
+        so the encoding lines up with the 0..num_classes-1 labels the readers produce. A label
+        outside [0, num_classes) cannot be encoded and raises an error when the batch is read.
+
         @param inputs (list)                               The input images to which one-hot encoding is applied.
         @param num_classes (int, optional, default = 0)    Number of classes used for one-hot encoding. Default is 0.
         @param device (string, optional, default = None)   Parameter unused for augmentation

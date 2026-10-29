@@ -38,6 +38,7 @@ function(rocal_test_enable_opencv target)
 
     set(_io_ok FALSE)
     set(_highgui_ok FALSE)
+    set(_videoio_ok FALSE)
     if(OpenCV_FOUND AND OpenCV_VERSION VERSION_GREATER_EQUAL 4)
         if("opencv_core" IN_LIST OpenCV_LIB_COMPONENTS
            AND "opencv_imgproc" IN_LIST OpenCV_LIB_COMPONENTS
@@ -47,13 +48,26 @@ function(rocal_test_enable_opencv target)
         if("opencv_highgui" IN_LIST OpenCV_LIB_COMPONENTS)
             set(_highgui_ok TRUE)
         endif()
+        if("opencv_videoio" IN_LIST OpenCV_LIB_COMPONENTS)
+            set(_videoio_ok TRUE)
+        endif()
     endif()
 
     if(_io_ok)
         message(STATUS "${target}: OpenCV ${OpenCV_VERSION} image output enabled")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV=1)
         target_include_directories(${target} PRIVATE ${OpenCV_INCLUDE_DIRS})
-        target_link_libraries(${target} ${OpenCV_LIBRARIES})
+        # Link the modules the tests actually use, not ${OpenCV_LIBRARIES}: that
+        # expands to every module the installation provides, and a distribution
+        # OpenCV brings in opencv_dnn, whose protobuf collides with the one the
+        # caffe/caffe2 readers already load. The two sets of static initializers
+        # crash the test before main() runs.
+        target_link_libraries(${target} opencv_core opencv_imgproc opencv_imgcodecs)
+        # video_tests constructs a cv::VideoWriter under ENABLE_OPENCV alone, so
+        # videoio has to be linked here and not left to arrive through highgui.
+        if(_videoio_ok)
+            target_link_libraries(${target} opencv_videoio)
+        endif()
     else()
         message(STATUS "${target}: OpenCV image output disabled")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV=0)
@@ -62,17 +76,21 @@ function(rocal_test_enable_opencv target)
     if(_highgui_ok)
         message(STATUS "${target}: OpenCV highgui enabled")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV_HIGHGUI=1)
+        target_link_libraries(${target} opencv_highgui)
     else()
         message(STATUS "${target}: OpenCV highgui disabled; display calls compiled out")
         target_compile_definitions(${target} PUBLIC ENABLE_OPENCV_HIGHGUI=0)
     endif()
 
-    # Visible to find_package. False is a valid build: image output or highgui may be absent.
+    # Visible to find_package. False is a valid build: image output, highgui or
+    # videoio may be absent.
     set(OpenCVComponents_FOUND ${_io_ok} PARENT_SCOPE)
     set(OpenCVComponents_HIGHGUI_FOUND ${_highgui_ok} PARENT_SCOPE)
+    set(OpenCVComponents_VIDEOIO_FOUND ${_videoio_ok} PARENT_SCOPE)
 endfunction()
 
 # Loaded by find_package after add_executable(), so PROJECT_NAME is that test.
 rocal_test_enable_opencv(${PROJECT_NAME})
 message(STATUS "OpenCVComponents_FOUND=${OpenCVComponents_FOUND}")
 message(STATUS "OpenCVComponents_HIGHGUI_FOUND=${OpenCVComponents_HIGHGUI_FOUND}")
+message(STATUS "OpenCVComponents_VIDEOIO_FOUND=${OpenCVComponents_VIDEOIO_FOUND}")

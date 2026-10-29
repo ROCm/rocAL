@@ -409,6 +409,14 @@ class TensorList : public rocalTensorList {
     std::vector<uint64_t>& roi_size() { return _tensor_roi_size; }
     void release() {
         for (auto& tensor : _tensor_list) delete tensor;
+        // A TensorList can be reachable from more than one TensorListVector: the
+        // box encoder registers _labels_tensor_list and _bbox_tensor_list in both
+        // _metadata_output_tensor_list and _bbox_encoded_output_tensor_list, and
+        // MasterGraph::release() releases both vectors. Drop the pointers here so
+        // a second release is a no-op instead of deleting every tensor twice.
+        _tensor_list.clear();
+        _tensor_data_size.clear();
+        _tensor_roi_size.clear();
     }
     Tensor* operator[](size_t index) { return _tensor_list[index]; }
     Tensor* at(size_t index) override { return _tensor_list[index]; }
