@@ -22,6 +22,7 @@
 thread that entered it. Operators build into Pipeline.current(), so a pipeline that stays current
 after its block ends, or that leaks into another thread, silently builds the wrong graph."""
 
+import asyncio
 import sys
 import threading
 
@@ -68,22 +69,83 @@ def test_an_exception_still_leaves_the_block():
     check(Pipeline.current() is None, 'a raising with block still stops being current')
 
 
+def test_blocks_that_close_out_of_order_leave_the_open_one_current():
+    """A generator can hold its `with` block open across a `yield`, so the block entered first
+    is not always the one left last. Leaving it must not take the still open block's pipeline
+    off the stack."""
+    outer = make_pipeline()
+    inner = make_pipeline()
+
+    def hold(pipeline):
+        with pipeline:
+            yield
+
+    held_outer, held_inner = hold(outer), hold(inner)
+    next(held_outer)
+    next(held_inner)
+    check(Pipeline.current() is inner, 'the block entered last is current')
+    held_outer.close()
+    check(Pipeline.current() is inner,
+          'leaving the outer block early leaves the still open inner one current')
+    held_inner.close()
+    check(Pipeline.current() is None, 'neither block is current once both have been left')
+
+
+def test_tasks_on_one_thread_do_not_see_each_others_pipelines():
+    """asyncio runs tasks on a single thread, so scoping the current pipeline per thread would
+    not keep pipelines built by interleaved tasks apart."""
+    task_count = 2
+    results = [None] * task_count
+
+    async def build(index, entered, every_task_entered):
+        pipeline = make_pipeline()
+        with pipeline:
+            entered.set()
+            # Suspend inside the block, so the other task enters its own while this one is open.
+            await every_task_entered()
+            results[index] = Pipeline.current() is pipeline
+
+    async def main():
+        entered = [asyncio.Event() for _ in range(task_count)]
+
+        async def every_task_entered():
+            await asyncio.wait_for(
+                asyncio.gather(*(event.wait() for event in entered)), timeout=60)
+
+        await asyncio.wait_for(
+            asyncio.gather(*(build(index, entered[index], every_task_entered)
+                             for index in range(task_count))),
+            timeout=60)
+
+    asyncio.run(main())
+    check(all(results), 'each task only ever sees the pipeline it entered')
+
+
 def test_threads_do_not_see_each_others_pipelines():
     """Each thread builds its own pipeline at the same time, as one loader per worker does."""
     thread_count = 4
     results = [None] * thread_count
-    at_the_barrier = threading.Barrier(thread_count)
+    errors = []
+    # Bound the wait: a thread that never arrives breaks the barrier rather than hanging the
+    # test until ctest's timeout kills it.
+    at_the_barrier = threading.Barrier(thread_count, timeout=60)
 
     def build(index):
-        pipeline = make_pipeline()
-        # Enter together, so every thread is inside its own block while the others are too.
-        at_the_barrier.wait()
-        with pipeline:
-            for _ in range(2000):
-                if Pipeline.current() is not pipeline:
-                    results[index] = False
-                    return
-        results[index] = Pipeline.current() is None
+        try:
+            pipeline = make_pipeline()
+            # Enter together, so every thread is inside its own block while the others are too.
+            at_the_barrier.wait()
+            with pipeline:
+                for _ in range(2000):
+                    if Pipeline.current() is not pipeline:
+                        results[index] = False
+                        return
+            results[index] = Pipeline.current() is None
+        except BaseException as error:
+            # Release the threads still waiting on a barrier this one will now never reach,
+            # and leave this thread's result unset so the check below fails.
+            at_the_barrier.abort()
+            errors.append(error)
 
     # Switch threads far more often than the 5 ms default, to widen the window a leaked
     # process-wide pipeline would be seen through.
@@ -99,6 +161,8 @@ def test_threads_do_not_see_each_others_pipelines():
     finally:
         sys.setswitchinterval(previous_interval)
 
+    for error in errors:
+        print('    thread raised: {!r}'.format(error))
     check(all(results), 'each thread only ever sees the pipeline it entered')
 
 
@@ -117,6 +181,8 @@ def test_a_fresh_thread_starts_with_no_pipeline():
 test_no_pipeline_outside_a_with_block()
 test_nesting_restores_the_outer_pipeline()
 test_an_exception_still_leaves_the_block()
+test_blocks_that_close_out_of_order_leave_the_open_one_current()
+test_tasks_on_one_thread_do_not_see_each_others_pipelines()
 test_threads_do_not_see_each_others_pipelines()
 test_a_fresh_thread_starts_with_no_pipeline()
 
