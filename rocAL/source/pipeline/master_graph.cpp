@@ -360,6 +360,24 @@ MasterGraph::create_tensor(const TensorInfo &info, bool is_output) {
     return output;
 }
 
+void MasterGraph::validate_inputs(const std::vector<Tensor *> &inputs) {
+    std::shared_ptr<Node> first_parent = nullptr;
+
+    for (auto &input : inputs) {
+        auto parent = _tensor_map.find(input);
+        if (parent == _tensor_map.end())
+            THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
+
+        // Node::add_previous() rejects parents from different loaders' graphs, but only once the
+        // node and some of its parent links are already in place, leaving a node behind that holds
+        // an output discard_tensor() would then free. Reject the same combination up front instead.
+        if (!first_parent)
+            first_parent = parent->second;
+        else if (parent->second->get_graph_id() != first_parent->get_graph_id())
+            THROW("The nodes are interdependent between 2 graphs")
+    }
+}
+
 void MasterGraph::discard_tensor(Tensor *tensor) {
     if (tensor == nullptr)
         return;
@@ -2125,9 +2143,7 @@ std::shared_ptr<Node> MasterGraph::add_node(const std::string& node_name, const 
     } else {
         // Validate the inputs before anything is created or linked, so that a rejected
         // operator leaves the graph exactly as it was.
-        for (auto &input : inputs)
-            if (_tensor_map.find(input) == _tensor_map.end())
-                THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
+        validate_inputs(inputs);
 
         node = NodeFactory::instance().create_node(node_name, inputs, outputs);
         _nodes.push_back(node);

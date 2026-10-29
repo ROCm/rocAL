@@ -123,6 +123,7 @@ public:
     //! Returns whether checkpointing is enabled for this pipeline.
     bool is_checkpointing_enabled() const { return _checkpointing_enabled; }
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
+    void validate_inputs(const std::vector<Tensor *> &inputs);  // Throws if an operator's inputs cannot be consumed, before add_node() mutates the graph
     void discard_tensor(Tensor *tensor);  // Undoes a create_tensor() whose node was never added, so a rejected operator leaves nothing behind
     Tensor *create_internal_tensor(const TensorInfo &info);  // Creates a regular (non-virtual) tensor and adds it to _internal_tensors vector
     TensorListVector * create_label_reader(const char *source_path, MetaDataReaderType reader_type);
@@ -312,9 +313,7 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, co
     // leaves the graph exactly as it was. Checking while linking used to leave the new node in
     // _nodes and _pipeline_operators with no parent, and the parents it had already reached
     // pointing back at it.
-    for (auto &input : inputs)
-        if (_tensor_map.find(input) == _tensor_map.end())
-            THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
+    validate_inputs(inputs);
 
     auto node = std::make_shared<T>(inputs, outputs);
     _nodes.push_back(node);
