@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <exception>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -66,6 +68,8 @@ class ImageLoader : public LoaderModule {
     std::shared_ptr<ImageReadAndDecode> _image_loader;
     LoaderModuleStatus update_output_image();
     LoaderModuleStatus load_routine();
+    //! Rethrows, on the calling thread, an exception captured by load_routine(). No-op if there is none.
+    void rethrow_load_exception();
 
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     Tensor* _output_tensor;
@@ -82,6 +86,8 @@ class ImageLoader : public LoaderModule {
     TimingDbg _swap_handle_time;
     bool _is_initialized;
     bool _stopped = false;
+    std::mutex _load_exception_lock;
+    std::exception_ptr _load_exception = nullptr;  //!< Exception raised on the loader thread, rethrown by load_next()
     bool _loop;                     //<! If true the reader will wrap around at the end of the media (files/images/...) and wouldn't stop
     size_t _prefetch_queue_depth;   // Used for circular buffer's internal buffer
     size_t _image_counter = 0;      //!< How many images have been loaded already

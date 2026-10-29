@@ -214,6 +214,8 @@ MasterGraph::MasterGraph(size_t batch_size, RocalAffinity affinity, size_t cpu_t
 
 MasterGraph::Status
 MasterGraph::run() {
+    // Checked before _processing, which an output routine clears when it fails.
+    rethrow_process_exception();
     if (!_processing)  // The user should not call the run function before the build() is called or while reset() is happening
         return MasterGraph::Status::NOT_RUNNING;
 
@@ -224,6 +226,10 @@ MasterGraph::run() {
     _rb_block_if_empty_time.start();
     _ring_buffer.block_if_empty();  // wait here if the user thread (caller of this function) is faster in consuming the processed images compare to th output routine in producing them
     _rb_block_if_empty_time.end();
+
+    // An output routine may have failed while this thread was blocked above, which is what woke it.
+    // Check before touching the batch state below, so run() cannot report OK without a valid batch.
+    rethrow_process_exception();
 
     if (_first_run) {
         // calling run pops the processed images that have been used by user, when user calls run() for the first time
@@ -422,6 +428,10 @@ void MasterGraph::set_output(Tensor *output_tensor) {
 }
 
 void MasterGraph::release() {
+    // build() and the metadata getters below release the graph before throwing, so the caller's
+    // rocalRelease() would otherwise release it a second time and walk freed nodes.
+    if (_released) return;
+    _released = true;
     LOG("MasterGraph release ...")
     // Unblock any threads that might be waiting on ring buffer read/write calls during shutdown.
     _ring_buffer.release_all_blocked_calls();
@@ -1085,6 +1095,12 @@ void MasterGraph::output_routine() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        {
+            // Hand the error to the user thread, which rethrows it from run(). Without this the
+            // caller only sees processing stop and reports an unrelated downstream failure.
+            std::lock_guard<std::mutex> lock(_process_exception_lock);
+            _process_exception = std::current_exception();
+        }
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
@@ -1153,12 +1169,32 @@ void MasterGraph::output_routine_multiple_loaders() {
         }
     } catch (const std::exception &e) {
         ERR("Exception thrown in the process routine: " + STR(e.what()) + STR("\n"));
+        {
+            // Hand the error to the user thread, which rethrows it from run(). Without this the
+            // caller only sees processing stop and reports an unrelated downstream failure.
+            std::lock_guard<std::mutex> lock(_process_exception_lock);
+            _process_exception = std::current_exception();
+        }
         _processing = false;
         _ring_buffer.release_all_blocked_calls();
     }
 }
 
+void MasterGraph::rethrow_process_exception() {
+    std::exception_ptr process_exception;
+    {
+        std::lock_guard<std::mutex> lock(_process_exception_lock);
+        process_exception = _process_exception;
+    }
+    if (process_exception) std::rethrow_exception(process_exception);
+}
+
 void MasterGraph::start_processing() {
+    {
+        // Drop any error left by a previous run so a restarted pipeline is not reported as failed.
+        std::lock_guard<std::mutex> lock(_process_exception_lock);
+        _process_exception = nullptr;
+    }
     _processing = true;
     _remaining_count = _loader_modules[0]->remaining_count();
     for (int i = 1; i < _loaders_count; i++) {
@@ -1594,6 +1630,7 @@ TensorListVector* MasterGraph::create_cifar10_label_reader(const char *source_pa
 
 const std::pair<ImageNameBatch, pMetaDataBatch> &MasterGraph::meta_data() {
     if (_ring_buffer.level() == 0) {
+        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
@@ -1628,6 +1665,7 @@ TensorList *MasterGraph::labels_meta_data() {
         THROW("Metadata reader is not compatible with multiple loaders")
 
     if (_ring_buffer.level() == 0) {
+        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
@@ -1649,6 +1687,7 @@ TensorListVector *MasterGraph::ascii_values_meta_data() {
         return &_webdataset_output_tensor_list;
     }
     if (_ring_buffer.level() == 0) { 
+        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
@@ -1675,6 +1714,7 @@ TensorList *MasterGraph::bbox_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
     if (_ring_buffer.level() == 0) {
+        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
@@ -1693,6 +1733,7 @@ TensorList *MasterGraph::mask_meta_data() {
     if (!_meta_data_reader && _loaders_count > 1)
         THROW("Metadata reader is not compatible with multiple loaders")
     if (_ring_buffer.level() == 0) {
+        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
@@ -1712,6 +1753,7 @@ TensorList *MasterGraph::matched_index_meta_data() {
         THROW("Metadata reader is not compatible with multiple loaders")
 
     if (_ring_buffer.level() == 0) {
+        rethrow_process_exception();  // An empty ring buffer usually means the pipeline failed; report that, not the generic message
         release();
         THROW("No meta data has been loaded")
     }
