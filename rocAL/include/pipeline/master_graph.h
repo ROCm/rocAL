@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <exception>
 #include <list>
 #include <map>
 #include <memory>
@@ -200,6 +201,8 @@ private:
     void stop_processing();
     void output_routine();
     void output_routine_multiple_loaders();
+    //! Rethrows, on the user thread, an exception captured by an output routine. No-op if there is none.
+    void rethrow_process_exception();
     void decrease_image_count();
     /// notify_user_thread() is called when the internal processing thread is done with processing all available tensors
     void notify_user_thread();
@@ -251,6 +254,9 @@ private:
     std::shared_ptr<RandomBBoxCrop_MetaDataReader> _randombboxcrop_meta_data_reader = nullptr;
     bool _first_run = true;
     bool _processing;                                                             //!< Indicates if internal processing thread should keep processing or not
+    bool _released = false;                                                       //!< Set by release() so a second call is a no-op instead of touching freed resources
+    std::mutex _process_exception_lock;
+    std::exception_ptr _process_exception = nullptr;                              //!< Exception raised on an output routine thread, rethrown by run()
     const static unsigned SAMPLE_SIZE = sizeof(unsigned char);
     int _remaining_count;                                                         //!< Keeps the count of remaining tensors yet to be processed for the user,
     bool _loop;                                                                   //!< Indicates if user wants to indefinitely loops through tensors or not

@@ -363,8 +363,20 @@ PYBIND11_MODULE(rocal_pybind, m) {
         return rocalVerify(ctx);
     });
     m.def("rocalRun", [](RocalContext ctx) {
-        py::gil_scoped_release release;
-        return rocalRun(ctx);
+        RocalStatus status;
+        {
+            py::gil_scoped_release release;
+            status = rocalRun(ctx);
+        }
+        // The iterators treat any non-OK status as the end of the epoch. Raise instead when the
+        // pipeline actually failed, so the error is not mistaken for a finished epoch and silently
+        // turned into StopIteration. Only a failure captures a message.
+        if (status != ROCAL_OK) {
+            const char* err = rocalGetErrorMessage(ctx);
+            if (err && *err)
+                throw std::runtime_error(err);
+        }
+        return status;
     }, py::return_value_policy::reference);
     m.def("rocalRelease", &rocalRelease, py::return_value_policy::reference);
     m.def("rocalSerialize", [](RocalContext context) {
