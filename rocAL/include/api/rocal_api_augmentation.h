@@ -943,6 +943,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorTempFixed(RocalContext context, 
                                                           RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Applies color jitter augmentation on images.
+ * \note Supported on the CPU backend only. On a GPU context this call fails and returns NULL,
+ * with the reason available from rocalGetErrorMessage().
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
@@ -965,6 +967,8 @@ extern "C" RocalTensor ROCAL_API_CALL rocalColorJitter(RocalContext context, Roc
                                                        RocalTensorOutputType output_datatype = ROCAL_UINT8);
 
 /*! \brief Applies color jitter augmentation on images with fixed parameters.
+ * \note Supported on the CPU backend only. On a GPU context this call fails and returns NULL,
+ * with the reason available from rocalGetErrorMessage().
  * \ingroup group_rocal_augmentations
  * \param [in] context Rocal context
  * \param [in] input Input Rocal tensor
