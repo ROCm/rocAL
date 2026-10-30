@@ -33,7 +33,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install rpp-dev wget libbz2-dev li
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y install python3 python3-pip git g++ hipblas hipsparse rocrand hipfft rocfft rocthrust-dev hipcub-dev && \
         git clone https://github.com/Tencent/rapidjson.git && cd rapidjson && mkdir build && cd build && \
         cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ../ && make -j4 && sudo make install && cd ../../ && \
-        pip install pytest==7.3.1 && git clone -b v2.11.1 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
+        pip install pytest==7.3.1 && git clone -b v3.1.0 https://github.com/pybind/pybind11 && cd pybind11 && mkdir build && cd build && \
         cmake -DDOWNLOAD_CATCH=ON -DDOWNLOAD_EIGEN=ON ../ && make -j4 && sudo make install && cd ../../ && \
         git clone -b v1.2.20 https://repo.or.cz/libtar.git && cd libtar && \
         autoreconf --force --install && CFLAGS="-fPIC" ./configure && make -j$(nproc) && sudo make install && cd ../../ 

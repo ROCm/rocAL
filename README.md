@@ -169,7 +169,7 @@ Follow the [ROCm install guide](https://rocm.docs.amd.com/en/latest/install/rocm
 Required manual installs:
 * [PyBind11](https://github.com/pybind/pybind11) - Manual install
   * Source: `https://github.com/pybind/pybind11`
-  * Tag: [v2.11.1](https://github.com/pybind/pybind11/releases/tag/v2.11.1)
+  * Tag: [v3.1.0](https://github.com/pybind/pybind11/releases/tag/v3.1.0) (>= 3.1 required; Python 3.14 needs pybind11 3.0+)
 
 * [RapidJSON](https://github.com/Tencent/rapidjson) - Manual install
   * Source: `https://github.com/Tencent/rapidjson.git`
@@ -378,7 +378,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 * Protobuf - `libprotobuf-dev`/`protobuf-devel`
 * TurboJPEG - `libturbojpeg0-dev`/`turbojpeg-devel`
 * RapidJSON - `https://github.com/Tencent/rapidjson`
-* PyBind11 - [v2.11.1](https://github.com/pybind/pybind11)
+* PyBind11 - [v3.1.0](https://github.com/pybind/pybind11) (>= 3.1)
 * FFMPEG - `ffmpeg` dev package
 * libsndfile - [1.0.31](https://github.com/libsndfile/libsndfile/releases/tag/1.0.31)
 * Libtar - [v1.2.20](https://repo.or.cz/libtar.git)
