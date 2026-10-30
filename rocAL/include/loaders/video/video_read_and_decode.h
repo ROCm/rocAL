@@ -38,10 +38,6 @@ THE SOFTWARE.
 #include "pipeline/filesystem.h"
 
 #ifdef ROCAL_VIDEO
-extern "C" {
-#include <libavutil/pixdesc.h>
-}
-
 class VideoReadAndDecode {
    public:
     VideoReadAndDecode();
@@ -108,7 +104,7 @@ class VideoReadAndDecode {
     size_t _max_decoded_width;
     size_t _max_decoded_height;
     size_t _max_decoded_stride;
-    AVPixelFormat _out_pix_fmt;
+    rocal::video::VideoPixelFormat _out_pix_fmt;
     DecoderConfig _video_decoder_config;
     int _device_id = 0;
 };

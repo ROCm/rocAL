@@ -84,6 +84,17 @@ if(NOT "${BACKEND}" STREQUAL "HIP")
   message("-- ${Yellow}Warning: Skipping GPU tests")
 endif()
 
+# Tests need the tiny image dataset.  In a normal /opt/rocm install it lives under
+# /opt/rocm/share/rocal/test/data.  When building against a local install prefix, use
+# the same prefix so the test data path is resolvable without /opt/rocm.
+if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/share/rocal/test/data/images/AMD-tinyDataSet")
+    set(ROCAL_TEST_DATA_PATH ${CMAKE_INSTALL_PREFIX}/share/rocal/test/data)
+else()
+    set(ROCAL_TEST_DATA_PATH ${ROCM_PATH}/share/rocal/test/data)
+endif()
+set(ROCAL_TEST_IMAGES ${ROCAL_TEST_DATA_PATH}/images/AMD-tinyDataSet)
+set(ROCAL_TEST_IMAGES_VAL ${ROCAL_TEST_DATA_PATH}/images/AMD-tinyDataSet-val.txt)
+
 # 1 - basic_test_cpu
 add_test(
   NAME
@@ -93,24 +104,25 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/basic_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/basic_test"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "basic_test"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 224 224
+            ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 0 224 224
 )
 if("${BACKEND}" STREQUAL "HIP")
   # 2 - basic_test_gpu
   add_test(NAME basic_test_gpu 
                 COMMAND basic_test 
-                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224
+                ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 1 224 224
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
   # 3 - basic_test_gray
   add_test(NAME basic_test_gray 
                 COMMAND basic_test 
-                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0
+                ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 1 224 224 0
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
   # 4 - basic_test_rgb
   add_test(NAME basic_test_rgb 
                 COMMAND basic_test 
-                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1
+                ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 1 224 224 1
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
 endif()
 
@@ -124,7 +136,7 @@ endif()
 #                              "${CMAKE_CURRENT_BINARY_DIR}/dataloader"
 #            --build-generator "${CMAKE_GENERATOR}"
 #            --test-command "dataloader"
-#            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet
+#            ${ROCAL_TEST_IMAGES}
 #)
 
 # 5 - dataloader_multithread_cpu
@@ -136,8 +148,9 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
                               "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "dataloader_multithread"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
+            ${ROCAL_TEST_IMAGES} 0
 )
 if("${BACKEND}" STREQUAL "HIP")
   # 6 - dataloader_multithread_gpu
@@ -149,8 +162,9 @@ if("${BACKEND}" STREQUAL "HIP")
               --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/dataloader_multithread"
                                 "${CMAKE_CURRENT_BINARY_DIR}/dataloader_multithread_gpu"
               --build-generator "${CMAKE_GENERATOR}"
+              --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
               --test-command "dataloader_multithread"
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+              ${ROCAL_TEST_IMAGES} 1
   )
 endif()
 
@@ -178,14 +192,15 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/performance_tests"
                               "${CMAKE_CURRENT_BINARY_DIR}/performance_tests"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "performance_tests"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 0
+            ${ROCAL_TEST_IMAGES} 224 224 1 16 0
 )
 if("${BACKEND}" STREQUAL "HIP")
   # 8 - performance_tests_gpu
   add_test(NAME performance_tests_gpu 
                 COMMAND performance_tests 
-                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 16 1
+                ${ROCAL_TEST_IMAGES} 224 224 1 16 1
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests)
 endif()
 
@@ -198,14 +213,15 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/performance_tests_with_depth"
                               "${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "performance_tests_with_depth"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 0
+            ${ROCAL_TEST_IMAGES} 224 224 1 1 1 0
 )
 if("${BACKEND}" STREQUAL "HIP")
   # 10 - performance_tests_with_depth_gpu
   add_test(NAME performance_tests_with_depth_gpu 
                 COMMAND performance_tests_with_depth 
-                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 224 224 1 1 1 1
+                ${ROCAL_TEST_IMAGES} 224 224 1 1 1 1
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/performance_tests_with_depth)
 endif()
 
@@ -218,19 +234,20 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests"
                               "${CMAKE_CURRENT_BINARY_DIR}/unit_tests"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "unit_tests"
-            0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 0 1
+            0 ${ROCAL_TEST_IMAGES} test 224 224 1 0 1
 )
 if("${BACKEND}" STREQUAL "HIP")
   # 12 - unit_tests_gpu
   add_test(NAME unit_tests_gpu 
                 COMMAND unit_tests 
-                0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 1
+                0 ${ROCAL_TEST_IMAGES} test 224 224 1 1 1
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
   # 13 - unit_tests_gray
   add_test(NAME unit_tests_gray 
                 COMMAND unit_tests 
-                0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet test 224 224 1 1 0
+                0 ${ROCAL_TEST_IMAGES} test 224 224 1 1 0
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 endif()
 
@@ -244,14 +261,15 @@ if("${BACKEND}" STREQUAL "HIP")
               --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
                                 "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
               --build-generator "${CMAKE_GENERATOR}"
+              --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
               --test-command "video_tests"
-              ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
+              ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4
   )
   # 15 - video_tests -- video reader with rocDecode
   if(rocdecode_FOUND)
     add_test(NAME video_tests_rocdecode
               COMMAND video_tests
-              ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 1 1 1
+              ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
   endif()
 
@@ -259,12 +277,12 @@ if("${BACKEND}" STREQUAL "HIP")
     # 16 - basic_test_rocjpeg_gray
     add_test(NAME basic_test_rocjpeg_gray
               COMMAND basic_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 0 1 1
+              ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 1 224 224 0 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
     # 17 - basic_test_rocjpeg_rgb
     add_test(NAME basic_test_rocjpeg_rgb
               COMMAND basic_test 
-              ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 1 224 224 1 1 1
+              ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 1 224 224 1 1 1
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/basic_test)
   endif()
 endif()
@@ -278,14 +296,15 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/serialization_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/serialization_test"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "serialization_test"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 0
+            ${ROCAL_TEST_IMAGES} 0
 )
 if("${BACKEND}" STREQUAL "HIP")
   # 19 - serialization_test_gpu
   add_test(NAME serialization_test_gpu 
                 COMMAND serialization_test 
-                ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet 1
+                ${ROCAL_TEST_IMAGES} 1
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/serialization_test)
 endif()
 
@@ -298,9 +317,10 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "checkpoint_test"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt
+            ${ROCAL_TEST_IMAGES}
+            ${ROCAL_TEST_IMAGES_VAL}
             0
 )
 
@@ -314,8 +334,8 @@ add_test(
                               "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
             --build-generator "${CMAKE_GENERATOR}"
             --test-command bash -c
-            "./checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0 && \
-             ./restore_checkpoint_test ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 0"
+            "./checkpoint_test ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 0 && \
+             ./restore_checkpoint_test ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 0"
 )
 
 # 22 - basic_test_cpu_partial_scale
@@ -330,8 +350,9 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/basic_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/basic_test"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "basic_test"
-            ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet-val.txt 1 0 32 32
+            ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 1 0 32 32
 )
 # A failed decode leaves a blank image and the pipeline carries on, so basic_test exits 0
 # either way. The decoder's complaint on stderr is the only signal, hence the regex.

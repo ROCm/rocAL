@@ -70,6 +70,7 @@ option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
+option(ROCAL_VIDEO_FFMPEG_ADAPTER "Build FFmpeg video support as a separate adapter" OFF)
 # The PythonFunction operator embeds the CPython C-API in the core rocAL library, which leaves
 # librocal.so with unresolved Py* symbols and makes it unusable from plain C/C++ applications
 # (https://github.com/ROCm/rocAL/issues/522). It stays disabled until the operator is moved out
@@ -153,12 +154,29 @@ else()
 endif()
 
 message("-- ${Cyan}rocAL Developer Options${ColourReset}")
+message("-- ${Cyan}     -D ROCAL_VIDEO_FFMPEG_ADAPTER=${ROCAL_VIDEO_FFMPEG_ADAPTER} [Build FFmpeg video support as a separate adapter (default:OFF)]${ColourReset}")
 message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
 
 add_subdirectory(rocAL)
+
+if(ROCAL_VIDEO_FFMPEG_ADAPTER)
+    add_subdirectory(rocal_video_ffmpeg)
+else()
+    # In monolithic mode the adapter is not built as a separate library, but its
+    # sources are still shipped under COMPONENT dev so users can build it on the
+    # target machine if they want to opt into the adapter workflow.
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rocal_video_ffmpeg/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/rocal_video_ffmpeg
+        COMPONENT dev
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.cpp"
+        PATTERN "*.hpp"
+        PATTERN "CMakeLists.txt")
+endif()
 
 if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.13"))
   message("-- ${Red}NOTE: rocAL pybind supported on Python versions - 3.8, 3.9, 3.10, 3.11, 3.12, 3.13. Not Found, Please provide supported version${ColourReset}")
@@ -174,6 +192,10 @@ endif()
 # install rocAL docs -- {ROCM_PATH}/${CMAKE_INSTALL_DATADIR}/doc/rocal/
 install(FILES docs/README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/rocal COMPONENT runtime)
 
+# Install CMake helper modules used by standalone adapter builds under the dev package.
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/cmake
+    COMPONENT dev)
 # test package
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
