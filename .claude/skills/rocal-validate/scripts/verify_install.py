@@ -61,6 +61,7 @@ HEADERS = [
 INSTALL_VOLATILE = {".dynstr", ".dynamic"}
 
 RUNPATH_TAG = re.compile(r"\((RUNPATH|RPATH)\)")
+DYN_ROW = re.compile(r"^\s*0x[0-9a-fA-F]+\s+\(")
 
 
 def run(cmd):
@@ -97,12 +98,17 @@ def section_md5(path, name):
 
 
 def dynamic_entries(path):
-    """`readelf -d` with RUNPATH/RPATH lines dropped - install rewrites those by design."""
+    """Dynamic-entry rows only, minus RPATH/RUNPATH.
+
+    The `Dynamic section ... contains N entries:` header is excluded on purpose: the top
+    level sets CMAKE_SKIP_INSTALL_RPATH, so install drops the RPATH entry entirely and N
+    changes, which would flag a legitimate install as stale.
+    """
     res = run(["readelf", "-d", "--wide", path])
     if res.returncode != 0:
         return None
     return [l.strip() for l in res.stdout.splitlines()
-            if l.strip() and not RUNPATH_TAG.search(l)]
+            if DYN_ROW.match(l) and not RUNPATH_TAG.search(l)]
 
 
 def compare_binaries(label, built, installed, findings):
@@ -165,6 +171,29 @@ def compare_binaries(label, built, installed, findings):
     else:
         n = len([k for k in sa if k not in INSTALL_VOLATILE])
         findings.append(("OK", label, f"all {n} comparable sections match"))
+
+
+def check_aliases(libdir, pattern, verified, findings):
+    """Require every symlink alias to resolve to content already verified as matching."""
+    aliases = [p for p in glob(os.path.join(libdir, pattern)) if os.path.islink(p)]
+    if not aliases:
+        findings.append(("WARN", "so aliases",
+                         f"no librocal symlinks in {libdir} - find_library() needs librocal.so"))
+        return
+    problems = []
+    for a in sorted(aliases):
+        target = os.path.realpath(a)
+        if not os.path.exists(target):
+            problems.append(f"{os.path.basename(a)} -> {os.readlink(a)} (DANGLING)")
+        elif verified and target not in verified:
+            problems.append(
+                f"{os.path.basename(a)} -> {os.path.basename(target)} "
+                "(resolves to a library that is not the one just verified)")
+    if problems:
+        findings.append(("FAIL", "so aliases", "; ".join(problems)))
+    else:
+        findings.append(("OK", "so aliases",
+                         f"{len(aliases)} alias(es) resolve to verified content"))
 
 
 def real_files(paths):
@@ -242,8 +271,18 @@ def main():
         findings.append((
             "FAIL", "librocal.so", "not found in the build tree - did the build run?",
         ))
+    verified = set()
     for name, built, installed in lib_pairs:
+        before = len([f for f in findings if f[0] == "FAIL"])
         compare_binaries(name, built, installed, findings)
+        if len([f for f in findings if f[0] == "FAIL"]) == before and installed:
+            verified.add(os.path.realpath(installed))
+
+    # The aliases are what tests actually link and load: find_library() resolves
+    # librocal.so, and the loader follows SONAME librocal.so.2. A partial install can
+    # leave either dangling or pointing at an older release while the versioned file is
+    # correct, so resolve each one and require it to land on verified content.
+    check_aliases(os.path.join(args.rocm_path, "lib"), "librocal.so*", verified, findings)
 
     # 2. rocal_pybind extension module(s), paired by basename
     pb_pairs = pair_by_name(

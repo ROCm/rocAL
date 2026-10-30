@@ -81,6 +81,16 @@ both. Never hardcode machine-specific paths into the skill.
 - `ROCM_PATH` - the ROCm install the tests link and load against
 - `ROCAL_DATA_PATH` - the MIVisionX-data checkout holding the goldens
 
+**`export` both**, for every phase. ctest builds each cpp_api test as a standalone
+sub-project that reads `ENV{ROCM_PATH}` and falls back to `/opt/rocm`
+(`tests/cpp_api/basic_test/CMakeLists.txt:28-33`); the top-level `-DROCM_PATH` does not
+reach it. Without the export the suite silently validates a different ROCm install than
+Phase 2 verified.
+
+```bash
+export ROCM_PATH ROCAL_DATA_PATH
+```
+
 ### 0c. Assert before doing any work
 
 - both paths exist

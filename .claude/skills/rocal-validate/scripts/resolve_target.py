@@ -177,6 +177,13 @@ def git(*args, cwd=None, check=True):
     return res.stdout.strip()
 
 
+def git_status(cwd):
+    """Porcelain lines with only line endings trimmed - the status columns are fixed-width."""
+    res = subprocess.run(["git", "status", "--porcelain"], cwd=cwd,
+                         capture_output=True, text=True)
+    return [l for l in res.stdout.split("\n") if l.strip()]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--target", help="PR number or branch name; omit to use the current checkout")
@@ -187,7 +194,7 @@ def main():
     args = ap.parse_args()
 
     root = git("rev-parse", "--show-toplevel")
-    dirty_files = [l for l in git("status", "--porcelain", cwd=root).splitlines() if l.strip()]
+    dirty_files = git_status(root)
 
     # ---- optional checkout --------------------------------------------------
     switched = None
@@ -220,7 +227,7 @@ def main():
 
     branch = git("rev-parse", "--abbrev-ref", "HEAD", cwd=root)
     sha = git("rev-parse", "HEAD", cwd=root)
-    dirty_files = [l for l in git("status", "--porcelain", cwd=root).splitlines() if l.strip()]
+    dirty_files = git_status(root)
 
     # ---- base resolution ----------------------------------------------------
     # Prefer origin/<base>. A local 'develop' is routinely stale, and diffing against a
