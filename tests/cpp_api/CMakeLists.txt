@@ -234,19 +234,21 @@ if("${BACKEND}" STREQUAL "HIP")
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unit_tests)
 endif()
 
+# 14 - video_tests -- CPU software decode (FFmpeg avcodec + swscale).
+# reader_case=0, processing_device=0, hardware_decode_mode=0.
+add_test(
+  NAME
+  video_tests_ffmpeg
+  COMMAND
+    "${CMAKE_CTEST_COMMAND}"
+            --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
+                              "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
+            --build-generator "${CMAKE_GENERATOR}"
+            --test-command "video_tests"
+            ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4 0 0 0
+)
+
 if("${BACKEND}" STREQUAL "HIP")
-  # 14 - video_tests -- video reader with ffmpeg decoder
-  add_test(
-    NAME
-    video_tests_ffmpeg
-    COMMAND
-      "${CMAKE_CTEST_COMMAND}"
-              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
-                                "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
-              --build-generator "${CMAKE_GENERATOR}"
-              --test-command "video_tests"
-              ${ROCM_PATH}/share/rocal/test/data/videos/AMD_driving_virtual_20.mp4
-  )
   # 15 - video_tests -- video reader with rocDecode
   if(rocdecode_FOUND)
     add_test(NAME video_tests_rocdecode
