@@ -87,6 +87,12 @@ if(Python3_FOUND AND ROCAL_PYBIND_SCRIPTS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
   set_property(TEST rocal_pybind_test_types PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
+  # 7 - pipeline scope test
+  add_test(NAME rocal_pybind_test_pipeline_scope
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/pipeline_scope_test.py
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
+  set_property(TEST rocal_pybind_test_pipeline_scope PROPERTY ENVIRONMENT "PYTHONPATH=${ROCM_PATH}/lib:$PYTHONPATH")
 else()
   if(NOT Python3_FOUND)
     message("-- NOTE: rocAL pybind requires Python3 - NOT FOUND")
