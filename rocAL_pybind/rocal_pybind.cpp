@@ -305,15 +305,24 @@ static std::string rocal_last_error(RocalContext context) {
 // recorded its reason through ROCAL_PRINT_EXCEPTION, but the argument checks in
 // ROCAL_INVALID_CONTEXT_ERR and ROCAL_INVALID_INPUT_ERR only log theirs. The context holds the
 // last reason until it is destroyed, so `last_error` - read just before the call - is what
-// tells the two apart: an unchanged message means this call recorded nothing and the one in
-// the context belongs to an earlier call, which it would be misleading to report here.
+// tells the two apart: an unchanged message means this call most likely recorded nothing and
+// the one in the context belongs to an earlier call.
+//
+// Most likely, not certainly: the context keeps only the last message, so two calls that fail
+// for the same reason read back identical text and the second looks like it recorded nothing.
+// Telling the two apart exactly would need a counter on the context reachable from here, and
+// the bindings only see the public API. Report the message either way rather than drop it, and
+// attribute it to the context instead of to this call, so the reason survives the ambiguous
+// case without the wording claiming more than is known.
 static std::string rocal_failure_message(const char *op_name, RocalContext context, const std::string &last_error) {
     std::string message = std::string("rocAL operator '") + op_name + "' failed: ";
     if (context == nullptr)
         return message + "invalid rocAL context";
     std::string error = rocal_last_error(context);
-    if (error.empty() || error == last_error)
+    if (error.empty())
         return message + "the operator rejected its arguments, see the rocAL error output above";
+    if (error == last_error)
+        return message + "the operator rejected its arguments; the last error recorded on this context was: " + error;
     return message + error;
 }
 
