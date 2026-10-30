@@ -150,7 +150,7 @@ endif()
 
 if(${BUILD_ROCAL_PYBIND})
     # multi version python support
-    set(PYTHON_VERSIONS "3.13" "3.12" "3.11" "3.10" "3.9" "3.8")
+    set(PYTHON_VERSIONS "3.14" "3.13" "3.12" "3.11" "3.10" "3.9" "3.8")
     if(PYTHON_VERSION_SUGGESTED)
         set(PYTHON_VERSIONS "${PYTHON_VERSION_SUGGESTED}")
     endif()
