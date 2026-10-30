@@ -126,6 +126,7 @@ public:
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
     void validate_inputs(const std::vector<Tensor *> &inputs);  // Throws if an operator's inputs cannot be consumed, before add_node() mutates the graph
     void discard_tensor(Tensor *tensor);  // Undoes a create_tensor() whose node was never added, so a rejected operator leaves nothing behind
+    bool discard_node(std::shared_ptr<Node> node);  // Undoes the add_node() of an operator that failed afterwards, in its init() say
     Tensor *create_internal_tensor(const TensorInfo &info);  // Creates a regular (non-virtual) tensor and adds it to _internal_tensors vector
     TensorListVector * create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     TensorListVector * create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);

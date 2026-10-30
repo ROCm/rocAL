@@ -384,14 +384,55 @@ void MasterGraph::validate_inputs(const std::vector<Tensor *> &inputs) {
     }
 }
 
+// Takes the node by value on purpose: the only references the caller has to it are the ones this
+// function removes, and the node has to stay alive while they go.
+bool MasterGraph::discard_node(std::shared_ptr<Node> node) {
+    // Only the operator added last can be rolled back. The lists below are append-only, and an
+    // operator added after this one may already consume its outputs, so anything else has to be
+    // left alone - the same reason discard_tensor() only unwinds the most recent create_tensor().
+    if (_pipeline_operators.empty() || _pipeline_operators.back()->node != node)
+        return false;
+
+    _pipeline_operators.pop_back();
+    _op_idx--;
+
+    // Drop the links the parents gained. The node itself goes away with the last reference to it,
+    // taking its own _prev with it.
+    for (auto &input : node->input()) {
+        auto parent = _tensor_map.find(input);
+        if (parent != _tensor_map.end())
+            parent->second->remove_next(node);
+    }
+
+    for (auto &output : node->output())
+        _tensor_map.erase(output);
+
+    _nodes.remove(node);
+
+    // A loader also registered its module and claimed a graph id, which is what decides whether
+    // build() takes the single or the multi-graph path.
+    if (!_root_nodes.empty() && _root_nodes.back() == node) {
+        _root_nodes.pop_back();
+        if (!_loader_modules.empty())
+            _loader_modules.pop_back();
+        if (_loaders_count > 0)
+            _loaders_count--;
+    }
+
+    return true;
+}
+
 void MasterGraph::discard_tensor(Tensor *tensor) {
     if (tensor == nullptr)
         return;
 
-    // A tensor that already produces for a node must outlive this call: deleting it would leave
-    // that node holding a dangling output. Reached when an entry point throws after add_node()
-    // succeeded, for instance from the node's init().
-    if (_tensor_map.find(tensor) != _tensor_map.end())
+    // Reached when an entry point threw after add_node() succeeded - from the node's init(), most
+    // often. The node holds this tensor as its output and is still in the graph, so build() would
+    // go on to create it from the very arguments init() rejected. Take the node out first; if it
+    // cannot be rolled back, leave the tensor alone too, since deleting it would leave the node
+    // holding a dangling output.
+    auto producer = _tensor_map.find(tensor);
+    if (producer != _tensor_map.end() && !discard_node(producer->second))
         return;
 
     // create_tensor(info, true) appends to both lists and allocates a user-facing replica. Only the

@@ -43,7 +43,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a heap buffer overrun in the raw TFRecord reader, which copied the whole record into the loader's output slot without honouring its capacity.
 * Resolve a segfault in `rocalRelease()` on box encoder pipelines, where the labels and bounding box tensor lists were reachable from two tensor list vectors and every tensor in them was deleted twice.
 * Resolve a failing operator in Python: inputs are now validated before the operator is added to the graph, and the call raises a `RuntimeError` naming the operator.
-* Resolve a rejected operator leaking its output tensor, and leaving it in the pipeline's output list as an output no node produces.
+* Resolve a rejected operator being left in the graph, along with its output tensor, for `build()` to create.
 * Resolve `rocalVideoFileResize()` and `rocalVideoFileResizeSingleShard()` returning a null tensor on success when the frames are decoded at their native size.
 * Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
