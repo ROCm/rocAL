@@ -43,6 +43,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a heap buffer overrun in the raw TFRecord reader, which copied the whole record into the loader's output slot without honouring its capacity.
 * Resolve a segfault in `rocalRelease()` on box encoder pipelines, where the labels and bounding box tensor lists were reachable from two tensor list vectors and every tensor in them was deleted twice.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
+* Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
