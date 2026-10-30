@@ -39,6 +39,13 @@ THE SOFTWARE.
 #include <half/half.hpp>
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
+
+static void check_hip(hipError_t status, const char *msg) {
+    if (status != hipSuccess) {
+        std::cerr << "HIP error in " << msg << ": " << hipGetErrorString(status) << std::endl;
+        exit(-1);
+    }
+}
 #endif
 
 #if ENABLE_OPENCV
@@ -1178,11 +1185,11 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
         } break;
         case 106: {
             std::cout << "Running tensor reduction augmentations" << std::endl;
-            auto tensor_sum = rocalTensorSum(handle, input, false, ROCAL_NONE, ROCAL_FP32);
-            auto tensor_min = rocalTensorMin(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
-            auto tensor_max = rocalTensorMax(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
+            rocalTensorSum(handle, input, false, ROCAL_NONE, ROCAL_FP32);
+            rocalTensorMin(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
+            rocalTensorMax(handle, input, false, ROCAL_NONE, ROCAL_UINT8);
             auto tensor_mean = rocalTensorMean(handle, input, false, ROCAL_NONE, ROCAL_FP32);
-            auto tensor_stddev = rocalTensorStdDev(handle, input, tensor_mean, false, ROCAL_NONE, ROCAL_FP32);
+            rocalTensorStdDev(handle, input, tensor_mean, false, ROCAL_NONE, ROCAL_FP32);
             output = rocalCopy(handle, input, true);
         } break;
         default:
@@ -1208,7 +1215,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
     int h = rocalGetAugmentationBranchCount(handle) * rocalGetOutputHeight(handle) * input_batch_size;
     int w = rocalGetOutputWidth(handle);
     int output_color_format = rocalGetOutputColorFormat(handle);
-    auto last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
+    size_t last_batch_padded_size = rocalGetLastBatchPaddedSize(handle);
+    // By definition last_batch_padded_size is the number of samples padded into the final
+    // batch (batch_size - padded_samples), so it can never reach/exceed the batch size itself.
+    if (last_batch_padded_size >= (size_t)input_batch_size) {
+        std::cout << "Invalid last_batch_padded_size " << last_batch_padded_size
+                   << " (batch size " << input_batch_size << ")" << std::endl;
+        return -1;
+    }
     // Use output_color_format to determine channels: 0=RGB24(3ch), 1=BGR24(3ch), 2=U8(1ch), 3=RGB_PLANAR(3ch)
     int p = ((output_color_format == 0 || output_color_format == 1 || output_color_format == 3) ? 3 : 1);
     std::vector<unsigned char> mat_input(h * w * p);
@@ -1222,10 +1236,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 #endif
     printf("Remaining images %lu \n", rocalGetRemainingImages(handle));
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
+#if ENABLE_OPENCV
     int index = 0;
+#endif
 
     while (rocalGetRemainingImages(handle) >= input_batch_size) {
+#if ENABLE_OPENCV
         index++;
+#endif
         if (rocalRun(handle) != 0) {
             std::cout << "rocalRun Failed with runtime error" << std::endl;
             rocalRelease(handle);
@@ -1343,7 +1361,7 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
 
                 // Get output matched indices
                 if (enable_iou_matcher) {
-                    rocalGetMatchedIndices(handle); // TODO - To verify the output
+                    (void)rocalGetMatchedIndices(handle); // TODO - To verify the output
                 }
             } break;
             case 3: {   // keypoints pipeline
@@ -1470,14 +1488,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
                 if (memcpy_backend) {
 #if ENABLE_HIP
                     float *d_f32_batch_output;
-                    hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+                    check_hip(hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1)), "hipMalloc d_f32_batch_output");
                     rocalToTensor(handle, d_f32_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                    hipFree(d_f32_batch_output);
+                    check_hip(hipFree(d_f32_batch_output), "hipFree d_f32_batch_output");
 
                     half *d_f16_batch_output;
-                    hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+                    check_hip(hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1)), "hipMalloc d_f16_batch_output");
                     rocalToTensor(handle, d_f16_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                    hipFree(d_f16_batch_output);
+                    check_hip(hipFree(d_f16_batch_output), "hipFree d_f16_batch_output");
 #endif
                 } else {
                     float *f32_batch_output = (float *)aligned_alloc(256, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
@@ -1491,14 +1509,14 @@ int test(int test_case, int reader_type, const char *path, const char *outName, 
             } else {
 #if ENABLE_HIP
                 float *d_f32_batch_output;
-                hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1));
+                check_hip(hipMalloc(&d_f32_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(float)) / 256 + 1)), "hipMalloc d_f32_batch_output");
                 rocalToTensor(handle, d_f32_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP32, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                hipFree(d_f32_batch_output);
+                check_hip(hipFree(d_f32_batch_output), "hipFree d_f32_batch_output");
 
                 half *d_f16_batch_output;
-                hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1));
+                check_hip(hipMalloc(&d_f16_batch_output, 256 * ((input_batch_size * h * w * p * sizeof(half)) / 256 + 1)), "hipMalloc d_f16_batch_output");
                 rocalToTensor(handle, d_f16_batch_output, (RocalTensorLayout)output_layout, RocalTensorOutputType::ROCAL_FP16, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, reverse_channels, RocalOutputMemType::ROCAL_MEMCPY_GPU);
-                hipFree(d_f16_batch_output);
+                check_hip(hipFree(d_f16_batch_output), "hipFree d_f16_batch_output");
 #endif
             }
         }
