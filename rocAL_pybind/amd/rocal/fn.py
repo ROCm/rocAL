@@ -52,7 +52,7 @@ def blend(*inputs, ratio=None, device=None, output_layout=types.NHWC, output_dty
     kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "ratio": ratio,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     blend_image = b.blend(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (blend_image)
 
 
@@ -76,7 +76,7 @@ def snow(*inputs, snow=0.5, brightness_coefficient=2.0, dark_mode=0, device=None
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "snow": snow,
                      "brightness_coefficient": brightness_coefficient, "dark_mode": dark_mode,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    snow_image = b.snow(Pipeline._current_pipeline._handle,
+    snow_image = b.snow(Pipeline.current()._handle,
                         *(kwargs_pybind.values()))
     return (snow_image)
 
@@ -98,7 +98,7 @@ def exposure(*inputs, exposure=0.5, device=None, output_layout=types.NHWC, outpu
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "exposure": exposure,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     exposure_image = b.exposure(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (exposure_image)
 
 
@@ -117,7 +117,7 @@ def fish_eye(*inputs, device=None, fill_value=0.0, output_layout=types.NHWC, out
     kwargs_pybind = {"input_image": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     fisheye_image = b.fishEye(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (fisheye_image)
 
 
@@ -138,7 +138,7 @@ def fog(*inputs, intensity_factor=0.5, gray_factor=0.5, device=None, output_layo
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "intensity_factor": intensity_factor, "gray_factor": gray_factor, "output_layout": output_layout, "output_dtype": output_dtype}
-    fog_image = b.fog(Pipeline._current_pipeline._handle,
+    fog_image = b.fog(Pipeline.current()._handle,
                       *(kwargs_pybind.values()))
     return (fog_image)
 
@@ -167,7 +167,7 @@ def brightness(*inputs, brightness=None, brightness_shift=None, conditional_exec
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "brightness": brightness, "brightness_shift": brightness_shift,
                      "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
     brightness_image = b.brightness(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (brightness_image)
 
 
@@ -189,7 +189,7 @@ def brightness_fixed(*inputs, brightness=1.0, brightness_shift=0.0, conditional_
     kwargs_pybind = {"input_image": inputs[0], "brightness": brightness, "brightness_shift": brightness_shift,
                      "is_output": False, "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
     brightness_image = b.brightnessFixed(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (brightness_image)
 
 
@@ -256,7 +256,7 @@ def lens_correction(*inputs, camera_matrix=None, distortion_coeffs=None, device=
     kwargs_pybind = {"input_image": inputs[0], "camera_matrix": cameraMatrix, "distortion_coeffs": distortionCoeffs, "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     len_corrected_image = b.lensCorrection(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (len_corrected_image)
 
 
@@ -275,7 +275,7 @@ def blur(*inputs, window_size=None, sigma=0.0, device=None, output_layout=types.
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    blur_image = b.blur(Pipeline._current_pipeline._handle,
+    blur_image = b.blur(Pipeline.current()._handle,
                         *(kwargs_pybind.values()))
     return (blur_image)
 
@@ -301,7 +301,7 @@ def contrast(*inputs, contrast=None, contrast_center=None, device=None, output_l
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "contrast": contrast, "contrast_center": contrast_center, "output_layout": output_layout, "output_dtype": output_dtype}
     contrast_image = b.contrast(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (contrast_image)
 
 
@@ -328,7 +328,7 @@ def flip(*inputs, horizontal=0, vertical=0, depth=0, device=None, output_layout=
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "horizontal": horizontal, "vertical": vertical, "depth": depth, "output_layout": output_layout, "output_dtype": output_dtype}
-    flip_image = b.flip(Pipeline._current_pipeline._handle,
+    flip_image = b.flip(Pipeline.current()._handle,
                         *(kwargs_pybind.values()))
     return (flip_image)
 
@@ -350,7 +350,7 @@ def gamma_correction(*inputs, gamma=0.5, device=None, output_layout=types.NHWC, 
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "gamma": gamma, "output_layout": output_layout, "output_dtype": output_dtype}
     gamma_correction_image = b.gammaCorrection(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (gamma_correction_image)
 
 
@@ -370,7 +370,7 @@ def hue(*inputs, hue=None, device=None, seed=0, output_layout=types.NHWC, output
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "hue": hue, "output_layout": output_layout, "output_dtype": output_dtype}
-    hue_image = b.hue(Pipeline._current_pipeline._handle,
+    hue_image = b.hue(Pipeline.current()._handle,
                       *(kwargs_pybind.values()))
     return (hue_image)
 
@@ -394,7 +394,7 @@ def jitter(*inputs, kernel_size=None, seed=0, fill_value=0.0, device=None, outpu
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "kernel_size": kernel_size, "seed": seed, "output_layout": output_layout, "output_dtype": output_dtype}
     jitter_image = b.jitter(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (jitter_image)
 
 
@@ -413,7 +413,7 @@ def pixelate(*inputs, device=None, pixelate_percent=50.0, output_layout=types.NH
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "pixelate_percent": pixelate_percent, "output_layout": output_layout, "output_dtype": output_dtype}
     pixelate_image = b.pixelate(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (pixelate_image)
 
 
@@ -438,7 +438,7 @@ def rain(*inputs, rain=None, rain_width=0, rain_height=0, rain_transparency=None
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "rain_value": rain, "rain_width": rain_width, "rain_height": rain_height,
                      "rain_slant_angle": rain_slant_angle, "rain_transparency": rain_transparency, "output_layout": output_layout, "output_dtype": output_dtype}
-    rain_image = b.rain(Pipeline._current_pipeline._handle,
+    rain_image = b.rain(Pipeline.current()._handle,
                         *(kwargs_pybind.values()))
     return (rain_image)
 
@@ -466,7 +466,7 @@ def resize(*inputs, max_size=[], resize_longer=0, resize_shorter=0, resize_width
     kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter,
                      "resize_longer": resize_longer, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     resized_image = b.resize(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (resized_image)
 
 
@@ -502,7 +502,7 @@ def resize_crop_mirror(*inputs, resize_width=0, resize_height=0, crop_w=0, crop_
     kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_w": crop_w,
                      "crop_h": crop_h, "mirror": mirror, "output_layout": output_layout, "output_dtype": output_dtype}
     rcm = b.resizeCropMirrorFixed(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (rcm)
 
 
@@ -542,7 +542,7 @@ def resize_crop(*inputs, resize_width=0, resize_height=0, crop_area_factor=None,
     kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
                      "crop_aspect_ratio": crop_aspect_ratio, "x_drift": x_drift, "y_drift": y_drift, "output_layout": output_layout, "output_dtype": output_dtype}
     crop_resized_image = b.cropResize(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (crop_resized_image)
 
 
@@ -567,7 +567,7 @@ def random_resized_crop(*inputs, resize_width=0, resize_height=0, crop_area_fact
     kwargs_pybind = {"input_image": inputs[0], "dest_width": resize_width, "dest_height": resize_height, "is_output": False, "crop_area_factor": crop_area_factor,
                      "crop_aspect_ratio": crop_aspect_ratio, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     random_resized_crop_image = b.randomResizedCrop(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (random_resized_crop_image)
 
 
@@ -593,7 +593,7 @@ def roi_resize(*inputs, resize_width=0, resize_height=0, roi_w=None, roi_h=None,
     kwargs_pybind = {"input_image": inputs[0], "dest_width:": resize_width, "dest_height": resize_height, "is_output": False, "roi_h": roi_h,
                      "roi_w": roi_w, "roi_pos_x": roi_pos_x, "roi_pos_y": roi_pos_y, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     roi_resized_image = b.roiResize(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (roi_resized_image)
 
 
@@ -635,7 +635,7 @@ def resize_mirror_normalize(*inputs, max_size=[], resize_longer=0, resize_shorte
                      "scaling_mode": scaling_mode, "max_size": max_size, "resize_shorter": resize_shorter, "resize_longer": resize_longer,
                      "interpolation_type": interpolation_type, "mirror": mirror, "output_layout": output_layout, "output_dtype": output_dtype}
     rmn = b.resizeMirrorNormalize(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (rmn)
 
 
@@ -663,7 +663,7 @@ def random_crop(*inputs, crop_area_factor=[0.08, 1], crop_aspect_ratio=[0.75, 1.
     kwargs_pybind = {"input_image": inputs[0], "is_output": False,
                      "crop_area_factor": crop_area_factor, "crop_aspect_ratio": crop_aspect_ratio, "crop_pos_x": crop_pox_x, "crop_pos_y": crop_pox_y, "num_of_attempts": num_attempts, "output_layout": output_layout, "output_dtype": output_dtype}
     random_cropped_image = b.randomCrop(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (random_cropped_image)
 
 
@@ -689,7 +689,7 @@ def rotate(*inputs, angle=None, dest_width=0, dest_height=0, interpolation_type=
     kwargs_pybind = {"input_image": inputs[0], "is_output": False,
                      "angle": angle, "dest_width": dest_width, "dest_height": dest_height, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     rotated_image = b.rotate(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (rotated_image)
 
 
@@ -710,7 +710,7 @@ def saturation(*inputs, saturation=1.0, device=None, output_layout=types.NHWC, o
     kwargs_pybind = {"input_image": inputs[0],
                      "is_output": False, "sat": saturation, "output_layout": output_layout, "output_dtype": output_dtype}
     saturated_image = b.saturation(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (saturated_image)
 
 
@@ -750,7 +750,7 @@ def ssd_random_crop(*inputs, p_threshold=None, crop_area_factor=None, crop_aspec
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "p_threshold": p_threshold, "crop_area_factor": crop_area_factor,
                      "crop_aspect_ratio": crop_aspect_ratio, "crop_pos_x": crop_pos_x, "crop_pos_y": crop_pos_y, "num_of_attempts": _num_attempts, "output_layout": output_layout, "output_dtype": output_dtype}
     ssd_random_cropped_image = b.ssdRandomCrop(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (ssd_random_cropped_image)
 
 
@@ -774,7 +774,7 @@ def warp_affine(*inputs, dest_width=0, dest_height=0, matrix=[0, 0, 0, 0, 0, 0],
     kwargs_pybind = {"input_image": inputs[0], "x0": x0, "x1": x1, "y0": y0, "y1": y1, "o0": o0,
                      "o1": o1, "is_output": False, "dest_height": dest_height, "dest_width": dest_width, "interpolation_type": interpolation_type, "output_layout": output_layout, "output_dtype": output_dtype}
     warp_affine_output = b.warpAffineFixed(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (warp_affine_output)
 
 
@@ -795,7 +795,7 @@ def vignette(*inputs, vignette=0.5, device=None, output_layout=types.NHWC, outpu
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "sdev": vignette,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     vignette_output = b.vignette(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (vignette_output)
 
 
@@ -838,7 +838,7 @@ def crop_mirror_normalize(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5,
     kwargs_pybind = {"input_image": inputs[0], "crop_height": crop_height, "crop_width": crop_width, "start_x": crop_pos_x, "start_y": crop_pos_y, "mean": mean, "std_dev": std,
                      "is_output": False, "mirror": mirror, "output_layout": output_layout, "output_dtype": output_dtype}
     cmn = b.cropMirrorNormalize(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (cmn)
 
 
@@ -874,7 +874,7 @@ def center_crop(*inputs, crop=[0, 0], crop_h=0, crop_w=0, crop_d=1,
     kwargs_pybind = {"input_image": inputs[0], "crop_width": crop_width, "crop_height": crop_height, "crop_depth": crop_depth,
                      "is_output": False, "output_layout": output_layout, "output_dtype": output_dtype}
     centre_cropped_image = b.centerCropFixed(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     return (centre_cropped_image)
 
@@ -915,13 +915,13 @@ def crop(*inputs, crop=[0, 0], crop_pos_x=0.5, crop_pos_y=0.5, crop_pos_z=0.5,
         kwargs_pybind = {"input_image": inputs[0], "crop_width": None, "crop_height": None, "crop_depth": None, "is_output": False, "crop_pos_x": None,
                          "crop_pos_y": None, "crop_pos_z": None, "output_layout": output_layout, "output_dtype": output_dtype}
         cropped_image = b.crop(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     else:
         # pybind call arguments
         kwargs_pybind = {"input_image": inputs[0], "crop_width": crop_width, "crop_height": crop_height, "crop_depth": crop_depth, "is_output": False, "crop_pos_x": crop_pos_x,
                          "crop_pos_y": crop_pos_y, "crop_pos_z": crop_pos_z, "output_layout": output_layout, "output_dtype": output_dtype}
         cropped_image = b.cropFixed(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (cropped_image)
 
 
@@ -952,7 +952,7 @@ def color_twist(*inputs, brightness=1.0, contrast=1.0, hue=0.0,
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "p_alpha": brightness, "p_beta": contrast,
                      "p_hue": hue, "p_sat": saturation, "output_layout": output_layout, "output_dtype": output_dtype}
     color_twist_image = b.colorTwist(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (color_twist_image)
 
 
@@ -1006,7 +1006,7 @@ def random_bbox_crop(*inputs, all_boxes_above_threshold=True, allow_no_crop=True
     kwargs_pybind = {"all_boxes_above_threshold": all_boxes_above_threshold, "no_crop": allow_no_crop, "p_aspect_ratio": aspect_ratio, "has_shape": has_shape,
                      "crop_width": crop_width, "crop_height": crop_height, "num_attemps": num_attempts, "p_scaling": scaling, "total_num_attempts": total_num_attempts, "seed": seed}
     random_bbox_crop = b.randomBBoxCrop(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     return (random_bbox_crop, [], [], [])
 
@@ -1024,8 +1024,8 @@ def one_hot(*inputs, num_classes=0, device=None):
 
         @return    an empty list
     """
-    Pipeline._current_pipeline._num_classes = num_classes
-    Pipeline._current_pipeline._one_hot_encoding = True
+    Pipeline.current()._num_classes = num_classes
+    Pipeline.current()._one_hot_encoding = True
     return ([])
 
 
@@ -1051,8 +1051,8 @@ def box_encoder(*inputs, anchors, criteria=0.5, means=None,
     kwargs_pybind = {"anchors": anchors, "criteria": criteria,
                      "means": means, "stds": stds, "offset": offset, "scale": scale}
     box_encoder = b.boxEncoder(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    Pipeline._current_pipeline._box_encoder = True
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
+    Pipeline.current()._box_encoder = True
     return (box_encoder, [])
 
 
@@ -1073,7 +1073,7 @@ def color_temp(*inputs, adjustment_value=50, device=None, output_layout=types.NH
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "adjustment_value": adjustment_value,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     color_temp_output = b.colorTemp(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (color_temp_output)
 
 
@@ -1087,7 +1087,7 @@ def nop(*inputs, device=None):
     """
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False}
-    nop_output = b.nop(Pipeline._current_pipeline._handle,
+    nop_output = b.nop(Pipeline.current()._handle,
                        *(kwargs_pybind.values()))
     return (nop_output)
 
@@ -1103,7 +1103,7 @@ def copy(*inputs, device=None):
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False}
     copied_image = b.copy(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (copied_image)
 
 
@@ -1136,7 +1136,7 @@ def snp_noise(*inputs, p_noise=0.0, p_salt=0.0, noise_val=0.0, salt_val=0.0,
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "p_noise": p_noise, "p_salt": p_salt, "noise_val": noise_val,
                      "salt_val": salt_val, "seed": seed, "output_layout": output_layout, "output_dtype": output_dtype}
     snp_noise_added_image = b.snpNoise(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (snp_noise_added_image)
 
 
@@ -1163,7 +1163,7 @@ def gaussian_noise(*inputs, mean=0.0, stddev=0.1, seed=0, conditional_execution=
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "mean": mean, "stddev": stddev,
                      "seed": seed, "conditional_execution": conditional_execution, "output_layout": output_layout, "output_dtype": output_dtype}
     gaussian_noise_added_image = b.gaussianNoise(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (gaussian_noise_added_image)
 
 
@@ -1185,7 +1185,7 @@ def shot_noise(*inputs, noise_factor=0.1, seed=0, device=None, output_layout=typ
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "noise_factor": noise_factor,
                      "seed": seed, "output_layout": output_layout, "output_dtype": output_dtype}
     shot_noise_added_image = b.shotNoise(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (shot_noise_added_image)
 
 
@@ -1208,7 +1208,7 @@ def spatter(*inputs, red=65, green=50, blue=23, device=None, output_layout=types
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "red": red, "green": green, "blue": blue,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     spatter_image = b.spatter(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (spatter_image)
 
 
@@ -1228,7 +1228,7 @@ def lut(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8
     kwargs_pybind = {"input_image": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     lut_image = b.lut(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (lut_image)
 
 
@@ -1248,7 +1248,7 @@ def posterize(*inputs, num_bits=4, device=None, output_layout=types.NHWC, output
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "num_bits": num_bits,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     posterized_image = b.posterize(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (posterized_image)
 
 
@@ -1268,7 +1268,7 @@ def solarize(*inputs, threshold=0.5, device=None, output_layout=types.NHWC, outp
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "threshold": threshold,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     solarized_image = b.solarize(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (solarized_image)
 
 
@@ -1288,7 +1288,7 @@ def jpeg_compression_distortion(*inputs, quality=75, device=None, output_layout=
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "quality": quality,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     compressed_image = b.jpegCompressionDistortion(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (compressed_image)
 
 
@@ -1306,7 +1306,7 @@ def channel_permute(*inputs, permutation, device=None, output_layout=types.NHWC,
     kwargs_pybind = {"input_image": inputs[0], "permutation": permutation, "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     permuted_image = b.channelPermute(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (permuted_image)
 
 
@@ -1323,7 +1323,7 @@ def color_to_greyscale(*inputs, subpixel_layout=0, device=None, output_dtype=typ
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "subpixel_layout": subpixel_layout,
                      "output_dtype": output_dtype}
     greyscale_image = b.colorToGreyscale(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (greyscale_image)
 
 
@@ -1345,8 +1345,8 @@ def box_iou_matcher(*inputs, anchors, high_threshold=0.5,
     kwargs_pybind = {"anchors": anchors, "high_threshold": high_threshold,
                      "low_threshold": low_threshold, "allow_low_quality_matches": allow_low_quality_matches}
     box_iou_matcher = b.boxIouMatcher(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
-    Pipeline._current_pipeline._box_iou_matcher = True
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
+    Pipeline.current()._box_iou_matcher = True
     return (box_iou_matcher, [])
 
 
@@ -1362,16 +1362,16 @@ def external_source(source, device=None, color_format=types.RGB, random_shuffle=
     @max_height (int, optional, default = 2000)                          The Max Height to which the source images would be decoded to.
     """
     # pybind call arguments
-    Pipeline._current_pipeline._is_external_source_operator = True
-    Pipeline._current_pipeline._external_source = iter(source)
-    Pipeline._current_pipeline._external_source_mode = mode
-    Pipeline._current_pipeline._external_source_user_given_width = max_width
-    Pipeline._current_pipeline._external_source_user_given_height = max_height
+    Pipeline.current()._is_external_source_operator = True
+    Pipeline.current()._external_source = iter(source)
+    Pipeline.current()._external_source_mode = mode
+    Pipeline.current()._external_source_user_given_width = max_width
+    Pipeline.current()._external_source_user_given_height = max_height
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch_repeated, stick_to_shard, shard_size)
     kwargs_pybind = {"rocal_color_format": color_format, "is_output": False, "shuffle": random_shuffle, "loop": False, "decode_size_policy": types.USER_GIVEN_SIZE,
                      "max_width": max_width, "max_height": max_height, "dec_type": types.DECODER_TJPEG, "external_source_mode": mode, "sharding_info": sharding_info}
     external_source_operator = b.externalFileSource(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (external_source_operator, [])  # Labels is Empty
 
 def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, output_dtype=types.FLOAT):
@@ -1395,7 +1395,7 @@ def preemphasis_filter(*inputs, border=types.CLAMP, preemph_coeff=0.97, output_d
     kwargs_pybind = {"input_audio0": inputs[0], "is_output": False,
                     "preemph_coeff": preemph_coeff_float_param, "preemph_border_type": border,
                     "output_dtype" :output_dtype}
-    preemphasis_output = b.preEmphasisFilter(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    preemphasis_output = b.preEmphasisFilter(Pipeline.current()._handle ,*(kwargs_pybind.values()))
     return (preemphasis_output)
 
 def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, layout = types.NFT, nfft = None, power = 2, reflect_padding = True, seed = -1, window_fn = [], window_length = 512, window_step = 256, output_dtype = types.FLOAT) :
@@ -1405,7 +1405,7 @@ def spectrogram(*inputs, bytes_per_sample_hint = [0], center_windows = True, lay
     """
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "window_fn": window_fn, "center_windows": center_windows, "reflect_padding": reflect_padding,
                      "power": power, "nfft": nfft, "window_length": window_length, "window_step": window_step, "output_layout": layout, "output_dtype": output_dtype}
-    spectrogram_output = b.spectrogram(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    spectrogram_output = b.spectrogram(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (spectrogram_output)
 
 def to_decibels(*inputs, bytes_per_sample_hint = [0], cutoff_db = -200.0, multiplier = 10.0, reference = 0.0, seed = -1, output_dtype = types.FLOAT):
@@ -1418,7 +1418,7 @@ def to_decibels(*inputs, bytes_per_sample_hint = [0], cutoff_db = -200.0, multip
     out[i] = multiplier * log10( max(min_ratio, input[i] / reference) )
     '''
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "cutoff_db": cutoff_db, "multiplier": multiplier, "reference_magnitude": reference, "rocal_tensor_output_type": output_dtype}
-    decibel_scale = b.toDecibels(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    decibel_scale = b.toDecibels(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return decibel_scale
 
 def resample(*inputs, resample_rate=None, output_datatype=types.FLOAT, resample_hint=-1, quality=50.0):
@@ -1428,7 +1428,7 @@ def resample(*inputs, resample_rate=None, output_datatype=types.FLOAT, resample_
     The resampling is achieved by applying a sinc filter with Hann window with an extent controlled by the quality argument.
     """
     kwargs_pybind = {"input_audio": inputs[0], "resample_rate": resample_rate, "is_output": False, "resample_hint": resample_hint, "quality": quality, "output_datatype": output_datatype}
-    resample_output = b.resample(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    resample_output = b.resample(Pipeline.current()._handle ,*(kwargs_pybind.values()))
     return resample_output
 
 def tensor_add_tensor_float(*inputs, output_datatype=types.FLOAT):
@@ -1436,7 +1436,7 @@ def tensor_add_tensor_float(*inputs, output_datatype=types.FLOAT):
     Adds a rocalTensor with another rocalTensor.
     """
     kwargs_pybind = {"input_audio": inputs[0], "input_image1": inputs[1], "is_output": False, "output_datatype": output_datatype}
-    tensor_add_tensor_float = b.tensorAddTensor(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    tensor_add_tensor_float = b.tensorAddTensor(Pipeline.current()._handle ,*(kwargs_pybind.values()))
     return tensor_add_tensor_float
 
 def tensor_mul_scalar_float(*inputs, scalar=1.0, output_datatype=types.FLOAT):
@@ -1444,7 +1444,7 @@ def tensor_mul_scalar_float(*inputs, scalar=1.0, output_datatype=types.FLOAT):
     Multiplies a rocalTensor with a scalar float value.
     """
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "scalar": scalar, "output_datatype": output_datatype}
-    tensor_mul_scalar_float = b.tensorMulScalar(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    tensor_mul_scalar_float = b.tensorMulScalar(Pipeline.current()._handle ,*(kwargs_pybind.values()))
     return tensor_mul_scalar_float
 
 
@@ -1461,7 +1461,7 @@ def tensor_sum(*inputs, device=None, output_layout=types.NHWC, output_dtype=type
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     sum_tensor = b.tensorSum(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (sum_tensor)
 
 
@@ -1478,7 +1478,7 @@ def tensor_min(*inputs, device=None, output_layout=types.NHWC, output_dtype=type
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     min_tensor = b.tensorMin(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (min_tensor)
 
 
@@ -1495,7 +1495,7 @@ def tensor_max(*inputs, device=None, output_layout=types.NHWC, output_dtype=type
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     max_tensor = b.tensorMax(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (max_tensor)
 
 
@@ -1512,7 +1512,7 @@ def tensor_mean(*inputs, device=None, output_layout=types.NHWC, output_dtype=typ
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     mean_tensor = b.tensorMean(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (mean_tensor)
 
 
@@ -1530,7 +1530,7 @@ def tensor_stddev(*inputs, mean_tensor, device=None, output_layout=types.NHWC, o
     kwargs_pybind = {"input_tensor": inputs[0], "mean_tensor": mean_tensor, "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     stddev_tensor = b.tensorStdDev(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (stddev_tensor)
 
 
@@ -1544,7 +1544,7 @@ def nonsilent_region(*inputs, cutoff_db = -60, reference_power = 0.0, reset_inte
     """
     kwargs_pybind = {"input_audio": inputs[0], "is_output": False, "cutoff_db": cutoff_db,
                      "reference_power": reference_power, "reset_interval": reset_interval, "window_length": window_length}
-    non_silent_region_output = b.nonSilentRegionDetection(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    non_silent_region_output = b.nonSilentRegionDetection(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return non_silent_region_output.anchor, non_silent_region_output.shape
 
 def slice(*inputs, anchor = None, shape = None, fill_values = [0.0],  out_of_bounds_policy = types.ERROR, rocal_tensor_output_type = types.FLOAT):
@@ -1576,7 +1576,7 @@ def slice(*inputs, anchor = None, shape = None, fill_values = [0.0],  out_of_bou
     if is_fixed_shape:
         kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "anchor": anchor_tensor, "shape": list(shape), "fill_values": fill_values,
                         "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
-        slice_output = b.sliceFixed(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        slice_output = b.sliceFixed(Pipeline.current()._handle, *(kwargs_pybind.values()))
     else:
         shape_tensor = shape
         if isinstance(shape, (list, tuple)):
@@ -1585,7 +1585,7 @@ def slice(*inputs, anchor = None, shape = None, fill_values = [0.0],  out_of_bou
             shape_tensor = shape[0]
         kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "anchor": anchor_tensor, "shape": shape_tensor, "fill_values": fill_values,
                         "out_of_bounds_policy": out_of_bounds_policy, "rocal_tensor_output_type": rocal_tensor_output_type}
-        slice_output = b.slice(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        slice_output = b.slice(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return slice_output
 
 def roi_random_crop(*inputs, roi_start, roi_end, crop_shape):
@@ -1604,7 +1604,7 @@ def roi_random_crop(*inputs, roi_start, roi_end, crop_shape):
     """
     # pybind call arguments
     kwargs_pybind = {"input_tensor": inputs[0], "roi_start": roi_start, "roi_end": roi_end, "crop_shape": crop_shape}
-    anchor = b.roiRandomCrop(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    anchor = b.roiRandomCrop(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (anchor)
 
 def random_object_bbox(*inputs, format='anchor_shape', cache_objects=False, foreground_prob=1.0, k_largest=-1):
@@ -1638,7 +1638,7 @@ def random_object_bbox(*inputs, format='anchor_shape', cache_objects=False, fore
 
     # pybind call arguments
     kwargs_pybind = {"input_tensor": inputs[0], "format": format, "k_largest": k_largest, "foreground_prob": foreground_prob, "cache_objects": cache_objects}
-    selected_roi = b.randomObjectBbox(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    selected_roi = b.randomObjectBbox(Pipeline.current()._handle, *(kwargs_pybind.values()))
     if format == "box":
         return selected_roi
     return (selected_roi[0], selected_roi[1])
@@ -1653,7 +1653,7 @@ def normalize(*inputs, axes=[], mean=[], stddev=[], scale=1.0, shift=0.0, output
     '''
     kwargs_pybind = {"input_tensor": inputs[0], "axes": axes, "mean": mean, "stddev": stddev, "is_output": False,
                      "scale": scale, "shift": shift, "output_datatype": output_datatype}
-    normalize_output = b.normalize(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    normalize_output = b.normalize(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return normalize_output
 
 def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_low = 0.0, mel_formula = types.MELSCALE_SLANEY, nfilter = 128, normalize = True, sample_rate = 44100.0, seed = -1, output_datatype = types.FLOAT):
@@ -1663,7 +1663,7 @@ def mel_filter_bank(*inputs, bytes_per_sample_hint = [0], freq_high = 0.0, freq_
     '''
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False, "freq_high": freq_high, "freq_low": freq_low, "mel_formula": mel_formula,
                      "nfilter": nfilter, "normalize": normalize, "sample_rate": sample_rate, "output_datatype": output_datatype}
-    mel_filter_bank_output = b.melFilterBank(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    mel_filter_bank_output = b.melFilterBank(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return mel_filter_bank_output
 
 def transpose(*inputs, perm=[], output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1674,7 +1674,7 @@ def transpose(*inputs, perm=[], output_layout=types.NHWC, output_dtype=types.UIN
     @param output_dtype    Output DataType of the Tensor
     """
     kwargs_pybind = {"input_image": inputs[0], "perm": perm, "is_output": False, "output_layout": output_layout}
-    transposed_image = b.transpose(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    transposed_image = b.transpose(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (transposed_image)
 
 def log1p(*inputs, output_datatype = types.FLOAT):
@@ -1682,7 +1682,7 @@ def log1p(*inputs, output_datatype = types.FLOAT):
     Computes the natural logarithm of 1 + input element-wise.
     """
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
-    log_output = b.log1p(Pipeline._current_pipeline._handle ,*(kwargs_pybind.values()))
+    log_output = b.log1p(Pipeline.current()._handle ,*(kwargs_pybind.values()))
     return log_output
 
 def python_function(*inputs, function, output_dims = [], dtype=None, layout=None):
@@ -1781,17 +1781,17 @@ def python_function(*inputs, function, output_dims = [], dtype=None, layout=None
 
     function_id = id(function)
     # Pin the callable to prevent GC; backend uses raw id(pointer)
-    if not hasattr(Pipeline._current_pipeline, "_pyfunc_refs"):
-        Pipeline._current_pipeline._pyfunc_refs = []
-    Pipeline._current_pipeline._pyfunc_refs.append(function)
+    if not hasattr(Pipeline.current(), "_pyfunc_refs"):
+        Pipeline.current()._pyfunc_refs = []
+    Pipeline.current()._pyfunc_refs.append(function)
     
     if layout is None:
-        layout = Pipeline._current_pipeline._tensor_layout
+        layout = Pipeline.current()._tensor_layout
     if dtype is None:
-        dtype = Pipeline._current_pipeline._tensor_dtype
+        dtype = Pipeline.current()._tensor_dtype
         
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "function_id": function_id, "output_dims": output_dims, "layout": layout, "dtype": dtype}
-    output = b.pythonFunction(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output = b.pythonFunction(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return output
 
 def color_cast(*inputs, alpha=1.0, rgb=[0.0, 0.0, 0.0], device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1809,7 +1809,7 @@ def color_cast(*inputs, alpha=1.0, rgb=[0.0, 0.0, 0.0], device=None, output_layo
     alpha = b.createFloatParameter(alpha) if isinstance(alpha, float) else alpha
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "alpha": alpha, "rgb": rgb,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    color_cast_image = b.colorCast(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    color_cast_image = b.colorCast(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (color_cast_image)
 
 def grid_mask(*inputs, tile_width=16, grid_ratio=0.5, grid_angle=0.0, translate_x=0, translate_y=0,
@@ -1839,7 +1839,7 @@ def grid_mask(*inputs, tile_width=16, grid_ratio=0.5, grid_angle=0.0, translate_
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    grid_mask_image = b.gridMask(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    grid_mask_image = b.gridMask(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (grid_mask_image)
 
 def median_filter(*inputs, kernel_size=3, border_type=types.REPLICATE, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1862,7 +1862,7 @@ def median_filter(*inputs, kernel_size=3, border_type=types.REPLICATE, device=No
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    output_image = b.medianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.medianFilter(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 
@@ -1889,7 +1889,7 @@ def gaussian_filter(*inputs, stddev=None, kernel_size=3, border_type=types.REPLI
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    output_image = b.gaussianFilter(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.gaussianFilter(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 def non_linear_blend(*inputs, stddev=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1906,7 +1906,7 @@ def non_linear_blend(*inputs, stddev=None, device=None, output_layout=types.NHWC
     stddev = b.createFloatParameter(stddev) if isinstance(stddev, float) else stddev
     kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False, "stddev": stddev,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    output_image = b.nonLinearBlend(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.nonLinearBlend(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1929,7 +1929,7 @@ def threshold(*inputs, min=None, max=None, device=None, output_layout=types.NHWC
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    output_image = b.threshold(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.threshold(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 def warp_perspective(*inputs, dest_width=0, dest_height=0, perspective=[1.0, 0.0, 0.0,
@@ -1963,7 +1963,7 @@ def warp_perspective(*inputs, dest_width=0, dest_height=0, perspective=[1.0, 0.0
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    warp_persp_output = b.warpPerspective(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    warp_persp_output = b.warpPerspective(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (warp_persp_output)
 
 def magnitude(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1979,7 +1979,7 @@ def magnitude(*inputs, device=None, output_layout=types.NHWC, output_dtype=types
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    magnitude_image = b.magnitude(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    magnitude_image = b.magnitude(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (magnitude_image)
 
 def phase(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -1995,7 +1995,7 @@ def phase(*inputs, device=None, output_layout=types.NHWC, output_dtype=types.UIN
     # pybind call arguments
     kwargs_pybind = {"input_image0": inputs[0], "input_image1": inputs[1], "is_output": False,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    phase_image = b.phase(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    phase_image = b.phase(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (phase_image)
 
 def dilate(*inputs, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -2012,7 +2012,7 @@ def dilate(*inputs, kernel_size=3, device=None, output_layout=types.NHWC, output
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "kernel_size": kernel_size,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    dilated_image = b.dilate(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    dilated_image = b.dilate(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (dilated_image)
 
 def erode(*inputs, kernel_size=3, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -2029,7 +2029,7 @@ def erode(*inputs, kernel_size=3, device=None, output_layout=types.NHWC, output_
     # pybind call arguments
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "kernel_size": kernel_size,
                      "output_layout": output_layout, "output_dtype": output_dtype}
-    eroded_image = b.erode(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    eroded_image = b.erode(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (eroded_image)
 
 def crop_and_patch(*inputs, crop_roi=[0, 0, 0, 0], patch_roi=[0, 0, 0, 0],
@@ -2056,7 +2056,7 @@ def crop_and_patch(*inputs, crop_roi=[0, 0, 0, 0], patch_roi=[0, 0, 0, 0],
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    output_image = b.cropAndPatch(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.cropAndPatch(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 def remap(*inputs, dest_width=0, dest_height=0, row_remap=[], col_remap=[],
@@ -2086,7 +2086,7 @@ def remap(*inputs, dest_width=0, dest_height=0, row_remap=[], col_remap=[],
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    output_image = b.remap(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.remap(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 def erase(*inputs, anchor=None, shape=None, num_boxes=None, fill_value=None, 
@@ -2138,7 +2138,7 @@ def erase(*inputs, anchor=None, shape=None, num_boxes=None, fill_value=None,
     else:
         raise RuntimeError("erase requires either (anchor, shape, num_boxes, fill_value) for vector API or (anchor_box_info, colors) for tensor API")
     
-    output_image = b.erase(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.erase(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 def ricap(*inputs, permutation=[], crop_rois=[], device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -2163,7 +2163,7 @@ def ricap(*inputs, permutation=[], crop_rois=[], device=None, output_layout=type
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    output_image = b.ricap(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.ricap(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 def bitwise_ops(*inputs, op=None, device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
@@ -2192,7 +2192,7 @@ def bitwise_ops(*inputs, op=None, device=None, output_layout=types.NHWC, output_
         "output_layout": output_layout,
         "output_dtype": output_dtype
     }
-    output_image = b.bitwiseOps(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    output_image = b.bitwiseOps(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (output_image)
 
 
@@ -2204,7 +2204,7 @@ def log(*inputs, output_datatype=types.FLOAT):
     """
     _ = output_datatype
     kwargs_pybind = {"input_tensor": inputs[0], "is_output": False}
-    log_output = b.log(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    log_output = b.log(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return log_output
 
 
@@ -2231,7 +2231,7 @@ def color_jitter(*inputs, brightness=1.0, contrast=1.0, hue=0.0, saturation=1.0,
     kwargs_pybind = {"input_image": inputs[0], "is_output": False, "brightness": brightness, "contrast": contrast,
                      "hue": hue, "saturation": saturation, "output_layout": output_layout, "output_dtype": output_dtype}
     jittered_image = b.colorJitter(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (jittered_image)
 
 
@@ -2264,5 +2264,5 @@ def water(*inputs, amplitude_x=5.0, amplitude_y=5.0, frequency_x=0.5, frequency_
                      "frequency_x": frequency_x, "frequency_y": frequency_y, "phase_x": phase_x, "phase_y": phase_y,
                      "output_layout": output_layout, "output_dtype": output_dtype}
     water_image = b.water(
-        Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+        Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (water_image)
