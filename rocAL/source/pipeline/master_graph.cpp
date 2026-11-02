@@ -423,8 +423,7 @@ bool MasterGraph::discard_node(std::shared_ptr<Node> node) {
     // build() takes the single or the multi-graph path, and how many samples the pipeline has.
     if (is_last_loader) {
         _root_nodes.pop_back();
-        auto loader_module = node->get_loader_module();
-        if (!_loader_modules.empty() && _loader_modules.back() == loader_module)
+        if (!_loader_modules.empty())
             _loader_modules.pop_back();
         if (_loaders_count > 0)
             _loaders_count--;
