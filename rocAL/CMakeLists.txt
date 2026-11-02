@@ -203,8 +203,7 @@ if(${BUILD_ROCAL})
     # MIVisionX
     include_directories(${MIVisionX_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OPENVX_LIBRARIES} ${VXRPP_LIBRARIES})
-    # OpenMP
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    # OpenMP -- compile and link flags propagate from the OpenMP::OpenMP_CXX imported target
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
     # Threads
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
@@ -376,8 +375,7 @@ if(${BUILD_ROCAL})
     # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation
     # -mf16c -- Support F16C built-in functions and code generation
     # -Wno-deprecated-declarations -- Do not warn about uses of functions, variables, and types marked as deprecated by using the deprecated attribute
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -mavx2 -mfma -mf16c -Wno-deprecated-declarations")
-    message("-- ${White}rocAL -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -mavx2 -mfma -mf16c -Wno-deprecated-declarations)
     target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
     message("-- ${White}rocAL -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 
