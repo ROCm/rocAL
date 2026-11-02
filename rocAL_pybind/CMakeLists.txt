@@ -63,8 +63,11 @@ find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
 # pybind11 >= 3.1 is required: Python 3.14 support landed in pybind11 3.0, and
 # older releases (e.g. 2.11.1) fail to build the module against 3.14 headers.
-# 3.1 is the version validated here and in downstream packaging.
-find_package(pybind11 3.1 QUIET CONFIG)
+# 3.1 is the version validated here and in downstream packaging. The version
+# floor is enforced below so an installed-but-too-old pybind11 reports a clear
+# version-specific message instead of a bare "Not Found".
+set(ROCAL_PYBIND11_MIN_VERSION "3.1")
+find_package(pybind11 QUIET CONFIG)
 find_package(HALF QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
 
@@ -138,7 +141,10 @@ endif()
 # PyBind11
 if(NOT pybind11_FOUND)
     set(BUILD_ROCAL_PYBIND false)
-    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11, Not Found${ColourReset}")
+    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11 >= ${ROCAL_PYBIND11_MIN_VERSION}, Not Found${ColourReset}")
+elseif(pybind11_VERSION VERSION_LESS ROCAL_PYBIND11_MIN_VERSION)
+    set(BUILD_ROCAL_PYBIND false)
+    message("-- ${Yellow}NOTE: rocAL pybind requires pybind11 >= ${ROCAL_PYBIND11_MIN_VERSION}, but found ${pybind11_VERSION}. Please upgrade pybind11 (Python 3.14 needs pybind11 3.0+)${ColourReset}")
 endif()
 # Half
 if(NOT HALF_FOUND)
