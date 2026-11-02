@@ -231,7 +231,6 @@ if(${BUILD_ROCAL_PYBIND})
             list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} rocal)
             # OpenMP
             list(APPEND LINK_LIBRARY_LIST_${PY_VERSION} ${OpenMP_CXX_LIBRARIES})
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath='$ORIGIN:$ORIGIN/llvm/lib'")
 
             # Binding sources
             set(BINDING_SOURCES
@@ -276,7 +275,8 @@ if(${BUILD_ROCAL_PYBIND})
             set_target_properties(${mod_tgt} PROPERTIES
                 PREFIX ""
                 SUFFIX "${Python3_EXTENSION_SUFFIX}"
-                OUTPUT_NAME "rocal_pybind")
+                OUTPUT_NAME "rocal_pybind"
+                INSTALL_RPATH "$ORIGIN:$ORIGIN/llvm/lib")
 
             # Python files - Install
             install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/amd/"
