@@ -52,8 +52,8 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
 
         @return    Decoded and preprocessed image.
     """
-    reader = Pipeline._current_pipeline._reader
-    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    reader = Pipeline.current()._reader
+    Pipeline.current()._last_batch_policy = last_batch_policy
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
 
     if (device == "gpu"):
@@ -74,7 +74,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
         decoded_image = b.cocoImageDecoderShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
         kwargs_pybind = {
@@ -92,7 +92,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
         decoded_image = b.tfImageDecoder(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
         if not hasattr(b, 'caffe2ImageDecoderShard'):
@@ -111,7 +111,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
         decoded_image = b.caffe2ImageDecoderShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     elif reader == "CaffeReader" or reader == "CaffeReaderDetection":
         if not hasattr(b, 'caffeImageDecoderShard'):
@@ -130,7 +130,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
         decoded_image = b.caffeImageDecoderShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     elif reader == "MXNETReader":
         kwargs_pybind = {
@@ -147,7 +147,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
         decoded_image = b.mxnetDecoder(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     elif reader == "WebDataset":
         kwargs_pybind = {
             "source_path": file_root,
@@ -164,7 +164,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
         decoded_image = b.webdatasetSourceSingleShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {
             "source_path": file_root,
@@ -181,7 +181,7 @@ def image(*inputs, user_feature_key_map=None, path='', file_root='', annotations
             "sharding_info": sharding_info,
             "seed": seed}
         decoded_image = b.imageDecoderShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     return (decoded_image)
 
@@ -200,8 +200,8 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
 
         @return    Decoded raw image.
     """
-    reader = Pipeline._current_pipeline._reader
-    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    reader = Pipeline.current()._reader
+    Pipeline.current()._last_batch_policy = last_batch_policy
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
 
     if (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
@@ -217,7 +217,7 @@ def image_raw(*inputs, user_feature_key_map=None, path='', random_shuffle=False,
             "max_height": max_decoded_height,
             "sharding_info": sharding_info}
         decoded_image = b.tfImageDecoderRaw(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
         return (decoded_image)
 
 
@@ -247,8 +247,8 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
 
         @return    Randomly cropped and preprocessed image.
     """
-    reader = Pipeline._current_pipeline._reader
-    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    reader = Pipeline.current()._reader
+    Pipeline.current()._last_batch_policy = last_batch_policy
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
 
     # Internally calls the C++ Partial decoder's
@@ -271,7 +271,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         crop_output_image = b.cocoImageDecoderSliceShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     elif (reader == "TFRecordReaderClassification" or reader == "TFRecordReaderDetection"):
         kwargs_pybind = {
             "source_path": path,
@@ -288,7 +288,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "dec_type": decoder_type,
             "sharding_info": sharding_info}
         crop_output_image = b.tfImageDecoder(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
         if not hasattr(b, 'caffeImageDecoderPartialShard'):
             raise RuntimeError("rocAL was built without LMDB support. Caffe LMDB decoders are not available.")
@@ -309,7 +309,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         crop_output_image = b.caffeImageDecoderPartialShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
         if not hasattr(b, 'caffe2ImageDecoderShard'):
             raise RuntimeError("rocAL was built without LMDB support. Caffe2 LMDB decoders are not available.")
@@ -330,7 +330,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         crop_output_image = b.caffe2ImageDecoderPartialShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {
             "source_path": file_root,
@@ -349,7 +349,7 @@ def image_random_crop(*inputs, user_feature_key_map=None, path='', file_root='',
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         crop_output_image = b.fusedDecoderCropShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
 
     return (crop_output_image)
 
@@ -376,8 +376,8 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
 
         @return    Sliced image.
     """
-    reader = Pipeline._current_pipeline._reader
-    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
+    reader = Pipeline.current()._reader
+    Pipeline.current()._last_batch_policy = last_batch_policy
     sharding_info = b.RocalShardingInfo(last_batch_policy, pad_last_batch, stick_to_shard, shard_size)
     
     if (device == "gpu"):
@@ -408,7 +408,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         image_decoder_slice = b.cocoImageDecoderSliceShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     elif (reader == "CaffeReader" or reader == "CaffeReaderDetection"):
         if not hasattr(b, 'caffeImageDecoderPartialShard'):
             raise RuntimeError("rocAL was built without LMDB support. Caffe LMDB decoders are not available.")
@@ -429,7 +429,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         image_decoder_slice = b.caffeImageDecoderPartialShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     elif (reader == "Caffe2Reader" or reader == "Caffe2ReaderDetection"):
         if not hasattr(b, 'caffe2ImageDecoderShard'):
             raise RuntimeError("rocAL was built without LMDB support. Caffe2 LMDB decoders are not available.")
@@ -450,7 +450,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         image_decoder_slice = b.caffe2ImageDecoderPartialShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     else:
         kwargs_pybind = {
             "source_path": file_root,
@@ -469,7 +469,7 @@ def image_slice(*inputs, file_root='', path='', annotations_file='', shard_id=0,
             "sharding_info": sharding_info,
             "dec_type": decoder_type}
         image_decoder_slice = b.fusedDecoderCropShard(
-            Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+            Pipeline.current()._handle, *(kwargs_pybind.values()))
     return (image_decoder_slice)
 
 def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], shard_id=0, num_shards=1, random_shuffle=False, downmix=False, dtype=types.FLOAT, quality=50.0, sample_rate=0.0, seed=1, stick_to_shard=True, shard_size=-1, last_batch_policy=types.LAST_BATCH_FILL, pad_last_batch_repeated=False,
@@ -510,6 +510,6 @@ def audio(*inputs, file_root='', file_list_path='', bytes_per_sample_hint=[0], s
             "max_width": max_decoded_samples,
             "max_height": max_decoded_channels,
             "sharding_info": sharding_info}
-    Pipeline._current_pipeline._last_batch_policy = last_batch_policy
-    decoded_audio = b.audioDecoderSingleShard(Pipeline._current_pipeline._handle, *(kwargs_pybind.values()))
+    Pipeline.current()._last_batch_policy = last_batch_policy
+    decoded_audio = b.audioDecoderSingleShard(Pipeline.current()._handle, *(kwargs_pybind.values()))
     return decoded_audio

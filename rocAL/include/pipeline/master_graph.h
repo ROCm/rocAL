@@ -124,6 +124,9 @@ public:
     //! Returns whether checkpointing is enabled for this pipeline.
     bool is_checkpointing_enabled() const { return _checkpointing_enabled; }
     Tensor *create_tensor(const TensorInfo &info, bool is_output);
+    void validate_inputs(const std::vector<Tensor *> &inputs);  // Throws if an operator's inputs cannot be consumed, before add_node() mutates the graph
+    void discard_tensor(Tensor *tensor);  // Undoes a create_tensor() whose node was never added, so a rejected operator leaves nothing behind
+    bool discard_node(std::shared_ptr<Node> node);  // Undoes the add_node() of an operator that failed afterwards, in its init() say
     Tensor *create_internal_tensor(const TensorInfo &info);  // Creates a regular (non-virtual) tensor and adds it to _internal_tensors vector
     TensorListVector * create_label_reader(const char *source_path, MetaDataReaderType reader_type);
     TensorListVector * create_video_label_reader(const char *source_path, MetaDataReaderType reader_type, unsigned sequence_length, unsigned frame_step, unsigned frame_stride, bool file_list_frame_num = true);
@@ -313,6 +316,12 @@ private:
 
 template <typename T>
 std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, const std::vector<Tensor *> &outputs) {
+    // Validate the inputs before anything is created or linked, so that a rejected operator
+    // leaves the graph exactly as it was. Checking while linking used to leave the new node in
+    // _nodes and _pipeline_operators with no parent, and the parents it had already reached
+    // pointing back at it.
+    validate_inputs(inputs);
+
     auto node = std::make_shared<T>(inputs, outputs);
     _nodes.push_back(node);
 
@@ -320,9 +329,6 @@ std::shared_ptr<T> MasterGraph::add_node(const std::vector<Tensor *> &inputs, co
     _pipeline_operators.push_back(std::make_shared<PipelineOperator>(node->node_name() + "_" + std::to_string(_op_idx++), "augmentation", node));
 
     for (auto &input : inputs) {
-        if (_tensor_map.find(input) == _tensor_map.end())
-            THROW("Input tensor is invalid, cannot be found among output of previously created nodes")
-
         auto parent_node = _tensor_map.find(input)->second;
         parent_node->add_next(node);
         node->add_previous(parent_node);
