@@ -29,16 +29,23 @@ ROCm/rocAL#537.
 
 import os
 import sys
+import tempfile
 import traceback
+
+import numpy as np
 
 from amd.rocal.pipeline import Pipeline
 import amd.rocal.fn as fn
 import amd.rocal.types as types
 import rocal_pybind as b
 
-DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                    '..', '..', 'data', 'images', 'AMD-tinyDataSet')
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+DATA = os.path.join(ROOT, 'data', 'images', 'AMD-tinyDataSet')
+VIDEO = os.path.join(ROOT, 'data', 'videos')
 BATCH = 4
+# A pipeline reports the smallest sample count among its loaders, so this has to stay above the
+# number of sequences in data/videos for a leftover video loader to be visible in it.
+NUMPY_SAMPLES = 256
 
 print('rocAL PyBind Rejected Operator')
 
@@ -55,6 +62,29 @@ def operators_in(pipeline):
     """The operator names the pipeline would serialize, which is what build() walks."""
     blob = b.rocalSerialize(pipeline._handle)
     return [field.decode('latin-1') for field in blob.split(b'\n') if b'Node' in field]
+
+
+def write_numpy_samples(directory):
+    for index in range(NUMPY_SAMPLES):
+        np.save(os.path.join(directory, 'sample_%03d.npy' % index),
+                np.full((16, 16), index, dtype=np.float32))
+
+
+def check_only_the_valid_loader_is_counted(pipeline, description):
+    """A rejected loader left in the graph still counts, and drags the pipeline down to its own
+    sample count -- zero when its init() failed, the clip's own count when only the arguments
+    that follow it were rejected."""
+    built = False
+    try:
+        pipeline.build()
+        built = True
+    except Exception:
+        traceback.print_exc()
+    check(built, 'a pipeline whose valid loader follows ' + description + ' builds')
+
+    if built:
+        check(pipeline.get_remaining_images() == NUMPY_SAMPLES,
+              "the pipeline reports the valid loader's samples, not " + description + "'s")
 
 
 def test_an_operator_rejected_by_its_init_is_not_left_in_the_graph():
@@ -128,7 +158,62 @@ def test_two_identical_failures_both_report_the_reason():
               'the second, identical failure also reports the reason')
 
 
+def test_a_loader_rejected_by_its_init_does_not_count_towards_the_pipeline():
+    # Loaders are rolled back through the same path, but only the two ImageLoaderNode
+    # specializations record a PipelineOperator - the video, numpy, audio, CIFAR-10 and
+    # fused-crop ones register a root node, a loader module and a graph id and nothing else. A
+    # rejected loader left among them keeps raising the loader count, which is what decides the
+    # multi-graph path and how many samples the pipeline reports.
+    with tempfile.TemporaryDirectory() as numpy_root:
+        write_numpy_samples(numpy_root)
+
+        pipe = Pipeline(batch_size=2, num_threads=1, device_id=0, rocal_cpu=True)
+        with pipe:
+            raised = False
+            try:
+                # rocalVideoFileSource checks only the sequence length, so num_shards=0 is left
+                # for VideoLoaderNode::init() to reject, once the loader is already registered
+                fn.readers.video(sequence_length=1, file_root=VIDEO, num_shards=0,
+                                 image_type=types.RGB)
+            except RuntimeError:
+                raised = True
+            check(raised, 'a loader its init() rejects raises')
+
+            # a later loader, entirely valid. Numpy because the rejected video reader has
+            # already taken the pipeline's one metadata reader.
+            pipe.set_outputs(fn.readers.numpy(file_root=numpy_root, num_shards=1))
+
+        check_only_the_valid_loader_is_counted(pipe, 'a loader rejected by its init()')
+
+
+def test_a_loader_whose_later_arguments_are_rejected_does_not_count_either():
+    # rocalVideoFileResize used to insert and initialize the loader before checking its resize
+    # arguments. Those checks therefore ran with the loader already in the graph, and the handler
+    # only discards the call's output tensor, which is still null at that point -- so the loader
+    # survived with its own sample count intact and capped the pipeline at the rejected clip's.
+    with tempfile.TemporaryDirectory() as numpy_root:
+        write_numpy_samples(numpy_root)
+
+        pipe = Pipeline(batch_size=2, num_threads=1, device_id=0, rocal_cpu=True)
+        with pipe:
+            raised = False
+            try:
+                # no size given by any of the four means accepted
+                fn.readers.video_resize(sequence_length=1, file_root=VIDEO,
+                                        resize_width=0, resize_height=0,
+                                        image_type=types.RGB)
+            except RuntimeError:
+                raised = True
+            check(raised, 'a loader whose resize arguments are rejected raises')
+
+            pipe.set_outputs(fn.readers.numpy(file_root=numpy_root, num_shards=1))
+
+        check_only_the_valid_loader_is_counted(pipe, 'a rejected resize')
+
+
 test_an_operator_rejected_by_its_init_is_not_left_in_the_graph()
+test_a_loader_rejected_by_its_init_does_not_count_towards_the_pipeline()
+test_a_loader_whose_later_arguments_are_rejected_does_not_count_either()
 test_two_identical_failures_both_report_the_reason()
 
 print()

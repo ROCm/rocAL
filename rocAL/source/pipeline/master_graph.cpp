@@ -387,14 +387,23 @@ void MasterGraph::validate_inputs(const std::vector<Tensor *> &inputs) {
 // Takes the node by value on purpose: the only references the caller has to it are the ones this
 // function removes, and the node has to stay alive while they go.
 bool MasterGraph::discard_node(std::shared_ptr<Node> node) {
-    // Only the operator added last can be rolled back. The lists below are append-only, and an
+    // Only the operator added last can be rolled back. These lists are append-only, and an
     // operator added after this one may already consume its outputs, so anything else has to be
     // left alone - the same reason discard_tensor() only unwinds the most recent create_tensor().
-    if (_pipeline_operators.empty() || _pipeline_operators.back()->node != node)
+    //
+    // Every augmentation lands in _nodes and every loader in _root_nodes, so that pair is the
+    // test. _pipeline_operators is not: only the two ImageLoaderNode specializations record one,
+    // and keying on it refuses to roll back a video, audio, numpy, CIFAR-10 or fused-crop loader.
+    const bool is_last_augmentation = !_nodes.empty() && _nodes.back() == node;
+    const bool is_last_loader = !_root_nodes.empty() && _root_nodes.back() == node;
+    if (!is_last_augmentation && !is_last_loader)
         return false;
 
-    _pipeline_operators.pop_back();
-    _op_idx--;
+    // Only pop an entry this node actually added, for the same reason.
+    if (!_pipeline_operators.empty() && _pipeline_operators.back()->node == node) {
+        _pipeline_operators.pop_back();
+        _op_idx--;
+    }
 
     // Drop the links the parents gained. The node itself goes away with the last reference to it,
     // taking its own _prev with it.
@@ -407,13 +416,15 @@ bool MasterGraph::discard_node(std::shared_ptr<Node> node) {
     for (auto &output : node->output())
         _tensor_map.erase(output);
 
-    _nodes.remove(node);
+    if (is_last_augmentation)
+        _nodes.pop_back();
 
     // A loader also registered its module and claimed a graph id, which is what decides whether
-    // build() takes the single or the multi-graph path.
-    if (!_root_nodes.empty() && _root_nodes.back() == node) {
+    // build() takes the single or the multi-graph path, and how many samples the pipeline has.
+    if (is_last_loader) {
         _root_nodes.pop_back();
-        if (!_loader_modules.empty())
+        auto loader_module = node->get_loader_module();
+        if (!_loader_modules.empty() && _loader_modules.back() == loader_module)
             _loader_modules.pop_back();
         if (_loaders_count > 0)
             _loaders_count--;

@@ -1859,21 +1859,31 @@ rocalVideoFileResize(
                                tensor_layout,
                                color_format);
 
-        Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
-        context->master_graph->set_loop(loop);
-
         // Only a request that matches the source in *both* dimensions needs no resize node. Using &&
         // here let a request like 2048x512 on a 2048x1024 clip fall through to the native-size branch
         // and come back unresized.
-        if (dest_width != video_prop.width || dest_height != video_prop.height) {
+        const bool needs_resize = (dest_width != video_prop.width || dest_height != video_prop.height);
+
+        // Check the resize arguments before the loader is inserted, not after. These throws used to
+        // run below, once the loader was already registered, and the handler only discards this
+        // call's output tensor - which is still null at that point - so the rejected clip's loader
+        // was left in the graph, counting towards the pipeline's loaders and its sample count.
+        if (needs_resize) {
             if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if ((dest_width | dest_height) && (resize_longer | resize_shorter))
                 THROW("Only one method of specifying size can be used \ndest_width and/or dest_height\nresize_shorter\nresize_longer")
             if (resize_longer && resize_shorter)
                 THROW("'resize_longer' and 'resize_shorter' cannot be passed together. They are mutually exclusive.")
+            if (max_size.size() > 2)
+                THROW("The length of max_size vector exceeds the image dimension.")
+        }
 
+        Tensor* output = context->master_graph->create_internal_tensor(info);
+        context->master_graph->add_node<VideoLoaderNode>({}, {output})->init(internal_shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->set_loop(loop);
+
+        if (needs_resize) {
             unsigned out_width, out_height;
             RocalResizeScalingMode resize_scaling_mode;
 
@@ -1890,15 +1900,12 @@ rocalVideoFileResize(
                 out_height = dest_height;
             }
 
+            // A longer max_size was rejected above, before the loader was inserted.
             std::vector<unsigned> maximum_size;
-            if (max_size.size()) {
-                if (max_size.size() == 1) {
-                    maximum_size = {max_size[0], max_size[0]};
-                } else if (max_size.size() == 2) {
-                    maximum_size = {max_size[0], max_size[1]};  // {width, height}
-                } else {
-                    THROW("The length of max_size vector exceeds the image dimension.")
-                }
+            if (max_size.size() == 1) {
+                maximum_size = {max_size[0], max_size[0]};
+            } else if (max_size.size() == 2) {
+                maximum_size = {max_size[0], max_size[1]};  // {width, height}
             }
 
             // Determine the max width and height to be set to the output info
@@ -2017,21 +2024,31 @@ rocalVideoFileResizeSingleShard(
                                RocalTensorDataType::UINT8,
                                tensor_layout,
                                color_format);
-        Tensor* output = context->master_graph->create_internal_tensor(info);
-        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
-        context->master_graph->set_loop(loop);
-
         // Only a request that matches the source in *both* dimensions needs no resize node. Using &&
         // here let a request like 2048x512 on a 2048x1024 clip fall through to the native-size branch
         // and come back unresized.
-        if (dest_width != video_prop.width || dest_height != video_prop.height) {
+        const bool needs_resize = (dest_width != video_prop.width || dest_height != video_prop.height);
+
+        // Check the resize arguments before the loader is inserted, not after. These throws used to
+        // run below, once the loader was already registered, and the handler only discards this
+        // call's output tensor - which is still null at that point - so the rejected clip's loader
+        // was left in the graph, counting towards the pipeline's loaders and its sample count.
+        if (needs_resize) {
             if ((dest_width | dest_height | resize_longer | resize_shorter) == 0)
                 THROW("Atleast one size 'dest_width' or 'dest_height' or 'resize_shorter' or 'resize_longer' must be specified")
             if ((dest_width | dest_height) && (resize_longer | resize_shorter))
                 THROW("Only one method of specifying size can be used \ndest_width and/or dest_height\nresize_shorter\nresize_longer")
             if (resize_longer && resize_shorter)
                 THROW("'resize_longer' and 'resize_shorter' cannot be passed together. They are mutually exclusive.")
+            if (max_size.size() > 2)
+                THROW("The length of max_size vector exceeds the image dimension.")
+        }
 
+        Tensor* output = context->master_graph->create_internal_tensor(info);
+        context->master_graph->add_node<VideoLoaderSingleShardNode>({}, {output})->init(shard_id, shard_count, source_path, StorageType::VIDEO_FILE_SYSTEM, decoder_type, decoder_mode, sequence_length, step, stride, video_prop, shuffle, loop, context->user_batch_size(), context->master_graph->mem_type());
+        context->master_graph->set_loop(loop);
+
+        if (needs_resize) {
             unsigned out_width, out_height;
             RocalResizeScalingMode resize_scaling_mode;
 
@@ -2048,15 +2065,12 @@ rocalVideoFileResizeSingleShard(
                 out_height = dest_height;
             }
 
+            // A longer max_size was rejected above, before the loader was inserted.
             std::vector<unsigned> maximum_size;
-            if (max_size.size()) {
-                if (max_size.size() == 1) {
-                    maximum_size = {max_size[0], max_size[0]};
-                } else if (max_size.size() == 2) {
-                    maximum_size = {max_size[0], max_size[1]};  // {width, height}
-                } else {
-                    THROW("The length of max_size vector exceeds the image dimension.")
-                }
+            if (max_size.size() == 1) {
+                maximum_size = {max_size[0], max_size[0]};
+            } else if (max_size.size() == 2) {
+                maximum_size = {max_size[0], max_size[1]};  // {width, height}
             }
 
             // Determine the max width and height to be set to the output info
