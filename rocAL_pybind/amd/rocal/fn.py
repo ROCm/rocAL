@@ -2212,8 +2212,9 @@ def color_jitter(*inputs, brightness=1.0, contrast=1.0, hue=0.0, saturation=1.0,
                  device=None, output_layout=types.NHWC, output_dtype=types.UINT8):
     """!Applies color jitter to the input image.
 
-        Supported on the CPU backend only. On a GPU pipeline this returns None;
-        Pipeline.set_outputs() raises a RuntimeError if that result is used as an output.
+        Supported on the CPU backend only. On a GPU pipeline this call raises a
+        RuntimeError: the C API rejects the context and returns NULL, and the binding
+        reports that at the call rather than leaving it for Pipeline.set_outputs().
 
         @param inputs (list)                                                          The input image to which color jitter is applied.
         @param brightness (float, optional, default = 1.0)                            Brightness adjustment factor.
