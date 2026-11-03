@@ -39,9 +39,11 @@ list(APPEND rocAL_HIP_SOURCES
     box_encoder_hip.cpp
 )
 if (rocdecode_FOUND)
+    get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
+    set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
     set (rocDecode_UTIL_SOURCES
-        ${ROCM_PATH}/share/rocdecode/utils/resize_kernels.cpp
-        ${ROCM_PATH}/share/rocdecode/utils/colorspace_kernels.cpp
+        ${rocdecode_UTILS_DIR}/resize_kernels.cpp
+        ${rocdecode_UTILS_DIR}/colorspace_kernels.cpp
     )
 endif()
 
@@ -50,4 +52,7 @@ set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_
 add_library(${PROJECT_NAME} OBJECT ${rocAL_HIP_SOURCES} ${rocDecode_UTIL_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(${PROJECT_NAME} PRIVATE __HIP_PLATFORM_AMD__)
+if(rocdecode_FOUND)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${rocdecode_UTILS_DIR})
+endif()
 target_link_libraries(${PROJECT_NAME} hip::device)

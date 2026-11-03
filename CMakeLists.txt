@@ -70,7 +70,7 @@ option(ENHANCED_MESSAGE "rocAL Enhanced Message Option"        ON)
 option(GPU_SUPPORT      "Build rocAL with GPU Support"         ON)
 option(BUILD_PYPACKAGE  "Build rocAL Python Package"           ON)
 option(PYTHON_VERSION_SUGGESTED "Python version to build rocal" "")
-option(ROCAL_VIDEO_PLUGIN "Build FFmpeg/rocDecode video support as a separate plugin" OFF)
+option(ROCAL_VIDEO_PLUGIN "Build FFmpeg/rocDecode video support as a separate plugin" ON)
 # The PythonFunction operator embeds the CPython C-API in the core rocAL library, which leaves
 # librocal.so with unresolved Py* symbols and makes it unusable from plain C/C++ applications
 # (https://github.com/ROCm/rocAL/issues/522). It stays disabled until the operator is moved out
@@ -154,17 +154,29 @@ else()
 endif()
 
 message("-- ${Cyan}rocAL Developer Options${ColourReset}")
-message("-- ${Cyan}     -D ROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN} [Build FFmpeg/rocDecode video support as a separate plugin (default:OFF)]${ColourReset}")
+message("-- ${Cyan}     -D ROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN} [Build FFmpeg/rocDecode video support as a separate plugin (default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D GPU_SUPPORT=${GPU_SUPPORT} [Turn ON/OFF GPU support (default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select rocAL Backend [options:CPU/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D BUILD_PYPACKAGE=${BUILD_PYPACKAGE} [rocAL Python Package(default:ON)]${ColourReset}")
 message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [User provided python version to use for rocAL Python Bindings(default:System Version)]${ColourReset}")
 
+# FFmpeg is required either by the video plugin (when ROCAL_VIDEO_PLUGIN=ON) or by
+# monolithic video support inside librocal (when OFF). Find it once up front so the
+# core and the test suite can share the result.
+find_package(FFmpeg QUIET)
+
 add_subdirectory(rocAL)
 
 if(ROCAL_VIDEO_PLUGIN)
-    add_subdirectory(plugins/video)
+    if(FFMPEG_FOUND)
+        set(ROCAL_VIDEO_PLUGIN_BUILT ON)
+        add_subdirectory(plugins/video)
+    else()
+        set(ROCAL_VIDEO_PLUGIN_BUILT OFF)
+        message("-- ${Yellow}NOTE: ROCAL_VIDEO_PLUGIN is ON but FFmpeg was not found; skipping rocal_video_plugin build and video tests${ColourReset}")
+    endif()
 else()
+    set(ROCAL_VIDEO_PLUGIN_BUILT OFF)
     # In monolithic mode the plugin is not built as a separate library, but its
     # sources are still shipped under COMPONENT dev so users can build it on the
     # target machine if they want to opt into the plugin workflow.
@@ -176,6 +188,23 @@ else()
         PATTERN "*.cpp"
         PATTERN "*.hpp"
         PATTERN "CMakeLists.txt")
+endif()
+
+# Decide whether the FFmpeg-based video tests can be exercised. They need a HIP
+# backend and a working video path: either the plugin was built, or rocAL is
+# monolithic and FFmpeg was found.
+if("${BACKEND}" STREQUAL "HIP")
+    if(ROCAL_VIDEO_PLUGIN)
+        set(ROCAL_VIDEO_TESTS_ENABLED ${ROCAL_VIDEO_PLUGIN_BUILT})
+    else()
+        if(FFMPEG_FOUND)
+            set(ROCAL_VIDEO_TESTS_ENABLED ON)
+        else()
+            set(ROCAL_VIDEO_TESTS_ENABLED OFF)
+        endif()
+    endif()
+else()
+    set(ROCAL_VIDEO_TESTS_ENABLED OFF)
 endif()
 
 if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.13"))

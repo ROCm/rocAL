@@ -252,25 +252,27 @@ if("${BACKEND}" STREQUAL "HIP")
 endif()
 
 if("${BACKEND}" STREQUAL "HIP")
-  # 14 - video_tests -- video reader with ffmpeg decoder
-  add_test(
-    NAME
-    video_tests_ffmpeg
-    COMMAND
-      "${CMAKE_CTEST_COMMAND}"
-              --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
-                                "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
-              --build-generator "${CMAKE_GENERATOR}"
-              --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN}"
-              --test-command "video_tests"
-              ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4
-  )
-  # 15 - video_tests -- video reader with rocDecode
-  if(rocdecode_FOUND)
-    add_test(NAME video_tests_rocdecode
-              COMMAND video_tests
-              ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4 1 1 1
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+  if(ROCAL_VIDEO_TESTS_ENABLED)
+    # 14 - video_tests -- video reader with ffmpeg decoder
+    add_test(
+      NAME
+      video_tests_ffmpeg
+      COMMAND
+        "${CMAKE_CTEST_COMMAND}"
+                --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/video_tests"
+                                  "${CMAKE_CURRENT_BINARY_DIR}/video_tests"
+                --build-generator "${CMAKE_GENERATOR}"
+                --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" "-DROCAL_VIDEO_PLUGIN=${ROCAL_VIDEO_PLUGIN}" "-DROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR=${CMAKE_BINARY_DIR}/lib"
+                --test-command "video_tests"
+                ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4
+    )
+    # 15 - video_tests -- video reader with rocDecode
+    if(rocdecode_FOUND)
+      add_test(NAME video_tests_rocdecode
+                COMMAND video_tests
+                ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4 1 1 1
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/video_tests)
+    endif()
   endif()
 
   if(rocjpeg_FOUND)

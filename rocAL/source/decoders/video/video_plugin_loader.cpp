@@ -51,6 +51,16 @@ namespace video {
 namespace {
 
 const char kPluginName[] = "librocal_video_plugin.so";
+const char kPluginNameVersioned[] = "librocal_video_plugin.so.2";
+
+// Append a directory and both the versioned and unversioned plugin names to the
+// search list.  Runtime packages use NAMELINK_SKIP, so the .so symlink may be
+// absent and only the .so.2 SONAME is present.
+void append_plugin_candidates(std::vector<std::string> &paths, const std::string &dir) {
+    if (dir.empty()) return;
+    paths.emplace_back(dir + "/" + kPluginNameVersioned);
+    paths.emplace_back(dir + "/" + kPluginName);
+}
 
 // Return the directory containing the running librocal.so so we can look for
 // the plugin next to it.  If dladdr fails, return an empty string.
@@ -68,15 +78,13 @@ std::string get_rocal_library_dir() {
 std::vector<std::string> build_plugin_search_list() {
     std::vector<std::string> paths;
     // 1. Let the dynamic linker honour LD_LIBRARY_PATH / rpath by trying the
-    //    bare SONAME first.
+    //    bare and versioned SONAMEs first.
+    paths.emplace_back(kPluginNameVersioned);
     paths.emplace_back(kPluginName);
     // 2. Directory that contains librocal.so.
-    std::string rocal_dir = get_rocal_library_dir();
-    if (!rocal_dir.empty()) {
-        paths.emplace_back(rocal_dir + "/" + kPluginName);
-    }
+    append_plugin_candidates(paths, get_rocal_library_dir());
     // 3. ROCm default install path.
-    paths.emplace_back(std::string(ROCM_PATH) + "/lib/" + kPluginName);
+    append_plugin_candidates(paths, std::string(ROCM_PATH) + "/lib");
     return paths;
 }
 
@@ -103,7 +111,8 @@ void do_load_video_plugin() {
         }
     }
 
-    THROW("rocAL video plugin (" + std::string(kPluginName) +
+    THROW("rocAL video plugin (" + std::string(kPluginName) + " or " +
+          std::string(kPluginNameVersioned) +
           ") could not be loaded. Ensure it is installed next to librocal.so or in "
           "the ROCm library path (" + std::string(ROCM_PATH) +
           "/lib). If the host FFmpeg/rocDecode libraries are incompatible, rebuild "

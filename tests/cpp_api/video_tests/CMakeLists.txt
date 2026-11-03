@@ -59,22 +59,19 @@ else()
 endif()
 include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
 
-# Prefer the same prefix for the library location.
-if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
+# Prefer the freshly built rocAL library directory when one is passed in.  This
+# lets the video_tests binary link against the in-tree librocal.so and lets the
+# runtime plugin loader find librocal_video_plugin.so next to it.
+if(ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR AND EXISTS "${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR}")
+    link_directories(${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
+    # Make the in-tree librocal.so and librocal_video_plugin.so discoverable at
+    # runtime without relying on LD_LIBRARY_PATH.
+    list(APPEND CMAKE_BUILD_RPATH ${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
+    list(APPEND CMAKE_INSTALL_RPATH ${ROCAL_VIDEO_PLUGIN_BUILD_LIB_DIR})
+elseif(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
     link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 else()
     link_directories(${ROCM_PATH}/lib/)
-endif()
-
-# When rocAL was built with ROCAL_VIDEO_PLUGIN=ON the video decoder factories live
-# in librocal_video_plugin.so. Link it when available.
-if(ROCAL_VIDEO_PLUGIN)
-    find_library(ROCAL_VIDEO_PLUGIN_LIBRARY NAMES rocal_video_plugin
-                 PATHS ${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib
-                 NO_DEFAULT_PATH)
-    if(NOT ROCAL_VIDEO_PLUGIN_LIBRARY)
-        message(FATAL_ERROR "-- ${Red}video_tests: ROCAL_VIDEO_PLUGIN=ON but librocal_video_plugin.so was not found under ${CMAKE_INSTALL_PREFIX}/lib or ${ROCM_PATH}/lib${ColourReset}")
-    endif()
 endif()
 
 file(GLOB My_Source_Files ./*.cpp)
@@ -86,4 +83,4 @@ find_package(OpenCVComponents MODULE QUIET)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mf16c -Wall ")
 # librocal carries Python C-API symbols (PythonFunction operator); link libpython to resolve them
 find_package(Python3 QUIET COMPONENTS Development.Embed)
-target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python> ${ROCAL_VIDEO_PLUGIN_LIBRARY})
+target_link_libraries(${PROJECT_NAME} rocal $<TARGET_NAME_IF_EXISTS:Python3::Python>)
