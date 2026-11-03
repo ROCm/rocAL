@@ -160,18 +160,16 @@ class ROCALGenericIteratorDetection(object):
             return self.output_list, self.res, self.l, self.num_bboxes_arr
         elif (self.loader._name == "TFRecordReaderClassification"):
             if (self.loader._one_hot_encoding == True):
-                if self.device == "cpu":
-                    self.labels = np.zeros(
-                        (self.bs) * (self.loader._num_classes), dtype="int32")
-                    self.loader.get_one_hot_encoded_labels(
-                        self.labels.ctypes.data, self.loader._output_memory_type)
-                    self.labels = np.reshape(
-                        self.labels, (-1, self.bs, self.loader._num_classes))
-                else:
-                    # TODO: one hot labels in dlpack? no support yet
-                    self.labels = np.zeros((self.bs) * (self.loader._num_classes), dtype="int32")
-                    self.loader.get_one_hot_encoded_labels(self.labels, self.loader._output_memory_type)
-                    self.labels = np.reshape(self.labels, (-1, self.bs, self.loader._num_classes))
+                # TODO: one hot labels in dlpack? no support yet - the labels are returned as a
+                # host numpy array on both devices, so the destination memory type is always
+                # HOST_MEMORY. Passing a GPU pipeline's DEVICE_MEMORY here would make rocAL
+                # hipMemcpy host-to-device into a host pointer and fail.
+                self.labels = np.zeros(
+                    (self.bs) * (self.loader._num_classes), dtype="int32")
+                self.loader.get_one_hot_encoded_labels(
+                    self.labels.ctypes.data, types.HOST_MEMORY)
+                self.labels = np.reshape(
+                    self.labels, (-1, self.bs, self.loader._num_classes))
             else:
                 self.labels = self.loader.get_image_labels()
 
