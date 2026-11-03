@@ -67,6 +67,11 @@ find_package(TurboJpeg QUIET)
 # floor is enforced below so an installed-but-too-old pybind11 reports a clear
 # version-specific message instead of a bare "Not Found".
 set(ROCAL_PYBIND11_MIN_VERSION "3.1")
+# Make pybind11 use CMake's modern FindPython instead of the removed
+# FindPythonLibs/FindPythonInterp modules, which otherwise emit a CMP0148 dev
+# warning. This is already the default in pybind11 3.x; setting it explicitly
+# also silences the warning when an older pybind11 is present in the environment.
+set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 QUIET CONFIG)
 find_package(HALF QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
