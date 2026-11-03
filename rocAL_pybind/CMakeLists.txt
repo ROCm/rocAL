@@ -280,8 +280,11 @@ if(${BUILD_ROCAL_PYBIND})
             set_target_properties(${mod_tgt} PROPERTIES
                 PREFIX ""
                 SUFFIX "${Python3_EXTENSION_SUFFIX}"
-                OUTPUT_NAME "rocal_pybind"
-                INSTALL_RPATH "$ORIGIN:$ORIGIN/llvm/lib")
+                OUTPUT_NAME "rocal_pybind")
+            # Record the module rpath with a raw linker flag rather than the INSTALL_RPATH property:
+            # the build disables CMake's rpath handling (CMAKE_SKIP_BUILD_RPATH here and
+            # CMAKE_SKIP_INSTALL_RPATH at the top level), which would drop an INSTALL_RPATH entry.
+            set_property(TARGET ${mod_tgt} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,'$ORIGIN:$ORIGIN/llvm/lib'")
 
             # Python files - Install
             install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/amd/"
