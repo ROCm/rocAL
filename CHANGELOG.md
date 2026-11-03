@@ -47,6 +47,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalVideoFileResize()` and `rocalVideoFileResizeSingleShard()` returning a null tensor on success when the frames are decoded at their native size.
 * Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
+* Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.
