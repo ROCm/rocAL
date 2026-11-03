@@ -29,7 +29,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Update EnumRegistry to support enum value lookup by type name.
 * Adds new method in Argument class for type-safe value retrieval of arguments.
 * `RocalPipelineParams` struct to represent pipeline configuration parameters used during serialization and deserialization.
-* The `Phase` and Bitwise AND/OR/XOR unit test cases are disabled, pending a fix to the RPP bilinear rotate their second input depends on.
+* The `Phase`, Bitwise AND/OR/XOR and `ResizeCropMirror` unit test cases are disabled, pending a fix to the RPP bilinear sampler they depend on.
 
 ### Resolved issues
 * Resolve the off-by-one in `rocalGetOneHotImageLabels()`, which encoded the 0 based labels the readers produce as the wrong class.

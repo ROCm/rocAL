@@ -116,7 +116,19 @@ do
 
         # caffe2 classification
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name center_crop --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}"        
-        python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name resize_crop_mirror --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}"
+        # ROCM-33746: resize_crop_mirror is disabled on both backends until RPP fixes its
+        # bilinear sampler. RPP lists the whole op as a known kernel defect in skip_list.hpp
+        # ("Image_Geometric/ResizeCropMirrorTest.Correctness/*"); run with
+        # RPP_TEST_NO_SKIP_LIST=1 it fails 160/160 BILINEAR cases on host *and* HIP against
+        # RPP's own double-precision reference. Nearest neighbour is not an alternative here -
+        # the op rejects it with RPP_ERROR_NOT_IMPLEMENTED.
+        # The host case is the one that fails here; the HIP case passes only because its golden
+        # was minted from the same defective HIP kernel. That was confirmed directly: with the
+        # candidate RPP fix applied, the HIP golden stops matching too. So both are disabled
+        # together, and both goldens must be regenerated when the fix lands - see AICV-206 and
+        # its draft PR ROCm/rocm-libraries#10516 (still incomplete for this op: the mirror path
+        # and the exact-ratio downscale remain wrong).
+        # python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name resize_crop_mirror --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$caffe2_classification_path" --reader-type "caffe2_classification" --augmentation-name snow --batch-size $batch_size  --max-width $width --max-height $height --color-format $rgb  --$backend_arg -f "${output_path}Snow_${rgb_name[$rgb]}_${device_name}"
 
         # caffe2 detection

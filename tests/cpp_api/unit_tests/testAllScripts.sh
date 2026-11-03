@@ -128,7 +128,19 @@ do
 
         # caffe2 classification
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}CropCenter_${rgb_name[$rgb]}_${device_name}" $width $height 52 $device $rgb 0 $display
-        ./unit_tests 8 "$caffe2_classification_path" "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}" $width $height 53 $device $rgb 0 $display
+        # ROCM-33746: resize_crop_mirror (case 53) is disabled on both backends until RPP fixes
+        # its bilinear sampler. RPP lists the whole op as a known kernel defect in skip_list.hpp
+        # ("Image_Geometric/ResizeCropMirrorTest.Correctness/*"); run with
+        # RPP_TEST_NO_SKIP_LIST=1 it fails 160/160 BILINEAR cases on host *and* HIP against
+        # RPP's own double-precision reference. Nearest neighbour is not an alternative here -
+        # the op rejects it with RPP_ERROR_NOT_IMPLEMENTED.
+        # The host case is the one that fails here; the HIP case passes only because its golden
+        # was minted from the same defective HIP kernel. That was confirmed directly: with the
+        # candidate RPP fix applied, the HIP golden stops matching too. So both are disabled
+        # together, and both goldens must be regenerated when the fix lands - see AICV-206 and
+        # its draft PR ROCm/rocm-libraries#10516 (still incomplete for this op: the mirror path
+        # and the exact-ratio downscale remain wrong).
+        # ./unit_tests 8 "$caffe2_classification_path" "${output_path}ResizeCropMirror_${rgb_name[$rgb]}_${device_name}" $width $height 53 $device $rgb 0 $display
         ./unit_tests 8 "$caffe2_classification_path" "${output_path}Snow_${rgb_name[$rgb]}_${device_name}" $width $height 41 $device $rgb 0 $display
 
         # caffe2 detection
