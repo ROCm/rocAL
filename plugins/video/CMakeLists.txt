@@ -136,15 +136,22 @@ if(ROCAL_VIDEO_PLUGIN_HIP AND ROCAL_VIDEO_PLUGIN_ROCDECODE)
     get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
     set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
     set(rocdecode_ROCVIDEODECODE_DIR "${rocdecode_UTILS_DIR}/rocvideodecode")
-
-    list(APPEND ROCAL_VIDEO_PLUGIN_SOURCES source/rocdec_video_decoder.cpp)
-    list(APPEND ROCAL_VIDEO_PLUGIN_SOURCES ${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp)
-    include_directories(
-        ${ROCM_PATH}/include
-        ${rocdecode_INCLUDE_DIR}
-        ${rocdecode_ROCVIDEODECODE_DIR}
-        ${rocdecode_UTILS_DIR}
-    )
+    # The rocDecode runtime package may not ship the utility source files.
+    # If they are missing, disable rocDecode support in the plugin instead of
+    # failing configure.
+    if(EXISTS "${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp")
+        list(APPEND ROCAL_VIDEO_PLUGIN_SOURCES source/rocdec_video_decoder.cpp)
+        list(APPEND ROCAL_VIDEO_PLUGIN_SOURCES ${rocdecode_ROCVIDEODECODE_DIR}/roc_video_dec.cpp)
+        include_directories(
+            ${ROCM_PATH}/include
+            ${rocdecode_INCLUDE_DIR}
+            ${rocdecode_ROCVIDEODECODE_DIR}
+            ${rocdecode_UTILS_DIR}
+        )
+    else()
+        message("-- ${Yellow}NOTE: rocDecode utility sources missing at ${rocdecode_ROCVIDEODECODE_DIR}; disabling rocDecode video decoder in plugin${ColourReset}")
+        set(ROCAL_VIDEO_PLUGIN_ROCDECODE OFF)
+    endif()
 endif()
 
 if(ROCAL_VIDEO_PLUGIN_STATIC)

@@ -41,10 +41,17 @@ list(APPEND rocAL_HIP_SOURCES
 if (rocdecode_FOUND)
     get_filename_component(rocdecode_PREFIX_DIR "${rocdecode_INCLUDE_DIR}" DIRECTORY)
     set(rocdecode_UTILS_DIR "${rocdecode_PREFIX_DIR}/share/rocdecode/utils")
-    set (rocDecode_UTIL_SOURCES
-        ${rocdecode_UTILS_DIR}/resize_kernels.cpp
-        ${rocdecode_UTILS_DIR}/colorspace_kernels.cpp
-    )
+    # Some rocDecode runtime packages (e.g. DEB installs) do not ship the
+    # utility source files.  Disable rocDecode HIP kernels if they are missing.
+    if(EXISTS "${rocdecode_UTILS_DIR}/resize_kernels.cpp" AND EXISTS "${rocdecode_UTILS_DIR}/colorspace_kernels.cpp")
+        set (rocDecode_UTIL_SOURCES
+            ${rocdecode_UTILS_DIR}/resize_kernels.cpp
+            ${rocdecode_UTILS_DIR}/colorspace_kernels.cpp
+        )
+    else()
+        message("-- ${Yellow}NOTE: rocDecode utility sources missing at ${rocdecode_UTILS_DIR}; disabling rocDecode HIP kernels${ColourReset}")
+        set(rocdecode_FOUND FALSE)
+    endif()
 endif()
 
 set_source_files_properties(${rocAL_HIP_SOURCES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
