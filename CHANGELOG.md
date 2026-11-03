@@ -5,7 +5,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ## (Unreleased) rocAL 2.6.0
 
 ### Added
-* Multi-version python `.so` build support for rocal pybind. Supports python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13
+* Multi-version python `.so` build support for rocal pybind. Supports python 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14
 * Adds support for pipeline checkpointing in rocAL.
 * Adds hipFile support in rocAL numpy reader
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
@@ -42,8 +42,12 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve a pipeline failure reaching Python as an empty iteration, which was indistinguishable from the end of an epoch, instead of raising the reported error.
 * Resolve a heap buffer overrun in the raw TFRecord reader, which copied the whole record into the loader's output slot without honouring its capacity.
 * Resolve a segfault in `rocalRelease()` on box encoder pipelines, where the labels and bounding box tensor lists were reachable from two tensor list vectors and every tensor in them was deleted twice.
+* Resolve a failing operator in Python: inputs are now validated before the operator is added to the graph, and the call raises a `RuntimeError` naming the operator.
+* Resolve a rejected operator being left in the graph, along with its output tensor, for `build()` to create.
+* Resolve `rocalVideoFileResize()` and `rocalVideoFileResizeSingleShard()` returning a null tensor on success when the frames are decoded at their native size.
 * Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
+* Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.

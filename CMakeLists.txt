@@ -207,8 +207,8 @@ else()
     set(ROCAL_VIDEO_TESTS_ENABLED OFF)
 endif()
 
-if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.13"))
-  message("-- ${Red}NOTE: rocAL pybind supported on Python versions - 3.8, 3.9, 3.10, 3.11, 3.12, 3.13. Not Found, Please provide supported version${ColourReset}")
+if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.9" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.14"))
+  message("-- ${Red}NOTE: rocAL pybind supported on Python versions - 3.9, 3.10, 3.11, 3.12, 3.13, 3.14. Not Found, Please provide supported version${ColourReset}")
   set(BUILD_PYPACKAGE OFF)
 endif()
 

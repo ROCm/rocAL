@@ -191,7 +191,8 @@ do
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name shot_noise --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ShotNoise_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name spatter --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Spatter_${rgb_name[$rgb]}_${device_name}"
         python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name water --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}Water_${rgb_name[$rgb]}_${device_name}"
-        if [ $rgb -eq 1 ]; then
+        # ColorJitter is CPU-only, as unit_tests.cpp already assumes, and only a host golden exists.
+        if [ $rgb -eq 1 ] && [ $device -eq 0 ]; then
             python"$ver" unit_test.py --image-dataset-path "$image_path" --augmentation-name color_jitter --batch-size $batch_size --max-width $width --max-height $height --color-format $rgb --$backend_arg -f "${output_path}ColorJitter_${rgb_name[$rgb]}_${device_name}"
         fi
 
