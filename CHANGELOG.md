@@ -5,7 +5,7 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 ## (Unreleased) rocAL 2.6.0
 
 ### Added
-* Multi-version python `.so` build support for rocal pybind. Supports python 3.8, 3.9, 3.10, 3.11, 3.12 and 3.13
+* Multi-version python `.so` build support for rocal pybind. Supports python 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14
 * Adds support for pipeline checkpointing in rocAL.
 * Adds hipFile support in rocAL numpy reader
 * Adds support for voxel augmentations, random object bbox and ROI random cropping in rocAL.
@@ -48,6 +48,8 @@ Full documentation for rocLibrary is available at [https://rocm.docs.amd.com/pro
 * Resolve `rocalVideoFileResize()` and `rocalVideoFileResizeSingleShard()` returning a null tensor on success when the frames are decoded at their native size.
 * Resolve the current pipeline being tracked process-wide, which built operators into the wrong graph when pipelines were nested or built from several threads; it is now per thread and readable through `Pipeline.current()`.
 * Resolve a graph verification failure in `Pipeline.build()` by raising a `RuntimeError` instead of exiting with status 0.
+* Resolve `fn.color_jitter` being accepted on a GPU pipeline, where it has no kernel, instead of failing at the call.
+* Resolve one-hot encoded labels failing on GPU pipelines in the generic, JAX and TensorFlow iterators, which asked `rocalGetOneHotImageLabels()` to copy into a host numpy buffer as if it were device memory.
 
 ### Known Issues
 * Package installation on SLES requires manually installing `TurboJPEG`.

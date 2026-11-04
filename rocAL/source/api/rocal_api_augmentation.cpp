@@ -1910,6 +1910,10 @@ rocalColorJitter(
     auto hue = static_cast<FloatParam*>(p_hue);
     auto saturation = static_cast<FloatParam*>(p_saturation);
     try {
+        // ColorJitter has no GPU kernel: RPP exports rppt_color_jitter for host memory only, so
+        // vx_rpp's node returns VX_ERROR_NOT_IMPLEMENTED from its GPU initialize.
+        if (context->affinity != RocalAffinity::CPU)
+            THROW("ColorJitter is only supported on the CPU backend")
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
@@ -1946,6 +1950,9 @@ rocalColorJitterFixed(
     auto context = static_cast<Context*>(p_context);
     auto input = static_cast<Tensor*>(p_input);
     try {
+        // CPU-only, for the reason given in rocalColorJitter() above.
+        if (context->affinity != RocalAffinity::CPU)
+            THROW("ColorJitter is only supported on the CPU backend")
         RocalTensorlayout op_tensor_layout = static_cast<RocalTensorlayout>(output_layout);
         if (op_tensor_layout == RocalTensorlayout::NONE)
             op_tensor_layout = input->info().layout();
