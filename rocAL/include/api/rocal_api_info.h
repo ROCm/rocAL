@@ -57,6 +57,14 @@ extern "C" int ROCAL_API_CALL rocalGetOutputHeight(RocalContext rocal_context);
 extern "C" int ROCAL_API_CALL rocalGetOutputColorFormat(RocalContext rocal_context);
 
 /*!
+ * \brief Retrieves the size in bytes of one output batch, as required by rocalCopyToOutput().
+ * \ingroup group_rocal_info
+ * \param [in] rocal_context The RocalContext.
+ * \return The size of one output batch in bytes, or 0 on failure.
+ */
+extern "C" size_t ROCAL_API_CALL rocalGetOutputByteSize(RocalContext rocal_context);
+
+/*!
  * \brief Retrieves the number of remaining images.
  * \ingroup group_rocal_info
  * \param [in] rocal_context The RocalContext.
