@@ -68,6 +68,9 @@ if(ROCAL_VIDEO_PLUGIN_IN_TREE)
     list(APPEND ROCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/rocAL/include)
 else()
     message("-- ${White}rocal_video_plugin: building standalone from installed sources${ColourReset}")
+    # Make ROCm packages (HIP, rocDecode) discoverable without caller-supplied hints,
+    # matching rocAL/CMakeLists.txt. This must run before the HIP/rocDecode discovery below.
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/lib/cmake ${ROCM_PATH}/hip)
     # Allow standalone builds to find rocAL's custom CMake modules (e.g. FindFFmpeg.cmake).
     # rocAL may have been installed either under ROCM_PATH or a separate CMAKE_INSTALL_PREFIX
     # (the rocAL library below is searched in both), so look for the modules in both prefixes.
@@ -82,15 +85,17 @@ else()
     add_library(rocal_imported SHARED IMPORTED)
     set_target_properties(rocal_imported PROPERTIES IMPORTED_LOCATION ${ROCAL_LIBRARY})
     set(ROCAL_TARGET rocal_imported)
-    # rocAL dev package install headers under <prefix>/include/rocal but internal
-    # headers include each other with relative paths like "decoders/video/..." or
-    # "readers/video/...". Add both the prefix and the rocal subdirectory so the
-    # plugin can find them without rewriting all include statements.
+    # Resolve the rocAL headers from the SAME installation prefix that provided the selected
+    # library (its parent of <prefix>/lib), so the plugin compiles against the matching
+    # VideoDecoder interface instead of possibly-older headers from a different rocAL prefix.
+    # Internal headers include each other with relative paths like "decoders/video/..." or
+    # "readers/video/...", so add both <prefix>/include and <prefix>/include/rocal.
+    get_filename_component(ROCAL_LIB_DIR "${ROCAL_LIBRARY}" DIRECTORY)
+    get_filename_component(ROCAL_INSTALL_PREFIX "${ROCAL_LIB_DIR}" DIRECTORY)
     set(ROCAL_INCLUDE_DIRS
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${ROCM_PATH}/include
-        ${ROCM_PATH}/include/rocal
-        ${CMAKE_INSTALL_PREFIX}/include/rocal
+        ${ROCAL_INSTALL_PREFIX}/include
+        ${ROCAL_INSTALL_PREFIX}/include/rocal
     )
     find_path(MIVisionX_INCLUDE_DIR NAMES vx_ext_amd.h PATHS ${MIVisionX_PATH}/include/mivisionx ${ROCM_PATH}/include/mivisionx NO_DEFAULT_PATH)
     if(MIVisionX_INCLUDE_DIR)
@@ -181,10 +186,25 @@ else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_HIP=0)
 endif()
 
+# Export the plugin's own include directory (rocal_video_plugin/register.h) as a usage
+# requirement so consumers that link this target can include the registration header,
+# e.g. to register a statically-built plugin explicitly.
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 target_link_libraries(${PROJECT_NAME} PUBLIC
     ${ROCAL_TARGET}
     ${FFMPEG_LIBRARIES}
 )
+
+# When HIP is enabled, register.cpp reaches hip/hip_runtime_api.h through DecoderConfig, so
+# link hip::host to pull in HIP's include requirements rather than depending on an unrelated
+# optional package to supply the ROCm include directory.
+if(ROCAL_VIDEO_PLUGIN_HIP)
+    find_package(hip QUIET)
+    if(TARGET hip::host)
+        target_link_libraries(${PROJECT_NAME} PUBLIC hip::host)
+    endif()
+endif()
 
 if(ROCAL_VIDEO_PLUGIN_HIP AND ROCAL_VIDEO_PLUGIN_ROCDECODE)
     target_link_libraries(${PROJECT_NAME} PUBLIC rocdecode::rocdecode)
@@ -197,6 +217,11 @@ if(NOT DEFINED rocal_VERSION_MAJOR)
     string(REGEX MATCH "^([0-9]+)" rocal_VERSION_MAJOR "${rocal_VERSION}")
 endif()
 
+# Match the core library install layout (lib, not lib64) so the runtime loader's library
+# search paths line up with where the plugin is installed. Honor an explicit user override.
+if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
+    set(CMAKE_INSTALL_LIBDIR "lib" CACHE PATH "Library install directory")
+endif()
 # GNUInstallDirs is required for the standalone install layout below.
 include(GNUInstallDirs)
 
@@ -211,6 +236,11 @@ install(TARGETS ${PROJECT_NAME}
 )
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev NAMELINK_ONLY
+)
+# ASAN packages select only the asan component; ship the plugin there too so an ASAN package
+# in plugin mode still contains the video implementation alongside the core library.
+install(TARGETS ${PROJECT_NAME}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan NAMELINK_SKIP
 )
 
 # Install plugin sources under COMPONENT dev (issue comment #2).

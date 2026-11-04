@@ -58,6 +58,18 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 find_package(rocdecode 1.0.0 QUIET)
 find_package(rocjpeg 1.0.0 QUIET)
 
+# rocdecode_FOUND only reports that the package is present; the hardware video decoder is
+# actually built only when rocDecode's utility sources (roc_video_dec.cpp) are available (the
+# same check the core and plugin perform). Gate the rocDecode hardware test on this effective
+# capability so the suite does not register a test that requests an unavailable decoder.
+set(ROCAL_VIDEO_ROCDECODE_AVAILABLE OFF)
+if(rocdecode_FOUND)
+    get_filename_component(_rocdecode_prefix_dir "${rocdecode_INCLUDE_DIR}" DIRECTORY)
+    if(EXISTS "${_rocdecode_prefix_dir}/share/rocdecode/utils/rocvideodecode/roc_video_dec.cpp")
+        set(ROCAL_VIDEO_ROCDECODE_AVAILABLE ON)
+    endif()
+endif()
+
 # When this test suite is configured standalone (e.g. the installed cpp_api tests built on
 # their own), the repository top-level build does not supply ROCAL_VIDEO_TESTS_ENABLED. Default
 # it ON so a working HIP/video install still runs the video tests (the previous behavior), while
@@ -275,7 +287,7 @@ if("${BACKEND}" STREQUAL "HIP")
                 ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4
     )
     # 15 - video_tests -- video reader with rocDecode
-    if(rocdecode_FOUND)
+    if(ROCAL_VIDEO_ROCDECODE_AVAILABLE)
       add_test(NAME video_tests_rocdecode
                 COMMAND video_tests
                 ${ROCAL_TEST_DATA_PATH}/videos/AMD_driving_virtual_20.mp4 1 1 1
@@ -343,6 +355,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/checkpoint_test"
                               "${CMAKE_CURRENT_BINARY_DIR}/checkpoint_test"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command bash -c
             "./checkpoint_test ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 0 && \
              ./restore_checkpoint_test ${ROCAL_TEST_IMAGES} ${ROCAL_TEST_IMAGES_VAL} 0"
@@ -382,6 +395,7 @@ add_test(
             --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests"
                               "${CMAKE_CURRENT_BINARY_DIR}/unit_tests_one_hot"
             --build-generator "${CMAKE_GENERATOR}"
+            --build-options "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
             --test-command "unit_tests"
             0 ${ROCM_PATH}/share/rocal/test/data/images/AMD-tinyDataSet one_hot 224 224 0 0 1 2
 )

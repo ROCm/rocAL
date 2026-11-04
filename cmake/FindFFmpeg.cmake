@@ -134,7 +134,14 @@ if(_FFMPEG_AVCODEC_VERSION)
   set(FFMPEG_VERSION "${_FFMPEG_AVCODEC_VERSION}")
 elseif(AVCODEC_INCLUDE_DIR)
   if(EXISTS "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h")
-    file(STRINGS "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h" AVCODEC_VERSION_MAJOR_REGEXP
+    # Newer FFmpeg moved LIBAVCODEC_VERSION_MAJOR into version_major.h, leaving MINOR/MICRO
+    # in version.h. Read MAJOR from version_major.h when present so version detection does not
+    # come up empty and fall back to the legacy compatibility branch on recent headers.
+    set(_AVCODEC_MAJOR_HEADER "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h")
+    if(EXISTS "${AVCODEC_INCLUDE_DIR}/libavcodec/version_major.h")
+      set(_AVCODEC_MAJOR_HEADER "${AVCODEC_INCLUDE_DIR}/libavcodec/version_major.h")
+    endif()
+    file(STRINGS "${_AVCODEC_MAJOR_HEADER}" AVCODEC_VERSION_MAJOR_REGEXP
          REGEX "^#define[ \t]+LIBAVCODEC_VERSION_MAJOR[ \t]+")
     file(STRINGS "${AVCODEC_INCLUDE_DIR}/libavcodec/version.h" AVCODEC_VERSION_MINOR_REGEXP
          REGEX "^#define[ \t]+LIBAVCODEC_VERSION_MINOR[ \t]+")

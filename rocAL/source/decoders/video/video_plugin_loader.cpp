@@ -77,12 +77,14 @@ std::string get_rocal_library_dir() {
 
 std::vector<std::string> build_plugin_search_list() {
     std::vector<std::string> paths;
-    // 1. Let the dynamic linker honour LD_LIBRARY_PATH / rpath by trying the
-    //    bare and versioned SONAMEs first.
+    // 1. Directory that contains the running librocal.so. The co-located plugin shares this
+    //    exact build's internal C++ types with the core, so it must take precedence over any
+    //    other copy the dynamic linker could resolve via LD_LIBRARY_PATH / rpath.
+    append_plugin_candidates(paths, get_rocal_library_dir());
+    // 2. Fall back to the bare and versioned SONAMEs so the dynamic linker can honour
+    //    LD_LIBRARY_PATH / rpath / the default library search path.
     paths.emplace_back(kPluginNameVersioned);
     paths.emplace_back(kPluginName);
-    // 2. Directory that contains librocal.so.
-    append_plugin_candidates(paths, get_rocal_library_dir());
     // 3. ROCm default install path.
     append_plugin_candidates(paths, std::string(ROCM_PATH) + "/lib");
     return paths;
