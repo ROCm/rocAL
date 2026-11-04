@@ -175,7 +175,7 @@ void CaffeLMDBRecordReader::read_image_names() {
     // The size of the memory map is also the maximum size of the database.
     CHECK_LMDB_RETURN_STATUS(mdb_env_set_mapsize(_mdb_env, _file_byte_size));
     // Opening an environment handle.
-    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_mdb_env, _path.c_str(), MDB_RDONLY, 0664));
+    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_mdb_env, _path.c_str(), kLmdbReadFlags, 0664));
     // Creating a transaction for use with the environment
     CHECK_LMDB_RETURN_STATUS(mdb_txn_begin(_mdb_env, NULL, MDB_RDONLY, &_mdb_txn));
     // Opening a database in the environment.
@@ -216,7 +216,7 @@ void CaffeLMDBRecordReader::open_env_for_read_image() {
     // The size of the memory map is also the maximum size of the database.
     CHECK_LMDB_RETURN_STATUS(mdb_env_set_mapsize(_read_mdb_env, _file_byte_size));
     // Opening an environment handle.
-    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_read_mdb_env, _path.c_str(), MDB_RDONLY, 0664));
+    CHECK_LMDB_RETURN_STATUS(mdb_env_open(_read_mdb_env, _path.c_str(), kLmdbReadFlags, 0664));
     // Creating a transaction for use with the environment
     CHECK_LMDB_RETURN_STATUS(mdb_txn_begin(_read_mdb_env, NULL, MDB_RDONLY, &_read_mdb_txn));
     // Opening a database in the environment.

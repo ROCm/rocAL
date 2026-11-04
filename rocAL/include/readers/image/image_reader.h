@@ -42,6 +42,10 @@ THE SOFTWARE.
             THROW("LMDB error, " + std::string(__FILE__) + ":" + std::to_string(__LINE__) + " " + \
                   #status + ":" + std::string(mdb_strerror(status)));                             \
     } while (0)
+// Readers never write the database. MDB_RDONLY still updates lock.mdb, so a
+// read rewrites the dataset and fails when the directory is not writable.
+// MDB_NOLOCK skips the lock file. Safe while no writer is active.
+constexpr unsigned int kLmdbReadFlags = MDB_RDONLY | MDB_NOLOCK;
 #endif
 
 enum class StorageType {
