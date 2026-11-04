@@ -9,3 +9,15 @@ _templates/
 _toc.yml
 docBin/
 _doxygen/
+
+# build trees
+build*/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# test run outputs
+tests/python_api/output_folder/
+tests/python_api/rocal_python_unittest_output_folder_*/
+rocal_unittest_log_file_*.log

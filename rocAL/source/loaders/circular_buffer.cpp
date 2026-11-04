@@ -181,7 +181,13 @@ void CircularBuffer::init(RocalMemType output_mem_type, size_t output_mem_size, 
 }
 
 void CircularBuffer::release() {
-    for (size_t buffIdx = 0; buffIdx < _buff_depth; buffIdx++) {
+    // Drive the loop from the vectors rather than _buff_depth, which a setup failure that skips
+    // init() leaves unset. That also keeps cleanup correct when init() itself fails partway: it
+    // sizes both vectors before allocating, so the entries it never reached are null, and the ones
+    // it did allocate still have to be freed here. The vectors are cleared below, so a second
+    // release() frees nothing.
+    _initialized = false;
+    for (size_t buffIdx = 0; buffIdx < _host_buffer_ptrs.size(); buffIdx++) {
 #if ENABLE_HIP
             if (_output_mem_type == RocalMemType::HIP) {
                 if (_use_pinned_memory && _host_buffer_ptrs[buffIdx]) {

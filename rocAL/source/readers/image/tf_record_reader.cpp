@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "readers/image/tf_record_reader.h"
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -81,12 +82,19 @@ size_t TFRecordReader::open() {
     return _current_file_size;
 }
 
-size_t TFRecordReader::read_data(unsigned char *buf, size_t read_size) {
-    auto ret = read_image(buf, _file_names[_curr_file_idx], _file_size[_file_names[_curr_file_idx]]);
+size_t TFRecordReader::read_data(unsigned char *buf, size_t max_size) {
+    // Same contract as the other readers, for example FileSourceReader: max_size is the
+    // capacity of the caller's buffer, so copy at most that many bytes and return how many
+    // were actually transferred. Requested read size bigger than the record? just read as
+    // many bytes as the record holds. The record is bounded by _file_size, an unsigned int
+    // map, so narrowing to read_image's uint parameter is lossless.
+    size_t record_size = _file_size[_file_names[_curr_file_idx]];
+    size_t actual_read_size = (max_size > record_size) ? record_size : max_size;
+    auto ret = read_image(buf, _file_names[_curr_file_idx], static_cast<uint>(actual_read_size));
     if (ret != Reader::Status::OK)
         THROW("TFRecordReader: Error in reading TF records");
     incremenet_read_ptr();
-    return read_size;
+    return actual_read_size;
 }
 
 int TFRecordReader::close() {
@@ -267,7 +275,10 @@ Reader::Status TFRecordReader::read_image(unsigned char *buff, std::string file_
     // if _filename key is empty, just read the encoded/raw feature
     if (_filename_key.empty() || (fname == file_name)) {
         _single_feature = feature.at(_encoded_key);
-        memcpy(buff, _single_feature.bytes_list().value()[0].c_str(), _single_feature.bytes_list().value()[0].size());
+        // file_size is how many bytes buff can hold. Honour it, the record itself can be
+        // larger than the destination.
+        size_t copy_size = std::min(static_cast<size_t>(file_size), _single_feature.bytes_list().value()[0].size());
+        memcpy(buff, _single_feature.bytes_list().value()[0].c_str(), copy_size);
     }
     file_contents.read((char *)&data_crc, sizeof(data_crc));
     if (!file_contents)
