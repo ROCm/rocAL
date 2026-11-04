@@ -53,6 +53,9 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # Find Dependency
 find_package(MIVisionX QUIET)
 find_package(TurboJpeg QUIET)
+# Classic libjpeg API (jpeg_std_error, jpeg_create_decompress, ...) is used directly by
+# source/decoders/libjpeg/libjpeg_extra.cpp. Those symbols live in libjpeg, not libturbojpeg.
+find_package(JPEG QUIET)
 find_package(Protobuf QUIET)
 find_package(OpenMP COMPONENTS CXX QUIET)
 find_package(LMDB QUIET)	
@@ -209,6 +212,13 @@ if(${BUILD_ROCAL})
     # TurboJPEG
     include_directories(${TurboJpeg_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
+    # libjpeg (classic API) -- libjpeg_extra.cpp calls jpeg_std_error()/jpeg_read_header() etc.,
+    # which are exported by libjpeg.so, not libturbojpeg.so. Link it explicitly so librocal does
+    # not depend on another library (e.g. FFmpeg in the old monolithic build) pulling it in.
+    if(JPEG_FOUND)
+        include_directories(${JPEG_INCLUDE_DIRS})
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${JPEG_LIBRARIES})
+    endif()
     # Protobuf
     include_directories(${PROTOBUF_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${PROTOBUF_LIBRARIES})
@@ -334,12 +344,18 @@ if(${BUILD_ROCAL})
     target_compile_definitions(${PROJECT_NAME} PUBLIC TFRECORD_ENABLE=0)
     message("-- ${White}rocAL built with ENABLE_SIMD")
 
-    # FFMPEG
+    # Video pipeline
+    # The neutral video pipeline (loader nodes, readers, decoder registry) has no FFmpeg
+    # dependency and is always compiled so the public video APIs are always available; the
+    # decoder registry simply reports no available decoder at runtime when none is present.
+    # The actual FFmpeg/rocDecode decoder comes from the runtime plugin (ROCAL_VIDEO_PLUGIN=ON)
+    # or is compiled into the core library (monolithic, when FFmpeg is found).
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
     if(ROCAL_VIDEO_PLUGIN)
         message("-- ${White}rocAL built without FFmpeg in core; FFmpeg video support is provided by the rocal_video_plugin runtime plugin${ColourReset}")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO -DROCAL_VIDEO_PLUGIN)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO_PLUGIN)
     elseif(NOT FFMPEG_FOUND)
-        message("-- ${Yellow}NOTE: rocAL built without FFmpeg video decode functionality${ColourReset}")
+        message("-- ${Yellow}NOTE: rocAL built without an FFmpeg video decoder in core; video APIs will report no available decoder at runtime${ColourReset}")
     else()
         # FFMPEG multi-version support
         if(_FFMPEG_AVCODEC_VERSION VERSION_LESS_EQUAL 58.134.100)
@@ -350,7 +366,6 @@ if(${BUILD_ROCAL})
         include_directories(${AVUTIL_INCLUDE_DIR} ${AVCODEC_INCLUDE_DIR} ${SWSCALE_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR})
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${FFMPEG_LIBRARIES})
         message("-- ${White}rocAL built with FFmpeg video decode functionality${ColourReset}")
-        target_compile_definitions(${PROJECT_NAME} PUBLIC -DROCAL_VIDEO)
     endif()
     # Filesystem
     if(STD_FILESYSTEM_PRESENT)

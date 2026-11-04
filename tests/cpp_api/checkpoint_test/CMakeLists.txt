@@ -61,7 +61,7 @@ include_directories(${ROCM_PATH}/include ${ROCAL_INCLUDE_ROOT})
 
 # Prefer the same prefix for the library location.
 if(CMAKE_INSTALL_PREFIX AND EXISTS "${CMAKE_INSTALL_PREFIX}/lib")
-    link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+    link_directories(${CMAKE_INSTALL_PREFIX}/lib ${ROCM_PATH}/lib)
 else()
     link_directories(${ROCM_PATH}/lib)
 endif()

@@ -69,7 +69,11 @@ if(ROCAL_VIDEO_PLUGIN_IN_TREE)
 else()
     message("-- ${White}rocal_video_plugin: building standalone from installed sources${ColourReset}")
     # Allow standalone builds to find rocAL's custom CMake modules (e.g. FindFFmpeg.cmake).
-    list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rocal/cmake)
+    # rocAL may have been installed either under ROCM_PATH or a separate CMAKE_INSTALL_PREFIX
+    # (the rocAL library below is searched in both), so look for the modules in both prefixes.
+    list(APPEND CMAKE_MODULE_PATH
+        ${ROCM_PATH}/share/rocal/cmake
+        ${CMAKE_INSTALL_PREFIX}/share/rocal/cmake)
     # Find the installed rocAL library.
     find_library(ROCAL_LIBRARY NAMES rocal PATHS ${ROCM_PATH}/lib ${CMAKE_INSTALL_PREFIX}/lib)
     if(NOT ROCAL_LIBRARY)

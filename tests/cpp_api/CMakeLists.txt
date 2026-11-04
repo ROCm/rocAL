@@ -58,6 +58,14 @@ list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 find_package(rocdecode 1.0.0 QUIET)
 find_package(rocjpeg 1.0.0 QUIET)
 
+# When this test suite is configured standalone (e.g. the installed cpp_api tests built on
+# their own), the repository top-level build does not supply ROCAL_VIDEO_TESTS_ENABLED. Default
+# it ON so a working HIP/video install still runs the video tests (the previous behavior), while
+# an explicit value passed down from the top-level build (ON or OFF) is still honored.
+if(NOT DEFINED ROCAL_VIDEO_TESTS_ENABLED)
+    option(ROCAL_VIDEO_TESTS_ENABLED "Enable the FFmpeg/rocDecode video tests" ON)
+endif()
+
 if(ROCAL_LIBRARY AND ROCAL_INCLUDE_DIR)
     set(ROCAL_FOUND TRUE)
     message("-- ${White}${PROJECT_NAME}: Using rocAL -- \n\tLibraries:${ROCAL_LIBRARY} \n\tIncludes:${ROCAL_INCLUDE_DIR}${ColourReset}")

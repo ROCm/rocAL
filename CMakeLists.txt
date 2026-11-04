@@ -177,9 +177,14 @@ if(ROCAL_VIDEO_PLUGIN)
     endif()
 else()
     set(ROCAL_VIDEO_PLUGIN_BUILT OFF)
-    # In monolithic mode the plugin is not built as a separate library, but its
-    # sources are still shipped under COMPONENT dev so users can build it on the
-    # target machine if they want to opt into the plugin workflow.
+endif()
+
+# Ship the video plugin sources under COMPONENT dev in every configuration where the plugin
+# library is not built in-tree: monolithic mode, or plugin mode with FFmpeg missing. This lets
+# the dev package always build the plugin on the target machine. When the plugin is built
+# in-tree it installs its own sources, so guarding on ROCAL_VIDEO_PLUGIN_BUILT avoids a
+# duplicate install.
+if(NOT ROCAL_VIDEO_PLUGIN_BUILT)
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/plugins/video/
         DESTINATION ${CMAKE_INSTALL_DATADIR}/rocal/plugins/video
         COMPONENT dev
@@ -195,7 +200,14 @@ endif()
 # monolithic and FFmpeg was found.
 if("${BACKEND}" STREQUAL "HIP")
     if(ROCAL_VIDEO_PLUGIN)
-        set(ROCAL_VIDEO_TESTS_ENABLED ${ROCAL_VIDEO_PLUGIN_BUILT})
+        # The video tests link only rocal and rely on the runtime loader dlopen-ing the shared
+        # plugin, so a static-only plugin build cannot register a decoder for them. Only enable
+        # them when a shared plugin was actually built.
+        if(ROCAL_VIDEO_PLUGIN_BUILT AND NOT ROCAL_VIDEO_PLUGIN_STATIC)
+            set(ROCAL_VIDEO_TESTS_ENABLED ON)
+        else()
+            set(ROCAL_VIDEO_TESTS_ENABLED OFF)
+        endif()
     else()
         if(FFMPEG_FOUND)
             set(ROCAL_VIDEO_TESTS_ENABLED ON)
