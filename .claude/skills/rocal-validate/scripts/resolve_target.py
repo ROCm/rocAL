@@ -107,11 +107,32 @@ COVERAGE_MAP = [
      [("no goldens, no comparison, no exit code", "UNGATED")]),
     ("tests/python_api/python_function_example.py", "python_function_example.py",
      [("needs -DROCAL_PYTHON_FUNCTION=ON, off by default", "UNGATED")]),
+    ("tests/pybind", "pybind test code",
+     [("tests/pybind import tests", "SMOKE")]),
 
     # Catch-all for test code that IS exercised by a phase of this skill.
     ("tests/", "test code (run by this skill)",
      [("the phase that runs it", "GATED")]),
 ]
+
+# The tests/python_api entry points a phase of this skill actually executes.
+#
+# unit_tests.sh invokes exactly two scripts - unit_test.py and image_comparison.py -
+# and unit_test.py imports parse_config.py. audio_unit_test.py is run separately by
+# phase 5 when AUDIO_SUPPORT was built. Every other .py in that directory is a
+# standalone example or reader demo that nothing here runs.
+#
+# Deliberately an allow-list, not a deny-list. A deny-list silently inherits the blanket
+# "tests/ is GATED" claim for anything added later - so a reader script landing in this
+# directory tomorrow would be reported as covered by a suite that never opens it. New
+# files must default to "nothing runs this".
+PYTHON_API_RUN = {
+    "tests/python_api/unit_tests.sh",
+    "tests/python_api/unit_test.py",
+    "tests/python_api/image_comparison.py",
+    "tests/python_api/parse_config.py",
+    "tests/python_api/audio_unit_test.py",
+}
 
 # Paths that genuinely need no test coverage. Anything else that fails to map is
 # reported, because a silently unmapped source file gets no scoping at all - which is
@@ -125,6 +146,22 @@ ORPHAN_DIRS = [
     "audio_tests", "dataloader", "dataloader_tf", "external_source",
     "image_augmentation", "multiple_dataloaders_test", "voxel_augmentations_test",
 ]
+
+
+def python_api_areas(path):
+    """-> (area, [(covered_by, status)]) for a tests/python_api file, else None.
+
+    Phase 5 runs `unit_tests.sh`, not the directory it lives in. A file in there that the
+    shell script never invokes is not covered by anything in this skill, however much it
+    looks like a test.
+    """
+    if not path.startswith("tests/python_api/"):
+        return None
+    if path in PYTHON_API_RUN:
+        return ("python_api suite (run by this skill)",
+                [("phase 5 - unit_tests.sh / audio_unit_test.py", "GATED")])
+    return ("python_api standalone script",
+            [("lives in tests/python_api but no phase of this skill invokes it", "UNGATED")])
 
 
 def scope_paths(paths):
@@ -144,6 +181,13 @@ def scope_paths(paths):
 
         for prefix, area, areas in COVERAGE_MAP:
             if probe.startswith(prefix):
+                # The blanket tests/ rule is the last resort, and for tests/python_api it
+                # is wrong: phase 5 runs unit_tests.sh, not the directory. Resolve those
+                # against PYTHON_API_RUN so an unrun script is never called covered.
+                if prefix == "tests/":
+                    override = python_api_areas(path)
+                    if override:
+                        area, areas = override
                 for name, status in areas:
                     key = (area, name, status)
                     if key not in seen:
@@ -168,6 +212,49 @@ def porcelain_path(line):
     if " -> " in path:
         path = path.split(" -> ", 1)[1].strip()
     return path.strip('"')
+
+
+SKILL_MARKER = ".claude/skills/rocal-validate/SKILL.md"
+
+
+def ref_has_skill(ref, root):
+    """Does `ref` carry this skill? None when the ref cannot be inspected."""
+    if subprocess.run(["git", "rev-parse", "--verify", "--quiet", ref],
+                      cwd=root, capture_output=True).returncode != 0:
+        return None
+    return subprocess.run(["git", "cat-file", "-e", f"{ref}:{SKILL_MARKER}"],
+                          cwd=root, capture_output=True).returncode == 0
+
+
+def checkout_would_delete_skill(target, is_pr, root):
+    """True if switching to `target` would remove the skill from the working tree.
+
+    This skill lives inside the repository it validates, so `git checkout` deletes it on
+    any branch that predates it - including the base branch, and every branch this tool is
+    most useful on. The already-running script survives in memory, but phases 2 through 5
+    then fail to open scripts that no longer exist, halfway through, on a branch the user
+    did not ask to be left on.
+
+    Only meaningful when the skill is tracked here; an untracked copy is not git's to
+    delete. Returns False when the answer cannot be established, so an uninspectable ref
+    warns rather than blocks.
+    """
+    tracked = subprocess.run(["git", "ls-files", "--error-unmatch", SKILL_MARKER],
+                             cwd=root, capture_output=True).returncode == 0
+    if not tracked:
+        return False
+    if is_pr:
+        head = subprocess.run(
+            ["gh", "pr", "view", target, "--json", "headRefName", "-q", ".headRefName"],
+            cwd=root, capture_output=True, text=True)
+        if head.returncode != 0 or not head.stdout.strip():
+            return False
+        target = head.stdout.strip()
+    for cand in (target, f"origin/{target}"):
+        has = ref_has_skill(cand, root)
+        if has is not None:
+            return not has
+    return False
 
 
 def git(*args, cwd=None, check=True):
@@ -216,6 +303,19 @@ def main():
                 f"Refusing to switch to {want}: the working tree has "
                 f"{len(dirty_files)} uncommitted change(s).\n"
                 "Commit or set them aside first - switching would clobber them."
+            )
+        elif checkout_would_delete_skill(args.target, is_pr, root):
+            raise SystemExit(
+                f"Refusing to switch to {want}: that branch does not contain\n"
+                f"  {SKILL_MARKER}\n"
+                "and this skill is tracked here, so checking it out would DELETE the gate\n"
+                "scripts - phases 2-5 would then fail on missing files, mid-run, leaving you\n"
+                "on a branch you did not ask for. Validate it from a worktree that keeps the\n"
+                "tooling instead:\n\n"
+                f"    git worktree add ../rocal-validate-{args.target} {args.target}\n"
+                "    # then run this skill's scripts by absolute path against --repo-root\n"
+                "    # pointing at that worktree\n\n"
+                "Or merge the branch carrying this skill into the target first."
             )
         else:
             if is_pr:

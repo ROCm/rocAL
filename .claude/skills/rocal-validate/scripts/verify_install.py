@@ -201,6 +201,44 @@ def real_files(paths):
     return [p for p in paths if os.path.isfile(p) and not os.path.islink(p)]
 
 
+def cache_value(build_dir, key):
+    """Read one entry out of build/CMakeCache.txt, or None if absent/unreadable."""
+    path = os.path.join(build_dir, "CMakeCache.txt")
+    try:
+        with open(path, errors="replace") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith(("//", "#")) or "=" not in line:
+                    continue
+                name, _, value = line.partition("=")
+                if name.split(":", 1)[0] == key:
+                    return value
+    except OSError:
+        return None
+    return None
+
+
+def file_equal(a, b):
+    """Byte-compare two files, size first.
+
+    Chunked rather than read-whole: the test-data payload is ~35 MB across 259 files, and
+    slurping both sides of every pair would be a needless 70 MB of churn. A size mismatch
+    settles it without reading anything.
+    """
+    try:
+        if os.path.getsize(a) != os.path.getsize(b):
+            return False
+        with open(a, "rb") as fa, open(b, "rb") as fb:
+            while True:
+                ca, cb = fa.read(1 << 20), fb.read(1 << 20)
+                if ca != cb:
+                    return False
+                if not ca:
+                    return True
+    except OSError:
+        return False
+
+
 def pair_by_name(built_paths, installed_paths):
     """Pair build-tree and installed libraries by basename.
 
@@ -238,7 +276,7 @@ def compare_tree(label, src_dir, dst_dir, pattern, findings, missing_is_fail=Tru
         n += 1
         if not os.path.isfile(dst):
             missing.append(rel)
-        elif open(src, "rb").read() != open(dst, "rb").read():
+        elif not file_equal(src, dst):
             differing.append(rel)
 
     if missing or differing:
@@ -284,19 +322,75 @@ def main():
     # correct, so resolve each one and require it to land on verified content.
     check_aliases(os.path.join(args.rocm_path, "lib"), "librocal.so*", verified, findings)
 
-    # 2. rocal_pybind extension module(s), paired by basename
-    pb_pairs = pair_by_name(
-        glob(os.path.join(args.build_dir, "**", "rocal_pybind*.so"), recursive=True),
-        glob(os.path.join(args.rocm_path, "lib", "rocal_pybind*.so")),
-    )
-    pybind_built = bool(pb_pairs)
-    if not pb_pairs:
-        findings.append((
-            "SKIP", "rocal_pybind",
-            "not built (pybind disabled) - phases 4 and 5 will be skipped",
-        ))
-    for name, built, installed in pb_pairs:
-        compare_binaries(name, built, installed, findings)
+    # 2. rocal_pybind extension module(s), paired by basename.
+    #
+    # Scoped to build/lib - where CMake actually writes it (rocAL_pybind/CMakeLists.txt
+    # sets no per-target OUTPUT_DIRECTORY, so the module lands in
+    # CMAKE_LIBRARY_OUTPUT_DIRECTORY = ${CMAKE_BINARY_DIR}/lib, same as librocal) - rather
+    # than a recursive build/** sweep, which would also pick up copies anywhere under the
+    # tree.
+    #
+    # Presence of a .so is NOT evidence that this build produced it. rocAL stops building
+    # the module for several reasons that are all but silent - pybind11 not found
+    # (rocAL_pybind/CMakeLists.txt:136), an unsupported Python version
+    # (CMakeLists.txt:162-165), BUILD_PYPACKAGE=OFF - and in every case the module from
+    # the LAST successful build stays in build/lib. Pairing that leftover against an
+    # equally old installed copy compares two stale files and reports OK.
+    #
+    # The cache is only a weak signal here: `option(BUILD_PYPACKAGE ... ON)` is a cache
+    # entry, but the unsupported-Python path does a plain `set(BUILD_PYPACKAGE OFF)` that
+    # shadows it without writing it back, and the pybind11-not-found path never touches it
+    # at all. So the cache still reads ON in exactly the cases that matter.
+    #
+    # The load-bearing check is the build-tree mtime ordering. The module links against
+    # rocal (`add_dependencies(mod_tgt rocal)` plus target_link_libraries), so any relink
+    # of librocal.so relinks the module too: a module OLDER than the librocal.so beside it
+    # cannot have come from this build. Build-tree mtimes are written by the linker here
+    # and are meaningful - unlike install-tree mtimes, which `make install` preserves,
+    # which is why pair_by_name refuses to use them.
+    pybind_on = (cache_value(args.build_dir, "BUILD_PYPACKAGE") or "").upper() \
+        not in ("OFF", "0", "FALSE", "NO", "N")
+    built_pb = glob(os.path.join(args.build_dir, "lib", "rocal_pybind*.so"))
+    built_lib = [b for _, b, _ in lib_pairs]
+    lib_mtime = max((os.path.getmtime(p) for p in built_lib), default=None)
+
+    leftover = []
+    if lib_mtime is not None:
+        leftover = [p for p in built_pb if os.path.getmtime(p) < lib_mtime]
+
+    if not pybind_on or (built_pb and len(leftover) == len(built_pb)):
+        pybind_built = False
+        if not pybind_on:
+            why = "BUILD_PYPACKAGE=OFF in this build's cache"
+        else:
+            why = ("every rocal_pybind*.so in build/lib predates the librocal.so beside "
+                   "it, so this build did not produce one - pybind11 missing, an "
+                   "unsupported Python version, or the module otherwise skipped")
+        detail = f"{why} - phases 4 and 5 must be reported as NOT RUN"
+        if built_pb:
+            detail += ("; LEFTOVER from an earlier build, not compared: "
+                       + ", ".join(sorted(os.path.basename(p) for p in built_pb)))
+        findings.append(("SKIP", "rocal_pybind", detail))
+    else:
+        if leftover:
+            findings.append((
+                "FAIL", "rocal_pybind",
+                "stale leftover module(s) older than librocal.so in build/lib: "
+                + ", ".join(sorted(os.path.basename(p) for p in leftover))
+                + " - delete them; a stale module can still pair with a stale install",
+            ))
+        fresh = [p for p in built_pb if p not in leftover]
+        pb_pairs = pair_by_name(
+            fresh, glob(os.path.join(args.rocm_path, "lib", "rocal_pybind*.so")))
+        pybind_built = bool(pb_pairs)
+        if not pb_pairs:
+            findings.append((
+                "FAIL", "rocal_pybind",
+                "BUILD_PYPACKAGE is on but no rocal_pybind*.so in "
+                f"{os.path.join(args.build_dir, 'lib')} - the module did not build",
+            ))
+        for name, built, installed in pb_pairs:
+            compare_binaries(name, built, installed, findings)
 
     # 3. public headers
     compare_tree(
@@ -315,15 +409,19 @@ def main():
             os.path.join(args.rocm_path, "lib", "amd"),
             "**/*.py", findings)
 
-    # 5. test data payload that every ctest case passes as argv
-    data_dir = os.path.join(args.rocm_path, "share", "rocal", "test", "data")
-    if os.path.isdir(data_dir):
-        findings.append(("OK", "test data", data_dir))
-    else:
-        findings.append((
-            "FAIL", "test data",
-            f"{data_dir} absent - ctest cases will fail on missing argv paths",
-        ))
+    # 5. test data payload that every ctest case passes as argv.
+    #
+    # Compared by content, not merely existence. CMakeLists.txt:179 installs the repo's
+    # data/ directory here, and the cpp_api cases read the installed copy - including
+    # AMD-tinyDataSet-val.txt, the label file that unit_tests_one_hot and every
+    # classification case assert against. A directory-exists check passes with a label
+    # file from an older install, which is the same stale-input class of bug this script
+    # exists to catch, just one layer out from the binaries.
+    compare_tree(
+        "test data",
+        os.path.join(args.repo_root, "data"),
+        os.path.join(args.rocm_path, "share", "rocal", "test", "data"),
+        "**/*", findings)
 
     # 6. pybind scripts dir - tests/pybind/CMakeLists.txt gates every add_test on this
     pb_scripts = os.path.join(args.rocm_path, "lib", "amd", "rocal")

@@ -19,10 +19,19 @@ because rocdecode_FOUND and rocjpeg_FOUND are separate if() blocks
 three-rung ladder of cpu/hip/everything would wrongly flag one as missing tests and the
 other as having unexpected ones.
 
+It also gates the nested build dirs before anything compiles. Each cpp_api case is built
+by `ctest --build-and-test` into a dir that persists under build/tests/cpp_api/ and is
+reused on every later run, and those sub-projects cache ROCM_PATH without FORCE - so the
+first value a dir ever saw stays pinned no matter what the environment says afterwards.
+Reuse build/ across two ROCm installs and the suite links the old one while phase 2
+verified the new one.
+
 Usage:
     check_ctest.py --build-dir build --baselines baselines.json \\
+                   --rocm-path "$ROCM_PATH" \\
                    --backend hip [--rocdecode] [--rocjpeg] [--log ctest.log]
-    check_ctest.py --build-dir build --baselines baselines.json --backend cpu
+    check_ctest.py --build-dir build --baselines baselines.json --rocm-path "$ROCM_PATH" \\
+                   --backend cpu [--clean-stale-cache]
     check_ctest.py --suite pybind --build-dir build/validate/pybind --baselines baselines.json
 
 Pass --expect-names to override the computed set entirely.
@@ -34,8 +43,58 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+from glob import glob
+
+
+def cache_value(cache_path, key):
+    """Read one entry out of a CMakeCache.txt, or None if absent/unreadable."""
+    try:
+        with open(cache_path, errors="replace") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith(("//", "#")) or "=" not in line:
+                    continue
+                name, _, value = line.partition("=")
+                if name.split(":", 1)[0] == key:
+                    return value
+    except OSError:
+        return None
+    return None
+
+
+def stale_nested_caches(build_dir, rocm_path):
+    """Nested cpp_api build dirs whose cached ROCM_PATH no longer matches.
+
+    Each cpp_api case is built by `ctest --build-and-test <src> <bin>` into a dir under
+    build/tests/cpp_api/<case>/ that PERSISTS and is reused by every later run. Those
+    sub-projects take ROCm from
+
+        set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "...")
+
+    with no FORCE (tests/cpp_api/basic_test/CMakeLists.txt:28-33), and `set(... CACHE ...)`
+    without FORCE is a no-op once the entry exists. The FIRST ROCM_PATH such a dir ever saw
+    is therefore pinned for its lifetime: exporting a different one changes nothing, and
+    `-DROCM_PATH` on the top-level configure never reaches these sub-projects at all.
+
+    That makes phase 0b's export necessary but not sufficient. Switch ROCm installs while
+    reusing build/ and phase 2 verifies install A while the suite silently links and loads
+    install B - the exact stale-install failure this skill exists to catch, arriving by a
+    route that looks clean from the outside.
+
+    Detected by reading the value back out of each nested cache rather than by stamping a
+    file, so it reports what the sub-projects will actually use.
+    """
+    want = os.path.realpath(rocm_path)
+    stale = []
+    pattern = os.path.join(build_dir, "tests", "cpp_api", "*", "CMakeCache.txt")
+    for cache in sorted(glob(pattern)):
+        got = cache_value(cache, "ROCM_PATH")
+        if got and os.path.realpath(got) != want:
+            stale.append((os.path.dirname(cache), got))
+    return stale
 
 
 def discover(build_dir):
@@ -72,10 +131,44 @@ def main():
                     help="rocjpeg_FOUND was true at configure time")
     ap.add_argument("--expect-names", help="comma-separated override of the expected set")
     ap.add_argument("--log", help="path to a ctest run log; if omitted, this script runs ctest")
+    ap.add_argument("--rocm-path",
+                    help="the ROCM_PATH this run is validating; required for cpp_api, which "
+                         "reuses nested build dirs that pin the first value they ever saw")
+    ap.add_argument("--clean-stale-cache", action="store_true",
+                    help="delete nested cpp_api build dirs pinned to a different ROCM_PATH "
+                         "instead of failing")
     args = ap.parse_args()
 
     with open(args.baselines) as fh:
         base = json.load(fh)
+
+    # ---- nested-cache staleness (before anything builds) --------------------
+    # Must come first: ctest -N only lists, but the run below BUILDS each case in those
+    # nested dirs, so a pinned ROCM_PATH has to be caught before a single object is
+    # compiled against the wrong install.
+    if args.suite == "cpp_api":
+        if not args.rocm_path:
+            ap.error(
+                "cpp_api needs --rocm-path. The nested per-case build dirs cache ROCM_PATH "
+                "without FORCE, so a reused build/ keeps linking whichever ROCm install it "
+                "saw first - and this gate cannot be skipped silently.")
+        stale = stale_nested_caches(args.build_dir, args.rocm_path)
+        if stale and args.clean_stale_cache:
+            for d, _ in stale:
+                shutil.rmtree(d, ignore_errors=True)
+            print(f"  cleaned    : {len(stale)} nested build dir(s) pinned to a stale "
+                  f"ROCM_PATH; they will reconfigure against {args.rocm_path}")
+        elif stale:
+            print("CTEST GATE FAILED: stale nested build dirs.\n")
+            print("  These were configured against a different ROCM_PATH than this run is")
+            print(f"  validating ({args.rocm_path}), and `set(ROCM_PATH ... CACHE PATH)`")
+            print("  without FORCE will NOT pick up the new value - the cached one wins:\n")
+            for d, got in stale:
+                print(f"    {d}\n        pinned to {got}")
+            print("\n  Running now would build and link every one of those cases against the")
+            print("  OLD install while phase 2 verified the new one. Re-run with")
+            print("  --clean-stale-cache, or delete the directories listed above.")
+            return 1
 
     # ---- expected set -------------------------------------------------------
     if args.expect_names:

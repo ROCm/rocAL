@@ -23,6 +23,7 @@ below exist specifically to close those holes; do not simplify them away.
 | Trap | What you see | What is true |
 |---|---|---|
 | Stale install | ctest: `100% tests passed` | Tests resolve rocAL via `find_library(... HINTS ${ROCM_PATH}/lib)`, so they re-validated the *previous* build |
+| Pinned `ROCM_PATH` | ctest: `100% tests passed` | Nested per-case build dirs cache `ROCM_PATH` without `FORCE`; a reused `build/` keeps linking whichever ROCm install it saw first |
 | Missing dependency | ctest: `100% tests passed`, 10 tests | 13 tests were never registered; no GPU silently drops the run from 23 to 10 |
 | pybind not installed | `No tests were found!!!`, exit **0** | Zero tests ran. `ctest` with no tests exits 0 |
 | python_api failures | shell exit **0** | Nothing under `tests/python_api` sets an exit code on failure |
@@ -52,6 +53,12 @@ python3 -I $SK/scripts/resolve_target.py \
 Switching branches is deliberately gated: the script refuses without `--allow-checkout`,
 and refuses on a dirty tree regardless. Do not work around either. If the user is already
 on the branch they want, run with no `--target` at all.
+
+It also refuses to check out a branch that does not itself carry this skill. The skill
+lives in the repo it validates, so `git checkout` would delete `$SK` out from under the
+run - every branch older than this one included - and phases 2-5 would then fail on
+missing files halfway through. Validate such a branch from a `git worktree` that keeps the
+tooling, as the error message spells out.
 
 The script records branch, HEAD sha, merge-base against the base, the changed-file list,
 and the dirty-tree state - so the report states exactly what was validated. It also maps
@@ -138,7 +145,34 @@ python3 -I $SK/scripts/verify_install.py \
 This compares **every ELF section** of the built and installed `librocal.so` and
 `rocal_pybind*.so` - name, size and content - plus the dynamic entries, normalising away
 only the RUNPATH carriers (`.dynstr`, `.dynamic`). It also diffs the 9 public headers, the
-installed Python package, and the test-data directory.
+installed Python package, and the test-data payload **by content**.
+
+The test data is not a directory-existence check. `CMakeLists.txt:179` installs the repo's
+`data/` to `$ROCM_PATH/share/rocal/test/data`, and every cpp_api case reads the installed
+copy - including `AMD-tinyDataSet-val.txt`, the label file the classification and one-hot
+cases assert against. A stale label file is the same class of bug as a stale `.so`, one
+layer further out, and an `isdir()` passes straight through it.
+
+`rocal_pybind*.so` is looked for in `build/lib` only, and a file being present is **not**
+taken as evidence this build produced it. rocAL stops building the module almost silently
+for several reasons - pybind11 not found (`rocAL_pybind/CMakeLists.txt:136`), an
+unsupported Python version (`CMakeLists.txt:162-165`), `BUILD_PYPACKAGE=OFF` - and the
+module from the last successful build stays in `build/lib` every time. Pairing that
+leftover against an equally old installed copy compares two stale files and reports OK.
+That is a bug seen in the wild, not a hypothetical.
+
+`BUILD_PYPACKAGE` in the cache is only a weak cross-check: `option()` writes it, but the
+unsupported-Python path does a plain `set(BUILD_PYPACKAGE OFF)` that shadows the cache
+without writing back, and the pybind11-not-found path never touches it - so the cache
+still reads `ON` in exactly the cases that matter. The load-bearing check is mtime
+ordering **inside the build tree**: the module links against `rocal`, so any relink of
+`librocal.so` relinks the module too, and a module older than the `librocal.so` beside it
+cannot have come from this build. Build-tree mtimes are written by the linker and are
+meaningful here - unlike install-tree mtimes, which `make install` preserves, which is why
+pairing never uses them.
+
+When every module is stale, pybind is reported `SKIP` and **phases 4 and 5 must be
+reported as NOT RUN** rather than passed.
 
 Whole-file checksums cannot do this job: `make install` rewrites RUNPATH in place, so the
 installed `.so` differs byte-for-byte at identical size and mtime even when the code is
@@ -159,9 +193,25 @@ catches it.
 ```bash
 python3 -I $SK/scripts/check_ctest.py \
   --build-dir build --baselines $SK/baselines.json \
+  --rocm-path "$ROCM_PATH" [--clean-stale-cache] \
   --backend <cpu|hip> [--rocdecode] [--rocjpeg] \
   --log build/validate/<ts>/ctest.log
 ```
+
+`--rocm-path` is **required** here, and it is not a duplicate of the Phase 0b export.
+ctest builds each case with `--build-and-test` into a dir under `build/tests/cpp_api/`
+that persists and is reused by every later run, and those sub-projects take ROCm from
+`set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH ...)` with **no `FORCE`**
+(`tests/cpp_api/basic_test/CMakeLists.txt:28-33`). `set(... CACHE ...)` without `FORCE` is
+a no-op once the entry exists, so the first value such a dir ever saw is pinned for its
+lifetime - exporting a new one changes nothing, and the top-level `-DROCM_PATH` never
+reaches it.
+
+So the Phase 0b export is necessary but **not sufficient**: reuse `build/` across two ROCm
+installs and Phase 2 verifies install A while the suite links and loads install B. The
+gate reads `ROCM_PATH` back out of each nested `CMakeCache.txt` and fails before anything
+compiles, naming the pinned directories. `--clean-stale-cache` deletes them so they
+reconfigure. Never skip this by dropping the flag.
 
 Set the flags from what Phase 1 actually detected. They are **independent**, not a ladder:
 `rocdecode_FOUND` and `rocjpeg_FOUND` are separate `if()` blocks nested inside the HIP
@@ -245,6 +295,14 @@ new set with `--update`, but **never** run `--update` to make a red run go green
 
 If `AUDIO_SUPPORT` was built, also run `audio_unit_test.py` and gate on
 `Number of FAILED tests: N`.
+
+**This phase runs `unit_tests.sh`, not the directory.** `unit_tests.sh` invokes exactly
+two scripts - `unit_test.py` and `image_comparison.py` (plus `parse_config.py`, imported)
+- and Phase 5 runs `audio_unit_test.py` separately. The ~20 other scripts in
+`tests/python_api` are standalone examples and reader demos that **nothing here runs**, so
+a diff touching one of them is reported `UNGATED`, not covered. That list is an allow-list
+in `resolve_target.py` on purpose: a script added to that directory later must default to
+"nothing runs this" rather than inherit a blanket claim of coverage.
 
 **Housekeeping.** The suite writes `rocal_python_unittest_output_folder_<ts>/` and
 `rocal_unittest_log_file_<ts>_.log` into the cwd. Move both into `build/validate/<ts>/`

@@ -99,6 +99,28 @@ anything (`:114-119`). They cannot fail. Treat them as "ran without crashing".
 | torch / JAX example scripts | examples, not gated tests |
 | `python_function_example.py` | needs `-DROCAL_PYTHON_FUNCTION=ON`, off by default |
 
+### 8a. Most of `tests/python_api` is not run at all
+
+Phase 5 runs `unit_tests.sh`, which invokes exactly **two** scripts - `unit_test.py` and
+`image_comparison.py` (plus `parse_config.py`, imported by the former) - and Phase 5 runs
+`audio_unit_test.py` separately when `AUDIO_SUPPORT` was built.
+
+Every other file in that directory is a standalone example that nothing in this skill
+executes:
+
+```
+caffe2_reader.py  caffe_reader.py  cifar10_reader.py  coco_reader.py  decoder.py
+external_source_reader.py  jax_classification_reader.py  numpy_reader.py  pipeline.py
+pipeline_checkpoint_example.py  pipeline_serialize_test.py  prefetch_queue_depth/
+pytorch_classification_reader.py  pytorch_diffusion_loader.py
+pytorch_multi_channel_loader.py  tf_classification_reader.py  tf_detection_reader.py
+video_pipeline.py  web_dataset_reader.py
+```
+
+Living under `tests/` is not coverage. `resolve_target.py` keeps an **allow-list** of the
+entry points a phase actually invokes, so anything added to this directory later defaults
+to `UNGATED` rather than inheriting a blanket "test code, therefore gated" claim.
+
 ## 9. The python_api baseline failures are known, not accepted
 
 As of 2026-10-28, host fails 19/139 and hip fails 17/139. **None are root-caused.**
